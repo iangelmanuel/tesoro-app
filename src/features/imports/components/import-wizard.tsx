@@ -7,10 +7,8 @@ import { confirmImport, getDuplicateCandidates } from "../actions"
 import { dateRange, markDuplicates } from "../duplicates"
 import {
   buildPreviewRows,
-  categoryPairs,
   computeStats,
   existingCategoryKey,
-  extractRows,
   newCategories,
   newCategoryKey,
   toImportRows
@@ -20,14 +18,19 @@ import type { CategoryOption, ImportTarget } from "../types"
 import { CategoriesStep } from "./categories-step"
 import { ColumnsStep } from "./columns-step"
 import { FileStep } from "./file-step"
+import { LinkStep } from "./link-step"
 import { PreviewStep } from "./preview-step"
 import { SummaryStep } from "./summary-step"
 import { TableStep } from "./table-step"
 import {
   STEPS,
   type StepId,
+  extractForTarget,
+  extractedLinkValues,
+  extractedPairs,
   initialState,
   selectedTables,
+  stepLabel,
   toSourceTables,
   wizardReducer
 } from "./wizard-state"
@@ -79,13 +82,14 @@ export function ImportWizard({
   )
   const sources = useMemo(() => toSourceTables(tables), [tables])
   const extracted = useMemo(
-    () => (state.config ? extractRows(sources, state.config) : null),
-    [sources, state.config]
+    () =>
+      state.config
+        ? extractForTarget(state.target, sources, state.config)
+        : null,
+    [state.target, sources, state.config]
   )
-  const pairs = useMemo(
-    () => (extracted ? categoryPairs(extracted.rows) : []),
-    [extracted]
-  )
+  const pairs = useMemo(() => extractedPairs(extracted), [extracted])
+  const linkOptions = useMemo(() => extractedLinkValues(extracted), [extracted])
   const categoryNames = useMemo(() => {
     const names: Record<string, string> = {}
     for (const category of categories) {
@@ -105,7 +109,7 @@ export function ImportWizard({
 
   // Aplica el mapeo de categorías y marca duplicados contra la BD
   function showPreview() {
-    if (!extracted) return
+    if (extracted?.target !== "transactions") return
     setError(null)
 
     startTransition(async () => {
@@ -168,7 +172,10 @@ export function ImportWizard({
 
   return (
     <div className="flex flex-col gap-6 rounded-xl border p-4 sm:p-6">
-      <StepIndicator current={state.step} />
+      <StepIndicator
+        current={state.step}
+        target={state.target}
+      />
 
       {state.step === "file" && (
         <FileStep
@@ -224,29 +231,56 @@ export function ImportWizard({
           onFixedLinkChange={(id) => dispatch({ type: "set_fixed_link", id })}
           onBack={() => dispatch({ type: "go_to", step: "table" })}
           onNext={() => {
-            // Los pasos 4 y 5 de los demás destinos llegan en los pasos 6 y 7
-            // del plan del SPEC 08b
-            if (state.target === "transactions") {
+            if (
+              state.target === "transactions" ||
+              state.target === "recurring_expenses"
+            ) {
               dispatch({ type: "start_categories", categories })
+            } else if (
+              state.config?.mapping[
+                state.target === "debt_entries" ? "debt" : "goal"
+              ] !== undefined
+            ) {
+              dispatch({ type: "start_links", options: links })
+            } else {
+              // Sin columna de deuda o meta, el paso 4 se salta
+              showPreview()
             }
           }}
         />
       )}
 
-      {state.step === "categories" && (
-        <CategoriesStep
-          pairs={pairs}
-          targets={state.categoryTargets}
-          categories={categories}
-          onTargetChange={(key, target) =>
-            dispatch({ type: "set_category_target", key, target })
-          }
-          loading={pending}
-          error={error}
-          onBack={() => goTo("columns")}
-          onNext={showPreview}
-        />
-      )}
+      {state.step === "categories" &&
+        (state.target === "debt_entries" ||
+        state.target === "goal_contributions" ? (
+          <LinkStep
+            kind={state.target === "debt_entries" ? "debt" : "goal"}
+            values={linkOptions}
+            targets={state.linkTargets}
+            options={links}
+            onTargetChange={(key, target) =>
+              dispatch({ type: "set_link_target", key, target })
+            }
+            loading={pending}
+            error={error}
+            onBack={() => goTo("columns")}
+            onNext={showPreview}
+          />
+        ) : (
+          <CategoriesStep
+            expenseOnly={state.target === "recurring_expenses"}
+            pairs={pairs}
+            targets={state.categoryTargets}
+            categories={categories}
+            onTargetChange={(key, target) =>
+              dispatch({ type: "set_category_target", key, target })
+            }
+            loading={pending}
+            error={error}
+            onBack={() => goTo("columns")}
+            onNext={showPreview}
+          />
+        ))}
 
       {state.step === "preview" && state.preview && (
         <PreviewStep
@@ -275,7 +309,13 @@ export function ImportWizard({
   )
 }
 
-function StepIndicator({ current }: { current: StepId }) {
+function StepIndicator({
+  current,
+  target
+}: {
+  current: StepId
+  target: ImportTarget
+}) {
   const currentIndex = STEPS.findIndex((step) => step.id === current)
 
   return (
@@ -302,7 +342,7 @@ function StepIndicator({ current }: { current: StepId }) {
             >
               {done ? <Check className="size-3.5" /> : index + 1}
             </span>
-            {step.label}
+            {stepLabel(step.id, target)}
           </li>
         )
       })}

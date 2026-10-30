@@ -5,16 +5,31 @@ import {
   suggestTypeMode
 } from "../detect"
 import {
+  type ExtractedRow,
   type SourceTable,
   categoryPairs,
   distinctValues,
   extractRows,
+  linkValues,
   suggestCategoryTargets,
+  suggestLinkTargets,
   suggestTypeValue
 } from "../normalize"
-import { suggestDebtEntryValue } from "../normalize-debt-entries"
-import { suggestGoalEntryValue } from "../normalize-goal-contributions"
-import { suggestFrequencyValue } from "../normalize-recurring"
+import {
+  type ExtractedDebtEntryRow,
+  extractDebtEntryRows,
+  suggestDebtEntryValue
+} from "../normalize-debt-entries"
+import {
+  type ExtractedGoalContributionRow,
+  extractGoalContributionRows,
+  suggestGoalEntryValue
+} from "../normalize-goal-contributions"
+import {
+  type ExtractedRecurringRow,
+  extractRecurringRows,
+  suggestFrequencyValue
+} from "../normalize-recurring"
 import type { SheetCells } from "../read-file"
 import { DEFAULT_TARGET } from "../targets"
 import type {
@@ -30,6 +45,7 @@ import type {
   ImportField,
   ImportStats,
   ImportTarget,
+  LinkTarget,
   PreviewRow,
   TypeMode,
   TypeValueTarget
@@ -48,6 +64,70 @@ export const STEPS = [
 ] as const
 
 export type StepId = (typeof STEPS)[number]["id"]
+
+/** Nombre del paso 4 según el destino */
+export function stepLabel(step: StepId, target: ImportTarget) {
+  if (step !== "categories") {
+    return STEPS.find((item) => item.id === step)?.label ?? step
+  }
+  if (target === "debt_entries") return "Deudas"
+  if (target === "goal_contributions") return "Metas"
+  return "Categorías"
+}
+
+/** Filas leídas con el mapeo de columnas, según el destino */
+export type Extracted =
+  | { target: "transactions"; rows: ExtractedRow[]; empty: number }
+  | {
+      target: "recurring_expenses"
+      rows: ExtractedRecurringRow[]
+      empty: number
+    }
+  | { target: "debt_entries"; rows: ExtractedDebtEntryRow[]; empty: number }
+  | {
+      target: "goal_contributions"
+      rows: ExtractedGoalContributionRow[]
+      empty: number
+    }
+
+export function extractForTarget(
+  target: ImportTarget,
+  tables: SourceTable[],
+  config: ImportConfig
+): Extracted {
+  switch (target) {
+    case "transactions":
+      return { target, ...extractRows(tables, config) }
+    case "recurring_expenses":
+      return { target, ...extractRecurringRows(tables, config) }
+    case "debt_entries":
+      return { target, ...extractDebtEntryRows(tables, config) }
+    case "goal_contributions":
+      return { target, ...extractGoalContributionRows(tables, config) }
+  }
+}
+
+/** Pares (tipo, valor de categoría) de los destinos que tienen categoría */
+export function extractedPairs(extracted: Extracted | null) {
+  if (
+    extracted?.target === "transactions" ||
+    extracted?.target === "recurring_expenses"
+  ) {
+    return categoryPairs(extracted.rows)
+  }
+  return []
+}
+
+/** Valores de la columna de deuda o meta, con su número de filas */
+export function extractedLinkValues(extracted: Extracted | null) {
+  if (
+    extracted?.target === "debt_entries" ||
+    extracted?.target === "goal_contributions"
+  ) {
+    return linkValues(extracted.rows)
+  }
+  return []
+}
 
 export interface LoadedFile {
   name: string
@@ -73,6 +153,8 @@ export interface WizardState {
   configHeaders: string | null
   /** Clave del par (tipo, valor de origen) → destino */
   categoryTargets: Record<string, CategoryTarget>
+  /** Valor normalizado de la columna de deuda o meta → destino */
+  linkTargets: Record<string, LinkTarget>
   /** Filas de la vista previa ya con duplicados marcados */
   preview: { rows: PreviewRow[]; empty: number } | null
   /** Stats de la importación confirmada */
@@ -103,6 +185,8 @@ export type WizardAction =
   | { type: "set_fixed_link"; id: string | null }
   | { type: "start_categories"; categories: CategoryOption[] }
   | { type: "set_category_target"; key: string; target: CategoryTarget }
+  | { type: "start_links"; options: { id: string; name: string }[] }
+  | { type: "set_link_target"; key: string; target: LinkTarget }
   | { type: "preview_ready"; rows: PreviewRow[]; empty: number }
   | { type: "toggle_row"; index: number }
   | { type: "imported"; stats: ImportStats }
@@ -118,6 +202,7 @@ export const INITIAL_STATE: WizardState = {
   config: null,
   configHeaders: null,
   categoryTargets: {},
+  linkTargets: {},
   preview: null,
   summary: null
 }
@@ -217,6 +302,7 @@ export function wizardReducer(
         config: null,
         configHeaders: null,
         categoryTargets: {},
+        linkTargets: {},
         preview: null
       }
 
@@ -297,7 +383,8 @@ export function wizardReducer(
         step: "columns",
         config,
         configHeaders: headers,
-        categoryTargets: {}
+        categoryTargets: {},
+        linkTargets: {}
       }
     }
 
@@ -382,9 +469,13 @@ export function wizardReducer(
       if (!state.config) return state
 
       // Se conservan las elecciones de pares que ya se habían mapeado
-      const { rows } = extractRows(sourceTables(state), state.config)
+      const extracted = extractForTarget(
+        state.target,
+        sourceTables(state),
+        state.config
+      )
       const suggested = suggestCategoryTargets(
-        categoryPairs(rows),
+        extractedPairs(extracted),
         action.categories
       )
 
@@ -394,6 +485,33 @@ export function wizardReducer(
         categoryTargets: { ...suggested, ...state.categoryTargets }
       }
     }
+
+    case "start_links": {
+      if (!state.config) return state
+
+      // Se conservan las elecciones de valores que ya se habían mapeado
+      const extracted = extractForTarget(
+        state.target,
+        sourceTables(state),
+        state.config
+      )
+      const suggested = suggestLinkTargets(
+        extractedLinkValues(extracted),
+        action.options
+      )
+
+      return {
+        ...state,
+        step: "categories",
+        linkTargets: { ...suggested, ...state.linkTargets }
+      }
+    }
+
+    case "set_link_target":
+      return {
+        ...state,
+        linkTargets: { ...state.linkTargets, [action.key]: action.target }
+      }
 
     case "set_category_target":
       return {

@@ -1,6 +1,6 @@
 # SPEC 01 — Autenticación con Supabase y layout del dashboard
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** ninguno
 > **Fecha:** 2026-10-29
 > **Objetivo:** Que un usuario pueda registrarse o iniciar sesión (email, Google o GitHub) y entre a un dashboard con aside y tab Personal/Empresa, donde su espacio Personal ya existe.

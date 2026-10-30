@@ -43,3 +43,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# archivos de ejemplo para importar (pueden traer datos financieros reales)
+*.xlsx
+*.xls

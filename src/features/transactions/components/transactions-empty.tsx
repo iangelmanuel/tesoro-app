@@ -1,9 +1,10 @@
 import type { Route } from "next"
 import Link from "next/link"
-import { Plus, ReceiptText, SearchX } from "lucide-react"
+import { FileUp, Plus, ReceiptText, SearchX } from "lucide-react"
 import { EmptyState } from "@/components/dashboard/empty-state"
 import { Button } from "@/components/ui/button"
 import type { Category } from "@/features/categories/queries"
+import { IMPORT_PATH } from "@/features/imports/constants"
 import {
   TRANSACTIONS_PATH,
   type TransactionFilters,
@@ -16,17 +17,28 @@ export function NoTransactions({ categories }: { categories: Category[] }) {
     <EmptyState
       icon={ReceiptText}
       title="Registra tu primer movimiento"
-      description="Anota un ingreso o un gasto. Con tus movimientos Tesoro arma tus totales, gráficas y recomendaciones."
+      description="Anota un ingreso o un gasto, o importa los que ya tienes en un Excel o CSV. Con tus movimientos Tesoro arma tus totales, gráficas y recomendaciones."
     >
-      <TransactionDialog
-        categories={categories}
-        trigger={
-          <Button>
-            <Plus data-icon="inline-start" />
-            Nuevo movimiento
-          </Button>
-        }
-      />
+      <div className="flex flex-wrap justify-center gap-2">
+        <TransactionDialog
+          categories={categories}
+          trigger={
+            <Button>
+              <Plus data-icon="inline-start" />
+              Nuevo movimiento
+            </Button>
+          }
+        />
+        <Button
+          variant="outline"
+          asChild
+        >
+          <Link href={IMPORT_PATH}>
+            <FileUp data-icon="inline-start" />
+            Importar
+          </Link>
+        </Button>
+      </div>
     </EmptyState>
   )
 }

@@ -1,9 +1,11 @@
 import { Suspense } from "react"
-import { Plus } from "lucide-react"
+import Link from "next/link"
+import { FileUp, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
 import { getCategories } from "@/features/categories/queries"
+import { IMPORT_PATH } from "@/features/imports/constants"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
 import {
   NoFilteredTransactions,
@@ -81,6 +83,15 @@ async function TransactionsContent({
             </Button>
           }
         />
+        <Button
+          variant="outline"
+          asChild
+        >
+          <Link href={IMPORT_PATH}>
+            <FileUp data-icon="inline-start" />
+            Importar
+          </Link>
+        </Button>
         <CategoriesSheet categories={categories} />
       </div>
 

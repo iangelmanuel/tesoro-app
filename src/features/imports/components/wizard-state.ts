@@ -5,29 +5,58 @@ import {
   suggestTypeMode
 } from "../detect"
 import {
+  type ExtractedRow,
   type SourceTable,
   categoryPairs,
   distinctValues,
   extractRows,
+  linkValues,
   suggestCategoryTargets,
+  suggestLinkTargets,
   suggestTypeValue
 } from "../normalize"
+import {
+  type ExtractedDebtEntryRow,
+  extractDebtEntryRows,
+  suggestDebtEntryValue
+} from "../normalize-debt-entries"
+import {
+  type ExtractedGoalContributionRow,
+  extractGoalContributionRows,
+  suggestGoalEntryValue
+} from "../normalize-goal-contributions"
+import {
+  type ExtractedRecurringRow,
+  extractRecurringRows,
+  suggestFrequencyValue
+} from "../normalize-recurring"
 import type { SheetCells } from "../read-file"
+import { DEFAULT_TARGET } from "../targets"
 import type {
   CategoryOption,
   CategoryTarget,
   DateFormat,
+  DebtEntryTarget,
+  DebtEntryValue,
   DetectedTable,
+  EntryTypeMode,
+  FrequencyTarget,
+  GoalContributionValue,
+  GoalEntryTarget,
   ImportConfig,
   ImportField,
   ImportStats,
+  ImportTarget,
+  LinkTarget,
   PreviewRow,
+  RecurringValue,
+  TransactionValue,
   TypeMode,
   TypeValueTarget
 } from "../types"
 
-// Estado del asistente de importación (SPEC 08). Vive en el cliente y se
-// pierde al recargar.
+// Estado del asistente de importación (SPEC 08 y 08b). Vive en el cliente y
+// se pierde al recargar.
 
 export const STEPS = [
   { id: "file", label: "Archivo" },
@@ -40,6 +69,81 @@ export const STEPS = [
 
 export type StepId = (typeof STEPS)[number]["id"]
 
+/** Nombre del paso 4 según el destino */
+export function stepLabel(step: StepId, target: ImportTarget) {
+  if (step !== "categories") {
+    return STEPS.find((item) => item.id === step)?.label ?? step
+  }
+  if (target === "debt_entries") return "Deudas"
+  if (target === "goal_contributions") return "Metas"
+  return "Categorías"
+}
+
+/** Filas de la vista previa según el destino */
+export type PreviewState = { empty: number } & (
+  | { target: "transactions"; rows: PreviewRow<TransactionValue>[] }
+  | { target: "recurring_expenses"; rows: PreviewRow<RecurringValue>[] }
+  | { target: "debt_entries"; rows: PreviewRow<DebtEntryValue>[] }
+  | {
+      target: "goal_contributions"
+      rows: PreviewRow<GoalContributionValue>[]
+    }
+)
+
+/** Filas leídas con el mapeo de columnas, según el destino */
+export type Extracted =
+  | { target: "transactions"; rows: ExtractedRow[]; empty: number }
+  | {
+      target: "recurring_expenses"
+      rows: ExtractedRecurringRow[]
+      empty: number
+    }
+  | { target: "debt_entries"; rows: ExtractedDebtEntryRow[]; empty: number }
+  | {
+      target: "goal_contributions"
+      rows: ExtractedGoalContributionRow[]
+      empty: number
+    }
+
+export function extractForTarget(
+  target: ImportTarget,
+  tables: SourceTable[],
+  config: ImportConfig
+): Extracted {
+  switch (target) {
+    case "transactions":
+      return { target, ...extractRows(tables, config) }
+    case "recurring_expenses":
+      return { target, ...extractRecurringRows(tables, config) }
+    case "debt_entries":
+      return { target, ...extractDebtEntryRows(tables, config) }
+    case "goal_contributions":
+      return { target, ...extractGoalContributionRows(tables, config) }
+  }
+}
+
+/** Pares (tipo, valor de categoría) de los destinos que tienen categoría */
+export function extractedPairs(extracted: Extracted | null) {
+  if (
+    extracted?.target === "transactions" ||
+    extracted?.target === "recurring_expenses"
+  ) {
+    return categoryPairs(extracted.rows)
+  }
+  return []
+}
+
+/** Valores de la columna de deuda o meta, con su número de filas */
+export function extractedLinkValues(extracted: Extracted | null) {
+  if (
+    extracted?.target === "debt_entries" ||
+    extracted?.target === "goal_contributions"
+  ) {
+    return linkValues(extracted.rows)
+  }
+  return []
+}
+
 export interface LoadedFile {
   name: string
   /** true para .csv: una sola hoja y `sheets` vacío al guardar */
@@ -51,6 +155,8 @@ export interface LoadedFile {
 
 export interface WizardState {
   step: StepId
+  /** Destino de la importación; cambiarlo reinicia el mapeo */
+  target: ImportTarget
   file: LoadedFile | null
   /** Hojas marcadas, en el orden del archivo. La primera define el mapeo */
   selectedSheets: string[]
@@ -62,13 +168,16 @@ export interface WizardState {
   configHeaders: string | null
   /** Clave del par (tipo, valor de origen) → destino */
   categoryTargets: Record<string, CategoryTarget>
+  /** Valor normalizado de la columna de deuda o meta → destino */
+  linkTargets: Record<string, LinkTarget>
   /** Filas de la vista previa ya con duplicados marcados */
-  preview: { rows: PreviewRow[]; empty: number } | null
+  preview: PreviewState | null
   /** Stats de la importación confirmada */
   summary: ImportStats | null
 }
 
 export type WizardAction =
+  | { type: "set_target"; target: ImportTarget }
   | { type: "file_loaded"; name: string; sheets: SheetCells[] }
   | { type: "toggle_sheet"; sheet: string }
   | { type: "set_primary_table"; table: DetectedTable }
@@ -77,9 +186,23 @@ export type WizardAction =
   | { type: "set_type_mode"; mode: TypeMode }
   | { type: "set_date_format"; format: DateFormat }
   | { type: "set_type_value"; key: string; target: TypeValueTarget | undefined }
+  | { type: "set_entry_type_mode"; mode: EntryTypeMode }
+  | {
+      type: "set_entry_type_value"
+      key: string
+      target: DebtEntryTarget | GoalEntryTarget | undefined
+    }
+  | {
+      type: "set_frequency_value"
+      key: string
+      target: FrequencyTarget | undefined
+    }
+  | { type: "set_fixed_link"; id: string | null }
   | { type: "start_categories"; categories: CategoryOption[] }
   | { type: "set_category_target"; key: string; target: CategoryTarget }
-  | { type: "preview_ready"; rows: PreviewRow[]; empty: number }
+  | { type: "start_links"; options: { id: string; name: string }[] }
+  | { type: "set_link_target"; key: string; target: LinkTarget }
+  | { type: "preview_ready"; preview: PreviewState }
   | { type: "toggle_row"; index: number }
   | { type: "imported"; stats: ImportStats }
   | { type: "go_to"; step: StepId }
@@ -87,35 +210,98 @@ export type WizardAction =
 
 export const INITIAL_STATE: WizardState = {
   step: "file",
+  target: DEFAULT_TARGET,
   file: null,
   selectedSheets: [],
   primaryTable: null,
   config: null,
   configHeaders: null,
   categoryTargets: {},
+  linkTargets: {},
   preview: null,
   summary: null
+}
+
+/** Estado inicial con el destino de `?target=` */
+export function initialState(target: ImportTarget): WizardState {
+  return { ...INITIAL_STATE, target }
+}
+
+/** Agrega o quita el destino de un valor */
+function withValue<T>(values: Record<string, T>, key: string, target?: T) {
+  const next = { ...values }
+  if (target === undefined) delete next[key]
+  else next[key] = target
+  return next
 }
 
 function firstTable(file: LoadedFile, sheet: string | undefined) {
   return sheet ? (file.detected[sheet]?.[0] ?? null) : null
 }
 
-/** Sugiere ingreso o gasto para los valores nuevos de la columna de tipo */
-function seedTypeValues(state: WizardState, config: ImportConfig) {
-  if (config.mapping.type === undefined) return config
+/**
+ * Agrega a `values` la sugerencia de cada valor nuevo de la columna. Los que
+ * ya tienen destino no cambian.
+ */
+function seedColumnValues<T>(
+  state: WizardState,
+  column: number | undefined,
+  values: Record<string, T>,
+  suggest: (label: string) => T | undefined
+) {
+  if (column === undefined) return values
 
-  const typeValues = { ...config.typeValues }
-  for (const { key, label } of distinctValues(
-    sourceTables(state),
-    config.mapping.type
-  )) {
-    if (key in typeValues) continue
-    const suggestion = suggestTypeValue(label)
-    if (suggestion) typeValues[key] = suggestion
+  const seeded = { ...values }
+  for (const { key, label } of distinctValues(sourceTables(state), column)) {
+    if (key in seeded) continue
+    const suggestion = suggest(label)
+    if (suggestion) seeded[key] = suggestion
   }
+  return seeded
+}
 
-  return { ...config, typeValues }
+/**
+ * Sugiere el destino de los valores nuevos de las columnas de tipo (ingreso o
+ * gasto; pago, cargo, aporte o retiro) y de frecuencia
+ */
+function seedValues(state: WizardState, config: ImportConfig): ImportConfig {
+  const { mapping } = config
+
+  switch (state.target) {
+    case "transactions":
+      return {
+        ...config,
+        typeValues: seedColumnValues(
+          state,
+          mapping.type,
+          config.typeValues,
+          suggestTypeValue
+        )
+      }
+    case "recurring_expenses":
+      return {
+        ...config,
+        frequencyValues: seedColumnValues(
+          state,
+          mapping.frequency,
+          config.frequencyValues,
+          suggestFrequencyValue
+        )
+      }
+    case "debt_entries":
+    case "goal_contributions":
+      return {
+        ...config,
+        entryTypeValues: seedColumnValues<DebtEntryTarget | GoalEntryTarget>(
+          state,
+          mapping.entry_type,
+          config.entryTypeValues,
+          state.target === "debt_entries"
+            ? suggestDebtEntryValue
+            : suggestGoalEntryValue
+        )
+      }
+  }
 }
 
 export function wizardReducer(
@@ -123,6 +309,18 @@ export function wizardReducer(
   action: WizardAction
 ): WizardState {
   switch (action.type) {
+    case "set_target":
+      if (action.target === state.target) return state
+      return {
+        ...state,
+        target: action.target,
+        config: null,
+        configHeaders: null,
+        categoryTargets: {},
+        linkTargets: {},
+        preview: null
+      }
+
     case "file_loaded": {
       const detected = Object.fromEntries(
         action.sheets.map((sheet) => [
@@ -144,6 +342,7 @@ export function wizardReducer(
       return {
         ...INITIAL_STATE,
         step: "table",
+        target: state.target,
         file,
         selectedSheets: [first.name],
         primaryTable: firstTable(file, first.name)
@@ -182,12 +381,16 @@ export function wizardReducer(
         return { ...state, step: "columns" }
       }
 
-      const mapping = suggestMapping(state.primaryTable.headers)
-      const config = seedTypeValues(state, {
+      const mapping = suggestMapping(state.primaryTable.headers, state.target)
+      const config = seedValues(state, {
         mapping,
         typeMode: suggestTypeMode(mapping),
         dateFormat: "dmy",
-        typeValues: {}
+        typeValues: {},
+        entryTypeMode: mapping.entry_type === undefined ? "sign" : "column",
+        entryTypeValues: {},
+        frequencyValues: {},
+        fixedLinkId: null
       })
 
       return {
@@ -195,7 +398,8 @@ export function wizardReducer(
         step: "columns",
         config,
         configHeaders: headers,
-        categoryTargets: {}
+        categoryTargets: {},
+        linkTargets: {}
       }
     }
 
@@ -213,7 +417,7 @@ export function wizardReducer(
 
       return {
         ...state,
-        config: seedTypeValues(state, { ...state.config, mapping })
+        config: seedValues(state, { ...state.config, mapping })
       }
     }
 
@@ -230,20 +434,63 @@ export function wizardReducer(
     case "set_type_value": {
       if (!state.config) return state
 
-      const typeValues = { ...state.config.typeValues }
-      if (action.target) typeValues[action.key] = action.target
-      else delete typeValues[action.key]
-
+      const typeValues = withValue(
+        state.config.typeValues,
+        action.key,
+        action.target
+      )
       return { ...state, config: { ...state.config, typeValues } }
     }
+
+    case "set_entry_type_mode":
+      return state.config
+        ? {
+            ...state,
+            config: seedValues(state, {
+              ...state.config,
+              entryTypeMode: action.mode
+            })
+          }
+        : state
+
+    case "set_entry_type_value": {
+      if (!state.config) return state
+
+      const entryTypeValues = withValue(
+        state.config.entryTypeValues,
+        action.key,
+        action.target
+      )
+      return { ...state, config: { ...state.config, entryTypeValues } }
+    }
+
+    case "set_frequency_value": {
+      if (!state.config) return state
+
+      const frequencyValues = withValue(
+        state.config.frequencyValues,
+        action.key,
+        action.target
+      )
+      return { ...state, config: { ...state.config, frequencyValues } }
+    }
+
+    case "set_fixed_link":
+      return state.config
+        ? { ...state, config: { ...state.config, fixedLinkId: action.id } }
+        : state
 
     case "start_categories": {
       if (!state.config) return state
 
       // Se conservan las elecciones de pares que ya se habían mapeado
-      const { rows } = extractRows(sourceTables(state), state.config)
+      const extracted = extractForTarget(
+        state.target,
+        sourceTables(state),
+        state.config
+      )
       const suggested = suggestCategoryTargets(
-        categoryPairs(rows),
+        extractedPairs(extracted),
         action.categories
       )
 
@@ -253,6 +500,33 @@ export function wizardReducer(
         categoryTargets: { ...suggested, ...state.categoryTargets }
       }
     }
+
+    case "start_links": {
+      if (!state.config) return state
+
+      // Se conservan las elecciones de valores que ya se habían mapeado
+      const extracted = extractForTarget(
+        state.target,
+        sourceTables(state),
+        state.config
+      )
+      const suggested = suggestLinkTargets(
+        extractedLinkValues(extracted),
+        action.options
+      )
+
+      return {
+        ...state,
+        step: "categories",
+        linkTargets: { ...suggested, ...state.linkTargets }
+      }
+    }
+
+    case "set_link_target":
+      return {
+        ...state,
+        linkTargets: { ...state.linkTargets, [action.key]: action.target }
+      }
 
     case "set_category_target":
       return {
@@ -264,20 +538,20 @@ export function wizardReducer(
       }
 
     case "preview_ready":
-      return {
-        ...state,
-        step: "preview",
-        preview: { rows: action.rows, empty: action.empty }
-      }
+      return { ...state, step: "preview", preview: action.preview }
 
     case "toggle_row": {
       const row = state.preview?.rows[action.index]
       // Las filas con error u omitidas no se pueden marcar
       if (!state.preview || !row?.value) return state
 
-      const rows = [...state.preview.rows]
+      const rows: PreviewRow<unknown>[] = [...state.preview.rows]
       rows[action.index] = { ...row, selected: !row.selected }
-      return { ...state, preview: { ...state.preview, rows } }
+      // Las filas siguen siendo del mismo destino
+      return {
+        ...state,
+        preview: { ...state.preview, rows } as PreviewState
+      }
     }
 
     case "imported":
@@ -286,8 +560,9 @@ export function wizardReducer(
     case "go_to":
       return { ...state, step: action.step }
 
+    // "Importar otro archivo" conserva el destino
     case "reset":
-      return INITIAL_STATE
+      return { ...INITIAL_STATE, target: state.target }
   }
 }
 

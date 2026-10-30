@@ -31,6 +31,7 @@ import {
   getDebts
 } from "@/features/debts/queries"
 import { parseDebtsTab } from "@/features/debts/tabs"
+import { ImportButton } from "@/features/imports/components/import-button"
 import {
   type PersonalWorkspace,
   getPersonalWorkspace
@@ -176,7 +177,10 @@ function ReceivablesTab({
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold">Cuentas por cobrar</h2>
-          {createButton}
+          <div className="flex flex-wrap gap-2">
+            <ImportButton target="debt_entries" />
+            {createButton}
+          </div>
         </div>
         <ul className="grid gap-4 lg:grid-cols-2">
           {active.map((receivable) => (
@@ -274,7 +278,10 @@ function PayablesTab({
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-lg font-semibold">Tus deudas</h2>
-              {createButton}
+              <div className="flex flex-wrap gap-2">
+                <ImportButton target="debt_entries" />
+                {createButton}
+              </div>
             </div>
             <ul className="grid gap-4 lg:grid-cols-2">
               {active.map((debt) => (

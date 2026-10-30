@@ -33,6 +33,8 @@ function newName(pair: CategoryPair) {
 }
 
 interface CategoriesStepProps {
+  /** Gastos fijos: solo categorías de gasto, sin la etiqueta de tipo */
+  expenseOnly?: boolean
   pairs: CategoryPair[]
   targets: Record<string, CategoryTarget>
   categories: CategoryOption[]
@@ -47,6 +49,7 @@ interface CategoriesStepProps {
 // Paso 4: cada par (tipo, valor de origen) con su número de filas y su
 // destino: una categoría existente, una nueva o "No importar"
 export function CategoriesStep({
+  expenseOnly = false,
   pairs,
   targets,
   categories,
@@ -76,8 +79,9 @@ export function CategoriesStep({
       <div className="flex flex-col gap-1">
         <h2 className="text-sm font-medium">Categorías</h2>
         <p className="text-sm text-muted-foreground">
-          Elige a qué categoría va cada valor de tu archivo. Marca «No importar»
-          para omitir filas como traspasos entre tus cuentas o saldos iniciales.
+          {expenseOnly
+            ? "Elige a qué categoría de gasto va cada valor de tu archivo. Marca «No importar» para omitir sus gastos fijos."
+            : "Elige a qué categoría va cada valor de tu archivo. Marca «No importar» para omitir filas como traspasos entre tus cuentas o saldos iniciales."}
         </p>
       </div>
 
@@ -90,7 +94,9 @@ export function CategoriesStep({
         <ul className="flex flex-col divide-y rounded-lg border">
           {pairs.map((pair) => {
             const options = categories.filter(
-              (category) => category.type === pair.type
+              (category) =>
+                category.type === pair.type &&
+                (!expenseOnly || category.type === "expense")
             )
 
             return (
@@ -99,11 +105,13 @@ export function CategoriesStep({
                 className="flex flex-wrap items-center justify-between gap-3 px-3 py-2"
               >
                 <span className="flex flex-wrap items-center gap-2 text-sm">
-                  <Badge
-                    variant={pair.type === "income" ? "secondary" : "outline"}
-                  >
-                    {TYPE_LABELS[pair.type]}
-                  </Badge>
+                  {!expenseOnly && (
+                    <Badge
+                      variant={pair.type === "income" ? "secondary" : "outline"}
+                    >
+                      {TYPE_LABELS[pair.type]}
+                    </Badge>
+                  )}
                   {pair.label}
                   <span className="text-muted-foreground">
                     · {pair.count === 1 ? "1 fila" : `${pair.count} filas`}

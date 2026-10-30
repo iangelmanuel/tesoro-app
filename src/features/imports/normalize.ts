@@ -27,6 +27,7 @@ import type {
   ImportConfig,
   ImportField,
   ImportStats,
+  LinkTarget,
   PreviewRow,
   TransactionType,
   TypeValueTarget
@@ -150,7 +151,7 @@ export function parseAmountCell(cell: unknown) {
   return sign * roundAmount(Number(normalized))
 }
 
-function isValidAmount(value: number) {
+export function isValidAmount(value: number) {
   return !Number.isNaN(value) && value > 0 && value <= MAX_AMOUNT
 }
 
@@ -191,7 +192,7 @@ export interface ExtractResult {
   empty: number
 }
 
-function pairKey(type: TransactionType, label: string) {
+export function pairKey(type: TransactionType, label: string) {
   return `${type}:${normalizeText(label)}`
 }
 
@@ -210,6 +211,45 @@ export function distinctValues(tables: SourceTable[], column: number) {
   }
 
   return [...counts.entries()].map(([key, entry]) => ({ key, ...entry }))
+}
+
+export interface DataRow {
+  sheet: string
+  sourceRow: number
+  /** Celda del campo, o null si no está mapeado */
+  at: (field: ImportField) => unknown
+}
+
+/**
+ * Recorre las filas de las tablas. Las que tienen vacíos todos los
+ * `requiredAny` no se entregan y se cuentan en `empty`.
+ */
+export function readDataRows(
+  tables: SourceTable[],
+  mapping: ImportConfig["mapping"],
+  requiredAny: ImportField[]
+) {
+  const rows: DataRow[] = []
+  let empty = 0
+
+  for (const { table, cells } of tables) {
+    for (const row of tableBodyRows(cells, table)) {
+      const values = tableRowCells(cells, table, row)
+      const at = (field: ImportField) => {
+        const index = mapping[field]
+        return index === undefined ? null : (values[index] ?? null)
+      }
+
+      if (requiredAny.every((field) => isEmptyCell(at(field)))) {
+        empty++
+        continue
+      }
+
+      rows.push({ sheet: table.sheet, sourceRow: row + 1, at })
+    }
+  }
+
+  return { rows, empty }
 }
 
 /** Número de filas con datos (con fecha o monto) en las tablas elegidas */
@@ -355,7 +395,11 @@ export function extractRows(
 }
 
 /** Pares (tipo, valor de categoría de origen) de las filas válidas */
-export function categoryPairs(rows: ExtractedRow[]): CategoryPair[] {
+export function categoryPairs(
+  rows: {
+    value?: { type: TransactionType; pairKey: string; categoryLabel: string }
+  }[]
+): CategoryPair[] {
   const pairs = new Map<string, CategoryPair>()
 
   for (const { value } of rows) {
@@ -446,7 +490,7 @@ export function buildPreviewRows(
 
 /** Categorías nuevas que usan las filas marcadas, sin repetir */
 export function newCategories(
-  rows: PreviewRow[],
+  rows: PreviewRow<{ categoryKey: string }>[],
   targets: Record<string, CategoryTarget>,
   pairs: CategoryPair[]
 ) {
@@ -470,7 +514,10 @@ export function newCategories(
 }
 
 /** Stats a partir de las filas de la vista previa y las vacías */
-export function computeStats(rows: PreviewRow[], empty: number): ImportStats {
+export function computeStats(
+  rows: PreviewRow<unknown>[],
+  empty: number
+): ImportStats {
   const stats: ImportStats = {
     read: rows.length,
     imported: 0,
@@ -489,8 +536,10 @@ export function computeStats(rows: PreviewRow[], empty: number): ImportStats {
   return stats
 }
 
-/** Filas marcadas en el formato de import_transactions */
-export function toImportRows(rows: PreviewRow[]) {
+/** Filas marcadas con `category_id` o `new_category_key`, para las RPC */
+export function toImportRows<V extends { categoryKey: string }>(
+  rows: PreviewRow<V>[]
+) {
   return rows.flatMap((row) => {
     if (!row.selected || !row.value) return []
     const { categoryKey, ...value } = row.value
@@ -504,4 +553,90 @@ export function toImportRows(rows: PreviewRow[]) {
       }
     ]
   })
+}
+
+/** Categoría destino de un par ya mapeado, como clave para las RPC */
+export function categoryKeyFor(
+  target: CategoryTarget,
+  type: TransactionType
+): string | null {
+  if (target.kind === "skip") return null
+  return target.kind === "existing"
+    ? existingCategoryKey(target.categoryId)
+    : newCategoryKey(type, target.name)
+}
+
+/** Número entero de una celda (número o texto), o NaN */
+export function parseIntegerCell(cell: unknown) {
+  const text = typeof cell === "number" ? String(cell) : cellText(cell)
+  return /^\d+$/.test(text) ? Number(text) : Number.NaN
+}
+
+/** Nota opcional recortada a `max` caracteres */
+export function noteText(cell: unknown, max: number) {
+  return cellText(cell).slice(0, max).trim() || null
+}
+
+/** Destino sugerido para un valor según una tabla de sinónimos */
+export function suggestBySynonyms<T extends string>(
+  value: string,
+  synonyms: Partial<Record<T, readonly string[]>>
+): T | undefined {
+  const normalized = normalizeText(value)
+  return (Object.keys(synonyms) as T[]).find((target) =>
+    synonyms[target]?.includes(normalized)
+  )
+}
+
+/** Valor de la columna de deuda o meta cuando la celda está vacía */
+export const EMPTY_LINK_LABEL = "(vacío)"
+
+/** Valor de la columna de deuda o meta de una fila, con su clave */
+export function linkValue(cell: unknown) {
+  const label = cellText(cell) || EMPTY_LINK_LABEL
+  return { key: normalizeText(label), label }
+}
+
+/** Valores distintos de la columna de deuda o meta, con su número de filas */
+export function linkValues(
+  rows: { value?: { linkKey: string | null; linkLabel: string } }[]
+) {
+  const values = new Map<
+    string,
+    { key: string; label: string; count: number }
+  >()
+
+  for (const { value } of rows) {
+    if (!value?.linkKey) continue
+    const entry = values.get(value.linkKey) ?? {
+      key: value.linkKey,
+      label: value.linkLabel,
+      count: 0
+    }
+    entry.count++
+    values.set(value.linkKey, entry)
+  }
+
+  return [...values.values()]
+}
+
+/**
+ * Deuda o meta sugerida para cada valor: la que tiene el mismo nombre
+ * normalizado. Si no hay, "No importar".
+ */
+export function suggestLinkTargets(
+  values: { key: string; label: string }[],
+  options: { id: string; name: string }[]
+): Record<string, LinkTarget> {
+  return Object.fromEntries(
+    values.map(({ key, label }) => {
+      const match = options.find(
+        (option) => normalizeText(option.name) === normalizeText(label)
+      )
+      const target: LinkTarget = match
+        ? { kind: "existing", id: match.id }
+        : { kind: "skip" }
+      return [key, target]
+    })
+  )
 }

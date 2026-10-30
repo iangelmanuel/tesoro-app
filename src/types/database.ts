@@ -109,6 +109,7 @@ export type Database = {
           created_at: string
           debt_id: string
           id: string
+          import_id: string | null
           kind: Database["public"]["Enums"]["debt_entry_kind"]
           note: string | null
           occurred_on: string
@@ -121,6 +122,7 @@ export type Database = {
           created_at?: string
           debt_id: string
           id?: string
+          import_id?: string | null
           kind: Database["public"]["Enums"]["debt_entry_kind"]
           note?: string | null
           occurred_on: string
@@ -133,6 +135,7 @@ export type Database = {
           created_at?: string
           debt_id?: string
           id?: string
+          import_id?: string | null
           kind?: Database["public"]["Enums"]["debt_entry_kind"]
           note?: string | null
           occurred_on?: string
@@ -147,6 +150,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "debts"
             referencedColumns: ["id", "workspace_id"]
+          },
+          {
+            foreignKeyName: "debt_entries_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "imports"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "debt_entries_transaction_id_fkey"
@@ -275,6 +285,7 @@ export type Database = {
           created_at: string
           goal_id: string
           id: string
+          import_id: string | null
           note: string | null
           occurred_on: string
           updated_at: string
@@ -285,6 +296,7 @@ export type Database = {
           created_at?: string
           goal_id: string
           id?: string
+          import_id?: string | null
           note?: string | null
           occurred_on: string
           updated_at?: string
@@ -295,6 +307,7 @@ export type Database = {
           created_at?: string
           goal_id?: string
           id?: string
+          import_id?: string | null
           note?: string | null
           occurred_on?: string
           updated_at?: string
@@ -307,6 +320,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "savings_goals"
             referencedColumns: ["id", "workspace_id"]
+          },
+          {
+            foreignKeyName: "goal_contributions_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "imports"
+            referencedColumns: ["id"]
           }
         ]
       }
@@ -318,6 +338,7 @@ export type Database = {
           sheets: string[]
           stats: Json
           status: Database["public"]["Enums"]["import_status"]
+          target: Database["public"]["Enums"]["import_target"]
           undone_at: string | null
           workspace_id: string
         }
@@ -328,6 +349,7 @@ export type Database = {
           sheets?: string[]
           stats: Json
           status?: Database["public"]["Enums"]["import_status"]
+          target?: Database["public"]["Enums"]["import_target"]
           undone_at?: string | null
           workspace_id: string
         }
@@ -338,6 +360,7 @@ export type Database = {
           sheets?: string[]
           stats?: Json
           status?: Database["public"]["Enums"]["import_status"]
+          target?: Database["public"]["Enums"]["import_target"]
           undone_at?: string | null
           workspace_id?: string
         }
@@ -387,6 +410,7 @@ export type Database = {
           ends_on: string | null
           frequency: Database["public"]["Enums"]["recurring_frequency"]
           id: string
+          import_id: string | null
           is_active: boolean
           month_of_year: number | null
           name: string
@@ -402,6 +426,7 @@ export type Database = {
           ends_on?: string | null
           frequency: Database["public"]["Enums"]["recurring_frequency"]
           id?: string
+          import_id?: string | null
           is_active?: boolean
           month_of_year?: number | null
           name: string
@@ -417,6 +442,7 @@ export type Database = {
           ends_on?: string | null
           frequency?: Database["public"]["Enums"]["recurring_frequency"]
           id?: string
+          import_id?: string | null
           is_active?: boolean
           month_of_year?: number | null
           name?: string
@@ -430,6 +456,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_expenses_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "imports"
             referencedColumns: ["id"]
           },
           {
@@ -639,6 +672,17 @@ export type Database = {
           tx_count: number
         }[]
       }
+      create_import: {
+        Args: {
+          p_filename: string
+          p_rows: Json
+          p_sheets: string[]
+          p_stats: Json
+          p_target: Database["public"]["Enums"]["import_target"]
+          p_workspace_id: string
+        }
+        Returns: string
+      }
       debt_overview: {
         Args: { p_workspace_id: string }
         Returns: {
@@ -687,6 +731,38 @@ export type Database = {
           target_amount: number
           target_date: string
         }[]
+      }
+      import_debt_entries: {
+        Args: {
+          p_create_transactions: boolean
+          p_filename: string
+          p_rows: Json
+          p_sheets: string[]
+          p_stats: Json
+          p_workspace_id: string
+        }
+        Returns: string
+      }
+      import_goal_contributions: {
+        Args: {
+          p_filename: string
+          p_rows: Json
+          p_sheets: string[]
+          p_stats: Json
+          p_workspace_id: string
+        }
+        Returns: string
+      }
+      import_recurring_expenses: {
+        Args: {
+          p_filename: string
+          p_new_categories: Json
+          p_rows: Json
+          p_sheets: string[]
+          p_stats: Json
+          p_workspace_id: string
+        }
+        Returns: string
       }
       import_transactions: {
         Args: {
@@ -790,6 +866,11 @@ export type Database = {
       debt_status: "active" | "paid" | "archived"
       goal_status: "active" | "completed" | "archived"
       import_status: "completed" | "undone"
+      import_target:
+        | "transactions"
+        | "recurring_expenses"
+        | "debt_entries"
+        | "goal_contributions"
       rate_type: "ea" | "mv"
       recurring_frequency: "monthly" | "yearly"
       transaction_type: "income" | "expense"
@@ -923,6 +1004,12 @@ export const Constants = {
       debt_status: ["active", "paid", "archived"],
       goal_status: ["active", "completed", "archived"],
       import_status: ["completed", "undone"],
+      import_target: [
+        "transactions",
+        "recurring_expenses",
+        "debt_entries",
+        "goal_contributions"
+      ],
       rate_type: ["ea", "mv"],
       recurring_frequency: ["monthly", "yearly"],
       transaction_type: ["income", "expense"],

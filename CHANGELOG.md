@@ -72,6 +72,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - shadcn/ui `checkbox` and `radio-group` components, used by the import wizard.
 - `.gitignore` excludes `*.xlsx` and `*.xls` so sample import files with real financial data are never committed.
 - "Importar" section in `docs/producto.md`, and the SPEC 08 answers plus the SPEC 08b and "Cuentas y métodos de pago" entries in `ROADMAP.md`.
+- Migration `import_recurring_debts_and_goals`: `import_target` enum and `imports.target`, `import_id` on `recurring_expenses`, `debt_entries` and `goal_contributions`, and the `import_recurring_expenses`, `import_debt_entries` and `import_goal_contributions` RPCs (`security definer`, owner check through an internal `create_import`, `search_path = ''`), executable only by `authenticated`.
+- Import destinations in the wizard: transactions, recurring expenses, debt payments and adjustments, and goal contributions and withdrawals, one per import, chosen in step 1 or with `?target=`. Debts and goals without active items are disabled with a link to create one.
+- Recurring expense imports: name, amount, category (expense only, with "Crear" and "No importar"), frequency values (monthly, yearly or skip), day of month or start date (one is enough), month as a number or Spanish name, and optional end date.
+- Debt and goal imports with 3 type modes (value column, amount sign, all payments / all contributions), a fixed debt or goal for the whole file or a column mapped to active ones in a new "Deudas" / "Metas" step, future-date validation, resulting balances in the preview (import blocked if one would go negative) and an optional "Registrar también como gasto/ingreso" checkbox for loan payments and receivable collections.
+- Per-destination duplicate detection: recurring expenses by normalized name, debt entries by debt, kind, signed amount and date, and goal contributions by goal, signed amount and date.
+- "Importar" buttons on the recurring expenses tab, the debts page and the goals page, opening the wizard with their destination.
 
 ### Changed
 
@@ -82,6 +88,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The debts placeholder page is replaced by the debts page, and `revalidatePersonalPages()` documents that it also refreshes `/dashboard/personal/debts`.
 - The recommendations placeholder page is replaced by the score and recommendations page.
 - `serverActions.bodySizeLimit` is raised to `2mb` so a 2,000-row import fits in one Server Action request.
+- `undo_import` deletes the rows of the import's destination. For debts and goals it fails without deleting anything, naming the debt or goal, when it is no longer active or its balance would go negative; undoing debt entries also deletes the transactions they created.
+- The import page is titled "Importar", and the import history shows each import's destination and counts rows in its own unit ("3 gastos fijos").
+- `getDuplicateCandidates` takes the import destination.
 
 ### Fixed
 

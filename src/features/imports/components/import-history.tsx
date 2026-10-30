@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button"
 import { TIME_ZONE } from "@/libs/dates"
 import { undoImport } from "../actions"
 import type { ImportRecord } from "../queries"
+import { IMPORT_TARGETS, countLabel } from "../targets"
+import type { ImportTarget } from "../types"
 
 const DATE_TIME = new Intl.DateTimeFormat("es-CO", {
   day: "numeric",
@@ -32,6 +34,22 @@ const DATE_TIME = new Intl.DateTimeFormat("es-CO", {
 
 function plural(count: number, one: string, many: string) {
   return count === 1 ? `1 ${one}` : `${count.toLocaleString("es-CO")} ${many}`
+}
+
+/** Qué más pasa al deshacer, según el destino */
+function undoNotes(target: ImportTarget, linkedTransactions: number) {
+  switch (target) {
+    case "transactions":
+      return "Las categorías creadas se conservan. Si alguno quedó enlazado a un pago de deuda, el pago se queda sin movimiento."
+    case "recurring_expenses":
+      return "Las categorías creadas se conservan. Los movimientos que pagaban sus ocurrencias se quedan, sin enlace al gasto fijo."
+    case "debt_entries":
+      return linkedTransactions > 0
+        ? `También se borrarán ${plural(linkedTransactions, "movimiento creado", "movimientos creados")} con los pagos.`
+        : "El saldo de cada deuda vuelve a como estaba sin estos pagos y ajustes."
+    case "goal_contributions":
+      return "Lo ahorrado en cada meta vuelve a como estaba sin estos aportes y retiros."
+  }
 }
 
 // Historial de importaciones bajo el asistente, con "Deshacer" siempre
@@ -68,6 +86,7 @@ function ImportHistoryItem({ item }: { item: ImportRecord }) {
       <div className="flex min-w-0 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="truncate font-medium">{item.filename}</p>
+          <Badge variant="outline">{IMPORT_TARGETS[item.target].label}</Badge>
           {undone ? (
             <Badge variant="outline">Deshecho</Badge>
           ) : (
@@ -92,7 +111,8 @@ function ImportHistoryItem({ item }: { item: ImportRecord }) {
 
 function UndoImportButton({ item }: { item: ImportRecord }) {
   const [pending, startTransition] = useTransition()
-  const count = item.transactions_count
+  const count = item.rows_count
+  const rows = countLabel(item.target, count)
 
   function handleUndo() {
     startTransition(async () => {
@@ -101,7 +121,7 @@ function UndoImportButton({ item }: { item: ImportRecord }) {
         toast.error(result.error)
       } else {
         toast.success(
-          `Importación deshecha: ${plural(result.deleted, "movimiento borrado", "movimientos borrados")}`
+          `Importación deshecha: ${countLabel(item.target, result.deleted)} ${result.deleted === 1 ? "borrado" : "borrados"}`
         )
       }
     })
@@ -123,10 +143,9 @@ function UndoImportButton({ item }: { item: ImportRecord }) {
         <AlertDialogHeader>
           <AlertDialogTitle>¿Deshacer esta importación?</AlertDialogTitle>
           <AlertDialogDescription>
-            Se borrarán {plural(count, "movimiento", "movimientos")} de &ldquo;
-            {item.filename}&rdquo;, también los que hayas editado después. Las
-            categorías creadas se conservan. Si alguno quedó enlazado a un pago
-            de deuda, el pago se queda sin movimiento.
+            Se borrarán {rows} de &ldquo;{item.filename}&rdquo;, también los que
+            hayas editado después.{" "}
+            {undoNotes(item.target, item.linked_transactions)}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -135,7 +154,7 @@ function UndoImportButton({ item }: { item: ImportRecord }) {
             variant="destructive"
             onClick={handleUndo}
           >
-            Borrar {plural(count, "movimiento", "movimientos")}
+            Borrar {rows}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

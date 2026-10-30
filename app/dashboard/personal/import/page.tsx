@@ -8,18 +8,25 @@ import { getCategories } from "@/features/categories/queries"
 import { ImportHistory } from "@/features/imports/components/import-history"
 import { ImportWizard } from "@/features/imports/components/import-wizard"
 import { IMPORT_PATH } from "@/features/imports/constants"
-import { getImports } from "@/features/imports/queries"
+import {
+  getActiveDebtOptions,
+  getActiveGoalOptions,
+  getImports
+} from "@/features/imports/queries"
+import { parseImportTarget } from "@/features/imports/targets"
 import { TRANSACTIONS_PATH } from "@/features/transactions/filters"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { buildMetadata } from "@/libs/seo"
 
 export const metadata = buildMetadata({
-  title: "Importar movimientos",
+  title: "Importar",
   path: IMPORT_PATH,
   noindex: true
 })
 
-export default function ImportPage() {
+type ImportPageProps = PageProps<"/dashboard/personal/import">
+
+export default function ImportPage({ searchParams }: ImportPageProps) {
   return (
     <section className="flex flex-1 flex-col gap-6">
       <header className="flex flex-col gap-3">
@@ -35,34 +42,41 @@ export default function ImportPage() {
           </Link>
         </Button>
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Importar movimientos
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Importar</h1>
           <p className="text-sm text-muted-foreground">
-            Trae tus ingresos y gastos desde un Excel o un CSV. Revisas todo
-            antes de guardar y puedes deshacer la importación.
+            Trae tus movimientos, gastos fijos, pagos de deudas o aportes a
+            metas desde un Excel o un CSV. Revisas todo antes de guardar y
+            puedes deshacer la importación.
           </p>
         </div>
       </header>
-      {/* La sesión es dinámica: va dentro de Suspense */}
+      {/* searchParams y la sesión son dinámicos: van dentro de Suspense */}
       <Suspense fallback={<ImportSkeleton />}>
-        <ImportContent />
+        <ImportContent searchParams={searchParams} />
       </Suspense>
     </section>
   )
 }
 
-async function ImportContent() {
+async function ImportContent({
+  searchParams
+}: Pick<ImportPageProps, "searchParams">) {
+  const query = await searchParams
   const workspace = await getPersonalWorkspace()
-  const [categories, imports] = await Promise.all([
+  const [categories, imports, debts, goals] = await Promise.all([
     getCategories(workspace.id),
-    getImports(workspace.id)
+    getImports(workspace.id),
+    getActiveDebtOptions(workspace.id),
+    getActiveGoalOptions(workspace.id)
   ])
 
   // Las categorías archivadas no aparecen como destino
   return (
     <>
       <ImportWizard
+        initialTarget={parseImportTarget(query.target)}
+        debts={debts}
+        goals={goals}
         categories={categories
           .filter((category) => category.archived_at === null)
           .map(({ id, type, name }) => ({ id, type, name }))}

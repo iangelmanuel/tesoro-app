@@ -1,10 +1,11 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { type ReactNode, useMemo, useState } from "react"
 import { LoaderCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 import {
   Table,
   TableBody,
@@ -15,8 +16,16 @@ import {
 } from "@/components/ui/table"
 import { formatCurrency, formatDate } from "@/libs/format"
 import { cn } from "@/libs/utils"
-import { PREVIEW_PAGE_SIZE } from "../constants"
-import type { PreviewRow, RowStatus } from "../types"
+import type { ResultingBalance } from "../balances"
+import { MONTH_NAMES, PREVIEW_PAGE_SIZE } from "../constants"
+import type {
+  DebtEntryValue,
+  GoalContributionValue,
+  PreviewRow,
+  RecurringValue,
+  RowStatus,
+  TransactionValue
+} from "../types"
 
 type Filter = "all" | RowStatus
 
@@ -42,13 +51,157 @@ const STATUS_BADGES: Record<
 
 const TYPE_LABELS = { income: "Ingreso", expense: "Gasto" } as const
 
-interface PreviewStepProps {
-  rows: PreviewRow[]
+/** Columna de datos normalizados de la vista previa */
+export interface PreviewColumn<V> {
+  header: string
+  className?: string
+  cell: (value: V) => ReactNode
+}
+
+const AMOUNT_CLASS = "text-right whitespace-nowrap tabular-nums"
+
+export function transactionColumns(
+  currency: string,
+  categoryNames: Record<string, string>
+): PreviewColumn<TransactionValue>[] {
+  return [
+    {
+      header: "Fecha",
+      className: "whitespace-nowrap",
+      cell: (value) => formatDate(value.occurred_on)
+    },
+    { header: "Tipo", cell: (value) => TYPE_LABELS[value.type] },
+    {
+      header: "Monto",
+      className: AMOUNT_CLASS,
+      cell: (value) => formatCurrency(value.amount, currency)
+    },
+    {
+      header: "Categoría",
+      cell: (value) => categoryNames[value.categoryKey] ?? "—"
+    },
+    {
+      header: "Descripción",
+      className: "max-w-64 truncate",
+      cell: (value) => value.description
+    }
+  ]
+}
+
+/** "Mensual, día 5" o "Anual, 15 de marzo" */
+function frequencyText(value: RecurringValue) {
+  if (value.frequency === "monthly") return `Mensual, día ${value.day_of_month}`
+  const month = MONTH_NAMES[(value.month_of_year ?? 1) - 1]
+  return `Anual, ${value.day_of_month} de ${month}`
+}
+
+export function recurringColumns(
+  currency: string,
+  categoryNames: Record<string, string>
+): PreviewColumn<RecurringValue>[] {
+  return [
+    {
+      header: "Nombre",
+      className: "max-w-64 truncate",
+      cell: (value) => value.name
+    },
+    {
+      header: "Monto",
+      className: AMOUNT_CLASS,
+      cell: (value) => formatCurrency(value.amount, currency)
+    },
+    {
+      header: "Categoría",
+      cell: (value) => categoryNames[value.categoryKey] ?? "—"
+    },
+    {
+      header: "Frecuencia",
+      className: "whitespace-nowrap",
+      cell: frequencyText
+    },
+    {
+      header: "Inicio",
+      className: "whitespace-nowrap",
+      cell: (value) => formatDate(value.starts_on)
+    },
+    {
+      header: "Fin",
+      className: "whitespace-nowrap",
+      cell: (value) => (value.ends_on ? formatDate(value.ends_on) : "—")
+    }
+  ]
+}
+
+/** Pago, Cargo (ajuste > 0) o Ajuste a la baja (ajuste < 0) */
+function debtEntryLabel(value: DebtEntryValue) {
+  if (value.kind === "payment") return "Pago"
+  return value.amount > 0 ? "Cargo" : "Ajuste a la baja"
+}
+
+export function debtEntryColumns(
+  currency: string,
+  debtNames: Record<string, string>
+): PreviewColumn<DebtEntryValue>[] {
+  return [
+    {
+      header: "Fecha",
+      className: "whitespace-nowrap",
+      cell: (value) => formatDate(value.occurred_on)
+    },
+    { header: "Deuda", cell: (value) => debtNames[value.debtId] ?? "—" },
+    { header: "Tipo", cell: debtEntryLabel },
+    {
+      header: "Monto",
+      className: AMOUNT_CLASS,
+      cell: (value) => formatCurrency(Math.abs(value.amount), currency)
+    },
+    {
+      header: "Nota",
+      className: "max-w-64 truncate",
+      cell: (value) => value.note ?? "—"
+    }
+  ]
+}
+
+export function goalContributionColumns(
+  currency: string,
+  goalNames: Record<string, string>
+): PreviewColumn<GoalContributionValue>[] {
+  return [
+    {
+      header: "Fecha",
+      className: "whitespace-nowrap",
+      cell: (value) => formatDate(value.occurred_on)
+    },
+    { header: "Meta", cell: (value) => goalNames[value.goalId] ?? "—" },
+    {
+      header: "Tipo",
+      cell: (value) => (value.amount < 0 ? "Retiro" : "Aporte")
+    },
+    {
+      header: "Monto",
+      className: AMOUNT_CLASS,
+      cell: (value) => formatCurrency(Math.abs(value.amount), currency)
+    },
+    {
+      header: "Nota",
+      className: "max-w-64 truncate",
+      cell: (value) => value.note ?? "—"
+    }
+  ]
+}
+
+interface PreviewStepProps<V> {
+  rows: PreviewRow<V>[]
+  columns: PreviewColumn<V>[]
   /** Filas vacías: no se muestran y suman en omitidas */
   empty: number
-  currency: string
-  /** categoryKey → nombre a mostrar */
-  categoryNames: Record<string, string>
+  /** "1 movimiento", "3 gastos fijos" */
+  countLabel: (count: number) => string
+  /** Bloque bajo la tabla: saldos y casilla de movimiento */
+  extra?: ReactNode
+  /** Motivo que impide importar, como un saldo negativo */
+  blocked?: string | null
   importing: boolean
   error: string | null
   onToggle: (index: number) => void
@@ -57,18 +210,20 @@ interface PreviewStepProps {
 }
 
 // Paso 5: contadores por estado, filtro, tabla paginada con casilla y el
-// botón para confirmar
-export function PreviewStep({
+// botón para confirmar. Las columnas de datos dependen del destino.
+export function PreviewStep<V>({
   rows,
+  columns,
   empty,
-  currency,
-  categoryNames,
+  countLabel,
+  extra,
+  blocked,
   importing,
   error,
   onToggle,
   onBack,
   onConfirm
-}: PreviewStepProps) {
+}: PreviewStepProps<V>) {
   const [filter, setFilter] = useState<Filter>("all")
   const [page, setPage] = useState(0)
 
@@ -97,6 +252,8 @@ export function PreviewStep({
     currentPage * PREVIEW_PAGE_SIZE,
     (currentPage + 1) * PREVIEW_PAGE_SIZE
   )
+  // Casilla, estado, hoja · fila, columnas de datos y motivos
+  const columnCount = columns.length + 4
 
   function changeFilter(next: Filter) {
     setFilter(next)
@@ -146,11 +303,16 @@ export function PreviewStep({
               </TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>Hoja · fila</TableHead>
-              <TableHead>Fecha</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead className="text-right">Monto</TableHead>
-              <TableHead>Categoría</TableHead>
-              <TableHead>Descripción</TableHead>
+              {columns.map((column) => (
+                <TableHead
+                  key={column.header}
+                  className={
+                    column.className === AMOUNT_CLASS ? "text-right" : undefined
+                  }
+                >
+                  {column.header}
+                </TableHead>
+              ))}
               <TableHead>Motivos</TableHead>
             </TableRow>
           </TableHeader>
@@ -158,7 +320,7 @@ export function PreviewStep({
             {pageRows.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={9}
+                  colSpan={columnCount}
                   className="text-center text-muted-foreground"
                 >
                   No hay filas con este estado
@@ -186,25 +348,14 @@ export function PreviewStep({
                   <TableCell className="whitespace-nowrap">
                     {row.sheet} · {row.sourceRow}
                   </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    {row.value ? formatDate(row.value.occurred_on) : "—"}
-                  </TableCell>
-                  <TableCell>
-                    {row.value ? TYPE_LABELS[row.value.type] : "—"}
-                  </TableCell>
-                  <TableCell className="text-right whitespace-nowrap tabular-nums">
-                    {row.value
-                      ? formatCurrency(row.value.amount, currency)
-                      : "—"}
-                  </TableCell>
-                  <TableCell>
-                    {row.value
-                      ? (categoryNames[row.value.categoryKey] ?? "—")
-                      : "—"}
-                  </TableCell>
-                  <TableCell className="max-w-64 truncate">
-                    {row.value?.description ?? "—"}
-                  </TableCell>
+                  {columns.map((column) => (
+                    <TableCell
+                      key={column.header}
+                      className={column.className}
+                    >
+                      {row.value === undefined ? "—" : column.cell(row.value)}
+                    </TableCell>
+                  ))}
                   <TableCell className="text-sm">
                     {row.reasons.join(" · ")}
                   </TableCell>
@@ -239,12 +390,14 @@ export function PreviewStep({
         </div>
       )}
 
-      {error && (
+      {extra}
+
+      {(blocked ?? error) && (
         <p
           role="alert"
           className="text-sm text-destructive"
         >
-          {error}
+          {blocked ?? error}
         </p>
       )}
 
@@ -257,7 +410,7 @@ export function PreviewStep({
           Atrás
         </Button>
         <Button
-          disabled={selectedCount === 0 || importing}
+          disabled={selectedCount === 0 || importing || Boolean(blocked)}
           onClick={onConfirm}
         >
           {importing && (
@@ -266,11 +419,84 @@ export function PreviewStep({
               className="animate-spin"
             />
           )}
-          Importar{" "}
-          {selectedCount === 1
-            ? "1 movimiento"
-            : `${selectedCount.toLocaleString("es-CO")} movimientos`}
+          Importar {countLabel(selectedCount)}
         </Button>
+      </div>
+    </div>
+  )
+}
+
+interface BalancesProps {
+  title: string
+  balances: ResultingBalance[]
+  currency: string
+}
+
+// Saldo actual → saldo resultante de cada deuda o meta con filas marcadas
+export function Balances({ title, balances, currency }: BalancesProps) {
+  if (balances.length === 0) return null
+
+  return (
+    <section className="flex flex-col gap-2">
+      <h2 className="text-sm font-medium">{title}</h2>
+      <ul className="flex flex-col divide-y rounded-lg border">
+        {balances.map((balance) => (
+          <li
+            key={balance.id}
+            className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm"
+          >
+            <span>{balance.name}</span>
+            <span className="tabular-nums">
+              <span className="text-muted-foreground">
+                {formatCurrency(balance.current, currency)}
+              </span>{" "}
+              →{" "}
+              <span
+                className={cn(
+                  "font-medium",
+                  balance.result < 0 && "text-destructive"
+                )}
+              >
+                {formatCurrency(balance.result, currency)}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+interface CreateTransactionsProps {
+  checked: boolean
+  disabled: boolean
+  onChange: (checked: boolean) => void
+}
+
+// Casilla para crear el gasto o ingreso de cada pago de préstamo o abono
+export function CreateTransactionsField({
+  checked,
+  disabled,
+  onChange
+}: CreateTransactionsProps) {
+  return (
+    <div className="flex items-start gap-2">
+      <Checkbox
+        id="import-create-transactions"
+        checked={checked}
+        disabled={disabled}
+        onCheckedChange={(value) => onChange(value === true)}
+        className="mt-0.5"
+      />
+      <div className="flex flex-col gap-0.5">
+        <Label htmlFor="import-create-transactions">
+          Registrar también como gasto/ingreso
+        </Label>
+        <p className="text-sm text-muted-foreground">
+          Cada pago de préstamo crea un gasto en «Deudas» y cada abono de una
+          cuenta por cobrar, un ingreso en «Cobros». Desmárcala si ya importaste
+          estos pagos como movimientos.
+        </p>
       </div>
     </div>
   )

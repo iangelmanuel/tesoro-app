@@ -60,18 +60,18 @@ magic link.
 Las migraciones viven en `supabase/migrations/`. Toda tabla con datos de
 usuario tiene RLS.
 
-| Tabla                       | Qué guarda                                                                                                                                                              | RLS (cliente)                          |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| `profiles`                  | Un perfil por usuario: `full_name`, `avatar_url`, `currency` (COP por defecto)                                                                                          | `select` y `update` del propio perfil  |
-| `workspaces`                | Espacios del usuario: `type` (`personal` / `business`) y `name`                                                                                                         | `select` de los propios                |
-| `categories`                | Categorías de ingreso o gasto: del sistema (`workspace_id` null) o propias                                                                                              | `select`, `insert` y `update`          |
-| `transactions`              | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note`                                                                                      | `select`, `insert`, `update`, `delete` |
-| `recurring_expenses`        | Gastos fijos: `name`, `amount`, `category_id`, `frequency`, día y mes de pago, vigencia, `is_active`                                                                    | `select`, `insert`, `update`, `delete` |
-| `budgets`                   | Presupuesto por categoría de gasto y mes (`month` = primer día), único por categoría y mes                                                                              | `select`, `insert`, `update`, `delete` |
-| `savings_goals`             | Metas de ahorro: `name`, `target_amount`, `target_date` opcional, `icon`, `color`, `status`                                                                             | `select`, `insert`, `update`           |
-| `goal_contributions`        | Aportes (`amount` > 0) y retiros (`amount` < 0) de una meta, con `occurred_on` y `note`                                                                                 | `select`, `insert`, `update`, `delete` |
-| `dismissed_recommendations` | Recomendaciones ocultas: `rule`, `entity_key` y `month` en que se ocultaron, únicas por los tres                                                                        | `select`, `insert`, `delete`           |
-| `imports`                   | Importaciones de movimientos: `filename`, `sheets`, `status` (`completed` / `undone`), `stats`, `undone_at`. Los movimientos importados llevan `transactions.import_id` | `select` (solo escriben las RPC)       |
+| Tabla                       | Qué guarda                                                                                                                                                                                                                               | RLS (cliente)                          |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `profiles`                  | Un perfil por usuario: `full_name`, `avatar_url`, `currency` (COP por defecto)                                                                                                                                                           | `select` y `update` del propio perfil  |
+| `workspaces`                | Espacios del usuario: `type` (`personal` / `business`) y `name`                                                                                                                                                                          | `select` de los propios                |
+| `categories`                | Categorías de ingreso o gasto: del sistema (`workspace_id` null) o propias                                                                                                                                                               | `select`, `insert` y `update`          |
+| `transactions`              | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note`                                                                                                                                                       | `select`, `insert`, `update`, `delete` |
+| `recurring_expenses`        | Gastos fijos: `name`, `amount`, `category_id`, `frequency`, día y mes de pago, vigencia, `is_active`                                                                                                                                     | `select`, `insert`, `update`, `delete` |
+| `budgets`                   | Presupuesto por categoría de gasto y mes (`month` = primer día), único por categoría y mes                                                                                                                                               | `select`, `insert`, `update`, `delete` |
+| `savings_goals`             | Metas de ahorro: `name`, `target_amount`, `target_date` opcional, `icon`, `color`, `status`                                                                                                                                              | `select`, `insert`, `update`           |
+| `goal_contributions`        | Aportes (`amount` > 0) y retiros (`amount` < 0) de una meta, con `occurred_on` y `note`                                                                                                                                                  | `select`, `insert`, `update`, `delete` |
+| `dismissed_recommendations` | Recomendaciones ocultas: `rule`, `entity_key` y `month` en que se ocultaron, únicas por los tres                                                                                                                                         | `select`, `insert`, `delete`           |
+| `imports`                   | Importaciones: `target` (destino), `filename`, `sheets`, `status` (`completed` / `undone`), `stats`, `undone_at`. Las filas importadas llevan `import_id` en `transactions`, `recurring_expenses`, `debt_entries` o `goal_contributions` | `select` (solo escriben las RPC)       |
 
 - Cada usuario tiene **un solo** espacio Personal (índice único parcial) y, en
   el futuro, Empresas ilimitadas.
@@ -771,9 +771,11 @@ suficientes".
 ## Importar
 
 Página `/dashboard/personal/import`, con entrada desde el botón "Importar" de
-Movimientos y de su estado vacío. No está en el aside: importar es ocasional.
-Importa solo **movimientos** del espacio Personal; gastos fijos, deudas y metas
-llegan en el SPEC 08b.
+Movimientos y de su estado vacío, de la tab Gastos fijos de Presupuestos, de
+Deudas y de Metas. No está en el aside: importar es ocasional. Importa en el
+espacio Personal con **un destino por importación**: movimientos, gastos
+fijos, pagos y ajustes de deudas o aportes y retiros de metas (ver
+[Destinos](#destinos)).
 
 - El archivo **se lee en el navegador** (`read-excel-file` para `.xlsx` y
   `papaparse` para `.csv`, cargadas con `import()` solo al elegir el archivo).
@@ -792,13 +794,17 @@ llegan en el SPEC 08b.
 
 ### Pasos
 
-1. **Archivo:** zona de arrastre o selector.
+1. **Archivo:** destino ("¿Qué vas a importar?") y zona de arrastre o
+   selector. El destino se precarga con `?target=` (`transactions`,
+   `recurring_expenses`, `debt_entries`, `goal_contributions`; un valor
+   inválido cae a movimientos). Cambiarlo reinicia el mapeo.
 2. **Tabla:** hojas con casillas, tabla detectada, ajuste de la fila de
    encabezados y de las columnas, y las primeras 5 filas.
 3. **Columnas:** un `select` por campo con la sugerencia, el modo de tipo, el
    formato de fecha y el mapeo de los valores de tipo.
 4. **Categorías:** cada par (tipo, valor de origen) va a una categoría
-   existente, a una nueva o a "No importar".
+   existente, a una nueva o a "No importar". En deudas y metas este paso es
+   **Deudas** o **Metas** (ver [Destinos](#destinos)).
 5. **Vista previa:** contadores por estado, filtro, tabla de 100 filas por
    página con casilla y "Importar N movimientos".
 6. **Resumen:** importadas, omitidas, duplicadas omitidas y con error.
@@ -887,10 +893,103 @@ nuevas se crean con `receipt` / `slate` (gasto) o `coins` / `lime` (ingreso).
   después) y lo deja "Deshecho". Las categorías creadas se quedan. Un pago de
   deuda enlazado queda sin movimiento.
 
+### Destinos
+
+Cada importación tiene un solo destino. Para cargar gastos fijos y aportes
+del mismo archivo se corre el asistente dos veces. Las deudas y metas **no se
+crean** al importar: se crean antes en su página. Sin deudas (o metas)
+activas, su destino aparece deshabilitado con "Primero crea una deuda" (o
+"una meta").
+
+Fechas y montos siguen las reglas de [Normalización por
+fila](#normalización-por-fila). Los campos con \* son obligatorios.
+
+**Gastos fijos** (`recurring_expenses`, siempre activos al importar):
+
+| Campo      | Encabezados                          | Regla                                                                                                              |
+| ---------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| Nombre \*  | nombre, gasto, concepto, descripción | Más de 60 caracteres se recorta con aviso. Vacío → "Falta el nombre"                                               |
+| Monto \*   | monto, valor, importe, cuota         | Valor absoluto                                                                                                     |
+| Categoría  | categoría, rubro                     | Mapeo igual que movimientos, solo de gasto. Sin columna → "Otros gastos"                                           |
+| Frecuencia | frecuencia, periodicidad             | Cada valor → mensual, anual u "Omitir fila" (mensual / mes / monthly, anual / año / yearly). Sin columna → mensual |
+| Día        | día, día de pago, vence              | Entero 1–31. Sin columna → día del inicio                                                                          |
+| Mes        | mes                                  | Solo anuales: 1–12 o nombre en español. Sin valor → mes del inicio de la columna; sin eso, "Falta el mes"          |
+| Inicio     | inicio, desde, fecha                 | Sin columna → primer día del mes actual                                                                            |
+| Fin        | fin, hasta                           | Opcional, ≥ inicio                                                                                                 |
+
+Hace falta mapear Día o Inicio (con uno basta).
+
+**Deudas** (`debt_entries`) y **Metas** (`goal_contributions`):
+
+| Campo      | Deudas                                                          | Metas                  |
+| ---------- | --------------------------------------------------------------- | ---------------------- |
+| Fecha \*   | fecha, date, día. No puede ser futura ("Fecha futura")          | Igual                  |
+| Monto \*   | monto, valor, pago, abono                                       | monto, valor, aporte   |
+| Tipo       | tipo, movimiento, concepto                                      | tipo, movimiento       |
+| Deuda/Meta | deuda, tarjeta, préstamo, crédito, entidad                      | meta, objetivo, ahorro |
+| Nota       | nota, descripción, detalle, observación (máximo 120 caracteres) | Igual                  |
+
+- **Tipo**, en 3 modos:
+  - **Columna con valores:** en deudas, cada valor → Pago, Cargo (ajuste que
+    sube el saldo), Ajuste a la baja u "Omitir fila" (pago / abono → Pago;
+    compra / cargo / interés / cuota de manejo → Cargo). En metas → Aporte,
+    Retiro u "Omitir fila" (aporte / ahorro / depósito → Aporte; retiro /
+    saca → Retiro).
+  - **Signo del monto:** negativo → Pago (o Retiro); positivo → Cargo (o
+    Aporte).
+  - **Todas son pagos** (o **Todos son aportes**).
+- **Deuda o meta de cada fila:** con la columna, el paso 4 mapea cada valor a
+  una deuda o meta activa o a "No importar" (se sugiere la del mismo nombre).
+  Sin columna, se elige una para todo el archivo y el paso 4 se salta.
+- Las compras con tarjeta siguen siendo **movimientos**: un Cargo sirve para
+  intereses o cuotas de manejo de un extracto.
+- **Saldos en la vista previa:** saldo actual → resultante de cada deuda
+  (`saldo + cargos − pagos − bajas`) o meta (`ahorrado + aportes − retiros`)
+  con filas marcadas. Si alguno queda < 0, "Importar" se deshabilita con "El
+  saldo de «X» quedaría en −$ N".
+- **Casilla "Registrar también como gasto/ingreso"**, desmarcada por defecto:
+  cada pago a un préstamo crea un gasto "Pago <nombre>" en "Deudas" y cada
+  abono de una cuenta por cobrar, un ingreso "Abono <nombre>" en "Cobros",
+  igual que `record_debt_payment`. Solo aparece si algún pago marcado va a un
+  préstamo o cuenta por cobrar; nunca en tarjetas. Se deja desmarcada si esos
+  pagos ya se importaron como movimientos.
+
+**Duplicados por destino** (desmarcados por defecto, también contra filas
+anteriores del mismo archivo):
+
+| Destino      | Clave                                         | Compara contra                                   |
+| ------------ | --------------------------------------------- | ------------------------------------------------ |
+| Gastos fijos | Nombre normalizado                            | Todos los gastos fijos del espacio, activos o no |
+| Deudas       | Deuda, pago o ajuste, monto con signo y fecha | Entradas de esas deudas en el rango del archivo  |
+| Metas        | Meta, monto con signo y fecha                 | Aportes de esas metas en el rango del archivo    |
+
+**Guardado y deshacer:** cada destino tiene su RPC (`import_recurring_expenses`,
+`import_debt_entries`, `import_goal_contributions`), todo o nada. Deudas y
+metas insertan primero lo que sube el saldo, así el trigger de saldo no falla
+en un estado intermedio. "Deshacer" borra las filas del destino con ese
+`import_id`:
+
+- en deudas también borra los movimientos creados con los pagos;
+- en gastos fijos, los movimientos que pagaban sus ocurrencias quedan sin
+  enlace;
+- si la deuda o meta ya no está activa, o quedaría con saldo negativo, falla
+  sin borrar nada y nombra cuál ("Reactiva la meta «Viaje» para deshacer la
+  importación").
+
+El historial muestra el destino de cada importación y la confirmación usa su
+unidad ("Borrar 3 gastos fijos").
+
 ### Seguridad
 
 - RLS en `imports`: solo `select` con `is_workspace_owner`. Sin políticas de
   escritura: el historial no se puede falsear desde el cliente.
+- `import_recurring_expenses`, `import_debt_entries` e
+  `import_goal_contributions` son `security definer` con `search_path = ''`,
+  verifican el dueño con la función interna `create_import` (que no se
+  expone) y que cada deuda o meta sea del espacio. Solo las ejecuta
+  `authenticated`.
+- Sus acciones revalidan con Zod y comprueban que las categorías, deudas y
+  metas elegidas sean visibles y estén activas.
 - `import_transactions` y `undo_import` son `security definer` con
   `search_path = ''` y verifican `is_workspace_owner` al inicio.
   `transactions_for_duplicates` es `security invoker` y también lo verifica.

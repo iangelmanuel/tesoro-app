@@ -12,6 +12,7 @@ import {
   getGoalContributions,
   getGoals
 } from "@/features/goals/queries"
+import { ImportButton } from "@/features/imports/components/import-button"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
 import { buildMetadata } from "@/libs/seo"
@@ -98,7 +99,10 @@ async function GoalsContent() {
           {createButton}
         </EmptyState>
       ) : (
-        <div className="flex flex-wrap gap-2">{createButton}</div>
+        <div className="flex flex-wrap gap-2">
+          {createButton}
+          <ImportButton target="goal_contributions" />
+        </div>
       )}
 
       {active.length > 0 && (

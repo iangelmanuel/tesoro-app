@@ -20,8 +20,14 @@ Visión y alcance de Tesoro. Este documento describe **qué** se construye; el
 | `/`                       | Landing                                   | Sí        |
 | `/sign-in`                | Inicio de sesión                          | Sí        |
 | `/sign-up`                | Registro                                  | Sí        |
+| `/forgot-password`        | Pedir el enlace para recuperar contraseña | Sí        |
+| `/reset-password`         | Elegir la nueva contraseña                | No        |
+| `/check-email`            | Revisar el correo de confirmación         | No        |
 | `/auth/callback`          | Callback de OAuth (Google, GitHub)        | No        |
+| `/auth/confirm`           | Verifica los enlaces de email             | No        |
+| `/account-deleted`        | Cuenta en periodo de gracia del borrado   | No        |
 | `/dashboard`              | Redirige a `/dashboard/personal`          | No        |
+| `/dashboard/account`      | Cuenta y perfil                           | No        |
 | `/dashboard/personal/...` | Espacio Personal (requiere sesión)        | No        |
 | `/dashboard/business`     | Espacio Empresa (por ahora, estado vacío) | No        |
 
@@ -43,7 +49,7 @@ Presenta el producto y lleva a crear cuenta: propuesta de valor, funciones
 Supabase Auth con tres métodos:
 
 - **Email y contraseña**: registro con nombre, email y contraseña (mínimo 8
-  caracteres). No se pide confirmar el email.
+  caracteres). Por ahora no se pide confirmar el email (ver abajo).
 - **Google** y **GitHub** (OAuth), con callback en `/auth/callback`. El nombre
   y el avatar salen del proveedor.
 
@@ -52,8 +58,24 @@ perfil y su espacio _Personal_. Quien ya tiene sesión y entra a `/sign-in` o
 `/sign-up` va directo al dashboard; quien no la tiene y entra al dashboard va a
 `/sign-in?next=<ruta>` y vuelve a esa ruta al iniciar sesión.
 
-Quedan para un spec futuro: confirmar el email, recuperar la contraseña y el
-magic link.
+**Recuperar la contraseña**: "¿Olvidaste tu contraseña?" en `/sign-in` lleva
+a `/forgot-password`. La respuesta es la misma exista o no el email, para no
+enumerar cuentas; solo cambia ante el límite de envíos. El enlace del correo
+abre `/reset-password`, que sin sesión vuelve a
+`/forgot-password?error=expired`.
+
+**Enlaces de email**: las plantillas de `supabase/templates/` enlazan a
+`/auth/confirm?token_hash=…&type=…&next=…`, que verifica el enlace y redirige a
+`next`. Funcionan aunque el correo se abra en otro navegador. Un enlace
+vencido o usado lleva a `/sign-in?error=link`.
+
+**Confirmación de email**: lista pero apagada (`enable_confirmations = false`).
+Si se enciende, el registro lleva a `/check-email` con "Reenviar correo", y
+quien inicia sesión sin confirmar ve el error con el enlace para reenviar.
+Conviene encenderla solo con un SMTP propio: sin él, Supabase envía muy pocos
+correos por hora.
+
+Queda para un spec futuro el magic link.
 
 ## Modelo de datos
 
@@ -1094,6 +1116,63 @@ unidad ("Borrar 3 gastos fijos").
   y los stats, y comprueba que las categorías existentes sean visibles, del
   tipo de la fila y activas, y que las cuentas existentes sean visibles y
   estén activas.
+
+## Cuenta y perfil
+
+`/dashboard/account`, desde "Cuenta" en el menú de usuario. Vive en el layout
+del dashboard (el aside muestra el menú Personal sin ítem activo) y tiene
+cuatro secciones apiladas.
+
+### Perfil y preferencias
+
+- **Avatar**: JPG, PNG o WebP de hasta 5 MB. El navegador lo recorta al
+  centro en cuadrado y lo sube como WebP de 256×256 a
+  `avatars/<user_id>/<uuid>.webp`. Queda un solo archivo por usuario.
+  "Quitar foto" vacía la carpeta y vuelve a las iniciales.
+- **Nombre**: de 2 a 80 caracteres, como en el registro.
+- **Email**: el cambio exige confirmar desde el correo actual y desde el
+  nuevo (`double_confirm_changes`). Mientras falta, la sección muestra
+  "Cambio pendiente a X".
+- **Moneda**: COP, USD, EUR, MXN, PEN, CLP o ARS (`SITE.currencies`). Solo
+  cambia el formato: los montos guardados no se convierten. COP y CLP se
+  muestran sin decimales.
+
+### Contraseña
+
+- Con contraseña: se pide la actual y se verifica antes de cambiarla.
+- Solo OAuth (`has_password()` es `false`): "Crear contraseña" sin pedir la
+  actual. La action revisa `has_password()` en el servidor.
+
+### Borrado con periodo de gracia
+
+1. El usuario escribe su email exacto en el diálogo de la zona de peligro.
+2. Se borra su avatar (Postgres no puede borrar archivos de Storage), se marca
+   la cuenta con `deletion_requested_at` en `auth.users.raw_app_meta_data` y
+   se cierra la sesión. `/sign-in` muestra la fecha de borrado.
+3. Durante 30 días (`SITE.accountDeletionGraceDays`) puede iniciar sesión:
+   `proxy.ts` lo lleva a `/account-deleted`, con la fecha, "Restaurar cuenta"
+   y "Cerrar sesión". Restaurar quita la marca; todo vuelve salvo la foto.
+4. El job diario de `pg_cron` `purge-deleted-accounts` (08:00 UTC, 03:00 en
+   Bogotá) borra de `auth.users` las cuentas marcadas hace más de 30 días, y
+   en cascada todos sus datos.
+
+La marca vive en `app_metadata` y no en `profiles` porque el proxy ya la recibe
+en su `getUser()` y el usuario no la puede editar.
+
+### Seguridad
+
+- Bucket `avatars` público para leer, de 1 MB y solo `image/webp`. Sus 4
+  políticas exigen que la primera carpeta sea `auth.uid()`. `setAvatar`
+  además exige la ruta `<user_id>/<uuid>.webp`.
+- `has_password`, `request_account_deletion` y `cancel_account_deletion` son
+  `security definer`, solo tocan la fila de `auth.uid()` y solo las ejecuta
+  `authenticated`. `purge_deleted_accounts` no la ejecuta ningún rol de la
+  API.
+- Las FK que antes eran `on delete restrict` (categorías y cuentas) son
+  `on delete no action`: dentro de la cascada del borrado se revisan al final
+  de la sentencia, y fuera de ella siguen bloqueando borrar una categoría o
+  cuenta en uso.
+- Nada usa la `service_role`.
 
 ## Specs
 

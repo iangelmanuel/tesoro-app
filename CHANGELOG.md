@@ -86,6 +86,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - "Saldo en cuentas" card on the Personal summary.
 - Import wizard: `account` field for the Método column in the transactions destination, with a "Cuentas" section in step 4 mapping each value to an active account, "Crear «valor»" or "Sin cuenta", and a "Cuenta" column in the preview. Accounts created by an import stay when it is undone.
 - "Cuentas y traspasos" section in `docs/producto.md` and the SPEC 08c answers in `ROADMAP.md`.
+- Account page at `/dashboard/account`, opened from a "Cuenta" item in the user menu: profile (avatar, name and email), currency preference, password and a danger zone.
+- Avatars in a public Supabase Storage bucket (`avatars`, 1 MB, WebP only) where each user can only write to their own folder. The browser center-crops JPG, PNG or WebP files up to 5 MB to a 256×256 WebP; "Quitar foto" deletes the files and falls back to initials.
+- Currency preference (COP, USD, EUR, MXN, PEN, CLP, ARS) from `SITE.currencies`, validated with Zod. It only changes formatting; stored amounts are not converted.
+- Email change with double confirmation and a "Cambio pendiente a X" notice.
+- Change password (requires the current one) or create one for OAuth-only users, using the new `has_password()` RPC.
+- Forgot password flow: `/forgot-password` (same answer whether or not the email exists) and `/reset-password`.
+- `/auth/confirm` route that verifies `token_hash` email links (sign-up confirmation, recovery and email change), so links work in a different browser.
+- Email confirmation ready but off (`enable_confirmations = false`): when enabled, sign-up goes to `/check-email` with a "Reenviar correo" button, and signing in with an unconfirmed email links there.
+- Spanish, Tesoro-branded email templates in `supabase/templates/` (`confirmation`, `recovery`, `email_change`).
+- Account deletion with a 30-day grace period: typing the exact email schedules it (`request_account_deletion()` stores `deletion_requested_at` in `raw_app_meta_data`), deletes the avatar and signs out. Signing in during the grace period leads to `/account-deleted` to restore the account (`cancel_account_deletion()`) or sign out.
+- Daily `pg_cron` job `purge-deleted-accounts` (08:00 UTC) running `purge_deleted_accounts()`, which deletes users marked more than 30 days ago and, by cascade, all their data. Only `pg_cron` can run it.
+- `SITE.routes` entries for the new pages, `SITE.currencies` and `SITE.accountDeletionGraceDays`.
+- "Cuenta y perfil" section in `docs/producto.md` and remote setup steps in the README.
 
 ### Changed
 
@@ -102,6 +115,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `record_debt_payment` takes an optional `p_account_id`, `import_transactions` takes `p_new_accounts` and per-row `account_id` / `new_account_key`, and `transaction_totals` takes optional `p_account_id` / `p_without_account` filters. All new parameters have defaults.
 - `getTransactions` reads the `ledger_entries` view, and the transaction dialog takes the account list.
 - `banknote` and `wallet` icons added to `CATEGORY_ICONS`.
+- Foreign keys `on delete restrict` on `category_id` (transactions, recurring expenses, budgets) and on the account references of transactions and transfers are now `on delete no action`, so deleting a user cascades without errors. Outside the cascade they still block deleting a category or account in use.
+- `minimum_password_length` raised to 8 in `supabase/config.toml`, matching the forms.
+- `CLP` is formatted without decimals.
+- `/forgot-password` added to the sitemap. `/reset-password`, `/check-email` and `/account-deleted` are `noindex`.
+- `proxy.ts` treats `/forgot-password` as an auth route, sends `/reset-password` without a session to `/forgot-password?error=expired`, and handles the deletion grace period.
+- On `/dashboard/account` the aside keeps the Personal navigation with no active item.
 
 ### Fixed
 

@@ -144,9 +144,25 @@ supabase db push                    # aplica las migraciones
 
 En el dashboard de Supabase, en **Authentication**:
 
-- **Sign In / Providers → Email**: desactiva _Confirm email_.
+- **Sign In / Providers → Email**: desactiva _Confirm email_ y pon
+  _Minimum password length_ en `8`.
 - **URL Configuration**: _Site URL_ `http://localhost:3000` y, en _Redirect
-  URLs_, `http://localhost:3000/auth/callback` (y las de producción).
+  URLs_, `http://localhost:3000/auth/callback` y
+  `http://localhost:3000/auth/confirm` (y las de producción).
+- **Emails → Templates**: copia el asunto y el HTML de `supabase/templates/`
+  en _Confirm signup_ (`confirmation.html`), _Reset password_
+  (`recovery.html`) y _Change email address_ (`email_change.html`).
+  `config.toml` solo los aplica en local.
+
+Después de `db push`, comprueba en el SQL Editor que el borrado programado de
+cuentas quedó activo: `select * from cron.job` debe mostrar
+`purge-deleted-accounts`.
+
+**Confirmación de email.** El código la soporta, pero va apagada. Antes de
+encenderla (_Confirm email_ en el dashboard, `enable_confirmations` en local),
+configura un SMTP propio en **Authentication → Emails → SMTP Settings**: sin
+él, Supabase envía muy pocos correos por hora, y esos mismos correos cubren la
+recuperación de contraseña y el cambio de email.
 
 **Stack local** (requiere [Docker](https://docs.docker.com/desktop/) y bastante
 RAM):
@@ -157,8 +173,10 @@ supabase db reset   # reaplica las migraciones desde cero
 supabase stop
 ```
 
-En local, `supabase/config.toml` ya trae la confirmación de email desactivada
-y el redirect a `/auth/callback`. Usa la `API_URL` y la clave publicable que
+En local, `supabase/config.toml` ya trae la confirmación de email desactivada,
+los redirects a `/auth/callback` y `/auth/confirm`, la longitud mínima de 8 y
+las plantillas en español. Los correos se ven en Mailpit
+(`http://127.0.0.1:54324`). Usa la `API_URL` y la clave publicable que
 imprime `supabase start` en tu `.env.local`.
 
 ### Proveedores OAuth (opcional)

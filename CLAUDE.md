@@ -100,6 +100,15 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
 - El cliente solo usa la clave publicable. La `service_role` nunca llega al
   navegador.
 - Los cambios de esquema van en migraciones versionadas.
+- Storage: bucket público `avatars` (1 MB, solo WebP), escritura solo en la
+  carpeta `<user_id>/`. Postgres no borra archivos de Storage: se borran desde
+  las actions con la sesión del usuario.
+- `pg_cron` corre el job diario `purge-deleted-accounts`, que borra las
+  cuentas marcadas para borrar hace más de 30 días
+  (`raw_app_meta_data.deletion_requested_at`).
+- Las plantillas de email viven en `supabase/templates/` y enlazan a
+  `/auth/confirm` con `token_hash`. `config.toml` solo las aplica en local: en
+  remoto se copian a mano al dashboard (ver README).
 
 ## Convenciones
 

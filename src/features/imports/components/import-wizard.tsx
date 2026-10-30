@@ -27,17 +27,21 @@ import {
 import {
   buildPreviewRows,
   computeStats,
+  existingAccountKey,
   existingCategoryKey,
+  newAccountKey,
+  newAccounts,
   newCategories,
   newCategoryKey,
-  toImportRows
+  toImportRows,
+  toTransactionImportRows
 } from "../normalize"
 import { buildDebtEntryPreviewRows } from "../normalize-debt-entries"
 import { buildGoalContributionPreviewRows } from "../normalize-goal-contributions"
 import { buildRecurringPreviewRows } from "../normalize-recurring"
 import type { DebtLinkOption, GoalLinkOption } from "../queries"
 import { countLabel } from "../targets"
-import type { CategoryOption, ImportTarget } from "../types"
+import type { AccountOption, CategoryOption, ImportTarget } from "../types"
 import { CategoriesStep } from "./categories-step"
 import { ColumnsStep } from "./columns-step"
 import { FileStep } from "./file-step"
@@ -58,6 +62,7 @@ import {
   STEPS,
   type StepId,
   extractForTarget,
+  extractedAccountValues,
   extractedLinkValues,
   extractedPairs,
   initialState,
@@ -75,6 +80,8 @@ interface ImportWizardProps {
   initialTarget: ImportTarget
   /** Categorías activas (sistema y propias) para el paso de categorías */
   categories: CategoryOption[]
+  /** Cuentas activas para la columna Método (movimientos) */
+  accounts: AccountOption[]
   /** Deudas y metas activas: destinos de esas importaciones */
   debts: DebtLinkOption[]
   goals: GoalLinkOption[]
@@ -91,6 +98,7 @@ function linkedIds<V>(rows: { value?: V }[], idOf: (value: V) => string) {
 export function ImportWizard({
   initialTarget,
   categories,
+  accounts,
   debts,
   goals,
   currency
@@ -135,6 +143,24 @@ export function ImportWizard({
   )
   const pairs = useMemo(() => extractedPairs(extracted), [extracted])
   const linkOptions = useMemo(() => extractedLinkValues(extracted), [extracted])
+  const accountOptions = useMemo(
+    () => extractedAccountValues(extracted),
+    [extracted]
+  )
+  // Solo con la columna Método mapeada
+  const accountNames = useMemo(() => {
+    if (state.config?.mapping.account === undefined) return undefined
+    const names: Record<string, string> = {}
+    for (const account of accounts) {
+      names[existingAccountKey(account.id)] = account.name
+    }
+    for (const target of Object.values(state.accountTargets)) {
+      if (target.kind === "new") {
+        names[newAccountKey(target.name)] = `${target.name} (nueva)`
+      }
+    }
+    return names
+  }, [accounts, state.config?.mapping.account, state.accountTargets])
   const categoryNames = useMemo(() => {
     const names: Record<string, string> = {}
     for (const category of categories) {
@@ -162,7 +188,11 @@ export function ImportWizard({
 
     switch (extracted.target) {
       case "transactions": {
-        const rows = buildPreviewRows(extracted.rows, state.categoryTargets)
+        const rows = buildPreviewRows(
+          extracted.rows,
+          state.categoryTargets,
+          state.accountTargets
+        )
         const range = dateRange(rows)
         if (!range)
           return { target: "transactions", rows, empty: extracted.empty }
@@ -292,7 +322,8 @@ export function ImportWizard({
             state.categoryTargets,
             pairs
           ),
-          rows: toImportRows(preview.rows)
+          newAccounts: newAccounts(preview.rows, state.accountTargets),
+          rows: toTransactionImportRows(preview.rows)
         })
       case "recurring_expenses":
         return confirmRecurringImport({
@@ -417,7 +448,7 @@ export function ImportWizard({
           <PreviewStep
             {...common}
             rows={preview.rows}
-            columns={transactionColumns(currency, categoryNames)}
+            columns={transactionColumns(currency, categoryNames, accountNames)}
           />
         )
       case "recurring_expenses":
@@ -540,7 +571,7 @@ export function ImportWizard({
               state.target === "transactions" ||
               state.target === "recurring_expenses"
             ) {
-              dispatch({ type: "start_categories", categories })
+              dispatch({ type: "start_categories", categories, accounts })
             } else if (
               state.config?.mapping[
                 state.target === "debt_entries" ? "debt" : "goal"
@@ -579,6 +610,12 @@ export function ImportWizard({
             categories={categories}
             onTargetChange={(key, target) =>
               dispatch({ type: "set_category_target", key, target })
+            }
+            accountValues={accountOptions}
+            accountTargets={state.accountTargets}
+            accounts={accounts}
+            onAccountTargetChange={(key, target) =>
+              dispatch({ type: "set_account_target", key, target })
             }
             loading={pending}
             error={error}

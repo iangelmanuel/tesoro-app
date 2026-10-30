@@ -8,6 +8,7 @@ import {
 } from "@/features/transactions/schemas"
 import { todayISO } from "@/libs/dates"
 import {
+  MAX_ACCOUNT_NAME_LENGTH,
   MAX_CATEGORY_NAME_LENGTH,
   MAX_ENTRY_NOTE_LENGTH,
   MAX_RECURRING_NAME_LENGTH,
@@ -42,6 +43,18 @@ export const newCategorySchema = z.object({
     })
 })
 
+// Cuenta nueva de la columna Método (SPEC 08c)
+export const newAccountSchema = z.object({
+  key: z.string().min(1).max(200),
+  name: z
+    .string()
+    .trim()
+    .min(1, { error: "Ingresa un nombre para la cuenta" })
+    .max(MAX_ACCOUNT_NAME_LENGTH, {
+      error: `El nombre debe tener máximo ${MAX_ACCOUNT_NAME_LENGTH} caracteres`
+    })
+})
+
 export const importRowSchema = z
   .object({
     type: z.enum(TRANSACTION_TYPES),
@@ -59,12 +72,18 @@ export const importRowSchema = z
       .trim()
       .max(500, { error: "La nota debe tener máximo 500 caracteres" })
       .nullable()
-      .transform((value) => value || null)
+      .transform((value) => value || null),
+    // Cuenta opcional: existente, nueva o ninguna
+    account_id: z.uuid().nullable().default(null),
+    new_account_key: z.string().min(1).max(200).nullable().default(null)
   })
   .refine(
     (row) => (row.category_id === null) !== (row.new_category_key === null),
     { error: "Cada movimiento necesita una categoría" }
   )
+  .refine((row) => row.account_id === null || row.new_account_key === null, {
+    error: "Cada movimiento tiene una sola cuenta"
+  })
 
 export const confirmImportSchema = z
   .object({
@@ -72,6 +91,7 @@ export const confirmImportSchema = z
     sheets: z.array(z.string().max(255)).max(500),
     stats: importStatsSchema,
     newCategories: z.array(newCategorySchema).max(MAX_ROWS),
+    newAccounts: z.array(newAccountSchema).max(MAX_ROWS).default([]),
     rows: z
       .array(importRowSchema)
       .min(1, { error: "No hay movimientos para importar" })
@@ -89,6 +109,20 @@ export const confirmImportSchema = z
     )
     if (missing) {
       ctx.addIssue({ code: "custom", message: "Falta una categoría nueva" })
+    }
+
+    const accountKeys = new Set(input.newAccounts.map((account) => account.key))
+
+    if (accountKeys.size !== input.newAccounts.length) {
+      ctx.addIssue({ code: "custom", message: "Cuentas nuevas repetidas" })
+    }
+    if (
+      input.rows.some(
+        (row) =>
+          row.new_account_key !== null && !accountKeys.has(row.new_account_key)
+      )
+    ) {
+      ctx.addIssue({ code: "custom", message: "Falta una cuenta nueva" })
     }
 
     if (input.stats.imported !== input.rows.length) {

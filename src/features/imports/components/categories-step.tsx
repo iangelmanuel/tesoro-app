@@ -13,8 +13,16 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select"
-import { MAX_CATEGORY_NAME_LENGTH } from "../constants"
-import type { CategoryOption, CategoryPair, CategoryTarget } from "../types"
+import { MAX_ACCOUNT_NAME_LENGTH, MAX_CATEGORY_NAME_LENGTH } from "../constants"
+import { EMPTY_LINK_LABEL } from "../normalize"
+import type {
+  AccountOption,
+  AccountTarget,
+  AccountValue,
+  CategoryOption,
+  CategoryPair,
+  CategoryTarget
+} from "../types"
 
 const NEW = "new"
 const SKIP = "skip"
@@ -32,6 +40,18 @@ function newName(pair: CategoryPair) {
   return pair.label.slice(0, MAX_CATEGORY_NAME_LENGTH).trim()
 }
 
+const NO_ACCOUNT = "none"
+
+function accountTargetValue(target: AccountTarget | undefined) {
+  if (!target || target.kind === "none") return NO_ACCOUNT
+  if (target.kind === "new") return NEW
+  return `${EXISTING_PREFIX}${target.accountId}`
+}
+
+function newAccountName(value: AccountValue) {
+  return value.label.slice(0, MAX_ACCOUNT_NAME_LENGTH).trim()
+}
+
 interface CategoriesStepProps {
   /** Gastos fijos: solo categorías de gasto, sin la etiqueta de tipo */
   expenseOnly?: boolean
@@ -39,6 +59,12 @@ interface CategoriesStepProps {
   targets: Record<string, CategoryTarget>
   categories: CategoryOption[]
   onTargetChange: (key: string, target: CategoryTarget) => void
+  /** Movimientos con la columna Método mapeada: sus valores y destinos */
+  accountValues?: AccountValue[]
+  accountTargets?: Record<string, AccountTarget>
+  /** Cuentas activas */
+  accounts?: AccountOption[]
+  onAccountTargetChange?: (key: string, target: AccountTarget) => void
   /** Revisando duplicados antes de la vista previa */
   loading: boolean
   error: string | null
@@ -54,6 +80,10 @@ export function CategoriesStep({
   targets,
   categories,
   onTargetChange,
+  accountValues = [],
+  accountTargets = {},
+  accounts = [],
+  onAccountTargetChange,
   loading,
   error,
   onBack,
@@ -70,6 +100,23 @@ export function CategoriesStep({
       onTargetChange(pair.key, {
         kind: "existing",
         categoryId: value.slice(EXISTING_PREFIX.length)
+      })
+    }
+  }
+
+  function handleAccountChange(value: AccountValue, selected: string) {
+    if (!onAccountTargetChange) return
+    if (selected === NO_ACCOUNT) {
+      onAccountTargetChange(value.key, { kind: "none" })
+    } else if (selected === NEW) {
+      onAccountTargetChange(value.key, {
+        kind: "new",
+        name: newAccountName(value)
+      })
+    } else {
+      onAccountTargetChange(value.key, {
+        kind: "existing",
+        accountId: selected.slice(EXISTING_PREFIX.length)
       })
     }
   }
@@ -148,6 +195,74 @@ export function CategoriesStep({
             )
           })}
         </ul>
+      )}
+
+      {/* La cuenta no omite filas: no hay "No importar" */}
+      {pairs.length > 0 && accountValues.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-sm font-medium">Cuentas</h2>
+            <p className="text-sm text-muted-foreground">
+              Elige a qué cuenta va cada valor de la columna Método. Los
+              movimientos sin cuenta se importan igual.
+            </p>
+          </div>
+          <ul className="flex flex-col divide-y rounded-lg border">
+            {accountValues.map((value) => {
+              const name = newAccountName(value)
+              const label = value.label || EMPTY_LINK_LABEL
+
+              return (
+                <li
+                  key={value.key}
+                  className="flex flex-wrap items-center justify-between gap-3 px-3 py-2"
+                >
+                  <span className="flex flex-wrap items-center gap-2 text-sm">
+                    {label}
+                    <span className="text-muted-foreground">
+                      · {value.count === 1 ? "1 fila" : `${value.count} filas`}
+                    </span>
+                  </span>
+                  <Select
+                    value={accountTargetValue(accountTargets[value.key])}
+                    onValueChange={(selected) =>
+                      handleAccountChange(value, selected)
+                    }
+                  >
+                    <SelectTrigger
+                      className="w-full sm:w-56"
+                      aria-label={`Cuenta para ${label}`}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accounts.length > 0 && (
+                        <>
+                          <SelectGroup>
+                            <SelectLabel>Tus cuentas</SelectLabel>
+                            {accounts.map((account) => (
+                              <SelectItem
+                                key={account.id}
+                                value={`${EXISTING_PREFIX}${account.id}`}
+                              >
+                                {account.name}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                          <SelectSeparator />
+                        </>
+                      )}
+                      {name && (
+                        <SelectItem value={NEW}>Crear «{name}»</SelectItem>
+                      )}
+                      <SelectItem value={NO_ACCOUNT}>Sin cuenta</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
       )}
 
       {error && (

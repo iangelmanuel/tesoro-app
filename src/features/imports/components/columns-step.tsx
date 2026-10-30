@@ -153,7 +153,8 @@ const OPTIONAL_HINTS: Record<
   transactions: {
     category: "Sin columna, todo va a Otros ingresos u Otros gastos",
     description: "Si está vacía se usa el valor de la categoría",
-    note: "Opcional"
+    note: "Opcional",
+    account: "Método de pago. Sin columna, los movimientos quedan sin cuenta"
   },
   recurring_expenses: {
     category: "Sin columna, todos van a Otros gastos",

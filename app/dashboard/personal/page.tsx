@@ -10,9 +10,11 @@ import {
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
+import { getCategories } from "@/features/categories/queries"
 import { buildCategorySlices } from "@/features/reports/chart-data"
 import { CategoryDonutChart } from "@/features/reports/components/category-donut-chart"
 import { IncomeExpenseChart } from "@/features/reports/components/income-expense-chart"
+import { NoPeriodData } from "@/features/reports/components/no-period-data"
 import { RecentTransactions } from "@/features/reports/components/recent-transactions"
 import { SummaryCards } from "@/features/reports/components/summary-cards"
 import {
@@ -21,6 +23,7 @@ import {
   getRecentTransactions,
   getWorkspaceBalance
 } from "@/features/reports/queries"
+import { NoTransactions } from "@/features/transactions/components/transactions-empty"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { currentMonth, monthRange, shiftMonth, todayISO } from "@/libs/dates"
 import { buildMetadata } from "@/libs/seo"
@@ -76,6 +79,14 @@ async function SummaryContent() {
   const current = monthly[monthly.length - 1]
   const previous = monthly[monthly.length - 2]
 
+  // Sin movimientos recientes el espacio está vacío: se invita a registrar
+  if (recent.length === 0) {
+    const categories = await getCategories(workspace.id)
+    return <NoTransactions categories={categories} />
+  }
+
+  const isEmptyTrend = monthly.every((row) => row.txCount === 0)
+
   return (
     <>
       <SummaryCards
@@ -93,11 +104,18 @@ async function SummaryContent() {
             <CardDescription>Últimos {TREND_MONTHS} meses</CardDescription>
           </CardHeader>
           <CardContent>
-            <IncomeExpenseChart
-              data={monthly}
-              currency={workspace.currency}
-              className="aspect-auto h-72 w-full"
-            />
+            {isEmptyTrend ? (
+              <NoPeriodData
+                message="No hay movimientos en este periodo"
+                className="h-72"
+              />
+            ) : (
+              <IncomeExpenseChart
+                data={monthly}
+                currency={workspace.currency}
+                className="aspect-auto h-72 w-full"
+              />
+            )}
           </CardContent>
         </Card>
         <Card className="lg:col-span-2">
@@ -108,11 +126,22 @@ async function SummaryContent() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <CategoryDonutChart
-              slices={buildCategorySlices(expenseByCategory)}
-              currency={workspace.currency}
-              title={`Gastos por categoría de ${monthLabel}`}
-            />
+            {expenseByCategory.length > 0 ? (
+              <CategoryDonutChart
+                slices={buildCategorySlices(expenseByCategory)}
+                currency={workspace.currency}
+                title={`Gastos por categoría de ${monthLabel}`}
+              />
+            ) : (
+              <NoPeriodData
+                message={
+                  current.txCount === 0
+                    ? "No hay movimientos en este periodo"
+                    : "No hay gastos en este periodo"
+                }
+                className="h-72"
+              />
+            )}
           </CardContent>
         </Card>
       </div>

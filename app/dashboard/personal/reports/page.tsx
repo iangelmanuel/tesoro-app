@@ -8,6 +8,7 @@ import {
   CardTitle
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { getCategories } from "@/features/categories/queries"
 import {
   TOP_CATEGORIES,
   buildCategorySlices,
@@ -16,11 +17,14 @@ import {
 import { CategoryDonutChart } from "@/features/reports/components/category-donut-chart"
 import { CategorySummaryTable } from "@/features/reports/components/category-summary-table"
 import { IncomeExpenseChart } from "@/features/reports/components/income-expense-chart"
+import { NoPeriodData } from "@/features/reports/components/no-period-data"
 import { ReportPeriodPicker } from "@/features/reports/components/report-period-picker"
 import { ReportTypeToggle } from "@/features/reports/components/report-type-toggle"
 import { TopCategoriesChart } from "@/features/reports/components/top-categories-chart"
 import { REPORTS_PATH, parseReportParams } from "@/features/reports/period"
 import { getCategoryTotals, getMonthlyTotals } from "@/features/reports/queries"
+import { NoTransactions } from "@/features/transactions/components/transactions-empty"
+import { hasAnyTransactions } from "@/features/transactions/queries"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { buildMetadata } from "@/libs/seo"
 
@@ -62,8 +66,16 @@ async function ReportsContent({
     getCategoryTotals(workspace.id, params.from, params.to, params.type)
   ])
 
+  const isEmptyPeriod = monthly.every((row) => row.txCount === 0)
+  // Solo se consulta cuando el periodo no tiene movimientos
+  if (isEmptyPeriod && !(await hasAnyTransactions(workspace.id))) {
+    const categories = await getCategories(workspace.id)
+    return <NoTransactions categories={categories} />
+  }
+
   const typeLabel = params.type === "expense" ? "Gastos" : "Ingresos"
   const typeNoun = params.type === "expense" ? "gasto" : "ingreso"
+  const noTypeData = `No hay ${typeLabel.toLowerCase()} en este periodo`
 
   return (
     <>
@@ -82,66 +94,87 @@ async function ReportsContent({
         </div>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Tendencia mensual</CardTitle>
-          <CardDescription className="first-letter:uppercase">
-            {params.label} · ingresos, gastos y balance por mes
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <IncomeExpenseChart
-            data={monthly}
-            currency={workspace.currency}
-            showBalance
-            className="aspect-auto h-80 w-full"
-          />
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>{typeLabel} por categoría</CardTitle>
-            <CardDescription className="first-letter:uppercase">
-              {params.label}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CategoryDonutChart
-              slices={buildCategorySlices(categoryTotals)}
-              currency={workspace.currency}
-              title={`${typeLabel} por categoría de ${params.label}`}
-            />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              Top {TOP_CATEGORIES} categorías de {typeNoun}
-            </CardTitle>
-            <CardDescription className="first-letter:uppercase">
-              {params.label}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <TopCategoriesChart
-              categories={buildTopCategories(categoryTotals)}
-              currency={workspace.currency}
-              title={`Top ${TOP_CATEGORIES} categorías de ${typeNoun} de ${params.label}`}
-            />
-          </CardContent>
-        </Card>
-      </div>
-
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Resumen por categoría</h2>
-        <CategorySummaryTable
-          totals={categoryTotals}
-          params={params}
-          currency={workspace.currency}
+      {isEmptyPeriod ? (
+        <NoPeriodData
+          message="No hay movimientos en este periodo"
+          className="py-16"
         />
-      </section>
+      ) : (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>Tendencia mensual</CardTitle>
+              <CardDescription className="first-letter:uppercase">
+                {params.label} · ingresos, gastos y balance por mes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <IncomeExpenseChart
+                data={monthly}
+                currency={workspace.currency}
+                showBalance
+                className="aspect-auto h-80 w-full"
+              />
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>{typeLabel} por categoría</CardTitle>
+                <CardDescription className="first-letter:uppercase">
+                  {params.label}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {categoryTotals.length > 0 ? (
+                  <CategoryDonutChart
+                    slices={buildCategorySlices(categoryTotals)}
+                    currency={workspace.currency}
+                    title={`${typeLabel} por categoría de ${params.label}`}
+                  />
+                ) : (
+                  <NoPeriodData message={noTypeData} />
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  Top {TOP_CATEGORIES} categorías de {typeNoun}
+                </CardTitle>
+                <CardDescription className="first-letter:uppercase">
+                  {params.label}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {categoryTotals.length > 0 ? (
+                  <TopCategoriesChart
+                    categories={buildTopCategories(categoryTotals)}
+                    currency={workspace.currency}
+                    title={`Top ${TOP_CATEGORIES} categorías de ${typeNoun} de ${params.label}`}
+                  />
+                ) : (
+                  <NoPeriodData message={noTypeData} />
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <section className="flex flex-col gap-3">
+            <h2 className="text-lg font-semibold">Resumen por categoría</h2>
+            {categoryTotals.length > 0 ? (
+              <CategorySummaryTable
+                totals={categoryTotals}
+                params={params}
+                currency={workspace.currency}
+              />
+            ) : (
+              <NoPeriodData message={noTypeData} />
+            )}
+          </section>
+        </>
+      )}
     </>
   )
 }

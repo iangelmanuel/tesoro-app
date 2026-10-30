@@ -39,12 +39,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - "Marcar como pagado" opens the transaction dialog prefilled and linked to the occurrence; paying the same occurrence twice is rejected ("Este pago ya está registrado").
 - "Próximos pagos" and "Presupuestos en riesgo" cards on the Personal summary.
 - Empty states for both budgets tabs and both summary cards, and a shared `EmptyState` component.
+- Migration `create_savings_goals`: `goal_status` enum, `savings_goals` and `goal_contributions` tables with RLS (no `delete` policy on goals, which can only be archived), a composite `(goal_id, workspace_id)` foreign key so a contribution always belongs to its goal's workspace, `check_goal_contribution` (goal must be active, goal cannot change, date ≤ today in `America/Bogota`) and `check_goal_balance` (a goal's balance never goes negative) triggers, and the `goal_progress` RPC (`security invoker`, executable only by `authenticated`).
+- Savings goals page at `/dashboard/personal/goals`: create and edit goals (name, target amount, optional target date, icon and color), active goal cards sorted by target date with progress, remaining amount, suggested monthly contribution and "En camino" / "En riesgo" status, "La fecha objetivo ya pasó" and "¡Lo lograste!" notices, and a collapsible "Cumplidas y archivadas" section with "Reactivar".
+- Goal sheet with a summary, "Aportar" / "Retirar" and a contribution history with edit and delete. Completed and archived goals are read-only. Contributions are independent from transactions and do not change the balance, expenses or budgets.
+- "Metas de ahorro" card on the Personal summary with up to 3 active goals, nearest target date first.
+- Empty states for the goals page, the inactive section, the contribution history and the summary card.
+- shadcn/ui `collapsible` component.
 
 ### Changed
 
 - shadcn `pagination` uses `next/link` and Spanish labels.
 - Transaction and recurring expense actions revalidate the whole Personal workspace (summary, transactions, budgets and reports) instead of only refreshing the current page.
 - The transaction dialog accepts prefilled values and an occurrence link, and locks the type to expense for recurring payments.
+- The icon and color picker from the categories sheet is now a reusable `IconColorPicker` component, shared with savings goals.
 
 ### Fixed
 

@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
 import { BudgetsAtRiskCard } from "@/features/budgets/components/budgets-at-risk-card"
 import { getCategories } from "@/features/categories/queries"
+import { GoalsCard } from "@/features/goals/components/goals-card"
 import { UpcomingPaymentsCard } from "@/features/recurring-expenses/components/upcoming-payments-card"
 import { buildCategorySlices } from "@/features/reports/chart-data"
 import { CategoryDonutChart } from "@/features/reports/components/category-donut-chart"
@@ -108,6 +109,12 @@ async function SummaryContent() {
         </Suspense>
         <Suspense fallback={<Skeleton className="h-72" />}>
           <BudgetsAtRiskCard
+            workspaceId={workspace.id}
+            currency={workspace.currency}
+          />
+        </Suspense>
+        <Suspense fallback={<Skeleton className="h-72" />}>
+          <GoalsCard
             workspaceId={workspace.id}
             currency={workspace.currency}
           />

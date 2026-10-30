@@ -103,6 +103,47 @@ export type Database = {
           }
         ]
       }
+      goal_contributions: {
+        Row: {
+          amount: number
+          created_at: string
+          goal_id: string
+          id: string
+          note: string | null
+          occurred_on: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          goal_id: string
+          id?: string
+          note?: string | null
+          occurred_on: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          goal_id?: string
+          id?: string
+          note?: string | null
+          occurred_on?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_contributions_goal_id_workspace_id_fkey"
+            columns: ["goal_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "savings_goals"
+            referencedColumns: ["id", "workspace_id"]
+          }
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -186,6 +227,56 @@ export type Database = {
           },
           {
             foreignKeyName: "recurring_expenses_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      savings_goals: {
+        Row: {
+          color: string
+          completed_at: string | null
+          created_at: string
+          icon: string
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["goal_status"]
+          target_amount: number
+          target_date: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          color: string
+          completed_at?: string | null
+          created_at?: string
+          icon: string
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["goal_status"]
+          target_amount: number
+          target_date?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          color?: string
+          completed_at?: string | null
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["goal_status"]
+          target_amount?: number
+          target_date?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "savings_goals_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -331,6 +422,22 @@ export type Database = {
           tx_count: number
         }[]
       }
+      goal_progress: {
+        Args: { p_workspace_id: string }
+        Returns: {
+          color: string
+          completed_at: string
+          contributions_count: number
+          created_at: string
+          icon: string
+          id: string
+          name: string
+          saved: number
+          status: Database["public"]["Enums"]["goal_status"]
+          target_amount: number
+          target_date: string
+        }[]
+      }
       is_workspace_owner: { Args: { p_workspace_id: string }; Returns: boolean }
       monthly_totals: {
         Args: { p_from: string; p_to: string; p_workspace_id: string }
@@ -370,6 +477,7 @@ export type Database = {
       workspace_balance: { Args: { p_workspace_id: string }; Returns: number }
     }
     Enums: {
+      goal_status: "active" | "completed" | "archived"
       recurring_frequency: "monthly" | "yearly"
       transaction_type: "income" | "expense"
       workspace_type: "personal" | "business"
@@ -497,6 +605,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      goal_status: ["active", "completed", "archived"],
       recurring_frequency: ["monthly", "yearly"],
       transaction_type: ["income", "expense"],
       workspace_type: ["personal", "business"]

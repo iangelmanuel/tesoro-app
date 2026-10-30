@@ -19,6 +19,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard layout with an aside: Personal / Empresa workspace tabs, Personal navigation and a user menu (name, email, theme toggle, sign out).
 - "Coming soon" placeholder pages for the 7 Personal sections and an empty state for the Empresa workspace.
 - `SITE.routes` entries for the dashboard workspaces and the OAuth callback, and `SITE.navigation.personal`.
+- Migration `create_categories_and_transactions`: `categories` and `transactions` tables with RLS, the reusable `is_workspace_owner()` and `set_updated_at()` functions, a `check_transaction_category` trigger (same type and same or system workspace), 12 seeded system categories and the `transaction_totals` RPC (`security invoker`).
+- Personal transactions page at `/dashboard/personal/transactions`: URL-driven pagination (20 per page), month / type / category / text filters, income, expense and balance totals for the whole filtered period, create/edit dialog, delete confirmation and empty states.
+- Custom categories per workspace (create, rename, change icon and color, archive, restore) managed from a "Categorías" sheet, with a curated lucide icon set and a fixed color palette.
+- "Nuevo movimiento" quick-add button in the dashboard header, shown only on `/dashboard/personal/*`.
+- `formatCurrency()` / `formatDate()` (`es-CO`), `America/Bogota` date helpers and `getPersonalWorkspace()`.
+- shadcn/ui components: `dialog`, `alert-dialog`, `select`, `table`, `popover`, `calendar`, `textarea`, `badge`, `pagination`, `toggle` and `toggle-group`, plus `react-day-picker` and `date-fns`.
+- Global `<Toaster />` (sonner) in the root layout.
+
+### Changed
+
+- shadcn `pagination` uses `next/link` and Spanish labels.
 
 ### Fixed
 

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next"
 import { Geist } from "next/font/google"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { ThemeProvider } from "@/components/theme/theme-provider"
+import { Toaster } from "@/components/ui/sonner"
 import { SITE } from "@/config/site"
 import {
   buildApplicationSchema,
@@ -62,7 +63,10 @@ export default function RootLayout({
             buildAuthorSchema()
           ]}
         />
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import { redirect } from "next/navigation"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { AppSidebarSkeleton } from "@/components/dashboard/app-sidebar-skeleton"
+import { QuickAddTransaction } from "@/components/dashboard/quick-add-transaction"
 import { Separator } from "@/components/ui/separator"
 import {
   SidebarInset,
@@ -57,6 +58,9 @@ export default function DashboardLayout({
               className="mr-2 data-[orientation=vertical]:h-4"
             />
             <span className="text-sm font-medium">{SITE.info.name}</span>
+            <div className="ml-auto">
+              <QuickAddTransaction />
+            </div>
           </header>
           <div className="flex flex-1 flex-col p-4 md:p-6">{children}</div>
         </SidebarInset>

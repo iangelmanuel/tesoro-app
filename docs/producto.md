@@ -60,18 +60,22 @@ magic link.
 Las migraciones viven en `supabase/migrations/`. Toda tabla con datos de
 usuario tiene RLS.
 
-| Tabla        | Qué guarda                                                                     | RLS (cliente)                         |
-| ------------ | ------------------------------------------------------------------------------ | ------------------------------------- |
-| `profiles`   | Un perfil por usuario: `full_name`, `avatar_url`, `currency` (COP por defecto) | `select` y `update` del propio perfil |
-| `workspaces` | Espacios del usuario: `type` (`personal` / `business`) y `name`                | `select` de los propios               |
+| Tabla          | Qué guarda                                                                         | RLS (cliente)                          |
+| -------------- | ---------------------------------------------------------------------------------- | -------------------------------------- |
+| `profiles`     | Un perfil por usuario: `full_name`, `avatar_url`, `currency` (COP por defecto)     | `select` y `update` del propio perfil  |
+| `workspaces`   | Espacios del usuario: `type` (`personal` / `business`) y `name`                    | `select` de los propios                |
+| `categories`   | Categorías de ingreso o gasto: del sistema (`workspace_id` null) o propias         | `select`, `insert` y `update`          |
+| `transactions` | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note` | `select`, `insert`, `update`, `delete` |
 
 - Cada usuario tiene **un solo** espacio Personal (índice único parcial) y, en
   el futuro, Empresas ilimitadas.
 - El trigger `on_auth_user_created` (función `handle_new_user`, `security
 definer`) crea el perfil y el espacio Personal al insertar en
   `auth.users`. Por eso el cliente no tiene políticas de `insert` ni `delete`.
-- Los datos de los siguientes módulos (movimientos, metas, deudas…) colgarán
-  de `workspace_id`.
+- Los datos de cada módulo (movimientos, metas, deudas…) cuelgan de
+  `workspace_id`. Sus políticas RLS usan la función
+  `is_workspace_owner(workspace_id)` (`security invoker`), y el trigger
+  reutilizable `set_updated_at()` mantiene `updated_at`.
 
 ## Dashboard
 
@@ -101,6 +105,67 @@ Los espacios están definidos en `SITE.workspaces`.
 - Costos y gastos operativos
 - Reportes y gráficas
 - Recomendaciones
+
+## Movimientos y categorías
+
+Página `/dashboard/personal/transactions`. Los movimientos son la materia prima
+de gráficas, presupuestos, metas, deudas y score.
+
+### Movimientos
+
+- Tipo (`income` / `expense`), monto, fecha, categoría, descripción (1 a 120
+  caracteres) y nota opcional (hasta 500).
+- Montos en `numeric(14, 2)`, mayores que 0 y hasta 999.999.999.999,99. La UI
+  de COP los muestra sin decimales con `Intl.NumberFormat("es-CO")`, y el
+  formulario acepta el formato `1.500.000` o `1500000,50`.
+- Fechas `date` sin hora. Se permiten fechas futuras. "Hoy" y "mes actual" se
+  calculan siempre en `America/Bogota`.
+- Se crean y editan en un diálogo, y se eliminan con confirmación. Al editar se
+  puede cambiar el tipo; eso limpia la categoría.
+- El botón "Nuevo movimiento" del header, visible solo en
+  `/dashboard/personal/*`, abre el mismo diálogo desde cualquier página.
+
+### Categorías
+
+- **Del sistema** (fijas, visibles para todos, no editables ni ocultables):
+  - Ingresos: Salario, Freelance, Otros ingresos.
+  - Gastos: Vivienda, Comida, Transporte, Salud, Educación, Ocio, Servicios,
+    Compras, Otros gastos.
+- **Propias** por espacio: crear, renombrar, cambiar icono y color, archivar y
+  restaurar, desde el Sheet "Categorías" de Movimientos. El tipo no cambia
+  después de crearlas.
+- No se borran (FK `on delete restrict`, sin política `delete`): los
+  movimientos históricos nunca pierden su categoría.
+- Nombre único por espacio y tipo, sin distinguir mayúsculas.
+- Icono de un set curado (`CATEGORY_ICONS`) y color de una paleta fija
+  (`CATEGORY_COLORS`), guardados como claves.
+- Una categoría archivada no aparece al crear movimientos. Sus movimientos la
+  conservan, se puede guardar un movimiento que ya la tenía, y en el filtro
+  aparece al final como "(archivada)".
+- El trigger `check_transaction_category` garantiza en la BD que la categoría
+  tenga el mismo tipo que el movimiento y sea del sistema o del mismo espacio.
+
+### Tabla, filtros y totales
+
+- Tabla paginada por URL, 20 por página, ordenada por `occurred_on desc,
+created_at desc`.
+- Totales (ingresos, gastos y balance) de todo el periodo filtrado, calculados
+  en Postgres con la RPC `transaction_totals` (`security invoker`).
+- Filtros en la URL; cambiar uno vuelve a la página 1:
+
+| Parámetro  | Valores                    | Por defecto                    |
+| ---------- | -------------------------- | ------------------------------ |
+| `month`    | `YYYY-MM` o `all`          | mes actual en `America/Bogota` |
+| `type`     | `income`, `expense`        | sin filtro                     |
+| `category` | uuid                       | sin filtro                     |
+| `q`        | texto (descripción y nota) | sin filtro                     |
+| `page`     | entero ≥ 1                 | `1`                            |
+
+- La búsqueda es `ilike` sobre descripción y nota, sin distinguir mayúsculas y
+  escapando `%` y `_`.
+- Estados vacíos: sin ningún movimiento, una invitación a registrar el primero;
+  con filtros sin resultados, "No hay movimientos con estos filtros" y un
+  enlace para limpiarlos (o ver todos los meses, si solo se filtra por mes).
 
 ## Specs
 

@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -91,15 +92,13 @@ export function TableStep({
                   key={sheet.name}
                   className="flex flex-wrap items-center gap-3 px-3 py-2"
                 >
-                  <label className="flex flex-1 items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      className="size-4 accent-primary"
+                  <Label className="flex flex-1 cursor-pointer items-center gap-2 font-normal">
+                    <Checkbox
                       checked={checked}
-                      onChange={() => onToggleSheet(sheet.name)}
+                      onCheckedChange={() => onToggleSheet(sheet.name)}
                     />
                     {sheet.name}
-                  </label>
+                  </Label>
                   {checked && isPrimary && <Badge>Define el mapeo</Badge>}
                   {checked && !isPrimary && match?.table && (
                     <Badge variant="secondary">

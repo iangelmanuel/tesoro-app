@@ -27,7 +27,7 @@ import {
   STEPS,
   type StepId,
   selectedTables,
-  sourceTables,
+  toSourceTables,
   wizardReducer
 } from "./wizard-state"
 
@@ -41,8 +41,14 @@ interface ImportWizardProps {
 
 export function ImportWizard({ categories, currency }: ImportWizardProps) {
   const [state, dispatch] = useReducer(wizardReducer, INITIAL_STATE)
-  const tables = useMemo(() => selectedTables(state), [state])
-  const sources = useMemo(() => sourceTables(state), [state])
+  // Solo se recalculan al cambiar el archivo, las hojas o la tabla, no al
+  // marcar filas en la vista previa
+  const { file, selectedSheets, primaryTable } = state
+  const tables = useMemo(
+    () => selectedTables({ file, selectedSheets, primaryTable }),
+    [file, selectedSheets, primaryTable]
+  )
+  const sources = useMemo(() => toSourceTables(tables), [tables])
   const extracted = useMemo(
     () => (state.config ? extractRows(sources, state.config) : null),
     [sources, state.config]

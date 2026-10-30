@@ -3,6 +3,7 @@
 import { useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   Select,
   SelectContent,
@@ -123,31 +124,38 @@ export function ColumnsStep({
 
   return (
     <div className="flex flex-col gap-6">
-      <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 text-sm font-medium">
+      <div className="flex flex-col gap-3">
+        <p
+          id="import-type-mode"
+          className="text-sm font-medium"
+        >
           ¿Cómo se sabe si es ingreso o gasto?
-        </legend>
-        <div className="grid gap-2 sm:grid-cols-3">
+        </p>
+        <RadioGroup
+          aria-labelledby="import-type-mode"
+          className="sm:grid-cols-3"
+          value={typeMode}
+          onValueChange={(value) => onTypeModeChange(value as TypeMode)}
+        >
           {TYPE_MODES.map((mode) => (
-            <label
+            <Label
               key={mode.value}
-              className="flex cursor-pointer gap-2 rounded-lg border p-3 text-sm has-checked:border-primary has-checked:bg-primary/5"
+              htmlFor={`import-type-mode-${mode.value}`}
+              className="flex cursor-pointer items-start gap-2 rounded-lg border p-3 font-normal has-data-checked:border-primary has-data-checked:bg-primary/5"
             >
-              <input
-                type="radio"
-                name="import-type-mode"
-                className="mt-0.5 accent-primary"
-                checked={typeMode === mode.value}
-                onChange={() => onTypeModeChange(mode.value)}
+              <RadioGroupItem
+                id={`import-type-mode-${mode.value}`}
+                value={mode.value}
+                className="mt-0.5"
               />
               <span className="flex flex-col gap-0.5">
                 <span className="font-medium">{mode.label}</span>
                 <span className="text-muted-foreground">{mode.hint}</span>
               </span>
-            </label>
+            </Label>
           ))}
-        </div>
-      </fieldset>
+        </RadioGroup>
+      </div>
 
       <section className="flex flex-col gap-3">
         <div className="flex flex-col gap-1">

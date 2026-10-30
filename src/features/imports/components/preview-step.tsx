@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { LoaderCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Table,
   TableBody,
@@ -170,13 +171,11 @@ export function PreviewStep({
                   className={cn(!row.selected && "text-muted-foreground")}
                 >
                   <TableCell>
-                    <input
-                      type="checkbox"
-                      className="size-4 accent-primary"
+                    <Checkbox
                       aria-label={`Importar fila ${row.sourceRow} de ${row.sheet}`}
                       checked={row.selected}
                       disabled={!row.value || importing}
-                      onChange={() => onToggle(index)}
+                      onCheckedChange={() => onToggle(index)}
                     />
                   </TableCell>
                   <TableCell>

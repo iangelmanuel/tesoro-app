@@ -1,6 +1,6 @@
 # SPEC 08 — Importar movimientos desde Excel o CSV
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 02
 > **Fecha:** 2026-10-30
 > **Objetivo:** Que el usuario importe sus movimientos personales desde una o varias hojas de un `.xlsx` o desde un `.csv`, ubicando la tabla, mapeando columnas y categorías y revisando una vista previa antes de guardar, con la opción de deshacer la importación.

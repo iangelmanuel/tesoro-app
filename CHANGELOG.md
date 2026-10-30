@@ -69,6 +69,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Preview with per-row validation, duplicate detection against existing transactions and earlier rows of the same file (unchecked by default), status filter, 100-row pages and per-row checkboxes; saved all-or-nothing, with a summary of imported, skipped, duplicate and error counts.
 - Import history with "Deshacer" (always available, confirms with the number of transactions, also deletes edited ones and keeps the created categories).
 - "Importar" buttons on the transactions page and its empty state.
+- shadcn/ui `checkbox` and `radio-group` components, used by the import wizard.
+- `.gitignore` excludes `*.xlsx` and `*.xls` so sample import files with real financial data are never committed.
 - "Importar" section in `docs/producto.md`, and the SPEC 08 answers plus the SPEC 08b and "Cuentas y métodos de pago" entries in `ROADMAP.md`.
 
 ### Changed

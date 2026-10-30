@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from "react"
 import { cn } from "cn"
-import { Pencil, Trash2 } from "lucide-react"
+import { Pencil, PiggyBank, Trash2 } from "lucide-react"
 import { toast } from "sonner"
+import { CardEmpty } from "@/components/dashboard/empty-state"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +34,15 @@ export function ContributionsList({
   currency,
   readOnly
 }: ContributionsListProps) {
+  if (contributions.length === 0) {
+    return (
+      <CardEmpty
+        icon={PiggyBank}
+        message="Aún no hay aportes en esta meta"
+      />
+    )
+  }
+
   return (
     <ul className="divide-y rounded-xl border">
       {contributions.map((contribution) => (

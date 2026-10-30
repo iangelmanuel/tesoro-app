@@ -1,5 +1,6 @@
 import { Suspense } from "react"
-import { Plus } from "lucide-react"
+import { Plus, Target } from "lucide-react"
+import { EmptyState } from "@/components/dashboard/empty-state"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { GoalCard } from "@/features/goals/components/goal-card"
@@ -62,18 +63,43 @@ async function GoalsContent() {
     )
   )
 
+  const createButton = (
+    <GoalDialog
+      trigger={
+        <Button>
+          <Plus data-icon="inline-start" />
+          Nueva meta
+        </Button>
+      }
+    />
+  )
+
+  if (goals.length === 0) {
+    return (
+      <EmptyState
+        icon={Target}
+        title="Crea tu primera meta de ahorro"
+        description="Un viaje, un fondo de emergencia o lo que quieras. Registra tus aportes y Tesoro te dice cuánto ahorrar cada mes."
+      >
+        {createButton}
+      </EmptyState>
+    )
+  }
+
   return (
     <>
-      <div className="flex flex-wrap gap-2">
-        <GoalDialog
-          trigger={
-            <Button>
-              <Plus data-icon="inline-start" />
-              Nueva meta
-            </Button>
-          }
-        />
-      </div>
+      {/* Sin activas, la acción va en el estado vacío */}
+      {active.length === 0 ? (
+        <EmptyState
+          icon={Target}
+          title="No tienes metas activas"
+          description="Crea una meta nueva o reactiva una de las cumplidas y archivadas."
+        >
+          {createButton}
+        </EmptyState>
+      ) : (
+        <div className="flex flex-wrap gap-2">{createButton}</div>
+      )}
 
       {active.length > 0 && (
         <ul className="grid gap-4 lg:grid-cols-2">

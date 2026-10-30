@@ -1,7 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { Archive, CircleCheck, EllipsisVertical, Pencil } from "lucide-react"
+import {
+  Archive,
+  CircleCheck,
+  EllipsisVertical,
+  Pencil,
+  RefreshCw
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -9,27 +15,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import { formatPercent } from "@/features/budgets/progress"
 import { formatCurrency, formatDate } from "@/libs/format"
 import {
   debtProjection,
   formatMonthYear,
   formatRate,
   hasZeroBalance,
-  nextPayment,
-  paidPercent,
-  utilizationPercent
+  nextPayment
 } from "../calculations"
-import type { Debt } from "../queries"
+import type { Debt, DebtEntry } from "../queries"
+import { AdjustBalanceDialog } from "./adjust-balance-dialog"
 import { ArchiveDebtDialog } from "./archive-debt-dialog"
 import { DebtDialog } from "./debt-dialog"
-import {
-  DebtBar,
-  PaymentStatusBadge,
-  ToneBadge,
-  UtilizationBadge,
-  UtilizationBar
-} from "./debt-indicators"
+import { PaymentStatusBadge, ToneBadge } from "./debt-indicators"
+import { DebtProgress } from "./debt-progress"
+import { DebtSheet } from "./debt-sheet"
 import { useDebtAction } from "./use-debt-action"
 
 const KIND_LABELS = { credit_card: "Tarjeta", loan: "Préstamo" } as const
@@ -37,13 +37,16 @@ const KIND_LABELS = { credit_card: "Tarjeta", loan: "Préstamo" } as const
 interface DebtCardProps {
   /** Tarjeta o préstamo activo */
   debt: Debt
+  entries: DebtEntry[]
   /** Hoy en America/Bogota, calculado en el servidor */
   today: string
   currency: string
 }
 
-export function DebtCard({ debt, today, currency }: DebtCardProps) {
+export function DebtCard({ debt, entries, today, currency }: DebtCardProps) {
   const [editing, setEditing] = useState(false)
+  const [adjusting, setAdjusting] = useState(false)
+  const [detailOpen, setDetailOpen] = useState(false)
   const [confirmArchive, setConfirmArchive] = useState(false)
   const { pending, run } = useDebtAction(debt)
   const zeroBalance = hasZeroBalance(debt)
@@ -59,8 +62,13 @@ export function DebtCard({ debt, today, currency }: DebtCardProps) {
   return (
     <li className="flex flex-col gap-4 rounded-xl border p-4">
       <div className="flex items-start gap-3">
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <div className="flex flex-wrap items-center gap-2">
+        {/* Abre el Sheet con el detalle, la proyección y el historial */}
+        <button
+          type="button"
+          className="-m-1 flex min-w-0 flex-1 flex-col gap-1 rounded-lg p-1 text-left transition-colors hover:bg-muted/50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+          onClick={() => setDetailOpen(true)}
+        >
+          <span className="flex flex-wrap items-center gap-2">
             <span className="truncate font-medium">{debt.name}</span>
             <span className="text-xs text-muted-foreground">
               {debt.kind === "loan"
@@ -68,7 +76,7 @@ export function DebtCard({ debt, today, currency }: DebtCardProps) {
                 : KIND_LABELS.credit_card}
               {debt.counterparty && ` · ${debt.counterparty}`}
             </span>
-          </div>
+          </span>
           <span className="text-2xl font-semibold tabular-nums">
             {formatCurrency(debt.balance, currency)}
           </span>
@@ -77,7 +85,7 @@ export function DebtCard({ debt, today, currency }: DebtCardProps) {
               ? formatRate(debt.interest_rate, debt.rate_type)
               : "Sin tasa"}
           </span>
-        </div>
+        </button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -94,6 +102,10 @@ export function DebtCard({ debt, today, currency }: DebtCardProps) {
             <DropdownMenuItem onSelect={() => setEditing(true)}>
               <Pencil />
               Editar
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setAdjusting(true)}>
+              <RefreshCw />
+              Actualizar saldo
             </DropdownMenuItem>
             {zeroBalance && (
               <DropdownMenuItem onSelect={() => run("markPaid")}>
@@ -112,11 +124,25 @@ export function DebtCard({ debt, today, currency }: DebtCardProps) {
           open={editing}
           onOpenChange={setEditing}
         />
+        <AdjustBalanceDialog
+          debt={debt}
+          currency={currency}
+          open={adjusting}
+          onOpenChange={setAdjusting}
+        />
         <ArchiveDebtDialog
           name={debt.name}
           open={confirmArchive}
           onOpenChange={setConfirmArchive}
           onConfirm={() => run("archive")}
+        />
+        <DebtSheet
+          debt={debt}
+          entries={entries}
+          today={today}
+          currency={currency}
+          open={detailOpen}
+          onOpenChange={setDetailOpen}
         />
       </div>
 
@@ -151,45 +177,6 @@ export function DebtCard({ debt, today, currency }: DebtCardProps) {
         </dl>
       )}
     </li>
-  )
-}
-
-/** Utilización (tarjeta) o % pagado (préstamo con monto original) */
-export function DebtProgress({ debt }: { debt: Debt }) {
-  if (debt.kind === "credit_card" && debt.credit_limit !== null) {
-    const percent = utilizationPercent(debt.balance, debt.credit_limit)
-
-    return (
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-3">
-          <UtilizationBar percent={percent} />
-          <span className="text-sm font-medium tabular-nums">
-            {formatPercent(percent)}
-          </span>
-        </div>
-        <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-          Utilización del cupo
-          <UtilizationBadge percent={percent} />
-        </p>
-      </div>
-    )
-  }
-
-  const percent = paidPercent(debt)
-  if (percent === null) {
-    return null
-  }
-
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-3">
-        <DebtBar percent={percent} />
-        <span className="text-sm font-medium tabular-nums">
-          {formatPercent(percent)}
-        </span>
-      </div>
-      <p className="text-sm text-muted-foreground">Pagado del monto original</p>
-    </div>
   )
 }
 

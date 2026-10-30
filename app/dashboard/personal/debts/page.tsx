@@ -10,7 +10,12 @@ import { DebtTotals } from "@/features/debts/components/debt-totals"
 import { DebtsTabs } from "@/features/debts/components/debts-tabs"
 import { InactiveDebts } from "@/features/debts/components/inactive-debts"
 import { UpcomingDebtPayments } from "@/features/debts/components/upcoming-debt-payments"
-import { type Debt, getDebts } from "@/features/debts/queries"
+import {
+  type Debt,
+  type DebtEntry,
+  getDebtEntries,
+  getDebts
+} from "@/features/debts/queries"
 import { parseDebtsTab } from "@/features/debts/tabs"
 import {
   type PersonalWorkspace,
@@ -53,12 +58,27 @@ async function DebtsContent({
   const debts = await getDebts(workspace.id)
   // Tras leer la sesión: todayISO usa new Date()
   const today = todayISO()
+  const tabDebts = debts.filter((debt) =>
+    tab === "debts" ? debt.kind !== "receivable" : debt.kind === "receivable"
+  )
+
+  // Historial de cada deuda de la tab para su Sheet. Solo se consultan las
+  // que tienen pagos o ajustes.
+  const entries: Record<string, DebtEntry[]> = Object.fromEntries(
+    await Promise.all(
+      tabDebts.map(async (debt) => [
+        debt.id,
+        debt.entries_count > 0 ? await getDebtEntries(debt.id) : []
+      ])
+    )
+  )
 
   return (
     <DebtsTabs tab={tab}>
       {tab === "debts" ? (
         <PayablesTab
-          debts={debts.filter((debt) => debt.kind !== "receivable")}
+          debts={tabDebts}
+          entries={entries}
           workspace={workspace}
           today={today}
         />
@@ -69,11 +89,14 @@ async function DebtsContent({
 
 function PayablesTab({
   debts,
+  entries,
   workspace,
   today
 }: {
   /** Tarjetas y préstamos, en cualquier estado */
   debts: Debt[]
+  /** Pagos y ajustes por id de deuda */
+  entries: Record<string, DebtEntry[]>
   workspace: PersonalWorkspace
   today: string
 }) {
@@ -142,6 +165,7 @@ function PayablesTab({
                 <DebtCard
                   key={debt.id}
                   debt={debt}
+                  entries={entries[debt.id] ?? []}
                   today={today}
                   currency={workspace.currency}
                 />
@@ -154,6 +178,8 @@ function PayablesTab({
       {inactive.length > 0 && (
         <InactiveDebts
           debts={inactive}
+          entries={entries}
+          today={today}
           currency={workspace.currency}
         />
       )}

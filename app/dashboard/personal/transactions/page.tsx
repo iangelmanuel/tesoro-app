@@ -5,6 +5,10 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
 import { getCategories } from "@/features/categories/queries"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
+import {
+  NoFilteredTransactions,
+  NoTransactions
+} from "@/features/transactions/components/transactions-empty"
 import { TransactionsFilters } from "@/features/transactions/components/transactions-filters"
 import { TransactionsPagination } from "@/features/transactions/components/transactions-pagination"
 import { TransactionsTable } from "@/features/transactions/components/transactions-table"
@@ -15,7 +19,8 @@ import {
 } from "@/features/transactions/filters"
 import {
   getTransactionTotals,
-  getTransactions
+  getTransactions,
+  hasAnyTransactions
 } from "@/features/transactions/queries"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { buildMetadata } from "@/libs/seo"
@@ -57,6 +62,9 @@ async function TransactionsContent({
     getTransactions(workspace.id, filters),
     getTransactionTotals(workspace.id, filters)
   ])
+  // Solo se consulta cuando los filtros no devuelven nada
+  const isEmptyWorkspace =
+    rows.length === 0 && !(await hasAnyTransactions(workspace.id))
 
   return (
     <>
@@ -73,31 +81,33 @@ async function TransactionsContent({
         <CategoriesSheet categories={categories} />
       </div>
 
-      <TransactionsFilters
-        filters={filters}
-        categories={categories}
-      />
-      <TransactionsTotals
-        totals={totals}
-        currency={workspace.currency}
-      />
-
-      {rows.length > 0 ? (
-        <TransactionsTable
-          rows={rows}
-          categories={categories}
-          currency={workspace.currency}
-        />
+      {isEmptyWorkspace ? (
+        <NoTransactions categories={categories} />
       ) : (
-        <p className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">
-          No hay movimientos.
-        </p>
+        <>
+          <TransactionsFilters
+            filters={filters}
+            categories={categories}
+          />
+          <TransactionsTotals
+            totals={totals}
+            currency={workspace.currency}
+          />
+          {rows.length > 0 ? (
+            <TransactionsTable
+              rows={rows}
+              categories={categories}
+              currency={workspace.currency}
+            />
+          ) : (
+            <NoFilteredTransactions filters={filters} />
+          )}
+          <TransactionsPagination
+            filters={filters}
+            count={count}
+          />
+        </>
       )}
-
-      <TransactionsPagination
-        filters={filters}
-        count={count}
-      />
     </>
   )
 }

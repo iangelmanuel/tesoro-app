@@ -80,6 +80,21 @@ export async function getTransactions(
   return { rows: data, count: count ?? 0 }
 }
 
+// Para distinguir "sin movimientos" de "sin resultados para los filtros"
+export async function hasAnyTransactions(workspaceId: string) {
+  const supabase = await createClient()
+  const { count, error } = await supabase
+    .from("transactions")
+    .select("id", { count: "exact", head: true })
+    .eq("workspace_id", workspaceId)
+    .limit(1)
+
+  if (error) {
+    throw new Error("No se pudieron cargar los movimientos")
+  }
+  return (count ?? 0) > 0
+}
+
 // Totales de todo el periodo filtrado, no solo de la página actual
 export async function getTransactionTotals(
   workspaceId: string,

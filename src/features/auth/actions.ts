@@ -82,7 +82,7 @@ export async function signInWithOAuth(
     redirect(`${SITE.routes.signIn}?error=oauth` as Route)
   }
 
-  const callbackUrl = new URL("/auth/callback", SITE.seo.url)
+  const callbackUrl = new URL(SITE.routes.authCallback, SITE.seo.url)
   callbackUrl.searchParams.set("next", safeRedirectPath(formData.get("next")))
 
   const supabase = await createClient()

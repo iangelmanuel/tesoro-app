@@ -58,3 +58,26 @@ export function groupTopWithOthers<T extends { total: number }>(
     }
   }
 }
+
+// Reparto de 100 % entre `values` con `decimals` decimales. Usa el método del
+// mayor residuo para que la suma redondeada dé exactamente 100.
+export function percentShares(values: number[], decimals = 1) {
+  const total = values.reduce((sum, value) => sum + value, 0)
+  if (total === 0) return values.map(() => 0)
+
+  const scale = 10 ** decimals
+  const exact = values.map((value) => (value / total) * 100 * scale)
+  const shares = exact.map(Math.floor)
+  let missing = 100 * scale - shares.reduce((sum, share) => sum + share, 0)
+
+  const byRemainder = exact
+    .map((value, index) => ({ index, remainder: value - Math.floor(value) }))
+    .sort((a, b) => b.remainder - a.remainder)
+
+  for (const { index } of byRemainder) {
+    if (missing <= 0) break
+    shares[index] += 1
+    missing -= 1
+  }
+  return shares.map((share) => share / scale)
+}

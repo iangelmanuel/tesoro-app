@@ -1,12 +1,15 @@
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { z } from "zod"
+import { SITE } from "@/config/site"
 import { TRANSACTION_TYPES } from "@/features/categories/constants"
 import type {
   SearchParams,
   TransactionType
 } from "@/features/transactions/filters"
-import { currentMonth, monthRange } from "@/libs/dates"
+import { currentMonth, monthRange, shiftMonth } from "@/libs/dates"
+
+export const REPORTS_PATH = `${SITE.routes.dashboardPersonal}/reports`
 
 export const REPORT_PERIODS = ["month", "quarter", "year", "range"] as const
 
@@ -181,4 +184,55 @@ export function parseReportParams(
   const parsed = monthSchema.safeParse(rawValue)
   const value = parsed.success ? parsed.data : currentPeriodValue(period, now)
   return { period, value, ...monthPeriod(value), type }
+}
+
+/** Valor del periodo `delta` pasos antes o después (mes, trimestre o año) */
+export function shiftPeriodValue(
+  period: Exclude<ReportPeriod, "range">,
+  value: string,
+  delta: number
+) {
+  if (period === "month") return shiftMonth(value, delta)
+  if (period === "year") return String(Number(value) + delta)
+
+  const [year, quarter] = value.split("-Q").map(Number)
+  const index = year * 4 + (quarter - 1) + delta
+  return `${Math.floor(index / 4)}-Q${(index % 4) + 1}`
+}
+
+export type ReportQuery =
+  | {
+      period: Exclude<ReportPeriod, "range">
+      value: string
+      type: TransactionType
+    }
+  | { period: "range"; from: string; to: string; type: TransactionType }
+
+// Se escriben siempre periodo y tipo para que el enlace no cambie de
+// significado con el tiempo y se conserve al recargar
+export function buildReportQuery(query: ReportQuery) {
+  const params = new URLSearchParams({ period: query.period })
+
+  if (query.period === "range") {
+    params.set("from", query.from)
+    params.set("to", query.to)
+  } else {
+    params.set("value", query.value)
+  }
+  params.set("type", query.type)
+
+  return params.toString()
+}
+
+/** Query de los parámetros ya validados, con cambios opcionales */
+export function reportQueryFromParams(
+  params: ReportParams,
+  overrides: { type?: TransactionType } = {}
+): ReportQuery {
+  const type = overrides.type ?? params.type
+
+  if (params.period === "range") {
+    return { period: "range", from: params.from, to: params.to, type }
+  }
+  return { period: params.period, value: params.value ?? "", type }
 }

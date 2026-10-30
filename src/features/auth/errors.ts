@@ -6,6 +6,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   email_exists: "Ya existe una cuenta con este email",
   email_address_invalid: "Ingresa un email válido",
   weak_password: "La contraseña es muy débil. Usa una más segura",
+  same_password: "La nueva contraseña debe ser distinta de la actual",
   email_not_confirmed: "Debes confirmar tu email antes de iniciar sesión",
   signup_disabled: "El registro está deshabilitado por ahora",
   over_request_rate_limit:

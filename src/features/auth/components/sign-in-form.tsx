@@ -58,6 +58,12 @@ export function SignInForm() {
           errors={state.fieldErrors?.password}
           required
         />
+        <Link
+          href={SITE.routes.forgotPassword}
+          className="-mt-2 self-end text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          ¿Olvidaste tu contraseña?
+        </Link>
         {error && (
           <p
             role="alert"

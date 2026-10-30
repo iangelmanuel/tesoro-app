@@ -12,13 +12,20 @@ import {
   suggestCategoryTargets,
   suggestTypeValue
 } from "../normalize"
+import { suggestDebtEntryValue } from "../normalize-debt-entries"
+import { suggestGoalEntryValue } from "../normalize-goal-contributions"
+import { suggestFrequencyValue } from "../normalize-recurring"
 import type { SheetCells } from "../read-file"
 import { DEFAULT_TARGET } from "../targets"
 import type {
   CategoryOption,
   CategoryTarget,
   DateFormat,
+  DebtEntryTarget,
   DetectedTable,
+  EntryTypeMode,
+  FrequencyTarget,
+  GoalEntryTarget,
   ImportConfig,
   ImportField,
   ImportStats,
@@ -82,6 +89,18 @@ export type WizardAction =
   | { type: "set_type_mode"; mode: TypeMode }
   | { type: "set_date_format"; format: DateFormat }
   | { type: "set_type_value"; key: string; target: TypeValueTarget | undefined }
+  | { type: "set_entry_type_mode"; mode: EntryTypeMode }
+  | {
+      type: "set_entry_type_value"
+      key: string
+      target: DebtEntryTarget | GoalEntryTarget | undefined
+    }
+  | {
+      type: "set_frequency_value"
+      key: string
+      target: FrequencyTarget | undefined
+    }
+  | { type: "set_fixed_link"; id: string | null }
   | { type: "start_categories"; categories: CategoryOption[] }
   | { type: "set_category_target"; key: string; target: CategoryTarget }
   | { type: "preview_ready"; rows: PreviewRow[]; empty: number }
@@ -103,25 +122,86 @@ export const INITIAL_STATE: WizardState = {
   summary: null
 }
 
+/** Estado inicial con el destino de `?target=` */
+export function initialState(target: ImportTarget): WizardState {
+  return { ...INITIAL_STATE, target }
+}
+
+/** Agrega o quita el destino de un valor */
+function withValue<T>(values: Record<string, T>, key: string, target?: T) {
+  const next = { ...values }
+  if (target === undefined) delete next[key]
+  else next[key] = target
+  return next
+}
+
 function firstTable(file: LoadedFile, sheet: string | undefined) {
   return sheet ? (file.detected[sheet]?.[0] ?? null) : null
 }
 
-/** Sugiere ingreso o gasto para los valores nuevos de la columna de tipo */
-function seedTypeValues(state: WizardState, config: ImportConfig) {
-  if (config.mapping.type === undefined) return config
+/**
+ * Agrega a `values` la sugerencia de cada valor nuevo de la columna. Los que
+ * ya tienen destino no cambian.
+ */
+function seedColumnValues<T>(
+  state: WizardState,
+  column: number | undefined,
+  values: Record<string, T>,
+  suggest: (label: string) => T | undefined
+) {
+  if (column === undefined) return values
 
-  const typeValues = { ...config.typeValues }
-  for (const { key, label } of distinctValues(
-    sourceTables(state),
-    config.mapping.type
-  )) {
-    if (key in typeValues) continue
-    const suggestion = suggestTypeValue(label)
-    if (suggestion) typeValues[key] = suggestion
+  const seeded = { ...values }
+  for (const { key, label } of distinctValues(sourceTables(state), column)) {
+    if (key in seeded) continue
+    const suggestion = suggest(label)
+    if (suggestion) seeded[key] = suggestion
   }
+  return seeded
+}
 
-  return { ...config, typeValues }
+/**
+ * Sugiere el destino de los valores nuevos de las columnas de tipo (ingreso o
+ * gasto; pago, cargo, aporte o retiro) y de frecuencia
+ */
+function seedValues(state: WizardState, config: ImportConfig): ImportConfig {
+  const { mapping } = config
+
+  switch (state.target) {
+    case "transactions":
+      return {
+        ...config,
+        typeValues: seedColumnValues(
+          state,
+          mapping.type,
+          config.typeValues,
+          suggestTypeValue
+        )
+      }
+    case "recurring_expenses":
+      return {
+        ...config,
+        frequencyValues: seedColumnValues(
+          state,
+          mapping.frequency,
+          config.frequencyValues,
+          suggestFrequencyValue
+        )
+      }
+    case "debt_entries":
+    case "goal_contributions":
+      return {
+        ...config,
+        entryTypeValues: seedColumnValues<DebtEntryTarget | GoalEntryTarget>(
+          state,
+          mapping.entry_type,
+          config.entryTypeValues,
+          state.target === "debt_entries"
+            ? suggestDebtEntryValue
+            : suggestGoalEntryValue
+        )
+      }
+  }
 }
 
 export function wizardReducer(
@@ -201,7 +281,7 @@ export function wizardReducer(
       }
 
       const mapping = suggestMapping(state.primaryTable.headers, state.target)
-      const config = seedTypeValues(state, {
+      const config = seedValues(state, {
         mapping,
         typeMode: suggestTypeMode(mapping),
         dateFormat: "dmy",
@@ -235,7 +315,7 @@ export function wizardReducer(
 
       return {
         ...state,
-        config: seedTypeValues(state, { ...state.config, mapping })
+        config: seedValues(state, { ...state.config, mapping })
       }
     }
 
@@ -252,12 +332,51 @@ export function wizardReducer(
     case "set_type_value": {
       if (!state.config) return state
 
-      const typeValues = { ...state.config.typeValues }
-      if (action.target) typeValues[action.key] = action.target
-      else delete typeValues[action.key]
-
+      const typeValues = withValue(
+        state.config.typeValues,
+        action.key,
+        action.target
+      )
       return { ...state, config: { ...state.config, typeValues } }
     }
+
+    case "set_entry_type_mode":
+      return state.config
+        ? {
+            ...state,
+            config: seedValues(state, {
+              ...state.config,
+              entryTypeMode: action.mode
+            })
+          }
+        : state
+
+    case "set_entry_type_value": {
+      if (!state.config) return state
+
+      const entryTypeValues = withValue(
+        state.config.entryTypeValues,
+        action.key,
+        action.target
+      )
+      return { ...state, config: { ...state.config, entryTypeValues } }
+    }
+
+    case "set_frequency_value": {
+      if (!state.config) return state
+
+      const frequencyValues = withValue(
+        state.config.frequencyValues,
+        action.key,
+        action.target
+      )
+      return { ...state, config: { ...state.config, frequencyValues } }
+    }
+
+    case "set_fixed_link":
+      return state.config
+        ? { ...state, config: { ...state.config, fixedLinkId: action.id } }
+        : state
 
     case "start_categories": {
       if (!state.config) return state

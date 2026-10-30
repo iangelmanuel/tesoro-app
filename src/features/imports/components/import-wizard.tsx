@@ -15,7 +15,8 @@ import {
   newCategoryKey,
   toImportRows
 } from "../normalize"
-import type { CategoryOption } from "../types"
+import type { DebtLinkOption, GoalLinkOption } from "../queries"
+import type { CategoryOption, ImportTarget } from "../types"
 import { CategoriesStep } from "./categories-step"
 import { ColumnsStep } from "./columns-step"
 import { FileStep } from "./file-step"
@@ -23,9 +24,9 @@ import { PreviewStep } from "./preview-step"
 import { SummaryStep } from "./summary-step"
 import { TableStep } from "./table-step"
 import {
-  INITIAL_STATE,
   STEPS,
   type StepId,
+  initialState,
   selectedTables,
   toSourceTables,
   wizardReducer
@@ -34,13 +35,41 @@ import {
 // Asistente de 6 pasos: archivo → tabla → columnas → categorías → vista
 // previa → resumen. El estado vive en el cliente y se pierde al recargar.
 interface ImportWizardProps {
+  /** Destino de `?target=` */
+  initialTarget: ImportTarget
   /** Categorías activas (sistema y propias) para el paso de categorías */
   categories: CategoryOption[]
+  /** Deudas y metas activas: destinos de esas importaciones */
+  debts: DebtLinkOption[]
+  goals: GoalLinkOption[]
   currency: string
 }
 
-export function ImportWizard({ categories, currency }: ImportWizardProps) {
-  const [state, dispatch] = useReducer(wizardReducer, INITIAL_STATE)
+export function ImportWizard({
+  initialTarget,
+  categories,
+  debts,
+  goals,
+  currency
+}: ImportWizardProps) {
+  // Sin deudas o metas activas, su destino no se puede elegir
+  const unavailable = useMemo(() => {
+    const targets: ImportTarget[] = []
+    if (debts.length === 0) targets.push("debt_entries")
+    if (goals.length === 0) targets.push("goal_contributions")
+    return targets
+  }, [debts.length, goals.length])
+  const [state, dispatch] = useReducer(
+    wizardReducer,
+    unavailable.includes(initialTarget) ? "transactions" : initialTarget,
+    initialState
+  )
+  const links =
+    state.target === "debt_entries"
+      ? debts
+      : state.target === "goal_contributions"
+        ? goals
+        : []
   // Solo se recalculan al cambiar el archivo, las hojas o la tabla, no al
   // marcar filas en la vista previa
   const { file, selectedSheets, primaryTable } = state
@@ -143,6 +172,9 @@ export function ImportWizard({ categories, currency }: ImportWizardProps) {
 
       {state.step === "file" && (
         <FileStep
+          target={state.target}
+          unavailable={unavailable}
+          onTargetChange={(target) => dispatch({ type: "set_target", target })}
           onLoaded={(name, sheets) =>
             dispatch({ type: "file_loaded", name, sheets })
           }
@@ -165,21 +197,39 @@ export function ImportWizard({ categories, currency }: ImportWizardProps) {
 
       {state.step === "columns" && state.primaryTable && state.config && (
         <ColumnsStep
+          target={state.target}
           headers={state.primaryTable.headers}
           config={state.config}
           tables={sources}
+          links={links}
           onFieldChange={(field, column) =>
             dispatch({ type: "set_field", field, column })
           }
           onTypeModeChange={(mode) => dispatch({ type: "set_type_mode", mode })}
+          onEntryTypeModeChange={(mode) =>
+            dispatch({ type: "set_entry_type_mode", mode })
+          }
           onDateFormatChange={(format) =>
             dispatch({ type: "set_date_format", format })
           }
           onTypeValueChange={(key, target) =>
             dispatch({ type: "set_type_value", key, target })
           }
+          onEntryTypeValueChange={(key, target) =>
+            dispatch({ type: "set_entry_type_value", key, target })
+          }
+          onFrequencyValueChange={(key, target) =>
+            dispatch({ type: "set_frequency_value", key, target })
+          }
+          onFixedLinkChange={(id) => dispatch({ type: "set_fixed_link", id })}
           onBack={() => dispatch({ type: "go_to", step: "table" })}
-          onNext={() => dispatch({ type: "start_categories", categories })}
+          onNext={() => {
+            // Los pasos 4 y 5 de los demás destinos llegan en los pasos 6 y 7
+            // del plan del SPEC 08b
+            if (state.target === "transactions") {
+              dispatch({ type: "start_categories", categories })
+            }
+          }}
         />
       )}
 

@@ -1,8 +1,12 @@
 "use client"
 
 import { useRef, useState } from "react"
+import type { Route } from "next"
+import Link from "next/link"
 import { FileSpreadsheet, LoaderCircle, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { cn } from "@/libs/utils"
 import {
   ImportFileError,
@@ -10,14 +14,39 @@ import {
   readFile,
   validateFile
 } from "../read-file"
+import { IMPORT_TARGETS } from "../targets"
+import type { ImportTarget } from "../types"
+
+const TARGET_HINTS: Record<ImportTarget, string> = {
+  transactions: "Ingresos y gastos",
+  recurring_expenses: "Pagos que se repiten cada mes o cada año",
+  debt_entries:
+    "Pagos y ajustes de tus tarjetas, préstamos y cuentas por cobrar",
+  goal_contributions: "Aportes y retiros de tus metas de ahorro"
+}
+
+/** Destinos que necesitan algo creado antes, con su mensaje */
+const TARGET_REQUIREMENTS: Partial<Record<ImportTarget, string>> = {
+  debt_entries: "Primero crea una deuda",
+  goal_contributions: "Primero crea una meta"
+}
 
 interface FileStepProps {
+  target: ImportTarget
+  /** Destinos deshabilitados: sin deudas o metas activas */
+  unavailable: ImportTarget[]
+  onTargetChange: (target: ImportTarget) => void
   onLoaded: (name: string, sheets: SheetCells[]) => void
 }
 
-// Paso 1: zona de arrastre y selector. El archivo se lee en el navegador y
-// no se envía al servidor.
-export function FileStep({ onLoaded }: FileStepProps) {
+// Paso 1: destino, zona de arrastre y selector. El archivo se lee en el
+// navegador y no se envía al servidor.
+export function FileStep({
+  target,
+  unavailable,
+  onTargetChange,
+  onLoaded
+}: FileStepProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
   const [reading, setReading] = useState(false)
@@ -46,6 +75,58 @@ export function FileStep({ onLoaded }: FileStepProps) {
 
   return (
     <div className="flex flex-col gap-3">
+      <p
+        id="import-target"
+        className="text-sm font-medium"
+      >
+        ¿Qué vas a importar?
+      </p>
+      <RadioGroup
+        aria-labelledby="import-target"
+        className="sm:grid-cols-2 lg:grid-cols-4"
+        value={target}
+        onValueChange={(value) => onTargetChange(value as ImportTarget)}
+      >
+        {(Object.keys(IMPORT_TARGETS) as ImportTarget[]).map((value) => {
+          const disabled = unavailable.includes(value)
+          const requirement = TARGET_REQUIREMENTS[value]
+
+          return (
+            <Label
+              key={value}
+              htmlFor={`import-target-${value}`}
+              className={cn(
+                "flex items-start gap-2 rounded-lg border p-3 font-normal has-data-checked:border-primary has-data-checked:bg-primary/5",
+                disabled ? "opacity-60" : "cursor-pointer"
+              )}
+            >
+              <RadioGroupItem
+                id={`import-target-${value}`}
+                value={value}
+                disabled={disabled}
+                className="mt-0.5"
+              />
+              <span className="flex flex-col gap-0.5">
+                <span className="font-medium">
+                  {IMPORT_TARGETS[value].label}
+                </span>
+                {disabled && requirement ? (
+                  <Link
+                    href={IMPORT_TARGETS[value].href as Route}
+                    className="text-primary underline-offset-4 hover:underline"
+                  >
+                    {requirement}
+                  </Link>
+                ) : (
+                  <span className="text-muted-foreground">
+                    {TARGET_HINTS[value]}
+                  </span>
+                )}
+              </span>
+            </Label>
+          )
+        })}
+      </RadioGroup>
       <div
         className={cn(
           "flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-10 text-center transition-colors",

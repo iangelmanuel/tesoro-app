@@ -10,7 +10,10 @@ import type { MonthlyInput, RuleKey, ScoreInputs } from "./types"
 // calcula en TS. `numeric` puede llegar como string: se convierte con
 // Number() aquí.
 
-export type ScoreData = ScoreInputs & { debts: Debt[]; goals: Goal[] }
+export type ScoreData = Omit<ScoreInputs, "debts" | "goals"> & {
+  debts: Debt[]
+  goals: Goal[]
+}
 
 /** Fecha del primer movimiento del espacio, o null si no hay */
 async function getFirstTransactionOn(workspaceId: string) {

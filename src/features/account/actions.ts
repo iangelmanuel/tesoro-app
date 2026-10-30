@@ -1,11 +1,14 @@
 "use server"
 
+import type { Route } from "next"
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 import { z } from "zod"
 import { SITE } from "@/config/site"
 import { translateAuthError } from "@/features/auth/errors"
 import { createClient } from "@/libs/supabase/server"
 import { AVATARS_BUCKET, removeAvatarFiles } from "./avatar"
+import { deletionDate } from "./deletion"
 import {
   changeEmailSchema,
   changePasswordSchema,
@@ -310,4 +313,55 @@ export async function createPassword(
   // La sección pasa a "Cambiar contraseña"
   revalidatePath(SITE.routes.account)
   return { ok: true }
+}
+
+export async function requestAccountDeletion(
+  _prevState: ProfileFormState,
+  formData: FormData
+): Promise<ProfileFormState> {
+  const confirmEmail = readString(formData, "confirmEmail").trim()
+
+  const supabase = await createClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user?.email) {
+    return { error: SESSION_EXPIRED }
+  }
+
+  // El botón ya se habilita solo con el email exacto; se revalida aquí
+  if (confirmEmail !== user.email) {
+    return {
+      fieldErrors: { confirmEmail: ["Escribe tu email exactamente igual"] }
+    }
+  }
+
+  // Postgres no puede borrar archivos de Storage: la foto se borra ahora, con
+  // la sesión del usuario. Si restaura la cuenta, vuelve sin foto
+  const { error: storageError } = await removeAvatarFiles(supabase, user.id)
+  if (storageError) {
+    return { error: DEFAULT_ERROR }
+  }
+
+  const { error: profileError } = await updateOwnProfile({ avatar_url: null })
+  if (profileError) {
+    return { error: profileError }
+  }
+
+  const { data: requestedAt, error } = await supabase.rpc(
+    "request_account_deletion"
+  )
+
+  if (error) {
+    return { error: "No se pudo programar el borrado. Intenta de nuevo" }
+  }
+
+  await supabase.auth.signOut()
+
+  const params = new URLSearchParams({
+    notice: "account-deletion-scheduled",
+    date: deletionDate(requestedAt)
+  })
+  redirect(`${SITE.routes.signIn}?${params}` as Route)
 }

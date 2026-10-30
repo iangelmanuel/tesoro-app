@@ -5,6 +5,7 @@ import { AccountSection } from "@/features/account/components/account-section"
 import { AvatarUploader } from "@/features/account/components/avatar-uploader"
 import { ChangeEmailForm } from "@/features/account/components/change-email-form"
 import { CurrencyForm } from "@/features/account/components/currency-form"
+import { DeleteAccountDialog } from "@/features/account/components/delete-account-dialog"
 import { PasswordForm } from "@/features/account/components/password-form"
 import { ProfileForm } from "@/features/account/components/profile-form"
 import { getAccount } from "@/features/account/queries"
@@ -100,7 +101,9 @@ async function AccountContent({
         title="Zona de peligro"
         description={`Programa el borrado de tu cuenta. Tienes ${SITE.accountDeletionGraceDays} días para restaurarla iniciando sesión.`}
         destructive
-      />
+      >
+        <DeleteAccountDialog email={user.email} />
+      </AccountSection>
     </>
   )
 }

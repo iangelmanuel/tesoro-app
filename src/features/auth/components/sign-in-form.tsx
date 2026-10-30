@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { SITE } from "@/config/site"
+import { formatDeletionDate } from "@/features/account/deletion"
 import { signIn } from "../actions"
 import type { AuthFormState } from "../types"
 import { FormField } from "./form-field"
@@ -19,6 +20,13 @@ export function SignInForm() {
   const searchParams = useSearchParams()
   const next = searchParams.get("next") ?? undefined
   const queryError = QUERY_ERRORS[searchParams.get("error") ?? ""]
+  const deletionOn = searchParams.get("date")
+  const deletionNotice =
+    searchParams.get("notice") === "account-deletion-scheduled" &&
+    deletionOn &&
+    /^\d{4}-\d{2}-\d{2}$/.test(deletionOn)
+      ? `Tu cuenta se borrará el ${formatDeletionDate(deletionOn)}. Inicia sesión antes para restaurarla.`
+      : undefined
 
   const [state, formAction, pending] = useActionState<AuthFormState, FormData>(
     signIn,
@@ -28,6 +36,14 @@ export function SignInForm() {
 
   return (
     <div className="flex flex-col gap-6">
+      {deletionNotice && (
+        <p
+          role="status"
+          className="rounded-lg border bg-muted/50 px-4 py-3 text-sm"
+        >
+          {deletionNotice}
+        </p>
+      )}
       <form
         action={formAction}
         className="flex flex-col gap-4"

@@ -78,7 +78,7 @@ function parseDateText(value: string, format: DateFormat) {
 }
 
 /** Último día aceptado: hoy + 1 año */
-function maxDate(today: string) {
+export function maxDate(today: string) {
   const [year, month, day] = today.split("-").map(Number)
   return isoFromParts(year + 1, month, day) ?? `${year + 1}-${pad(month)}-28`
 }

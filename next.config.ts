@@ -6,6 +6,13 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   typedRoutes: true,
+  experimental: {
+    serverActions: {
+      // Importar movimientos (SPEC 08) envía hasta 2.000 filas mapeadas,
+      // que con descripción y nota máximas superan el 1 MB por defecto
+      bodySizeLimit: "2mb"
+    }
+  },
   images: {
     formats: ["image/avif", "image/webp"]
   },

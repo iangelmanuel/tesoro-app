@@ -6,7 +6,11 @@ import { GoalCard } from "@/features/goals/components/goal-card"
 import { GoalDialog } from "@/features/goals/components/goal-dialog"
 import { InactiveGoals } from "@/features/goals/components/inactive-goals"
 import { GOALS_PATH, compareByTargetDate } from "@/features/goals/progress"
-import { getGoals } from "@/features/goals/queries"
+import {
+  type GoalContribution,
+  getGoalContributions,
+  getGoals
+} from "@/features/goals/queries"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
 import { buildMetadata } from "@/libs/seo"
@@ -47,6 +51,17 @@ async function GoalsContent() {
     .sort(compareByTargetDate)
   const inactive = goals.filter((goal) => goal.status !== "active")
 
+  // Historial de cada meta para su Sheet. Solo se consultan las que tienen
+  // aportes.
+  const contributions: Record<string, GoalContribution[]> = Object.fromEntries(
+    await Promise.all(
+      goals.map(async (goal) => [
+        goal.id,
+        goal.contributions_count > 0 ? await getGoalContributions(goal.id) : []
+      ])
+    )
+  )
+
   return (
     <>
       <div className="flex flex-wrap gap-2">
@@ -66,6 +81,7 @@ async function GoalsContent() {
             <GoalCard
               key={goal.id}
               goal={goal}
+              contributions={contributions[goal.id]}
               today={today}
               currency={workspace.currency}
             />
@@ -76,6 +92,8 @@ async function GoalsContent() {
       {inactive.length > 0 && (
         <InactiveGoals
           goals={inactive}
+          contributions={contributions}
+          today={today}
           currency={workspace.currency}
         />
       )}

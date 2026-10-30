@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -8,19 +9,29 @@ import {
   CollapsibleTrigger
 } from "@/components/ui/collapsible"
 import { formatCurrency } from "@/libs/format"
-import type { Goal } from "../queries"
+import type { Goal, GoalContribution } from "../queries"
 import { GoalIcon } from "./goal-icon"
 import { GoalStatusBadge } from "./goal-progress-bar"
+import { GoalSheet } from "./goal-sheet"
 import { useGoalAction } from "./use-goal-action"
 
 interface InactiveGoalsProps {
   /** Metas cumplidas y archivadas */
   goals: Goal[]
+  /** Aportes por id de meta */
+  contributions: Record<string, GoalContribution[]>
+  /** Hoy en America/Bogota, calculado en el servidor */
+  today: string
   currency: string
 }
 
 /** Sección plegable "Cumplidas y archivadas", cerrada por defecto */
-export function InactiveGoals({ goals, currency }: InactiveGoalsProps) {
+export function InactiveGoals({
+  goals,
+  contributions,
+  today,
+  currency
+}: InactiveGoalsProps) {
   return (
     <Collapsible className="flex flex-col gap-3">
       <CollapsibleTrigger asChild>
@@ -41,6 +52,8 @@ export function InactiveGoals({ goals, currency }: InactiveGoalsProps) {
             <InactiveGoalRow
               key={goal.id}
               goal={goal}
+              contributions={contributions[goal.id] ?? []}
+              today={today}
               currency={currency}
             />
           ))}
@@ -50,27 +63,45 @@ export function InactiveGoals({ goals, currency }: InactiveGoalsProps) {
   )
 }
 
-function InactiveGoalRow({ goal, currency }: { goal: Goal; currency: string }) {
+function InactiveGoalRow({
+  goal,
+  contributions,
+  today,
+  currency
+}: {
+  goal: Goal
+  contributions: GoalContribution[]
+  today: string
+  currency: string
+}) {
+  const [detailOpen, setDetailOpen] = useState(false)
   const { pending, run } = useGoalAction(goal)
 
   return (
     <li className="flex flex-wrap items-center gap-3 p-4">
-      <GoalIcon
-        icon={goal.icon}
-        color={goal.color}
-      />
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="truncate font-medium">{goal.name}</p>
-          <GoalStatusBadge
-            status={goal.status === "active" ? null : goal.status}
-          />
-        </div>
-        <p className="text-sm text-muted-foreground tabular-nums">
-          {formatCurrency(goal.saved, currency)} de{" "}
-          {formatCurrency(goal.target_amount, currency)}
-        </p>
-      </div>
+      {/* Abre el Sheet de solo lectura */}
+      <button
+        type="button"
+        className="-m-1 flex min-w-0 flex-1 items-center gap-3 rounded-lg p-1 text-left transition-colors hover:bg-muted/50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+        onClick={() => setDetailOpen(true)}
+      >
+        <GoalIcon
+          icon={goal.icon}
+          color={goal.color}
+        />
+        <span className="flex min-w-0 flex-1 flex-col gap-1">
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="truncate font-medium">{goal.name}</span>
+            <GoalStatusBadge
+              status={goal.status === "active" ? null : goal.status}
+            />
+          </span>
+          <span className="text-sm text-muted-foreground tabular-nums">
+            {formatCurrency(goal.saved, currency)} de{" "}
+            {formatCurrency(goal.target_amount, currency)}
+          </span>
+        </span>
+      </button>
       <Button
         variant="outline"
         size="sm"
@@ -79,6 +110,14 @@ function InactiveGoalRow({ goal, currency }: { goal: Goal; currency: string }) {
       >
         Reactivar
       </Button>
+      <GoalSheet
+        goal={goal}
+        contributions={contributions}
+        today={today}
+        currency={currency}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+      />
     </li>
   )
 }

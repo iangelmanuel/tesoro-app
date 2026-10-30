@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Reportar una vulnerabilidad
+    url: https://github.com/iangelmanuel/tesoro-app/security/advisories/new
+    about: Reporta problemas de seguridad de forma privada.
+  - name: Preguntas e ideas
+    url: https://github.com/iangelmanuel/tesoro-app/discussions
+    about: Para dudas generales usa GitHub Discussions.

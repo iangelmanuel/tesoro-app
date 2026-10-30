@@ -1,0 +1,48 @@
+name: Reporte de bug
+description: Algo no funciona como debería
+title: "fix: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por reportar. **No incluyas datos financieros reales, claves ni tokens.**
+        Si es una vulnerabilidad, no abras un issue: sigue [SECURITY.md](https://github.com/iangelmanuel/tesoro-app/blob/main/SECURITY.md).
+  - type: textarea
+    id: description
+    attributes:
+      label: Descripción
+      description: Qué pasa y qué esperabas que pasara.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para reproducir
+      placeholder: |
+        1. Ir a '...'
+        2. Hacer clic en '...'
+        3. Ver el error
+    validations:
+      required: true
+  - type: dropdown
+    id: workspace
+    attributes:
+      label: Espacio afectado
+      options:
+        - Personal
+        - Empresa
+        - Ambos
+        - No aplica (landing, auth, etc.)
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Entorno
+      placeholder: "Windows 11, Chrome 140"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs o capturas
+      description: Errores de consola, capturas o video.

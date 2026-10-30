@@ -60,17 +60,18 @@ magic link.
 Las migraciones viven en `supabase/migrations/`. Toda tabla con datos de
 usuario tiene RLS.
 
-| Tabla                       | Qué guarda                                                                                           | RLS (cliente)                          |
-| --------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| `profiles`                  | Un perfil por usuario: `full_name`, `avatar_url`, `currency` (COP por defecto)                       | `select` y `update` del propio perfil  |
-| `workspaces`                | Espacios del usuario: `type` (`personal` / `business`) y `name`                                      | `select` de los propios                |
-| `categories`                | Categorías de ingreso o gasto: del sistema (`workspace_id` null) o propias                           | `select`, `insert` y `update`          |
-| `transactions`              | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note`                   | `select`, `insert`, `update`, `delete` |
-| `recurring_expenses`        | Gastos fijos: `name`, `amount`, `category_id`, `frequency`, día y mes de pago, vigencia, `is_active` | `select`, `insert`, `update`, `delete` |
-| `budgets`                   | Presupuesto por categoría de gasto y mes (`month` = primer día), único por categoría y mes           | `select`, `insert`, `update`, `delete` |
-| `savings_goals`             | Metas de ahorro: `name`, `target_amount`, `target_date` opcional, `icon`, `color`, `status`          | `select`, `insert`, `update`           |
-| `goal_contributions`        | Aportes (`amount` > 0) y retiros (`amount` < 0) de una meta, con `occurred_on` y `note`              | `select`, `insert`, `update`, `delete` |
-| `dismissed_recommendations` | Recomendaciones ocultas: `rule`, `entity_key` y `month` en que se ocultaron, únicas por los tres     | `select`, `insert`, `delete`           |
+| Tabla                       | Qué guarda                                                                                                                                                              | RLS (cliente)                          |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `profiles`                  | Un perfil por usuario: `full_name`, `avatar_url`, `currency` (COP por defecto)                                                                                          | `select` y `update` del propio perfil  |
+| `workspaces`                | Espacios del usuario: `type` (`personal` / `business`) y `name`                                                                                                         | `select` de los propios                |
+| `categories`                | Categorías de ingreso o gasto: del sistema (`workspace_id` null) o propias                                                                                              | `select`, `insert` y `update`          |
+| `transactions`              | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note`                                                                                      | `select`, `insert`, `update`, `delete` |
+| `recurring_expenses`        | Gastos fijos: `name`, `amount`, `category_id`, `frequency`, día y mes de pago, vigencia, `is_active`                                                                    | `select`, `insert`, `update`, `delete` |
+| `budgets`                   | Presupuesto por categoría de gasto y mes (`month` = primer día), único por categoría y mes                                                                              | `select`, `insert`, `update`, `delete` |
+| `savings_goals`             | Metas de ahorro: `name`, `target_amount`, `target_date` opcional, `icon`, `color`, `status`                                                                             | `select`, `insert`, `update`           |
+| `goal_contributions`        | Aportes (`amount` > 0) y retiros (`amount` < 0) de una meta, con `occurred_on` y `note`                                                                                 | `select`, `insert`, `update`, `delete` |
+| `dismissed_recommendations` | Recomendaciones ocultas: `rule`, `entity_key` y `month` en que se ocultaron, únicas por los tres                                                                        | `select`, `insert`, `delete`           |
+| `imports`                   | Importaciones de movimientos: `filename`, `sheets`, `status` (`completed` / `undone`), `stats`, `undone_at`. Los movimientos importados llevan `transactions.import_id` | `select` (solo escriben las RPC)       |
 
 - Cada usuario tiene **un solo** espacio Personal (índice único parcial) y, en
   el futuro, Empresas ilimitadas.
@@ -766,6 +767,137 @@ suficientes".
   ejecuta `authenticated`. Con un espacio ajeno no devuelven datos.
 - `dismissRecommendation` y `restoreRecommendation` validan con Zod la regla
   y la entidad, y usan el espacio Personal del usuario autenticado.
+
+## Importar
+
+Página `/dashboard/personal/import`, con entrada desde el botón "Importar" de
+Movimientos y de su estado vacío. No está en el aside: importar es ocasional.
+Importa solo **movimientos** del espacio Personal; gastos fijos, deudas y metas
+llegan en el SPEC 08b.
+
+- El archivo **se lee en el navegador** (`read-excel-file` para `.xlsx` y
+  `papaparse` para `.csv`, cargadas con `import()` solo al elegir el archivo).
+  Al servidor solo llegan las filas ya mapeadas. El archivo no se guarda.
+- El estado del asistente vive en el cliente y se pierde al recargar.
+
+### Formatos y límites
+
+| Límite                | Valor                                                   |
+| --------------------- | ------------------------------------------------------- |
+| Formatos              | `.xlsx` (una o varias hojas) y `.csv` (una hoja)        |
+| Tamaño                | 5 MB, validado antes de leer                            |
+| Filas por importación | 2.000 filas con datos, sumando todas las hojas elegidas |
+| Payload de la acción  | `serverActions.bodySizeLimit` en `2mb`                  |
+| Delimitador del CSV   | Lo detecta `papaparse` (`,`, `;`, tabulador…)           |
+
+### Pasos
+
+1. **Archivo:** zona de arrastre o selector.
+2. **Tabla:** hojas con casillas, tabla detectada, ajuste de la fila de
+   encabezados y de las columnas, y las primeras 5 filas.
+3. **Columnas:** un `select` por campo con la sugerencia, el modo de tipo, el
+   formato de fecha y el mapeo de los valores de tipo.
+4. **Categorías:** cada par (tipo, valor de origen) va a una categoría
+   existente, a una nueva o a "No importar".
+5. **Vista previa:** contadores por estado, filtro, tabla de 100 filas por
+   página con casilla y "Importar N movimientos".
+6. **Resumen:** importadas, omitidas, duplicadas omitidas y con error.
+
+### Detección de tablas
+
+- **Encabezados:** una fila con ≥ 3 celdas de texto contiguas cuya siguiente
+  fila no vacía, dentro del mismo rango, tiene una celda tipo fecha y otra
+  tipo número. El rango es el tramo contiguo de celdas no vacías; una fila
+  puede dar varias tablas si las separa al menos una columna vacía.
+- **Fin:** 3 filas vacías seguidas en el rango, o el fin de la hoja.
+- Sin detección, se usa la fila 1 con todas las columnas con datos.
+- **Varias hojas:** la primera hoja marcada define la tabla y el mapeo. En las
+  demás se busca una tabla con los mismos encabezados normalizados (minúsculas,
+  sin tildes ni espacios sobrantes), empiece en la columna que empiece. Las que
+  no coinciden se marcan "No coincide" y se excluyen.
+
+### Mapeo
+
+Campos: fecha, monto, tipo, ingreso, gasto, categoría, descripción y nota. Las
+columnas sin destino (como Método) se ignoran. Encabezados que sugieren cada
+campo:
+
+| Campo            | Encabezados                                        |
+| ---------------- | -------------------------------------------------- |
+| `date`           | fecha, date, día                                   |
+| `amount`         | monto, valor, importe, amount                      |
+| `type`           | tipo, salida entrada, entrada salida, movimiento   |
+| `income_amount`  | ingreso, entrada, abono, crédito                   |
+| `expense_amount` | gasto, salida, cargo, débito                       |
+| `category`       | categoría, category, rubro                         |
+| `description`    | descripción, concepto, detalle, notas, description |
+| `note`           | nota, observación, comentario                      |
+
+**Tipo**, en 3 modos:
+
+- **Columna con valores:** cada valor distinto se mapea a ingreso, gasto u
+  "Omitir fila". Se sugiere entrada / ingreso / income → ingreso y salida /
+  gasto / egreso / expense → gasto. Un valor sin asignar da "Tipo
+  desconocido".
+- **Signo del monto:** negativo → gasto, positivo → ingreso.
+- **Dos columnas:** la columna con valor ≠ 0. Ambas > 0 da "Ingreso y gasto a
+  la vez".
+
+**Categorías:** cada par (tipo, valor de origen) se mapea. Se sugiere la
+categoría del mismo tipo con ese nombre (sin distinguir mayúsculas ni tildes)
+o una nueva con el valor de origen (máximo 40 caracteres). Sin columna de
+categoría, todo va a "Otros ingresos" u "Otros gastos". Un valor vacío es el
+par (tipo, "Sin categoría"). Las archivadas no aparecen como destino. Las
+nuevas se crean con `receipt` / `slate` (gasto) o `coins` / `lime` (ingreso).
+
+### Normalización por fila
+
+| Campo       | Regla                                                                                                                                                                                                                           | Error                  |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| Fecha       | Celda fecha de Excel → componentes UTC (`read-excel-file` la entrega a las 00:00 UTC). Número entre 20.000 y 80.000 → serie de Excel. Texto → DD/MM/AAAA (por defecto), MM/DD/AAAA o AAAA-MM-DD. Entre 2000-01-01 y hoy + 1 año | "Fecha inválida"       |
+| Monto       | Texto con coma y punto: el último separador es el decimal. Con uno solo, formato es-CO. Signo como `-50.000`, `50.000-` o `(50.000)`. Redondeo a 2 decimales; > 0 y ≤ 999.999.999.999,99                                        | "Monto inválido"       |
+| Descripción | Recortada; vacía → valor de categoría de origen. Más de 120 caracteres se recorta con aviso                                                                                                                                     | "Falta la descripción" |
+| Nota        | Opcional; más de 500 caracteres se recorta                                                                                                                                                                                      | —                      |
+
+- Una fila **sin fecha ni monto** es vacía: no se muestra y suma en omitidas.
+- Una fila con tipo "Omitir fila" o categoría "No importar" queda **omitida**
+  con el motivo, aunque tenga otros errores.
+
+### Duplicados
+
+- Clave: `fecha | tipo | monto con 2 decimales | descripción normalizada`
+  (minúsculas, sin tildes, espacios colapsados).
+- Se compara contra los movimientos del rango `[min fecha, max fecha]` del
+  archivo (`transactions_for_duplicates`) y contra filas anteriores del mismo
+  archivo.
+- Una fila duplicada queda **desmarcada** con "Posible duplicado de un
+  movimiento del DD/MM/AAAA" o "Posible duplicado de la fila N (Hoja)". El
+  usuario puede marcarla.
+
+### Guardado, historial y deshacer
+
+- `import_transactions` guarda **todo o nada**: crea la fila de `imports` con
+  sus stats, las categorías nuevas y los movimientos con `import_id`. Los
+  `check` y el trigger `check_transaction_category` siguen aplicando.
+- Stats: `read` (filas con datos), `imported`, `skipped` ("No importar",
+  desmarcadas y vacías), `duplicates` (duplicadas no incluidas) y `errors`.
+- El historial, bajo el asistente, muestra archivo, hojas, fecha, stats y
+  estado. **Deshacer** está disponible siempre: pide confirmación con el
+  número de movimientos, borra todos los del import (también los editados
+  después) y lo deja "Deshecho". Las categorías creadas se quedan. Un pago de
+  deuda enlazado queda sin movimiento.
+
+### Seguridad
+
+- RLS en `imports`: solo `select` con `is_workspace_owner`. Sin políticas de
+  escritura: el historial no se puede falsear desde el cliente.
+- `import_transactions` y `undo_import` son `security definer` con
+  `search_path = ''` y verifican `is_workspace_owner` al inicio.
+  `transactions_for_duplicates` es `security invoker` y también lo verifica.
+  Las tres solo las ejecuta `authenticated`.
+- `confirmImport` revalida con Zod las filas, las categorías nuevas y los
+  stats, y comprueba que las categorías existentes sean visibles, del tipo de
+  la fila y activas.
 
 ## Specs
 

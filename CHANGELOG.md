@@ -61,6 +61,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - "Salud financiera" card at the top of the Personal summary with the score, band, change and the top 3 recommendations.
 - Empty states for the recommendations page and card ("Todo en orden por ahora", "Aún no hay histórico").
 - "Score y recomendaciones" section in `docs/producto.md` with the period, factors, weights, curves, bands, rules and history approximation.
+- Migration `create_imports`: `import_status` enum, `imports` table with RLS (`select` only, no write policies), `transactions.import_id`, the `import_transactions` and `undo_import` RPCs (`security definer`, owner check, `search_path = ''`) and the `transactions_for_duplicates` RPC (`security invoker`), all executable only by `authenticated`.
+- Transaction import at `/dashboard/personal/import`: a 6-step wizard (file → table → columns → categories → preview → summary) for `.xlsx` (one or several sheets) and `.csv` files up to 5 MB and 2,000 rows. The file is read in the browser with `read-excel-file` and `papaparse` (exact versions, loaded with dynamic `import()`); only the mapped rows reach the server.
+- Automatic table detection per sheet (header row, column range, several tables per row, end after 3 empty rows) with manual adjustment, and multi-sheet imports that reuse the first sheet's mapping and exclude sheets whose headers don't match.
+- Column mapping with header-based suggestions, 3 type modes (value column, amount sign, income/expense columns), value mapping for the type column, Excel dates, Excel serial numbers, DD/MM/YYYY, MM/DD/YYYY and YYYY-MM-DD text dates, and es-CO / en-US amounts.
+- Category mapping per (type, source value) pair to an existing category, a new one or "No importar".
+- Preview with per-row validation, duplicate detection against existing transactions and earlier rows of the same file (unchecked by default), status filter, 100-row pages and per-row checkboxes; saved all-or-nothing, with a summary of imported, skipped, duplicate and error counts.
+- Import history with "Deshacer" (always available, confirms with the number of transactions, also deletes edited ones and keeps the created categories).
+- "Importar" buttons on the transactions page and its empty state.
+- "Importar" section in `docs/producto.md`, and the SPEC 08 answers plus the SPEC 08b and "Cuentas y métodos de pago" entries in `ROADMAP.md`.
 
 ### Changed
 
@@ -70,6 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The icon and color picker from the categories sheet is now a reusable `IconColorPicker` component, shared with savings goals.
 - The debts placeholder page is replaced by the debts page, and `revalidatePersonalPages()` documents that it also refreshes `/dashboard/personal/debts`.
 - The recommendations placeholder page is replaced by the score and recommendations page.
+- `serverActions.bodySizeLimit` is raised to `2mb` so a 2,000-row import fits in one Server Action request.
 
 ### Fixed
 

@@ -124,13 +124,13 @@ Constantes en TypeScript:
 export const CATEGORY_ICONS = {
   home: "House",
   utensils: "Utensils",
-  car: "Car",
+  car: "Car"
   // ~24 claves → nombre del ícono de lucide-react
 } as const
 
 export const CATEGORY_COLORS = {
   emerald: "...", // clases Tailwind con variante dark
-  rose: "...",
+  rose: "..."
   // ~10 claves
 } as const
 ```

@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          archived_at: string | null
+          color: string
+          created_at: string
+          icon: string
+          id: string
+          name: string
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at: string
+          workspace_id: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          color: string
+          created_at?: string
+          icon: string
+          id?: string
+          name: string
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+          type?: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -40,6 +84,60 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          category_id: string
+          created_at: string
+          description: string
+          id: string
+          note: string | null
+          occurred_on: string
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          amount: number
+          category_id: string
+          created_at?: string
+          description: string
+          id?: string
+          note?: string | null
+          occurred_on: string
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          note?: string | null
+          occurred_on?: string
+          type?: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       workspaces: {
         Row: {
@@ -81,9 +179,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_workspace_owner: { Args: { p_workspace_id: string }; Returns: boolean }
+      transaction_totals: {
+        Args: {
+          p_category_id?: string
+          p_from?: string
+          p_search?: string
+          p_to?: string
+          p_type?: Database["public"]["Enums"]["transaction_type"]
+          p_workspace_id: string
+        }
+        Returns: {
+          expense: number
+          income: number
+        }[]
+      }
     }
     Enums: {
+      transaction_type: "income" | "expense"
       workspace_type: "personal" | "business"
     }
     CompositeTypes: {
@@ -209,6 +322,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      transaction_type: ["income", "expense"],
       workspace_type: ["personal", "business"]
     }
   }

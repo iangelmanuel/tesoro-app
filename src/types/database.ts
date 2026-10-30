@@ -234,6 +234,41 @@ export type Database = {
           }
         ]
       }
+      dismissed_recommendations: {
+        Row: {
+          created_at: string
+          entity_key: string
+          id: string
+          month: string
+          rule: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_key: string
+          id?: string
+          month: string
+          rule: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_key?: string
+          id?: string
+          month?: string
+          rule?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dismissed_recommendations_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       goal_contributions: {
         Row: {
           amount: number
@@ -632,6 +667,33 @@ export type Database = {
           paid_amount: number
           recurring_expense_id: string
           transaction_id: string
+        }[]
+      }
+      score_balances: {
+        Args: { p_from: string; p_to: string; p_workspace_id: string }
+        Returns: {
+          balance: number
+          entity_id: string
+          kind: string
+          month: string
+        }[]
+      }
+      score_monthly_inputs: {
+        Args: { p_from: string; p_to: string; p_workspace_id: string }
+        Returns: {
+          budgeted_count: number
+          closing_balance: number
+          expense: number
+          income: number
+          month: string
+          within_budget_count: number
+        }[]
+      }
+      score_weekly_activity: {
+        Args: { p_from: string; p_to: string; p_workspace_id: string }
+        Returns: {
+          tx_count: number
+          week_start: string
         }[]
       }
       transaction_totals: {

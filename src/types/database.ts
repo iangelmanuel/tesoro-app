@@ -310,6 +310,47 @@ export type Database = {
           }
         ]
       }
+      imports: {
+        Row: {
+          created_at: string
+          filename: string
+          id: string
+          sheets: string[]
+          stats: Json
+          status: Database["public"]["Enums"]["import_status"]
+          undone_at: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          filename: string
+          id?: string
+          sheets?: string[]
+          stats: Json
+          status?: Database["public"]["Enums"]["import_status"]
+          undone_at?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          filename?: string
+          id?: string
+          sheets?: string[]
+          stats?: Json
+          status?: Database["public"]["Enums"]["import_status"]
+          undone_at?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "imports_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -457,6 +498,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          import_id: string | null
           note: string | null
           occurred_on: string
           recurring_due_on: string | null
@@ -471,6 +513,7 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
+          import_id?: string | null
           note?: string | null
           occurred_on: string
           recurring_due_on?: string | null
@@ -485,6 +528,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          import_id?: string | null
           note?: string | null
           occurred_on?: string
           recurring_due_on?: string | null
@@ -499,6 +543,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "imports"
             referencedColumns: ["id"]
           },
           {
@@ -637,6 +688,17 @@ export type Database = {
           target_date: string
         }[]
       }
+      import_transactions: {
+        Args: {
+          p_filename: string
+          p_new_categories: Json
+          p_rows: Json
+          p_sheets: string[]
+          p_stats: Json
+          p_workspace_id: string
+        }
+        Returns: string
+      }
       is_workspace_owner: { Args: { p_workspace_id: string }; Returns: boolean }
       monthly_totals: {
         Args: { p_from: string; p_to: string; p_workspace_id: string }
@@ -710,6 +772,16 @@ export type Database = {
           income: number
         }[]
       }
+      transactions_for_duplicates: {
+        Args: { p_from: string; p_to: string; p_workspace_id: string }
+        Returns: {
+          amount: number
+          description: string
+          occurred_on: string
+          type: Database["public"]["Enums"]["transaction_type"]
+        }[]
+      }
+      undo_import: { Args: { p_import_id: string }; Returns: number }
       workspace_balance: { Args: { p_workspace_id: string }; Returns: number }
     }
     Enums: {
@@ -717,6 +789,7 @@ export type Database = {
       debt_kind: "credit_card" | "loan" | "receivable"
       debt_status: "active" | "paid" | "archived"
       goal_status: "active" | "completed" | "archived"
+      import_status: "completed" | "undone"
       rate_type: "ea" | "mv"
       recurring_frequency: "monthly" | "yearly"
       transaction_type: "income" | "expense"
@@ -849,6 +922,7 @@ export const Constants = {
       debt_kind: ["credit_card", "loan", "receivable"],
       debt_status: ["active", "paid", "archived"],
       goal_status: ["active", "completed", "archived"],
+      import_status: ["completed", "undone"],
       rate_type: ["ea", "mv"],
       recurring_frequency: ["monthly", "yearly"],
       transaction_type: ["income", "expense"],

@@ -488,3 +488,20 @@ export function computeStats(rows: PreviewRow[], empty: number): ImportStats {
 
   return stats
 }
+
+/** Filas marcadas en el formato de import_transactions */
+export function toImportRows(rows: PreviewRow[]) {
+  return rows.flatMap((row) => {
+    if (!row.selected || !row.value) return []
+    const { categoryKey, ...value } = row.value
+    const isExisting = categoryKey.startsWith("existing:")
+
+    return [
+      {
+        ...value,
+        category_id: isExisting ? categoryKey.slice("existing:".length) : null,
+        new_category_key: isExisting ? null : categoryKey
+      }
+    ]
+  })
+}

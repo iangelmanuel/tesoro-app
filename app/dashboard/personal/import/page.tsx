@@ -60,6 +60,7 @@ async function ImportContent() {
       categories={categories
         .filter((category) => category.archived_at === null)
         .map(({ id, type, name }) => ({ id, type, name }))}
+      currency={workspace.currency}
     />
   )
 }

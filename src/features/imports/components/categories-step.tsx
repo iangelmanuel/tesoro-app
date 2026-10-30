@@ -1,5 +1,6 @@
 "use client"
 
+import { LoaderCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -36,6 +37,9 @@ interface CategoriesStepProps {
   targets: Record<string, CategoryTarget>
   categories: CategoryOption[]
   onTargetChange: (key: string, target: CategoryTarget) => void
+  /** Revisando duplicados antes de la vista previa */
+  loading: boolean
+  error: string | null
   onBack: () => void
   onNext: () => void
 }
@@ -47,6 +51,8 @@ export function CategoriesStep({
   targets,
   categories,
   onTargetChange,
+  loading,
+  error,
   onBack,
   onNext
 }: CategoriesStepProps) {
@@ -136,17 +142,33 @@ export function CategoriesStep({
         </ul>
       )}
 
+      {error && (
+        <p
+          role="alert"
+          className="text-sm text-destructive"
+        >
+          {error}
+        </p>
+      )}
+
       <div className="flex flex-wrap justify-between gap-2">
         <Button
           variant="outline"
+          disabled={loading}
           onClick={onBack}
         >
           Atrás
         </Button>
         <Button
-          disabled={rowCount === 0}
+          disabled={rowCount === 0 || loading}
           onClick={onNext}
         >
+          {loading && (
+            <LoaderCircle
+              data-icon="inline-start"
+              className="animate-spin"
+            />
+          )}
           Ver vista previa
         </Button>
       </div>

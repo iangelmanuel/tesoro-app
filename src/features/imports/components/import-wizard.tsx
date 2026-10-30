@@ -1,13 +1,26 @@
 "use client"
 
-import { useMemo, useReducer } from "react"
+import { useMemo, useReducer, useState, useTransition } from "react"
 import { Check } from "lucide-react"
 import { cn } from "@/libs/utils"
-import { categoryPairs, extractRows } from "../normalize"
+import { confirmImport, getDuplicateCandidates } from "../actions"
+import { dateRange, markDuplicates } from "../duplicates"
+import {
+  buildPreviewRows,
+  categoryPairs,
+  computeStats,
+  existingCategoryKey,
+  extractRows,
+  newCategories,
+  newCategoryKey,
+  toImportRows
+} from "../normalize"
 import type { CategoryOption } from "../types"
 import { CategoriesStep } from "./categories-step"
 import { ColumnsStep } from "./columns-step"
 import { FileStep } from "./file-step"
+import { PreviewStep } from "./preview-step"
+import { SummaryStep } from "./summary-step"
 import { TableStep } from "./table-step"
 import {
   INITIAL_STATE,
@@ -23,9 +36,10 @@ import {
 interface ImportWizardProps {
   /** Categorías activas (sistema y propias) para el paso de categorías */
   categories: CategoryOption[]
+  currency: string
 }
 
-export function ImportWizard({ categories }: ImportWizardProps) {
+export function ImportWizard({ categories, currency }: ImportWizardProps) {
   const [state, dispatch] = useReducer(wizardReducer, INITIAL_STATE)
   const tables = useMemo(() => selectedTables(state), [state])
   const sources = useMemo(() => sourceTables(state), [state])
@@ -37,6 +51,78 @@ export function ImportWizard({ categories }: ImportWizardProps) {
     () => (extracted ? categoryPairs(extracted.rows) : []),
     [extracted]
   )
+  const categoryNames = useMemo(() => {
+    const names: Record<string, string> = {}
+    for (const category of categories) {
+      names[existingCategoryKey(category.id)] = category.name
+    }
+    for (const pair of pairs) {
+      const target = state.categoryTargets[pair.key]
+      if (target?.kind === "new") {
+        names[newCategoryKey(pair.type, target.name)] = `${target.name} (nueva)`
+      }
+    }
+    return names
+  }, [categories, pairs, state.categoryTargets])
+
+  const [pending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+
+  // Aplica el mapeo de categorías y marca duplicados contra la BD
+  function showPreview() {
+    if (!extracted) return
+    setError(null)
+
+    startTransition(async () => {
+      const rows = buildPreviewRows(extracted.rows, state.categoryTargets)
+      const range = dateRange(rows)
+      const result = range
+        ? await getDuplicateCandidates(range.from, range.to)
+        : { candidates: [] }
+
+      if (result.error !== undefined) {
+        setError(result.error)
+        return
+      }
+
+      dispatch({
+        type: "preview_ready",
+        rows: markDuplicates(rows, result.candidates),
+        empty: extracted.empty
+      })
+    })
+  }
+
+  function confirm() {
+    if (!state.file || !state.preview) return
+    const { rows, empty } = state.preview
+    const stats = computeStats(rows, empty)
+    setError(null)
+
+    startTransition(async () => {
+      const result = await confirmImport({
+        filename: state.file?.name ?? "",
+        sheets: state.file?.isCsv
+          ? []
+          : sources.map((source) => source.table.sheet),
+        stats,
+        newCategories: newCategories(rows, state.categoryTargets, pairs),
+        rows: toImportRows(rows)
+      })
+
+      if (result.error !== undefined) {
+        setError(result.error)
+        return
+      }
+
+      dispatch({ type: "imported", stats })
+    })
+  }
+
+  function goTo(step: StepId) {
+    setError(null)
+    dispatch({ type: "go_to", step })
+  }
 
   return (
     <div className="flex flex-col gap-6 rounded-xl border p-4 sm:p-6">
@@ -92,8 +178,34 @@ export function ImportWizard({ categories }: ImportWizardProps) {
           onTargetChange={(key, target) =>
             dispatch({ type: "set_category_target", key, target })
           }
-          onBack={() => dispatch({ type: "go_to", step: "columns" })}
-          onNext={() => dispatch({ type: "go_to", step: "preview" })}
+          loading={pending}
+          error={error}
+          onBack={() => goTo("columns")}
+          onNext={showPreview}
+        />
+      )}
+
+      {state.step === "preview" && state.preview && (
+        <PreviewStep
+          rows={state.preview.rows}
+          empty={state.preview.empty}
+          currency={currency}
+          categoryNames={categoryNames}
+          importing={pending}
+          error={error}
+          onToggle={(index) => dispatch({ type: "toggle_row", index })}
+          onBack={() => goTo("categories")}
+          onConfirm={confirm}
+        />
+      )}
+
+      {state.step === "summary" && state.summary && (
+        <SummaryStep
+          stats={state.summary}
+          onRestart={() => {
+            setError(null)
+            dispatch({ type: "reset" })
+          }}
         />
       )}
     </div>

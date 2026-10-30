@@ -5,7 +5,6 @@ import { cn } from "cn"
 import { Archive, ArchiveRestore, Pencil, Tags } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import {
   Sheet,
   SheetContent,
@@ -15,7 +14,6 @@ import {
   SheetTrigger
 } from "@/components/ui/sheet"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { FormField } from "@/features/auth/components/form-field"
 import {
   archiveCategory,
@@ -23,17 +21,10 @@ import {
   restoreCategory,
   updateCategory
 } from "../actions"
-import {
-  CATEGORY_COLORS,
-  CATEGORY_COLOR_KEYS,
-  CATEGORY_ICONS,
-  CATEGORY_ICON_KEYS,
-  type CategoryColorKey,
-  type CategoryIconKey
-} from "../constants"
 import type { Category } from "../queries"
 import type { CategoryFormState } from "../types"
 import { CategoryBadge } from "./category-badge"
+import { IconColorPicker } from "./icon-color-picker"
 
 type TransactionType = Category["type"]
 
@@ -271,12 +262,6 @@ function CategoryForm({
   onCancel
 }: CategoryFormProps) {
   const isEditing = category !== null && category.type === type
-  const [icon, setIcon] = useState<string>(
-    isEditing ? category.icon : CATEGORY_ICON_KEYS[0]
-  )
-  const [color, setColor] = useState<string>(
-    isEditing ? category.color : CATEGORY_COLOR_KEYS[0]
-  )
 
   const [state, formAction, pending] = useActionState<
     CategoryFormState,
@@ -315,16 +300,6 @@ function CategoryForm({
         name="type"
         value={type}
       />
-      <input
-        type="hidden"
-        name="icon"
-        value={icon}
-      />
-      <input
-        type="hidden"
-        name="color"
-        value={color}
-      />
 
       <FormField
         name="name"
@@ -338,71 +313,12 @@ function CategoryForm({
         required
       />
 
-      <div className="flex flex-col gap-2">
-        <Label>Icono</Label>
-        <ToggleGroup
-          type="single"
-          variant="outline"
-          size="sm"
-          spacing={1}
-          value={icon}
-          onValueChange={(value) => value && setIcon(value)}
-          className="w-full flex-wrap"
-        >
-          {CATEGORY_ICON_KEYS.map((key: CategoryIconKey) => {
-            const Icon = CATEGORY_ICONS[key]
-            return (
-              <ToggleGroupItem
-                key={key}
-                value={key}
-                aria-label={key}
-              >
-                <Icon />
-              </ToggleGroupItem>
-            )
-          })}
-        </ToggleGroup>
-        {state.fieldErrors?.icon && (
-          <p className="text-sm text-destructive">
-            {state.fieldErrors.icon[0]}
-          </p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Label>Color</Label>
-        <ToggleGroup
-          type="single"
-          variant="outline"
-          size="sm"
-          spacing={1}
-          value={color}
-          onValueChange={(value) => value && setColor(value)}
-          className="w-full flex-wrap"
-        >
-          {CATEGORY_COLOR_KEYS.map((key: CategoryColorKey) => (
-            <ToggleGroupItem
-              key={key}
-              value={key}
-              aria-label={key}
-            >
-              <span
-                className={cn(
-                  "flex size-5 items-center justify-center rounded-full",
-                  CATEGORY_COLORS[key]
-                )}
-              >
-                <span className="size-2 rounded-full bg-current" />
-              </span>
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
-        {state.fieldErrors?.color && (
-          <p className="text-sm text-destructive">
-            {state.fieldErrors.color[0]}
-          </p>
-        )}
-      </div>
+      <IconColorPicker
+        defaultIcon={isEditing ? category.icon : undefined}
+        defaultColor={isEditing ? category.color : undefined}
+        iconErrors={state.fieldErrors?.icon}
+        colorErrors={state.fieldErrors?.color}
+      />
 
       {state.error && (
         <p

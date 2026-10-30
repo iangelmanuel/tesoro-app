@@ -4,6 +4,7 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { getCategories } from "@/features/categories/queries"
 import { ImportWizard } from "@/features/imports/components/import-wizard"
 import { IMPORT_PATH } from "@/features/imports/constants"
 import { TRANSACTIONS_PATH } from "@/features/transactions/filters"
@@ -50,10 +51,17 @@ export default function ImportPage() {
 }
 
 async function ImportContent() {
-  // Valida la sesión (redirige si no hay) antes de mostrar el asistente
-  await getPersonalWorkspace()
+  const workspace = await getPersonalWorkspace()
+  const categories = await getCategories(workspace.id)
 
-  return <ImportWizard />
+  // Las categorías archivadas no aparecen como destino
+  return (
+    <ImportWizard
+      categories={categories
+        .filter((category) => category.archived_at === null)
+        .map(({ id, type, name }) => ({ id, type, name }))}
+    />
+  )
 }
 
 function ImportSkeleton() {

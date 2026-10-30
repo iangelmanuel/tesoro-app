@@ -83,8 +83,12 @@ export function ImportWizard({ categories, currency }: ImportWizardProps) {
       const rows = buildPreviewRows(extracted.rows, state.categoryTargets)
       const range = dateRange(rows)
       const result = range
-        ? await getDuplicateCandidates(range.from, range.to)
-        : { candidates: [] }
+        ? await getDuplicateCandidates({
+            target: "transactions",
+            from: range.from,
+            to: range.to
+          })
+        : { target: "transactions" as const, candidates: [] }
 
       if (result.error !== undefined) {
         setError(result.error)
@@ -93,7 +97,10 @@ export function ImportWizard({ categories, currency }: ImportWizardProps) {
 
       dispatch({
         type: "preview_ready",
-        rows: markDuplicates(rows, result.candidates),
+        rows: markDuplicates(
+          rows,
+          result.target === "transactions" ? result.candidates : []
+        ),
         empty: extracted.empty
       })
     })

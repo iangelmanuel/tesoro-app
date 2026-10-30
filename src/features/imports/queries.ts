@@ -1,3 +1,5 @@
+import { type Debt, getDebts } from "@/features/debts/queries"
+import { getGoals } from "@/features/goals/queries"
 import { createClient } from "@/libs/supabase/server"
 import type { Database } from "@/types/database"
 import { importStatsSchema } from "./schemas"
@@ -40,4 +42,37 @@ export async function getImports(workspaceId: string): Promise<ImportRecord[]> {
       transactions_count: transactions[0]?.count ?? 0
     }
   })
+}
+
+export interface DebtLinkOption {
+  id: string
+  name: string
+  kind: Debt["kind"]
+  balance: number
+}
+
+export interface GoalLinkOption {
+  id: string
+  name: string
+  saved: number
+}
+
+// Deudas activas con su saldo: destinos de una importación de deudas
+export async function getActiveDebtOptions(
+  workspaceId: string
+): Promise<DebtLinkOption[]> {
+  const debts = await getDebts(workspaceId)
+  return debts
+    .filter((debt) => debt.status === "active")
+    .map(({ id, name, kind, balance }) => ({ id, name, kind, balance }))
+}
+
+// Metas activas con lo ahorrado: destinos de una importación de metas
+export async function getActiveGoalOptions(
+  workspaceId: string
+): Promise<GoalLinkOption[]> {
+  const goals = await getGoals(workspaceId)
+  return goals
+    .filter((goal) => goal.status === "active")
+    .map(({ id, name, saved }) => ({ id, name, saved }))
 }

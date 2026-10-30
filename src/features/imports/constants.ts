@@ -1,3 +1,4 @@
+import { SITE } from "@/config/site"
 import type { ImportField, TransactionType } from "./types"
 
 /** Tamaño máximo del archivo, antes de leerlo */
@@ -70,3 +71,5 @@ export const FIELD_LABELS: Record<ImportField, string> = {
   description: "Descripción",
   note: "Nota"
 }
+
+export const IMPORT_PATH = `${SITE.routes.dashboardPersonal}/import`

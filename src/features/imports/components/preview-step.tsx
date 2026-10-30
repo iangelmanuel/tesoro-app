@@ -62,9 +62,11 @@ const AMOUNT_CLASS = "text-right whitespace-nowrap tabular-nums"
 
 export function transactionColumns(
   currency: string,
-  categoryNames: Record<string, string>
+  categoryNames: Record<string, string>,
+  /** Solo con la columna Método mapeada */
+  accountNames?: Record<string, string>
 ): PreviewColumn<TransactionValue>[] {
-  return [
+  const columns: PreviewColumn<TransactionValue>[] = [
     {
       header: "Fecha",
       className: "whitespace-nowrap",
@@ -86,6 +88,17 @@ export function transactionColumns(
       cell: (value) => value.description
     }
   ]
+
+  if (accountNames) {
+    columns.splice(4, 0, {
+      header: "Cuenta",
+      cell: (value) =>
+        value.accountKey === null
+          ? "Sin cuenta"
+          : (accountNames[value.accountKey] ?? "—")
+    })
+  }
+  return columns
 }
 
 /** "Mensual, día 5" o "Anual, 15 de marzo" */

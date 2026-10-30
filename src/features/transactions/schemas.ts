@@ -29,6 +29,10 @@ export const amountSchema = z
     error: "El monto es demasiado grande"
   })
 
+// Los campos opcionales del formulario llegan como "" cuando están vacíos:
+// sin cuenta o sin enlace a un gasto fijo
+const emptyToNull = (value: unknown) => (value === "" ? null : value)
+
 export const transactionSchema = z.object({
   type: z.enum(TRANSACTION_TYPES, { error: "Elige ingreso o gasto" }),
   amount: amountSchema,
@@ -43,12 +47,12 @@ export const transactionSchema = z.object({
     .string()
     .trim()
     .max(500, { error: "La nota debe tener máximo 500 caracteres" })
-    .transform((value) => value || null)
+    .transform((value) => value || null),
+  account_id: z.preprocess(
+    emptyToNull,
+    z.uuid({ error: "Elige una cuenta válida" }).nullable()
+  )
 })
-
-// Los campos ocultos del enlace llegan como "" cuando el movimiento no es el
-// pago de un gasto fijo
-const emptyToNull = (value: unknown) => (value === "" ? null : value)
 
 // Movimiento nuevo, opcionalmente enlazado a una ocurrencia de gasto fijo
 export const createTransactionSchema = transactionSchema

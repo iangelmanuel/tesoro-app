@@ -239,6 +239,11 @@ export const paymentSchema = z.object({
   create_transaction: z.preprocess(
     (value) => value === "on" || value === "true" || value === true,
     z.boolean()
+  ),
+  // Cuenta del movimiento creado. Vacío = sin cuenta.
+  account_id: z.preprocess(
+    emptyToNull,
+    z.uuid({ error: "Elige una cuenta válida" }).nullable()
   )
 })
 

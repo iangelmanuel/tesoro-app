@@ -9,6 +9,8 @@ import {
   CardTitle
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import type { AccountOption } from "@/features/accounts/components/account-select"
+import { getAccountBalances } from "@/features/accounts/queries"
 import {
   DEBTS_PATH,
   compareByExpectedOn,
@@ -71,7 +73,11 @@ async function DebtsContent({
   const query = await searchParams
   const workspace = await getPersonalWorkspace()
   const tab = parseDebtsTab(query.tab)
-  const debts = await getDebts(workspace.id)
+  const [debts, accounts] = await Promise.all([
+    getDebts(workspace.id),
+    getAccountBalances(workspace.id)
+  ])
+  const activeAccounts = accounts.filter((account) => !account.archived_at)
   // Tras leer la sesión: todayISO usa new Date()
   const today = todayISO()
   const tabDebts = debts.filter((debt) =>
@@ -95,6 +101,7 @@ async function DebtsContent({
         <PayablesTab
           debts={tabDebts}
           entries={entries}
+          accounts={activeAccounts}
           workspace={workspace}
           today={today}
         />
@@ -102,6 +109,7 @@ async function DebtsContent({
         <ReceivablesTab
           receivables={tabDebts}
           entries={entries}
+          accounts={activeAccounts}
           workspace={workspace}
           today={today}
         />
@@ -113,6 +121,7 @@ async function DebtsContent({
 function ReceivablesTab({
   receivables,
   entries,
+  accounts,
   workspace,
   today
 }: {
@@ -120,6 +129,8 @@ function ReceivablesTab({
   receivables: Debt[]
   /** Abonos y ajustes por id de cuenta */
   entries: Record<string, DebtEntry[]>
+  /** Cuentas activas, para el movimiento de un abono */
+  accounts: AccountOption[]
   workspace: PersonalWorkspace
   today: string
 }) {
@@ -188,6 +199,7 @@ function ReceivablesTab({
               key={receivable.id}
               receivable={receivable}
               entries={entries[receivable.id] ?? []}
+              accounts={accounts}
               today={today}
               currency={workspace.currency}
             />
@@ -210,6 +222,7 @@ function ReceivablesTab({
 function PayablesTab({
   debts,
   entries,
+  accounts,
   workspace,
   today
 }: {
@@ -217,6 +230,8 @@ function PayablesTab({
   debts: Debt[]
   /** Pagos y ajustes por id de deuda */
   entries: Record<string, DebtEntry[]>
+  /** Cuentas activas, para el movimiento de un pago */
+  accounts: AccountOption[]
   workspace: PersonalWorkspace
   today: string
 }) {
@@ -289,6 +304,7 @@ function PayablesTab({
                   key={debt.id}
                   debt={debt}
                   entries={entries[debt.id] ?? []}
+                  accounts={accounts}
                   today={today}
                   currency={workspace.currency}
                 />

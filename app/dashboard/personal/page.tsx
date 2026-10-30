@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
+import { AccountsCard } from "@/features/accounts/components/accounts-card"
+import { getAccountBalances } from "@/features/accounts/queries"
 import { BudgetsAtRiskCard } from "@/features/budgets/components/budgets-at-risk-card"
 import { getCategories } from "@/features/categories/queries"
 import { DebtsCard } from "@/features/debts/components/debts-card"
@@ -86,8 +88,16 @@ async function SummaryContent() {
 
   // Sin movimientos recientes el espacio está vacío: se invita a registrar
   if (recent.length === 0) {
-    const categories = await getCategories(workspace.id)
-    return <NoTransactions categories={categories} />
+    const [categories, accounts] = await Promise.all([
+      getCategories(workspace.id),
+      getAccountBalances(workspace.id)
+    ])
+    return (
+      <NoTransactions
+        categories={categories}
+        accounts={accounts}
+      />
+    )
   }
 
   const isEmptyTrend = monthly.every((row) => row.txCount === 0)
@@ -106,6 +116,12 @@ async function SummaryContent() {
         currency={workspace.currency}
       />
       <div className="grid gap-4 lg:grid-cols-2">
+        <Suspense fallback={<Skeleton className="h-36" />}>
+          <AccountsCard
+            workspaceId={workspace.id}
+            currency={workspace.currency}
+          />
+        </Suspense>
         <Suspense fallback={<Skeleton className="h-72" />}>
           <UpcomingPaymentsCard
             workspaceId={workspace.id}

@@ -1,5 +1,6 @@
 import {
   Baby,
+  Banknote,
   Briefcase,
   Bus,
   Car,
@@ -25,6 +26,7 @@ import {
   Tag,
   TrendingUp,
   Utensils,
+  Wallet,
   Wrench,
   Zap
 } from "lucide-react"
@@ -58,7 +60,9 @@ export const CATEGORY_ICONS = {
   "baby": Baby,
   "paw-print": PawPrint,
   "dumbbell": Dumbbell,
-  "tag": Tag
+  "tag": Tag,
+  "banknote": Banknote,
+  "wallet": Wallet
 } as const satisfies Record<string, LucideIcon>
 
 // Paleta fija con variante dark, legible en claro y oscuro. Las clases van

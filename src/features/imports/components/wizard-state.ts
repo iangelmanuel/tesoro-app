@@ -7,10 +7,12 @@ import {
 import {
   type ExtractedRow,
   type SourceTable,
+  accountValues,
   categoryPairs,
   distinctValues,
   extractRows,
   linkValues,
+  suggestAccountTargets,
   suggestCategoryTargets,
   suggestLinkTargets,
   suggestTypeValue
@@ -33,6 +35,8 @@ import {
 import type { SheetCells } from "../read-file"
 import { DEFAULT_TARGET } from "../targets"
 import type {
+  AccountOption,
+  AccountTarget,
   CategoryOption,
   CategoryTarget,
   DateFormat,
@@ -133,6 +137,13 @@ export function extractedPairs(extracted: Extracted | null) {
   return []
 }
 
+/** Valores de la columna Método (movimientos), con su número de filas */
+export function extractedAccountValues(extracted: Extracted | null) {
+  return extracted?.target === "transactions"
+    ? accountValues(extracted.rows)
+    : []
+}
+
 /** Valores de la columna de deuda o meta, con su número de filas */
 export function extractedLinkValues(extracted: Extracted | null) {
   if (
@@ -168,6 +179,8 @@ export interface WizardState {
   configHeaders: string | null
   /** Clave del par (tipo, valor de origen) → destino */
   categoryTargets: Record<string, CategoryTarget>
+  /** Valor normalizado de la columna Método → cuenta (movimientos) */
+  accountTargets: Record<string, AccountTarget>
   /** Valor normalizado de la columna de deuda o meta → destino */
   linkTargets: Record<string, LinkTarget>
   /** Filas de la vista previa ya con duplicados marcados */
@@ -198,8 +211,13 @@ export type WizardAction =
       target: FrequencyTarget | undefined
     }
   | { type: "set_fixed_link"; id: string | null }
-  | { type: "start_categories"; categories: CategoryOption[] }
+  | {
+      type: "start_categories"
+      categories: CategoryOption[]
+      accounts: AccountOption[]
+    }
   | { type: "set_category_target"; key: string; target: CategoryTarget }
+  | { type: "set_account_target"; key: string; target: AccountTarget }
   | { type: "start_links"; options: { id: string; name: string }[] }
   | { type: "set_link_target"; key: string; target: LinkTarget }
   | { type: "preview_ready"; preview: PreviewState }
@@ -217,6 +235,7 @@ export const INITIAL_STATE: WizardState = {
   config: null,
   configHeaders: null,
   categoryTargets: {},
+  accountTargets: {},
   linkTargets: {},
   preview: null,
   summary: null
@@ -317,6 +336,7 @@ export function wizardReducer(
         config: null,
         configHeaders: null,
         categoryTargets: {},
+        accountTargets: {},
         linkTargets: {},
         preview: null
       }
@@ -399,6 +419,7 @@ export function wizardReducer(
         config,
         configHeaders: headers,
         categoryTargets: {},
+        accountTargets: {},
         linkTargets: {}
       }
     }
@@ -493,11 +514,16 @@ export function wizardReducer(
         extractedPairs(extracted),
         action.categories
       )
+      const suggestedAccounts = suggestAccountTargets(
+        extractedAccountValues(extracted),
+        action.accounts
+      )
 
       return {
         ...state,
         step: "categories",
-        categoryTargets: { ...suggested, ...state.categoryTargets }
+        categoryTargets: { ...suggested, ...state.categoryTargets },
+        accountTargets: { ...suggestedAccounts, ...state.accountTargets }
       }
     }
 
@@ -533,6 +559,15 @@ export function wizardReducer(
         ...state,
         categoryTargets: {
           ...state.categoryTargets,
+          [action.key]: action.target
+        }
+      }
+
+    case "set_account_target":
+      return {
+        ...state,
+        accountTargets: {
+          ...state.accountTargets,
           [action.key]: action.target
         }
       }

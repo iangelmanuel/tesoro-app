@@ -5,6 +5,7 @@ import {
   EMPTY_CATEGORY_LABEL,
   EXCEL_SERIAL_MAX,
   EXCEL_SERIAL_MIN,
+  MAX_ACCOUNT_NAME_LENGTH,
   MAX_CATEGORY_NAME_LENGTH,
   MAX_DESCRIPTION_LENGTH,
   MAX_NOTE_LENGTH,
@@ -19,6 +20,9 @@ import {
   tableRowCells
 } from "./detect"
 import type {
+  AccountOption,
+  AccountTarget,
+  AccountValue,
   CategoryOption,
   CategoryPair,
   CategoryTarget,
@@ -183,6 +187,8 @@ export interface ExtractedRow {
     categoryLabel: string
     description: string
     note: string | null
+    /** Valor de la columna Método; null si no está mapeada */
+    accountLabel: string | null
   }
 }
 
@@ -365,6 +371,8 @@ export function extractRows(
       }
 
       const note = cellText(at("note")).slice(0, MAX_NOTE_LENGTH).trim() || null
+      const accountLabel =
+        mapping.account === undefined ? null : cellText(at("account"))
 
       if (reasons.length > 0 || !type || !occurredOn) {
         rows.push({ ...base, status: "error", reasons })
@@ -385,13 +393,94 @@ export function extractRows(
           pairKey: pairKey(type, categoryLabel),
           categoryLabel,
           description,
-          note
+          note,
+          accountLabel
         }
       })
     }
   }
 
   return { rows, empty }
+}
+
+/** Valores distintos de la columna Método en las filas válidas */
+export function accountValues(
+  rows: { value?: { accountLabel: string | null } }[]
+): AccountValue[] {
+  const values = new Map<string, AccountValue>()
+
+  for (const { value } of rows) {
+    if (!value || value.accountLabel === null) continue
+    const key = normalizeText(value.accountLabel)
+    const entry = values.get(key) ?? {
+      key,
+      label: value.accountLabel,
+      count: 0
+    }
+    entry.count++
+    values.set(key, entry)
+  }
+
+  return [...values.values()]
+}
+
+/**
+ * Cuenta sugerida para cada valor de Método: la activa con el mismo nombre
+ * normalizado o una nueva con el valor. Vacío → sin cuenta.
+ */
+export function suggestAccountTargets(
+  values: AccountValue[],
+  accounts: AccountOption[]
+): Record<string, AccountTarget> {
+  return Object.fromEntries(
+    values.map((value) => {
+      const name = value.label.slice(0, MAX_ACCOUNT_NAME_LENGTH).trim()
+      if (!name) return [value.key, { kind: "none" }]
+
+      const existing = accounts.find(
+        (account) => normalizeText(account.name) === normalizeText(name)
+      )
+      const target: AccountTarget = existing
+        ? { kind: "existing", accountId: existing.id }
+        : { kind: "new", name }
+      return [value.key, target]
+    })
+  )
+}
+
+/** Clave de una cuenta nueva; dos valores con el mismo nombre la comparten */
+export function newAccountKey(name: string) {
+  return `new:${normalizeText(name)}`
+}
+
+export function existingAccountKey(accountId: string) {
+  return `existing:${accountId}`
+}
+
+function accountKeyFor(target: AccountTarget | undefined) {
+  if (!target || target.kind === "none") return null
+  return target.kind === "existing"
+    ? existingAccountKey(target.accountId)
+    : newAccountKey(target.name)
+}
+
+/** Cuentas nuevas que usan las filas marcadas, sin repetir */
+export function newAccounts(
+  rows: PreviewRow<{ accountKey: string | null }>[],
+  targets: Record<string, AccountTarget>
+) {
+  const used = new Set(
+    rows.filter((row) => row.selected).map((row) => row.value?.accountKey)
+  )
+  const result = new Map<string, { key: string; name: string }>()
+
+  for (const target of Object.values(targets)) {
+    if (target.kind !== "new") continue
+    const key = newAccountKey(target.name)
+    if (used.has(key)) result.set(key, { key, name: target.name })
+  }
+
+  return [...result.values()]
 }
 
 /** Pares (tipo, valor de categoría de origen) de las filas válidas */
@@ -450,10 +539,14 @@ export function existingCategoryKey(categoryId: string) {
   return `existing:${categoryId}`
 }
 
-/** Aplica el mapeo de categorías y deja las filas listas para la vista previa */
+/**
+ * Aplica el mapeo de categorías y de cuentas y deja las filas listas para la
+ * vista previa. La cuenta nunca omite filas.
+ */
 export function buildPreviewRows(
   rows: ExtractedRow[],
-  targets: Record<string, CategoryTarget>
+  targets: Record<string, CategoryTarget>,
+  accountTargets: Record<string, AccountTarget> = {}
 ): PreviewRow[] {
   return rows.map((row): PreviewRow => {
     if (!row.value) {
@@ -461,7 +554,7 @@ export function buildPreviewRows(
       return { sheet, sourceRow, status, reasons, selected: false }
     }
 
-    const { pairKey: key, categoryLabel, ...value } = row.value
+    const { pairKey: key, categoryLabel, accountLabel, ...value } = row.value
     const target = targets[key] ?? { kind: "skip" }
 
     if (target.kind === "skip") {
@@ -482,7 +575,11 @@ export function buildPreviewRows(
         categoryKey:
           target.kind === "existing"
             ? existingCategoryKey(target.categoryId)
-            : newCategoryKey(value.type, target.name)
+            : newCategoryKey(value.type, target.name),
+        accountKey:
+          accountLabel === null
+            ? null
+            : accountKeyFor(accountTargets[normalizeText(accountLabel)])
       }
     }
   })
@@ -552,6 +649,24 @@ export function toImportRows<V extends { categoryKey: string }>(
         new_category_key: isExisting ? null : categoryKey
       }
     ]
+  })
+}
+
+/** Movimientos marcados para import_transactions, con su cuenta */
+export function toTransactionImportRows<
+  V extends { categoryKey: string; accountKey: string | null }
+>(rows: PreviewRow<V>[]) {
+  return toImportRows(rows).map(({ accountKey, ...row }) => {
+    const accountId = accountKey?.startsWith("existing:")
+      ? accountKey.slice("existing:".length)
+      : null
+
+    return {
+      ...row,
+      account_id: accountId,
+      new_account_key:
+        accountKey !== null && accountId === null ? accountKey : null
+    }
   })
 }
 

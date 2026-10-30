@@ -16,6 +16,8 @@ export type ImportField =
   | "category"
   | "description"
   | "note"
+  // Columna Método (SPEC 08c)
+  | "account"
   // Gastos fijos, deudas y metas (SPEC 08b)
   | "name"
   | "frequency"
@@ -49,6 +51,25 @@ export type CategoryTarget =
   | { kind: "existing"; categoryId: string }
   | { kind: "new"; name: string }
   | { kind: "skip" }
+
+/** Cuenta a la que va un valor de la columna Método. No omite filas. */
+export type AccountTarget =
+  | { kind: "existing"; accountId: string }
+  | { kind: "new"; name: string }
+  | { kind: "none" }
+
+/** Cuenta activa que se puede elegir como destino */
+export interface AccountOption {
+  id: string
+  name: string
+}
+
+/** Valor de la columna Método con su número de filas */
+export interface AccountValue {
+  key: string
+  label: string
+  count: number
+}
 
 /** Destino de un valor de la columna de frecuencia (gastos fijos) */
 export type FrequencyTarget = RecurringFrequency | "skip"
@@ -100,6 +121,8 @@ export interface TransactionValue {
   amount: number
   occurred_on: string
   categoryKey: string
+  /** "existing:<id>", "new:<nombre normalizado>" o null sin cuenta */
+  accountKey: string | null
   description: string
   note: string | null
 }

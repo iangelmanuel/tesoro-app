@@ -4,14 +4,17 @@ import { usePathname } from "next/navigation"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SITE } from "@/config/site"
+import type { AccountOption } from "@/features/accounts/components/account-select"
 import type { Category } from "@/features/categories/queries"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
 
 // Solo en el espacio Personal: Empresa aún no tiene movimientos
 export function QuickAddTransactionButton({
-  categories
+  categories,
+  accounts
 }: {
   categories: Category[]
+  accounts: AccountOption[]
 }) {
   const pathname = usePathname()
   const personal = SITE.routes.dashboardPersonal
@@ -23,6 +26,7 @@ export function QuickAddTransactionButton({
   return (
     <TransactionDialog
       categories={categories}
+      accounts={accounts}
       trigger={
         <Button size="sm">
           <Plus data-icon="inline-start" />

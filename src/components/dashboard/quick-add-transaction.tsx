@@ -1,4 +1,5 @@
 import { Suspense } from "react"
+import { getAccountBalances } from "@/features/accounts/queries"
 import { getCategories } from "@/features/categories/queries"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { QuickAddTransactionButton } from "./quick-add-transaction-button"
@@ -7,9 +8,17 @@ import { QuickAddTransactionButton } from "./quick-add-transaction-button"
 // conoce la ruta en el servidor, así que el botón client decide si se muestra.
 async function QuickAddTransactionLoader() {
   const workspace = await getPersonalWorkspace()
-  const categories = await getCategories(workspace.id)
+  const [categories, accounts] = await Promise.all([
+    getCategories(workspace.id),
+    getAccountBalances(workspace.id)
+  ])
 
-  return <QuickAddTransactionButton categories={categories} />
+  return (
+    <QuickAddTransactionButton
+      categories={categories}
+      accounts={accounts}
+    />
+  )
 }
 
 export function QuickAddTransaction() {

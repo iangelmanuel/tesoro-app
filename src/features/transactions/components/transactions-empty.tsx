@@ -3,6 +3,7 @@ import Link from "next/link"
 import { FileUp, Plus, ReceiptText, SearchX } from "lucide-react"
 import { EmptyState } from "@/components/dashboard/empty-state"
 import { Button } from "@/components/ui/button"
+import type { AccountOption } from "@/features/accounts/components/account-select"
 import type { Category } from "@/features/categories/queries"
 import { IMPORT_PATH } from "@/features/imports/constants"
 import {
@@ -12,7 +13,13 @@ import {
 } from "../filters"
 import { TransactionDialog } from "./transaction-dialog"
 
-export function NoTransactions({ categories }: { categories: Category[] }) {
+export function NoTransactions({
+  categories,
+  accounts
+}: {
+  categories: Category[]
+  accounts: AccountOption[]
+}) {
   return (
     <EmptyState
       icon={ReceiptText}
@@ -22,6 +29,7 @@ export function NoTransactions({ categories }: { categories: Category[] }) {
       <div className="flex flex-wrap justify-center gap-2">
         <TransactionDialog
           categories={categories}
+          accounts={accounts}
           trigger={
             <Button>
               <Plus data-icon="inline-start" />
@@ -43,15 +51,15 @@ export function NoTransactions({ categories }: { categories: Category[] }) {
   )
 }
 
-// Si hay filtros de tipo, categoría o texto se limpian esos y se conserva el
-// mes. Si solo filtra el mes, el enlace abre todos los meses.
+// Si hay filtros de tipo, categoría, cuenta o texto se limpian esos y se
+// conserva el mes. Si solo filtra el mes, el enlace abre todos los meses.
 export function NoFilteredTransactions({
   filters
 }: {
   filters: TransactionFilters
 }) {
   const hasExtraFilters = Boolean(
-    filters.type || filters.categoryId || filters.q
+    filters.type || filters.categoryId || filters.accountId || filters.q
   )
   const query = hasExtraFilters
     ? buildFiltersQuery({ month: filters.month, page: 1 })
@@ -61,7 +69,7 @@ export function NoFilteredTransactions({
     <EmptyState
       icon={SearchX}
       title="No hay movimientos con estos filtros"
-      description="Prueba con otro mes, tipo, categoría o texto."
+      description="Prueba con otro mes, tipo, categoría, cuenta o texto."
     >
       <Button
         variant="outline"

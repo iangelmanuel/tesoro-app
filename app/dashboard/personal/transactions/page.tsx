@@ -1,8 +1,10 @@
 import { Suspense } from "react"
 import Link from "next/link"
-import { FileUp, Plus } from "lucide-react"
+import { ArrowLeftRight, FileUp, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
+import { getAccountBalances } from "@/features/accounts/queries"
 import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
 import { getCategories } from "@/features/categories/queries"
 import { IMPORT_PATH } from "@/features/imports/constants"
@@ -22,7 +24,7 @@ import {
 import {
   getTransactionTotals,
   getTransactions,
-  hasAnyTransactions
+  hasAnyLedgerEntries
 } from "@/features/transactions/queries"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { buildMetadata } from "@/libs/seo"
@@ -43,7 +45,7 @@ export default function TransactionsPage({
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Movimientos</h1>
         <p className="text-sm text-muted-foreground">
-          Tus ingresos y gastos registrados.
+          Tus ingresos, gastos y traspasos entre cuentas.
         </p>
       </header>
       {/* searchParams y la sesión son dinámicos: van dentro de Suspense */}
@@ -62,20 +64,25 @@ async function TransactionsContent({
   // Se parsea tras leer la sesión: el mes por defecto usa la fecha de hoy, y
   // new Date() solo se permite después de connection()
   const filters = parseTransactionFilters(query)
-  const [categories, { rows, count }, totals] = await Promise.all([
+  const [categories, accounts, { rows, count }, totals] = await Promise.all([
     getCategories(workspace.id),
+    getAccountBalances(workspace.id),
     getTransactions(workspace.id, filters),
     getTransactionTotals(workspace.id, filters)
   ])
   // Solo se consulta cuando los filtros no devuelven nada
   const isEmptyWorkspace =
-    rows.length === 0 && !(await hasAnyTransactions(workspace.id))
+    rows.length === 0 && !(await hasAnyLedgerEntries(workspace.id))
+  // Un traspaso necesita al menos dos cuentas activas
+  const canTransfer =
+    accounts.filter((account) => !account.archived_at).length > 1
 
   return (
     <>
       <div className="flex flex-wrap gap-2">
         <TransactionDialog
           categories={categories}
+          accounts={accounts}
           trigger={
             <Button>
               <Plus data-icon="inline-start" />
@@ -83,6 +90,17 @@ async function TransactionsContent({
             </Button>
           }
         />
+        {canTransfer && (
+          <TransferDialog
+            accounts={accounts}
+            trigger={
+              <Button variant="outline">
+                <ArrowLeftRight data-icon="inline-start" />
+                Traspaso
+              </Button>
+            }
+          />
+        )}
         <Button
           variant="outline"
           asChild
@@ -96,12 +114,16 @@ async function TransactionsContent({
       </div>
 
       {isEmptyWorkspace ? (
-        <NoTransactions categories={categories} />
+        <NoTransactions
+          categories={categories}
+          accounts={accounts}
+        />
       ) : (
         <>
           <TransactionsFilters
             filters={filters}
             categories={categories}
+            accounts={accounts}
           />
           <TransactionsTotals
             totals={totals}
@@ -111,6 +133,7 @@ async function TransactionsContent({
             <TransactionsTable
               rows={rows}
               categories={categories}
+              accounts={accounts}
               currency={workspace.currency}
             />
           ) : (

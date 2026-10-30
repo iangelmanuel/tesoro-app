@@ -13,6 +13,11 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import {
+  type AccountOption,
+  AccountSelect,
+  selectableAccounts
+} from "@/features/accounts/components/account-select"
 import { todayISO } from "@/libs/dates"
 import { recordPayment, updateEntry } from "../actions"
 import type { Debt, DebtEntry } from "../queries"
@@ -24,6 +29,8 @@ interface PaymentDialogProps {
   debt: Pick<Debt, "id" | "kind">
   /** Si llega, el diálogo edita este pago */
   entry?: DebtEntry
+  /** Cuentas para el movimiento que crea el pago; solo al registrar */
+  accounts?: AccountOption[]
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
   trigger?: React.ReactNode
   open?: boolean
@@ -34,6 +41,7 @@ interface PaymentDialogProps {
 export function PaymentDialog({
   debt,
   entry,
+  accounts = [],
   trigger,
   open: controlledOpen,
   onOpenChange
@@ -67,6 +75,7 @@ export function PaymentDialog({
         <PaymentForm
           debt={debt}
           entry={entry}
+          accounts={accounts}
           onSaved={() => setOpen(false)}
           onCancel={() => setOpen(false)}
         />
@@ -78,11 +87,18 @@ export function PaymentDialog({
 interface PaymentFormProps {
   debt: Pick<Debt, "id" | "kind">
   entry?: DebtEntry
+  accounts: AccountOption[]
   onSaved: () => void
   onCancel: () => void
 }
 
-function PaymentForm({ debt, entry, onSaved, onCancel }: PaymentFormProps) {
+function PaymentForm({
+  debt,
+  entry,
+  accounts,
+  onSaved,
+  onCancel
+}: PaymentFormProps) {
   const isEditing = entry !== undefined
   const isReceivable = debt.kind === "receivable"
   const [occurredOn, setOccurredOn] = useState(
@@ -107,6 +123,10 @@ function PaymentForm({ debt, entry, onSaved, onCancel }: PaymentFormProps) {
 
   const errors = state.fieldErrors
   const values = state.values
+  const [createTransaction, setCreateTransaction] = useState(
+    () => !values || values.create_transaction === "on"
+  )
+  const [accountId, setAccountId] = useState("")
 
   return (
     <form
@@ -188,17 +208,36 @@ function PaymentForm({ debt, entry, onSaved, onCancel }: PaymentFormProps) {
             pago no crea un movimiento.
           </p>
         ) : (
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              name="create_transaction"
-              className="size-4 accent-primary"
-              defaultChecked={
-                values ? values.create_transaction === "on" : true
-              }
-            />
-            {isReceivable ? "Registrar como ingreso" : "Registrar como gasto"}
-          </label>
+          <>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="create_transaction"
+                className="size-4 accent-primary"
+                checked={createTransaction}
+                onChange={(event) => setCreateTransaction(event.target.checked)}
+              />
+              {isReceivable ? "Registrar como ingreso" : "Registrar como gasto"}
+            </label>
+            {/* La cuenta es la del movimiento: sin él no aplica */}
+            {createTransaction && (
+              <Field
+                id="account_id"
+                label="Cuenta"
+                errors={errors?.account_id}
+              >
+                <AccountSelect
+                  id="account_id"
+                  name="account_id"
+                  value={accountId}
+                  onChange={setAccountId}
+                  accounts={selectableAccounts(accounts)}
+                  allowNone
+                  invalid={Boolean(errors?.account_id)}
+                />
+              </Field>
+            )}
+          </>
         ))}
 
       {state.error && (

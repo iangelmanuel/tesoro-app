@@ -145,6 +145,11 @@ export const SITE = {
         icon: "ArrowLeftRight"
       },
       {
+        name: "Cuentas",
+        href: "/dashboard/personal/accounts",
+        icon: "Wallet"
+      },
+      {
         name: "Presupuestos",
         href: "/dashboard/personal/budgets",
         icon: "PiggyBank"

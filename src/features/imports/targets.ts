@@ -32,7 +32,8 @@ export const IMPORT_TARGETS: Record<ImportTarget, TargetDefinition> = {
       "expense_amount",
       "category",
       "description",
-      "note"
+      "note",
+      "account"
     ],
     synonyms: HEADER_SYNONYMS,
     href: `${PERSONAL}/transactions`

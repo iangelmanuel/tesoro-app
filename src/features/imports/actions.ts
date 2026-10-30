@@ -26,6 +26,10 @@ const ARCHIVED_CATEGORY =
   "Una de las categorías elegidas está archivada. Elige otra"
 const DUPLICATE_CATEGORY =
   "Ya existe una categoría con uno de los nombres nuevos. Mapéala a la existente"
+const INVALID_ACCOUNT =
+  "Una de las cuentas elegidas no es válida o está archivada. Revisa el mapeo de cuentas"
+const DUPLICATE_ACCOUNT =
+  "Ya existe una cuenta con uno de los nombres nuevos (puede estar archivada). Mapéala a la existente o restáurala"
 const UNDO_NOT_FOUND = "No se encontró la importación"
 const UNDO_ERROR = "No se pudo deshacer la importación. Intenta de nuevo"
 const DUPLICATES_ERROR =
@@ -222,6 +226,29 @@ async function validateCategories(
   return null
 }
 
+// Las cuentas existentes deben ser visibles para el usuario (RLS) y estar
+// activas. check_account_active y la FK compuesta también lo verifican.
+async function validateAccounts(
+  rows: { account_id: string | null }[]
+): Promise<string | null> {
+  const ids = [
+    ...new Set(rows.flatMap((row) => (row.account_id ? [row.account_id] : [])))
+  ]
+  if (ids.length === 0) return null
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("accounts")
+    .select("id, archived_at")
+    .in("id", ids)
+
+  if (error) return DEFAULT_ERROR
+  if (data.length !== ids.length) return INVALID_ACCOUNT
+  return data.every((account) => account.archived_at === null)
+    ? null
+    : INVALID_ACCOUNT
+}
+
 // Las deudas o metas deben ser visibles para el usuario (RLS) y estar
 // activas. Los triggers también lo verifican; esto da un mensaje claro.
 async function validateLinks(
@@ -258,9 +285,11 @@ export async function confirmImport(
     return { error: parsed.error.issues[0]?.message ?? DEFAULT_ERROR }
   }
 
-  const { filename, sheets, stats, newCategories, rows } = parsed.data
+  const { filename, sheets, stats, newCategories, newAccounts, rows } =
+    parsed.data
 
-  const categoryError = await validateCategories(rows)
+  const categoryError =
+    (await validateCategories(rows)) ?? (await validateAccounts(rows))
   if (categoryError) {
     return { error: categoryError }
   }
@@ -273,10 +302,21 @@ export async function confirmImport(
     p_sheets: sheets,
     p_stats: stats,
     p_new_categories: newCategories,
+    p_new_accounts: newAccounts,
     p_rows: rows
   })
 
   if (error) {
+    // Errores de las cuentas antes que los códigos genéricos de categoría
+    if (error.message.includes("accounts_unique_name")) {
+      return { error: DUPLICATE_ACCOUNT }
+    }
+    if (
+      error.message.includes("La cuenta está archivada") ||
+      (error.code === "23503" && error.message.includes("account_id"))
+    ) {
+      return { error: INVALID_ACCOUNT }
+    }
     return { error: PG_ERROR_MESSAGES[error.code] ?? DEFAULT_ERROR }
   }
 

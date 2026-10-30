@@ -31,6 +31,7 @@ const HAS_BALANCE = "La deuda aún tiene saldo"
 const SAME_BALANCE = "El saldo ya es ese"
 const FUTURE_DATE = "La fecha no puede ser futura"
 const CARD_TRANSACTION = "Un pago de tarjeta no crea un movimiento"
+const ARCHIVED_ACCOUNT = "La cuenta está archivada"
 
 const DEBT_FIELDS: Record<DebtKind, readonly string[]> = {
   credit_card: [
@@ -62,7 +63,8 @@ const PAYMENT_FIELDS = [
   "amount",
   "occurred_on",
   "note",
-  "create_transaction"
+  "create_transaction",
+  "account_id"
 ] as const
 
 const ADJUST_FIELDS = ["balance", "occurred_on", "note"] as const
@@ -93,6 +95,13 @@ function debtPgError(
   }
   if (error.message.includes(CARD_TRANSACTION)) {
     return { error: CARD_TRANSACTION }
+  }
+  // Cuenta del movimiento de un pago: archivada o de otro espacio
+  if (error.message.includes(ARCHIVED_ACCOUNT)) {
+    return { fieldErrors: { account_id: [ARCHIVED_ACCOUNT] } }
+  }
+  if (error.code === "23503" && error.message.includes("account_id")) {
+    return { fieldErrors: { account_id: ["Elige una cuenta válida"] } }
   }
   if (error.code === "23503") {
     return { error: DEBT_NOT_FOUND }
@@ -387,7 +396,11 @@ export async function recordPayment(
     p_occurred_on: parsed.data.occurred_on,
     // Los tipos generados no marcan el parámetro como nullable
     p_note: parsed.data.note as string,
-    p_create_transaction: parsed.data.create_transaction
+    p_create_transaction: parsed.data.create_transaction,
+    // Solo cuenta si se crea el movimiento
+    p_account_id: parsed.data.create_transaction
+      ? (parsed.data.account_id ?? undefined)
+      : undefined
   })
 
   if (error) {

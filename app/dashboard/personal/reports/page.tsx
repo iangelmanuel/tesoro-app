@@ -8,6 +8,7 @@ import {
   CardTitle
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { getAccountBalances } from "@/features/accounts/queries"
 import { getCategories } from "@/features/categories/queries"
 import {
   TOP_CATEGORIES,
@@ -69,8 +70,16 @@ async function ReportsContent({
   const isEmptyPeriod = monthly.every((row) => row.txCount === 0)
   // Solo se consulta cuando el periodo no tiene movimientos
   if (isEmptyPeriod && !(await hasAnyTransactions(workspace.id))) {
-    const categories = await getCategories(workspace.id)
-    return <NoTransactions categories={categories} />
+    const [categories, accounts] = await Promise.all([
+      getCategories(workspace.id),
+      getAccountBalances(workspace.id)
+    ])
+    return (
+      <NoTransactions
+        categories={categories}
+        accounts={accounts}
+      />
+    )
   }
 
   const typeLabel = params.type === "expense" ? "Gastos" : "Ingresos"

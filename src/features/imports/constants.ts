@@ -40,6 +40,9 @@ export const MAX_DESCRIPTION_LENGTH = 120
 export const MAX_NOTE_LENGTH = 500
 export const MAX_CATEGORY_NAME_LENGTH = 40
 
+/** Nombre de accounts (SPEC 08c) */
+export const MAX_ACCOUNT_NAME_LENGTH = 40
+
 /** Nombre de recurring_expenses (SPEC 04) */
 export const MAX_RECURRING_NAME_LENGTH = 60
 /** Nota de goal_contributions y debt_entries (SPEC 05 y 06) */
@@ -64,7 +67,8 @@ export const HEADER_SYNONYMS: Partial<Record<ImportField, readonly string[]>> =
     expense_amount: ["gasto", "salida", "cargo", "debito"],
     category: ["categoria", "category", "rubro"],
     description: ["descripcion", "concepto", "detalle", "notas", "description"],
-    note: ["nota", "observacion", "comentario"]
+    note: ["nota", "observacion", "comentario"],
+    account: ["metodo", "medio de pago", "forma de pago", "cuenta"]
   }
 
 /** Valores normalizados de la columna de tipo que sugieren ingreso o gasto */
@@ -123,6 +127,7 @@ export const FIELD_LABELS: Record<ImportField, string> = {
   category: "Categoría",
   description: "Descripción",
   note: "Nota",
+  account: "Cuenta",
   name: "Nombre",
   frequency: "Frecuencia",
   day_of_month: "Día",

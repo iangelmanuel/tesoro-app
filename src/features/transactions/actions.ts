@@ -19,6 +19,8 @@ const ARCHIVED_CATEGORY = "Esta categoría está archivada. Elige otra"
 const RECURRING_NOT_FOUND = "No se encontró el gasto fijo"
 const ALREADY_PAID = "Este pago ya está registrado"
 const RECURRING_MUST_BE_EXPENSE = "El pago de un gasto fijo debe ser un gasto"
+const ARCHIVED_ACCOUNT = "La cuenta está archivada"
+const INVALID_ACCOUNT = "Elige una cuenta válida"
 const UNIQUE_VIOLATION = "23505"
 
 const FIELDS = [
@@ -28,6 +30,7 @@ const FIELDS = [
   "category_id",
   "description",
   "note",
+  "account_id",
   "recurring_expense_id",
   "recurring_due_on"
 ] as const
@@ -60,6 +63,14 @@ function toFormError(
   // Índice único por ocurrencia: el pago ya existe (p. ej. doble clic)
   if (error.code === UNIQUE_VIOLATION) {
     return { error: ALREADY_PAID, values }
+  }
+  // check_account_active y la FK compuesta de la cuenta, antes que los
+  // códigos genéricos de la categoría
+  if (error.message.includes(ARCHIVED_ACCOUNT)) {
+    return { fieldErrors: { account_id: [ARCHIVED_ACCOUNT] }, values }
+  }
+  if (error.code === "23503" && error.message.includes("account_id")) {
+    return { fieldErrors: { account_id: [INVALID_ACCOUNT] }, values }
   }
   return {
     ...(PG_ERROR_MESSAGES[error.code] ?? { error: DEFAULT_ERROR }),

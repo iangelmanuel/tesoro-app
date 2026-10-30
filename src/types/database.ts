@@ -14,6 +14,91 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_adjustments: {
+        Row: {
+          account_id: string
+          amount: number
+          created_at: string
+          id: string
+          note: string | null
+          occurred_on: string
+          workspace_id: string
+        }
+        Insert: {
+          account_id: string
+          amount: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          occurred_on: string
+          workspace_id: string
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          occurred_on?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_adjustments_account_id_workspace_id_fkey"
+            columns: ["account_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "workspace_id"]
+          }
+        ]
+      }
+      accounts: {
+        Row: {
+          archived_at: string | null
+          color: string
+          created_at: string
+          icon: string
+          id: string
+          kind: Database["public"]["Enums"]["account_kind"]
+          name: string
+          opening_balance: number
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          archived_at?: string | null
+          color: string
+          created_at?: string
+          icon: string
+          id?: string
+          kind: Database["public"]["Enums"]["account_kind"]
+          name: string
+          opening_balance?: number
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          archived_at?: string | null
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["account_kind"]
+          name?: string
+          opening_balance?: number
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       budgets: {
         Row: {
           amount: number
@@ -526,6 +611,7 @@ export type Database = {
       }
       transactions: {
         Row: {
+          account_id: string | null
           amount: number
           category_id: string
           created_at: string
@@ -541,6 +627,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          account_id?: string | null
           amount: number
           category_id: string
           created_at?: string
@@ -556,6 +643,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          account_id?: string | null
           amount?: number
           category_id?: string
           created_at?: string
@@ -571,6 +659,13 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "transactions_account_id_workspace_id_fkey"
+            columns: ["account_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "workspace_id"]
+          },
           {
             foreignKeyName: "transactions_category_id_fkey"
             columns: ["category_id"]
@@ -598,6 +693,57 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
+          }
+        ]
+      }
+      transfers: {
+        Row: {
+          amount: number
+          created_at: string
+          from_account_id: string
+          id: string
+          note: string | null
+          occurred_on: string
+          to_account_id: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          from_account_id: string
+          id?: string
+          note?: string | null
+          occurred_on: string
+          to_account_id: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          from_account_id?: string
+          id?: string
+          note?: string | null
+          occurred_on?: string
+          to_account_id?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transfers_from_account_id_workspace_id_fkey"
+            columns: ["from_account_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "workspace_id"]
+          },
+          {
+            foreignKeyName: "transfers_to_account_id_workspace_id_fkey"
+            columns: ["to_account_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "workspace_id"]
           }
         ]
       }
@@ -638,9 +784,42 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      ledger_entries: {
+        Row: {
+          account_id: string | null
+          amount: number | null
+          category_id: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          kind: string | null
+          note: string | null
+          occurred_on: string | null
+          to_account_id: string | null
+          workspace_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      account_balances: {
+        Args: { p_workspace_id: string }
+        Returns: {
+          archived_at: string
+          balance: number
+          color: string
+          created_at: string
+          icon: string
+          id: string
+          kind: Database["public"]["Enums"]["account_kind"]
+          last_activity_on: string
+          name: string
+          opening_balance: number
+          scheduled_balance: number
+          updated_at: string
+          workspace_id: string
+        }[]
+      }
       budget_progress: {
         Args: { p_month: string; p_workspace_id: string }
         Returns: {
@@ -767,6 +946,7 @@ export type Database = {
       import_transactions: {
         Args: {
           p_filename: string
+          p_new_accounts?: Json
           p_new_categories: Json
           p_rows: Json
           p_sheets: string[]
@@ -787,6 +967,7 @@ export type Database = {
       }
       record_debt_payment: {
         Args: {
+          p_account_id?: string
           p_amount: number
           p_create_transaction: boolean
           p_debt_id: string
@@ -836,11 +1017,13 @@ export type Database = {
       }
       transaction_totals: {
         Args: {
+          p_account_id?: string
           p_category_id?: string
           p_from?: string
           p_search?: string
           p_to?: string
           p_type?: Database["public"]["Enums"]["transaction_type"]
+          p_without_account?: boolean
           p_workspace_id: string
         }
         Returns: {
@@ -861,6 +1044,7 @@ export type Database = {
       workspace_balance: { Args: { p_workspace_id: string }; Returns: number }
     }
     Enums: {
+      account_kind: "cash" | "bank" | "wallet" | "other"
       debt_entry_kind: "payment" | "adjustment"
       debt_kind: "credit_card" | "loan" | "receivable"
       debt_status: "active" | "paid" | "archived"
@@ -999,6 +1183,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_kind: ["cash", "bank", "wallet", "other"],
       debt_entry_kind: ["payment", "adjustment"],
       debt_kind: ["credit_card", "loan", "receivable"],
       debt_status: ["active", "paid", "archived"],

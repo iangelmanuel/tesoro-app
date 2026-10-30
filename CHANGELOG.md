@@ -78,6 +78,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Debt and goal imports with 3 type modes (value column, amount sign, all payments / all contributions), a fixed debt or goal for the whole file or a column mapped to active ones in a new "Deudas" / "Metas" step, future-date validation, resulting balances in the preview (import blocked if one would go negative) and an optional "Registrar también como gasto/ingreso" checkbox for loan payments and receivable collections.
 - Per-destination duplicate detection: recurring expenses by normalized name, debt entries by debt, kind, signed amount and date, and goal contributions by goal, signed amount and date.
 - "Importar" buttons on the recurring expenses tab, the debts page and the goals page, opening the wizard with their destination.
+- Migration `create_accounts_and_transfers`: `account_kind` enum, `accounts` (unique name per workspace, archive only), `transfers` and `account_adjustments` tables with RLS, an optional `transactions.account_id`, composite `(account_id, workspace_id)` foreign keys, `check_account_active` and `seed_workspace_accounts` triggers, an "Efectivo" account backfilled in every workspace, the `ledger_entries` view (`security_invoker`, readable only by `authenticated`) and the `account_balances` RPC (`security invoker`, executable only by `authenticated`).
+- Accounts page at `/dashboard/personal/accounts` with a "Cuentas" aside item: one card per active account with its type, balance as of today (red when negative) and "Con lo programado" when future rows change it, a "Saldo en cuentas" total, create/edit/archive/restore, "Actualizar saldo" (creates an adjustment for the difference with the real balance), "Ver movimientos" and a collapsed "Archivadas" section.
+- Transfers between own accounts (create, edit, delete) from the accounts and transactions pages. Transfers and balance adjustments never count as income or expense.
+- Optional "Cuenta" select in the transaction dialog and in the loan payment / receivable collection dialog when "Registrar como gasto/ingreso" is checked.
+- The transactions page lists transactions, transfers ("Nequi → Efectivo") and adjustments ("Ajuste de saldo · Nequi") in one paginated list, with a "Cuenta" column, an account filter (`?account=<id>` or `none`), a "Traspasos" type and a "Traspaso" button.
+- "Saldo en cuentas" card on the Personal summary.
+- Import wizard: `account` field for the Método column in the transactions destination, with a "Cuentas" section in step 4 mapping each value to an active account, "Crear «valor»" or "Sin cuenta", and a "Cuenta" column in the preview. Accounts created by an import stay when it is undone.
+- "Cuentas y traspasos" section in `docs/producto.md` and the SPEC 08c answers in `ROADMAP.md`.
 
 ### Changed
 
@@ -91,6 +99,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `undo_import` deletes the rows of the import's destination. For debts and goals it fails without deleting anything, naming the debt or goal, when it is no longer active or its balance would go negative; undoing debt entries also deletes the transactions they created.
 - The import page is titled "Importar", and the import history shows each import's destination and counts rows in its own unit ("3 gastos fijos").
 - `getDuplicateCandidates` takes the import destination.
+- `record_debt_payment` takes an optional `p_account_id`, `import_transactions` takes `p_new_accounts` and per-row `account_id` / `new_account_key`, and `transaction_totals` takes optional `p_account_id` / `p_without_account` filters. All new parameters have defaults.
+- `getTransactions` reads the `ledger_entries` view, and the transaction dialog takes the account list.
+- `banknote` and `wallet` icons added to `CATEGORY_ICONS`.
 
 ### Fixed
 

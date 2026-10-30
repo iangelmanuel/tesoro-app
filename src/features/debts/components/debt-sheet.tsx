@@ -12,6 +12,7 @@ import {
   SheetHeader,
   SheetTitle
 } from "@/components/ui/sheet"
+import type { AccountOption } from "@/features/accounts/components/account-select"
 import { parseAmount } from "@/features/transactions/schemas"
 import { formatCurrency, formatDate } from "@/libs/format"
 import {
@@ -34,6 +35,8 @@ import { useDebtAction } from "./use-debt-action"
 interface DebtSheetProps {
   debt: Debt
   entries: DebtEntry[]
+  /** Cuentas para el movimiento de un pago nuevo; solo en deudas activas */
+  accounts?: AccountOption[]
   /** Hoy en America/Bogota, calculado en el servidor */
   today: string
   currency: string
@@ -49,6 +52,7 @@ interface DebtSheetProps {
 export function DebtSheet({
   debt,
   entries,
+  accounts,
   today,
   currency,
   open,
@@ -114,6 +118,7 @@ export function DebtSheet({
             <div className="grid grid-cols-2 gap-2">
               <PaymentDialog
                 debt={debt}
+                accounts={accounts}
                 trigger={
                   <Button disabled={debt.balance <= 0}>
                     <Plus data-icon="inline-start" />

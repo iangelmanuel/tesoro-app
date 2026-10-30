@@ -4,6 +4,7 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { getAccountBalances } from "@/features/accounts/queries"
 import { getCategories } from "@/features/categories/queries"
 import { ImportHistory } from "@/features/imports/components/import-history"
 import { ImportWizard } from "@/features/imports/components/import-wizard"
@@ -63,14 +64,15 @@ async function ImportContent({
 }: Pick<ImportPageProps, "searchParams">) {
   const query = await searchParams
   const workspace = await getPersonalWorkspace()
-  const [categories, imports, debts, goals] = await Promise.all([
+  const [categories, accounts, imports, debts, goals] = await Promise.all([
     getCategories(workspace.id),
+    getAccountBalances(workspace.id),
     getImports(workspace.id),
     getActiveDebtOptions(workspace.id),
     getActiveGoalOptions(workspace.id)
   ])
 
-  // Las categorías archivadas no aparecen como destino
+  // Las categorías y cuentas archivadas no aparecen como destino
   return (
     <>
       <ImportWizard
@@ -80,6 +82,9 @@ async function ImportContent({
         categories={categories
           .filter((category) => category.archived_at === null)
           .map(({ id, type, name }) => ({ id, type, name }))}
+        accounts={accounts
+          .filter((account) => account.archived_at === null)
+          .map(({ id, name }) => ({ id, name }))}
         currency={workspace.currency}
       />
       <ImportHistory imports={imports} />

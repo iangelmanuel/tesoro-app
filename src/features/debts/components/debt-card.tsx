@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
+import type { AccountOption } from "@/features/accounts/components/account-select"
 import { formatCurrency, formatDate } from "@/libs/format"
 import {
   debtProjection,
@@ -38,12 +39,20 @@ interface DebtCardProps {
   /** Tarjeta o préstamo activo */
   debt: Debt
   entries: DebtEntry[]
+  /** Cuentas activas, para el movimiento de un pago */
+  accounts: AccountOption[]
   /** Hoy en America/Bogota, calculado en el servidor */
   today: string
   currency: string
 }
 
-export function DebtCard({ debt, entries, today, currency }: DebtCardProps) {
+export function DebtCard({
+  debt,
+  entries,
+  accounts,
+  today,
+  currency
+}: DebtCardProps) {
   const [editing, setEditing] = useState(false)
   const [adjusting, setAdjusting] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -139,6 +148,7 @@ export function DebtCard({ debt, entries, today, currency }: DebtCardProps) {
         <DebtSheet
           debt={debt}
           entries={entries}
+          accounts={accounts}
           today={today}
           currency={currency}
           open={detailOpen}

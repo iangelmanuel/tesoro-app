@@ -834,6 +834,7 @@ export type Database = {
           spent: number
         }[]
       }
+      cancel_account_deletion: { Args: never; Returns: undefined }
       category_totals: {
         Args: {
           p_from: string
@@ -911,6 +912,7 @@ export type Database = {
           target_date: string
         }[]
       }
+      has_password: { Args: never; Returns: boolean }
       import_debt_entries: {
         Args: {
           p_create_transactions: boolean
@@ -965,6 +967,7 @@ export type Database = {
           tx_count: number
         }[]
       }
+      purge_deleted_accounts: { Args: never; Returns: number }
       record_debt_payment: {
         Args: {
           p_account_id?: string
@@ -988,6 +991,7 @@ export type Database = {
           transaction_id: string
         }[]
       }
+      request_account_deletion: { Args: never; Returns: string }
       score_balances: {
         Args: { p_from: string; p_to: string; p_workspace_id: string }
         Returns: {

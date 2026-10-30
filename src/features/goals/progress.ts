@@ -1,4 +1,7 @@
+import { SITE } from "@/config/site"
 import { todayISO } from "@/libs/dates"
+
+export const GOALS_PATH = `${SITE.routes.dashboardPersonal}/goals` as const
 
 export type GoalStatus = "completed" | "archived" | "on_track" | "at_risk"
 

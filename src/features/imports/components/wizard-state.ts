@@ -37,9 +37,11 @@ import type {
   CategoryTarget,
   DateFormat,
   DebtEntryTarget,
+  DebtEntryValue,
   DetectedTable,
   EntryTypeMode,
   FrequencyTarget,
+  GoalContributionValue,
   GoalEntryTarget,
   ImportConfig,
   ImportField,
@@ -47,6 +49,8 @@ import type {
   ImportTarget,
   LinkTarget,
   PreviewRow,
+  RecurringValue,
+  TransactionValue,
   TypeMode,
   TypeValueTarget
 } from "../types"
@@ -74,6 +78,17 @@ export function stepLabel(step: StepId, target: ImportTarget) {
   if (target === "goal_contributions") return "Metas"
   return "Categorías"
 }
+
+/** Filas de la vista previa según el destino */
+export type PreviewState = { empty: number } & (
+  | { target: "transactions"; rows: PreviewRow<TransactionValue>[] }
+  | { target: "recurring_expenses"; rows: PreviewRow<RecurringValue>[] }
+  | { target: "debt_entries"; rows: PreviewRow<DebtEntryValue>[] }
+  | {
+      target: "goal_contributions"
+      rows: PreviewRow<GoalContributionValue>[]
+    }
+)
 
 /** Filas leídas con el mapeo de columnas, según el destino */
 export type Extracted =
@@ -156,7 +171,7 @@ export interface WizardState {
   /** Valor normalizado de la columna de deuda o meta → destino */
   linkTargets: Record<string, LinkTarget>
   /** Filas de la vista previa ya con duplicados marcados */
-  preview: { rows: PreviewRow[]; empty: number } | null
+  preview: PreviewState | null
   /** Stats de la importación confirmada */
   summary: ImportStats | null
 }
@@ -187,7 +202,7 @@ export type WizardAction =
   | { type: "set_category_target"; key: string; target: CategoryTarget }
   | { type: "start_links"; options: { id: string; name: string }[] }
   | { type: "set_link_target"; key: string; target: LinkTarget }
-  | { type: "preview_ready"; rows: PreviewRow[]; empty: number }
+  | { type: "preview_ready"; preview: PreviewState }
   | { type: "toggle_row"; index: number }
   | { type: "imported"; stats: ImportStats }
   | { type: "go_to"; step: StepId }
@@ -523,20 +538,20 @@ export function wizardReducer(
       }
 
     case "preview_ready":
-      return {
-        ...state,
-        step: "preview",
-        preview: { rows: action.rows, empty: action.empty }
-      }
+      return { ...state, step: "preview", preview: action.preview }
 
     case "toggle_row": {
       const row = state.preview?.rows[action.index]
       // Las filas con error u omitidas no se pueden marcar
       if (!state.preview || !row?.value) return state
 
-      const rows = [...state.preview.rows]
+      const rows: PreviewRow<unknown>[] = [...state.preview.rows]
       rows[action.index] = { ...row, selected: !row.selected }
-      return { ...state, preview: { ...state.preview, rows } }
+      // Las filas siguen siendo del mismo destino
+      return {
+        ...state,
+        preview: { ...state.preview, rows } as PreviewState
+      }
     }
 
     case "imported":

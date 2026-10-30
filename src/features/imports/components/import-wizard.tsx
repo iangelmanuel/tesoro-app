@@ -2,9 +2,28 @@
 
 import { useMemo, useReducer, useState, useTransition } from "react"
 import { Check } from "lucide-react"
+import { formatCurrency } from "@/libs/format"
 import { cn } from "@/libs/utils"
-import { confirmImport, getDuplicateCandidates } from "../actions"
-import { dateRange, markDuplicates } from "../duplicates"
+import {
+  type ConfirmImportResult,
+  confirmDebtEntriesImport,
+  confirmGoalContributionsImport,
+  confirmImport,
+  confirmRecurringImport,
+  getDuplicateCandidates
+} from "../actions"
+import {
+  debtResultingBalances,
+  firstNegativeBalance,
+  goalResultingBalances
+} from "../balances"
+import {
+  dateRange,
+  markDebtEntryDuplicates,
+  markDuplicates,
+  markGoalContributionDuplicates,
+  markRecurringDuplicates
+} from "../duplicates"
 import {
   buildPreviewRows,
   computeStats,
@@ -13,16 +32,29 @@ import {
   newCategoryKey,
   toImportRows
 } from "../normalize"
+import { buildDebtEntryPreviewRows } from "../normalize-debt-entries"
+import { buildGoalContributionPreviewRows } from "../normalize-goal-contributions"
+import { buildRecurringPreviewRows } from "../normalize-recurring"
 import type { DebtLinkOption, GoalLinkOption } from "../queries"
+import { countLabel } from "../targets"
 import type { CategoryOption, ImportTarget } from "../types"
 import { CategoriesStep } from "./categories-step"
 import { ColumnsStep } from "./columns-step"
 import { FileStep } from "./file-step"
 import { LinkStep } from "./link-step"
-import { PreviewStep } from "./preview-step"
+import {
+  Balances,
+  CreateTransactionsField,
+  PreviewStep,
+  debtEntryColumns,
+  goalContributionColumns,
+  recurringColumns,
+  transactionColumns
+} from "./preview-step"
 import { SummaryStep } from "./summary-step"
 import { TableStep } from "./table-step"
 import {
+  type PreviewState,
   STEPS,
   type StepId,
   extractForTarget,
@@ -35,8 +67,9 @@ import {
   wizardReducer
 } from "./wizard-state"
 
-// Asistente de 6 pasos: archivo → tabla → columnas → categorías → vista
-// previa → resumen. El estado vive en el cliente y se pierde al recargar.
+// Asistente de 6 pasos: archivo → tabla → columnas → categorías (o deudas o
+// metas) → vista previa → resumen. El estado vive en el cliente y se pierde
+// al recargar.
 interface ImportWizardProps {
   /** Destino de `?target=` */
   initialTarget: ImportTarget
@@ -46,6 +79,13 @@ interface ImportWizardProps {
   debts: DebtLinkOption[]
   goals: GoalLinkOption[]
   currency: string
+}
+
+/** Ids distintos de deudas o metas de las filas con datos */
+function linkedIds<V>(rows: { value?: V }[], idOf: (value: V) => string) {
+  return [
+    ...new Set(rows.flatMap((row) => (row.value ? [idOf(row.value)] : [])))
+  ]
 }
 
 export function ImportWizard({
@@ -67,12 +107,17 @@ export function ImportWizard({
     unavailable.includes(initialTarget) ? "transactions" : initialTarget,
     initialState
   )
-  const links =
-    state.target === "debt_entries"
-      ? debts
-      : state.target === "goal_contributions"
-        ? goals
-        : []
+  // Casilla "Registrar también como gasto/ingreso" de deudas
+  const [createTransactions, setCreateTransactions] = useState(false)
+  const links = useMemo(
+    () =>
+      state.target === "debt_entries"
+        ? debts
+        : state.target === "goal_contributions"
+          ? goals
+          : [],
+    [state.target, debts, goals]
+  )
   // Solo se recalculan al cambiar el archivo, las hojas o la tabla, no al
   // marcar filas en la vista previa
   const { file, selectedSheets, primaryTable } = state
@@ -103,25 +148,206 @@ export function ImportWizard({
     }
     return names
   }, [categories, pairs, state.categoryTargets])
+  const linkNames = useMemo(
+    () => Object.fromEntries(links.map((link) => [link.id, link.name])),
+    [links]
+  )
 
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
-  // Aplica el mapeo de categorías y marca duplicados contra la BD
+  // Arma las filas de la vista previa y marca duplicados contra la BD
+  async function buildPreview(): Promise<PreviewState | string> {
+    if (!extracted) return "No hay filas para importar"
+
+    switch (extracted.target) {
+      case "transactions": {
+        const rows = buildPreviewRows(extracted.rows, state.categoryTargets)
+        const range = dateRange(rows)
+        if (!range)
+          return { target: "transactions", rows, empty: extracted.empty }
+
+        const result = await getDuplicateCandidates({
+          target: "transactions",
+          ...range
+        })
+        if (result.error !== undefined) return result.error
+        return {
+          target: "transactions",
+          rows: markDuplicates(
+            rows,
+            result.target === "transactions" ? result.candidates : []
+          ),
+          empty: extracted.empty
+        }
+      }
+
+      case "recurring_expenses": {
+        const rows = buildRecurringPreviewRows(
+          extracted.rows,
+          state.categoryTargets
+        )
+        const result = await getDuplicateCandidates({
+          target: "recurring_expenses"
+        })
+        if (result.error !== undefined) return result.error
+        return {
+          target: "recurring_expenses",
+          rows: markRecurringDuplicates(
+            rows,
+            result.target === "recurring_expenses" ? result.candidates : []
+          ),
+          empty: extracted.empty
+        }
+      }
+
+      case "debt_entries": {
+        const rows = buildDebtEntryPreviewRows(
+          extracted.rows,
+          state.linkTargets,
+          state.config?.fixedLinkId ?? null
+        )
+        const range = dateRange(rows)
+        const ids = linkedIds(rows, (value) => value.debtId)
+        if (!range || ids.length === 0) {
+          return { target: "debt_entries", rows, empty: extracted.empty }
+        }
+
+        const result = await getDuplicateCandidates({
+          target: "debt_entries",
+          ...range,
+          ids
+        })
+        if (result.error !== undefined) return result.error
+        return {
+          target: "debt_entries",
+          rows: markDebtEntryDuplicates(
+            rows,
+            result.target === "debt_entries" ? result.candidates : []
+          ),
+          empty: extracted.empty
+        }
+      }
+
+      case "goal_contributions": {
+        const rows = buildGoalContributionPreviewRows(
+          extracted.rows,
+          state.linkTargets,
+          state.config?.fixedLinkId ?? null
+        )
+        const range = dateRange(rows)
+        const ids = linkedIds(rows, (value) => value.goalId)
+        if (!range || ids.length === 0) {
+          return { target: "goal_contributions", rows, empty: extracted.empty }
+        }
+
+        const result = await getDuplicateCandidates({
+          target: "goal_contributions",
+          ...range,
+          ids
+        })
+        if (result.error !== undefined) return result.error
+        return {
+          target: "goal_contributions",
+          rows: markGoalContributionDuplicates(
+            rows,
+            result.target === "goal_contributions" ? result.candidates : []
+          ),
+          empty: extracted.empty
+        }
+      }
+    }
+  }
+
   function showPreview() {
-    if (extracted?.target !== "transactions") return
     setError(null)
 
     startTransition(async () => {
-      const rows = buildPreviewRows(extracted.rows, state.categoryTargets)
-      const range = dateRange(rows)
-      const result = range
-        ? await getDuplicateCandidates({
-            target: "transactions",
-            from: range.from,
-            to: range.to
-          })
-        : { target: "transactions" as const, candidates: [] }
+      const preview = await buildPreview()
+      if (typeof preview === "string") {
+        setError(preview)
+        return
+      }
+      dispatch({ type: "preview_ready", preview })
+    })
+  }
+
+  // Guarda las filas marcadas con la acción del destino
+  function save(preview: PreviewState): Promise<ConfirmImportResult> {
+    const stats = computeStats(preview.rows, preview.empty)
+    const base = {
+      filename: state.file?.name ?? "",
+      sheets: state.file?.isCsv
+        ? []
+        : sources.map((source) => source.table.sheet),
+      stats
+    }
+
+    switch (preview.target) {
+      case "transactions":
+        return confirmImport({
+          ...base,
+          newCategories: newCategories(
+            preview.rows,
+            state.categoryTargets,
+            pairs
+          ),
+          rows: toImportRows(preview.rows)
+        })
+      case "recurring_expenses":
+        return confirmRecurringImport({
+          ...base,
+          newCategories: newCategories(
+            preview.rows,
+            state.categoryTargets,
+            pairs
+          ).map(({ key, name }) => ({ key, name })),
+          rows: toImportRows(preview.rows)
+        })
+      case "debt_entries":
+        return confirmDebtEntriesImport({
+          ...base,
+          createTransactions: createTransactions && hasLinkedPayments,
+          rows: preview.rows.flatMap(({ selected, value }) =>
+            selected && value
+              ? [
+                  {
+                    debt_id: value.debtId,
+                    kind: value.kind,
+                    amount: value.amount,
+                    occurred_on: value.occurred_on,
+                    note: value.note
+                  }
+                ]
+              : []
+          )
+        })
+      case "goal_contributions":
+        return confirmGoalContributionsImport({
+          ...base,
+          rows: preview.rows.flatMap(({ selected, value }) =>
+            selected && value
+              ? [
+                  {
+                    goal_id: value.goalId,
+                    amount: value.amount,
+                    occurred_on: value.occurred_on,
+                    note: value.note
+                  }
+                ]
+              : []
+          )
+        })
+    }
+  }
+
+  function confirm() {
+    const { preview } = state
+    if (!state.file || !preview) return
+    setError(null)
+
+    startTransition(async () => {
+      const result = await save(preview)
 
       if (result.error !== undefined) {
         setError(result.error)
@@ -129,45 +355,121 @@ export function ImportWizard({
       }
 
       dispatch({
-        type: "preview_ready",
-        rows: markDuplicates(
-          rows,
-          result.target === "transactions" ? result.candidates : []
-        ),
-        empty: extracted.empty
+        type: "imported",
+        stats: computeStats(preview.rows, preview.empty)
       })
-    })
-  }
-
-  function confirm() {
-    if (!state.file || !state.preview) return
-    const { rows, empty } = state.preview
-    const stats = computeStats(rows, empty)
-    setError(null)
-
-    startTransition(async () => {
-      const result = await confirmImport({
-        filename: state.file?.name ?? "",
-        sheets: state.file?.isCsv
-          ? []
-          : sources.map((source) => source.table.sheet),
-        stats,
-        newCategories: newCategories(rows, state.categoryTargets, pairs),
-        rows: toImportRows(rows)
-      })
-
-      if (result.error !== undefined) {
-        setError(result.error)
-        return
-      }
-
-      dispatch({ type: "imported", stats })
     })
   }
 
   function goTo(step: StepId) {
     setError(null)
     dispatch({ type: "go_to", step })
+  }
+
+  // Saldos resultantes y si algún pago marcado va a un préstamo o cuenta por
+  // cobrar (solo ahí aplica la casilla de movimiento)
+  const preview = state.preview
+  const balances = useMemo(() => {
+    if (preview?.target === "debt_entries") {
+      return debtResultingBalances(preview.rows, debts)
+    }
+    if (preview?.target === "goal_contributions") {
+      return goalResultingBalances(preview.rows, goals)
+    }
+    return []
+  }, [preview, debts, goals])
+  const negative = firstNegativeBalance(balances)
+  const hasLinkedPayments =
+    preview?.target === "debt_entries" &&
+    preview.rows.some(
+      ({ selected, value }) =>
+        selected &&
+        value?.kind === "payment" &&
+        debts.find((debt) => debt.id === value.debtId)?.kind !== "credit_card"
+    )
+
+  function renderPreview(preview: PreviewState) {
+    const common = {
+      empty: preview.empty,
+      countLabel: (count: number) => countLabel(preview.target, count),
+      importing: pending,
+      error,
+      onToggle: (index: number) => dispatch({ type: "toggle_row", index }),
+      onBack: () =>
+        goTo(
+          (preview.target === "debt_entries" ||
+            preview.target === "goal_contributions") &&
+            state.config?.mapping[
+              preview.target === "debt_entries" ? "debt" : "goal"
+            ] === undefined
+            ? "columns"
+            : "categories"
+        ),
+      onConfirm: confirm
+    }
+    const blocked = negative
+      ? `El saldo de «${negative.name}» quedaría en ${formatCurrency(negative.result, currency)}`
+      : null
+
+    switch (preview.target) {
+      case "transactions":
+        return (
+          <PreviewStep
+            {...common}
+            rows={preview.rows}
+            columns={transactionColumns(currency, categoryNames)}
+          />
+        )
+      case "recurring_expenses":
+        return (
+          <PreviewStep
+            {...common}
+            rows={preview.rows}
+            columns={recurringColumns(currency, categoryNames)}
+          />
+        )
+      case "debt_entries":
+        return (
+          <PreviewStep
+            {...common}
+            rows={preview.rows}
+            columns={debtEntryColumns(currency, linkNames)}
+            blocked={blocked}
+            extra={
+              <>
+                <Balances
+                  title="Saldos de tus deudas"
+                  balances={balances}
+                  currency={currency}
+                />
+                {hasLinkedPayments && (
+                  <CreateTransactionsField
+                    checked={createTransactions}
+                    disabled={pending}
+                    onChange={setCreateTransactions}
+                  />
+                )}
+              </>
+            }
+          />
+        )
+      case "goal_contributions":
+        return (
+          <PreviewStep
+            {...common}
+            rows={preview.rows}
+            columns={goalContributionColumns(currency, linkNames)}
+            blocked={blocked}
+            extra={
+              <Balances
+                title="Ahorrado en tus metas"
+                balances={balances}
+                currency={currency}
+              />
+            }
+          />
+        )
+    }
   }
 
   return (
@@ -181,7 +483,10 @@ export function ImportWizard({
         <FileStep
           target={state.target}
           unavailable={unavailable}
-          onTargetChange={(target) => dispatch({ type: "set_target", target })}
+          onTargetChange={(target) => {
+            setCreateTransactions(false)
+            dispatch({ type: "set_target", target })
+          }}
           onLoaded={(name, sheets) =>
             dispatch({ type: "file_loaded", name, sheets })
           }
@@ -282,25 +587,15 @@ export function ImportWizard({
           />
         ))}
 
-      {state.step === "preview" && state.preview && (
-        <PreviewStep
-          rows={state.preview.rows}
-          empty={state.preview.empty}
-          currency={currency}
-          categoryNames={categoryNames}
-          importing={pending}
-          error={error}
-          onToggle={(index) => dispatch({ type: "toggle_row", index })}
-          onBack={() => goTo("categories")}
-          onConfirm={confirm}
-        />
-      )}
+      {state.step === "preview" && preview && renderPreview(preview)}
 
       {state.step === "summary" && state.summary && (
         <SummaryStep
+          target={state.target}
           stats={state.summary}
           onRestart={() => {
             setError(null)
+            setCreateTransactions(false)
             dispatch({ type: "reset" })
           }}
         />

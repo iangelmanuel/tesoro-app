@@ -2,16 +2,19 @@ import type { Route } from "next"
 import Link from "next/link"
 import { CircleCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { TRANSACTIONS_PATH } from "@/features/transactions/filters"
-import type { ImportStats } from "../types"
+import { IMPORT_TARGETS } from "../targets"
+import type { ImportStats, ImportTarget } from "../types"
 
 interface SummaryStepProps {
+  target: ImportTarget
   stats: ImportStats
   onRestart: () => void
 }
 
-// Paso 6: importadas, omitidas, duplicadas omitidas y con error
-export function SummaryStep({ stats, onRestart }: SummaryStepProps) {
+// Paso 6: importadas, omitidas, duplicadas omitidas y con error, con enlace
+// a la página del destino
+export function SummaryStep({ target, stats, onRestart }: SummaryStepProps) {
+  const { label, href } = IMPORT_TARGETS[target]
   const items = [
     { label: "Importadas", value: stats.imported },
     { label: "Omitidas", value: stats.skipped },
@@ -24,7 +27,7 @@ export function SummaryStep({ stats, onRestart }: SummaryStepProps) {
       <div className="flex items-center gap-3">
         <CircleCheck className="size-6 text-primary" />
         <div className="flex flex-col">
-          <p className="font-medium">Importación completada</p>
+          <p className="font-medium">Importación completada · {label}</p>
           <p className="text-sm text-muted-foreground">
             Puedes deshacerla desde el historial cuando quieras.
           </p>
@@ -47,7 +50,7 @@ export function SummaryStep({ stats, onRestart }: SummaryStepProps) {
 
       <div className="flex flex-wrap gap-2">
         <Button asChild>
-          <Link href={TRANSACTIONS_PATH as Route}>Ver movimientos</Link>
+          <Link href={href as Route}>Ver {label.toLowerCase()}</Link>
         </Button>
         <Button
           variant="outline"

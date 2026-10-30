@@ -1,7 +1,15 @@
 "use client"
 
 import { useTransition } from "react"
-import { ChevronsUpDown, LogOut, Monitor, Moon, Sun } from "lucide-react"
+import Link from "next/link"
+import {
+  ChevronsUpDown,
+  LogOut,
+  Monitor,
+  Moon,
+  Sun,
+  UserRound
+} from "lucide-react"
 import { useTheme } from "next-themes"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -19,6 +27,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from "@/components/ui/sidebar"
+import { SITE } from "@/config/site"
 import { signOut } from "@/features/auth/actions"
 
 export interface DashboardUser {
@@ -33,7 +42,7 @@ const THEMES = [
   { value: "system", label: "Sistema", icon: Monitor }
 ] as const
 
-function getInitials(name: string) {
+export function getInitials(name: string) {
   return name
     .split(/\s+/)
     .filter(Boolean)
@@ -99,6 +108,13 @@ export function UserMenu({ user }: { user: DashboardUser }) {
                 <UserInfo user={user} />
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href={SITE.routes.account}>
+                <UserRound />
+                Cuenta
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground">
               Tema

@@ -1,7 +1,7 @@
 const LOCALE = "es-CO"
 
 // Monedas que la UI muestra sin decimales, aunque la BD guarde centavos
-const ZERO_DECIMAL_CURRENCIES = new Set(["COP"])
+const ZERO_DECIMAL_CURRENCIES = new Set(["COP", "CLP"])
 
 export function formatCurrency(amount: number, currency = "COP") {
   const digits = ZERO_DECIMAL_CURRENCIES.has(currency) ? 0 : 2

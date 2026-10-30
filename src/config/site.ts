@@ -107,8 +107,29 @@ export const SITE = {
     dashboard: "/dashboard",
     dashboardPersonal: "/dashboard/personal",
     dashboardBusiness: "/dashboard/business",
-    authCallback: "/auth/callback"
+    authCallback: "/auth/callback",
+    account: "/dashboard/account",
+    accountDeleted: "/account-deleted",
+    forgotPassword: "/forgot-password",
+    resetPassword: "/reset-password",
+    checkEmail: "/check-email",
+    authConfirm: "/auth/confirm"
   },
+
+  // Monedas que el usuario puede elegir. Solo cambian el formato de los
+  // montos: los valores guardados no se convierten
+  currencies: [
+    { code: "COP", label: "Peso colombiano" },
+    { code: "USD", label: "Dólar estadounidense" },
+    { code: "EUR", label: "Euro" },
+    { code: "MXN", label: "Peso mexicano" },
+    { code: "PEN", label: "Sol peruano" },
+    { code: "CLP", label: "Peso chileno" },
+    { code: "ARS", label: "Peso argentino" }
+  ],
+
+  // Días entre programar el borrado de la cuenta y la purga (pg_cron)
+  accountDeletionGraceDays: 30,
 
   legal: [
     {

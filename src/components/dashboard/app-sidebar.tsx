@@ -50,7 +50,10 @@ function isActive(pathname: string, href: string) {
 
 export function AppSidebar({ user }: { user: DashboardUser }) {
   const pathname = usePathname()
-  const isPersonal = pathname.startsWith(SITE.routes.dashboardPersonal)
+  // /dashboard/account mantiene el menú Personal, sin ningún ítem activo
+  const isPersonal =
+    pathname.startsWith(SITE.routes.dashboardPersonal) ||
+    pathname === SITE.routes.account
 
   return (
     <Sidebar collapsible="offcanvas">

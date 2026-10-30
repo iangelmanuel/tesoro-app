@@ -8,7 +8,12 @@ const STATIC_ROUTES: Array<{
 }> = [
   { path: SITE.routes.home, changeFrequency: "weekly", priority: 1 },
   { path: SITE.routes.signUp, changeFrequency: "yearly", priority: 0.6 },
-  { path: SITE.routes.signIn, changeFrequency: "yearly", priority: 0.5 }
+  { path: SITE.routes.signIn, changeFrequency: "yearly", priority: 0.5 },
+  {
+    path: SITE.routes.forgotPassword,
+    changeFrequency: "yearly",
+    priority: 0.3
+  }
 ]
 
 export default function sitemap(): MetadataRoute.Sitemap {

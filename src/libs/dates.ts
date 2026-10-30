@@ -29,3 +29,10 @@ export function monthRange(month: string) {
     to: `${month}-${String(lastDay).padStart(2, "0")}`
   }
 }
+
+/** Mes YYYY-MM desplazado `delta` meses (negativo hacia atrás) */
+export function shiftMonth(month: string, delta: number) {
+  const [year, monthIndex] = month.split("-").map(Number)
+  const date = new Date(Date.UTC(year, monthIndex - 1 + delta, 1))
+  return date.toISOString().slice(0, 7)
+}

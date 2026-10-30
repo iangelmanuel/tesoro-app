@@ -1,8 +1,11 @@
 import { z } from "zod"
+import { SITE } from "@/config/site"
 import { TRANSACTION_TYPES } from "@/features/categories/constants"
 import { currentMonth, monthRange } from "@/libs/dates"
 
 export const PAGE_SIZE = 20
+
+export const TRANSACTIONS_PATH = `${SITE.routes.dashboardPersonal}/transactions`
 
 export type TransactionType = (typeof TRANSACTION_TYPES)[number]
 

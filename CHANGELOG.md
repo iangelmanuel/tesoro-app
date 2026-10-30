@@ -26,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `formatCurrency()` / `formatDate()` (`es-CO`), `America/Bogota` date helpers and `getPersonalWorkspace()`.
 - shadcn/ui components: `dialog`, `alert-dialog`, `select`, `table`, `popover`, `calendar`, `textarea`, `badge`, `pagination`, `toggle` and `toggle-group`, plus `react-day-picker` and `date-fns`.
 - Global `<Toaster />` (sonner) in the root layout.
+- Migration `create_report_functions`: `monthly_totals` (fills empty months with zeros), `category_totals` and `workspace_balance` RPCs (`security invoker`, executable only by `authenticated`).
+- Personal summary page at `/dashboard/personal`: income, expense and balance cards with change vs. the previous month, savings rate, daily average spend, month-end spend projection, top expense category, all-time balance and transaction count, a 6-month income vs. expense chart, an expense-by-category donut (top 6 + "Otras") and the 5 latest transactions.
+- Personal reports page at `/dashboard/personal/reports`: URL-driven period picker (month, quarter, year or a range of up to 24 months), Gastos/Ingresos toggle, monthly trend with a balance line, category donut, top 5 categories bar chart and a per-category summary table linking to filtered transactions.
+- shadcn/ui `chart` component with `recharts` (exact version), charts with `aria-label`, a screen-reader data table and keyboard-navigable tooltips.
+- `CATEGORY_CHART_COLORS` and per-theme `--category-*`, `--income`, `--expense` and `--balance` CSS variables, so chart colors match category badges in light and dark mode.
+- Empty states and skeletons for the summary and reports pages.
 
 ### Changed
 
@@ -34,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `Metadata` / `Viewport` were imported as default exports from `next`, which broke type checking.
+- The transactions page read the current date before the session, which made Next.js reject `new Date()` while prerendering when the URL had no `month`.
 
 ## [0.1.0] - 2026-10-29
 

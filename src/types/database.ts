@@ -179,7 +179,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      category_totals: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_type: Database["public"]["Enums"]["transaction_type"]
+          p_workspace_id: string
+        }
+        Returns: {
+          archived: boolean
+          category_id: string
+          color: string
+          icon: string
+          name: string
+          total: number
+          tx_count: number
+        }[]
+      }
       is_workspace_owner: { Args: { p_workspace_id: string }; Returns: boolean }
+      monthly_totals: {
+        Args: { p_from: string; p_to: string; p_workspace_id: string }
+        Returns: {
+          expense: number
+          income: number
+          month: string
+          tx_count: number
+        }[]
+      }
       transaction_totals: {
         Args: {
           p_category_id?: string
@@ -194,6 +220,7 @@ export type Database = {
           income: number
         }[]
       }
+      workspace_balance: { Args: { p_workspace_id: string }; Returns: number }
     }
     Enums: {
       transaction_type: "income" | "expense"

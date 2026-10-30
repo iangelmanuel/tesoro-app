@@ -55,8 +55,11 @@ export default function TransactionsPage({
 async function TransactionsContent({
   searchParams
 }: Pick<TransactionsPageProps, "searchParams">) {
-  const filters = parseTransactionFilters(await searchParams)
+  const query = await searchParams
   const workspace = await getPersonalWorkspace()
+  // Se parsea tras leer la sesión: el mes por defecto usa la fecha de hoy, y
+  // new Date() solo se permite después de connection()
+  const filters = parseTransactionFilters(query)
   const [categories, { rows, count }, totals] = await Promise.all([
     getCategories(workspace.id),
     getTransactions(workspace.id, filters),

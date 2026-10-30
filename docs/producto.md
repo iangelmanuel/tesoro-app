@@ -167,6 +167,79 @@ created_at desc`.
   con filtros sin resultados, "No hay movimientos con estos filtros" y un
   enlace para limpiarlos (o ver todos los meses, si solo se filtra por mes).
 
+## Resumen y reportes
+
+Páginas `/dashboard/personal` (Resumen) y `/dashboard/personal/reports`
+(Reportes). Convierten los movimientos en tarjetas, gráficas y tablas.
+
+### Reglas de agregación
+
+- Todo total se calcula en Postgres con funciones RPC `security invoker`, que
+  respetan RLS. Con un espacio ajeno devuelven ceros o vacío, y `anon` no las
+  puede ejecutar.
+  - `monthly_totals(workspace, from, to)`: ingresos, gastos y número de
+    movimientos por mes. Rellena con ceros los meses sin movimientos.
+  - `category_totals(workspace, from, to, type)`: total y número de
+    movimientos por categoría en un rango de fechas inclusivo, ordenado por
+    total descendente. Incluye las categorías archivadas.
+  - `workspace_balance(workspace)`: ingresos menos gastos de toda la historia.
+- Mes calendario en `America/Bogota`. Los movimientos con fecha futura cuentan
+  en el mes de su fecha, igual que en Movimientos.
+- Colores: cada categoría usa en las gráficas el mismo color que su badge
+  (`CATEGORY_CHART_COLORS`, variables `--category-*` con tono 500 en claro y
+  400 en oscuro). Ingresos en emerald, gastos en rose y balance en sky.
+  "Otras" usa el gris de texto secundario.
+- Cada gráfica tiene `aria-label`, una tabla `sr-only` con sus datos y tooltip
+  navegable con teclado.
+
+### Métricas del Resumen
+
+Siempre sobre el mes actual. "Anterior" es el mes anterior completo.
+
+| Tarjeta                  | Cálculo                                                | Sin datos                     |
+| ------------------------ | ------------------------------------------------------ | ----------------------------- |
+| Ingresos / Gastos        | Total del mes; variación % vs. anterior                | Variación "—" si anterior = 0 |
+| Balance                  | Ingresos − gastos; variación como diferencia en dinero | Diferencia contra 0           |
+| Tasa de ahorro           | Balance / ingresos × 100, puede ser negativa           | "—" si ingresos = 0           |
+| Gasto promedio diario    | Gastos del mes / días transcurridos (hoy incluido)     | `$ 0`                         |
+| Proyección de gasto      | Promedio diario × días del mes                         | `$ 0`                         |
+| Categoría de mayor gasto | Categoría con más gasto en el mes                      | "—"                           |
+| Balance acumulado        | Ingresos − gastos de toda la historia                  | `$ 0`                         |
+| Movimientos del mes      | Número de movimientos del mes                          | `0`                           |
+
+- En gastos el color de la variación se invierte: subir es rojo y bajar es
+  verde.
+- Debajo de las tarjetas: ingresos vs. gastos de los últimos 6 meses (incluido
+  el actual), dona de gastos por categoría del mes (top 6 + "Otras") y los
+  últimos 5 movimientos, con enlace a Movimientos.
+
+### Periodos de Reportes
+
+Periodo y tipo viven en la URL, así un enlace se puede compartir y recargar:
+
+| Parámetro | Valores                                     | Por defecto              |
+| --------- | ------------------------------------------- | ------------------------ |
+| `period`  | `month`, `quarter`, `year`, `range`         | `month`                  |
+| `value`   | `YYYY-MM`, `YYYY-Qn` o `YYYY` según periodo | periodo actual en Bogotá |
+| `from`    | `YYYY-MM-DD` (solo `range`)                 | —                        |
+| `to`      | `YYYY-MM-DD` (solo `range`)                 | —                        |
+| `type`    | `expense`, `income`                         | `expense`                |
+
+- Cualquier valor inválido cae a su valor por defecto. Un rango con fechas
+  inválidas, `from > to` o más de 24 meses muestra un aviso y cae al mes
+  actual.
+- La tendencia siempre agrupa por mes (barras de ingresos y gastos, línea de
+  balance) y no cambia con el tipo.
+- El toggle Gastos/Ingresos cambia la dona (top 6 + "Otras"), el top 5 en
+  barras horizontales y la tabla resumen.
+- La tabla muestra por categoría el total, el % del total del tipo (redondeado
+  para que sume 100), el número de movimientos y el promedio por movimiento.
+  Cada fila abre Movimientos filtrado por categoría y tipo, en ese mes si el
+  periodo es un mes o en todos los meses si no.
+- Estados vacíos: sin ningún movimiento, una invitación a registrar el primero;
+  periodo sin movimientos, "No hay movimientos en este periodo"; tipo sin
+  datos, "No hay gastos/ingresos en este periodo".
+
 ## Specs
 
 Tesoro se construye en 13 specs (`specs/`), cada uno sobre los anteriores. El

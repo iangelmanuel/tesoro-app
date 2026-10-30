@@ -1,6 +1,6 @@
 # SPEC 02 — Movimientos personales y categorías
 
-> **Estado:** Aprovado
+> **Estado:** Implementado
 > **Depende de:** SPEC 01
 > **Fecha:** 2026-10-29
 > **Objetivo:** Que el usuario registre, edite, elimine y filtre los ingresos y gastos de su espacio Personal, clasificados con categorías del sistema o propias.

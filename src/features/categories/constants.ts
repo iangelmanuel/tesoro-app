@@ -85,6 +85,23 @@ export const CATEGORY_COLORS = {
 export type CategoryIconKey = keyof typeof CATEGORY_ICONS
 export type CategoryColorKey = keyof typeof CATEGORY_COLORS
 
+// Color de cada categoría en las gráficas. Las variables cambian por tema en
+// globals.css (tono 500 en claro, 400 en oscuro) y coinciden con el badge.
+export const CATEGORY_CHART_COLORS = {
+  emerald: "var(--category-emerald)",
+  teal: "var(--category-teal)",
+  lime: "var(--category-lime)",
+  amber: "var(--category-amber)",
+  orange: "var(--category-orange)",
+  rose: "var(--category-rose)",
+  pink: "var(--category-pink)",
+  violet: "var(--category-violet)",
+  indigo: "var(--category-indigo)",
+  blue: "var(--category-blue)",
+  sky: "var(--category-sky)",
+  slate: "var(--category-slate)"
+} as const satisfies Record<CategoryColorKey, string>
+
 export const CATEGORY_ICON_KEYS = Object.keys(CATEGORY_ICONS) as [
   CategoryIconKey,
   ...CategoryIconKey[]

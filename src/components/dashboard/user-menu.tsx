@@ -42,7 +42,7 @@ const THEMES = [
   { value: "system", label: "Sistema", icon: Monitor }
 ] as const
 
-function getInitials(name: string) {
+export function getInitials(name: string) {
   return name
     .split(/\s+/)
     .filter(Boolean)

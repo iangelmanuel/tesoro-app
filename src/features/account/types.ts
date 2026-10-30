@@ -24,3 +24,7 @@ export interface ProfileFormState {
   /** Valores enviados, para no vaciar el formulario si hay error */
   values?: Record<string, string>
 }
+
+export interface AccountActionResult {
+  error?: string
+}

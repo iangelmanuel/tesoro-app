@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
 import { AccountSection } from "@/features/account/components/account-section"
+import { AvatarUploader } from "@/features/account/components/avatar-uploader"
 import { CurrencyForm } from "@/features/account/components/currency-form"
 import { ProfileForm } from "@/features/account/components/profile-form"
 import { getAccount } from "@/features/account/queries"
@@ -39,6 +40,11 @@ async function AccountContent() {
         title="Perfil"
         description="Cómo te ves en Tesoro."
       >
+        <AvatarUploader
+          userId={user.id}
+          name={profile.fullName}
+          avatarUrl={profile.avatarUrl}
+        />
         <ProfileForm fullName={profile.fullName} />
         <div className="flex flex-col gap-1 text-sm">
           <span className="font-medium">Email</span>

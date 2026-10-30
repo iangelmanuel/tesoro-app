@@ -33,7 +33,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
-import { todayISO } from "@/libs/dates"
+import { fromLocalDate, toLocalDate, todayISO } from "@/libs/dates"
 import { formatDate } from "@/libs/format"
 import { createTransaction, updateTransaction } from "../actions"
 import type { TransactionType } from "../filters"
@@ -43,18 +43,6 @@ import type { TransactionFormState } from "../types"
 const AMOUNT_FORMAT = new Intl.NumberFormat("es-CO", {
   maximumFractionDigits: 2
 })
-
-// YYYY-MM-DD ↔ Date local, sin pasar por UTC para no correr el día
-function toDate(value: string) {
-  const [year, month, day] = value.split("-").map(Number)
-  return new Date(year, month - 1, day)
-}
-
-function toISODate(date: Date) {
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-  return `${date.getFullYear()}-${month}-${day}`
-}
 
 /** Valores con los que se prellena un movimiento nuevo */
 export interface TransactionInitialValues {
@@ -325,11 +313,11 @@ function TransactionForm({
               <Calendar
                 mode="single"
                 locale={es}
-                selected={toDate(date)}
-                defaultMonth={toDate(date)}
+                selected={toLocalDate(date)}
+                defaultMonth={toLocalDate(date)}
                 onSelect={(value) => {
                   if (value) {
-                    setDate(toISODate(value))
+                    setDate(fromLocalDate(value))
                     setCalendarOpen(false)
                   }
                 }}

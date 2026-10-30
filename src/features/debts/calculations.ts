@@ -41,6 +41,17 @@ export function formatRate(rate: number, rateType: RateType) {
   return `${RATE_FORMAT.format(rate)} % ${RATE_TYPE_LABELS[rateType]}`
 }
 
+const MONTH_YEAR_FORMAT = new Intl.DateTimeFormat("es-CO", {
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC"
+})
+
+/** "octubre de 2027", desde un mes YYYY-MM */
+export function formatMonthYear(month: string) {
+  return MONTH_YEAR_FORMAT.format(new Date(`${month}-01T00:00:00Z`))
+}
+
 /** Activa y de tipo tarjeta o préstamo */
 export function isActiveDebt(debt: Pick<DebtCalcInput, "kind" | "status">) {
   return debt.status === "active" && debt.kind !== "receivable"

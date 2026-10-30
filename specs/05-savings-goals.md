@@ -1,6 +1,6 @@
 # SPEC 05 — Metas de ahorro
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 02, SPEC 04
 > **Fecha:** 2026-10-30
 > **Objetivo:** Que el usuario cree en su espacio Personal metas de ahorro con monto y fecha objetivo opcional, registre aportes y retiros, y vea su progreso, el aporte mensual sugerido y si va en camino.

@@ -68,6 +68,8 @@ usuario tiene RLS.
 | `transactions`       | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note`                   | `select`, `insert`, `update`, `delete` |
 | `recurring_expenses` | Gastos fijos: `name`, `amount`, `category_id`, `frequency`, día y mes de pago, vigencia, `is_active` | `select`, `insert`, `update`, `delete` |
 | `budgets`            | Presupuesto por categoría de gasto y mes (`month` = primer día), único por categoría y mes           | `select`, `insert`, `update`, `delete` |
+| `savings_goals`      | Metas de ahorro: `name`, `target_amount`, `target_date` opcional, `icon`, `color`, `status`          | `select`, `insert`, `update`           |
+| `goal_contributions` | Aportes (`amount` > 0) y retiros (`amount` < 0) de una meta, con `occurred_on` y `note`              | `select`, `insert`, `update`, `delete` |
 
 - Cada usuario tiene **un solo** espacio Personal (índice único parcial) y, en
   el futuro, Empresas ilimitadas.
@@ -345,6 +347,111 @@ Estado de una ocurrencia (fechas en `America/Bogota`):
   fecha de vencimiento, sea un gasto y enlace un gasto fijo del mismo espacio.
 - Las RPC son `security invoker` y solo las ejecuta `authenticated`. Con un
   espacio ajeno devuelven vacío.
+
+## Metas de ahorro
+
+Página `/dashboard/personal/goals`. Una meta es algo para lo que el usuario
+aparta dinero: un viaje, un fondo de emergencia, una compra.
+
+- Los aportes son **independientes de los movimientos**: no cambian el
+  balance, los gastos, los presupuestos ni los reportes. El diálogo de aporte
+  lo dice: "Los aportes no cambian tu balance ni tus movimientos".
+- Un fondo de emergencia es una meta normal, sin tipo especial.
+- Las metas no se eliminan: se archivan y se pueden reactivar. La historia de
+  ahorro no se pierde.
+
+### Modelo
+
+- **Meta:** nombre (1 a 60 caracteres), monto objetivo (mismas reglas que
+  movimientos), fecha objetivo opcional, icono y color de las paletas de
+  categorías, y estado `active`, `completed` o `archived`.
+- La fecha objetivo debe ser posterior a hoy al crear la meta o al cambiarla.
+  Al editar otros campos, una fecha ya pasada se conserva.
+- **Aporte:** monto con signo en una sola tabla (`> 0` aporte, `< 0` retiro),
+  fecha hasta hoy (también antes de la creación de la meta) y nota opcional de
+  hasta 120 caracteres. En el formulario se elige Aporte o Retiro y el monto
+  se escribe positivo.
+- Los aportes se pueden editar y eliminar desde el historial, solo mientras la
+  meta está activa.
+- La RPC `goal_progress(workspace)` devuelve cada meta, en cualquier estado,
+  con `saved` (suma de sus aportes, 0 si no tiene) y `contributions_count`.
+
+### Cálculos
+
+Fechas en `America/Bogota`.
+
+| Valor                   | Cálculo                                                                                    |
+| ----------------------- | ------------------------------------------------------------------------------------------ |
+| Progreso                | `saved / target_amount`, en porcentaje truncado. Puede pasar de 100 %                      |
+| Faltante                | `max(target_amount − saved, 0)`                                                            |
+| Meses restantes         | Meses desde el mes siguiente al actual hasta el de `target_date`, contando ambos; mínimo 1 |
+| Aporte mensual sugerido | `faltante / meses restantes`. Solo con fecha y faltante > 0                                |
+| Inicio                  | Fecha de `created_at` en `America/Bogota`                                                  |
+| Esperado hoy            | `target_amount × (hoy − inicio) / (target_date − inicio)`, con tope en `target_amount`     |
+
+- Si `target_date ≤ inicio`, el esperado es `target_amount`.
+- Ejemplo: hoy 30 de octubre y fecha objetivo 15 de diciembre → 2 meses
+  restantes (noviembre y diciembre). Fecha objetivo en el mes actual → 1.
+- Ejemplo: "Viaje" de 3.000.000, creada el 1 de octubre con objetivo el 31 de
+  marzo. El 30 de octubre, con 500.000 va "En camino" y el aporte sugerido es
+  500.000 (2.500.000 / 5 meses). Con 400.000 va "En riesgo".
+- Avance lineal desde la creación, sin margen. Los ahorros previos se
+  registran como un primer aporte.
+
+### Estados
+
+| Estado    | Condición                                            | Color  |
+| --------- | ---------------------------------------------------- | ------ |
+| Cumplida  | `status = 'completed'`                               | verde  |
+| Archivada | `status = 'archived'`                                | neutro |
+| En camino | activa, con fecha y `saved ≥ esperado hoy`           | verde  |
+| En riesgo | activa, con fecha y `saved < esperado hoy`           | ámbar  |
+| —         | activa sin fecha: sin etiqueta, "Sin fecha objetivo" | neutro |
+
+- Una meta activa con `target_date < hoy` y faltante > 0 está "En riesgo",
+  muestra "La fecha objetivo ya pasó" y su aporte sugerido es el faltante
+  completo.
+- Con `saved ≥ target_amount`, una meta activa muestra "¡Lo lograste!" y
+  "Marcar como cumplida" en lugar del aporte sugerido. Cumplirla es manual: un
+  retiro posterior no la reabre sin que el usuario lo note.
+
+### Transiciones
+
+| Acción               | Desde                   | Hacia       | Efecto                 |
+| -------------------- | ----------------------- | ----------- | ---------------------- |
+| Marcar como cumplida | `active`                | `completed` | `completed_at = now()` |
+| Archivar             | `active`, `completed`   | `archived`  | `completed_at = null`  |
+| Reactivar            | `completed`, `archived` | `active`    | `completed_at = null`  |
+
+- Las metas cumplidas y archivadas van en la sección plegable "Cumplidas y
+  archivadas". No aceptan aportes y su Sheet es de solo lectura, con
+  "Reactivar". Al reactivarlas, sus aportes siguen intactos.
+
+### Página y Resumen
+
+- Las metas activas se muestran en tarjetas, ordenadas por fecha objetivo (sin
+  fecha al final). Cada tarjeta abre un Sheet con el resumen, "Aportar",
+  "Retirar" y el historial de aportes.
+- **Widget del Resumen:** "Metas de ahorro" con hasta 3 metas activas, de
+  fecha más cercana primero, con barra, porcentaje, estado y "Ver todas". Como
+  los widgets de Gastos fijos y presupuestos, solo aparece cuando hay
+  movimientos.
+
+### Seguridad
+
+- RLS en `savings_goals` y `goal_contributions` con `is_workspace_owner`. Sin
+  política `delete` en `savings_goals`: no hay forma de eliminar una meta desde
+  el cliente.
+- `goal_contributions` tiene `workspace_id` con FK compuesta
+  `(goal_id, workspace_id)` a la meta: un aporte siempre es del mismo espacio
+  que su meta.
+- Trigger `check_goal_contribution` (`before`): la meta debe estar activa (en
+  `delete`, la fila vieja), el aporte no cambia de meta y su fecha es ≤ hoy.
+  Bloquea la fila de la meta para serializar aportes concurrentes.
+- Trigger `check_goal_balance` (`after`): la suma de la meta nunca queda
+  negativa tras un retiro, una edición o un borrado ("No puedes retirar más de
+  lo ahorrado").
+- `goal_progress` es `security invoker` y solo la ejecuta `authenticated`.
 
 ## Specs
 

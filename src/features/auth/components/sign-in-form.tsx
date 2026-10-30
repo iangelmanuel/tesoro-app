@@ -70,6 +70,17 @@ export function SignInForm() {
             className="text-sm text-destructive"
           >
             {error}
+            {state.errorCode === "email_not_confirmed" && (
+              <>
+                {" "}
+                <Link
+                  href={`${SITE.routes.checkEmail}?${new URLSearchParams({ email: state.values?.email ?? "" })}`}
+                  className="font-medium underline underline-offset-4"
+                >
+                  Reenviar el correo
+                </Link>
+              </>
+            )}
           </p>
         )}
         <Button

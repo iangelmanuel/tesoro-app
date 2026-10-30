@@ -46,17 +46,62 @@ export async function signUp(
   }
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
-    options: { data: { full_name: parsed.data.fullName } }
+    options: {
+      data: { full_name: parsed.data.fullName },
+      emailRedirectTo: confirmationRedirectUrl()
+    }
   })
 
   if (error) {
     return { error: translateAuthError(error), values }
   }
 
+  // Con enable_confirmations = true no hay sesión hasta confirmar el email
+  if (!data.session) {
+    redirect(checkEmailPath(parsed.data.email))
+  }
+
   redirect(SITE.routes.dashboard)
+}
+
+// La plantilla confirmation enlaza a /auth/confirm con token_hash. Este
+// redirect solo aplica si el proyecto aún usa la plantilla por defecto
+function confirmationRedirectUrl() {
+  const url = new URL(SITE.routes.authCallback, SITE.seo.url)
+  url.searchParams.set("next", SITE.routes.dashboard)
+  return url.toString()
+}
+
+function checkEmailPath(email: string) {
+  return `${SITE.routes.checkEmail}?${new URLSearchParams({ email })}` as Route
+}
+
+export async function resendConfirmation(
+  _prevState: AuthFormState,
+  formData: FormData
+): Promise<AuthFormState> {
+  const values = { email: readString(formData, "email") }
+  const parsed = forgotPasswordSchema.safeParse(values)
+
+  if (!parsed.success) {
+    return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: parsed.data.email,
+    options: { emailRedirectTo: confirmationRedirectUrl() }
+  })
+
+  if (error) {
+    return { error: translateAuthError(error), values }
+  }
+
+  return { success: `Te enviamos otro correo a ${parsed.data.email}`, values }
 }
 
 export async function signIn(
@@ -78,7 +123,7 @@ export async function signIn(
   const { error } = await supabase.auth.signInWithPassword(parsed.data)
 
   if (error) {
-    return { error: translateAuthError(error), values }
+    return { error: translateAuthError(error), errorCode: error.code, values }
   }
 
   redirect(safeRedirectPath(formData.get("next")) as Route)

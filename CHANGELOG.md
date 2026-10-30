@@ -39,7 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - "Marcar como pagado" opens the transaction dialog prefilled and linked to the occurrence; paying the same occurrence twice is rejected ("Este pago ya está registrado").
 - "Próximos pagos" and "Presupuestos en riesgo" cards on the Personal summary.
 - Empty states for both budgets tabs and both summary cards, and a shared `EmptyState` component.
-- shadcn/ui `progress` component.
 
 ### Changed
 

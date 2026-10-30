@@ -1,6 +1,6 @@
 # SPEC 04 — Gastos fijos y presupuestos
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 02, SPEC 03
 > **Fecha:** 2026-10-30
 > **Objetivo:** Que el usuario defina en su espacio Personal gastos fijos recurrentes y presupuestos mensuales por categoría, registre a mano el pago de cada gasto fijo y vea cuánto lleva gastado contra cada presupuesto.
@@ -164,7 +164,8 @@ Parámetros de URL de `/dashboard/personal/budgets`:
    - Aplicarla con `supabase db push` (o `supabase db reset` en local) y regenerar `src/types/database.ts`.
    - Verificar: `recurring_occurrences` de un gasto mensual del día 31 devuelve el 30 de noviembre y el 28 de febrero.
 2. **Componentes shadcn.**
-   - Agregar `tabs` y `progress` si no existen.
+   - Agregar `tabs` si no existe.
+   - `progress` no se usa: la barra de presupuesto es propia porque necesita el segmento comprometido rayado y colores por estado.
    - Verificar: `pnpm check`, `pnpm eslint`, `pnpm build` pasan y el lockfile queda sincronizado.
 3. **Gastos fijos: esquemas, consultas y acciones.**
    - `src/features/recurring-expenses/schemas.ts` (Zod): `name` de 1 a 60, `amount` igual que movimientos, `frequency`, `day_of_month` 1–31, `month_of_year` 1–12 obligatorio solo en `yearly`, `starts_on`, `ends_on` ≥ `starts_on`.

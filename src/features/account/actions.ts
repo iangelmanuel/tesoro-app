@@ -6,7 +6,13 @@ import { SITE } from "@/config/site"
 import { translateAuthError } from "@/features/auth/errors"
 import { createClient } from "@/libs/supabase/server"
 import { AVATARS_BUCKET, removeAvatarFiles } from "./avatar"
-import { changeEmailSchema, currencySchema, profileSchema } from "./schemas"
+import {
+  changeEmailSchema,
+  changePasswordSchema,
+  createPasswordSchema,
+  currencySchema,
+  profileSchema
+} from "./schemas"
 import type { AccountActionResult, ProfileFormState } from "./types"
 
 const DEFAULT_ERROR = "No se pudieron guardar los cambios. Intenta de nuevo"
@@ -207,4 +213,101 @@ export async function changeEmail(
     success:
       "Te enviamos un enlace a tu correo actual y al nuevo. El cambio se aplica cuando confirmes los dos."
   }
+}
+
+export async function changePassword(
+  _prevState: ProfileFormState,
+  formData: FormData
+): Promise<ProfileFormState> {
+  const parsed = changePasswordSchema.safeParse({
+    currentPassword: readString(formData, "currentPassword"),
+    password: readString(formData, "password"),
+    confirmPassword: readString(formData, "confirmPassword")
+  })
+
+  if (!parsed.success) {
+    return { fieldErrors: z.flattenError(parsed.error).fieldErrors }
+  }
+
+  const supabase = await createClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user?.email) {
+    return { error: SESSION_EXPIRED }
+  }
+
+  // Verifica la actual. La sesión nueva reemplaza a la anterior en las
+  // cookies: es la misma cuenta y el mismo navegador
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: parsed.data.currentPassword
+  })
+
+  if (signInError) {
+    return signInError.code === "invalid_credentials"
+      ? {
+          fieldErrors: {
+            currentPassword: ["La contraseña actual no es correcta"]
+          }
+        }
+      : { error: translateAuthError(signInError) }
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: parsed.data.password
+  })
+
+  if (error) {
+    return { error: translateAuthError(error) }
+  }
+
+  return { ok: true }
+}
+
+export async function createPassword(
+  _prevState: ProfileFormState,
+  formData: FormData
+): Promise<ProfileFormState> {
+  const parsed = createPasswordSchema.safeParse({
+    password: readString(formData, "password"),
+    confirmPassword: readString(formData, "confirmPassword")
+  })
+
+  if (!parsed.success) {
+    return { fieldErrors: z.flattenError(parsed.error).fieldErrors }
+  }
+
+  const supabase = await createClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: SESSION_EXPIRED }
+  }
+
+  // Sin esta revisión, una sesión podría cambiar la contraseña sin la actual
+  const { data: hasPassword, error: rpcError } =
+    await supabase.rpc("has_password")
+
+  if (rpcError) {
+    return { error: DEFAULT_ERROR }
+  }
+  if (hasPassword) {
+    return { error: "Ya tienes una contraseña. Cámbiala con la actual" }
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: parsed.data.password
+  })
+
+  if (error) {
+    return { error: translateAuthError(error) }
+  }
+
+  // La sección pasa a "Cambiar contraseña"
+  revalidatePath(SITE.routes.account)
+  return { ok: true }
 }

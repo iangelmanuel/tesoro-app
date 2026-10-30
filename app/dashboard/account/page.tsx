@@ -5,6 +5,7 @@ import { AccountSection } from "@/features/account/components/account-section"
 import { AvatarUploader } from "@/features/account/components/avatar-uploader"
 import { ChangeEmailForm } from "@/features/account/components/change-email-form"
 import { CurrencyForm } from "@/features/account/components/currency-form"
+import { PasswordForm } from "@/features/account/components/password-form"
 import { ProfileForm } from "@/features/account/components/profile-form"
 import { getAccount } from "@/features/account/queries"
 import { buildMetadata } from "@/libs/seo"
@@ -87,7 +88,13 @@ async function AccountContent({
             ? "Cambia la contraseña con la que inicias sesión."
             : "Entras con Google o GitHub. Crea una contraseña para entrar también con tu email."
         }
-      />
+      >
+        {/* key: al crear la contraseña el formulario cambia de modo limpio */}
+        <PasswordForm
+          key={String(hasPassword)}
+          hasPassword={hasPassword}
+        />
+      </AccountSection>
 
       <AccountSection
         title="Zona de peligro"

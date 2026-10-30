@@ -17,6 +17,8 @@ export interface AccountData {
 export interface ProfileFormState {
   /** true cuando la acción terminó bien */
   ok?: boolean
+  /** Mensaje que se queda visible tras guardar (p. ej. revisar el correo) */
+  success?: string
   /** Error general (sin sesión, error de la BD, etc.) */
   error?: string
   /** Errores de validación por campo */

@@ -3,6 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
 import { AccountSection } from "@/features/account/components/account-section"
 import { AvatarUploader } from "@/features/account/components/avatar-uploader"
+import { ChangeEmailForm } from "@/features/account/components/change-email-form"
 import { CurrencyForm } from "@/features/account/components/currency-form"
 import { ProfileForm } from "@/features/account/components/profile-form"
 import { getAccount } from "@/features/account/queries"
@@ -14,7 +15,14 @@ export const metadata = buildMetadata({
   noindex: true
 })
 
-export default function AccountPage() {
+const NOTICES: Record<string, string> = {
+  "email-confirmed":
+    "Enlace confirmado. Si aún no ves el cambio, confirma también el otro correo."
+}
+
+type AccountPageProps = PageProps<"/dashboard/account">
+
+export default function AccountPage({ searchParams }: AccountPageProps) {
   return (
     <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6">
       <header className="flex flex-col gap-1">
@@ -23,19 +31,32 @@ export default function AccountPage() {
           Tu perfil, tus preferencias y la seguridad de tu cuenta.
         </p>
       </header>
-      {/* La sesión es dinámica: va dentro de Suspense */}
+      {/* searchParams y la sesión son dinámicos: van dentro de Suspense */}
       <Suspense fallback={<AccountSkeleton />}>
-        <AccountContent />
+        <AccountContent searchParams={searchParams} />
       </Suspense>
     </section>
   )
 }
 
-async function AccountContent() {
+async function AccountContent({
+  searchParams
+}: Pick<AccountPageProps, "searchParams">) {
+  const query = await searchParams
+  const notice =
+    typeof query.notice === "string" ? NOTICES[query.notice] : undefined
   const { user, profile, hasPassword } = await getAccount()
 
   return (
     <>
+      {notice && (
+        <p
+          role="status"
+          className="rounded-lg border bg-muted/50 px-4 py-3 text-sm"
+        >
+          {notice}
+        </p>
+      )}
       <AccountSection
         title="Perfil"
         description="Cómo te ves en Tesoro."
@@ -46,10 +67,10 @@ async function AccountContent() {
           avatarUrl={profile.avatarUrl}
         />
         <ProfileForm fullName={profile.fullName} />
-        <div className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Email</span>
-          <span className="text-muted-foreground">{user.email}</span>
-        </div>
+        <ChangeEmailForm
+          email={user.email}
+          newEmail={user.newEmail}
+        />
       </AccountSection>
 
       <AccountSection

@@ -27,7 +27,13 @@ export async function GET(request: NextRequest) {
     })
 
     if (!error) {
-      return NextResponse.redirect(new URL(next, request.url))
+      const url = new URL(next, request.url)
+      // Con double_confirm_changes cada correo confirma por separado: la
+      // página de cuenta avisa por si aún falta el otro enlace
+      if (type === "email_change") {
+        url.searchParams.set("notice", "email-confirmed")
+      }
+      return NextResponse.redirect(url)
     }
   }
 

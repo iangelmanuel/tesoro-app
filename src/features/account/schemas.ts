@@ -20,5 +20,10 @@ export const currencySchema = z.object({
   currency: z.enum(CURRENCY_CODES, { error: "Elige una moneda de la lista" })
 })
 
+export const changeEmailSchema = z.object({
+  email: z.email({ error: "Ingresa un email válido" }).trim().toLowerCase()
+})
+
 export type ProfileInput = z.infer<typeof profileSchema>
 export type CurrencyInput = z.infer<typeof currencySchema>
+export type ChangeEmailInput = z.infer<typeof changeEmailSchema>

@@ -17,17 +17,21 @@ export function parseAmount(value: string) {
   return Number(normalized)
 }
 
+// Reutilizado por gastos fijos y presupuestos. Recibe el resultado de
+// parseAmount.
+export const amountSchema = z
+  .number({ error: "Ingresa un monto válido" })
+  .refine((value) => !Number.isNaN(value), {
+    error: "Ingresa un monto válido"
+  })
+  .refine((value) => value > 0, { error: "El monto debe ser mayor a 0" })
+  .refine((value) => value <= MAX_AMOUNT, {
+    error: "El monto es demasiado grande"
+  })
+
 export const transactionSchema = z.object({
   type: z.enum(TRANSACTION_TYPES, { error: "Elige ingreso o gasto" }),
-  amount: z
-    .number({ error: "Ingresa un monto válido" })
-    .refine((value) => !Number.isNaN(value), {
-      error: "Ingresa un monto válido"
-    })
-    .refine((value) => value > 0, { error: "El monto debe ser mayor a 0" })
-    .refine((value) => value <= MAX_AMOUNT, {
-      error: "El monto es demasiado grande"
-    }),
+  amount: amountSchema,
   occurred_on: z.iso.date({ error: "Elige una fecha válida" }),
   category_id: z.uuid({ error: "Elige una categoría" }),
   description: z
@@ -41,5 +45,27 @@ export const transactionSchema = z.object({
     .max(500, { error: "La nota debe tener máximo 500 caracteres" })
     .transform((value) => value || null)
 })
+
+// Los campos ocultos del enlace llegan como "" cuando el movimiento no es el
+// pago de un gasto fijo
+const emptyToNull = (value: unknown) => (value === "" ? null : value)
+
+// Movimiento nuevo, opcionalmente enlazado a una ocurrencia de gasto fijo
+export const createTransactionSchema = transactionSchema
+  .extend({
+    recurring_expense_id: z.preprocess(
+      emptyToNull,
+      z.uuid({ error: "No se encontró el gasto fijo" }).nullable()
+    ),
+    recurring_due_on: z.preprocess(
+      emptyToNull,
+      z.iso.date({ error: "No se encontró el gasto fijo" }).nullable()
+    )
+  })
+  .refine(
+    (data) =>
+      (data.recurring_expense_id === null) === (data.recurring_due_on === null),
+    { error: "No se encontró el gasto fijo" }
+  )
 
 export type TransactionInput = z.infer<typeof transactionSchema>

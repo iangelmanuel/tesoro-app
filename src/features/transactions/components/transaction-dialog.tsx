@@ -33,7 +33,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
-import { todayISO } from "@/libs/dates"
+import { fromLocalDate, toLocalDate, todayISO } from "@/libs/dates"
 import { formatDate } from "@/libs/format"
 import { createTransaction, updateTransaction } from "../actions"
 import type { TransactionType } from "../filters"
@@ -44,16 +44,18 @@ const AMOUNT_FORMAT = new Intl.NumberFormat("es-CO", {
   maximumFractionDigits: 2
 })
 
-// YYYY-MM-DD ↔ Date local, sin pasar por UTC para no correr el día
-function toDate(value: string) {
-  const [year, month, day] = value.split("-").map(Number)
-  return new Date(year, month - 1, day)
+/** Valores con los que se prellena un movimiento nuevo */
+export interface TransactionInitialValues {
+  amount?: number
+  category_id?: string
+  occurred_on?: string
+  description?: string
 }
 
-function toISODate(date: Date) {
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-  return `${date.getFullYear()}-${month}-${day}`
+/** Ocurrencia de gasto fijo que paga el movimiento nuevo */
+export interface RecurringOccurrenceLink {
+  recurringExpenseId: string
+  dueOn: string
 }
 
 interface TransactionDialogProps {
@@ -61,6 +63,10 @@ interface TransactionDialogProps {
   categories: Category[]
   /** Si llega, el diálogo edita este movimiento */
   transaction?: TransactionWithCategory
+  /** Prellenado de un movimiento nuevo */
+  initialValues?: TransactionInitialValues
+  /** Si llega, el movimiento nuevo es el pago de esta ocurrencia */
+  recurring?: RecurringOccurrenceLink
   /** Botón que abre el diálogo */
   trigger: React.ReactNode
 }
@@ -68,10 +74,13 @@ interface TransactionDialogProps {
 export function TransactionDialog({
   categories,
   transaction,
+  initialValues,
+  recurring,
   trigger
 }: TransactionDialogProps) {
   const [open, setOpen] = useState(false)
   const isEditing = transaction !== undefined
+  const isPayment = !isEditing && recurring !== undefined
 
   return (
     <Dialog
@@ -82,18 +91,26 @@ export function TransactionDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? "Editar movimiento" : "Nuevo movimiento"}
+            {isEditing
+              ? "Editar movimiento"
+              : isPayment
+                ? "Registrar pago"
+                : "Nuevo movimiento"}
           </DialogTitle>
           <DialogDescription>
             {isEditing
               ? "Cambia los datos del movimiento."
-              : "Registra un ingreso o un gasto de tu espacio Personal."}
+              : isPayment
+                ? "Confirma los datos del pago. Puedes ajustar el monto."
+                : "Registra un ingreso o un gasto de tu espacio Personal."}
           </DialogDescription>
         </DialogHeader>
         {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
         <TransactionForm
           categories={categories}
           transaction={transaction}
+          initialValues={isEditing ? undefined : initialValues}
+          recurring={isEditing ? undefined : recurring}
           onSaved={() => setOpen(false)}
           onCancel={() => setOpen(false)}
         />
@@ -105,6 +122,8 @@ export function TransactionDialog({
 interface TransactionFormProps {
   categories: Category[]
   transaction?: TransactionWithCategory
+  initialValues?: TransactionInitialValues
+  recurring?: RecurringOccurrenceLink
   onSaved: () => void
   onCancel: () => void
 }
@@ -112,15 +131,34 @@ interface TransactionFormProps {
 function TransactionForm({
   categories,
   transaction,
+  initialValues,
+  recurring,
   onSaved,
   onCancel
 }: TransactionFormProps) {
   const isEditing = transaction !== undefined
+  // Un pago de gasto fijo, nuevo o editado, siempre es un gasto
+  const isLinked =
+    recurring !== undefined || Boolean(transaction?.recurring_expense_id)
+
+  // La categoría prellenada solo se usa si sigue activa (regla del SPEC 02)
+  const initialCategory = categories.find(
+    (category) => category.id === initialValues?.category_id
+  )
+  const initialCategoryUnavailable =
+    initialValues?.category_id !== undefined &&
+    (initialCategory === undefined || initialCategory.archived_at !== null)
+
   const [type, setType] = useState<TransactionType>(
     transaction?.type ?? "expense"
   )
-  const [categoryId, setCategoryId] = useState(transaction?.category_id ?? "")
-  const [date, setDate] = useState(() => transaction?.occurred_on ?? todayISO())
+  const [categoryId, setCategoryId] = useState(
+    transaction?.category_id ??
+      (initialCategoryUnavailable ? "" : (initialValues?.category_id ?? ""))
+  )
+  const [date, setDate] = useState(
+    () => transaction?.occurred_on ?? initialValues?.occurred_on ?? todayISO()
+  )
   const [calendarOpen, setCalendarOpen] = useState(false)
 
   const [state, formAction, pending] = useActionState<
@@ -133,7 +171,11 @@ function TransactionForm({
 
     if (result.ok) {
       toast.success(
-        isEditing ? "Movimiento actualizado" : "Movimiento registrado"
+        isEditing
+          ? "Movimiento actualizado"
+          : recurring
+            ? "Pago registrado"
+            : "Movimiento registrado"
       )
       onSaved()
     }
@@ -181,6 +223,20 @@ function TransactionForm({
         name="occurred_on"
         value={date}
       />
+      {recurring && (
+        <>
+          <input
+            type="hidden"
+            name="recurring_expense_id"
+            value={recurring.recurringExpenseId}
+          />
+          <input
+            type="hidden"
+            name="recurring_due_on"
+            value={recurring.dueOn}
+          />
+        </>
+      )}
 
       <ToggleGroup
         type="single"
@@ -189,6 +245,7 @@ function TransactionForm({
         onValueChange={handleTypeChange}
         className="w-full"
         aria-label="Tipo de movimiento"
+        disabled={isLinked}
       >
         <ToggleGroupItem
           value="expense"
@@ -218,7 +275,11 @@ function TransactionForm({
             placeholder="0"
             defaultValue={
               values?.amount ??
-              (transaction ? AMOUNT_FORMAT.format(transaction.amount) : "")
+              (transaction
+                ? AMOUNT_FORMAT.format(transaction.amount)
+                : initialValues?.amount !== undefined
+                  ? AMOUNT_FORMAT.format(initialValues.amount)
+                  : "")
             }
             aria-invalid={Boolean(errors?.amount) || undefined}
             required
@@ -252,11 +313,11 @@ function TransactionForm({
               <Calendar
                 mode="single"
                 locale={es}
-                selected={toDate(date)}
-                defaultMonth={toDate(date)}
+                selected={toLocalDate(date)}
+                defaultMonth={toLocalDate(date)}
                 onSelect={(value) => {
                   if (value) {
-                    setDate(toISODate(value))
+                    setDate(fromLocalDate(value))
                     setCalendarOpen(false)
                   }
                 }}
@@ -302,6 +363,11 @@ function TransactionForm({
             ))}
           </SelectContent>
         </Select>
+        {initialCategoryUnavailable && !categoryId && (
+          <p className="text-sm text-muted-foreground">
+            La categoría de este gasto fijo está archivada. Elige otra.
+          </p>
+        )}
       </Field>
 
       <Field
@@ -314,7 +380,11 @@ function TransactionForm({
           name="description"
           maxLength={120}
           placeholder={type === "expense" ? "Mercado de la semana" : "Salario"}
-          defaultValue={values?.description ?? transaction?.description}
+          defaultValue={
+            values?.description ??
+            transaction?.description ??
+            initialValues?.description
+          }
           aria-invalid={Boolean(errors?.description) || undefined}
           required
         />

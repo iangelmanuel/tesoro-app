@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      budgets: {
+        Row: {
+          amount: number
+          category_id: string
+          created_at: string
+          id: string
+          month: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          amount: number
+          category_id: string
+          created_at?: string
+          id?: string
+          month: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string
+          created_at?: string
+          id?: string
+          month?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budgets_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budgets_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       categories: {
         Row: {
           archived_at: string | null
@@ -85,6 +130,69 @@ export type Database = {
         }
         Relationships: []
       }
+      recurring_expenses: {
+        Row: {
+          amount: number
+          category_id: string
+          created_at: string
+          day_of_month: number
+          ends_on: string | null
+          frequency: Database["public"]["Enums"]["recurring_frequency"]
+          id: string
+          is_active: boolean
+          month_of_year: number | null
+          name: string
+          starts_on: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          amount: number
+          category_id: string
+          created_at?: string
+          day_of_month: number
+          ends_on?: string | null
+          frequency: Database["public"]["Enums"]["recurring_frequency"]
+          id?: string
+          is_active?: boolean
+          month_of_year?: number | null
+          name: string
+          starts_on: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string
+          created_at?: string
+          day_of_month?: number
+          ends_on?: string | null
+          frequency?: Database["public"]["Enums"]["recurring_frequency"]
+          id?: string
+          is_active?: boolean
+          month_of_year?: number | null
+          name?: string
+          starts_on?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_expenses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_expenses_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       transactions: {
         Row: {
           amount: number
@@ -94,6 +202,8 @@ export type Database = {
           id: string
           note: string | null
           occurred_on: string
+          recurring_due_on: string | null
+          recurring_expense_id: string | null
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at: string
           workspace_id: string
@@ -106,6 +216,8 @@ export type Database = {
           id?: string
           note?: string | null
           occurred_on: string
+          recurring_due_on?: string | null
+          recurring_expense_id?: string | null
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
           workspace_id: string
@@ -118,6 +230,8 @@ export type Database = {
           id?: string
           note?: string | null
           occurred_on?: string
+          recurring_due_on?: string | null
+          recurring_expense_id?: string | null
           type?: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
           workspace_id?: string
@@ -128,6 +242,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_recurring_expense_id_fkey"
+            columns: ["recurring_expense_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_expenses"
             referencedColumns: ["id"]
           },
           {
@@ -179,6 +300,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      budget_progress: {
+        Args: { p_month: string; p_workspace_id: string }
+        Returns: {
+          archived: boolean
+          budget_amount: number
+          budget_id: string
+          category_id: string
+          color: string
+          committed: number
+          icon: string
+          name: string
+          spent: number
+        }[]
+      }
       category_totals: {
         Args: {
           p_from: string
@@ -206,6 +341,18 @@ export type Database = {
           tx_count: number
         }[]
       }
+      recurring_occurrences: {
+        Args: { p_from: string; p_to: string; p_workspace_id: string }
+        Returns: {
+          amount: number
+          category_id: string
+          due_on: string
+          name: string
+          paid_amount: number
+          recurring_expense_id: string
+          transaction_id: string
+        }[]
+      }
       transaction_totals: {
         Args: {
           p_category_id?: string
@@ -223,6 +370,7 @@ export type Database = {
       workspace_balance: { Args: { p_workspace_id: string }; Returns: number }
     }
     Enums: {
+      recurring_frequency: "monthly" | "yearly"
       transaction_type: "income" | "expense"
       workspace_type: "personal" | "business"
     }
@@ -349,6 +497,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      recurring_frequency: ["monthly", "yearly"],
       transaction_type: ["income", "expense"],
       workspace_type: ["personal", "business"]
     }

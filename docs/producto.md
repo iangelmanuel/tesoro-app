@@ -60,12 +60,14 @@ magic link.
 Las migraciones viven en `supabase/migrations/`. Toda tabla con datos de
 usuario tiene RLS.
 
-| Tabla          | Qué guarda                                                                         | RLS (cliente)                          |
-| -------------- | ---------------------------------------------------------------------------------- | -------------------------------------- |
-| `profiles`     | Un perfil por usuario: `full_name`, `avatar_url`, `currency` (COP por defecto)     | `select` y `update` del propio perfil  |
-| `workspaces`   | Espacios del usuario: `type` (`personal` / `business`) y `name`                    | `select` de los propios                |
-| `categories`   | Categorías de ingreso o gasto: del sistema (`workspace_id` null) o propias         | `select`, `insert` y `update`          |
-| `transactions` | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note` | `select`, `insert`, `update`, `delete` |
+| Tabla                | Qué guarda                                                                                           | RLS (cliente)                          |
+| -------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `profiles`           | Un perfil por usuario: `full_name`, `avatar_url`, `currency` (COP por defecto)                       | `select` y `update` del propio perfil  |
+| `workspaces`         | Espacios del usuario: `type` (`personal` / `business`) y `name`                                      | `select` de los propios                |
+| `categories`         | Categorías de ingreso o gasto: del sistema (`workspace_id` null) o propias                           | `select`, `insert` y `update`          |
+| `transactions`       | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note`                   | `select`, `insert`, `update`, `delete` |
+| `recurring_expenses` | Gastos fijos: `name`, `amount`, `category_id`, `frequency`, día y mes de pago, vigencia, `is_active` | `select`, `insert`, `update`, `delete` |
+| `budgets`            | Presupuesto por categoría de gasto y mes (`month` = primer día), único por categoría y mes           | `select`, `insert`, `update`, `delete` |
 
 - Cada usuario tiene **un solo** espacio Personal (índice único parcial) y, en
   el futuro, Empresas ilimitadas.
@@ -92,7 +94,7 @@ Los espacios están definidos en `SITE.workspaces`.
 
 - Resumen: balance, ingresos vs. gastos del mes, score
 - Movimientos: ingresos y gastos con categorías
-- Presupuestos por categoría
+- Presupuestos por categoría y gastos fijos
 - Metas de ahorro
 - Deudas
 - Reportes y gráficas
@@ -212,6 +214,8 @@ Siempre sobre el mes actual. "Anterior" es el mes anterior completo.
 - Debajo de las tarjetas: ingresos vs. gastos de los últimos 6 meses (incluido
   el actual), dona de gastos por categoría del mes (top 6 + "Otras") y los
   últimos 5 movimientos, con enlace a Movimientos.
+- Entre las tarjetas y las gráficas: "Próximos pagos" y "Presupuestos en
+  riesgo" (ver [Gastos fijos y presupuestos](#gastos-fijos-y-presupuestos)).
 
 ### Periodos de Reportes
 
@@ -239,6 +243,108 @@ Periodo y tipo viven en la URL, así un enlace se puede compartir y recargar:
 - Estados vacíos: sin ningún movimiento, una invitación a registrar el primero;
   periodo sin movimientos, "No hay movimientos en este periodo"; tipo sin
   datos, "No hay gastos/ingresos en este periodo".
+
+## Gastos fijos y presupuestos
+
+Página `/dashboard/personal/budgets` con dos tabs: **Presupuestos** (por
+defecto) y **Gastos fijos**. Las dos son la planificación del mes: lo que se
+quiere gastar como máximo y lo que se debe pagar.
+
+| Parámetro | Valores                | Por defecto                    |
+| --------- | ---------------------- | ------------------------------ |
+| `tab`     | `budgets`, `recurring` | `budgets`                      |
+| `month`   | `YYYY-MM`              | mes actual en `America/Bogota` |
+
+- `month` solo aplica a Presupuestos. Un valor inválido cae a su valor por
+  defecto. Todos los meses, pasados y futuros, se pueden ver y editar.
+
+### Gastos fijos
+
+- Nombre (1 a 60 caracteres), monto (mismas reglas que movimientos), categoría
+  de gasto activa, frecuencia `monthly` o `yearly`, día de pago (1 a 31), mes
+  de pago (solo anuales), fecha de inicio y fecha de fin opcional (≥ inicio).
+- Se pueden pausar y reanudar. Uno pausado no aparece en Próximos pagos ni en
+  el comprometido de los presupuestos.
+- Al eliminarlo, sus pagos se conservan en Movimientos con el enlace en `null`
+  (`on delete set null` + trigger `check_transaction_recurring`).
+- Las ocurrencias no se guardan: las calcula la RPC
+  `recurring_occurrences(workspace, from, to)` con su pago, si existe.
+
+Reglas de vencimiento:
+
+| Frecuencia | Vencimiento                                   | Ejemplo                                       |
+| ---------- | --------------------------------------------- | --------------------------------------------- |
+| `monthly`  | `day_of_month` de cada mes                    | día 31 en noviembre → 30 de noviembre         |
+| `yearly`   | `day_of_month` de `month_of_year` de cada año | 29 de febrero en 2027 → 28 de febrero de 2027 |
+
+- Si el día no existe en el mes, el vencimiento cae en el último día del mes.
+- La primera ocurrencia es el primer vencimiento ≥ `starts_on` y la última, el
+  último ≤ `ends_on`.
+
+Estado de una ocurrencia (fechas en `America/Bogota`):
+
+| Estado  | Condición                  | Color  |
+| ------- | -------------------------- | ------ |
+| Pagado  | tiene movimiento enlazado  | verde  |
+| Vencido | pendiente y `due_on < hoy` | rojo   |
+| Hoy     | pendiente y `due_on = hoy` | ámbar  |
+| Próximo | pendiente y `due_on > hoy` | neutro |
+
+- **Próximos pagos** muestra todas las ocurrencias del mes actual y las
+  impagas de los 2 meses anteriores, en orden de vencimiento.
+- **Marcar como pagado** abre el diálogo de movimiento prellenado (gasto,
+  monto, categoría, fecha = vencimiento, descripción = nombre). El monto se
+  puede cambiar antes de guardar; si la categoría está archivada queda vacía
+  con un aviso. Nada se crea sin confirmar.
+- El pago es un movimiento con `recurring_expense_id` y `recurring_due_on`.
+  Un índice único impide pagar dos veces la misma ocurrencia ("Este pago ya
+  está registrado"). Borrar el movimiento devuelve la ocurrencia a pendiente.
+  Editarlo desde Movimientos conserva el enlace, y debe seguir siendo un
+  gasto.
+
+### Presupuestos
+
+- Monto por categoría de gasto y mes, sin categorías de ingreso ni archivadas.
+  El total del mes es la suma de las categorías.
+- La RPC `budget_progress(workspace, month)` devuelve por categoría el
+  presupuesto, el **gastado** (gastos del mes, futuros incluidos) y el
+  **comprometido** (ocurrencias pendientes de gastos fijos que vencen en el
+  mes). También devuelve las categorías con gastos y sin presupuesto.
+- Tarjetas: presupuestado, gastado (solo categorías con presupuesto) y
+  restante = presupuestado − gastado, en rojo si es negativo.
+- Cada fila tiene una barra con el gastado sólido y el comprometido rayado.
+
+| Gastado / presupuestado | Etiqueta         | Color  |
+| ----------------------- | ---------------- | ------ |
+| < 80 %                  | —                | neutro |
+| 80 % – 99 %             | Cerca del límite | ámbar  |
+| ≥ 100 %                 | Excedido         | rojo   |
+
+- El porcentaje se trunca: nunca dice 80 % antes de llegar al umbral.
+- El comprometido no cambia el estado. Si gastado + comprometido llega al
+  80 %, la fila dice "Con pagos pendientes llegarías al X %".
+- **Copiar del mes anterior** solo crea los presupuestos que faltan
+  (`on conflict do nothing`), omite categorías archivadas y nunca pisa montos
+  ya definidos.
+- **Sin presupuesto** lista las categorías con gastos en el mes y sin
+  presupuesto, con un botón "Presupuestar".
+
+### Widgets del Resumen
+
+- **Próximos pagos:** hasta 5 ocurrencias pendientes, vencidas primero, con
+  "Marcar como pagado".
+- **Presupuestos en riesgo:** hasta 5 presupuestos del mes actual con gastado
+  ≥ 80 %, de mayor a menor porcentaje.
+- Ambos con enlace "Ver todos" a su tab.
+
+### Seguridad
+
+- RLS en `recurring_expenses` y `budgets` con `is_workspace_owner`.
+- El trigger `check_expense_category` exige una categoría de gasto del sistema
+  o del mismo espacio. `check_transaction_recurring` exige que un pago tenga
+  fecha de vencimiento, sea un gasto y enlace un gasto fijo del mismo espacio.
+- Las RPC son `security invoker` y solo las ejecuta `authenticated`. Con un
+  espacio ajeno devuelven vacío.
 
 ## Specs
 

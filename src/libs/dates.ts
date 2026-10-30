@@ -36,3 +36,16 @@ export function shiftMonth(month: string, delta: number) {
   const date = new Date(Date.UTC(year, monthIndex - 1 + delta, 1))
   return date.toISOString().slice(0, 7)
 }
+
+// YYYY-MM-DD ↔ Date local, sin pasar por UTC para no correr el día. Para
+// los selectores de fecha (Calendar trabaja con fechas locales).
+export function toLocalDate(value: string) {
+  const [year, month, day] = value.split("-").map(Number)
+  return new Date(year, month - 1, day)
+}
+
+export function fromLocalDate(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${date.getFullYear()}-${month}-${day}`
+}

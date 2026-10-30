@@ -10,7 +10,9 @@ import {
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
+import { BudgetsAtRiskCard } from "@/features/budgets/components/budgets-at-risk-card"
 import { getCategories } from "@/features/categories/queries"
+import { UpcomingPaymentsCard } from "@/features/recurring-expenses/components/upcoming-payments-card"
 import { buildCategorySlices } from "@/features/reports/chart-data"
 import { CategoryDonutChart } from "@/features/reports/components/category-donut-chart"
 import { IncomeExpenseChart } from "@/features/reports/components/income-expense-chart"
@@ -97,6 +99,20 @@ async function SummaryContent() {
         today={today}
         currency={workspace.currency}
       />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Suspense fallback={<Skeleton className="h-72" />}>
+          <UpcomingPaymentsCard
+            workspaceId={workspace.id}
+            currency={workspace.currency}
+          />
+        </Suspense>
+        <Suspense fallback={<Skeleton className="h-72" />}>
+          <BudgetsAtRiskCard
+            workspaceId={workspace.id}
+            currency={workspace.currency}
+          />
+        </Suspense>
+      </div>
       <div className="grid gap-4 lg:grid-cols-5">
         <Card className="lg:col-span-3">
           <CardHeader>
@@ -168,6 +184,10 @@ function SummarySkeleton() {
             className="h-28"
           />
         ))}
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Skeleton className="h-72" />
+        <Skeleton className="h-72" />
       </div>
       <div className="grid gap-4 lg:grid-cols-5">
         <Skeleton className="h-96 lg:col-span-3" />

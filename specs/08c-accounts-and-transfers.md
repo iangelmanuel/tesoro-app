@@ -1,6 +1,6 @@
 # SPEC 08c — Cuentas, métodos de pago y traspasos
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 02, SPEC 06, SPEC 08
 > **Fecha:** 2026-10-30
 > **Objetivo:** Que el usuario registre sus cuentas y métodos de pago (efectivo, Nequi, Bancolombia…) con su saldo calculado, asigne una cuenta opcional a cada movimiento, registre traspasos entre cuentas propias que no cuentan como ingreso ni gasto, e importe la columna Método del SPEC 08.

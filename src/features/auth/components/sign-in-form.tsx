@@ -11,7 +11,8 @@ import { FormField } from "./form-field"
 import { OAuthButtons } from "./oauth-buttons"
 
 const QUERY_ERRORS: Record<string, string> = {
-  oauth: "No se pudo iniciar sesión con el proveedor. Intenta de nuevo"
+  oauth: "No se pudo iniciar sesión con el proveedor. Intenta de nuevo",
+  link: "El enlace expiró o ya se usó"
 }
 
 export function SignInForm() {

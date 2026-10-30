@@ -65,7 +65,10 @@ usuario tiene RLS.
 | `profiles`                  | Un perfil por usuario: `full_name`, `avatar_url`, `currency` (COP por defecto)                                                                                                                                                           | `select` y `update` del propio perfil  |
 | `workspaces`                | Espacios del usuario: `type` (`personal` / `business`) y `name`                                                                                                                                                                          | `select` de los propios                |
 | `categories`                | Categorías de ingreso o gasto: del sistema (`workspace_id` null) o propias                                                                                                                                                               | `select`, `insert` y `update`          |
-| `transactions`              | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note`                                                                                                                                                       | `select`, `insert`, `update`, `delete` |
+| `transactions`              | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note` y `account_id` opcional                                                                                                                               | `select`, `insert`, `update`, `delete` |
+| `accounts`                  | Cuentas y métodos de pago: `name` (único por espacio), `kind` (`cash` / `bank` / `wallet` / `other`), `icon`, `color`, `opening_balance`, `archived_at`                                                                                  | `select`, `insert`, `update`           |
+| `transfers`                 | Traspasos entre cuentas propias: `from_account_id`, `to_account_id` (distintas), `amount` > 0, `occurred_on`, `note`                                                                                                                     | `select`, `insert`, `update`, `delete` |
+| `account_adjustments`       | Ajustes de saldo de "Actualizar saldo": `account_id`, `amount` ≠ 0 (> 0 sube el saldo), `occurred_on`, `note`                                                                                                                            | `select`, `insert`, `update`, `delete` |
 | `recurring_expenses`        | Gastos fijos: `name`, `amount`, `category_id`, `frequency`, día y mes de pago, vigencia, `is_active`                                                                                                                                     | `select`, `insert`, `update`, `delete` |
 | `budgets`                   | Presupuesto por categoría de gasto y mes (`month` = primer día), único por categoría y mes                                                                                                                                               | `select`, `insert`, `update`, `delete` |
 | `savings_goals`             | Metas de ahorro: `name`, `target_amount`, `target_date` opcional, `icon`, `color`, `status`                                                                                                                                              | `select`, `insert`, `update`           |
@@ -97,7 +100,8 @@ Los espacios están definidos en `SITE.workspaces`.
 ### Espacio Personal
 
 - Resumen: balance, ingresos vs. gastos del mes, score
-- Movimientos: ingresos y gastos con categorías
+- Movimientos: ingresos y gastos con categorías, más traspasos y ajustes
+- Cuentas: saldo de efectivo, bancos y billeteras
 - Presupuestos por categoría y gastos fijos
 - Metas de ahorro
 - Deudas
@@ -159,13 +163,14 @@ created_at desc`.
   en Postgres con la RPC `transaction_totals` (`security invoker`).
 - Filtros en la URL; cambiar uno vuelve a la página 1:
 
-| Parámetro  | Valores                    | Por defecto                    |
-| ---------- | -------------------------- | ------------------------------ |
-| `month`    | `YYYY-MM` o `all`          | mes actual en `America/Bogota` |
-| `type`     | `income`, `expense`        | sin filtro                     |
-| `category` | uuid                       | sin filtro                     |
-| `q`        | texto (descripción y nota) | sin filtro                     |
-| `page`     | entero ≥ 1                 | `1`                            |
+| Parámetro  | Valores                         | Por defecto                    |
+| ---------- | ------------------------------- | ------------------------------ |
+| `month`    | `YYYY-MM` o `all`               | mes actual en `America/Bogota` |
+| `type`     | `income`, `expense`, `transfer` | sin filtro                     |
+| `category` | uuid                            | sin filtro                     |
+| `account`  | uuid o `none`                   | sin filtro                     |
+| `q`        | texto (descripción y nota)      | sin filtro                     |
+| `page`     | entero ≥ 1                      | `1`                            |
 
 - La búsqueda es `ilike` sobre descripción y nota, sin distinguir mayúsculas y
   escapando `%` y `_`.
@@ -643,6 +648,86 @@ workspace_id)`: una entrada siempre es del mismo espacio que su deuda.
   ejecuta `authenticated`. `record_debt_payment` crea el movimiento y el pago
   en una sola transacción.
 
+## Cuentas y traspasos
+
+Página `/dashboard/personal/accounts` (ítem "Cuentas" del aside). Dice de
+dónde sale la plata: efectivo, bancos y billeteras como Nequi.
+
+### Cuentas
+
+- Nombre (1 a 40 caracteres, único por espacio sin distinguir mayúsculas),
+  tipo, ícono y color (los del picker de categorías) y saldo inicial, que
+  puede ser negativo.
+- Cada espacio, nuevo o existente, trae la cuenta "Efectivo" con saldo 0
+  (trigger `seed_workspace_accounts` y backfill).
+- Se archivan y restauran, no se borran. Una cuenta archivada sale de los
+  `select`, pero sus movimientos la conservan.
+
+| `kind`   | Etiqueta          | Ícono      | Color     |
+| -------- | ----------------- | ---------- | --------- |
+| `cash`   | Efectivo          | `banknote` | `emerald` |
+| `bank`   | Banco             | `landmark` | `blue`    |
+| `wallet` | Billetera digital | `wallet`   | `violet`  |
+| `other`  | Otra              | `wallet`   | `slate`   |
+
+### Saldo
+
+El saldo no se guarda: se calcula con la RPC `account_balances`.
+
+```text
+saldo = opening_balance
+      + Σ ingresos − Σ gastos           (transactions con esa account_id)
+      + Σ traspasos entrantes − Σ salientes
+      + Σ ajustes
+```
+
+- **Saldo a hoy:** solo filas con `occurred_on ≤ hoy` (`America/Bogota`). Es
+  el que se muestra, en rojo si es negativo.
+- **Con lo programado:** todas las filas. Aparece solo si difiere.
+- El saldo puede ser negativo: un sobregiro o un movimiento olvidado es real.
+- "Actualizar saldo" pide el saldo real y crea un ajuste por
+  `saldo real − saldo a hoy` con fecha de hoy. Si la diferencia es 0, no crea
+  nada ("El saldo ya coincide").
+- Los movimientos sin cuenta no cuentan en ningún saldo.
+
+### Cuenta en movimientos
+
+- El formulario de movimiento tiene un `select` "Cuenta" opcional ("Sin
+  cuenta" por defecto). Al editar un movimiento de una cuenta archivada, la
+  cuenta se muestra como "(archivada)" y se puede guardar sin cambiarla.
+- El pago de un préstamo o el abono de una cuenta por cobrar con "Registrar
+  como gasto/ingreso" acepta una cuenta para el movimiento que crea.
+
+### Traspasos y ajustes
+
+- Un traspaso mueve plata entre dos cuentas propias distintas. Se crea desde
+  Cuentas o Movimientos, y se edita y elimina desde Movimientos.
+- Traspasos y ajustes viven en sus propias tablas: **no son ingreso ni gasto**
+  y no afectan Resumen, Reportes, Presupuestos ni el score.
+- Movimientos los muestra en la misma lista paginada, leyendo la vista
+  `ledger_entries`, con estilo neutro: "Nequi → Efectivo" (monto sin signo) y
+  "Ajuste de saldo · Nequi" (monto con signo, solo eliminar). Los totales del
+  encabezado solo suman movimientos.
+- `?account=<id>` muestra los movimientos y ajustes de la cuenta y los
+  traspasos donde es origen o destino. `?account=none` muestra solo
+  movimientos sin cuenta. `?type=transfer` muestra solo traspasos y ajustes.
+
+### Resumen
+
+- Tarjeta "Saldo en cuentas": suma de los saldos a hoy de las cuentas
+  activas, con enlace a Cuentas.
+
+### Seguridad
+
+- RLS en `accounts`, `transfers` y `account_adjustments` con
+  `is_workspace_owner`. Sin política `delete` en `accounts`.
+- FK compuestas `(account_id, workspace_id)` en `transactions`, `transfers` y
+  `account_adjustments`: la cuenta siempre es del mismo espacio.
+- Trigger `check_account_active`: una fila nueva, o una que cambia de cuenta,
+  no puede usar una cuenta archivada.
+- `ledger_entries` es `security_invoker` y solo la lee `authenticated`.
+  `account_balances` es `security invoker` y solo la ejecuta `authenticated`.
+
 ## Score y recomendaciones
 
 Página `/dashboard/personal/recommendations` y tarjeta "Salud financiera" en
@@ -824,9 +909,9 @@ fijos, pagos y ajustes de deudas o aportes y retiros de metas (ver
 
 ### Mapeo
 
-Campos: fecha, monto, tipo, ingreso, gasto, categoría, descripción y nota. Las
-columnas sin destino (como Método) se ignoran. Encabezados que sugieren cada
-campo:
+Campos: fecha, monto, tipo, ingreso, gasto, categoría, descripción, nota y
+cuenta (columna Método, SPEC 08c). Las columnas sin destino se ignoran.
+Encabezados que sugieren cada campo:
 
 | Campo            | Encabezados                                        |
 | ---------------- | -------------------------------------------------- |
@@ -838,6 +923,7 @@ campo:
 | `category`       | categoría, category, rubro                         |
 | `description`    | descripción, concepto, detalle, notas, description |
 | `note`           | nota, observación, comentario                      |
+| `account`        | método, medio de pago, forma de pago, cuenta       |
 
 **Tipo**, en 3 modos:
 
@@ -855,6 +941,15 @@ o una nueva con el valor de origen (máximo 40 caracteres). Sin columna de
 categoría, todo va a "Otros ingresos" u "Otros gastos". Un valor vacío es el
 par (tipo, "Sin categoría"). Las archivadas no aparecen como destino. Las
 nuevas se crean con `receipt` / `slate` (gasto) o `coins` / `lime` (ingreso).
+
+**Cuentas:** con la columna Método mapeada, el paso 4 agrega una sección
+"Cuentas": cada valor distinto con su número de filas y un `select` con las
+cuentas activas, "Crear «valor»" y "Sin cuenta". Se sugiere la cuenta con ese
+nombre normalizado o una nueva (máximo 40 caracteres); un valor vacío va a
+"Sin cuenta". La cuenta no omite filas. Las nuevas se crean como "Otra"
+(`wallet` / `slate`) y se quedan al deshacer. Sin columna, los movimientos
+quedan sin cuenta. Las filas "Traspaso" del Excel siguen yendo a "No
+importar".
 
 ### Normalización por fila
 
@@ -883,7 +978,8 @@ nuevas se crean con `receipt` / `slate` (gasto) o `coins` / `lime` (ingreso).
 ### Guardado, historial y deshacer
 
 - `import_transactions` guarda **todo o nada**: crea la fila de `imports` con
-  sus stats, las categorías nuevas y los movimientos con `import_id`. Los
+  sus stats, las categorías y cuentas nuevas y los movimientos con
+  `import_id`. Los
   `check` y el trigger `check_transaction_category` siguen aplicando.
 - Stats: `read` (filas con datos), `imported`, `skipped` ("No importar",
   desmarcadas y vacías), `duplicates` (duplicadas no incluidas) y `errors`.
@@ -994,9 +1090,10 @@ unidad ("Borrar 3 gastos fijos").
   `search_path = ''` y verifican `is_workspace_owner` al inicio.
   `transactions_for_duplicates` es `security invoker` y también lo verifica.
   Las tres solo las ejecuta `authenticated`.
-- `confirmImport` revalida con Zod las filas, las categorías nuevas y los
-  stats, y comprueba que las categorías existentes sean visibles, del tipo de
-  la fila y activas.
+- `confirmImport` revalida con Zod las filas, las categorías y cuentas nuevas
+  y los stats, y comprueba que las categorías existentes sean visibles, del
+  tipo de la fila y activas, y que las cuentas existentes sean visibles y
+  estén activas.
 
 ## Specs
 
@@ -1011,7 +1108,8 @@ detalle de cada uno (objetivo, alcance, modelo y preguntas abiertas) está en
 5. Metas de ahorro
 6. Tarjetas de crédito y deudas
 7. Score financiero y recomendaciones
-8. Importar desde Excel o CSV
+8. Importar desde Excel o CSV (más 8b, gastos fijos, deudas y metas, y 8c,
+   cuentas y traspasos)
 9. Cuenta y perfil
 10. Espacio Empresa: crear y registrar operaciones
 11. Empresa: flujo de caja, reportes, score y recomendaciones

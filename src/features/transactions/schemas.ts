@@ -46,4 +46,26 @@ export const transactionSchema = z.object({
     .transform((value) => value || null)
 })
 
+// Los campos ocultos del enlace llegan como "" cuando el movimiento no es el
+// pago de un gasto fijo
+const emptyToNull = (value: unknown) => (value === "" ? null : value)
+
+// Movimiento nuevo, opcionalmente enlazado a una ocurrencia de gasto fijo
+export const createTransactionSchema = transactionSchema
+  .extend({
+    recurring_expense_id: z.preprocess(
+      emptyToNull,
+      z.uuid({ error: "No se encontró el gasto fijo" }).nullable()
+    ),
+    recurring_due_on: z.preprocess(
+      emptyToNull,
+      z.iso.date({ error: "No se encontró el gasto fijo" }).nullable()
+    )
+  })
+  .refine(
+    (data) =>
+      (data.recurring_expense_id === null) === (data.recurring_due_on === null),
+    { error: "No se encontró el gasto fijo" }
+  )
+
 export type TransactionInput = z.infer<typeof transactionSchema>

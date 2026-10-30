@@ -1,10 +1,10 @@
 "use server"
 
-import { refresh } from "next/cache"
 import type { PostgrestError } from "@supabase/supabase-js"
 import { z } from "zod"
 import { parseAmount } from "@/features/transactions/schemas"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
+import { revalidatePersonalPages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import { recurringExpenseSchema } from "./schemas"
 import type {
@@ -112,7 +112,7 @@ export async function createRecurringExpense(
     return toFormError(error, values)
   }
 
-  refresh()
+  revalidatePersonalPages()
   return { ok: true }
 }
 
@@ -151,7 +151,7 @@ export async function updateRecurringExpense(
     return { error: NOT_FOUND, values }
   }
 
-  refresh()
+  revalidatePersonalPages()
   return { ok: true }
 }
 
@@ -182,7 +182,7 @@ export async function toggleRecurringExpense(
     return { error: NOT_FOUND }
   }
 
-  refresh()
+  revalidatePersonalPages()
   return {}
 }
 
@@ -212,6 +212,6 @@ export async function deleteRecurringExpense(
     return { error: NOT_FOUND }
   }
 
-  refresh()
+  revalidatePersonalPages()
   return {}
 }

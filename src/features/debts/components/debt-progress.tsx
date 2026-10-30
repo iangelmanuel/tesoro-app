@@ -1,5 +1,9 @@
 import { formatPercent } from "@/features/budgets/progress"
-import { paidPercent, utilizationPercent } from "../calculations"
+import {
+  collectedPercent,
+  paidPercent,
+  utilizationPercent
+} from "../calculations"
 import type { Debt } from "../queries"
 import { DebtBar, UtilizationBadge, UtilizationBar } from "./debt-indicators"
 
@@ -41,6 +45,26 @@ export function DebtProgress({ debt }: { debt: Debt }) {
         </span>
       </div>
       <p className="text-sm text-muted-foreground">Pagado del monto original</p>
+    </div>
+  )
+}
+
+/** % cobrado de una cuenta por cobrar */
+export function ReceivableProgress({ debt }: { debt: Debt }) {
+  const percent = collectedPercent(debt)
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-3">
+        <DebtBar
+          percent={percent}
+          tone="success"
+        />
+        <span className="text-sm font-medium tabular-nums">
+          {formatPercent(percent)}
+        </span>
+      </div>
+      <p className="text-sm text-muted-foreground">Cobrado</p>
     </div>
   )
 }

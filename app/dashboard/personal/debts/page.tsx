@@ -1,14 +1,28 @@
 import { Suspense } from "react"
-import { CreditCard, Plus } from "lucide-react"
+import { CreditCard, HandCoins, Plus } from "lucide-react"
 import { EmptyState } from "@/components/dashboard/empty-state"
 import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { DEBTS_PATH, compareByNextDue } from "@/features/debts/calculations"
+import {
+  DEBTS_PATH,
+  compareByExpectedOn,
+  compareByNextDue,
+  totalReceivable
+} from "@/features/debts/calculations"
 import { DebtCard } from "@/features/debts/components/debt-card"
 import { DebtDialog } from "@/features/debts/components/debt-dialog"
 import { DebtTotals } from "@/features/debts/components/debt-totals"
 import { DebtsTabs } from "@/features/debts/components/debts-tabs"
 import { InactiveDebts } from "@/features/debts/components/inactive-debts"
+import { InactiveReceivables } from "@/features/debts/components/inactive-receivables"
+import { ReceivableCard } from "@/features/debts/components/receivable-card"
+import { ReceivableDialog } from "@/features/debts/components/receivable-dialog"
 import { UpcomingDebtPayments } from "@/features/debts/components/upcoming-debt-payments"
 import {
   type Debt,
@@ -22,6 +36,7 @@ import {
   getPersonalWorkspace
 } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
+import { formatCurrency } from "@/libs/format"
 import { buildMetadata } from "@/libs/seo"
 
 export const metadata = buildMetadata({
@@ -38,7 +53,7 @@ export default function DebtsPage({ searchParams }: DebtsPageProps) {
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Deudas</h1>
         <p className="text-sm text-muted-foreground">
-          Tus tarjetas y préstamos, cuándo vencen y cuándo terminas de pagarlos.
+          Lo que debes, lo que te deben y cuándo terminas de pagar.
         </p>
       </header>
       {/* searchParams y la sesión son dinámicos: van dentro de Suspense */}
@@ -82,8 +97,109 @@ async function DebtsContent({
           workspace={workspace}
           today={today}
         />
-      ) : null}
+      ) : (
+        <ReceivablesTab
+          receivables={tabDebts}
+          entries={entries}
+          workspace={workspace}
+          today={today}
+        />
+      )}
     </DebtsTabs>
+  )
+}
+
+function ReceivablesTab({
+  receivables,
+  entries,
+  workspace,
+  today
+}: {
+  /** Cuentas por cobrar, en cualquier estado */
+  receivables: Debt[]
+  /** Abonos y ajustes por id de cuenta */
+  entries: Record<string, DebtEntry[]>
+  workspace: PersonalWorkspace
+  today: string
+}) {
+  const active = receivables
+    .filter((receivable) => receivable.status === "active")
+    .sort(compareByExpectedOn)
+  const inactive = receivables.filter(
+    (receivable) => receivable.status !== "active"
+  )
+
+  const createButton = (
+    <ReceivableDialog
+      trigger={
+        <Button>
+          <Plus data-icon="inline-start" />
+          Nueva cuenta por cobrar
+        </Button>
+      }
+    />
+  )
+
+  if (active.length === 0) {
+    return (
+      <>
+        <EmptyState
+          icon={HandCoins}
+          title="Nadie te debe dinero por ahora"
+          description="Registra lo que prestaste y los abonos que te hagan, y sabrás cuánto te falta por cobrar."
+        >
+          {createButton}
+        </EmptyState>
+        {inactive.length > 0 && (
+          <InactiveReceivables
+            debts={inactive}
+            entries={entries}
+            today={today}
+            currency={workspace.currency}
+          />
+        )}
+      </>
+    )
+  }
+
+  return (
+    <>
+      <Card className="sm:max-w-xs">
+        <CardHeader>
+          <CardDescription>Te deben</CardDescription>
+          <CardTitle className="text-2xl font-semibold tabular-nums">
+            {formatCurrency(totalReceivable(receivables), workspace.currency)}
+          </CardTitle>
+        </CardHeader>
+      </Card>
+
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold">Cuentas por cobrar</h2>
+          {createButton}
+        </div>
+        <ul className="grid gap-4 lg:grid-cols-2">
+          {active.map((receivable) => (
+            <ReceivableCard
+              key={receivable.id}
+              receivable={receivable}
+              entries={entries[receivable.id] ?? []}
+              today={today}
+              currency={workspace.currency}
+            />
+          ))}
+        </ul>
+      </div>
+
+      {inactive.length > 0 && (
+        <InactiveReceivables
+          debts={inactive}
+          entries={entries}
+          today={today}
+          currency={workspace.currency}
+        />
+      )}
+    </>
   )
 }
 

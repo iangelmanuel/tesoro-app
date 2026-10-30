@@ -15,7 +15,7 @@ import { ToneBadge } from "./debt-indicators"
 import { DebtSheet } from "./debt-sheet"
 import { useDebtAction } from "./use-debt-action"
 
-interface InactiveDebtsProps {
+export interface InactiveDebtsProps {
   /** Deudas pagadas y archivadas */
   debts: Debt[]
   /** Pagos y ajustes por id de deuda */
@@ -23,6 +23,8 @@ interface InactiveDebtsProps {
   /** Hoy en America/Bogota, calculado en el servidor */
   today: string
   currency: string
+  /** Título de la sección. Cuentas por cobrar: "Cobradas y archivadas" */
+  title?: string
 }
 
 /** Sección plegable "Pagadas y archivadas", cerrada por defecto */
@@ -30,7 +32,8 @@ export function InactiveDebts({
   debts,
   entries,
   today,
-  currency
+  currency,
+  title = "Pagadas y archivadas"
 }: InactiveDebtsProps) {
   return (
     <Collapsible className="flex flex-col gap-3">
@@ -43,7 +46,7 @@ export function InactiveDebts({
             data-icon="inline-start"
             className="transition-transform group-data-[state=closed]:-rotate-90"
           />
-          Pagadas y archivadas ({debts.length})
+          {title} ({debts.length})
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent>

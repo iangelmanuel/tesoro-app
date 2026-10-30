@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { cn } from "cn"
 import { CalendarIcon } from "lucide-react"
 import { es } from "react-day-picker/locale"
 import { Button } from "@/components/ui/button"
@@ -13,19 +14,25 @@ import {
 import { fromLocalDate, toLocalDate, todayISO } from "@/libs/dates"
 import { formatDate } from "@/libs/format"
 
-/** Selector de fecha que solo deja elegir fechas hasta hoy */
-export function PastDatePicker({
-  id,
-  value,
-  onChange
-}: {
+interface DatePickerProps {
   id: string
-  /** YYYY-MM-DD */
+  /** YYYY-MM-DD, o "" sin fecha */
   value: string
   onChange: (value: string) => void
-}) {
+  /** Por defecto solo deja elegir fechas hasta hoy (pagos y ajustes) */
+  allowFuture?: boolean
+  className?: string
+}
+
+export function DatePicker({
+  id,
+  value,
+  onChange,
+  allowFuture = false,
+  className
+}: DatePickerProps) {
   const [open, setOpen] = useState(false)
-  const selected = toLocalDate(value)
+  const selected = value ? toLocalDate(value) : undefined
 
   return (
     <Popover
@@ -37,10 +44,14 @@ export function PastDatePicker({
           id={id}
           type="button"
           variant="outline"
-          className="justify-start font-normal"
+          className={cn("justify-start font-normal", className)}
         >
           <CalendarIcon data-icon="inline-start" />
-          {formatDate(value)}
+          {value ? (
+            formatDate(value)
+          ) : (
+            <span className="text-muted-foreground">Sin fecha</span>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -52,7 +63,9 @@ export function PastDatePicker({
           locale={es}
           selected={selected}
           defaultMonth={selected}
-          disabled={(date) => fromLocalDate(date) > todayISO()}
+          disabled={
+            allowFuture ? undefined : (date) => fromLocalDate(date) > todayISO()
+          }
           onSelect={(date) => {
             if (date) {
               onChange(fromLocalDate(date))

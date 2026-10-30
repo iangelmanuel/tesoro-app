@@ -18,7 +18,7 @@ import { formatCurrency } from "@/libs/format"
 import { adjustBalance, updateEntry } from "../actions"
 import type { Debt, DebtEntry } from "../queries"
 import type { AdjustBalanceFormState } from "../types"
-import { PastDatePicker } from "./date-picker"
+import { DatePicker } from "./date-picker"
 import { Field, amountInput } from "./field"
 
 interface AdjustBalanceDialogProps {
@@ -163,7 +163,7 @@ function AdjustBalanceForm({
           label="Fecha"
           errors={errors?.occurred_on}
         >
-          <PastDatePicker
+          <DatePicker
             id="occurred_on"
             value={occurredOn}
             onChange={setOccurredOn}

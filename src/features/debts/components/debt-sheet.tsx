@@ -12,12 +12,10 @@ import {
   SheetHeader,
   SheetTitle
 } from "@/components/ui/sheet"
-import { formatPercent } from "@/features/budgets/progress"
 import { parseAmount } from "@/features/transactions/schemas"
 import { formatCurrency, formatDate } from "@/libs/format"
 import {
   type DebtProjection,
-  collectedPercent,
   debtProjection,
   debtStatusLabel,
   formatMonthYear,
@@ -28,8 +26,8 @@ import {
 import type { Debt, DebtEntry } from "../queries"
 import { AdjustBalanceDialog } from "./adjust-balance-dialog"
 import { DebtEntriesList } from "./debt-entries-list"
-import { DebtBar, ToneBadge } from "./debt-indicators"
-import { DebtProgress } from "./debt-progress"
+import { ToneBadge } from "./debt-indicators"
+import { DebtProgress, ReceivableProgress } from "./debt-progress"
 import { PaymentDialog } from "./payment-dialog"
 import { useDebtAction } from "./use-debt-action"
 
@@ -165,25 +163,6 @@ export function DebtSheet({
         </div>
       </SheetContent>
     </Sheet>
-  )
-}
-
-function ReceivableProgress({ debt }: { debt: Debt }) {
-  const percent = collectedPercent(debt)
-
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-3">
-        <DebtBar
-          percent={percent}
-          tone="success"
-        />
-        <span className="text-sm font-medium tabular-nums">
-          {formatPercent(percent)}
-        </span>
-      </div>
-      <p className="text-sm text-muted-foreground">Cobrado</p>
-    </div>
   )
 }
 

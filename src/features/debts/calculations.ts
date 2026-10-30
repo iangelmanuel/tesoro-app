@@ -361,6 +361,22 @@ export function compareByNextDue(
   return a.created_at.localeCompare(b.created_at)
 }
 
+/**
+ * Orden de las cuentas por cobrar activas: fecha esperada más cercana
+ * primero y las que no tienen al final; empates por creación
+ */
+export function compareByExpectedOn(
+  a: Pick<DebtCalcInput, "expected_on" | "created_at">,
+  b: Pick<DebtCalcInput, "expected_on" | "created_at">
+) {
+  if (a.expected_on !== b.expected_on) {
+    if (a.expected_on === null) return 1
+    if (b.expected_on === null) return -1
+    return a.expected_on < b.expected_on ? -1 : 1
+  }
+  return a.created_at.localeCompare(b.created_at)
+}
+
 /** Etiqueta de una deuda pagada o archivada, o null si está activa */
 export function debtStatusLabel(
   debt: Pick<DebtCalcInput, "kind" | "status">

@@ -17,7 +17,7 @@ import { todayISO } from "@/libs/dates"
 import { recordPayment, updateEntry } from "../actions"
 import type { Debt, DebtEntry } from "../queries"
 import type { PaymentFormState } from "../types"
-import { PastDatePicker } from "./date-picker"
+import { DatePicker } from "./date-picker"
 import { Field, amountInput } from "./field"
 
 interface PaymentDialogProps {
@@ -156,7 +156,7 @@ function PaymentForm({ debt, entry, onSaved, onCancel }: PaymentFormProps) {
           label="Fecha"
           errors={errors?.occurred_on}
         >
-          <PastDatePicker
+          <DatePicker
             id="occurred_on"
             value={occurredOn}
             onChange={setOccurredOn}

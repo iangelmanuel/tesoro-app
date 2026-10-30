@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Supabase Auth with email + password (no email confirmation), Google and GitHub OAuth, and an OAuth callback at `/auth/callback`.
+- `/sign-in` and `/sign-up` pages with Zod-validated Server Actions (`useActionState`) and Spanish error messages.
+- Root `proxy.ts` that refreshes the Supabase session, protects `/dashboard/*` (redirecting to `/sign-in?next=<path>`) and sends signed-in users away from the auth pages. `next` only accepts internal paths to prevent open redirects.
+- Supabase CLI project (`supabase/`) and the first migration: `profiles` and `workspaces` tables with RLS, a single Personal workspace per user, and an `on_auth_user_created` trigger that creates the profile and Personal workspace on sign-up.
+- Generated database types in `src/types/database.ts` and typed Supabase clients for the browser, the server and the proxy (`src/libs/supabase/`).
+- shadcn/ui (Radix, `radix-nova` style) on Tailwind 4, with `cn` in `src/libs/utils.ts`.
+- Light / Dark / System theme with `next-themes` (System by default).
+- Dashboard layout with an aside: Personal / Empresa workspace tabs, Personal navigation and a user menu (name, email, theme toggle, sign out).
+- "Coming soon" placeholder pages for the 7 Personal sections and an empty state for the Empresa workspace.
+- `SITE.routes` entries for the dashboard workspaces and the OAuth callback, and `SITE.navigation.personal`.
+
+### Fixed
+
+- `Metadata` / `Viewport` were imported as default exports from `next`, which broke type checking.
+
 ## [0.1.0] - 2026-10-29
 
 ### Added

@@ -51,22 +51,39 @@ Autenticación y base de datos corren sobre [Supabase](https://supabase.com/)
 (Postgres + Auth), con Row Level Security para que cada usuario solo vea sus
 propios datos. El SEO (metadata, Open Graph, JSON-LD, `robots.txt`,
 `sitemap.xml` y `manifest.webmanifest`) se genera desde `SITE` con
-`src/libs/seo.ts`.
+`src/libs/seo.ts`. La interfaz usa [shadcn/ui](https://ui.shadcn.com/) (Radix),
+tema claro/oscuro con [next-themes](https://github.com/pacocoursey/next-themes)
+y validación con [Zod](https://zod.dev/).
 
 ## Estructura
 
 ```text
-app/                    Rutas (App Router) y archivos de metadata
-├── layout.tsx          Metadata global, viewport y JSON-LD
-├── manifest.ts         manifest.webmanifest
-├── robots.ts           robots.txt
-└── sitemap.ts          sitemap.xml
+app/                      Rutas (App Router) y archivos de metadata
+├── (auth)/               /sign-in y /sign-up
+├── auth/callback/        Callback de OAuth
+├── dashboard/            Layout con aside, /personal/... y /business
+├── layout.tsx            Metadata global, viewport, JSON-LD y tema
+├── manifest.ts           manifest.webmanifest
+├── robots.ts             robots.txt
+└── sitemap.ts            sitemap.xml
+proxy.ts                  Refresca la sesión y protege /dashboard/*
 src/
-├── components/seo/     <JsonLd />
-├── config/site.ts      SITE: marca, autor, rutas, espacios y SEO
-├── libs/seo.ts         buildMetadata() y builders de schema.org
-└── styles/globals.css  Tailwind y estilos base
-docs/                   Documentación de producto
+├── components/
+│   ├── dashboard/        Aside, tabs de espacio, menú de usuario, placeholders
+│   ├── seo/              <JsonLd />
+│   ├── theme/            ThemeProvider (next-themes)
+│   └── ui/               Componentes de shadcn/ui
+├── config/site.ts        SITE: marca, autor, rutas, navegación, espacios y SEO
+├── features/auth/        Esquemas Zod, Server Actions y formularios de auth
+├── libs/
+│   ├── seo.ts            buildMetadata() y builders de schema.org
+│   ├── supabase/         Clientes de Supabase (navegador, servidor y proxy)
+│   └── utils.ts          cn()
+├── types/database.ts     Tipos generados de la base de datos
+└── styles/globals.css    Tailwind, tokens de shadcn y tema claro/oscuro
+supabase/                 config.toml y migraciones versionadas
+docs/                     Documentación de producto
+specs/                    Specs de implementación
 ```
 
 ## Empezar
@@ -87,11 +104,15 @@ pnpm dev
 
 La app queda disponible en `http://localhost:3000`.
 
-| Variable                               | Para qué sirve                                |
-| -------------------------------------- | --------------------------------------------- |
-| `NEXT_PUBLIC_SITE_URL`                 | URL pública: canonical, Open Graph y sitemap  |
-| `NEXT_PUBLIC_SUPABASE_URL`             | URL del proyecto de Supabase                  |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clave pública de Supabase (protegida por RLS) |
+| Variable                               | Para qué sirve                                      |
+| -------------------------------------- | --------------------------------------------------- |
+| `NEXT_PUBLIC_SITE_URL`                 | URL pública: canonical, Open Graph, sitemap y OAuth |
+| `NEXT_PUBLIC_SUPABASE_URL`             | URL del proyecto de Supabase                        |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clave publicable de Supabase (protegida por RLS)    |
+| `SUPABASE_AUTH_EXTERNAL_*`             | Credenciales OAuth para el stack local (solo CLI)   |
+
+Nunca pongas la clave `service_role` ni la secreta en `.env.local` ni en
+variables `NEXT_PUBLIC_*`: la app solo usa la clave publicable.
 
 | Comando               | Qué hace                                |
 | --------------------- | --------------------------------------- |
@@ -107,12 +128,61 @@ La app queda disponible en `http://localhost:3000`.
 CI (`.github/workflows/ci.yml`) corre `check`, `eslint` y `prettier:check` en
 paralelo, y un build, en cada push/PR a `main`.
 
+### Supabase
+
+Necesitas el [Supabase CLI](https://supabase.com/docs/guides/cli). Las
+migraciones viven en `supabase/migrations/` y se aplican igual en local o en
+remoto.
+
+**Proyecto remoto** (recomendado, no necesita Docker):
+
+```bash
+supabase login
+supabase link --project-ref <ref>   # el ref está en la URL del proyecto
+supabase db push                    # aplica las migraciones
+```
+
+En el dashboard de Supabase, en **Authentication**:
+
+- **Sign In / Providers → Email**: desactiva _Confirm email_.
+- **URL Configuration**: _Site URL_ `http://localhost:3000` y, en _Redirect
+  URLs_, `http://localhost:3000/auth/callback` (y las de producción).
+
+**Stack local** (requiere [Docker](https://docs.docker.com/desktop/) y bastante
+RAM):
+
+```bash
+supabase start      # levanta Postgres, Auth y Studio; muestra URL y claves
+supabase db reset   # reaplica las migraciones desde cero
+supabase stop
+```
+
+En local, `supabase/config.toml` ya trae la confirmación de email desactivada
+y el redirect a `/auth/callback`. Usa la `API_URL` y la clave publicable que
+imprime `supabase start` en tu `.env.local`.
+
+### Proveedores OAuth (opcional)
+
+Sin ellos, el registro con email y contraseña funciona igual.
+
+1. **Google**: en [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+   crea un _OAuth client ID_ de tipo _Web application_.
+2. **GitHub**: en _Settings → Developer settings → OAuth Apps_ crea una app.
+3. En ambos, la URL de redirección autorizada es el callback de Supabase, no
+   el de la app:
+   - Remoto: `https://<ref>.supabase.co/auth/v1/callback`
+   - Local: `http://127.0.0.1:54321/auth/v1/callback`
+4. Remoto: pega el _client ID_ y el _secret_ en **Authentication → Sign In /
+   Providers** de cada proveedor. Local: ponlos en `supabase/.env` como
+   `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID`, `..._GOOGLE_SECRET`,
+   `..._GITHUB_CLIENT_ID` y `..._GITHUB_SECRET`, y reinicia `supabase start`.
+
 ## Hoja de ruta
 
 - [x] Base del proyecto: configuración, SEO y documentación
 - [ ] Landing page
-- [ ] Autenticación con Supabase (`/sign-in`, `/sign-up`)
-- [ ] Dashboard con aside y selector de espacio _Personal_ / _Empresa_
+- [x] Autenticación con Supabase (`/sign-in`, `/sign-up`, Google y GitHub)
+- [x] Dashboard con aside y selector de espacio _Personal_ / _Empresa_
 - [ ] Registro de movimientos (ingresos, gastos, categorías)
 - [ ] Gráficas y reportes
 - [ ] Score financiero

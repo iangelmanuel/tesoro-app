@@ -365,3 +365,17 @@ export async function requestAccountDeletion(
   })
   redirect(`${SITE.routes.signIn}?${params}` as Route)
 }
+
+export async function cancelAccountDeletion(): Promise<AccountActionResult> {
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("cancel_account_deletion")
+
+  if (error) {
+    return { error: "No se pudo restaurar la cuenta. Intenta de nuevo" }
+  }
+
+  // El JWT guardado aún trae la marca en app_metadata: se renueva
+  await supabase.auth.refreshSession()
+
+  redirect(SITE.routes.dashboardPersonal)
+}

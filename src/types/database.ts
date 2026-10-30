@@ -103,6 +103,137 @@ export type Database = {
           }
         ]
       }
+      debt_entries: {
+        Row: {
+          amount: number
+          created_at: string
+          debt_id: string
+          id: string
+          kind: Database["public"]["Enums"]["debt_entry_kind"]
+          note: string | null
+          occurred_on: string
+          transaction_id: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          debt_id: string
+          id?: string
+          kind: Database["public"]["Enums"]["debt_entry_kind"]
+          note?: string | null
+          occurred_on: string
+          transaction_id?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          debt_id?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["debt_entry_kind"]
+          note?: string | null
+          occurred_on?: string
+          transaction_id?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "debt_entries_debt_id_workspace_id_fkey"
+            columns: ["debt_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "debts"
+            referencedColumns: ["id", "workspace_id"]
+          },
+          {
+            foreignKeyName: "debt_entries_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: true
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      debts: {
+        Row: {
+          closed_at: string | null
+          closing_day: number | null
+          counterparty: string | null
+          created_at: string
+          credit_limit: number | null
+          due_day: number | null
+          expected_on: string | null
+          id: string
+          installment: number | null
+          interest_rate: number | null
+          kind: Database["public"]["Enums"]["debt_kind"]
+          min_payment: number | null
+          name: string
+          opening_balance: number
+          original_amount: number | null
+          rate_type: Database["public"]["Enums"]["rate_type"] | null
+          status: Database["public"]["Enums"]["debt_status"]
+          term_months: number | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closing_day?: number | null
+          counterparty?: string | null
+          created_at?: string
+          credit_limit?: number | null
+          due_day?: number | null
+          expected_on?: string | null
+          id?: string
+          installment?: number | null
+          interest_rate?: number | null
+          kind: Database["public"]["Enums"]["debt_kind"]
+          min_payment?: number | null
+          name: string
+          opening_balance: number
+          original_amount?: number | null
+          rate_type?: Database["public"]["Enums"]["rate_type"] | null
+          status?: Database["public"]["Enums"]["debt_status"]
+          term_months?: number | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          closed_at?: string | null
+          closing_day?: number | null
+          counterparty?: string | null
+          created_at?: string
+          credit_limit?: number | null
+          due_day?: number | null
+          expected_on?: string | null
+          id?: string
+          installment?: number | null
+          interest_rate?: number | null
+          kind?: Database["public"]["Enums"]["debt_kind"]
+          min_payment?: number | null
+          name?: string
+          opening_balance?: number
+          original_amount?: number | null
+          rate_type?: Database["public"]["Enums"]["rate_type"] | null
+          status?: Database["public"]["Enums"]["debt_status"]
+          term_months?: number | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "debts_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       goal_contributions: {
         Row: {
           amount: number
@@ -422,6 +553,39 @@ export type Database = {
           tx_count: number
         }[]
       }
+      debt_overview: {
+        Args: { p_workspace_id: string }
+        Returns: {
+          balance: number
+          closed_at: string
+          closing_day: number
+          counterparty: string
+          created_at: string
+          credit_limit: number
+          due_day: number
+          entries_count: number
+          expected_on: string
+          id: string
+          installment: number
+          interest_rate: number
+          kind: Database["public"]["Enums"]["debt_kind"]
+          last_payment_on: string
+          min_payment: number
+          name: string
+          next_due_on: string
+          opening_balance: number
+          original_amount: number
+          paid_current_cycle: number
+          paid_previous_cycle: number
+          paid_total: number
+          prev_due_on: string
+          rate_type: Database["public"]["Enums"]["rate_type"]
+          status: Database["public"]["Enums"]["debt_status"]
+          term_months: number
+          updated_at: string
+          workspace_id: string
+        }[]
+      }
       goal_progress: {
         Args: { p_workspace_id: string }
         Returns: {
@@ -447,6 +611,16 @@ export type Database = {
           month: string
           tx_count: number
         }[]
+      }
+      record_debt_payment: {
+        Args: {
+          p_amount: number
+          p_create_transaction: boolean
+          p_debt_id: string
+          p_note: string
+          p_occurred_on: string
+        }
+        Returns: string
       }
       recurring_occurrences: {
         Args: { p_from: string; p_to: string; p_workspace_id: string }
@@ -477,7 +651,11 @@ export type Database = {
       workspace_balance: { Args: { p_workspace_id: string }; Returns: number }
     }
     Enums: {
+      debt_entry_kind: "payment" | "adjustment"
+      debt_kind: "credit_card" | "loan" | "receivable"
+      debt_status: "active" | "paid" | "archived"
       goal_status: "active" | "completed" | "archived"
+      rate_type: "ea" | "mv"
       recurring_frequency: "monthly" | "yearly"
       transaction_type: "income" | "expense"
       workspace_type: "personal" | "business"
@@ -605,7 +783,11 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      debt_entry_kind: ["payment", "adjustment"],
+      debt_kind: ["credit_card", "loan", "receivable"],
+      debt_status: ["active", "paid", "archived"],
       goal_status: ["active", "completed", "archived"],
+      rate_type: ["ea", "mv"],
       recurring_frequency: ["monthly", "yearly"],
       transaction_type: ["income", "expense"],
       workspace_type: ["personal", "business"]

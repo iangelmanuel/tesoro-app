@@ -275,7 +275,7 @@ Parámetros de URL de `/dashboard/personal/debts`:
 1. **Migración.**
    - Crear la migración del modelo de datos con tipos, tablas, índices, categorías, triggers, RLS y RPC.
    - Aplicarla con `supabase db push` y regenerar `src/types/database.ts`.
-   - Verificar en la BD: un pago mayor que el saldo falla; un pago con `transaction_id` en una tarjeta falla; `debt_overview` de una deuda con `due_day` 31 devuelve el 30 de noviembre como `next_due_on` el 30 de octubre.
+   - Verificar en la BD: un pago mayor que el saldo falla; un pago con `transaction_id` en una tarjeta falla; `debt_overview` de una deuda con `due_day` 31 devuelve el 31 de octubre como `next_due_on` el 30 de octubre, y sus vencimientos de noviembre de 2026 y febrero de 2027 caen el 30 de noviembre y el 28 de febrero.
 2. **Esquemas y cálculos.**
    - `src/features/debts/schemas.ts` (Zod):
      - tarjeta: `name` 1 a 60, `counterparty` hasta 60, `opening_balance` ≥ 0, `credit_limit`, `due_day` 1–31, y opcionales `interest_rate` con `rate_type`, `min_payment` y `closing_day`;

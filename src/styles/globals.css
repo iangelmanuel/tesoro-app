@@ -38,6 +38,22 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  /* Gráficas: tono 500 de Tailwind por categoría, ingreso, gasto y balance */
+  --category-emerald: oklch(69.6% 0.17 162.48);
+  --category-teal: oklch(70.4% 0.14 182.503);
+  --category-lime: oklch(76.8% 0.233 130.85);
+  --category-amber: oklch(76.9% 0.188 70.08);
+  --category-orange: oklch(70.5% 0.213 47.604);
+  --category-rose: oklch(64.5% 0.246 16.439);
+  --category-pink: oklch(65.6% 0.241 354.308);
+  --category-violet: oklch(60.6% 0.25 292.717);
+  --category-indigo: oklch(58.5% 0.233 277.117);
+  --category-blue: oklch(62.3% 0.214 259.815);
+  --category-sky: oklch(68.5% 0.169 237.323);
+  --category-slate: oklch(55.4% 0.046 257.417);
+  --income: oklch(69.6% 0.17 162.48);
+  --expense: oklch(64.5% 0.246 16.439);
+  --balance: oklch(68.5% 0.169 237.323);
 }
 
 @theme inline {
@@ -116,6 +132,22 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  /* Gráficas: tono 400 en oscuro para mantener el contraste */
+  --category-emerald: oklch(76.5% 0.177 163.223);
+  --category-teal: oklch(77.7% 0.152 181.912);
+  --category-lime: oklch(84.1% 0.238 128.85);
+  --category-amber: oklch(82.8% 0.189 84.429);
+  --category-orange: oklch(75% 0.183 55.934);
+  --category-rose: oklch(71.2% 0.194 13.428);
+  --category-pink: oklch(71.8% 0.202 349.761);
+  --category-violet: oklch(70.2% 0.183 293.541);
+  --category-indigo: oklch(67.3% 0.182 276.935);
+  --category-blue: oklch(70.7% 0.165 254.624);
+  --category-sky: oklch(74.6% 0.16 232.661);
+  --category-slate: oklch(70.4% 0.04 256.788);
+  --income: oklch(76.5% 0.177 163.223);
+  --expense: oklch(71.2% 0.194 13.428);
+  --balance: oklch(74.6% 0.16 232.661);
 }
 
 @layer base {

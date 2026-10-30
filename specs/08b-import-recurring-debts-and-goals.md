@@ -1,6 +1,6 @@
 # SPEC 08b — Importar gastos fijos, deudas y metas
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 04, SPEC 05, SPEC 06, SPEC 08
 > **Fecha:** 2026-10-30
 > **Objetivo:** Que el usuario importe gastos fijos, pagos y ajustes de sus deudas y aportes a sus metas desde un `.xlsx` o `.csv`, eligiendo un destino por importación y reutilizando el asistente del SPEC 08.

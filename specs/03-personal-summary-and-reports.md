@@ -1,6 +1,6 @@
 # SPEC 03 — Resumen y reportes con gráficas
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 02
 > **Fecha:** 2026-10-30
 > **Objetivo:** Que el usuario vea en Resumen y en Reportes del espacio Personal gráficas e indicadores claros de sus ingresos, gastos, balance y categorías, calculados en Postgres a partir de sus movimientos.

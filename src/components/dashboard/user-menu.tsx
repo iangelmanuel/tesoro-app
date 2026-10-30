@@ -17,8 +17,7 @@ import {
 import {
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar
+  SidebarMenuItem
 } from "@/components/ui/sidebar"
 import { signOut } from "@/features/auth/actions"
 
@@ -71,7 +70,6 @@ function UserInfo({ user }: { user: DashboardUser }) {
 }
 
 export function UserMenu({ user }: { user: DashboardUser }) {
-  const { isMobile } = useSidebar()
   const { theme, setTheme } = useTheme()
   const [isSigningOut, startSignOut] = useTransition()
 
@@ -91,8 +89,8 @@ export function UserMenu({ user }: { user: DashboardUser }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
-            align="end"
+            side="top"
+            align="start"
             sideOffset={4}
           >
             <DropdownMenuLabel className="p-0 font-normal">

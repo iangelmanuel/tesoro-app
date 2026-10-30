@@ -1,4 +1,18 @@
-import type { Band, FactorKey, Severity } from "./types"
+import type { Band, FactorKey, RuleKey, Severity } from "./types"
+
+/** Claves de regla; deben coincidir con el check de dismissed_recommendations */
+export const RULE_KEYS = [
+  "deficit",
+  "category_growth",
+  "budget_exceeded",
+  "goal_at_risk",
+  "high_utilization",
+  "highest_rate_first",
+  "overdue_payment",
+  "low_cushion",
+  "unbudgeted_spending",
+  "irregular_records"
+] as const satisfies readonly RuleKey[]
 
 /** Puntos [dato, puntos] de una curva, con el dato en orden ascendente */
 export type Curve = readonly (readonly [number, number])[]

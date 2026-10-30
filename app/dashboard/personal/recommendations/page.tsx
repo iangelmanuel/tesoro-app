@@ -1,4 +1,6 @@
 import { Suspense } from "react"
+import { ChartLine } from "lucide-react"
+import { CardEmpty } from "@/components/dashboard/empty-state"
 import {
   Card,
   CardContent,
@@ -115,7 +117,14 @@ async function RecommendationsContent() {
           <CardDescription>Últimos 12 meses</CardDescription>
         </CardHeader>
         <CardContent>
-          <ScoreHistoryChart data={points} />
+          {points.every((point) => point.score === null) ? (
+            <CardEmpty
+              icon={ChartLine}
+              message="Aún no hay histórico"
+            />
+          ) : (
+            <ScoreHistoryChart data={points} />
+          )}
         </CardContent>
       </Card>
 

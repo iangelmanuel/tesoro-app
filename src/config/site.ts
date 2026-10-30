@@ -104,7 +104,10 @@ export const SITE = {
     home: "/",
     signIn: "/sign-in",
     signUp: "/sign-up",
-    dashboard: "/dashboard"
+    dashboard: "/dashboard",
+    dashboardPersonal: "/dashboard/personal",
+    dashboardBusiness: "/dashboard/business",
+    authCallback: "/auth/callback"
   },
 
   legal: [
@@ -128,7 +131,37 @@ export const SITE = {
       { name: "Código abierto", href: "/#open-source" }
     ],
     cta: { label: "Crear cuenta", href: "/sign-up" },
-    secondary: { label: "Iniciar sesión", href: "/sign-in" }
+    secondary: { label: "Iniciar sesión", href: "/sign-in" },
+    // `icon` es el nombre del ícono de lucide-react que pinta el aside
+    personal: [
+      {
+        name: "Resumen",
+        href: "/dashboard/personal",
+        icon: "LayoutDashboard"
+      },
+      {
+        name: "Movimientos",
+        href: "/dashboard/personal/transactions",
+        icon: "ArrowLeftRight"
+      },
+      {
+        name: "Presupuestos",
+        href: "/dashboard/personal/budgets",
+        icon: "PiggyBank"
+      },
+      { name: "Metas", href: "/dashboard/personal/goals", icon: "Target" },
+      { name: "Deudas", href: "/dashboard/personal/debts", icon: "CreditCard" },
+      {
+        name: "Reportes",
+        href: "/dashboard/personal/reports",
+        icon: "ChartColumn"
+      },
+      {
+        name: "Recomendaciones",
+        href: "/dashboard/personal/recommendations",
+        icon: "Lightbulb"
+      }
+    ]
   },
 
   seo: {

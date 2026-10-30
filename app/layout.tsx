@@ -1,6 +1,7 @@
-import type Viewport from "next"
-import type Metadata from "next"
+import type { Metadata, Viewport } from "next"
+import { Geist } from "next/font/google"
 import { JsonLd } from "@/components/seo/JsonLd"
+import { ThemeProvider } from "@/components/theme/theme-provider"
 import { SITE } from "@/config/site"
 import {
   buildApplicationSchema,
@@ -8,7 +9,10 @@ import {
   buildMetadata,
   buildWebsiteSchema
 } from "@/libs/seo"
+import { cn } from "@/libs/utils"
 import "@/styles/globals.css"
+
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 
 const baseMetadata = buildMetadata({ path: "/" })
 
@@ -45,7 +49,11 @@ export default function RootLayout({
   children
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang={SITE.seo.lang}>
+    <html
+      lang={SITE.seo.lang}
+      className={cn("font-sans", geist.variable)}
+      suppressHydrationWarning
+    >
       <body>
         <JsonLd
           schema={[
@@ -54,7 +62,7 @@ export default function RootLayout({
             buildAuthorSchema()
           ]}
         />
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   )

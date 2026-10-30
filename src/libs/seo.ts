@@ -1,4 +1,4 @@
-import type Metadata from "next"
+import type { Metadata } from "next"
 import { SITE } from "@/config/site"
 
 export interface SeoOptions {

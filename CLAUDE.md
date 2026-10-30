@@ -42,7 +42,20 @@ pnpm build            # build de producción
 pnpm check            # tsc --noEmit
 pnpm eslint           # lint (eslint:fix para corregir)
 pnpm prettier         # formatea (prettier:check solo verifica)
+pnpm next typegen     # regenera los tipos de typedRoutes (antes de `check`)
 ```
+
+Supabase (CLI global; el proyecto remoto se enlaza con `supabase link`):
+
+```bash
+supabase migration new <nombre>   # nueva migración en supabase/migrations/
+supabase db push                  # aplica las migraciones al proyecto enlazado
+supabase gen types typescript --linked --schema public > src/types/database.ts
+supabase start / stop             # stack local (requiere Docker, pesa en RAM)
+supabase db reset                 # reaplica las migraciones en local
+```
+
+Tras cambiar el esquema, regenera `src/types/database.ts` y pásale Prettier.
 
 Aún no hay tests. El CI (`.github/workflows/ci.yml`) corre `check`, `eslint`,
 `prettier:check` y luego `build` con `pnpm install --frozen-lockfile`. Por eso
@@ -114,4 +127,3 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   - `/brand/logo.png`
   - `/apple-touch-icon.png`
   - `/icons/icon-192.png` y `/icons/icon-512.png`
-- `sitemap.ts` lista `/sign-in` y `/sign-up`, que aún no existen.

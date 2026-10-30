@@ -31,6 +31,11 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import {
+  type AccountOption,
+  AccountSelect,
+  selectableAccounts
+} from "@/features/accounts/components/account-select"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { fromLocalDate, toLocalDate, todayISO } from "@/libs/dates"
@@ -61,6 +66,8 @@ export interface RecurringOccurrenceLink {
 interface TransactionDialogProps {
   /** Categorías del sistema y propias, activas y archivadas */
   categories: Category[]
+  /** Cuentas del espacio, activas y archivadas */
+  accounts: AccountOption[]
   /** Si llega, el diálogo edita este movimiento */
   transaction?: TransactionWithCategory
   /** Prellenado de un movimiento nuevo */
@@ -73,6 +80,7 @@ interface TransactionDialogProps {
 
 export function TransactionDialog({
   categories,
+  accounts,
   transaction,
   initialValues,
   recurring,
@@ -108,6 +116,7 @@ export function TransactionDialog({
         {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
         <TransactionForm
           categories={categories}
+          accounts={accounts}
           transaction={transaction}
           initialValues={isEditing ? undefined : initialValues}
           recurring={isEditing ? undefined : recurring}
@@ -121,6 +130,7 @@ export function TransactionDialog({
 
 interface TransactionFormProps {
   categories: Category[]
+  accounts: AccountOption[]
   transaction?: TransactionWithCategory
   initialValues?: TransactionInitialValues
   recurring?: RecurringOccurrenceLink
@@ -130,6 +140,7 @@ interface TransactionFormProps {
 
 function TransactionForm({
   categories,
+  accounts,
   transaction,
   initialValues,
   recurring,
@@ -160,6 +171,7 @@ function TransactionForm({
     () => transaction?.occurred_on ?? initialValues?.occurred_on ?? todayISO()
   )
   const [calendarOpen, setCalendarOpen] = useState(false)
+  const [accountId, setAccountId] = useState(transaction?.account_id ?? "")
 
   const [state, formAction, pending] = useActionState<
     TransactionFormState,
@@ -368,6 +380,24 @@ function TransactionForm({
             La categoría de este gasto fijo está archivada. Elige otra.
           </p>
         )}
+      </Field>
+
+      <Field
+        id="account_id"
+        label="Cuenta"
+        errors={errors?.account_id}
+      >
+        {/* Solo activas, más la actual del movimiento editado aunque esté
+            archivada, para poder guardar sin cambiarla */}
+        <AccountSelect
+          id="account_id"
+          name="account_id"
+          value={accountId}
+          onChange={setAccountId}
+          accounts={selectableAccounts(accounts, transaction?.account_id)}
+          allowNone
+          invalid={Boolean(errors?.account_id)}
+        />
       </Field>
 
       <Field

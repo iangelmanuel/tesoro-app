@@ -2,6 +2,7 @@ import { cn } from "cn"
 import { Check } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import type { AccountOption } from "@/features/accounts/components/account-select"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
@@ -33,17 +34,20 @@ export function OccurrenceStatusBadge({
 interface PayOccurrenceButtonProps {
   payment: UpcomingPayment
   categories: Category[]
+  accounts: AccountOption[]
 }
 
 // Abre TransactionDialog prellenado con la ocurrencia y enlazado a ella. El
 // usuario confirma (y puede cambiar el monto) antes de crear el movimiento.
 export function PayOccurrenceButton({
   payment,
-  categories
+  categories,
+  accounts
 }: PayOccurrenceButtonProps) {
   return (
     <TransactionDialog
       categories={categories}
+      accounts={accounts}
       initialValues={{
         amount: payment.amount,
         category_id: payment.category.id,
@@ -70,12 +74,14 @@ export function PayOccurrenceButton({
 interface UpcomingPaymentsProps {
   payments: UpcomingPayment[]
   categories: Category[]
+  accounts: AccountOption[]
   currency: string
 }
 
 export function UpcomingPayments({
   payments,
   categories,
+  accounts,
   currency
 }: UpcomingPaymentsProps) {
   return (
@@ -118,6 +124,7 @@ export function UpcomingPayments({
                 <PayOccurrenceButton
                   payment={payment}
                   categories={categories}
+                  accounts={accounts}
                 />
               </>
             )}

@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
+import type { AccountOption } from "@/features/accounts/components/account-select"
 import { formatCurrency, formatDate } from "@/libs/format"
 import { hasZeroBalance, isReceivableOverdue } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
@@ -30,6 +31,8 @@ interface ReceivableCardProps {
   /** Cuenta por cobrar activa */
   receivable: Debt
   entries: DebtEntry[]
+  /** Cuentas activas, para el movimiento de un abono */
+  accounts: AccountOption[]
   /** Hoy en America/Bogota, calculado en el servidor */
   today: string
   currency: string
@@ -38,6 +41,7 @@ interface ReceivableCardProps {
 export function ReceivableCard({
   receivable,
   entries,
+  accounts,
   today,
   currency
 }: ReceivableCardProps) {
@@ -133,6 +137,7 @@ export function ReceivableCard({
         <DebtSheet
           debt={receivable}
           entries={entries}
+          accounts={accounts}
           today={today}
           currency={currency}
           open={detailOpen}

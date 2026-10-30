@@ -3,6 +3,7 @@ import Link from "next/link"
 import { FileUp, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { getAccountBalances } from "@/features/accounts/queries"
 import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
 import { getCategories } from "@/features/categories/queries"
 import { IMPORT_PATH } from "@/features/imports/constants"
@@ -62,8 +63,9 @@ async function TransactionsContent({
   // Se parsea tras leer la sesión: el mes por defecto usa la fecha de hoy, y
   // new Date() solo se permite después de connection()
   const filters = parseTransactionFilters(query)
-  const [categories, { rows, count }, totals] = await Promise.all([
+  const [categories, accounts, { rows, count }, totals] = await Promise.all([
     getCategories(workspace.id),
+    getAccountBalances(workspace.id),
     getTransactions(workspace.id, filters),
     getTransactionTotals(workspace.id, filters)
   ])
@@ -76,6 +78,7 @@ async function TransactionsContent({
       <div className="flex flex-wrap gap-2">
         <TransactionDialog
           categories={categories}
+          accounts={accounts}
           trigger={
             <Button>
               <Plus data-icon="inline-start" />
@@ -96,7 +99,10 @@ async function TransactionsContent({
       </div>
 
       {isEmptyWorkspace ? (
-        <NoTransactions categories={categories} />
+        <NoTransactions
+          categories={categories}
+          accounts={accounts}
+        />
       ) : (
         <>
           <TransactionsFilters
@@ -111,6 +117,7 @@ async function TransactionsContent({
             <TransactionsTable
               rows={rows}
               categories={categories}
+              accounts={accounts}
               currency={workspace.currency}
             />
           ) : (

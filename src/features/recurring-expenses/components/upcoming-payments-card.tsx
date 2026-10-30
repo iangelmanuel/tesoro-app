@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card"
+import { getAccountBalances } from "@/features/accounts/queries"
 import { BUDGETS_PATH } from "@/features/budgets/tabs"
 import { getCategories } from "@/features/categories/queries"
 import { formatCurrency, formatDate } from "@/libs/format"
@@ -31,9 +32,10 @@ export async function UpcomingPaymentsCard({
   workspaceId,
   currency
 }: UpcomingPaymentsCardProps) {
-  const [payments, categories] = await Promise.all([
+  const [payments, categories, accounts] = await Promise.all([
     getUpcomingPayments(workspaceId),
-    getCategories(workspaceId)
+    getCategories(workspaceId),
+    getAccountBalances(workspaceId)
   ])
   const pending = payments
     .filter((payment) => payment.transactionId === null)
@@ -80,6 +82,7 @@ export async function UpcomingPaymentsCard({
               <PayOccurrenceButton
                 payment={payment}
                 categories={categories}
+                accounts={accounts}
               />
             </li>
           ))}

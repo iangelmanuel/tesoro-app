@@ -3,6 +3,7 @@ import Link from "next/link"
 import { FileUp, Plus, ReceiptText, SearchX } from "lucide-react"
 import { EmptyState } from "@/components/dashboard/empty-state"
 import { Button } from "@/components/ui/button"
+import type { AccountOption } from "@/features/accounts/components/account-select"
 import type { Category } from "@/features/categories/queries"
 import { IMPORT_PATH } from "@/features/imports/constants"
 import {
@@ -12,7 +13,13 @@ import {
 } from "../filters"
 import { TransactionDialog } from "./transaction-dialog"
 
-export function NoTransactions({ categories }: { categories: Category[] }) {
+export function NoTransactions({
+  categories,
+  accounts
+}: {
+  categories: Category[]
+  accounts: AccountOption[]
+}) {
   return (
     <EmptyState
       icon={ReceiptText}
@@ -22,6 +29,7 @@ export function NoTransactions({ categories }: { categories: Category[] }) {
       <div className="flex flex-wrap justify-center gap-2">
         <TransactionDialog
           categories={categories}
+          accounts={accounts}
           trigger={
             <Button>
               <Plus data-icon="inline-start" />

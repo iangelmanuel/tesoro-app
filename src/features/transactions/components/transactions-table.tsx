@@ -24,6 +24,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
+import type { AccountOption } from "@/features/accounts/components/account-select"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { formatCurrency, formatDate } from "@/libs/format"
@@ -34,6 +35,7 @@ import { TransactionDialog } from "./transaction-dialog"
 interface TransactionsTableProps {
   rows: TransactionWithCategory[]
   categories: Category[]
+  accounts: AccountOption[]
   currency: string
 }
 
@@ -42,6 +44,7 @@ interface TransactionsTableProps {
 export function TransactionsTable({
   rows,
   categories,
+  accounts,
   currency
 }: TransactionsTableProps) {
   return (
@@ -96,6 +99,7 @@ export function TransactionsTable({
                 <div className="flex justify-end gap-1">
                   <TransactionDialog
                     categories={categories}
+                    accounts={accounts}
                     transaction={transaction}
                     trigger={
                       <Button

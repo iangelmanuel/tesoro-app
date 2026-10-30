@@ -3,6 +3,7 @@ import { CalendarClock, PiggyBank, Plus } from "lucide-react"
 import { EmptyState } from "@/components/dashboard/empty-state"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { getAccountBalances } from "@/features/accounts/queries"
 import { BudgetDialog } from "@/features/budgets/components/budget-dialog"
 import { BudgetMonthNav } from "@/features/budgets/components/budget-month-nav"
 import { BudgetProgressRow } from "@/features/budgets/components/budget-progress-row"
@@ -186,10 +187,11 @@ async function BudgetsTab({
 }
 
 async function RecurringTab({ workspace }: { workspace: PersonalWorkspace }) {
-  const [categories, expenses, payments] = await Promise.all([
+  const [categories, expenses, payments, accounts] = await Promise.all([
     getCategories(workspace.id),
     getRecurringExpenses(workspace.id),
-    getUpcomingPayments(workspace.id)
+    getUpcomingPayments(workspace.id),
+    getAccountBalances(workspace.id)
   ])
 
   const createButton = (
@@ -238,6 +240,7 @@ async function RecurringTab({ workspace }: { workspace: PersonalWorkspace }) {
           <UpcomingPayments
             payments={payments}
             categories={categories}
+            accounts={accounts}
             currency={workspace.currency}
           />
         )}

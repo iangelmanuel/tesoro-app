@@ -4,8 +4,7 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuSkeleton
+  SidebarMenuItem
 } from "@/components/ui/sidebar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
@@ -20,8 +19,14 @@ export function AppSidebarSkeleton() {
       <SidebarContent className="p-2">
         <SidebarMenu>
           {SITE.navigation.personal.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuSkeleton showIcon />
+            // No se usa SidebarMenuSkeleton: su ancho sale de Math.random(),
+            // que cacheComponents no permite al prerenderizar
+            <SidebarMenuItem
+              key={item.href}
+              className="flex h-8 items-center gap-2 px-2"
+            >
+              <Skeleton className="size-4 rounded-md" />
+              <Skeleton className="h-4 flex-1" />
             </SidebarMenuItem>
           ))}
         </SidebarMenu>

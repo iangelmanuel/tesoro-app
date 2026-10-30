@@ -46,7 +46,7 @@ export async function signUp(
     return { error: translateAuthError(error), values }
   }
 
-  redirect(SITE.routes.dashboard as Route)
+  redirect(SITE.routes.dashboard)
 }
 
 export async function signIn(
@@ -102,5 +102,5 @@ export async function signOut() {
   const supabase = await createClient()
   await supabase.auth.signOut()
 
-  redirect(SITE.routes.signIn as Route)
+  redirect(SITE.routes.signIn)
 }

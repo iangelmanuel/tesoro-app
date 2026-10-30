@@ -1,5 +1,4 @@
 import { Suspense } from "react"
-import type { Route } from "next"
 import { redirect } from "next/navigation"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { AppSidebarSkeleton } from "@/components/dashboard/app-sidebar-skeleton"
@@ -21,7 +20,7 @@ async function DashboardSidebar() {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(SITE.routes.signIn as Route)
+    redirect(SITE.routes.signIn)
   }
 
   const { data: profile } = await supabase

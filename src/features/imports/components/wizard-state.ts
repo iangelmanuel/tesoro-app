@@ -13,6 +13,7 @@ import {
   suggestTypeValue
 } from "../normalize"
 import type { SheetCells } from "../read-file"
+import { DEFAULT_TARGET } from "../targets"
 import type {
   CategoryOption,
   CategoryTarget,
@@ -21,13 +22,14 @@ import type {
   ImportConfig,
   ImportField,
   ImportStats,
+  ImportTarget,
   PreviewRow,
   TypeMode,
   TypeValueTarget
 } from "../types"
 
-// Estado del asistente de importación (SPEC 08). Vive en el cliente y se
-// pierde al recargar.
+// Estado del asistente de importación (SPEC 08 y 08b). Vive en el cliente y
+// se pierde al recargar.
 
 export const STEPS = [
   { id: "file", label: "Archivo" },
@@ -51,6 +53,8 @@ export interface LoadedFile {
 
 export interface WizardState {
   step: StepId
+  /** Destino de la importación; cambiarlo reinicia el mapeo */
+  target: ImportTarget
   file: LoadedFile | null
   /** Hojas marcadas, en el orden del archivo. La primera define el mapeo */
   selectedSheets: string[]
@@ -69,6 +73,7 @@ export interface WizardState {
 }
 
 export type WizardAction =
+  | { type: "set_target"; target: ImportTarget }
   | { type: "file_loaded"; name: string; sheets: SheetCells[] }
   | { type: "toggle_sheet"; sheet: string }
   | { type: "set_primary_table"; table: DetectedTable }
@@ -87,6 +92,7 @@ export type WizardAction =
 
 export const INITIAL_STATE: WizardState = {
   step: "file",
+  target: DEFAULT_TARGET,
   file: null,
   selectedSheets: [],
   primaryTable: null,
@@ -123,6 +129,17 @@ export function wizardReducer(
   action: WizardAction
 ): WizardState {
   switch (action.type) {
+    case "set_target":
+      if (action.target === state.target) return state
+      return {
+        ...state,
+        target: action.target,
+        config: null,
+        configHeaders: null,
+        categoryTargets: {},
+        preview: null
+      }
+
     case "file_loaded": {
       const detected = Object.fromEntries(
         action.sheets.map((sheet) => [
@@ -144,6 +161,7 @@ export function wizardReducer(
       return {
         ...INITIAL_STATE,
         step: "table",
+        target: state.target,
         file,
         selectedSheets: [first.name],
         primaryTable: firstTable(file, first.name)
@@ -182,12 +200,16 @@ export function wizardReducer(
         return { ...state, step: "columns" }
       }
 
-      const mapping = suggestMapping(state.primaryTable.headers)
+      const mapping = suggestMapping(state.primaryTable.headers, state.target)
       const config = seedTypeValues(state, {
         mapping,
         typeMode: suggestTypeMode(mapping),
         dateFormat: "dmy",
-        typeValues: {}
+        typeValues: {},
+        entryTypeMode: mapping.entry_type === undefined ? "sign" : "column",
+        entryTypeValues: {},
+        frequencyValues: {},
+        fixedLinkId: null
       })
 
       return {
@@ -286,8 +308,9 @@ export function wizardReducer(
     case "go_to":
       return { ...state, step: action.step }
 
+    // "Importar otro archivo" conserva el destino
     case "reset":
-      return INITIAL_STATE
+      return { ...INITIAL_STATE, target: state.target }
   }
 }
 

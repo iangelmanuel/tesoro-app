@@ -1,14 +1,15 @@
 import {
   EXCEL_SERIAL_MAX,
   EXCEL_SERIAL_MIN,
-  HEADER_SYNONYMS,
   MIN_HEADER_CELLS,
   TABLE_END_EMPTY_ROWS
 } from "./constants"
+import { DEFAULT_TARGET, IMPORT_TARGETS } from "./targets"
 import type {
   ColumnMapping,
   DetectedTable,
   ImportField,
+  ImportTarget,
   TypeMode
 } from "./types"
 
@@ -287,14 +288,18 @@ export function matchTable(
  * Mapeo sugerido por los encabezados. Cada campo toma el primer encabezado
  * que coincide y cada columna se usa una sola vez.
  */
-export function suggestMapping(headers: string[]): ColumnMapping {
+export function suggestMapping(
+  headers: string[],
+  target: ImportTarget = DEFAULT_TARGET
+): ColumnMapping {
   const mapping: ColumnMapping = {}
   const used = new Set<number>()
   const normalized = headers.map(normalizeText)
+  const { synonyms } = IMPORT_TARGETS[target]
 
-  for (const field of Object.keys(HEADER_SYNONYMS) as ImportField[]) {
+  for (const field of Object.keys(synonyms) as ImportField[]) {
     const index = normalized.findIndex(
-      (header, col) => !used.has(col) && HEADER_SYNONYMS[field].includes(header)
+      (header, col) => !used.has(col) && synonyms[field]?.includes(header)
     )
     if (index !== -1) {
       mapping[field] = index

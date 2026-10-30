@@ -54,6 +54,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Loan payments and receivable collections can create their transaction ("Registrar como gasto" / "Registrar como ingreso", checked by default); credit card payments never do. Editing or deleting a linked payment updates or deletes its transaction.
 - "Deudas" card on the Personal summary with total debt, card utilization and up to 3 upcoming payments, overdue first.
 - Empty states for both debts tabs, the inactive sections, the payment history and the summary card.
+- Migration `create_score`: `dismissed_recommendations` table with RLS (`select`, `insert` and `delete`, no `update`) and a `check` on the 10 rule keys, plus the `score_monthly_inputs`, `score_weekly_activity` and `score_balances` RPCs (`security invoker`, executable only by `authenticated`).
+- Financial health score from 0 to 100, computed on the fly from 7 weighted factors (savings rate, debt-to-income, emergency cushion, budgets, card utilization, goals and regularity). Factors without data are excluded and the remaining weights are rescaled; months without enough data show "Sin datos suficientes" with the missing reasons.
+- Rule-based recommendation engine with 10 rules (deficit, category growth, exceeded budget, goal at risk, high card utilization, highest rate first, overdue payment, low cushion, unbudgeted spending and irregular records), sorted by severity and amount, each with its evidence and a link to where it is resolved.
+- Recommendations page at `/dashboard/personal/recommendations`: score with band (Débil / Regular / Bueno / Excelente), change vs. the previous month and calculation date, per-factor breakdown, 12-month history chart with gaps, recommendation list with "Ocultar este mes" and a collapsible "Ocultas este mes" section with "Mostrar de nuevo".
+- "Salud financiera" card at the top of the Personal summary with the score, band, change and the top 3 recommendations.
+- Empty states for the recommendations page and card ("Todo en orden por ahora", "Aún no hay histórico").
+- "Score y recomendaciones" section in `docs/producto.md` with the period, factors, weights, curves, bands, rules and history approximation.
 
 ### Changed
 
@@ -62,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The transaction dialog accepts prefilled values and an occurrence link, and locks the type to expense for recurring payments.
 - The icon and color picker from the categories sheet is now a reusable `IconColorPicker` component, shared with savings goals.
 - The debts placeholder page is replaced by the debts page, and `revalidatePersonalPages()` documents that it also refreshes `/dashboard/personal/debts`.
+- The recommendations placeholder page is replaced by the score and recommendations page.
 
 ### Fixed
 

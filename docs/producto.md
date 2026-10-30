@@ -60,16 +60,17 @@ magic link.
 Las migraciones viven en `supabase/migrations/`. Toda tabla con datos de
 usuario tiene RLS.
 
-| Tabla                | Qué guarda                                                                                           | RLS (cliente)                          |
-| -------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| `profiles`           | Un perfil por usuario: `full_name`, `avatar_url`, `currency` (COP por defecto)                       | `select` y `update` del propio perfil  |
-| `workspaces`         | Espacios del usuario: `type` (`personal` / `business`) y `name`                                      | `select` de los propios                |
-| `categories`         | Categorías de ingreso o gasto: del sistema (`workspace_id` null) o propias                           | `select`, `insert` y `update`          |
-| `transactions`       | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note`                   | `select`, `insert`, `update`, `delete` |
-| `recurring_expenses` | Gastos fijos: `name`, `amount`, `category_id`, `frequency`, día y mes de pago, vigencia, `is_active` | `select`, `insert`, `update`, `delete` |
-| `budgets`            | Presupuesto por categoría de gasto y mes (`month` = primer día), único por categoría y mes           | `select`, `insert`, `update`, `delete` |
-| `savings_goals`      | Metas de ahorro: `name`, `target_amount`, `target_date` opcional, `icon`, `color`, `status`          | `select`, `insert`, `update`           |
-| `goal_contributions` | Aportes (`amount` > 0) y retiros (`amount` < 0) de una meta, con `occurred_on` y `note`              | `select`, `insert`, `update`, `delete` |
+| Tabla                       | Qué guarda                                                                                           | RLS (cliente)                          |
+| --------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `profiles`                  | Un perfil por usuario: `full_name`, `avatar_url`, `currency` (COP por defecto)                       | `select` y `update` del propio perfil  |
+| `workspaces`                | Espacios del usuario: `type` (`personal` / `business`) y `name`                                      | `select` de los propios                |
+| `categories`                | Categorías de ingreso o gasto: del sistema (`workspace_id` null) o propias                           | `select`, `insert` y `update`          |
+| `transactions`              | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note`                   | `select`, `insert`, `update`, `delete` |
+| `recurring_expenses`        | Gastos fijos: `name`, `amount`, `category_id`, `frequency`, día y mes de pago, vigencia, `is_active` | `select`, `insert`, `update`, `delete` |
+| `budgets`                   | Presupuesto por categoría de gasto y mes (`month` = primer día), único por categoría y mes           | `select`, `insert`, `update`, `delete` |
+| `savings_goals`             | Metas de ahorro: `name`, `target_amount`, `target_date` opcional, `icon`, `color`, `status`          | `select`, `insert`, `update`           |
+| `goal_contributions`        | Aportes (`amount` > 0) y retiros (`amount` < 0) de una meta, con `occurred_on` y `note`              | `select`, `insert`, `update`, `delete` |
+| `dismissed_recommendations` | Recomendaciones ocultas: `rule`, `entity_key` y `month` en que se ocultaron, únicas por los tres     | `select`, `insert`, `delete`           |
 
 - Cada usuario tiene **un solo** espacio Personal (índice único parcial) y, en
   el futuro, Empresas ilimitadas.
@@ -641,6 +642,131 @@ workspace_id)`: una entrada siempre es del mismo espacio que su deuda.
   ejecuta `authenticated`. `record_debt_payment` crea el movimiento y el pago
   en una sola transacción.
 
+## Score y recomendaciones
+
+Página `/dashboard/personal/recommendations` y tarjeta "Salud financiera" en
+el Resumen. El score resume la salud financiera del espacio Personal de 0 a
+100; las recomendaciones dicen qué hacer, en qué dato se basan y enlazan a la
+sección donde se resuelven.
+
+- El score **se calcula al vuelo** y no se guarda. Todo dato tiene fecha, así
+  que el histórico se reconstruye mes a mes: editar un movimiento viejo
+  corrige también el histórico.
+- Las sumas corren en Postgres (`score_monthly_inputs`,
+  `score_weekly_activity`, `score_balances`, más `debt_overview` y
+  `goal_progress`). Las curvas, el score y las reglas son funciones puras en
+  `src/features/score/`.
+- Las recomendaciones son **reglas fijas, sin IA**.
+
+### Periodo de un mes
+
+Fechas en `America/Bogota`. La **referencia** es hoy si `M` es el mes actual,
+o el último día de `M` si es pasado.
+
+| Concepto            | Definición                                                                                           |
+| ------------------- | ---------------------------------------------------------------------------------------------------- |
+| Ventana             | De `max(M − 2 meses, mes del primer movimiento)` a `M`, inclusive (1 a 3 meses)                      |
+| Ingreso mensual     | `Σ ingresos de la ventana / meses de ventana`                                                        |
+| Meses cerrados      | Los 3 meses anteriores a `M`, desde el mes del primer movimiento                                     |
+| Gasto promedio      | `Σ gastos de los meses cerrados / número de meses cerrados`                                          |
+| Saldos              | Al fin de `M`: saldo de cada deuda, ahorrado de cada meta y balance acumulado (`closing_balance`)    |
+| Semanas de ventana  | Semanas ISO (lunes) que tocan `[max(inicio de ventana, primer movimiento), referencia]`              |
+| Deudas consideradas | Tarjetas y préstamos creados ≤ fin de `M`, sin archivar hoy y no pagados antes del fin de `M`        |
+| Metas consideradas  | Metas con fecha objetivo, creadas ≤ fin de `M`, sin archivar hoy y no cumplidas antes del fin de `M` |
+
+### Datos suficientes
+
+Un mes tiene score si la ventana tiene ingresos > 0 y el primer movimiento es
+de hace al menos 30 días (contra la referencia). Si no, muestra "Sin datos
+suficientes" con cada motivo: "Registra tus ingresos" o "Necesitamos 30 días
+de registros (faltan N días)".
+
+### Factores y pesos
+
+Cada factor da de 0 a 100 puntos por interpolación lineal entre los puntos de
+su curva, con tope en los extremos. Un factor sin datos se **excluye** y los
+pesos de los demás se reescalan.
+
+| Factor                  | Peso | Dato                                                       | Curva                                           | Excluido si                  |
+| ----------------------- | ---- | ---------------------------------------------------------- | ----------------------------------------------- | ---------------------------- |
+| Tasa de ahorro          | 25   | `(ingresos − gastos) / ingresos` de la ventana             | ≤ 0 % → 0; ≥ 20 % → 100                         | nunca                        |
+| Deuda / ingresos        | 20   | `Σ pago requerido / ingreso mensual`                       | ≤ 15 % → 100; ≥ 50 % → 0. Sin deudas → 100      | nunca                        |
+| Colchón                 | 15   | `max(closing_balance, 0) / gasto promedio`, en meses       | 0 → 0; ≥ 6 → 100                                | sin meses cerrados o gasto 0 |
+| Presupuestos            | 15   | Presupuestos de `M` con gastado ≤ presupuesto / total      | 0 % → 0; 100 % → 100                            | sin presupuestos en `M`      |
+| Utilización de tarjetas | 10   | `Σ saldos / Σ cupos` de las tarjetas consideradas          | ≤ 10 % → 100; 30 % → 75; 70 % → 25; ≥ 100 % → 0 | sin tarjetas                 |
+| Metas                   | 10   | % de metas consideradas "En camino" a la referencia        | 0 % → 0; 100 % → 100                            | sin metas con fecha objetivo |
+| Regularidad             | 5    | Semanas de ventana con ≥ 1 movimiento / semanas de ventana | 0 % → 0; 100 % → 100                            | nunca                        |
+
+- **Pago requerido** por deuda: `min(cuota o pago mínimo, saldo al fin de M)`,
+  como en Deudas. Una tarjeta sin pago mínimo suma 0; la utilización sí la
+  mide.
+- **"En camino"** usa la regla de Metas con hoy = referencia y el ahorrado al
+  fin de `M`.
+- **Score:** `round(Σ (peso × puntos) / Σ pesos incluidos)`.
+- El **colchón** es una estimación: no hay cuentas bancarias, así que usa el
+  balance acumulado (los aportes a metas no lo restan). Su dato dice "Tu
+  balance cubre N meses de gastos".
+
+Ejemplo: hoy 30 oct 2026, primer movimiento el 1 de agosto, ingresos de
+4.000.000 y gastos de 3.400.000 cada mes, un préstamo con cuota de 600.000 y
+movimientos todas las semanas. Ahorro 15 % → 75; deuda 15 % → 100; colchón
+0,53 meses → 8,82; regularidad → 100; el resto excluido. Score
+`(25 × 75 + 20 × 100 + 15 × 8,82 + 5 × 100) / 65` = **69, Bueno**.
+
+### Bandas, variación e histórico
+
+| Score    | Banda     | Color |
+| -------- | --------- | ----- |
+| 0 – 39   | Débil     | rojo  |
+| 40 – 59  | Regular   | ámbar |
+| 60 – 79  | Bueno     | sky   |
+| 80 – 100 | Excelente | verde |
+
+- **Variación:** score de `M` − score de `M − 1`, en puntos; "—" si el
+  anterior no tiene score.
+- **Histórico:** los 12 meses hasta el actual. Un mes sin datos suficientes es
+  un hueco en la línea.
+- **Aproximación:** cupo, cuota, pago mínimo, tasa, fecha objetivo y estado
+  archivado se toman con su **valor actual**. Archivar una deuda o cambiar un
+  cupo cambia también los meses pasados. No hay `archived_at` en metas ni
+  deudas.
+
+### Reglas de recomendación
+
+Se evalúan sobre hoy y el mes actual, aunque el score esté "Sin datos
+suficientes".
+
+| Regla                 | Condición                                                                                                                                                  | Severidad | Enlace                       |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ---------------------------- |
+| `deficit`             | Último mes cerrado con gastos > ingresos                                                                                                                   | alta      | Reportes de ese mes          |
+| `category_growth`     | Con 3 meses completos antes del último cerrado: categoría ≥ 130 % de su promedio de esos meses y diferencia ≥ 5 % del gasto promedio de los meses cerrados | media     | Movimientos de esa categoría |
+| `budget_exceeded`     | Presupuesto del mes actual con gastado ≥ 100 %                                                                                                             | alta      | Presupuestos                 |
+| `goal_at_risk`        | Meta activa "En riesgo"                                                                                                                                    | media     | Metas                        |
+| `high_utilization`    | Tarjeta activa con utilización ≥ 70 %                                                                                                                      | media     | Deudas                       |
+| `highest_rate_first`  | ≥ 2 tarjetas o préstamos activos con saldo y tasa > 0; señala la de mayor tasa mensual                                                                     | baja      | Deudas                       |
+| `overdue_payment`     | Deuda "Vencida" u ocurrencia de gasto fijo vencida                                                                                                         | alta      | Deudas o Gastos fijos        |
+| `low_cushion`         | Factor colchón incluido y < 3 meses                                                                                                                        | media     | Metas                        |
+| `unbudgeted_spending` | ≥ 2 categorías con gastos en el mes actual y sin presupuesto                                                                                               | baja      | Presupuestos                 |
+| `irregular_records`   | Regularidad del mes actual < 50 %, solo con datos suficientes                                                                                              | baja      | Movimientos                  |
+
+- **Orden:** severidad (alta, media, baja) y luego monto descendente (déficit,
+  exceso, faltante, interés…). Las 3 primeras no ocultas van al Resumen.
+- **Ocultar este mes** guarda `(rule, entity_key, mes actual)` en
+  `dismissed_recommendations`. La recomendación pasa a "Ocultas este mes" y
+  vuelve el mes siguiente si la condición sigue. **Mostrar de nuevo** borra la
+  fila. No se descartan para siempre.
+- Una fila oculta cuya condición ya no se cumple no se muestra en ningún lado
+  y no necesita limpieza.
+
+### Seguridad
+
+- RLS en `dismissed_recommendations` con `is_workspace_owner`: `select`,
+  `insert` y `delete`, sin `update`. Un `check` limita `rule` a las 10 claves.
+- Las tres RPC del score son `security invoker` y `stable`, y solo las
+  ejecuta `authenticated`. Con un espacio ajeno no devuelven datos.
+- `dismissRecommendation` y `restoreRecommendation` validan con Zod la regla
+  y la entidad, y usan el espacio Personal del usuario autenticado.
+
 ## Specs
 
 Tesoro se construye en 13 specs (`specs/`), cada uno sobre los anteriores. El
@@ -660,15 +786,3 @@ detalle de cada uno (objetivo, alcance, modelo y preguntas abiertas) está en
 11. Empresa: flujo de caja, reportes, score y recomendaciones
 12. Landing, páginas legales y assets
 13. Lanzamiento v1.0
-
-## Score financiero
-
-Puntaje que resume la salud financiera del espacio activo y su evolución en el
-tiempo. Se calcula solo con los registros del usuario. Los factores y pesos
-exactos se definen al implementar el módulo y deben documentarse aquí.
-
-## Recomendaciones
-
-Sugerencias accionables derivadas de los registros (por ejemplo, categorías
-que crecen, meses con déficit, metas en riesgo). Cada recomendación debe
-explicar en qué dato se basa.

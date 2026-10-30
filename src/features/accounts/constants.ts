@@ -1,8 +1,12 @@
+import { SITE } from "@/config/site"
 import type {
   CategoryColorKey,
   CategoryIconKey
 } from "@/features/categories/constants"
 import type { AccountKind } from "./types"
+
+export const ACCOUNTS_PATH =
+  `${SITE.routes.dashboardPersonal}/accounts` as const
 
 export const ACCOUNT_KINDS = [
   "cash",

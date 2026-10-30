@@ -10,7 +10,8 @@ import {
   Lightbulb,
   type LucideIcon,
   PiggyBank,
-  Target
+  Target,
+  Wallet
 } from "lucide-react"
 import {
   Sidebar,
@@ -33,6 +34,7 @@ type NavIcon = (typeof SITE.navigation.personal)[number]["icon"]
 const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   LayoutDashboard,
   ArrowLeftRight,
+  Wallet,
   PiggyBank,
   Target,
   CreditCard,

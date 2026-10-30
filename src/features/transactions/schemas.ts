@@ -17,17 +17,21 @@ export function parseAmount(value: string) {
   return Number(normalized)
 }
 
+// Reutilizado por gastos fijos y presupuestos. Recibe el resultado de
+// parseAmount.
+export const amountSchema = z
+  .number({ error: "Ingresa un monto válido" })
+  .refine((value) => !Number.isNaN(value), {
+    error: "Ingresa un monto válido"
+  })
+  .refine((value) => value > 0, { error: "El monto debe ser mayor a 0" })
+  .refine((value) => value <= MAX_AMOUNT, {
+    error: "El monto es demasiado grande"
+  })
+
 export const transactionSchema = z.object({
   type: z.enum(TRANSACTION_TYPES, { error: "Elige ingreso o gasto" }),
-  amount: z
-    .number({ error: "Ingresa un monto válido" })
-    .refine((value) => !Number.isNaN(value), {
-      error: "Ingresa un monto válido"
-    })
-    .refine((value) => value > 0, { error: "El monto debe ser mayor a 0" })
-    .refine((value) => value <= MAX_AMOUNT, {
-      error: "El monto es demasiado grande"
-    }),
+  amount: amountSchema,
   occurred_on: z.iso.date({ error: "Elige una fecha válida" }),
   category_id: z.uuid({ error: "Elige una categoría" }),
   description: z

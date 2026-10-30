@@ -45,6 +45,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - "Metas de ahorro" card on the Personal summary with up to 3 active goals, nearest target date first.
 - Empty states for the goals page, the inactive section, the contribution history and the summary card.
 - shadcn/ui `collapsible` component.
+- Migration `create_debts`: `debt_kind`, `debt_status`, `rate_type` and `debt_entry_kind` enums, `debts` (credit cards, loans and receivables) and `debt_entries` (payments and balance adjustments) tables with RLS (no `delete` policy on debts, which can only be archived), a composite `(debt_id, workspace_id)` foreign key, the "Deudas" (expense) and "Cobros" (income) system categories, and the `check_debt_update`, `check_debt_entry`, `check_debt_balance` and `sync_debt_entry_transaction` triggers.
+- `debt_overview` RPC (balance and payment cycle per debt) and `record_debt_payment` RPC (payment and its optional transaction in one transaction), both `security invoker` and executable only by `authenticated`.
+- Debts page at `/dashboard/personal/debts` with URL-driven tabs (`?tab=debts|receivables`).
+- "Debo" tab: total debt, global card utilization and estimated monthly interest, "Próximos pagos" with Vencido / Pagado / Hoy / Pendiente status, debt cards sorted by next due date with balance, rate (E.A. or M.V.), utilization or paid percentage, next payment and a payoff projection, create/edit dialog, "Marcar como pagada", archive with confirmation and a collapsible "Pagadas y archivadas" section with "Reactivar".
+- "Me deben" tab: "Te deben" total, receivable cards with collected percentage, expected date and "Vencida" label, create/edit dialog and a collapsible "Cobradas y archivadas" section.
+- Debt sheet with details, full payoff projection (months, payoff month and total interest), a "Si pagaras X al mes" simulator, "Registrar pago" / "Registrar abono", "Actualizar saldo" and an editable history. Paid, collected and archived debts are read-only.
+- Loan payments and receivable collections can create their transaction ("Registrar como gasto" / "Registrar como ingreso", checked by default); credit card payments never do. Editing or deleting a linked payment updates or deletes its transaction.
+- "Deudas" card on the Personal summary with total debt, card utilization and up to 3 upcoming payments, overdue first.
+- Empty states for both debts tabs, the inactive sections, the payment history and the summary card.
 
 ### Changed
 
@@ -52,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Transaction and recurring expense actions revalidate the whole Personal workspace (summary, transactions, budgets and reports) instead of only refreshing the current page.
 - The transaction dialog accepts prefilled values and an occurrence link, and locks the type to expense for recurring payments.
 - The icon and color picker from the categories sheet is now a reusable `IconColorPicker` component, shared with savings goals.
+- The debts placeholder page is replaced by the debts page, and `revalidatePersonalPages()` documents that it also refreshes `/dashboard/personal/debts`.
 
 ### Fixed
 

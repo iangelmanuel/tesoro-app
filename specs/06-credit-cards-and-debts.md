@@ -1,6 +1,6 @@
 # SPEC 06 — Tarjetas de crédito y deudas
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 02, SPEC 04, SPEC 05
 > **Fecha:** 2026-10-30
 > **Objetivo:** Que el usuario registre en su espacio Personal sus tarjetas de crédito, préstamos y cuentas por cobrar, con pagos, ajustes de saldo, próximos vencimientos y una proyección de cuándo termina de pagar cada deuda.

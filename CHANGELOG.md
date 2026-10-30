@@ -32,10 +32,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - shadcn/ui `chart` component with `recharts` (exact version), charts with `aria-label`, a screen-reader data table and keyboard-navigable tooltips.
 - `CATEGORY_CHART_COLORS` and per-theme `--category-*`, `--income`, `--expense` and `--balance` CSS variables, so chart colors match category badges in light and dark mode.
 - Empty states and skeletons for the summary and reports pages.
+- Migration `create_recurring_expenses_and_budgets`: `recurring_expenses` (monthly or yearly, pausable) and `budgets` (one per expense category and month) tables with RLS, optional `recurring_expense_id` / `recurring_due_on` columns on `transactions` with a unique index per occurrence, `check_expense_category` and `check_transaction_recurring` triggers, and the `recurring_occurrences` and `budget_progress` RPCs (`security invoker`, executable only by `authenticated`).
+- Budgets page at `/dashboard/personal/budgets` with URL-driven tabs (`?tab=budgets|recurring`) and month navigation (`?month=YYYY-MM`).
+- Budgets tab: budgeted, spent and remaining cards, per-category progress bars with pending recurring payments as a striped segment, "Cerca del límite" (≥ 80 %) and "Excedido" (≥ 100 %) alerts, create/edit/delete, "Copiar del mes anterior" (only creates missing budgets) and a "Sin presupuesto" section.
+- Recurring expenses tab: "Próximos pagos" (current month plus unpaid occurrences from the previous 2 months) with Pagado / Vencido / Hoy / Próximo status, and a list to create, edit, pause/resume and delete recurring expenses.
+- "Marcar como pagado" opens the transaction dialog prefilled and linked to the occurrence; paying the same occurrence twice is rejected ("Este pago ya está registrado").
+- "Próximos pagos" and "Presupuestos en riesgo" cards on the Personal summary.
+- Empty states for both budgets tabs and both summary cards, and a shared `EmptyState` component.
+- shadcn/ui `progress` component.
 
 ### Changed
 
 - shadcn `pagination` uses `next/link` and Spanish labels.
+- Transaction and recurring expense actions revalidate the whole Personal workspace (summary, transactions, budgets and reports) instead of only refreshing the current page.
+- The transaction dialog accepts prefilled values and an occurrence link, and locks the type to expense for recurring payments.
 
 ### Fixed
 

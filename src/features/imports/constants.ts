@@ -72,4 +72,4 @@ export const FIELD_LABELS: Record<ImportField, string> = {
   note: "Nota"
 }
 
-export const IMPORT_PATH = `${SITE.routes.dashboardPersonal}/import`
+export const IMPORT_PATH = `${SITE.routes.dashboardPersonal}/import` as const

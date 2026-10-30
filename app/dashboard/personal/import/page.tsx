@@ -5,8 +5,10 @@ import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getCategories } from "@/features/categories/queries"
+import { ImportHistory } from "@/features/imports/components/import-history"
 import { ImportWizard } from "@/features/imports/components/import-wizard"
 import { IMPORT_PATH } from "@/features/imports/constants"
+import { getImports } from "@/features/imports/queries"
 import { TRANSACTIONS_PATH } from "@/features/transactions/filters"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { buildMetadata } from "@/libs/seo"
@@ -52,19 +54,30 @@ export default function ImportPage() {
 
 async function ImportContent() {
   const workspace = await getPersonalWorkspace()
-  const categories = await getCategories(workspace.id)
+  const [categories, imports] = await Promise.all([
+    getCategories(workspace.id),
+    getImports(workspace.id)
+  ])
 
   // Las categorías archivadas no aparecen como destino
   return (
-    <ImportWizard
-      categories={categories
-        .filter((category) => category.archived_at === null)
-        .map(({ id, type, name }) => ({ id, type, name }))}
-      currency={workspace.currency}
-    />
+    <>
+      <ImportWizard
+        categories={categories
+          .filter((category) => category.archived_at === null)
+          .map(({ id, type, name }) => ({ id, type, name }))}
+        currency={workspace.currency}
+      />
+      <ImportHistory imports={imports} />
+    </>
   )
 }
 
 function ImportSkeleton() {
-  return <Skeleton className="h-80 w-full" />
+  return (
+    <>
+      <Skeleton className="h-80 w-full" />
+      <Skeleton className="h-40 w-full" />
+    </>
+  )
 }

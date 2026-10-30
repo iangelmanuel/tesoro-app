@@ -27,6 +27,7 @@ import {
   getRecentTransactions,
   getWorkspaceBalance
 } from "@/features/reports/queries"
+import { ScoreSummaryCard } from "@/features/score/components/score-summary-card"
 import { NoTransactions } from "@/features/transactions/components/transactions-empty"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { currentMonth, monthRange, shiftMonth, todayISO } from "@/libs/dates"
@@ -93,6 +94,9 @@ async function SummaryContent() {
 
   return (
     <>
+      <Suspense fallback={<Skeleton className="h-56" />}>
+        <ScoreSummaryCard workspaceId={workspace.id} />
+      </Suspense>
       <SummaryCards
         current={current}
         previous={previous}
@@ -186,6 +190,7 @@ async function SummaryContent() {
 function SummarySkeleton() {
   return (
     <>
+      <Skeleton className="h-56" />
       <div className="grid gap-4 sm:grid-cols-3">
         <Skeleton className="h-32" />
         <Skeleton className="h-32" />

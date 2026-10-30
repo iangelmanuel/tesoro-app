@@ -1,4 +1,6 @@
 import Link from "next/link"
+import { ShieldCheck } from "lucide-react"
+import { CardEmpty } from "@/components/dashboard/empty-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -62,6 +64,12 @@ export async function BudgetsAtRiskCard({
         </CardAction>
       </CardHeader>
       <CardContent>
+        {atRisk.length === 0 && (
+          <CardEmpty
+            icon={ShieldCheck}
+            message="Ningún presupuesto en riesgo"
+          />
+        )}
         <ul className="flex flex-col divide-y">
           {atRisk.map((row) => {
             const status = budgetStatus(row.spent, row.budgetAmount)

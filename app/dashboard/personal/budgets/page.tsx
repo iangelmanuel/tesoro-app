@@ -1,5 +1,6 @@
 import { Suspense } from "react"
-import { Plus } from "lucide-react"
+import { CalendarClock, PiggyBank, Plus } from "lucide-react"
+import { EmptyState } from "@/components/dashboard/empty-state"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { BudgetDialog } from "@/features/budgets/components/budget-dialog"
@@ -12,7 +13,8 @@ import { UnbudgetedCategories } from "@/features/budgets/components/unbudgeted-c
 import { type BudgetMonth, parseBudgetMonth } from "@/features/budgets/month"
 import {
   type BudgetProgress,
-  getBudgetProgress
+  getBudgetProgress,
+  hasBudgets
 } from "@/features/budgets/queries"
 import { BUDGETS_PATH, parseBudgetsTab } from "@/features/budgets/tabs"
 import { getCategories } from "@/features/categories/queries"
@@ -95,6 +97,9 @@ async function BudgetsTab({
   ])
   const budgets = progress.filter(isBudgeted)
   const unbudgeted = progress.filter((row) => !isBudgeted(row))
+  // Solo se consulta cuando el mes no tiene presupuestos
+  const canCopyPrevious =
+    budgets.length === 0 && (await hasBudgets(workspace.id, month.prev))
 
   // El selector solo lista categorías de gasto activas sin presupuesto en el
   // mes
@@ -110,36 +115,62 @@ async function BudgetsTab({
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <BudgetMonthNav month={month} />
-        <div className="flex flex-wrap gap-2">
-          <CopyPreviousMonthButton month={month.month} />
-          <BudgetDialog
-            month={month}
-            categories={available}
-            trigger={
-              <Button>
-                <Plus data-icon="inline-start" />
-                Nuevo presupuesto
-              </Button>
-            }
-          />
-        </div>
+        {/* Sin presupuestos las acciones van en el estado vacío */}
+        {budgets.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            <CopyPreviousMonthButton month={month.month} />
+            <BudgetDialog
+              month={month}
+              categories={available}
+              trigger={
+                <Button>
+                  <Plus data-icon="inline-start" />
+                  Nuevo presupuesto
+                </Button>
+              }
+            />
+          </div>
+        )}
       </div>
 
-      <BudgetTotals
-        budgets={budgets}
-        currency={workspace.currency}
-      />
-
-      <ul className="divide-y rounded-xl border">
-        {budgets.map((budget) => (
-          <BudgetProgressRow
-            key={budget.budgetId}
-            budget={budget}
-            month={month}
+      {budgets.length === 0 ? (
+        <EmptyState
+          icon={PiggyBank}
+          title="Aún no tienes presupuestos para este mes"
+          description="Define cuánto quieres gastar como máximo en cada categoría y sigue tu avance durante el mes."
+        >
+          <div className="flex flex-wrap justify-center gap-2">
+            <BudgetDialog
+              month={month}
+              categories={available}
+              trigger={
+                <Button>
+                  <Plus data-icon="inline-start" />
+                  Crear presupuesto
+                </Button>
+              }
+            />
+            {canCopyPrevious && <CopyPreviousMonthButton month={month.month} />}
+          </div>
+        </EmptyState>
+      ) : (
+        <>
+          <BudgetTotals
+            budgets={budgets}
             currency={workspace.currency}
           />
-        ))}
-      </ul>
+          <ul className="divide-y rounded-xl border">
+            {budgets.map((budget) => (
+              <BudgetProgressRow
+                key={budget.budgetId}
+                budget={budget}
+                month={month}
+                currency={workspace.currency}
+              />
+            ))}
+          </ul>
+        </>
+      )}
 
       {unbudgeted.length > 0 && (
         <UnbudgetedCategories
@@ -160,27 +191,51 @@ async function RecurringTab({ workspace }: { workspace: PersonalWorkspace }) {
     getUpcomingPayments(workspace.id)
   ])
 
+  const createButton = (
+    <RecurringExpenseDialog
+      categories={categories}
+      trigger={
+        <Button>
+          <Plus data-icon="inline-start" />
+          Nuevo gasto fijo
+        </Button>
+      }
+    />
+  )
+
+  if (expenses.length === 0) {
+    return (
+      <EmptyState
+        icon={CalendarClock}
+        title="Agrega tus gastos fijos"
+        description="Arriendo, servicios, suscripciones o seguros. Tesoro te muestra cuándo vencen y los tiene en cuenta en tus presupuestos."
+      >
+        {createButton}
+      </EmptyState>
+    )
+  }
+
+  const isUpToDate = payments.every((payment) => payment.transactionId !== null)
+
   return (
     <>
-      <div className="flex flex-wrap gap-2">
-        <RecurringExpenseDialog
-          categories={categories}
-          trigger={
-            <Button>
-              <Plus data-icon="inline-start" />
-              Nuevo gasto fijo
-            </Button>
-          }
-        />
-      </div>
+      <div className="flex flex-wrap gap-2">{createButton}</div>
 
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Próximos pagos</h2>
-        <UpcomingPayments
-          payments={payments}
-          categories={categories}
-          currency={workspace.currency}
-        />
+        {isUpToDate && (
+          <p className="rounded-xl border border-dashed p-4 text-center text-sm text-muted-foreground">
+            Estás al día con tus pagos
+          </p>
+        )}
+        {/* Los pagados del mes siguen en la lista con su monto */}
+        {payments.length > 0 && (
+          <UpcomingPayments
+            payments={payments}
+            categories={categories}
+            currency={workspace.currency}
+          />
+        )}
       </div>
 
       <div className="flex flex-col gap-3">

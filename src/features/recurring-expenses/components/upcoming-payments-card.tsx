@@ -1,5 +1,7 @@
 import type { Route } from "next"
 import Link from "next/link"
+import { CircleCheck } from "lucide-react"
+import { CardEmpty } from "@/components/dashboard/empty-state"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -53,6 +55,12 @@ export async function UpcomingPaymentsCard({
         </CardAction>
       </CardHeader>
       <CardContent>
+        {pending.length === 0 && (
+          <CardEmpty
+            icon={CircleCheck}
+            message="No tienes pagos pendientes"
+          />
+        )}
         <ul className="flex flex-col divide-y">
           {pending.map((payment) => (
             <li

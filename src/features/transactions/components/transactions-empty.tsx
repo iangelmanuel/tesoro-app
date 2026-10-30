@@ -1,6 +1,7 @@
 import type { Route } from "next"
 import Link from "next/link"
 import { Plus, ReceiptText, SearchX } from "lucide-react"
+import { EmptyState } from "@/components/dashboard/empty-state"
 import { Button } from "@/components/ui/button"
 import type { Category } from "@/features/categories/queries"
 import {
@@ -9,27 +10,6 @@ import {
   buildFiltersQuery
 } from "../filters"
 import { TransactionDialog } from "./transaction-dialog"
-
-function EmptyState({
-  icon: Icon,
-  title,
-  description,
-  children
-}: {
-  icon: React.ComponentType<{ className?: string }>
-  title: string
-  description: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-10 text-center">
-      <Icon className="size-8 text-muted-foreground" />
-      <p className="text-lg font-medium">{title}</p>
-      <p className="max-w-sm text-sm text-muted-foreground">{description}</p>
-      {children}
-    </div>
-  )
-}
 
 export function NoTransactions({ categories }: { categories: Category[] }) {
   return (

@@ -45,3 +45,19 @@ export async function getBudgetProgress(
     committed: Number(row.committed)
   }))
 }
+
+// Para el estado vacío: "Copiar del mes anterior" solo si ese mes tiene
+export async function hasBudgets(workspaceId: string, month: string) {
+  const supabase = await createClient()
+  const { count, error } = await supabase
+    .from("budgets")
+    .select("id", { count: "exact", head: true })
+    .eq("workspace_id", workspaceId)
+    .eq("month", monthStart(month))
+    .limit(1)
+
+  if (error) {
+    throw new Error("No se pudieron cargar los presupuestos")
+  }
+  return (count ?? 0) > 0
+}

@@ -104,14 +104,23 @@ Los espacios están definidos en `SITE.workspaces`.
 
 ## Specs
 
-Tesoro se construye en 5 specs (`specs/`), cada uno sobre el anterior:
+Tesoro se construye en 13 specs (`specs/`), cada uno sobre los anteriores. El
+detalle de cada uno (objetivo, alcance, modelo y preguntas abiertas) está en
+[`ROADMAP.md`](../ROADMAP.md).
 
-1. **Autenticación y layout del dashboard**: sesión, `profiles` y
-   `workspaces` con RLS, shadcn/ui, tema y aside con tab Personal/Empresa.
-2. **Movimientos personales**: ingresos y gastos con categorías.
-3. **Resumen y gráficas**.
-4. **Gastos fijos, ahorro/metas y tarjetas/deudas**.
-5. **Score y recomendaciones**.
+1. Autenticación y layout del dashboard ✅
+2. Movimientos personales y categorías
+3. Resumen y reportes con gráficas
+4. Gastos fijos y presupuestos
+5. Metas de ahorro
+6. Tarjetas de crédito y deudas
+7. Score financiero y recomendaciones
+8. Importar desde Excel o CSV
+9. Cuenta y perfil
+10. Espacio Empresa: crear y registrar operaciones
+11. Empresa: flujo de caja, reportes, score y recomendaciones
+12. Landing, páginas legales y assets
+13. Lanzamiento v1.0
 
 ## Score financiero
 

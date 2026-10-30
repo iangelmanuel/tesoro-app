@@ -20,6 +20,9 @@
 # production
 /build
 
+# ROADMAP
+ROADMAP.md
+
 # misc
 .DS_Store
 *.pem

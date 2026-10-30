@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import { Geist } from "next/font/google"
 import { JsonLd } from "@/components/seo/JsonLd"
+import { ThemeProvider } from "@/components/theme/theme-provider"
 import { SITE } from "@/config/site"
 import {
   buildApplicationSchema,
@@ -51,6 +52,7 @@ export default function RootLayout({
     <html
       lang={SITE.seo.lang}
       className={cn("font-sans", geist.variable)}
+      suppressHydrationWarning
     >
       <body>
         <JsonLd
@@ -60,7 +62,7 @@ export default function RootLayout({
             buildAuthorSchema()
           ]}
         />
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   )

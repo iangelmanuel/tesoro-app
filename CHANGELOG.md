@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `Metadata` / `Viewport` were imported as default exports from `next`, which broke type checking.
+- The transactions page read the current date before the session, which made Next.js reject `new Date()` while prerendering when the URL had no `month`.
 
 ## [0.1.0] - 2026-10-29
 

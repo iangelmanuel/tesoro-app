@@ -453,6 +453,194 @@ Fechas en `America/Bogota`.
   lo ahorrado").
 - `goal_progress` es `security invoker` y solo la ejecuta `authenticated`.
 
+## Tarjetas de crédito y deudas
+
+Página `/dashboard/personal/debts`, con dos tabs en la URL: **Debo**
+(`?tab=debts`, por defecto) y **Me deben** (`?tab=receivables`). Un valor
+inválido de `tab` cae a Debo.
+
+- Tres tipos en una sola tabla: **tarjeta de crédito**, **préstamo** y
+  **cuenta por cobrar** (lo que le deben al usuario). El tipo no cambia tras
+  crear la deuda.
+- Las compras con tarjeta son gastos al comprar (Movimientos). Por eso
+  **pagar la tarjeta no crea un movimiento**: contaría el mismo consumo dos
+  veces. El diálogo de pago de tarjeta lo dice.
+- Un pago de préstamo puede crear un gasto en la categoría de sistema
+  "Deudas" ("Pago <nombre>"), y un abono de cuenta por cobrar un ingreso en
+  "Cobros" ("Abono <nombre>"). La casilla viene marcada por defecto; se
+  desmarca para cargar pagos antiguos sin inflar los gastos.
+- Las deudas no se eliminan: se marcan como pagadas, se archivan y se
+  reactivan. La historia de pagos no se pierde.
+
+### Modelo
+
+- **Tarjeta:** nombre, entidad opcional, saldo inicial (≥ 0), cupo, día de
+  pago, y opcionales tasa con su tipo, pago mínimo y día de corte.
+- **Préstamo:** nombre, entidad opcional, saldo inicial (> 0), cuota, tasa
+  (obligatoria, 0 permitido) con su tipo, día de pago, y opcionales monto
+  original y plazo en meses (informativos).
+- **Cuenta por cobrar:** nombre, deudor opcional, monto (> 0) y fecha
+  esperada opcional. Sin tasa ni proyección.
+- **Tasa:** porcentaje con coma decimal (`28,5`), E.A. (máximo 200 %) o M.V.
+  (máximo 10 %).
+- **Entradas** (`debt_entries`): pagos (monto > 0) y ajustes (monto con
+  signo), con fecha hasta hoy y nota opcional de hasta 120 caracteres. Un
+  pago de préstamo o un abono puede enlazar su movimiento (`transaction_id`).
+- **Saldo:** no se guarda. Es `saldo inicial − Σ pagos + Σ ajustes`. Así
+  editar un pago viejo no descuadra nada y el historial explica cada cambio.
+  El saldo nunca queda negativo ni hay saldo a favor.
+- **"Actualizar saldo":** el usuario escribe el saldo real (por ejemplo, el
+  del extracto) y se crea un ajuste por la diferencia. Si es 0, "El saldo ya
+  es ese". Corrige compras e intereses que el saldo no sube solo.
+- Editar un pago enlazado copia su monto y fecha al movimiento; eliminarlo
+  elimina el movimiento. Eliminar el movimiento desde Movimientos solo quita
+  el enlace: el pago y el saldo siguen igual.
+
+### Ciclo de pago
+
+Tarjetas y préstamos. Fechas en `America/Bogota`. El vencimiento de cada mes
+es `due_day`; si el día no existe en el mes, cae en el último día del mes
+(igual que los gastos fijos).
+
+| Fecha  | Cálculo                                        |
+| ------ | ---------------------------------------------- |
+| `D_n`  | Primer vencimiento ≥ hoy (próximo vencimiento) |
+| `D_b`  | Vencimiento anterior a `D_n`                   |
+| `D_bb` | Vencimiento anterior a `D_b`                   |
+| Ciclo  | Σ pagos con fecha en `(D_b, hoy]`              |
+| Previo | Σ pagos con fecha en `(D_bb, D_b]`             |
+
+- Ejemplo: hoy 30 de octubre y día de pago 5 → `D_n` 5 de noviembre, `D_b` 5
+  de octubre, `D_bb` 5 de septiembre. Con día de pago 31 → `D_n` 31 de
+  octubre; los de noviembre y febrero caen el 30 y el 28.
+
+### Cálculos
+
+| Valor              | Cálculo                                                                        |
+| ------------------ | ------------------------------------------------------------------------------ |
+| Tasa mensual `r`   | E.A.: `(1 + i/100)^(1/12) − 1`. M.V.: `i/100`. Sin tasa: 0                     |
+| Pago requerido     | `min(cuota o pago mínimo, saldo)`. Tarjeta sin pago mínimo: no hay             |
+| Utilización        | `saldo / cupo`, en porcentaje truncado. Puede pasar de 100 %                   |
+| Utilización global | `Σ saldos / Σ cupos` de las tarjetas activas                                   |
+| Deuda total        | `Σ saldo` de tarjetas y préstamos activos                                      |
+| Te deben           | `Σ saldo` de cuentas por cobrar activas                                        |
+| Interés del mes    | `saldo × r` por deuda (en centavos); el encabezado suma las activas            |
+| % pagado           | `(monto original − saldo) / monto original`, solo préstamos con monto original |
+| % cobrado          | `(monto inicial − saldo) / monto inicial`                                      |
+
+- Ejemplo: 26,82 % E.A. ≈ 2 % mensual.
+
+### Proyección
+
+Tarjetas y préstamos activos con saldo > 0.
+
+- Pago `P`: la cuota del préstamo o el pago mínimo de la tarjeta. En el
+  simulador "Si pagaras X al mes" del Sheet, el valor que escribe el usuario
+  (no guarda nada).
+- Mes a mes desde `D_n`: `interés = saldo × r` (redondeado a centavos),
+  `saldo = saldo + interés − P`, hasta llegar a 0, con tope de 600 meses.
+- Resultado: meses `n`, mes de pago total (mes de `D_n` + `n − 1`) e
+  intereses totales. La tarjeta muestra "Terminas en octubre de 2027"; el
+  Sheet, los tres valores.
+- `P ≤ saldo × r`: "Con este pago la deuda no baja". Tope: "Más de 50 años".
+  Tarjeta sin tasa: sin intereses, con el aviso "Sin tasa, la proyección no
+  incluye intereses". Tarjeta sin pago mínimo: "Agrega el pago mínimo para
+  ver la proyección" (el simulador sí funciona).
+- Ejemplo: saldo 1.000.000, 2 % M.V., cuota 100.000, `D_n` 15 de noviembre
+  de 2026 → 12 meses, termina en octubre de 2027, intereses `$ 127.033`.
+- No usa el promedio de pagos reales ni el plazo del préstamo.
+
+### Estados
+
+Estado del próximo pago (tarjetas y préstamos activos con saldo > 0 y pago
+requerido), evaluado en este orden:
+
+| Estado    | Condición                                                                      | Fecha | Color  |
+| --------- | ------------------------------------------------------------------------------ | ----- | ------ |
+| Vencido   | ciclo previo < requerido, ciclo actual < requerido y la deuda existía en `D_b` | `D_b` | rojo   |
+| Pagado    | ciclo actual ≥ requerido                                                       | `D_n` | verde  |
+| Hoy       | `D_n = hoy`                                                                    | `D_n` | ámbar  |
+| Pendiente | el resto                                                                       | `D_n` | neutro |
+
+- "La deuda existía en `D_b`": su fecha de creación en `America/Bogota` ≤
+  `D_b`. Una deuda recién creada no aparece vencida.
+- Un pago tardío (después de `D_b`) quita el "Vencido" y cuenta para el ciclo
+  actual, así que puede marcarlo "Pagado". La app no reparte pagos entre
+  ciclos.
+- Una tarjeta sin pago mínimo muestra solo la fecha, sin estado.
+
+Utilización de una tarjeta (los umbrales siguen la referencia usual de las
+centrales de riesgo):
+
+| Rango       | Etiqueta  | Color |
+| ----------- | --------- | ----- |
+| < 30 %      | Saludable | verde |
+| 30 % – 69 % | Moderada  | ámbar |
+| ≥ 70 %      | Alta      | rojo  |
+
+Etiquetas de la deuda:
+
+| Estado                           | Tarjeta o préstamo | Cuenta por cobrar | Color  |
+| -------------------------------- | ------------------ | ----------------- | ------ |
+| `paid`                           | Pagada             | Cobrada           | verde  |
+| `archived`                       | Archivada          | Archivada         | neutro |
+| activa con fecha esperada pasada | —                  | Vencida           | ámbar  |
+| activa con saldo 0               | Saldo en cero      | Saldo en cero     | verde  |
+
+### Transiciones
+
+| Acción             | Desde              | Hacia      | Condición | Efecto              |
+| ------------------ | ------------------ | ---------- | --------- | ------------------- |
+| Marcar como pagada | `active`           | `paid`     | saldo 0   | `closed_at = now()` |
+| Archivar           | `active`, `paid`   | `archived` | —         | `closed_at = null`  |
+| Reactivar          | `paid`, `archived` | `active`   | —         | `closed_at = null`  |
+
+- El cierre es manual: una tarjeta en 0 se puede seguir usando. Con saldo > 0,
+  "Marcar como pagada" falla con "La deuda aún tiene saldo".
+- Archivar con saldo pide confirmación: "Esta deuda tiene saldo. Al
+  archivarla sale de los totales y de los próximos pagos."
+- Pagadas, cobradas y archivadas van en las secciones plegables "Pagadas y
+  archivadas" y "Cobradas y archivadas". No cuentan en totales, utilización,
+  interés, próximos pagos ni Resumen. No aceptan pagos ni ajustes y su Sheet
+  es de solo lectura, con "Reactivar". Al reactivarlas, su historial sigue
+  intacto.
+
+### Página y Resumen
+
+- **Debo:** totales (deuda total, utilización global, interés estimado del
+  mes), "Próximos pagos" (vencidos primero y luego por fecha) y una tarjeta
+  por deuda activa, ordenadas por próximo vencimiento.
+- **Me deben:** total "Te deben" y una tarjeta por cuenta activa, ordenadas
+  por fecha esperada (sin fecha al final).
+- Cada tarjeta abre un Sheet con el detalle, la proyección y el simulador,
+  "Registrar pago" (o "Registrar abono"), "Actualizar saldo" y el historial
+  de pagos y ajustes, editable mientras la deuda está activa.
+- **Widget del Resumen:** "Deudas" con la deuda total, la utilización global
+  (si hay tarjetas activas) y hasta 3 próximos pagos, vencidos primero, con
+  "Ver todas". Las cuentas por cobrar no aparecen. Como los demás widgets,
+  solo se muestra cuando hay movimientos.
+
+### Seguridad
+
+- RLS en `debts` y `debt_entries` con `is_workspace_owner`. Sin política
+  `delete` en `debts`.
+- `debt_entries` tiene `workspace_id` con FK compuesta `(debt_id,
+workspace_id)`: una entrada siempre es del mismo espacio que su deuda.
+- Trigger `check_debt_update`: el tipo de una deuda no cambia.
+- Trigger `check_debt_entry` (`before`): la deuda debe estar activa (en
+  `delete`, la fila vieja), la entrada no cambia de deuda ni de tipo, la fecha
+  es ≤ hoy, y un movimiento enlazado es un gasto de un préstamo o un ingreso
+  de una cuenta por cobrar del mismo espacio. Una tarjeta nunca tiene
+  movimiento. Quitar el enlace al borrar el movimiento se permite aunque la
+  deuda no esté activa. Bloquea la fila de la deuda para serializar pagos
+  concurrentes.
+- Trigger `check_debt_balance` (`after`, en `debt_entries` y en
+  `debts.opening_balance`): el saldo nunca queda negativo.
+- Trigger `sync_debt_entry_transaction`: el pago manda sobre su movimiento.
+- `debt_overview` y `record_debt_payment` son `security invoker` y solo las
+  ejecuta `authenticated`. `record_debt_payment` crea el movimiento y el pago
+  en una sola transacción.
+
 ## Specs
 
 Tesoro se construye en 13 specs (`specs/`), cada uno sobre los anteriores. El

@@ -18,6 +18,7 @@ import {
 } from "@/features/budgets/queries"
 import { BUDGETS_PATH, parseBudgetsTab } from "@/features/budgets/tabs"
 import { getCategories } from "@/features/categories/queries"
+import { ImportButton } from "@/features/imports/components/import-button"
 import { RecurringExpenseDialog } from "@/features/recurring-expenses/components/recurring-expense-dialog"
 import { RecurringExpensesList } from "@/features/recurring-expenses/components/recurring-expenses-list"
 import { UpcomingPayments } from "@/features/recurring-expenses/components/upcoming-payments"
@@ -211,6 +212,7 @@ async function RecurringTab({ workspace }: { workspace: PersonalWorkspace }) {
         description="Arriendo, servicios, suscripciones o seguros. Tesoro te muestra cuándo vencen y los tiene en cuenta en tus presupuestos."
       >
         {createButton}
+        <ImportButton target="recurring_expenses" />
       </EmptyState>
     )
   }
@@ -219,7 +221,10 @@ async function RecurringTab({ workspace }: { workspace: PersonalWorkspace }) {
 
   return (
     <>
-      <div className="flex flex-wrap gap-2">{createButton}</div>
+      <div className="flex flex-wrap gap-2">
+        {createButton}
+        <ImportButton target="recurring_expenses" />
+      </div>
 
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Próximos pagos</h2>

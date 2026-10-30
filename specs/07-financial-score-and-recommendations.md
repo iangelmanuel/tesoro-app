@@ -1,6 +1,6 @@
 # SPEC 07 — Score financiero y recomendaciones
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 03, SPEC 04, SPEC 05, SPEC 06
 > **Fecha:** 2026-10-30
 > **Objetivo:** Que el usuario vea en su espacio Personal un score de salud financiera de 0 a 100 con su desglose y evolución, y recomendaciones basadas en reglas que dicen en qué dato se apoyan y enlazan a donde se resuelven.

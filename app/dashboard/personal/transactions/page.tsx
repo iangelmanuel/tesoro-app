@@ -1,8 +1,9 @@
 import { Suspense } from "react"
 import Link from "next/link"
-import { FileUp, Plus } from "lucide-react"
+import { ArrowLeftRight, FileUp, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
 import { getCategories } from "@/features/categories/queries"
@@ -23,7 +24,7 @@ import {
 import {
   getTransactionTotals,
   getTransactions,
-  hasAnyTransactions
+  hasAnyLedgerEntries
 } from "@/features/transactions/queries"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { buildMetadata } from "@/libs/seo"
@@ -44,7 +45,7 @@ export default function TransactionsPage({
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Movimientos</h1>
         <p className="text-sm text-muted-foreground">
-          Tus ingresos y gastos registrados.
+          Tus ingresos, gastos y traspasos entre cuentas.
         </p>
       </header>
       {/* searchParams y la sesión son dinámicos: van dentro de Suspense */}
@@ -71,7 +72,10 @@ async function TransactionsContent({
   ])
   // Solo se consulta cuando los filtros no devuelven nada
   const isEmptyWorkspace =
-    rows.length === 0 && !(await hasAnyTransactions(workspace.id))
+    rows.length === 0 && !(await hasAnyLedgerEntries(workspace.id))
+  // Un traspaso necesita al menos dos cuentas activas
+  const canTransfer =
+    accounts.filter((account) => !account.archived_at).length > 1
 
   return (
     <>
@@ -86,6 +90,17 @@ async function TransactionsContent({
             </Button>
           }
         />
+        {canTransfer && (
+          <TransferDialog
+            accounts={accounts}
+            trigger={
+              <Button variant="outline">
+                <ArrowLeftRight data-icon="inline-start" />
+                Traspaso
+              </Button>
+            }
+          />
+        )}
         <Button
           variant="outline"
           asChild
@@ -108,6 +123,7 @@ async function TransactionsContent({
           <TransactionsFilters
             filters={filters}
             categories={categories}
+            accounts={accounts}
           />
           <TransactionsTotals
             totals={totals}

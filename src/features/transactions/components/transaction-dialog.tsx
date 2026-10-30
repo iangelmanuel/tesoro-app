@@ -42,7 +42,7 @@ import { fromLocalDate, toLocalDate, todayISO } from "@/libs/dates"
 import { formatDate } from "@/libs/format"
 import { createTransaction, updateTransaction } from "../actions"
 import type { TransactionType } from "../filters"
-import type { TransactionWithCategory } from "../queries"
+import type { EditableTransaction } from "../queries"
 import type { TransactionFormState } from "../types"
 
 const AMOUNT_FORMAT = new Intl.NumberFormat("es-CO", {
@@ -69,7 +69,7 @@ interface TransactionDialogProps {
   /** Cuentas del espacio, activas y archivadas */
   accounts: AccountOption[]
   /** Si llega, el diálogo edita este movimiento */
-  transaction?: TransactionWithCategory
+  transaction?: EditableTransaction
   /** Prellenado de un movimiento nuevo */
   initialValues?: TransactionInitialValues
   /** Si llega, el movimiento nuevo es el pago de esta ocurrencia */
@@ -131,7 +131,7 @@ export function TransactionDialog({
 interface TransactionFormProps {
   categories: Category[]
   accounts: AccountOption[]
-  transaction?: TransactionWithCategory
+  transaction?: EditableTransaction
   initialValues?: TransactionInitialValues
   recurring?: RecurringOccurrenceLink
   onSaved: () => void

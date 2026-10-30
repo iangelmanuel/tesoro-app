@@ -14,12 +14,14 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select"
+import type { AccountOption } from "@/features/accounts/components/account-select"
+import { NO_ACCOUNT } from "@/features/accounts/constants"
 import type { Category } from "@/features/categories/queries"
 import { currentMonth } from "@/libs/dates"
 import {
+  type LedgerFilterType,
   TRANSACTIONS_PATH,
   type TransactionFilters,
-  type TransactionType,
   buildFiltersQuery
 } from "../filters"
 
@@ -46,11 +48,14 @@ function shiftMonth(month: string, delta: number) {
 interface TransactionsFiltersProps {
   filters: TransactionFilters
   categories: Category[]
+  /** Cuentas del espacio, activas y archivadas */
+  accounts: AccountOption[]
 }
 
 export function TransactionsFilters({
   filters,
-  categories
+  categories,
+  accounts
 }: TransactionsFiltersProps) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -95,6 +100,10 @@ export function TransactionsFilters({
     .toSorted(
       (a, b) => Number(a.archived_at !== null) - Number(b.archived_at !== null)
     )
+  // Igual con las cuentas: archivadas al final
+  const accountOptions = accounts.toSorted(
+    (a, b) => Number(a.archived_at !== null) - Number(b.archived_at !== null)
+  )
 
   return (
     <div
@@ -143,7 +152,7 @@ export function TransactionsFilters({
           value={filters.type ?? ALL}
           onValueChange={(value) =>
             navigate({
-              type: value === ALL ? undefined : (value as TransactionType),
+              type: value === ALL ? undefined : (value as LedgerFilterType),
               // Una categoría de otro tipo dejaría la tabla vacía
               categoryId: undefined
             })
@@ -159,6 +168,7 @@ export function TransactionsFilters({
             <SelectItem value={ALL}>Todos los tipos</SelectItem>
             <SelectItem value="income">Ingresos</SelectItem>
             <SelectItem value="expense">Gastos</SelectItem>
+            <SelectItem value="transfer">Traspasos</SelectItem>
           </SelectContent>
         </Select>
 
@@ -184,6 +194,34 @@ export function TransactionsFilters({
                 {category.archived_at
                   ? `${category.name} (archivada)`
                   : category.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filters.accountId ?? ALL}
+          onValueChange={(value) =>
+            navigate({ accountId: value === ALL ? undefined : value })
+          }
+        >
+          <SelectTrigger
+            className="sm:w-44"
+            aria-label="Cuenta"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>Todas las cuentas</SelectItem>
+            <SelectItem value={NO_ACCOUNT}>Sin cuenta</SelectItem>
+            {accountOptions.map((account) => (
+              <SelectItem
+                key={account.id}
+                value={account.id}
+              >
+                {account.archived_at
+                  ? `${account.name} (archivada)`
+                  : account.name}
               </SelectItem>
             ))}
           </SelectContent>

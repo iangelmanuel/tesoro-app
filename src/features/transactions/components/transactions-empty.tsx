@@ -51,15 +51,15 @@ export function NoTransactions({
   )
 }
 
-// Si hay filtros de tipo, categoría o texto se limpian esos y se conserva el
-// mes. Si solo filtra el mes, el enlace abre todos los meses.
+// Si hay filtros de tipo, categoría, cuenta o texto se limpian esos y se
+// conserva el mes. Si solo filtra el mes, el enlace abre todos los meses.
 export function NoFilteredTransactions({
   filters
 }: {
   filters: TransactionFilters
 }) {
   const hasExtraFilters = Boolean(
-    filters.type || filters.categoryId || filters.q
+    filters.type || filters.categoryId || filters.accountId || filters.q
   )
   const query = hasExtraFilters
     ? buildFiltersQuery({ month: filters.month, page: 1 })
@@ -69,7 +69,7 @@ export function NoFilteredTransactions({
     <EmptyState
       icon={SearchX}
       title="No hay movimientos con estos filtros"
-      description="Prueba con otro mes, tipo, categoría o texto."
+      description="Prueba con otro mes, tipo, categoría, cuenta o texto."
     >
       <Button
         variant="outline"

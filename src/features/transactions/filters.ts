@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { SITE } from "@/config/site"
+import { NO_ACCOUNT } from "@/features/accounts/constants"
 import { TRANSACTION_TYPES } from "@/features/categories/constants"
 import { currentMonth, monthRange } from "@/libs/dates"
 
@@ -9,11 +10,16 @@ export const TRANSACTIONS_PATH = `${SITE.routes.dashboardPersonal}/transactions`
 
 export type TransactionType = (typeof TRANSACTION_TYPES)[number]
 
+/** Tipo del filtro: "transfer" muestra traspasos y ajustes */
+export type LedgerFilterType = TransactionType | "transfer"
+
 export interface TransactionFilters {
   /** YYYY-MM o "all" */
   month: string
-  type?: TransactionType
+  type?: LedgerFilterType
   categoryId?: string
+  /** id de cuenta, o "none" para los movimientos sin cuenta */
+  accountId?: string
   q?: string
   page: number
 }
@@ -24,8 +30,9 @@ const monthSchema = z.union([
   z.literal("all"),
   z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/)
 ])
-const typeSchema = z.enum(TRANSACTION_TYPES)
+const typeSchema = z.enum([...TRANSACTION_TYPES, "transfer"])
 const categorySchema = z.uuid()
+const accountSchema = z.union([z.literal(NO_ACCOUNT), z.uuid()])
 const pageSchema = z.coerce.number().int().min(1)
 
 function first(value: string | string[] | undefined) {
@@ -39,6 +46,7 @@ export function parseTransactionFilters(
   const month = monthSchema.safeParse(first(searchParams.month))
   const type = typeSchema.safeParse(first(searchParams.type))
   const category = categorySchema.safeParse(first(searchParams.category))
+  const account = accountSchema.safeParse(first(searchParams.account))
   const page = pageSchema.safeParse(first(searchParams.page))
   const q = first(searchParams.q)?.trim().slice(0, 100)
 
@@ -46,6 +54,7 @@ export function parseTransactionFilters(
     month: month.success ? month.data : currentMonth(),
     type: type.success ? type.data : undefined,
     categoryId: category.success ? category.data : undefined,
+    accountId: account.success ? account.data : undefined,
     q: q || undefined,
     page: page.success ? page.data : 1
   }
@@ -68,6 +77,7 @@ export function buildFiltersQuery(
   params.set("month", next.month)
   if (next.type) params.set("type", next.type)
   if (next.categoryId) params.set("category", next.categoryId)
+  if (next.accountId) params.set("account", next.accountId)
   if (next.q) params.set("q", next.q)
   if (next.page > 1) params.set("page", String(next.page))
 

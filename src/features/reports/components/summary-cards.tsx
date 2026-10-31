@@ -9,6 +9,15 @@ import {
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import { formatCurrency } from "@/libs/format"
 import {
+  EMPTY,
+  NEGATIVE,
+  PERCENT,
+  POSITIVE,
+  changeTone,
+  formatPercentChange,
+  formatSignedCurrency
+} from "../change"
+import {
   balanceDifference,
   dailyAverage,
   monthProgress,
@@ -17,30 +26,6 @@ import {
   savingsRate
 } from "../metrics"
 import type { CategoryTotal, MonthlyTotal } from "../queries"
-
-const EMPTY = "—"
-const POSITIVE = "text-emerald-600 dark:text-emerald-400"
-const NEGATIVE = "text-rose-600 dark:text-rose-400"
-
-const PERCENT = new Intl.NumberFormat("es-CO", {
-  style: "percent",
-  maximumFractionDigits: 1
-})
-const SIGNED_PERCENT = new Intl.NumberFormat("es-CO", {
-  style: "percent",
-  maximumFractionDigits: 1,
-  signDisplay: "exceptZero"
-})
-
-function formatSignedCurrency(amount: number, currency: string) {
-  return `${amount > 0 ? "+" : ""}${formatCurrency(amount, currency)}`
-}
-
-// Verde si el cambio es bueno y rojo si es malo. En gastos subir es malo.
-function changeTone(change: number | null, inverted = false) {
-  if (!change) return "text-muted-foreground"
-  return change > 0 !== inverted ? POSITIVE : NEGATIVE
-}
 
 interface SummaryCardsProps {
   current: MonthlyTotal
@@ -73,20 +58,14 @@ export function SummaryCards({
       label: "Ingresos",
       value: formatCurrency(current.income, currency),
       valueClassName: POSITIVE,
-      change:
-        incomeChange === null
-          ? EMPTY
-          : SIGNED_PERCENT.format(incomeChange / 100),
+      change: formatPercentChange(incomeChange),
       changeClassName: changeTone(incomeChange)
     },
     {
       label: "Gastos",
       value: formatCurrency(current.expense, currency),
       valueClassName: NEGATIVE,
-      change:
-        expenseChange === null
-          ? EMPTY
-          : SIGNED_PERCENT.format(expenseChange / 100),
+      change: formatPercentChange(expenseChange),
       changeClassName: changeTone(expenseChange, true)
     },
     {

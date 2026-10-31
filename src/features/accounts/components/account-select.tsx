@@ -1,17 +1,10 @@
 "use client"
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
+import { FieldError, Label, ListBox, Select } from "@heroui/react"
 import { GoalIcon } from "@/features/goals/components/goal-icon"
 import type { AccountWithBalance } from "../types"
 
-// Radix Select no admite "" como valor: "Sin cuenta" usa este centinela y el
-// campo oculto envía ""
+// "Sin cuenta" usa este centinela como clave y el campo oculto envía ""
 const NONE = "__none__"
 
 export type AccountOption = Pick<
@@ -20,9 +13,10 @@ export type AccountOption = Pick<
 >
 
 interface AccountSelectProps {
-  id: string
   /** Nombre del campo del formulario */
   name: string
+  /** Etiqueta visible del campo */
+  label: string
   /** id de la cuenta, o "" sin cuenta */
   value: string
   onChange: (value: string) => void
@@ -31,18 +25,21 @@ interface AccountSelectProps {
   /** Muestra la opción "Sin cuenta" */
   allowNone?: boolean
   placeholder?: string
-  invalid?: boolean
+  /** Error de Zod del campo */
+  error?: string
 }
 
+// Select de HeroUI con la etiqueta y el error dentro. El valor viaja en un
+// input oculto para poder enviar "" (sin cuenta)
 export function AccountSelect({
-  id,
   name,
+  label,
   value,
   onChange,
   accounts,
   allowNone = false,
   placeholder = "Elige una cuenta",
-  invalid
+  error
 }: AccountSelectProps) {
   return (
     <>
@@ -52,30 +49,51 @@ export function AccountSelect({
         value={value}
       />
       <Select
-        value={value || (allowNone ? NONE : "")}
-        onValueChange={(next) => onChange(next === NONE ? "" : next)}
+        fullWidth
+        placeholder={placeholder}
+        value={value || (allowNone ? NONE : null)}
+        onChange={(key) =>
+          onChange(key === NONE || key == null ? "" : String(key))
+        }
+        isInvalid={Boolean(error)}
+        className="flex flex-col gap-2"
       >
-        <SelectTrigger
-          id={id}
-          className="w-full"
-          aria-invalid={invalid || undefined}
-        >
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {allowNone && <SelectItem value={NONE}>Sin cuenta</SelectItem>}
-          {accounts.map((account) => (
-            <SelectItem
-              key={account.id}
-              value={account.id}
-            >
-              <AccountLabel account={account} />
-            </SelectItem>
-          ))}
-        </SelectContent>
+        <Label>{label}</Label>
+        <Select.Trigger>
+          <Select.Value />
+          <Select.Indicator />
+        </Select.Trigger>
+        <Select.Popover>
+          <ListBox>
+            {allowNone ? (
+              <ListBox.Item
+                id={NONE}
+                textValue="Sin cuenta"
+              >
+                Sin cuenta
+                <ListBox.ItemIndicator />
+              </ListBox.Item>
+            ) : null}
+            {accounts.map((account) => (
+              <ListBox.Item
+                key={account.id}
+                id={account.id}
+                textValue={accountName(account)}
+              >
+                <AccountLabel account={account} />
+                <ListBox.ItemIndicator />
+              </ListBox.Item>
+            ))}
+          </ListBox>
+        </Select.Popover>
+        <FieldError>{error}</FieldError>
       </Select>
     </>
   )
+}
+
+function accountName(account: AccountOption) {
+  return account.archived_at ? `${account.name} (archivada)` : account.name
 }
 
 export function AccountLabel({ account }: { account: AccountOption }) {
@@ -86,7 +104,7 @@ export function AccountLabel({ account }: { account: AccountOption }) {
         color={account.color}
         className="size-5 [&_svg]:size-3"
       />
-      {account.archived_at ? `${account.name} (archivada)` : account.name}
+      {accountName(account)}
     </span>
   )
 }

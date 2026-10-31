@@ -1,10 +1,4 @@
-import { cn } from "cn"
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+import { Card, CardDescription, CardHeader, CardTitle, cn } from "@heroui/react"
 import { formatCurrency } from "@/libs/format"
 import type { TransactionTotals } from "../queries"
 
@@ -21,18 +15,17 @@ export function TransactionsTotals({
     {
       label: "Ingresos",
       value: totals.income,
-      className: "text-emerald-600 dark:text-emerald-400"
+      className: "text-(--income)"
     },
     {
       label: "Gastos",
       value: totals.expense,
-      className: "text-rose-600 dark:text-rose-400"
+      className: "text-(--expense)"
     },
     {
       label: "Balance",
       value: totals.balance,
-      className:
-        totals.balance < 0 ? "text-rose-600 dark:text-rose-400" : undefined
+      className: totals.balance < 0 ? "text-(--expense)" : undefined
     }
   ]
 

@@ -1,7 +1,6 @@
 import { Suspense } from "react"
+import { Button, Skeleton } from "@heroui/react"
 import { ArrowLeftRight, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
 import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
 import { getAccountBalances } from "@/features/accounts/queries"
@@ -43,7 +42,7 @@ export default function BusinessTransactionsPage({
     <section className="flex flex-1 flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Movimientos</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted">
           Las ventas, los costos y gastos, y los traspasos entre cuentas de tu
           empresa.
         </p>
@@ -93,7 +92,7 @@ async function TransactionsContent({
           accounts={accounts}
           trigger={
             <Button>
-              <Plus data-icon="inline-start" />
+              <Plus />
               Nuevo movimiento
             </Button>
           }
@@ -104,7 +103,7 @@ async function TransactionsContent({
             accounts={accounts}
             trigger={
               <Button variant="outline">
-                <ArrowLeftRight data-icon="inline-start" />
+                <ArrowLeftRight />
                 Traspaso
               </Button>
             }

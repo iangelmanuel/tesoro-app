@@ -1,8 +1,7 @@
 import { Suspense } from "react"
 import Link from "next/link"
+import { Button, Skeleton, buttonVariants } from "@heroui/react"
 import { ArrowLeftRight, FileUp, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
@@ -44,7 +43,7 @@ export default function TransactionsPage({
     <section className="flex flex-1 flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Movimientos</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted">
           Tus ingresos, gastos y traspasos entre cuentas.
         </p>
       </header>
@@ -86,7 +85,7 @@ async function TransactionsContent({
           accounts={accounts}
           trigger={
             <Button>
-              <Plus data-icon="inline-start" />
+              <Plus />
               Nuevo movimiento
             </Button>
           }
@@ -97,21 +96,19 @@ async function TransactionsContent({
             accounts={accounts}
             trigger={
               <Button variant="outline">
-                <ArrowLeftRight data-icon="inline-start" />
+                <ArrowLeftRight />
                 Traspaso
               </Button>
             }
           />
         )}
-        <Button
-          variant="outline"
-          asChild
+        <Link
+          href={IMPORT_PATH}
+          className={buttonVariants({ variant: "outline" })}
         >
-          <Link href={IMPORT_PATH}>
-            <FileUp data-icon="inline-start" />
-            Importar
-          </Link>
-        </Button>
+          <FileUp className="size-4" />
+          Importar
+        </Link>
         <CategoriesSheet
           workspaceId={workspace.id}
           categories={categories}

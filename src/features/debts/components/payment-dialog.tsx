@@ -221,21 +221,15 @@ function PaymentForm({
             </label>
             {/* La cuenta es la del movimiento: sin él no aplica */}
             {createTransaction && (
-              <Field
-                id="account_id"
+              <AccountSelect
+                name="account_id"
                 label="Cuenta"
-                errors={errors?.account_id}
-              >
-                <AccountSelect
-                  id="account_id"
-                  name="account_id"
-                  value={accountId}
-                  onChange={setAccountId}
-                  accounts={selectableAccounts(accounts)}
-                  allowNone
-                  invalid={Boolean(errors?.account_id)}
-                />
-              </Field>
+                value={accountId}
+                onChange={setAccountId}
+                accounts={selectableAccounts(accounts)}
+                allowNone
+                error={errors?.account_id?.[0]}
+              />
             )}
           </>
         ))}

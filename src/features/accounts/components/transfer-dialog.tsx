@@ -152,37 +152,25 @@ function TransferForm({
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          id="from_account_id"
+        <AccountSelect
+          name="from_account_id"
           label="Desde"
-          errors={errors?.from_account_id}
-        >
-          <AccountSelect
-            id="from_account_id"
-            name="from_account_id"
-            value={fromId}
-            onChange={setFromId}
-            accounts={selectableAccounts(accounts, transfer?.from_account_id)}
-            placeholder="Cuenta de origen"
-            invalid={Boolean(errors?.from_account_id)}
-          />
-        </Field>
+          value={fromId}
+          onChange={setFromId}
+          accounts={selectableAccounts(accounts, transfer?.from_account_id)}
+          placeholder="Cuenta de origen"
+          error={errors?.from_account_id?.[0]}
+        />
 
-        <Field
-          id="to_account_id"
+        <AccountSelect
+          name="to_account_id"
           label="Hacia"
-          errors={errors?.to_account_id}
-        >
-          <AccountSelect
-            id="to_account_id"
-            name="to_account_id"
-            value={toId}
-            onChange={setToId}
-            accounts={selectableAccounts(accounts, transfer?.to_account_id)}
-            placeholder="Cuenta de destino"
-            invalid={Boolean(errors?.to_account_id)}
-          />
-        </Field>
+          value={toId}
+          onChange={setToId}
+          accounts={selectableAccounts(accounts, transfer?.to_account_id)}
+          placeholder="Cuenta de destino"
+          error={errors?.to_account_id?.[0]}
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

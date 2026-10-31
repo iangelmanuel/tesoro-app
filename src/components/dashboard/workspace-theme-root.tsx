@@ -2,7 +2,8 @@
 
 import { Suspense, useCallback, useRef } from "react"
 import { usePathname } from "next/navigation"
-import { UNSAFE_PortalProvider } from "react-aria"
+import { I18nProvider, UNSAFE_PortalProvider } from "react-aria"
+import { SITE } from "@/config/site"
 import { getWorkspaceTheme } from "@/libs/workspace-theme"
 
 // Contenedor raíz del dashboard. Es estático: solo el marcador lee la ruta,
@@ -12,7 +13,9 @@ import { getWorkspaceTheme } from "@/libs/workspace-theme"
 // evita sumar una caja al layout.
 //
 // Los overlays de HeroUI (Drawer, Dropdown, Modal, Popover) se montan aquí y
-// no en <body>, así heredan el primario del espacio
+// no en <body>, así heredan el primario del espacio. I18nProvider fija el
+// locale de fechas y números de React Aria (DatePicker, Calendar): sin él el
+// servidor y el navegador podrían usar locales distintos
 export function WorkspaceThemeRoot({
   children
 }: Readonly<{ children: React.ReactNode }>) {
@@ -27,9 +30,11 @@ export function WorkspaceThemeRoot({
       <Suspense fallback={null}>
         <WorkspaceThemeMarker />
       </Suspense>
-      <UNSAFE_PortalProvider getContainer={getContainer}>
-        {children}
-      </UNSAFE_PortalProvider>
+      <I18nProvider locale={SITE.seo.locale}>
+        <UNSAFE_PortalProvider getContainer={getContainer}>
+          {children}
+        </UNSAFE_PortalProvider>
+      </I18nProvider>
     </div>
   )
 }

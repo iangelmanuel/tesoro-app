@@ -30,11 +30,14 @@ function visiblePages(current: number, total: number) {
 }
 
 interface TransactionsPaginationProps {
+  /** Ruta de Movimientos del espacio */
+  path?: string
   filters: TransactionFilters
   count: number
 }
 
 export function TransactionsPagination({
+  path = TRANSACTIONS_PATH,
   filters,
   count
 }: TransactionsPaginationProps) {
@@ -45,7 +48,7 @@ export function TransactionsPagination({
   }
 
   const href = (page: number) =>
-    `${TRANSACTIONS_PATH}?${buildFiltersQuery(filters, { page })}` as Route
+    `${path}?${buildFiltersQuery(filters, { page })}` as Route
   const current = Math.min(filters.page, totalPages)
 
   return (

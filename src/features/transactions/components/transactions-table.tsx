@@ -32,6 +32,7 @@ import {
 import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
+import type { WorkspaceType } from "@/features/workspaces/queries"
 import { formatCurrency, formatDate } from "@/libs/format"
 import { deleteTransaction } from "../actions"
 import type { EditableTransaction, LedgerEntry } from "../queries"
@@ -39,6 +40,8 @@ import { TransactionDialog } from "./transaction-dialog"
 
 interface TransactionsTableProps {
   workspaceId: string
+  /** En Empresa se muestran cliente/proveedor y factura */
+  workspaceType?: WorkspaceType
   rows: LedgerEntry[]
   categories: Category[]
   /** Cuentas del espacio, activas y archivadas */
@@ -53,6 +56,7 @@ type AdjustmentEntry = Extract<LedgerEntry, { kind: "adjustment" }>
 // cuentas viajan una sola vez en vez de una por fila
 export function TransactionsTable({
   workspaceId,
+  workspaceType = "personal",
   rows,
   categories,
   accounts,
@@ -63,6 +67,7 @@ export function TransactionsTable({
   )
   const accountsById = new Map(accounts.map((account) => [account.id, account]))
   const accountName = (id: string) => accountsById.get(id)?.name ?? "Cuenta"
+  const isBusiness = workspaceType === "business"
 
   return (
     <div className="rounded-xl border">
@@ -72,6 +77,7 @@ export function TransactionsTable({
             <TableHead className="w-32">Fecha</TableHead>
             <TableHead>Descripción</TableHead>
             <TableHead>Categoría</TableHead>
+            {isBusiness && <TableHead>Cliente o proveedor</TableHead>}
             <TableHead>Cuenta</TableHead>
             <TableHead className="text-right">Monto</TableHead>
             <TableHead className="w-24">
@@ -86,6 +92,7 @@ export function TransactionsTable({
                 <TransferRow
                   key={row.id}
                   workspaceId={workspaceId}
+                  showCounterparty={isBusiness}
                   transfer={row}
                   label={`${accountName(row.from_account_id)} → ${accountName(row.to_account_id)}`}
                   accounts={accounts}
@@ -98,6 +105,7 @@ export function TransactionsTable({
                 <AdjustmentRow
                   key={row.id}
                   workspaceId={workspaceId}
+                  showCounterparty={isBusiness}
                   adjustment={row}
                   label={`Ajuste de saldo · ${accountName(row.account_id)}`}
                   currency={currency}
@@ -129,6 +137,12 @@ export function TransactionsTable({
                     />
                   )}
                 </TableCell>
+                {isBusiness && (
+                  <CounterpartyCell
+                    counterparty={transaction.counterparty}
+                    invoiceRef={transaction.invoice_ref}
+                  />
+                )}
                 <TableCell>
                   {account ? (
                     <AccountLabel account={account} />
@@ -151,6 +165,7 @@ export function TransactionsTable({
                   <div className="flex justify-end gap-1">
                     <TransactionDialog
                       workspaceId={workspaceId}
+                      workspaceType={workspaceType}
                       categories={categories}
                       accounts={accounts}
                       transaction={transaction}
@@ -179,6 +194,31 @@ export function TransactionsTable({
   )
 }
 
+// Cliente o proveedor y, debajo, el número de factura
+function CounterpartyCell({
+  counterparty,
+  invoiceRef
+}: {
+  counterparty: string | null
+  invoiceRef: string | null
+}) {
+  if (!counterparty && !invoiceRef) {
+    return (
+      <TableCell>
+        <span className="text-muted-foreground">—</span>
+      </TableCell>
+    )
+  }
+  return (
+    <TableCell className="max-w-48">
+      {counterparty && <p className="truncate">{counterparty}</p>}
+      {invoiceRef && (
+        <p className="truncate text-sm text-muted-foreground">{invoiceRef}</p>
+      )}
+    </TableCell>
+  )
+}
+
 function DescriptionCell({
   title,
   note,
@@ -202,12 +242,14 @@ function DescriptionCell({
 // Traspaso: neutro, sin signo y sin categoría. No suma a los totales.
 function TransferRow({
   workspaceId,
+  showCounterparty,
   transfer,
   label,
   accounts,
   currency
 }: {
   workspaceId: string
+  showCounterparty: boolean
   transfer: TransferEntry
   label: string
   accounts: AccountOption[]
@@ -224,6 +266,7 @@ function TransferRow({
         icon={ArrowLeftRight}
       />
       <TableCell className="text-muted-foreground">Traspaso</TableCell>
+      {showCounterparty && <TableCell />}
       <TableCell />
       <TableCell className="text-right font-medium text-muted-foreground tabular-nums">
         {formatCurrency(transfer.amount, currency)}
@@ -259,11 +302,13 @@ function TransferRow({
 // Ajuste de saldo: neutro, con signo. Solo se elimina.
 function AdjustmentRow({
   workspaceId,
+  showCounterparty,
   adjustment,
   label,
   currency
 }: {
   workspaceId: string
+  showCounterparty: boolean
   adjustment: AdjustmentEntry
   label: string
   currency: string
@@ -279,6 +324,7 @@ function AdjustmentRow({
         icon={RefreshCw}
       />
       <TableCell className="text-muted-foreground">Ajuste</TableCell>
+      {showCounterparty && <TableCell />}
       <TableCell />
       <TableCell className="text-right font-medium text-muted-foreground tabular-nums">
         {adjustment.amount > 0 ? "+" : "−"}

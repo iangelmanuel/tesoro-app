@@ -34,6 +34,8 @@ const FIELDS = [
   "description",
   "note",
   "account_id",
+  "counterparty",
+  "invoice_ref",
   "recurring_expense_id",
   "recurring_due_on"
 ] as const
@@ -91,6 +93,15 @@ function parseForm<T>(
     amount: parseAmount(values.amount)
   })
   return { values, parsed }
+}
+
+// Contraparte y factura solo existen en Empresa
+function workspaceFields<
+  T extends { counterparty: unknown; invoice_ref: unknown }
+>(data: T, type: WorkspaceType): T {
+  return type === "business"
+    ? data
+    : { ...data, counterparty: null, invoice_ref: null }
 }
 
 function toValidationError(
@@ -193,9 +204,10 @@ export async function createTransaction(
   }
 
   const supabase = await createClient()
-  const { error } = await supabase
-    .from("transactions")
-    .insert({ ...parsed.data, workspace_id: workspace.id })
+  const { error } = await supabase.from("transactions").insert({
+    ...workspaceFields(parsed.data, workspace.type),
+    workspace_id: workspace.id
+  })
 
   if (error) {
     return toFormError(error, values)
@@ -248,7 +260,7 @@ export async function updateTransaction(
 
   const { data, error } = await supabase
     .from("transactions")
-    .update(parsed.data)
+    .update(workspaceFields(parsed.data, workspace.type))
     .eq("id", id.data)
     .eq("workspace_id", workspace.id)
     .select("id")

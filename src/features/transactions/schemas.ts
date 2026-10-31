@@ -51,7 +51,19 @@ export const transactionSchema = z.object({
   account_id: z.preprocess(
     emptyToNull,
     z.uuid({ error: "Elige una cuenta válida" }).nullable()
-  )
+  ),
+  // Solo en Empresa: cliente (venta) o proveedor (costo o gasto) y factura.
+  // En Personal la action los guarda como null
+  counterparty: z
+    .string()
+    .trim()
+    .max(80, { error: "Máximo 80 caracteres" })
+    .transform((value) => value || null),
+  invoice_ref: z
+    .string()
+    .trim()
+    .max(40, { error: "El número de factura debe tener máximo 40 caracteres" })
+    .transform((value) => value || null)
 })
 
 // Movimiento nuevo, opcionalmente enlazado a una ocurrencia de gasto fijo

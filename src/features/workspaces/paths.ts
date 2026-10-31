@@ -10,3 +10,11 @@ export function workspaceBasePath(workspace: {
     ? `${SITE.routes.dashboardBusiness}/${workspace.id}`
     : SITE.routes.dashboardPersonal
 }
+
+/** Movimientos del espacio */
+export function workspaceTransactionsPath(workspace: {
+  id: string
+  type: WorkspaceType
+}) {
+  return `${workspaceBasePath(workspace)}/transactions`
+}

@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Logo } from "@/components/brand/logo"
 import { ThemeToggle } from "@/components/theme/theme-toggle"
 import { SITE } from "@/config/site"
+import { MobileNav } from "./mobile-nav"
 import { SiteHeaderSession } from "./site-header-session"
 
 export function SiteHeader() {
@@ -40,6 +41,9 @@ export function SiteHeader() {
           <div className="hidden w-56 items-center justify-end gap-2 sm:flex">
             <SiteHeaderSession />
           </div>
+          <MobileNav>
+            <SiteHeaderSession />
+          </MobileNav>
         </div>
       </div>
     </header>

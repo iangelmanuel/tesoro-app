@@ -8,7 +8,6 @@ import { z } from "zod"
 import { SITE } from "@/config/site"
 import { workspaceBasePath } from "@/features/workspaces/paths"
 import { requireWritableWorkspace } from "@/features/workspaces/queries"
-import { revalidateWorkspacePages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import { businessSchema } from "./schemas"
 import type { BusinessFormState } from "./types"
@@ -118,6 +117,8 @@ export async function updateBusiness(
     return toFormError(error, values)
   }
 
-  revalidateWorkspacePages(workspace)
+  // El nombre también se ve en el aside, que vive en el layout de /dashboard:
+  // se revalida desde ahí, lo que incluye las páginas de la empresa
+  revalidatePath(SITE.routes.dashboard, "layout")
   return { ok: true }
 }

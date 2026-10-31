@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { SITE } from "@/config/site"
+import { getBusinessWorkspaces } from "@/features/workspaces/queries"
 import { createClient } from "@/libs/supabase/server"
 
 // Lee la sesión (cookies): va dentro de un Suspense por cacheComponents
@@ -24,11 +25,14 @@ async function DashboardSidebar() {
     redirect(SITE.routes.signIn)
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, avatar_url")
-    .eq("id", user.id)
-    .single()
+  const [{ data: profile }, businesses] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, avatar_url")
+      .eq("id", user.id)
+      .single(),
+    getBusinessWorkspaces()
+  ])
 
   return (
     <AppSidebar
@@ -37,6 +41,7 @@ async function DashboardSidebar() {
         email: user.email ?? "",
         avatarUrl: profile?.avatar_url ?? null
       }}
+      businesses={businesses.map(({ id, name }) => ({ id, name }))}
     />
   )
 }

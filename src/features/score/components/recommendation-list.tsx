@@ -4,12 +4,14 @@ import type { Recommendation } from "../types"
 import { RecommendationItem } from "./recommendation-item"
 
 interface RecommendationListProps {
+  workspaceId: string
   /** Ya ordenadas por severidad y monto */
-  recommendations: Recommendation[]
+  recommendations: Recommendation<string>[]
   compact?: boolean
 }
 
 export function RecommendationList({
+  workspaceId,
   recommendations,
   compact
 }: RecommendationListProps) {
@@ -27,6 +29,7 @@ export function RecommendationList({
       {recommendations.map((item) => (
         <RecommendationItem
           key={`${item.rule}:${item.entityKey}`}
+          workspaceId={workspaceId}
           recommendation={item}
           compact={compact}
         />

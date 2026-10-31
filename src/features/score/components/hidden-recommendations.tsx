@@ -15,9 +15,11 @@ import { SeverityBadge } from "./recommendation-item"
 
 /** Sección plegable "Ocultas este mes", cerrada por defecto */
 export function HiddenRecommendations({
+  workspaceId,
   recommendations
 }: {
-  recommendations: Recommendation[]
+  workspaceId: string
+  recommendations: Recommendation<string>[]
 }) {
   return (
     <Collapsible className="flex flex-col gap-3">
@@ -38,6 +40,7 @@ export function HiddenRecommendations({
           {recommendations.map((item) => (
             <HiddenRecommendationRow
               key={`${item.rule}:${item.entityKey}`}
+              workspaceId={workspaceId}
               recommendation={item}
             />
           ))}
@@ -48,15 +51,18 @@ export function HiddenRecommendations({
 }
 
 function HiddenRecommendationRow({
+  workspaceId,
   recommendation
 }: {
-  recommendation: Recommendation
+  workspaceId: string
+  recommendation: Recommendation<string>
 }) {
   const [pending, startTransition] = useTransition()
 
   function restore() {
     startTransition(async () => {
       const result = await restoreRecommendation(
+        workspaceId,
         recommendation.rule,
         recommendation.entityKey
       )

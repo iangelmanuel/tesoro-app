@@ -77,6 +77,7 @@ export async function ScoreSummaryCard({
           <ScoreInsufficient reasons={current.insufficient} />
         )}
         <RecommendationList
+          workspaceId={workspaceId}
           recommendations={active.slice(0, SUMMARY_RECOMMENDATIONS)}
           compact
         />

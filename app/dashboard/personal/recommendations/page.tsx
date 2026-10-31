@@ -136,11 +136,19 @@ async function RecommendationsContent() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <RecommendationList recommendations={active} />
+          <RecommendationList
+            workspaceId={workspace.id}
+            recommendations={active}
+          />
         </CardContent>
       </Card>
 
-      {hidden.length > 0 && <HiddenRecommendations recommendations={hidden} />}
+      {hidden.length > 0 && (
+        <HiddenRecommendations
+          workspaceId={workspace.id}
+          recommendations={hidden}
+        />
+      )}
     </>
   )
 }

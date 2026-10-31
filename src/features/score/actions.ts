@@ -1,9 +1,13 @@
 "use server"
 
 import { z } from "zod"
-import { getPersonalWorkspace } from "@/features/workspaces/queries"
+import { BUSINESS_RULE_KEYS } from "@/features/business-score/constants"
+import {
+  type WorkspaceType,
+  requireWritableWorkspace
+} from "@/features/workspaces/queries"
 import { currentMonth } from "@/libs/dates"
-import { revalidatePersonalPages } from "@/libs/revalidate"
+import { revalidateWorkspacePages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import { RULE_KEYS } from "./constants"
 
@@ -13,23 +17,37 @@ export interface RecommendationActionResult {
 
 const INVALID_RECOMMENDATION = "La recomendación no es válida"
 
-const recommendationSchema = z.object({
-  rule: z.enum(RULE_KEYS),
-  entityKey: z.string().trim().min(1).max(100)
-})
+const entityKeySchema = z.string().trim().min(1).max(100)
 
-// "Ocultar este mes": una fila por regla, entidad y mes actual
+// Cada espacio solo acepta sus reglas: una de Personal sobre una empresa (o
+// al revés) es un error de validación
+const RECOMMENDATION_SCHEMAS: Record<
+  WorkspaceType,
+  z.ZodType<{ rule: string; entityKey: string }>
+> = {
+  personal: z.object({ rule: z.enum(RULE_KEYS), entityKey: entityKeySchema }),
+  business: z.object({
+    rule: z.enum(BUSINESS_RULE_KEYS),
+    entityKey: entityKeySchema
+  })
+}
+
+// "Ocultar este mes": una fila por espacio, regla, entidad y mes actual
 export async function dismissRecommendation(
+  workspaceId: string,
   rule: string,
   entityKey: string
 ): Promise<RecommendationActionResult> {
-  const parsed = recommendationSchema.safeParse({ rule, entityKey })
+  const workspace = await requireWritableWorkspace(workspaceId)
+  const parsed = RECOMMENDATION_SCHEMAS[workspace.type].safeParse({
+    rule,
+    entityKey
+  })
 
   if (!parsed.success) {
     return { error: INVALID_RECOMMENDATION }
   }
 
-  const workspace = await getPersonalWorkspace()
   const supabase = await createClient()
   const { error } = await supabase.from("dismissed_recommendations").insert({
     workspace_id: workspace.id,
@@ -43,22 +61,26 @@ export async function dismissRecommendation(
     return { error: "No se pudo ocultar la recomendación. Intenta de nuevo" }
   }
 
-  revalidatePersonalPages()
+  revalidateWorkspacePages(workspace)
   return {}
 }
 
 // "Mostrar de nuevo": borra la fila del mes actual
 export async function restoreRecommendation(
+  workspaceId: string,
   rule: string,
   entityKey: string
 ): Promise<RecommendationActionResult> {
-  const parsed = recommendationSchema.safeParse({ rule, entityKey })
+  const workspace = await requireWritableWorkspace(workspaceId)
+  const parsed = RECOMMENDATION_SCHEMAS[workspace.type].safeParse({
+    rule,
+    entityKey
+  })
 
   if (!parsed.success) {
     return { error: INVALID_RECOMMENDATION }
   }
 
-  const workspace = await getPersonalWorkspace()
   const supabase = await createClient()
   const { error } = await supabase
     .from("dismissed_recommendations")
@@ -72,6 +94,6 @@ export async function restoreRecommendation(
     return { error: "No se pudo mostrar la recomendación. Intenta de nuevo" }
   }
 
-  revalidatePersonalPages()
+  revalidateWorkspacePages(workspace)
   return {}
 }

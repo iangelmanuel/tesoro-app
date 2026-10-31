@@ -1,6 +1,6 @@
 # SPEC 12 — Landing, páginas legales y assets de marca
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 01, SPEC 07
 > **Fecha:** 2026-10-31
 > **Objetivo:** Que el sitio público presente Tesoro con una landing completa, páginas legales propias y todos los assets de marca y SEO que la metadata ya referencia.
@@ -209,26 +209,26 @@ Los textos se escriben en lenguaje claro, en segunda persona ("tú"), como el re
 
 ## Criterios de aceptación
 
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
-- [ ] `pnpm build` reporta `/`, `/legal/privacy` y `/legal/terms` como prerenderizadas (estáticas o PPR), no dinámicas completas.
-- [ ] `GET` de `/opengraph-image.png`, `/brand/logo.png`, `/apple-touch-icon.png`, `/icons/icon-192.png` y `/icons/icon-512.png` responde 200 con las dimensiones 1200×630, 512×512, 180×180, 192×192 y 512×512.
-- [ ] `/favicon.ico` contiene 16, 32 y 48 px y muestra el isotipo nuevo; `/icon.svg` responde 200.
-- [ ] Borrar los PNG y correr `pnpm brand:assets` los regenera idénticos en tamaño.
-- [ ] La landing muestra, en orden: hero, funciones (6 ítems de `SITE.features`), cómo funciona (3 pasos), score (7 factores, 4 bandas), Personal y Empresa, código abierto y CTA final.
-- [ ] Los enlaces del header llevan a `#funciones`, `#como-funciona`, `#score` y `#open-source`, y esos `id` existen.
-- [ ] Sin sesión, el header muestra "Iniciar sesión" y "Crear cuenta"; con sesión, "Ir al dashboard" a `/dashboard`.
-- [ ] El toggle de tema cambia entre claro y oscuro y la preferencia persiste al recargar.
-- [ ] En 375 px de ancho no hay scroll horizontal y el menú móvil abre y cierra con teclado.
-- [ ] `/legal/privacy` y `/legal/terms` muestran título, "Última actualización" con la fecha de `SITE.legal`, índice con anclas funcionales y todas las secciones de "Contenido legal".
-- [ ] `/legal/otra-cosa` responde 404.
-- [ ] Cada página pública tiene canonical propio y `<title>` con `titleTemplate`; las legales incluyen JSON-LD `BreadcrumbList`.
-- [ ] `sitemap.xml` incluye `/legal/privacy` y `/legal/terms`.
-- [ ] El footer enlaza a ambos legales, al repo y a issues.
-- [ ] `/sign-up` muestra el aviso de aceptación con enlaces a ambos legales.
-- [ ] Ningún componente arma a mano una URL legal ni duplica textos de marca: todo sale de `SITE`.
-- [ ] Ninguna página pública hace peticiones a dominios externos al cargar (salvo Supabase en la isla de sesión).
-- [ ] Lighthouse móvil ≥ 90 en Rendimiento, Accesibilidad, Buenas prácticas y SEO en `/`, `/legal/privacy` y `/legal/terms`, sobre `pnpm start`.
-- [ ] `CLAUDE.md` ya no lista assets pendientes; `docs/producto.md` y `CHANGELOG.md` actualizados.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] `pnpm build` reporta `/`, `/legal/privacy` y `/legal/terms` como prerenderizadas (estáticas o PPR), no dinámicas completas.
+- [x] `GET` de `/opengraph-image.png`, `/brand/logo.png`, `/apple-touch-icon.png`, `/icons/icon-192.png` y `/icons/icon-512.png` responde 200 con las dimensiones 1200×630, 512×512, 180×180, 192×192 y 512×512.
+- [x] `/favicon.ico` contiene 16, 32 y 48 px y muestra el isotipo nuevo; `/icon.svg` responde 200.
+- [x] Borrar los PNG y correr `pnpm brand:assets` los regenera idénticos en tamaño.
+- [x] La landing muestra, en orden: hero, funciones (6 ítems de `SITE.features`), cómo funciona (3 pasos), score (7 factores, 4 bandas), Personal y Empresa, código abierto y CTA final.
+- [x] Los enlaces del header llevan a `#funciones`, `#como-funciona`, `#score` y `#open-source`, y esos `id` existen.
+- [x] Sin sesión, el header muestra "Iniciar sesión" y "Crear cuenta"; con sesión, "Ir al dashboard" a `/dashboard`.
+- [x] El toggle de tema cambia entre claro y oscuro y la preferencia persiste al recargar.
+- [x] En 375 px de ancho no hay scroll horizontal y el menú móvil abre y cierra con teclado.
+- [x] `/legal/privacy` y `/legal/terms` muestran título, "Última actualización" con la fecha de `SITE.legal`, índice con anclas funcionales y todas las secciones de "Contenido legal".
+- [x] `/legal/otra-cosa` responde 404.
+- [x] Cada página pública tiene canonical propio y `<title>` con `titleTemplate`; las legales incluyen JSON-LD `BreadcrumbList`.
+- [x] `sitemap.xml` incluye `/legal/privacy` y `/legal/terms`.
+- [x] El footer enlaza a ambos legales, al repo y a issues.
+- [x] `/sign-up` muestra el aviso de aceptación con enlaces a ambos legales.
+- [x] Ningún componente arma a mano una URL legal ni duplica textos de marca: todo sale de `SITE`.
+- [x] Ninguna página pública hace peticiones a dominios externos al cargar (salvo Supabase en la isla de sesión).
+- [x] Lighthouse móvil ≥ 90 en Rendimiento, Accesibilidad, Buenas prácticas y SEO en `/`, `/legal/privacy` y `/legal/terms`, sobre `pnpm start`.
+- [x] `CLAUDE.md` ya no lista assets pendientes; `docs/producto.md` y `CHANGELOG.md` actualizados.
 
 ## Decisiones
 

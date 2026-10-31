@@ -1547,5 +1547,5 @@ detalle de cada uno (objetivo, alcance, modelo y preguntas abiertas) está en
 9. Cuenta y perfil
 10. Espacio Empresa: crear y registrar operaciones ✅
 11. Empresa: flujo de caja, reportes, score y recomendaciones
-12. Landing, páginas legales y assets
+12. Landing, páginas legales y assets ✅
 13. Lanzamiento v1.0

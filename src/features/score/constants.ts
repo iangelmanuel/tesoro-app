@@ -82,6 +82,14 @@ export const FACTORS: Record<
 /** Orden en que se muestran los factores */
 export const FACTOR_KEYS = Object.keys(FACTORS) as FactorKey[]
 
+/** Etiquetas de los factores, para los componentes de score */
+export const FACTOR_LABELS = Object.fromEntries(
+  FACTOR_KEYS.map((key) => [key, FACTORS[key].label])
+) as Record<FactorKey, string>
+
+/** Factores cuyo dato se muestra en meses en vez de porcentaje */
+export const MONTH_FACTORS: readonly FactorKey[] = ["emergency_cushion"]
+
 export const EXCLUDED_REASONS = {
   noClosedMonths: "Aún no hay meses cerrados",
   noClosedExpense: "Sin gastos en los meses cerrados",

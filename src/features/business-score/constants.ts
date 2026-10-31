@@ -83,6 +83,11 @@ export const BUSINESS_FACTOR_LABELS = Object.fromEntries(
   BUSINESS_FACTOR_KEYS.map((key) => [key, BUSINESS_FACTORS[key].label])
 ) as Record<BusinessFactorKey, string>
 
+/** Factores cuyo dato se muestra en meses en vez de porcentaje */
+export const BUSINESS_MONTH_FACTORS: readonly BusinessFactorKey[] = [
+  "liquidity"
+]
+
 export const BUSINESS_EXCLUDED_REASONS = {
   noClosedMonths: "Aún no hay meses cerrados",
   noClosedCosts: "Sin costos en los meses cerrados",

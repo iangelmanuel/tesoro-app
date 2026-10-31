@@ -34,3 +34,11 @@ export function workspaceCashFlowPath(workspace: {
 }) {
   return `${workspaceBasePath(workspace)}/cash-flow`
 }
+
+/** Score y recomendaciones del espacio */
+export function workspaceRecommendationsPath(workspace: {
+  id: string
+  type: WorkspaceType
+}) {
+  return `${workspaceBasePath(workspace)}/recommendations`
+}

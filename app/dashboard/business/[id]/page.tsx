@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
 import { getAccountBalances } from "@/features/accounts/queries"
 import type { AccountWithBalance } from "@/features/accounts/types"
+import { BusinessScoreSummaryCard } from "@/features/business-score/components/business-score-summary-card"
 import { BusinessSummaryCards } from "@/features/business/components/business-summary-cards"
 import { getCategories } from "@/features/categories/queries"
 import { buildCategorySlices } from "@/features/reports/chart-data"
@@ -107,6 +108,9 @@ async function SummaryContent({
 
   return (
     <>
+      <Suspense fallback={<Skeleton className="h-56" />}>
+        <BusinessScoreSummaryCard workspace={workspace} />
+      </Suspense>
       <BusinessSummaryCards
         current={current}
         previous={previous}
@@ -195,6 +199,7 @@ async function EmptyBusiness({
 function SummarySkeleton() {
   return (
     <>
+      <Skeleton className="h-56" />
       <div className="grid gap-4 sm:grid-cols-3">
         <Skeleton className="h-28" />
         <Skeleton className="h-28" />

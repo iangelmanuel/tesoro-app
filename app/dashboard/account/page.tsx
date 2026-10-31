@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@heroui/react"
 import { SITE } from "@/config/site"
 import { AccountSection } from "@/features/account/components/account-section"
 import { AvatarUploader } from "@/features/account/components/avatar-uploader"
@@ -29,7 +29,7 @@ export default function AccountPage({ searchParams }: AccountPageProps) {
     <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Cuenta</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted">
           Tu perfil, tus preferencias y la seguridad de tu cuenta.
         </p>
       </header>

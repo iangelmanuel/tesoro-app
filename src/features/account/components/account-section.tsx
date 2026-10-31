@@ -4,7 +4,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
+} from "@heroui/react"
 import { cn } from "@/libs/utils"
 
 interface AccountSectionProps {
@@ -26,7 +26,7 @@ export function AccountSection({
   return (
     <Card className={cn(destructive && "border-destructive/50")}>
       <CardHeader>
-        <CardTitle className={cn(destructive && "text-destructive")}>
+        <CardTitle className={cn(destructive && "text-danger")}>
           {title}
         </CardTitle>
         <CardDescription>{description}</CardDescription>

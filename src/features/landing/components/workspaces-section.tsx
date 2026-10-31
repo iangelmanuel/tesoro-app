@@ -40,7 +40,7 @@ export function WorkspacesSection() {
             return (
               <li
                 key={workspace.id}
-                className="flex flex-col gap-5 rounded-xl border bg-card p-6"
+                className="flex flex-col gap-5 rounded-xl border bg-surface p-6"
               >
                 <div className="flex items-center gap-3">
                   <span className="flex size-10 items-center justify-center rounded-lg bg-(--income)/10 text-(--income)">
@@ -51,14 +51,10 @@ export function WorkspacesSection() {
                   </span>
                   <div>
                     <h3 className="font-medium">{workspace.name}</h3>
-                    <p className="text-xs text-muted-foreground">
-                      {NOTES[workspace.id]}
-                    </p>
+                    <p className="text-xs text-muted">{NOTES[workspace.id]}</p>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {workspace.description}
-                </p>
+                <p className="text-sm text-muted">{workspace.description}</p>
                 <ul className="grid grid-cols-2 gap-2 text-sm">
                   {HIGHLIGHTS[workspace.id].map((name) => (
                     <li

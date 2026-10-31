@@ -1,7 +1,7 @@
 "use client"
 
 import type { ComponentProps } from "react"
-import { ChartTooltipContent } from "@/components/ui/chart"
+import { ChartTooltipContent } from "@/components/charts/chart-tooltip"
 import { formatCurrency } from "@/libs/format"
 
 type CurrencyTooltipProps = ComponentProps<typeof ChartTooltipContent> & {
@@ -10,7 +10,7 @@ type CurrencyTooltipProps = ComponentProps<typeof ChartTooltipContent> & {
   labels: Record<string, string>
 }
 
-// Tooltip de shadcn con los valores en moneda en vez de toLocaleString
+// Tooltip de las gráficas con los valores en moneda en vez de toLocaleString
 export function CurrencyTooltipContent({
   currency,
   labels,
@@ -33,10 +33,8 @@ export function CurrencyTooltipContent({
               style={{ backgroundColor: item.payload?.fill ?? item.color }}
             />
             <span className="flex flex-1 items-center justify-between gap-4 leading-none">
-              <span className="text-muted-foreground">
-                {labels[key] ?? key}
-              </span>
-              <span className="font-mono font-medium text-foreground tabular-nums">
+              <span className="text-muted">{labels[key] ?? key}</span>
+              <span className="font-mono font-medium tabular-nums">
                 {formatCurrency(Number(value), currency)}
               </span>
             </span>

@@ -32,7 +32,7 @@ export function LandingScoreVisual() {
       </figcaption>
       <div
         aria-hidden="true"
-        className="flex flex-col gap-6 rounded-2xl border bg-card p-4 shadow-xl shadow-black/5 sm:p-6 dark:shadow-black/40"
+        className="flex flex-col gap-6 rounded-2xl border bg-surface p-4 shadow-xl shadow-black/5 sm:p-6 dark:shadow-black/40"
       >
         <div className="flex flex-col items-center gap-2">
           <svg
@@ -67,9 +67,7 @@ export function LandingScoreVisual() {
           <span className="rounded-md bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-800 dark:bg-sky-950 dark:text-sky-300">
             Bueno
           </span>
-          <span className="text-xs text-muted-foreground">
-            +4 pts vs. el mes anterior
-          </span>
+          <span className="text-xs text-muted">+4 pts vs. el mes anterior</span>
         </div>
 
         <ul className="flex flex-col gap-3">
@@ -86,9 +84,7 @@ export function LandingScoreVisual() {
               />
               <div className="flex flex-col gap-0.5">
                 <span className="text-sm font-medium">{item.title}</span>
-                <span className="text-xs text-muted-foreground">
-                  {item.detail}
-                </span>
+                <span className="text-xs text-muted">{item.detail}</span>
               </div>
             </li>
           ))}

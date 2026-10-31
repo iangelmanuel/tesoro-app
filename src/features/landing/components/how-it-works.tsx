@@ -47,13 +47,11 @@ export function HowItWorks() {
                 </span>
                 <step.icon
                   aria-hidden="true"
-                  className="size-5 text-muted-foreground"
+                  className="size-5 text-muted"
                 />
               </div>
               <h3 className="text-lg font-medium">{step.title}</h3>
-              <p className="text-sm text-muted-foreground">
-                {step.description}
-              </p>
+              <p className="text-sm text-muted">{step.description}</p>
             </li>
           ))}
         </ol>

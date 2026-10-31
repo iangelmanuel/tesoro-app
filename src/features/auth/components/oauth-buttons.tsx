@@ -1,7 +1,7 @@
 "use client"
 
+import { Button } from "@heroui/react"
 import { useFormStatus } from "react-dom"
-import { Button } from "@/components/ui/button"
 import { signInWithOAuth } from "../actions"
 import type { OAuthProvider } from "../types"
 
@@ -65,8 +65,8 @@ function ProviderButton({
     <Button
       type="submit"
       variant="outline"
-      className="w-full"
-      disabled={pending}
+      fullWidth
+      isDisabled={pending}
     >
       <Icon />
       {label}

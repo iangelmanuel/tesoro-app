@@ -32,7 +32,7 @@ function FooterColumn({
               href={link.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="text-sm text-muted transition-colors hover:text-foreground"
             >
               {link.name}
             </a>
@@ -55,9 +55,7 @@ export function SiteFooter() {
           >
             <Logo />
           </Link>
-          <p className="max-w-xs text-sm text-muted-foreground">
-            {SITE.info.slogan}
-          </p>
+          <p className="max-w-xs text-sm text-muted">{SITE.info.slogan}</p>
         </div>
 
         <div className="flex flex-col gap-3">
@@ -67,7 +65,7 @@ export function SiteFooter() {
               <li key={document.slug}>
                 <Link
                   href={legalHref(document.slug)}
-                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  className="text-sm text-muted transition-colors hover:text-foreground"
                 >
                   {document.title}
                 </Link>
@@ -86,7 +84,7 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p>
             © {SITE.info.founded} {SITE.info.name}. Licencia {SITE.info.license}{" "}
             · v{SITE.info.version}

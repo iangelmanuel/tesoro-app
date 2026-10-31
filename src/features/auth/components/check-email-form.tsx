@@ -3,7 +3,7 @@
 import { useActionState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
+import { Button } from "@heroui/react"
 import { SITE } from "@/config/site"
 import { resendConfirmation } from "../actions"
 import type { AuthFormState } from "../types"
@@ -21,7 +21,7 @@ export function CheckEmailForm() {
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-center text-sm text-muted">
         {email ? (
           <>
             Te enviamos un enlace a{" "}
@@ -60,7 +60,7 @@ export function CheckEmailForm() {
         {state.error && (
           <p
             role="alert"
-            className="text-sm text-destructive"
+            className="text-sm text-danger"
           >
             {state.error}
           </p>
@@ -68,7 +68,7 @@ export function CheckEmailForm() {
         {state.success && (
           <p
             role="status"
-            className="text-sm text-muted-foreground"
+            className="text-sm text-muted"
           >
             {state.success}
           </p>
@@ -76,14 +76,14 @@ export function CheckEmailForm() {
         <Button
           type="submit"
           variant="outline"
-          className="w-full"
-          disabled={pending}
+          fullWidth
+          isDisabled={pending}
         >
           {pending ? "Reenviando..." : "Reenviar correo"}
         </Button>
       </form>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-center text-sm text-muted">
         ¿Ya confirmaste?{" "}
         <Link
           href={SITE.routes.signIn}

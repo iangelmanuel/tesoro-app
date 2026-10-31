@@ -42,7 +42,7 @@ export function Features() {
             return (
               <li
                 key={feature.title}
-                className="flex flex-col gap-3 rounded-xl border bg-card p-6"
+                className="flex flex-col gap-3 rounded-xl border bg-surface p-6"
               >
                 <span className="flex size-10 items-center justify-center rounded-lg bg-(--income)/10 text-(--income)">
                   <Icon
@@ -51,9 +51,7 @@ export function Features() {
                   />
                 </span>
                 <h3 className="font-medium">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {feature.description}
-                </p>
+                <p className="text-sm text-muted">{feature.description}</p>
               </li>
             )
           })}

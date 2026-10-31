@@ -4,7 +4,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
+} from "@heroui/react"
 import { SITE } from "@/config/site"
 import { ResetPasswordForm } from "@/features/auth/components/reset-password-form"
 import { buildMetadata } from "@/libs/seo"

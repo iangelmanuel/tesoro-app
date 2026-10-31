@@ -2,8 +2,7 @@
 
 import { useActionState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { toast } from "@heroui/react"
-import { Button } from "@/components/ui/button"
+import { Button, toast } from "@heroui/react"
 import { SITE } from "@/config/site"
 import { resetPassword } from "../actions"
 import type { AuthFormState } from "../types"
@@ -48,15 +47,15 @@ export function ResetPasswordForm() {
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-destructive"
+          className="text-sm text-danger"
         >
           {state.error}
         </p>
       )}
       <Button
         type="submit"
-        className="w-full"
-        disabled={pending || Boolean(state.success)}
+        fullWidth
+        isDisabled={pending || Boolean(state.success)}
       >
         {pending ? "Guardando..." : "Guardar contraseña"}
       </Button>

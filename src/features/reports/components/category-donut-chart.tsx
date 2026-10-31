@@ -3,9 +3,9 @@
 import { Label, Pie, PieChart } from "recharts"
 import {
   type ChartConfig,
-  ChartContainer,
-  ChartTooltip
-} from "@/components/ui/chart"
+  ChartContainer
+} from "@/components/charts/chart-container"
+import { ChartTooltip } from "@/components/charts/chart-tooltip"
 import { formatCurrency } from "@/libs/format"
 import type { CategorySlice } from "../chart-data"
 import { ChartDataTable } from "./chart-data-table"
@@ -90,7 +90,7 @@ export function CategoryDonutChart({
                     <tspan
                       x={cx}
                       y={(cy ?? 0) + 20}
-                      className="fill-muted-foreground text-xs"
+                      className="fill-muted text-xs"
                     >
                       Total
                     </tspan>

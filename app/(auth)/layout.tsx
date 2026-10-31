@@ -13,9 +13,7 @@ export default function AuthLayout({
           className="flex flex-col items-center gap-1 self-center text-center"
         >
           <Logo size="lg" />
-          <span className="text-sm text-muted-foreground">
-            {SITE.info.slogan}
-          </span>
+          <span className="text-sm text-muted">{SITE.info.slogan}</span>
         </Link>
         {children}
       </div>

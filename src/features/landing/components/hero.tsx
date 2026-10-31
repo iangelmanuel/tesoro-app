@@ -1,6 +1,6 @@
 import Link from "next/link"
+import { buttonVariants } from "@heroui/react"
 import { ArrowRightIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import { LandingHeroVisual } from "./hero-visual"
 
@@ -16,7 +16,7 @@ export function Hero() {
       />
       <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-20 sm:px-6 sm:py-28 lg:grid-cols-2">
         <div className="flex flex-col items-start gap-6">
-          <p className="rounded-full border bg-background/60 px-3 py-1 text-xs font-medium text-muted-foreground">
+          <p className="rounded-full border bg-background/60 px-3 py-1 text-xs font-medium text-muted">
             Gratis y de código abierto · Licencia {SITE.info.license}
           </p>
           <h1
@@ -25,36 +25,27 @@ export function Hero() {
           >
             Tus finanzas personales y las de tu negocio, en un solo lugar
           </h1>
-          <p className="max-w-xl text-lg text-pretty text-muted-foreground">
+          <p className="max-w-xl text-lg text-pretty text-muted">
             {SITE.info.slogan} Registra ingresos, gastos, deudas y metas, y{" "}
             {SITE.info.name} los convierte en gráficas, recomendaciones y un
             score de salud financiera.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Button
-              asChild
-              size="lg"
-              className="h-11 px-5"
+            <Link
+              href={SITE.navigation.cta.href}
+              className={buttonVariants({ size: "lg" })}
             >
-              <Link href={SITE.navigation.cta.href}>
-                {SITE.navigation.cta.label}
-                <ArrowRightIcon data-icon="inline-end" />
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="h-11 px-5"
+              {SITE.navigation.cta.label}
+              <ArrowRightIcon className="size-4" />
+            </Link>
+            <a
+              href={SITE.repository.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonVariants({ size: "lg", variant: "outline" })}
             >
-              <a
-                href={SITE.repository.url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Ver en GitHub
-              </a>
-            </Button>
+              Ver en GitHub
+            </a>
           </div>
         </div>
         <LandingHeroVisual />

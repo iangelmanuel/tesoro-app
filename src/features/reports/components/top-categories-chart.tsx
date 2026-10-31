@@ -3,9 +3,9 @@
 import { Bar, BarChart, LabelList, XAxis, YAxis } from "recharts"
 import {
   type ChartConfig,
-  ChartContainer,
-  ChartTooltip
-} from "@/components/ui/chart"
+  ChartContainer
+} from "@/components/charts/chart-container"
+import { ChartTooltip } from "@/components/charts/chart-tooltip"
 import { formatCurrency } from "@/libs/format"
 import type { CategorySlice } from "../chart-data"
 import { ChartDataTable } from "./chart-data-table"

@@ -4,9 +4,9 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+  CardTitle,
+  Skeleton
+} from "@heroui/react"
 import { SITE } from "@/config/site"
 import { CheckEmailForm } from "@/features/auth/components/check-email-form"
 import { buildMetadata } from "@/libs/seo"

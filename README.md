@@ -51,9 +51,12 @@ Autenticación y base de datos corren sobre [Supabase](https://supabase.com/)
 (Postgres + Auth), con Row Level Security para que cada usuario solo vea sus
 propios datos. El SEO (metadata, Open Graph, JSON-LD, `robots.txt`,
 `sitemap.xml` y `manifest.webmanifest`) se genera desde `SITE` con
-`src/libs/seo.ts`. La interfaz usa [shadcn/ui](https://ui.shadcn.com/) (Radix),
-tema claro/oscuro con [next-themes](https://github.com/pacocoursey/next-themes)
-y validación con [Zod](https://zod.dev/).
+`src/libs/seo.ts`. La interfaz usa [HeroUI](https://heroui.com/) v3 (sobre
+React Aria, sin Provider), tema claro/oscuro con
+[next-themes](https://github.com/pacocoursey/next-themes), gráficas con
+[Recharts](https://recharts.org/) y validación con [Zod](https://zod.dev/).
+El tema usa neutros negros y grises azulados con un primario por espacio:
+neutro fuera del dashboard, emerald en Personal y naranja en Empresa.
 
 ## Estructura
 
@@ -69,18 +72,20 @@ app/                      Rutas (App Router) y archivos de metadata
 proxy.ts                  Refresca la sesión y protege /dashboard/*
 src/
 ├── components/
-│   ├── dashboard/        Aside, tabs de espacio, menú de usuario, placeholders
+│   ├── charts/           Contenedor, tooltip y leyenda de Recharts con HeroUI
+│   ├── dashboard/        Sidebar propio, tabs de espacio, menú de usuario y
+│   │                     WorkspaceThemeRoot (primario por espacio)
+│   ├── forms/            DatePickerField (DatePicker de HeroUI)
 │   ├── seo/              <JsonLd />
-│   ├── theme/            ThemeProvider (next-themes)
-│   └── ui/               Componentes de shadcn/ui
+│   └── theme/            ThemeProvider (next-themes)
 ├── config/site.ts        SITE: marca, autor, rutas, navegación, espacios y SEO
 ├── features/auth/        Esquemas Zod, Server Actions y formularios de auth
 ├── libs/
 │   ├── seo.ts            buildMetadata() y builders de schema.org
 │   ├── supabase/         Clientes de Supabase (navegador, servidor y proxy)
-│   └── utils.ts          cn()
+│   └── workspace-theme.ts getWorkspaceTheme(): espacio según la ruta
 ├── types/database.ts     Tipos generados de la base de datos
-└── styles/globals.css    Tailwind, tokens de shadcn y tema claro/oscuro
+└── styles/globals.css    Tailwind, HeroUI, tokens del tema y primarios por espacio
 supabase/                 config.toml y migraciones versionadas
 docs/                     Documentación de producto
 specs/                    Specs de implementación

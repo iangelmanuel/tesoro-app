@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- HeroUI v3 (`@heroui/react`, `@heroui/styles` 3.2.7) as the UI library, imported directly with no Provider or wrappers. `react-aria` and `@internationalized/date` as direct dependencies.
+- Theme on HeroUI tokens: black and blue-gray neutrals, a neutral primary outside the workspaces, emerald in Personal and orange in Business. `getWorkspaceTheme()` and `WorkspaceThemeRoot` set `data-workspace` from the route; overlays render inside it via `UNSAFE_PortalProvider` and dates use the `es-CO` locale via `I18nProvider`.
+- `--brand` token (emerald-500) for the logo, so brand assets stay emerald on every theme.
+- Own dashboard sidebar built with HeroUI primitives (`src/components/dashboard/sidebar/`), `DatePickerField` (`src/components/forms/`) and Recharts chart container, tooltip and legend with HeroUI surfaces (`src/components/charts/`).
+
 - Supabase Auth with email + password (no email confirmation), Google and GitHub OAuth, and an OAuth callback at `/auth/callback`.
 - `/sign-in` and `/sign-up` pages with Zod-validated Server Actions (`useActionState`) and Spanish error messages.
 - Root `proxy.ts` that refreshes the Supabase session, protects `/dashboard/*` (redirecting to `/sign-in?next=<path>`) and sends signed-in users away from the auth pages. `next` only accepts internal paths to prevent open redirects.
@@ -133,6 +138,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Every screen migrated from shadcn/ui to HeroUI: forms, dialogs, alert dialogs, menus, drawers, selects, tabs, tables, pagination, toggles, checkboxes, radios, tooltips, chips, avatars and skeletons. Toasts use HeroUI's `toast` and dates the HeroUI `DatePicker`; values sent by forms are unchanged.
+- Money, category, status and chart colors retuned to the new theme with AA contrast in light and dark mode; `CATEGORY_COLORS` keys are unchanged.
+- `SITE.seo.themeColor` updated to the new light and dark backgrounds.
+
 - `SITE.legal` slugs are now `privacy` / `terms` (updated 2026-10-31).
 - The home page moved from `app/page.tsx` to `app/(public)/page.tsx`.
 - The auth layout shows the `Logo` instead of the plain name.
@@ -171,6 +180,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `dismissRecommendation` and `restoreRecommendation` take the workspace id, resolve it with `requireWritableWorkspace`, validate the rule against that workspace type's keys and revalidate its pages. Personal passes its own id and behaves as before.
 - `dismissed_recommendations` write policies use `is_workspace_writable` instead of `is_workspace_owner`.
 - The variation helpers of the summary cards moved to `src/features/reports/change.ts`.
+
+### Removed
+
+- shadcn/ui: `src/components/ui/`, `components.json`, `src/libs/utils.ts` and the `shadcn`, `radix-ui`, `class-variance-authority`, `tw-animate-css`, `cn`, `sonner` and `react-day-picker` packages.
 
 ### Fixed
 

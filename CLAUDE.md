@@ -86,6 +86,34 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
 - `app/` contiene solo rutas. El resto del código vive en `src/` (alias
   `@/*` → `./src/*`). Estilos globales en `src/styles/globals.css` (Tailwind
   4, cargado vía `@tailwindcss/turbopack` en `next.config.ts`).
+
+## UI y tema
+
+- **HeroUI v3** (`@heroui/react` y `@heroui/styles`), sin Provider. Se
+  importa **directo de `@heroui/react`**: no hay wrappers ni
+  `src/components/ui/`. `cn` también sale de `@heroui/react`.
+- Componentes compuestos (`Modal.Header`, `Select.Popover`…). En componentes
+  de servidor se usan los nombres exportados (`CardHeader`, `ToastProvider`),
+  no la notación con punto.
+- Botones con `onPress`, `isDisabled`, `isIconOnly`; enlaces con estilo de
+  botón: `<Link className={buttonVariants({ variant })}>`.
+- Formularios: `useActionState` + Zod. Cada campo es `TextField` / `Select` /
+  `DatePicker` con `Label` y `FieldError` dentro y
+  `validationBehavior="aria"` (valida el servidor).
+- Fechas: `DatePickerField` (`src/components/forms/date-picker-field.tsx`),
+  que trabaja con `YYYY-MM-DD`. Toasts: `toast` de `@heroui/react`.
+- Gráficas: Recharts con `src/components/charts/*` (contenedor, tooltip y
+  leyenda con superficie HeroUI); colores siempre desde tokens.
+- Tokens en `globals.css` con los nombres de HeroUI (`--accent` es el
+  primario, `--muted` es texto atenuado, `--surface`, `--overlay`,
+  `--default`, `--danger`…), más los propios `--brand`, `--income`,
+  `--expense`, `--balance`, `--category-*` y `--chart-*`.
+- Primario por espacio: `WorkspaceThemeRoot` + `getWorkspaceTheme(pathname)`
+  ponen `data-workspace` y `globals.css` lo aplica con `:has()`. Neutro fuera
+  del dashboard, emerald en Personal, naranja en Empresa. Nunca se pasa el
+  color por props; `data-workspace` solo aparece en esos dos archivos.
+- Todo par texto/fondo nuevo debe dar AA (4.5:1 texto, 3:1 gráficos y foco)
+  en claro y oscuro.
 - `next.config.ts` tiene activos `cacheComponents`, `partialPrefetching` y
   `typedRoutes`, entre otras opciones. Antes de usar APIs de Next, consulta
   `node_modules/next/dist/docs/`.

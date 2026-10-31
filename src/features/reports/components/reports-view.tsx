@@ -7,9 +7,7 @@ import {
   CardTitle
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { getAccountBalances } from "@/features/accounts/queries"
-import { getCategories } from "@/features/categories/queries"
-import { NoTransactions } from "@/features/transactions/components/transactions-empty"
+import { WorkspaceNoTransactions } from "@/features/transactions/components/workspace-no-transactions"
 import type { SearchParams } from "@/features/transactions/filters"
 import { hasAnyTransactions } from "@/features/transactions/queries"
 import {
@@ -55,16 +53,10 @@ export async function ReportsView({
   const isEmptyPeriod = monthly.every((row) => row.txCount === 0)
   // Solo se consulta cuando el periodo no tiene movimientos
   if (isEmptyPeriod && !(await hasAnyTransactions(workspace.id))) {
-    const [categories, accounts] = await Promise.all([
-      getCategories(workspace.id),
-      getAccountBalances(workspace.id)
-    ])
     return (
-      <NoTransactions
+      <WorkspaceNoTransactions
         workspaceId={workspace.id}
         workspaceType={workspace.type}
-        categories={categories}
-        accounts={accounts}
       />
     )
   }

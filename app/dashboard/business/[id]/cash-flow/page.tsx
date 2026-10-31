@@ -16,9 +16,12 @@ import { AccountBalancesList } from "@/features/cash-flow/components/account-bal
 import { CashFlowChart } from "@/features/cash-flow/components/cash-flow-chart"
 import { CashFlowTable } from "@/features/cash-flow/components/cash-flow-table"
 import { getCashFlow } from "@/features/cash-flow/queries"
+import { NoPeriodData } from "@/features/reports/components/no-period-data"
 import { ReportPeriodPicker } from "@/features/reports/components/report-period-picker"
 import { parseReportParams } from "@/features/reports/period"
+import { WorkspaceNoTransactions } from "@/features/transactions/components/workspace-no-transactions"
 import { buildFiltersQuery } from "@/features/transactions/filters"
+import { hasAnyTransactions } from "@/features/transactions/queries"
 import {
   workspaceCashFlowPath,
   workspaceTransactionsPath
@@ -74,6 +77,17 @@ async function CashFlowContent({
   ])
   const activeAccounts = accounts.filter((account) => !account.archived_at)
 
+  const isEmptyPeriod = cashFlow.months.every((row) => row.txCount === 0)
+  // Solo se consulta cuando el periodo no tiene movimientos
+  if (isEmptyPeriod && !(await hasAnyTransactions(workspace.id))) {
+    return (
+      <WorkspaceNoTransactions
+        workspaceId={workspace.id}
+        workspaceType="business"
+      />
+    )
+  }
+
   // Movimientos solo filtra por mes: con otro periodo el enlace abre todos
   const withoutAccountHref =
     `${workspaceTransactionsPath(workspace)}?${buildFiltersQuery({
@@ -119,29 +133,40 @@ async function CashFlowContent({
         </div>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Entradas y salidas</CardTitle>
-          <CardDescription className="first-letter:uppercase">
-            {period.label} · con el saldo en cuentas al cierre de cada mes
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <CashFlowChart
-            data={cashFlow.months}
-            currency={workspace.currency}
-            className="aspect-auto h-80 w-full"
-          />
-        </CardContent>
-      </Card>
+      {isEmptyPeriod ? (
+        <NoPeriodData
+          message="No hay movimientos en este periodo"
+          className="py-16"
+        />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Entradas y salidas</CardTitle>
+            <CardDescription className="first-letter:uppercase">
+              {period.label} · con el saldo en cuentas al cierre de cada mes
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CashFlowChart
+              data={cashFlow.months}
+              currency={workspace.currency}
+              className="aspect-auto h-80 w-full"
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <section className="flex flex-col gap-3 lg:col-span-2">
           <h2 className="text-lg font-semibold">Mes a mes</h2>
-          <CashFlowTable
-            months={cashFlow.months}
-            currency={workspace.currency}
-          />
+          {isEmptyPeriod ? (
+            <NoPeriodData message="No hay movimientos en este periodo" />
+          ) : (
+            <CashFlowTable
+              months={cashFlow.months}
+              currency={workspace.currency}
+            />
+          )}
         </section>
         <Card className="self-start">
           <CardHeader>

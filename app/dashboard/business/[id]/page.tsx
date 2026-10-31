@@ -11,10 +11,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
 import { getAccountBalances } from "@/features/accounts/queries"
-import type { AccountWithBalance } from "@/features/accounts/types"
 import { BusinessScoreSummaryCard } from "@/features/business-score/components/business-score-summary-card"
 import { BusinessSummaryCards } from "@/features/business/components/business-summary-cards"
-import { getCategories } from "@/features/categories/queries"
 import { buildCategorySlices } from "@/features/reports/chart-data"
 import { CategoryDonutChart } from "@/features/reports/components/category-donut-chart"
 import { IncomeExpenseChart } from "@/features/reports/components/income-expense-chart"
@@ -26,7 +24,7 @@ import {
   getMonthlyTotals,
   getRecentTransactions
 } from "@/features/reports/queries"
-import { NoTransactions } from "@/features/transactions/components/transactions-empty"
+import { WorkspaceNoTransactions } from "@/features/transactions/components/workspace-no-transactions"
 import { workspaceTransactionsPath } from "@/features/workspaces/paths"
 import { getWorkspace } from "@/features/workspaces/queries"
 import { currentMonth, monthRange, shiftMonth } from "@/libs/dates"
@@ -90,9 +88,9 @@ async function SummaryContent({
   // Sin movimientos recientes la empresa está vacía: se invita a registrar
   if (recent.length === 0) {
     return (
-      <EmptyBusiness
+      <WorkspaceNoTransactions
         workspaceId={workspace.id}
-        accounts={accounts}
+        workspaceType="business"
       />
     )
   }
@@ -173,26 +171,6 @@ async function SummaryContent({
         transactionsPath={workspaceTransactionsPath(workspace)}
       />
     </>
-  )
-}
-
-// Sin movimientos se invita a registrar la primera venta o gasto
-async function EmptyBusiness({
-  workspaceId,
-  accounts
-}: {
-  workspaceId: string
-  accounts: AccountWithBalance[]
-}) {
-  const categories = await getCategories(workspaceId)
-
-  return (
-    <NoTransactions
-      workspaceId={workspaceId}
-      workspaceType="business"
-      categories={categories}
-      accounts={accounts}
-    />
   )
 }
 

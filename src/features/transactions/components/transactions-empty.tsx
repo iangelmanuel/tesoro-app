@@ -31,7 +31,11 @@ export function NoTransactions({
   return (
     <EmptyState
       icon={ReceiptText}
-      title="Registra tu primer movimiento"
+      title={
+        isBusiness
+          ? "Registra tu primera venta"
+          : "Registra tu primer movimiento"
+      }
       description={
         isBusiness
           ? "Anota una venta o un costo o gasto de tu empresa. Con tus movimientos Tesoro arma las ventas, los costos y la utilidad del mes."

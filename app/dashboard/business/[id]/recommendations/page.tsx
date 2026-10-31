@@ -12,6 +12,8 @@ import {
 } from "@/features/score/components/score-recommendations-view"
 import { getDismissedRecommendations } from "@/features/score/queries"
 import { splitDismissed } from "@/features/score/recommendations"
+import { WorkspaceNoTransactions } from "@/features/transactions/components/workspace-no-transactions"
+import { hasAnyTransactions } from "@/features/transactions/queries"
 import { getWorkspace } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
 import { buildMetadata } from "@/libs/seo"
@@ -52,6 +54,16 @@ async function RecommendationsContent({
 }: Pick<BusinessRecommendationsPageProps, "params">) {
   const { id } = await params
   const workspace = await getWorkspace(id)
+
+  if (!(await hasAnyTransactions(workspace.id))) {
+    return (
+      <WorkspaceNoTransactions
+        workspaceId={workspace.id}
+        workspaceType="business"
+      />
+    )
+  }
+
   // Tras leer la sesión: todayISO usa new Date()
   const today = todayISO()
   const month = today.slice(0, 7)

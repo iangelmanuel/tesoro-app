@@ -28,17 +28,19 @@ import { formatCurrency, formatDate } from "@/libs/format"
 
 // Los últimos movimientos pueden ser de meses anteriores: "Ver todos" abre
 // Movimientos con todos los meses
-const ALL_TRANSACTIONS_HREF =
-  `${TRANSACTIONS_PATH}?${buildFiltersQuery({ month: "all", page: 1 })}` as Route
+const ALL_MONTHS_QUERY = buildFiltersQuery({ month: "all", page: 1 })
 
 interface RecentTransactionsProps {
   rows: TransactionWithCategory[]
   currency: string
+  /** Ruta de Movimientos del espacio */
+  transactionsPath?: string
 }
 
 export function RecentTransactions({
   rows,
-  currency
+  currency,
+  transactionsPath = TRANSACTIONS_PATH
 }: RecentTransactionsProps) {
   return (
     <Card>
@@ -51,7 +53,9 @@ export function RecentTransactions({
             size="sm"
             asChild
           >
-            <Link href={ALL_TRANSACTIONS_HREF}>Ver todos</Link>
+            <Link href={`${transactionsPath}?${ALL_MONTHS_QUERY}` as Route}>
+              Ver todos
+            </Link>
           </Button>
         </CardAction>
       </CardHeader>

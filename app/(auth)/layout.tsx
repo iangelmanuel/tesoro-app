@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { Logo } from "@/components/brand/logo"
 import { SITE } from "@/config/site"
 
 export default function AuthLayout({
@@ -11,9 +12,7 @@ export default function AuthLayout({
           href={SITE.routes.home}
           className="flex flex-col items-center gap-1 self-center text-center"
         >
-          <span className="text-2xl font-semibold tracking-tight">
-            {SITE.info.name}
-          </span>
+          <Logo size="lg" />
           <span className="text-sm text-muted-foreground">
             {SITE.info.slogan}
           </span>

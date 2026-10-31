@@ -1,8 +1,8 @@
 "use client"
 
 import { useParams, usePathname } from "next/navigation"
+import { Button } from "@heroui/react"
 import { Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import type { Category } from "@/features/categories/queries"
@@ -51,7 +51,7 @@ export function QuickAddTransactionButton({
       accounts={workspace.accounts}
       trigger={
         <Button size="sm">
-          <Plus data-icon="inline-start" />
+          <Plus className="size-4" />
           <span className="hidden sm:inline">Nuevo movimiento</span>
           <span className="sr-only sm:hidden">Nuevo movimiento</span>
         </Button>

@@ -1,15 +1,15 @@
 import { Suspense } from "react"
 import { redirect } from "next/navigation"
+import { Separator } from "@heroui/react"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { AppSidebarSkeleton } from "@/components/dashboard/app-sidebar-skeleton"
 import { QuickAddTransaction } from "@/components/dashboard/quick-add-transaction"
-import { WorkspaceThemeRoot } from "@/components/dashboard/workspace-theme-root"
-import { Separator } from "@/components/ui/separator"
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger
-} from "@/components/ui/sidebar"
+} from "@/components/dashboard/sidebar"
+import { WorkspaceThemeRoot } from "@/components/dashboard/workspace-theme-root"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { SITE } from "@/config/site"
 import { getBusinessWorkspaces } from "@/features/workspaces/queries"
@@ -58,11 +58,11 @@ export default function DashboardLayout({
             <DashboardSidebar />
           </Suspense>
           <SidebarInset>
-            <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+            <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b border-separator bg-background/80 px-4 backdrop-blur">
               <SidebarTrigger className="-ml-1" />
               <Separator
                 orientation="vertical"
-                className="mr-2 data-[orientation=vertical]:h-4"
+                className="mr-2 h-4"
               />
               <span className="text-sm font-medium">{SITE.info.name}</span>
               <div className="ml-auto">

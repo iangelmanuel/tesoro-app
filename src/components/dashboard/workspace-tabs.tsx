@@ -2,14 +2,17 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs } from "@heroui/react"
 import { SITE } from "@/config/site"
 
 const WORKSPACE_TABS = [
-  { value: "personal", label: "Personal", href: SITE.routes.dashboardPersonal },
-  { value: "business", label: "Empresa", href: SITE.routes.dashboardBusiness }
+  { id: "personal", label: "Personal", href: SITE.routes.dashboardPersonal },
+  { id: "business", label: "Empresa", href: SITE.routes.dashboardBusiness }
 ] as const
 
+// Selector Personal / Empresa. Son enlaces (Next Link vía `render`); la
+// pestaña activa sale de la ruta. La variante secondary subraya la activa con
+// el primario del espacio (--accent)
 export function WorkspaceTabs() {
   const pathname = usePathname()
   const active = pathname.startsWith(SITE.routes.dashboardBusiness)
@@ -18,20 +21,34 @@ export function WorkspaceTabs() {
 
   return (
     <Tabs
-      value={active}
-      activationMode="manual"
+      selectedKey={active}
+      variant="secondary"
+      className="w-full"
     >
-      <TabsList className="w-full">
-        {WORKSPACE_TABS.map((tab) => (
-          <TabsTrigger
-            key={tab.value}
-            value={tab.value}
-            asChild
-          >
-            <Link href={tab.href}>{tab.label}</Link>
-          </TabsTrigger>
-        ))}
-      </TabsList>
+      <Tabs.ListContainer>
+        <Tabs.List
+          aria-label="Espacio"
+          className="w-full"
+        >
+          {WORKSPACE_TABS.map((tab) => (
+            <Tabs.Tab
+              key={tab.id}
+              id={tab.id}
+              href={tab.href}
+              render={(domProps) => (
+                <Link
+                  {...(domProps as React.ComponentProps<"a">)}
+                  href={tab.href}
+                />
+              )}
+              className="flex-1"
+            >
+              {tab.label}
+              <Tabs.Indicator />
+            </Tabs.Tab>
+          ))}
+        </Tabs.List>
+      </Tabs.ListContainer>
     </Tabs>
   )
 }

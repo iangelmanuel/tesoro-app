@@ -20,15 +20,10 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarRail
-} from "@/components/ui/sidebar"
+  SidebarNavLink
+} from "@/components/dashboard/sidebar"
 import { SITE } from "@/config/site"
 import {
   type BusinessOption,
@@ -101,8 +96,8 @@ export function AppSidebar({ user, businesses }: AppSidebarProps) {
   }
 
   return (
-    <Sidebar collapsible="offcanvas">
-      <SidebarHeader className="gap-3">
+    <Sidebar>
+      <SidebarHeader>
         <Link
           href={SITE.routes.dashboardPersonal}
           className="px-2 pt-1 text-lg font-semibold tracking-tight"
@@ -119,40 +114,35 @@ export function AppSidebar({ user, businesses }: AppSidebarProps) {
       </SidebarHeader>
       <SidebarContent>
         {root && (
-          <SidebarGroup>
+          <nav aria-label="Secciones del espacio">
             {/* Con una sola empresa el selector no se pinta: el nombre queda aquí */}
             {business && businesses.length < 2 && (
               <SidebarGroupLabel>
                 <span className="truncate">{business.name}</span>
               </SidebarGroupLabel>
             )}
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {items.map((item) => {
-                  const Icon = NAV_ICONS[item.icon]
-                  return (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive(pathname, item.href, root)}
-                      >
-                        <Link href={item.href as Route}>
-                          <Icon />
-                          <span>{item.name}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+            <ul className="flex flex-col gap-0.5">
+              {items.map((item) => {
+                const Icon = NAV_ICONS[item.icon]
+                return (
+                  <li key={item.href}>
+                    <SidebarNavLink
+                      href={item.href as Route}
+                      isActive={isActive(pathname, item.href, root)}
+                    >
+                      <Icon />
+                      <span className="truncate">{item.name}</span>
+                    </SidebarNavLink>
+                  </li>
+                )
+              })}
+            </ul>
+          </nav>
         )}
       </SidebarContent>
       <SidebarFooter>
         <UserMenu user={user} />
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   )
 }

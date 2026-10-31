@@ -17,7 +17,7 @@ export type ScoreData = Omit<ScoreInputs, "debts" | "goals"> & {
 }
 
 /** Fecha del primer movimiento del espacio, o null si no hay */
-async function getFirstTransactionOn(workspaceId: string) {
+export async function getFirstTransactionOn(workspaceId: string) {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("transactions")

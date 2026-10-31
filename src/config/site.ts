@@ -113,7 +113,8 @@ export const SITE = {
     forgotPassword: "/forgot-password",
     resetPassword: "/reset-password",
     checkEmail: "/check-email",
-    authConfirm: "/auth/confirm"
+    authConfirm: "/auth/confirm",
+    legal: "/legal"
   },
 
   // Monedas que el usuario puede elegir. Solo cambian el formato de los
@@ -154,14 +155,14 @@ export const SITE = {
 
   legal: [
     {
-      slug: "privacidad",
+      slug: "privacy",
       title: "Política de Privacidad",
-      updatedAt: "2026-10-29"
+      updatedAt: "2026-10-31"
     },
     {
-      slug: "terminos",
+      slug: "terms",
       title: "Términos y Condiciones",
-      updatedAt: "2026-10-29"
+      updatedAt: "2026-10-31"
     }
   ],
 
@@ -169,6 +170,7 @@ export const SITE = {
     main: [
       { name: "Inicio", href: "/" },
       { name: "Funciones", href: "/#funciones" },
+      { name: "Cómo funciona", href: "/#como-funciona" },
       { name: "Score", href: "/#score" },
       { name: "Código abierto", href: "/#open-source" }
     ],
@@ -282,3 +284,10 @@ export const SITE = {
     manifestCategories: ["finance", "business", "productivity"]
   }
 } as const
+
+export type LegalSlug = (typeof SITE.legal)[number]["slug"]
+
+// URL de un documento legal. No se arma a mano en los componentes
+export function legalHref(slug: LegalSlug) {
+  return `${SITE.routes.legal}/${slug}` as const
+}

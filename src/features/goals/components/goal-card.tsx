@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { Button, Dropdown, Label } from "@heroui/react"
 import {
   Archive,
   CircleCheck,
@@ -8,13 +9,6 @@ import {
   PartyPopper,
   Pencil
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
 import { formatCurrency } from "@/libs/format"
 import { goalStatus, isReached } from "../progress"
 import type { Goal, GoalContribution } from "../queries"
@@ -49,7 +43,7 @@ export function GoalCard({
         {/* Abre el Sheet con el detalle y los aportes */}
         <button
           type="button"
-          className="-m-1 flex min-w-0 flex-1 items-start gap-3 rounded-lg p-1 text-left transition-colors hover:bg-default/50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+          className="-m-1 flex min-w-0 flex-1 items-start gap-3 rounded-lg p-1 text-left transition-colors hover:bg-default/50 focus-visible:ring-[3px] focus-visible:ring-focus/50 focus-visible:outline-none"
           onClick={() => setDetailOpen(true)}
         >
           <GoalIcon
@@ -61,7 +55,7 @@ export function GoalCard({
               <span className="truncate font-medium">{goal.name}</span>
               <GoalStatusBadge status={goalStatus(goal, today)} />
             </span>
-            <span className="text-sm text-muted-foreground tabular-nums">
+            <span className="text-sm text-muted tabular-nums">
               <span className="font-medium text-foreground">
                 {formatCurrency(goal.saved, currency)}
               </span>{" "}
@@ -70,32 +64,42 @@ export function GoalCard({
           </span>
         </button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Acciones de ${goal.name}`}
-              disabled={pending}
-            >
-              <EllipsisVertical />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => setEditing(true)}>
-              <Pencil />
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => run("complete")}>
-              <CircleCheck />
-              Marcar como cumplida
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => run("archive")}>
-              <Archive />
-              Archivar
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Dropdown>
+          <Button
+            variant="ghost"
+            isIconOnly
+            size="sm"
+            aria-label={`Acciones de ${goal.name}`}
+            isDisabled={pending}
+          >
+            <EllipsisVertical />
+          </Button>
+          <Dropdown.Popover placement="bottom end">
+            <Dropdown.Menu aria-label={`Acciones de ${goal.name}`}>
+              <Dropdown.Item
+                onAction={() => setEditing(true)}
+                textValue="Editar"
+              >
+                <Pencil className="size-4" />
+                <Label>Editar</Label>
+              </Dropdown.Item>
+              <Dropdown.Item
+                onAction={() => run("complete")}
+                textValue="Marcar como cumplida"
+              >
+                <CircleCheck className="size-4" />
+                <Label>Marcar como cumplida</Label>
+              </Dropdown.Item>
+              <Dropdown.Item
+                onAction={() => run("archive")}
+                textValue="Archivar"
+              >
+                <Archive className="size-4" />
+                <Label>Archivar</Label>
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown.Popover>
+        </Dropdown>
         <GoalDialog
           goal={goal}
           open={editing}
@@ -125,8 +129,8 @@ export function GoalCard({
           </p>
           <Button
             size="sm"
-            disabled={pending}
-            onClick={() => run("complete")}
+            isDisabled={pending}
+            onPress={() => run("complete")}
           >
             Marcar como cumplida
           </Button>

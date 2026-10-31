@@ -43,13 +43,13 @@ export function GoalSummary({ goal, today, currency }: GoalSummaryProps) {
 
       <dl className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
         <div className="flex justify-between gap-2 sm:flex-col sm:justify-start">
-          <dt className="text-muted-foreground">Faltan</dt>
+          <dt className="text-muted">Faltan</dt>
           <dd className="font-medium tabular-nums">
             {formatCurrency(remaining, currency)}
           </dd>
         </div>
         <div className="flex justify-between gap-2 sm:flex-col sm:justify-start">
-          <dt className="text-muted-foreground">Fecha objetivo</dt>
+          <dt className="text-muted">Fecha objetivo</dt>
           <dd className="font-medium">
             {goal.target_date
               ? formatDate(goal.target_date)
@@ -60,7 +60,7 @@ export function GoalSummary({ goal, today, currency }: GoalSummaryProps) {
             reemplaza al aporte sugerido */}
         {goal.status === "active" && suggested !== null && !isReached(goal) && (
           <div className="flex justify-between gap-2 sm:col-span-2 sm:flex-col sm:justify-start">
-            <dt className="text-muted-foreground">Aporte mensual sugerido</dt>
+            <dt className="text-muted">Aporte mensual sugerido</dt>
             <dd className="font-medium tabular-nums">
               {formatCurrency(suggested, currency)}
             </dd>

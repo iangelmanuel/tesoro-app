@@ -1,15 +1,14 @@
 import Link from "next/link"
-import { Target } from "lucide-react"
-import { CardEmpty } from "@/components/dashboard/empty-state"
-import { Button } from "@/components/ui/button"
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+  CardTitle,
+  buttonVariants
+} from "@heroui/react"
+import { Target } from "lucide-react"
+import { CardEmpty } from "@/components/dashboard/empty-state"
 import { formatPercent } from "@/features/budgets/progress"
 import { todayISO } from "@/libs/dates"
 import { formatCurrency } from "@/libs/format"
@@ -41,19 +40,20 @@ export async function GoalsCard({ workspaceId, currency }: GoalsCardProps) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Metas de ahorro</CardTitle>
-        <CardDescription>Las de fecha más cercana</CardDescription>
-        <CardAction>
-          <Button
-            variant="outline"
-            size="sm"
-            asChild
+      <div className="flex items-start justify-between gap-2">
+        <CardHeader>
+          <CardTitle>Metas de ahorro</CardTitle>
+          <CardDescription>Las de fecha más cercana</CardDescription>
+        </CardHeader>
+        <div className="shrink-0">
+          <Link
+            href={GOALS_PATH}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
           >
-            <Link href={GOALS_PATH}>Ver todas</Link>
-          </Button>
-        </CardAction>
-      </CardHeader>
+            Ver todas
+          </Link>
+        </div>
+      </div>
       <CardContent>
         {active.length === 0 && (
           <div className="flex flex-col items-center gap-3">
@@ -61,13 +61,12 @@ export async function GoalsCard({ workspaceId, currency }: GoalsCardProps) {
               icon={Target}
               message="No tienes metas activas"
             />
-            <Button
-              variant="link"
-              size="sm"
-              asChild
+            <Link
+              href={GOALS_PATH}
+              className={buttonVariants({ variant: "ghost", size: "sm" })}
             >
-              <Link href={GOALS_PATH}>Crear meta</Link>
-            </Button>
+              Crear meta
+            </Link>
           </div>
         )}
         <ul className="flex flex-col divide-y">
@@ -95,7 +94,7 @@ export async function GoalsCard({ workspaceId, currency }: GoalsCardProps) {
                   percent={percent}
                   status={status}
                 />
-                <p className="text-sm text-muted-foreground tabular-nums">
+                <p className="text-sm text-muted tabular-nums">
                   {formatCurrency(goal.saved, currency)} de{" "}
                   {formatCurrency(goal.target_amount, currency)}
                 </p>

@@ -1,30 +1,20 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import { toast } from "@heroui/react"
-import { CalendarIcon, X } from "lucide-react"
-import { es } from "react-day-picker/locale"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover"
+  Button,
+  FieldError,
+  Input,
+  Label,
+  Modal,
+  TextField,
+  toast
+} from "@heroui/react"
+import { parseDate } from "@internationalized/date"
+import { X } from "lucide-react"
+import { DatePickerField } from "@/components/forms/date-picker-field"
 import { IconColorPicker } from "@/features/categories/components/icon-color-picker"
-import { fromLocalDate, toLocalDate, todayISO } from "@/libs/dates"
-import { formatDate } from "@/libs/format"
+import { todayISO } from "@/libs/dates"
 import { createGoal, updateGoal } from "../actions"
 import type { Goal } from "../queries"
 import type { GoalFormState } from "../types"
@@ -54,28 +44,37 @@ export function GoalDialog({
   const isEditing = goal !== undefined
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={setOpen}
-    >
-      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? "Editar meta" : "Nueva meta"}</DialogTitle>
-          <DialogDescription>
-            {isEditing
-              ? "Cambia los datos de la meta. Sus aportes no cambian."
-              : "Algo para lo que quieres ahorrar, como un viaje o un fondo de emergencia."}
-          </DialogDescription>
-        </DialogHeader>
-        {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-        <GoalForm
-          goal={goal}
-          onSaved={() => setOpen(false)}
-          onCancel={() => setOpen(false)}
-        />
-      </DialogContent>
-    </Dialog>
+    <Modal>
+      {trigger}
+      <Modal.Backdrop
+        isOpen={open}
+        onOpenChange={setOpen}
+      >
+        <Modal.Container scroll="outside">
+          <Modal.Dialog className="sm:max-w-md">
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <Modal.Heading>
+                {isEditing ? "Editar meta" : "Nueva meta"}
+              </Modal.Heading>
+              <p className="text-sm text-muted">
+                {isEditing
+                  ? "Cambia los datos de la meta. Sus aportes no cambian."
+                  : "Algo para lo que quieres ahorrar, como un viaje o un fondo de emergencia."}
+              </p>
+            </Modal.Header>
+            <Modal.Body>
+              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
+              <GoalForm
+                goal={goal}
+                onSaved={() => setOpen(false)}
+                onCancel={() => setOpen(false)}
+              />
+            </Modal.Body>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
   )
 }
 
@@ -120,73 +119,62 @@ function GoalForm({ goal, onSaved, onCancel }: GoalFormProps) {
           value={goal.id}
         />
       )}
-      <input
-        type="hidden"
-        name="target_date"
-        value={targetDate}
-      />
 
-      <Field
-        id="name"
-        label="Nombre"
-        errors={errors?.name}
+      <TextField
+        name="name"
+        maxLength={60}
+        defaultValue={values?.name ?? goal?.name}
+        isRequired
+        isInvalid={Boolean(errors?.name)}
+        validationBehavior="aria"
+        className="flex flex-col gap-2"
       >
-        <Input
-          id="name"
-          name="name"
-          maxLength={60}
-          placeholder="Viaje"
-          defaultValue={values?.name ?? goal?.name}
-          aria-invalid={Boolean(errors?.name) || undefined}
-          required
-        />
-      </Field>
+        <Label>Nombre</Label>
+        <Input placeholder="Viaje" />
+        <FieldError>{errors?.name?.[0]}</FieldError>
+      </TextField>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          id="target_amount"
-          label="Monto objetivo"
-          errors={errors?.target_amount}
+        <TextField
+          name="target_amount"
+          inputMode="decimal"
+          autoComplete="off"
+          defaultValue={
+            values?.target_amount ??
+            (goal ? AMOUNT_FORMAT.format(goal.target_amount) : "")
+          }
+          isRequired
+          isInvalid={Boolean(errors?.target_amount)}
+          validationBehavior="aria"
+          className="flex flex-col gap-2"
         >
-          <Input
-            id="target_amount"
-            name="target_amount"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="0"
-            defaultValue={
-              values?.target_amount ??
-              (goal ? AMOUNT_FORMAT.format(goal.target_amount) : "")
-            }
-            aria-invalid={Boolean(errors?.target_amount) || undefined}
-            required
-          />
-        </Field>
+          <Label>Monto objetivo</Label>
+          <Input placeholder="0" />
+          <FieldError>{errors?.target_amount?.[0]}</FieldError>
+        </TextField>
 
-        <Field
-          id="target_date"
-          label="Fecha objetivo (opcional)"
-          errors={errors?.target_date}
-        >
-          <div className="flex gap-1">
-            <TargetDatePicker
-              id="target_date"
-              value={targetDate}
-              onChange={setTargetDate}
-            />
-            {targetDate && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label="Quitar fecha objetivo"
-                onClick={() => setTargetDate("")}
-              >
-                <X />
-              </Button>
-            )}
-          </div>
-        </Field>
+        {/* Solo deja elegir fechas posteriores a hoy */}
+        <div className="flex items-end gap-1">
+          <DatePickerField
+            name="target_date"
+            label="Fecha objetivo (opcional)"
+            value={targetDate}
+            onChange={setTargetDate}
+            error={errors?.target_date?.[0]}
+            minValue={parseDate(todayISO()).add({ days: 1 }).toString()}
+            className="flex flex-1 flex-col gap-2"
+          />
+          {targetDate && (
+            <Button
+              variant="ghost"
+              isIconOnly
+              aria-label="Quitar fecha objetivo"
+              onPress={() => setTargetDate("")}
+            >
+              <X />
+            </Button>
+          )}
+        </div>
       </div>
 
       <IconColorPicker
@@ -199,105 +187,26 @@ function GoalForm({ goal, onSaved, onCancel }: GoalFormProps) {
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-destructive"
+          className="text-sm text-danger"
         >
           {state.error}
         </p>
       )}
 
-      <DialogFooter>
+      <div className="flex justify-end gap-2">
         <Button
-          type="button"
           variant="ghost"
-          onClick={onCancel}
+          onPress={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          disabled={pending}
+          isDisabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear"}
         </Button>
-      </DialogFooter>
+      </div>
     </form>
-  )
-}
-
-// Solo deja elegir fechas posteriores a hoy
-function TargetDatePicker({
-  id,
-  value,
-  onChange
-}: {
-  id: string
-  /** YYYY-MM-DD, o "" sin fecha */
-  value: string
-  onChange: (value: string) => void
-}) {
-  const [open, setOpen] = useState(false)
-  const selected = value ? toLocalDate(value) : undefined
-
-  return (
-    <Popover
-      open={open}
-      onOpenChange={setOpen}
-    >
-      <PopoverTrigger asChild>
-        <Button
-          id={id}
-          type="button"
-          variant="outline"
-          className="flex-1 justify-start font-normal"
-        >
-          <CalendarIcon data-icon="inline-start" />
-          {value ? (
-            formatDate(value)
-          ) : (
-            <span className="text-muted-foreground">Sin fecha</span>
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        className="w-auto p-0"
-        align="start"
-      >
-        <Calendar
-          mode="single"
-          locale={es}
-          selected={selected}
-          defaultMonth={selected}
-          disabled={(date) => fromLocalDate(date) <= todayISO()}
-          onSelect={(date) => {
-            if (date) {
-              onChange(fromLocalDate(date))
-              setOpen(false)
-            }
-          }}
-        />
-      </PopoverContent>
-    </Popover>
-  )
-}
-
-function Field({
-  id,
-  label,
-  errors,
-  children
-}: {
-  id: string
-  label: string
-  errors?: string[]
-  children: React.ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>{label}</Label>
-      {children}
-      {errors?.length ? (
-        <p className="text-sm text-destructive">{errors[0]}</p>
-      ) : null}
-    </div>
   )
 }

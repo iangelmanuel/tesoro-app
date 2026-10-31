@@ -11,21 +11,10 @@ import {
   ChartTooltip
 } from "@/components/ui/chart"
 import { formatCurrency } from "@/libs/format"
+import { REPORT_LABELS, type ReportLabels } from "../labels"
 import type { MonthlyTotal } from "../queries"
 import { ChartDataTable } from "./chart-data-table"
 import { CurrencyTooltipContent } from "./currency-tooltip"
-
-const CHART_CONFIG = {
-  income: { label: "Ingresos", color: "var(--income)" },
-  expense: { label: "Gastos", color: "var(--expense)" },
-  balance: { label: "Balance", color: "var(--balance)" }
-} satisfies ChartConfig
-
-const LABELS = {
-  income: "Ingresos",
-  expense: "Gastos",
-  balance: "Balance"
-}
 
 const COMPACT = new Intl.NumberFormat("es-CO", {
   notation: "compact",
@@ -47,6 +36,8 @@ interface IncomeExpenseChartProps {
   currency: string
   /** Agrega la línea de balance sobre las barras */
   showBalance?: boolean
+  /** Textos de las series según el espacio. Por defecto, los de Personal */
+  labels?: Pick<ReportLabels, "income" | "expense" | "series">
   className?: string
 }
 
@@ -54,8 +45,19 @@ export function IncomeExpenseChart({
   data,
   currency,
   showBalance = false,
+  labels = REPORT_LABELS.personal,
   className
 }: IncomeExpenseChartProps) {
+  const seriesLabels = {
+    income: labels.income,
+    expense: labels.expense,
+    balance: "Balance"
+  }
+  const chartConfig = {
+    income: { label: labels.income, color: "var(--income)" },
+    expense: { label: labels.expense, color: "var(--expense)" },
+    balance: { label: "Balance", color: "var(--balance)" }
+  } satisfies ChartConfig
   const sameYear =
     data.length > 0 &&
     data[0].month.slice(0, 4) === data.at(-1)?.month.slice(0, 4)
@@ -64,12 +66,12 @@ export function IncomeExpenseChart({
     data.length > 0
       ? `de ${monthLabel(data[0].month)} a ${monthLabel(data.at(-1)!.month)}`
       : ""
-  const description = `Ingresos y gastos${showBalance ? " con balance" : ""} por mes ${range}`
+  const description = `${labels.series}${showBalance ? " con balance" : ""} por mes ${range}`
 
   return (
     <>
       <ChartContainer
-        config={CHART_CONFIG}
+        config={chartConfig}
         className={className}
         role="figure"
         aria-label={description}
@@ -99,7 +101,7 @@ export function IncomeExpenseChart({
             content={
               <CurrencyTooltipContent
                 currency={currency}
-                labels={LABELS}
+                labels={seriesLabels}
                 labelFormatter={(_, payload) =>
                   payload[0] ? monthLabel(String(payload[0].payload.month)) : ""
                 }
@@ -132,8 +134,8 @@ export function IncomeExpenseChart({
         caption={description}
         headers={[
           "Mes",
-          "Ingresos",
-          "Gastos",
+          labels.income,
+          labels.expense,
           ...(showBalance ? ["Balance"] : [])
         ]}
         rows={data.map((row) => [

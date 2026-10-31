@@ -18,3 +18,11 @@ export function workspaceTransactionsPath(workspace: {
 }) {
   return `${workspaceBasePath(workspace)}/transactions`
 }
+
+/** Reportes del espacio */
+export function workspaceReportsPath(workspace: {
+  id: string
+  type: WorkspaceType
+}) {
+  return `${workspaceBasePath(workspace)}/reports`
+}

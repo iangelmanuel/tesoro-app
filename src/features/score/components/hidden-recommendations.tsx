@@ -1,8 +1,8 @@
 "use client"
 
 import { useTransition } from "react"
+import { toast } from "@heroui/react"
 import { ChevronDown } from "lucide-react"
-import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Collapsible,
@@ -67,7 +67,7 @@ function HiddenRecommendationRow({
         recommendation.entityKey
       )
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       }
     })
   }

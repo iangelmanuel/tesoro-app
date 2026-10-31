@@ -1,9 +1,9 @@
 "use client"
 
 import { useTransition } from "react"
+import { toast } from "@heroui/react"
 import { cn } from "cn"
 import { Pencil, Trash2 } from "lucide-react"
-import { toast } from "sonner"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -178,7 +178,7 @@ function DeleteBudgetButton({
     startTransition(async () => {
       const result = await deleteBudget(budget.budgetId)
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success("Presupuesto eliminado")
       }

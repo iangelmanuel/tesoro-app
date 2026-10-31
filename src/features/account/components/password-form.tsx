@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState, useRef } from "react"
-import { toast } from "sonner"
+import { toast } from "@heroui/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Field } from "@/features/debts/components/field"

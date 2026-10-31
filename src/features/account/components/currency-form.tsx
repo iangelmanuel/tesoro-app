@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState } from "react"
-import { toast } from "sonner"
+import { toast } from "@heroui/react"
 import { Button } from "@/components/ui/button"
 import {
   Select,

@@ -1,7 +1,7 @@
 "use client"
 
 import { useTransition } from "react"
-import { toast } from "sonner"
+import { toast } from "@heroui/react"
 import { archiveAccount, restoreAccount } from "../actions"
 
 const ACTIONS = {
@@ -23,7 +23,7 @@ export function useAccountAction(account: {
     startTransition(async () => {
       const result = await ACTIONS[action].run(account.workspace_id, account.id)
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success(`"${account.name}" ${ACTIONS[action].success}`)
       }

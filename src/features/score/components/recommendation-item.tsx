@@ -2,7 +2,7 @@
 
 import { useTransition } from "react"
 import Link from "next/link"
-import { toast } from "sonner"
+import { toast } from "@heroui/react"
 import { Button } from "@/components/ui/button"
 import { ToneBadge } from "@/features/debts/components/debt-indicators"
 import type { OccurrenceTone } from "@/features/recurring-expenses/occurrences"
@@ -48,7 +48,7 @@ export function RecommendationItem({
         recommendation.entityKey
       )
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success("Recomendación oculta este mes")
       }

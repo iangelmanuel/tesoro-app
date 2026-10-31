@@ -1,7 +1,7 @@
 "use client"
 
 import { useTransition } from "react"
-import { toast } from "sonner"
+import { toast } from "@heroui/react"
 import { Button } from "@/components/ui/button"
 import { cancelBusinessDeletion } from "../actions"
 
@@ -17,7 +17,7 @@ export function RestoreBusinessButton({
     startTransition(async () => {
       const result = await cancelBusinessDeletion(workspaceId)
       if (result?.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       }
     })
   }

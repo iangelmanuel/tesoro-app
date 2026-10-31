@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { toast } from "sonner"
+import { toast } from "@heroui/react"
 import { Button } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import { resetPassword } from "../actions"

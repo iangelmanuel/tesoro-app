@@ -1,8 +1,8 @@
 "use client"
 
 import { useRef, useTransition } from "react"
+import { toast } from "@heroui/react"
 import { ImageUp, Trash2 } from "lucide-react"
-import { toast } from "sonner"
 import { getInitials } from "@/components/dashboard/user-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -72,11 +72,11 @@ export function AvatarUploader({
 
   function upload(file: File) {
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      toast.error("La foto debe ser JPG, PNG o WebP")
+      toast.danger("La foto debe ser JPG, PNG o WebP")
       return
     }
     if (file.size > MAX_FILE_SIZE) {
-      toast.error("La foto debe pesar máximo 5 MB")
+      toast.danger("La foto debe pesar máximo 5 MB")
       return
     }
 
@@ -85,7 +85,7 @@ export function AvatarUploader({
       try {
         blob = await toSquareWebp(file)
       } catch {
-        toast.error("No se pudo procesar la foto. Prueba con otra")
+        toast.danger("No se pudo procesar la foto. Prueba con otra")
         return
       }
 
@@ -96,13 +96,13 @@ export function AvatarUploader({
         .upload(path, blob, { contentType: "image/webp", upsert: false })
 
       if (uploadError) {
-        toast.error("No se pudo subir la foto. Intenta de nuevo")
+        toast.danger("No se pudo subir la foto. Intenta de nuevo")
         return
       }
 
       const result = await setAvatar(path)
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success("Foto actualizada")
       }
@@ -113,7 +113,7 @@ export function AvatarUploader({
     startTransition(async () => {
       const result = await removeAvatar()
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success("Foto quitada")
       }

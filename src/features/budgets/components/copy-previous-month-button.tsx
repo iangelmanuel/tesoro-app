@@ -1,8 +1,8 @@
 "use client"
 
 import { useTransition } from "react"
+import { toast } from "@heroui/react"
 import { Copy } from "lucide-react"
-import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { copyPreviousMonthBudgets } from "../actions"
 
@@ -20,7 +20,7 @@ export function CopyPreviousMonthButton({
     startTransition(async () => {
       const result = await copyPreviousMonthBudgets(month)
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else if (result.copied) {
         toast.success(`Se copiaron ${result.copied} presupuestos`)
       } else {

@@ -1,9 +1,9 @@
 "use client"
 
 import { useActionState, useState } from "react"
+import { toast } from "@heroui/react"
 import { CalendarIcon } from "lucide-react"
 import { es } from "react-day-picker/locale"
-import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {

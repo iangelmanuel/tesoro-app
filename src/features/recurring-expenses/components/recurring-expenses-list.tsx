@@ -1,9 +1,9 @@
 "use client"
 
 import { useTransition } from "react"
+import { toast } from "@heroui/react"
 import { cn } from "cn"
 import { Pause, Pencil, Play, Trash2 } from "lucide-react"
-import { toast } from "sonner"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -147,7 +147,7 @@ function ToggleRecurringExpenseButton({
         !expense.is_active
       )
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success(
           expense.is_active ? "Gasto fijo pausado" : "Gasto fijo reanudado"
@@ -181,7 +181,7 @@ function DeleteRecurringExpenseButton({
     startTransition(async () => {
       const result = await deleteRecurringExpense(expense.id)
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success("Gasto fijo eliminado")
       }

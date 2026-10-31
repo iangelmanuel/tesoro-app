@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { toast } from "@heroui/react"
 import { cn } from "cn"
 import { Pencil, PiggyBank, Trash2 } from "lucide-react"
-import { toast } from "sonner"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import {
   AlertDialog,
@@ -133,7 +133,7 @@ function DeleteContributionButton({
     startTransition(async () => {
       const result = await deleteContribution(contribution.id)
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success(
           label === "retiro" ? "Retiro eliminado" : "Aporte eliminado"

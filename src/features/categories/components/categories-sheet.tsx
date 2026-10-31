@@ -1,9 +1,9 @@
 "use client"
 
 import { useActionState, useState, useTransition } from "react"
+import { toast } from "@heroui/react"
 import { cn } from "cn"
 import { Archive, ArchiveRestore, Pencil, Tags } from "lucide-react"
-import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -247,7 +247,7 @@ function ArchiveButton({
         : await archiveCategory(workspaceId, category.id)
 
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success(
           isArchived

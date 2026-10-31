@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { toast } from "@heroui/react"
 import { cn } from "cn"
 import { Link2, Pencil, Receipt, Trash2 } from "lucide-react"
-import { toast } from "sonner"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import {
   AlertDialog,
@@ -174,7 +174,7 @@ function DeleteEntryButton({
     startTransition(async () => {
       const result = await deleteEntry(entry.id)
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success(`${label} eliminado`)
       }

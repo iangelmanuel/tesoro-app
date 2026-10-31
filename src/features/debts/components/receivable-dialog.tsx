@@ -1,8 +1,8 @@
 "use client"
 
 import { useActionState, useState } from "react"
+import { toast } from "@heroui/react"
 import { X } from "lucide-react"
-import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,

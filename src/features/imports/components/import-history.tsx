@@ -1,8 +1,8 @@
 "use client"
 
 import { useTransition } from "react"
+import { toast } from "@heroui/react"
 import { FileClock, Undo2 } from "lucide-react"
-import { toast } from "sonner"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import {
   AlertDialog,
@@ -118,7 +118,7 @@ function UndoImportButton({ item }: { item: ImportRecord }) {
     startTransition(async () => {
       const result = await undoImport(item.id)
       if (result.error !== undefined) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success(
           `Importación deshecha: ${countLabel(item.target, result.deleted)} ${result.deleted === 1 ? "borrado" : "borrados"}`

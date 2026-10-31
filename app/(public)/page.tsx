@@ -1,4 +1,10 @@
 import { SITE } from "@/config/site"
+import { Features } from "@/features/landing/components/features"
+import { FinalCta } from "@/features/landing/components/final-cta"
+import { Hero } from "@/features/landing/components/hero"
+import { HowItWorks } from "@/features/landing/components/how-it-works"
+import { OpenSource } from "@/features/landing/components/open-source"
+import { WorkspacesSection } from "@/features/landing/components/workspaces-section"
 import { buildMetadata } from "@/libs/seo"
 
 export const metadata = buildMetadata({
@@ -9,14 +15,12 @@ export const metadata = buildMetadata({
 export default function HomePage() {
   return (
     <main>
-      <h1>{SITE.info.name}</h1>
-      <p>{SITE.info.slogan}</p>
-      <p>
-        Versión {SITE.info.version}: primera versión del proyecto. Por ahora
-        solo están la configuración base, el SEO y la documentación; la landing,
-        la autenticación y el dashboard llegarán en las próximas versiones.
-        🏴‍☠️🦜🪙
-      </p>
+      <Hero />
+      <Features />
+      <HowItWorks />
+      <WorkspacesSection />
+      <OpenSource />
+      <FinalCta />
     </main>
   )
 }

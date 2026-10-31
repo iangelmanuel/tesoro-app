@@ -1,4 +1,4 @@
-import { cn } from "cn"
+import { cn } from "@heroui/react"
 import { formatCurrency, formatDate } from "@/libs/format"
 import { upcomingPayments } from "../calculations"
 import type { Debt } from "../queries"
@@ -27,7 +27,7 @@ export function UpcomingDebtPayments({
 
   if (items.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed p-4 text-center text-sm text-muted-foreground">
+      <p className="rounded-xl border border-dashed p-4 text-center text-sm text-muted">
         No tienes pagos de deudas pendientes
       </p>
     )
@@ -46,18 +46,14 @@ export function UpcomingDebtPayments({
               {/* Tarjeta sin pago mínimo: solo fecha, sin estado */}
               {payment.status && <PaymentStatusBadge status={payment.status} />}
             </div>
-            <p className="text-sm text-muted-foreground">
-              {formatDate(payment.dueOn)}
-            </p>
+            <p className="text-sm text-muted">{formatDate(payment.dueOn)}</p>
           </div>
           {payment.amount !== null && (
             <p
               className={cn(
                 "font-medium tabular-nums",
-                payment.status === "overdue" &&
-                  "text-rose-600 dark:text-rose-400",
-                payment.status === "paid" &&
-                  "text-emerald-600 dark:text-emerald-400"
+                payment.status === "overdue" && "text-(--expense)",
+                payment.status === "paid" && "text-(--income)"
               )}
             >
               {formatCurrency(payment.amount, currency)}

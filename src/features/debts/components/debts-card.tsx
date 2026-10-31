@@ -1,15 +1,14 @@
 import Link from "next/link"
-import { CreditCard } from "lucide-react"
-import { CardEmpty } from "@/components/dashboard/empty-state"
-import { Button } from "@/components/ui/button"
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+  CardTitle,
+  buttonVariants
+} from "@heroui/react"
+import { CreditCard } from "lucide-react"
+import { CardEmpty } from "@/components/dashboard/empty-state"
 import { formatPercent } from "@/features/budgets/progress"
 import { todayISO } from "@/libs/dates"
 import { formatCurrency } from "@/libs/format"
@@ -40,19 +39,20 @@ export async function DebtsCard({ workspaceId, currency }: DebtsCardProps) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Deudas</CardTitle>
-        <CardDescription>Tarjetas y préstamos activos</CardDescription>
-        <CardAction>
-          <Button
-            variant="outline"
-            size="sm"
-            asChild
+      <div className="flex items-start justify-between gap-2">
+        <CardHeader>
+          <CardTitle>Deudas</CardTitle>
+          <CardDescription>Tarjetas y préstamos activos</CardDescription>
+        </CardHeader>
+        <div className="shrink-0">
+          <Link
+            href={DEBTS_PATH}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
           >
-            <Link href={DEBTS_PATH}>Ver todas</Link>
-          </Button>
-        </CardAction>
-      </CardHeader>
+            Ver todas
+          </Link>
+        </div>
+      </div>
       <CardContent className="flex flex-col gap-4">
         {active.length === 0 ? (
           <div className="flex flex-col items-center gap-3">
@@ -60,26 +60,25 @@ export async function DebtsCard({ workspaceId, currency }: DebtsCardProps) {
               icon={CreditCard}
               message="No tienes deudas activas"
             />
-            <Button
-              variant="link"
-              size="sm"
-              asChild
+            <Link
+              href={DEBTS_PATH}
+              className={buttonVariants({ variant: "ghost", size: "sm" })}
             >
-              <Link href={DEBTS_PATH}>Registrar deuda</Link>
-            </Button>
+              Registrar deuda
+            </Link>
           </div>
         ) : (
           <>
             <dl className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
-                <dt className="text-sm text-muted-foreground">Deuda total</dt>
+                <dt className="text-sm text-muted">Deuda total</dt>
                 <dd className="text-xl font-semibold tabular-nums">
                   {formatCurrency(totalDebt(debts), currency)}
                 </dd>
               </div>
               {utilization !== null && (
                 <div className="flex flex-col gap-1">
-                  <dt className="text-sm text-muted-foreground">
+                  <dt className="text-sm text-muted">
                     Utilización de tarjetas
                   </dt>
                   <dd className="flex flex-wrap items-center gap-2 text-xl font-semibold tabular-nums">

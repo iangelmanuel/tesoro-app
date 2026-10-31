@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { Button, Dropdown, Label } from "@heroui/react"
 import {
   Archive,
   CircleCheck,
@@ -8,13 +9,6 @@ import {
   Pencil,
   RefreshCw
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import { formatCurrency, formatDate } from "@/libs/format"
 import { hasZeroBalance, isReceivableOverdue } from "../calculations"
@@ -66,7 +60,7 @@ export function ReceivableCard({
         {/* Abre el Sheet con el detalle y los abonos */}
         <button
           type="button"
-          className="-m-1 flex min-w-0 flex-1 flex-col gap-1 rounded-lg p-1 text-left transition-colors hover:bg-default/50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+          className="-m-1 flex min-w-0 flex-1 flex-col gap-1 rounded-lg p-1 text-left transition-colors hover:bg-default/50 focus-visible:ring-[3px] focus-visible:ring-focus/50 focus-visible:outline-none"
           onClick={() => setDetailOpen(true)}
         >
           <span className="flex flex-wrap items-center gap-2">
@@ -76,7 +70,7 @@ export function ReceivableCard({
             )}
           </span>
           {receivable.counterparty && (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted">
               {receivable.counterparty}
             </span>
           )}
@@ -85,38 +79,51 @@ export function ReceivableCard({
           </span>
         </button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Acciones de ${receivable.name}`}
-              disabled={pending}
-            >
-              <EllipsisVertical />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => setEditing(true)}>
-              <Pencil />
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => setAdjusting(true)}>
-              <RefreshCw />
-              Actualizar saldo
-            </DropdownMenuItem>
-            {zeroBalance && (
-              <DropdownMenuItem onSelect={() => run("markCollected")}>
-                <CircleCheck />
-                Marcar como cobrada
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem onSelect={archive}>
-              <Archive />
-              Archivar
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Dropdown>
+          <Button
+            variant="ghost"
+            isIconOnly
+            size="sm"
+            aria-label={`Acciones de ${receivable.name}`}
+            isDisabled={pending}
+          >
+            <EllipsisVertical />
+          </Button>
+          <Dropdown.Popover placement="bottom end">
+            <Dropdown.Menu aria-label={`Acciones de ${receivable.name}`}>
+              <Dropdown.Item
+                onAction={() => setEditing(true)}
+                textValue="Editar"
+              >
+                <Pencil className="size-4" />
+                <Label>Editar</Label>
+              </Dropdown.Item>
+              <Dropdown.Item
+                onAction={() => setAdjusting(true)}
+                textValue="Actualizar saldo"
+              >
+                <RefreshCw className="size-4" />
+                <Label>Actualizar saldo</Label>
+              </Dropdown.Item>
+              {zeroBalance && (
+                <Dropdown.Item
+                  onAction={() => run("markCollected")}
+                  textValue="Marcar como cobrada"
+                >
+                  <CircleCheck className="size-4" />
+                  <Label>Marcar como cobrada</Label>
+                </Dropdown.Item>
+              )}
+              <Dropdown.Item
+                onAction={archive}
+                textValue="Archivar"
+              >
+                <Archive className="size-4" />
+                <Label>Archivar</Label>
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown.Popover>
+        </Dropdown>
         <ReceivableDialog
           receivable={receivable}
           open={editing}
@@ -154,8 +161,8 @@ export function ReceivableCard({
           </p>
           <Button
             size="sm"
-            disabled={pending}
-            onClick={() => run("markCollected")}
+            isDisabled={pending}
+            onPress={() => run("markCollected")}
           >
             Marcar como cobrada
           </Button>
@@ -163,7 +170,7 @@ export function ReceivableCard({
       ) : (
         <dl className="text-sm">
           <div className="flex justify-between gap-2">
-            <dt className="text-muted-foreground">Fecha esperada</dt>
+            <dt className="text-muted">Fecha esperada</dt>
             <dd className="font-medium">
               {receivable.expected_on
                 ? formatDate(receivable.expected_on)

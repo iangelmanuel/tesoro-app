@@ -1,5 +1,4 @@
-import { cn } from "cn"
-import { Badge } from "@/components/ui/badge"
+import { Chip, cn } from "@heroui/react"
 import type { OccurrenceTone } from "@/features/recurring-expenses/occurrences"
 import {
   PAYMENT_STATUS,
@@ -13,14 +12,14 @@ const TONE_BADGE_CLASSES: Record<OccurrenceTone, string> = {
     "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
   danger: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
   warning: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-  neutral: "bg-default text-muted-foreground"
+  neutral: "bg-default text-muted"
 }
 
 const TONE_BAR_CLASSES: Record<OccurrenceTone, string> = {
   success: "bg-emerald-500",
   danger: "bg-rose-500",
   warning: "bg-amber-500",
-  neutral: "bg-muted-foreground"
+  neutral: "bg-muted"
 }
 
 export function ToneBadge({
@@ -30,7 +29,16 @@ export function ToneBadge({
   tone: OccurrenceTone
   children: React.ReactNode
 }) {
-  return <Badge className={TONE_BADGE_CLASSES[tone]}>{children}</Badge>
+  return (
+    <Chip
+      size="sm"
+      className={TONE_BADGE_CLASSES[tone]}
+      color="accent"
+      variant="primary"
+    >
+      {children}
+    </Chip>
+  )
 }
 
 export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {

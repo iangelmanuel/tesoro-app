@@ -1,18 +1,16 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import { toast } from "@heroui/react"
-import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+  Button,
+  FieldError,
+  Input,
+  Label,
+  Modal,
+  TextField,
+  toast
+} from "@heroui/react"
+import { DatePickerField } from "@/components/forms/date-picker-field"
 import {
   type AccountOption,
   AccountSelect,
@@ -22,8 +20,7 @@ import { todayISO } from "@/libs/dates"
 import { recordPayment, updateEntry } from "../actions"
 import type { Debt, DebtEntry } from "../queries"
 import type { PaymentFormState } from "../types"
-import { DatePicker } from "./date-picker"
-import { Field, amountInput } from "./field"
+import { amountInput } from "./field"
 
 interface PaymentDialogProps {
   debt: Pick<Debt, "id" | "kind">
@@ -53,34 +50,41 @@ export function PaymentDialog({
   const noun = debt.kind === "receivable" ? "abono" : "pago"
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={setOpen}
-    >
-      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? `Editar ${noun}` : `Registrar ${noun}`}
-          </DialogTitle>
-          <DialogDescription>
-            {isEditing && entry.transaction_id
-              ? "El movimiento enlazado se actualiza con el monto y la fecha."
-              : debt.kind === "receivable"
-                ? "Lo que te pagaron de esta cuenta por cobrar."
-                : "Lo que pagaste de esta deuda."}
-          </DialogDescription>
-        </DialogHeader>
-        {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-        <PaymentForm
-          debt={debt}
-          entry={entry}
-          accounts={accounts}
-          onSaved={() => setOpen(false)}
-          onCancel={() => setOpen(false)}
-        />
-      </DialogContent>
-    </Dialog>
+    <Modal>
+      {trigger}
+      <Modal.Backdrop
+        isOpen={open}
+        onOpenChange={setOpen}
+      >
+        <Modal.Container scroll="outside">
+          <Modal.Dialog className="sm:max-w-md">
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <Modal.Heading>
+                {isEditing ? `Editar ${noun}` : `Registrar ${noun}`}
+              </Modal.Heading>
+              <p className="text-sm text-muted">
+                {isEditing && entry.transaction_id
+                  ? "El movimiento enlazado se actualiza con el monto y la fecha."
+                  : debt.kind === "receivable"
+                    ? "Lo que te pagaron de esta cuenta por cobrar."
+                    : "Lo que pagaste de esta deuda."}
+              </p>
+            </Modal.Header>
+            <Modal.Body>
+              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
+              <PaymentForm
+                debt={debt}
+                entry={entry}
+                accounts={accounts}
+                onSaved={() => setOpen(false)}
+                onCancel={() => setOpen(false)}
+              />
+            </Modal.Body>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
   )
 }
 
@@ -147,63 +151,54 @@ function PaymentForm({
           value={debt.id}
         />
       )}
-      <input
-        type="hidden"
-        name="occurred_on"
-        value={occurredOn}
-      />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          id="amount"
-          label="Monto"
-          errors={errors?.amount}
+        <TextField
+          name="amount"
+          inputMode="decimal"
+          autoComplete="off"
+          defaultValue={values?.amount ?? amountInput(entry?.amount)}
+          isRequired
+          isInvalid={Boolean(errors?.amount)}
+          validationBehavior="aria"
+          className="flex flex-col gap-2"
         >
-          <Input
-            id="amount"
-            name="amount"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="0"
-            defaultValue={values?.amount ?? amountInput(entry?.amount)}
-            aria-invalid={Boolean(errors?.amount) || undefined}
-            required
-          />
-        </Field>
+          <Label>Monto</Label>
+          <Input placeholder="0" />
+          <FieldError>{errors?.amount?.[0]}</FieldError>
+        </TextField>
 
-        <Field
-          id="occurred_on"
+        <DatePickerField
+          name="occurred_on"
           label="Fecha"
-          errors={errors?.occurred_on}
-        >
-          <DatePicker
-            id="occurred_on"
-            value={occurredOn}
-            onChange={setOccurredOn}
-          />
-        </Field>
+          value={occurredOn}
+          onChange={setOccurredOn}
+          error={errors?.occurred_on?.[0]}
+          maxValue={todayISO()}
+          isRequired
+        />
       </div>
 
-      <Field
-        id="note"
-        label="Nota (opcional)"
-        errors={errors?.note}
+      <TextField
+        name="note"
+        maxLength={120}
+        defaultValue={values?.note ?? entry?.note ?? ""}
+        isInvalid={Boolean(errors?.note)}
+        validationBehavior="aria"
+        className="flex flex-col gap-2"
       >
+        <Label>Nota (opcional)</Label>
         <Input
-          id="note"
-          name="note"
-          maxLength={120}
           placeholder={isReceivable ? "Primer abono" : "Cuota de noviembre"}
-          defaultValue={values?.note ?? entry?.note ?? ""}
-          aria-invalid={Boolean(errors?.note) || undefined}
         />
-      </Field>
+        <FieldError>{errors?.note?.[0]}</FieldError>
+      </TextField>
 
       {/* El movimiento solo se crea al registrar; al editar, el trigger
           sincroniza el que ya existe */}
       {!isEditing &&
         (debt.kind === "credit_card" ? (
-          <p className="rounded-lg bg-default p-3 text-sm text-muted-foreground">
+          <p className="rounded-lg bg-default p-3 text-sm text-muted">
             Las compras con tarjeta se registran como gasto al comprar. Este
             pago no crea un movimiento.
           </p>
@@ -237,27 +232,26 @@ function PaymentForm({
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-destructive"
+          className="text-sm text-danger"
         >
           {state.error}
         </p>
       )}
 
-      <DialogFooter>
+      <div className="flex justify-end gap-2">
         <Button
-          type="button"
           variant="ghost"
-          onClick={onCancel}
+          onPress={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          disabled={pending}
+          isDisabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Registrar"}
         </Button>
-      </DialogFooter>
+      </div>
     </form>
   )
 }

@@ -1,4 +1,4 @@
-import { Label } from "@/components/ui/label"
+import { Label } from "@heroui/react"
 
 /** Etiqueta, control y primer error. Lo comparten los diálogos de deudas. */
 export function Field({
@@ -17,7 +17,7 @@ export function Field({
       <Label htmlFor={id}>{label}</Label>
       {children}
       {errors?.length ? (
-        <p className="text-sm text-destructive">{errors[0]}</p>
+        <p className="text-sm text-danger">{errors[0]}</p>
       ) : null}
     </div>
   )

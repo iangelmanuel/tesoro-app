@@ -1,14 +1,14 @@
 import { Suspense } from "react"
-import { CreditCard, HandCoins, Plus } from "lucide-react"
-import { EmptyState } from "@/components/dashboard/empty-state"
-import { Button } from "@/components/ui/button"
 import {
+  Button,
   Card,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+  CardTitle,
+  Skeleton
+} from "@heroui/react"
+import { CreditCard, HandCoins, Plus } from "lucide-react"
+import { EmptyState } from "@/components/dashboard/empty-state"
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import { getAccountBalances } from "@/features/accounts/queries"
 import {
@@ -55,7 +55,7 @@ export default function DebtsPage({ searchParams }: DebtsPageProps) {
     <section className="flex flex-1 flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Deudas</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted">
           Lo que debes, lo que te deben y cuándo terminas de pagar.
         </p>
       </header>
@@ -145,7 +145,7 @@ function ReceivablesTab({
     <ReceivableDialog
       trigger={
         <Button>
-          <Plus data-icon="inline-start" />
+          <Plus />
           Nueva cuenta por cobrar
         </Button>
       }
@@ -244,7 +244,7 @@ function PayablesTab({
     <DebtDialog
       trigger={
         <Button>
-          <Plus data-icon="inline-start" />
+          <Plus />
           Nueva deuda
         </Button>
       }

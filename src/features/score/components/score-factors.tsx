@@ -44,12 +44,10 @@ export function ScoreFactors<K extends string>({
           >
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
               <p className="font-medium">{label}</p>
-              <p className="text-xs text-muted-foreground">
-                Peso {factor.weight}
-              </p>
+              <p className="text-xs text-muted">Peso {factor.weight}</p>
               {isIncluded(factor) ? (
                 <p className="ml-auto text-sm tabular-nums">
-                  <span className="text-muted-foreground">
+                  <span className="text-muted">
                     {formatFactorValue(
                       factor.value,
                       monthFactors.includes(factor.key)
@@ -61,9 +59,7 @@ export function ScoreFactors<K extends string>({
                   </span>
                 </p>
               ) : (
-                <p className="ml-auto text-sm text-muted-foreground">
-                  Excluido
-                </p>
+                <p className="ml-auto text-sm text-muted">Excluido</p>
               )}
             </div>
             {isIncluded(factor) ? (
@@ -81,7 +77,7 @@ export function ScoreFactors<K extends string>({
                 />
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">{factor.excluded}</p>
+              <p className="text-sm text-muted">{factor.excluded}</p>
             )}
           </li>
         )

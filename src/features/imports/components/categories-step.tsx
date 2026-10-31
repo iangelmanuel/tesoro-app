@@ -1,18 +1,7 @@
 "use client"
 
+import { Button, Chip, Header, ListBox, Select, Separator } from "@heroui/react"
 import { LoaderCircle } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
 import { MAX_ACCOUNT_NAME_LENGTH, MAX_CATEGORY_NAME_LENGTH } from "../constants"
 import { EMPTY_LINK_LABEL } from "../normalize"
 import type {
@@ -125,7 +114,7 @@ export function CategoriesStep({
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h2 className="text-sm font-medium">Categorías</h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted">
           {expenseOnly
             ? "Elige a qué categoría de gasto va cada valor de tu archivo. Marca «No importar» para omitir sus gastos fijos."
             : "Elige a qué categoría va cada valor de tu archivo. Marca «No importar» para omitir filas como traspasos entre tus cuentas o saldos iniciales."}
@@ -133,7 +122,7 @@ export function CategoriesStep({
       </div>
 
       {pairs.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted">
           No hay filas válidas para importar. Vuelve al paso anterior y revisa
           el mapeo de columnas.
         </p>
@@ -153,43 +142,65 @@ export function CategoriesStep({
               >
                 <span className="flex flex-wrap items-center gap-2 text-sm">
                   {!expenseOnly && (
-                    <Badge
-                      variant={pair.type === "income" ? "secondary" : "outline"}
+                    <Chip
+                      size="sm"
+                      variant={
+                        pair.type === "income" ? "secondary" : "tertiary"
+                      }
                     >
                       {TYPE_LABELS[pair.type]}
-                    </Badge>
+                    </Chip>
                   )}
                   {pair.label}
-                  <span className="text-muted-foreground">
+                  <span className="text-muted">
                     · {pair.count === 1 ? "1 fila" : `${pair.count} filas`}
                   </span>
                 </span>
                 <Select
-                  value={targetValue(targets[pair.key])}
-                  onValueChange={(value) => handleChange(pair, value)}
+                  value={targetValue(targets[pair.key]) || null}
+                  onChange={(key) =>
+                    key != null &&
+                    ((value) => handleChange(pair, value))(String(key))
+                  }
+                  fullWidth
+                  className="sm:w-56"
+                  aria-label={`Categoría para ${pair.label}`}
                 >
-                  <SelectTrigger
-                    className="w-full sm:w-56"
-                    aria-label={`Categoría para ${pair.label}`}
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Tus categorías</SelectLabel>
-                      {options.map((category) => (
-                        <SelectItem
-                          key={category.id}
-                          value={`${EXISTING_PREFIX}${category.id}`}
-                        >
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                    <SelectSeparator />
-                    <SelectItem value={NEW}>Crear «{newName(pair)}»</SelectItem>
-                    <SelectItem value={SKIP}>No importar</SelectItem>
-                  </SelectContent>
+                  <Select.Trigger>
+                    <Select.Value />
+                    <Select.Indicator />
+                  </Select.Trigger>
+                  <Select.Popover>
+                    <ListBox>
+                      <ListBox.Section>
+                        <Header>Tus categorías</Header>
+                        {options.map((category) => (
+                          <ListBox.Item
+                            key={category.id}
+                            id={`${EXISTING_PREFIX}${category.id}`}
+                            textValue={String(category.name)}
+                          >
+                            {category.name}
+                            <ListBox.ItemIndicator />
+                          </ListBox.Item>
+                        ))}
+                      </ListBox.Section>
+                      <Separator />
+                      <ListBox.Item
+                        id={NEW}
+                        textValue={`Crear «${newName(pair)}»`}
+                      >
+                        Crear «{newName(pair)}»<ListBox.ItemIndicator />
+                      </ListBox.Item>
+                      <ListBox.Item
+                        id={SKIP}
+                        textValue="No importar"
+                      >
+                        No importar
+                        <ListBox.ItemIndicator />
+                      </ListBox.Item>
+                    </ListBox>
+                  </Select.Popover>
                 </Select>
               </li>
             )
@@ -202,7 +213,7 @@ export function CategoriesStep({
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1">
             <h2 className="text-sm font-medium">Cuentas</h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted">
               Elige a qué cuenta va cada valor de la columna Método. Los
               movimientos sin cuenta se importan igual.
             </p>
@@ -219,44 +230,65 @@ export function CategoriesStep({
                 >
                   <span className="flex flex-wrap items-center gap-2 text-sm">
                     {label}
-                    <span className="text-muted-foreground">
+                    <span className="text-muted">
                       · {value.count === 1 ? "1 fila" : `${value.count} filas`}
                     </span>
                   </span>
                   <Select
-                    value={accountTargetValue(accountTargets[value.key])}
-                    onValueChange={(selected) =>
-                      handleAccountChange(value, selected)
+                    value={
+                      accountTargetValue(accountTargets[value.key]) || null
                     }
+                    onChange={(key) =>
+                      key != null &&
+                      ((selected) => handleAccountChange(value, selected))(
+                        String(key)
+                      )
+                    }
+                    fullWidth
+                    className="sm:w-56"
+                    aria-label={`Cuenta para ${label}`}
                   >
-                    <SelectTrigger
-                      className="w-full sm:w-56"
-                      aria-label={`Cuenta para ${label}`}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {accounts.length > 0 && (
-                        <>
-                          <SelectGroup>
-                            <SelectLabel>Tus cuentas</SelectLabel>
-                            {accounts.map((account) => (
-                              <SelectItem
-                                key={account.id}
-                                value={`${EXISTING_PREFIX}${account.id}`}
-                              >
-                                {account.name}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                          <SelectSeparator />
-                        </>
-                      )}
-                      {name && (
-                        <SelectItem value={NEW}>Crear «{name}»</SelectItem>
-                      )}
-                      <SelectItem value={NO_ACCOUNT}>Sin cuenta</SelectItem>
-                    </SelectContent>
+                    <Select.Trigger>
+                      <Select.Value />
+                      <Select.Indicator />
+                    </Select.Trigger>
+                    <Select.Popover>
+                      <ListBox>
+                        {accounts.length > 0 && (
+                          <>
+                            <ListBox.Section>
+                              <Header>Tus cuentas</Header>
+                              {accounts.map((account) => (
+                                <ListBox.Item
+                                  key={account.id}
+                                  id={`${EXISTING_PREFIX}${account.id}`}
+                                  textValue={String(account.name)}
+                                >
+                                  {account.name}
+                                  <ListBox.ItemIndicator />
+                                </ListBox.Item>
+                              ))}
+                            </ListBox.Section>
+                            <Separator />
+                          </>
+                        )}
+                        {name && (
+                          <ListBox.Item
+                            id={NEW}
+                            textValue={`Crear «${name}»`}
+                          >
+                            Crear «{name}»<ListBox.ItemIndicator />
+                          </ListBox.Item>
+                        )}
+                        <ListBox.Item
+                          id={NO_ACCOUNT}
+                          textValue="Sin cuenta"
+                        >
+                          Sin cuenta
+                          <ListBox.ItemIndicator />
+                        </ListBox.Item>
+                      </ListBox>
+                    </Select.Popover>
                   </Select>
                 </li>
               )
@@ -268,7 +300,7 @@ export function CategoriesStep({
       {error && (
         <p
           role="alert"
-          className="text-sm text-destructive"
+          className="text-sm text-danger"
         >
           {error}
         </p>
@@ -277,21 +309,16 @@ export function CategoriesStep({
       <div className="flex flex-wrap justify-between gap-2">
         <Button
           variant="outline"
-          disabled={loading}
-          onClick={onBack}
+          isDisabled={loading}
+          onPress={onBack}
         >
           Atrás
         </Button>
         <Button
-          disabled={rowCount === 0 || loading}
-          onClick={onNext}
+          isDisabled={rowCount === 0 || loading}
+          onPress={onNext}
         >
-          {loading && (
-            <LoaderCircle
-              data-icon="inline-start"
-              className="animate-spin"
-            />
-          )}
+          {loading && <LoaderCircle className="animate-spin" />}
           Ver vista previa
         </Button>
       </div>

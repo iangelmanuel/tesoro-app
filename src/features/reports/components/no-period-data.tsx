@@ -1,4 +1,4 @@
-import { cn } from "cn"
+import { cn } from "@heroui/react"
 import { ChartNoAxesColumn } from "lucide-react"
 
 interface NoPeriodDataProps {
@@ -15,8 +15,8 @@ export function NoPeriodData({ message, className }: NoPeriodDataProps) {
         className
       )}
     >
-      <ChartNoAxesColumn className="size-6 text-muted-foreground" />
-      <p className="text-sm text-muted-foreground">{message}</p>
+      <ChartNoAxesColumn className="size-6 text-muted" />
+      <p className="text-sm text-muted">{message}</p>
     </div>
   )
 }

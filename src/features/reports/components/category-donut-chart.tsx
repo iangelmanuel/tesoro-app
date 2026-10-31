@@ -115,7 +115,7 @@ export function CategoryDonutChart({
               style={{ backgroundColor: slice.color }}
             />
             <span className="flex-1 truncate">{slice.name}</span>
-            <span className="text-muted-foreground tabular-nums">
+            <span className="text-muted tabular-nums">
               {share(slice.total)}
             </span>
             <span className="font-medium tabular-nums">

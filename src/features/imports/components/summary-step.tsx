@@ -1,7 +1,7 @@
 import type { Route } from "next"
 import Link from "next/link"
+import { Button, buttonVariants } from "@heroui/react"
 import { CircleCheck } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { IMPORT_TARGETS } from "../targets"
 import type { ImportStats, ImportTarget } from "../types"
 
@@ -25,10 +25,10 @@ export function SummaryStep({ target, stats, onRestart }: SummaryStepProps) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
-        <CircleCheck className="size-6 text-primary" />
+        <CircleCheck className="size-6 text-accent" />
         <div className="flex flex-col">
           <p className="font-medium">Importación completada · {label}</p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted">
             Puedes deshacerla desde el historial cuando quieras.
           </p>
         </div>
@@ -40,7 +40,7 @@ export function SummaryStep({ target, stats, onRestart }: SummaryStepProps) {
             key={item.label}
             className="flex flex-col gap-1 rounded-lg border p-4"
           >
-            <dt className="text-sm text-muted-foreground">{item.label}</dt>
+            <dt className="text-sm text-muted">{item.label}</dt>
             <dd className="text-2xl font-semibold tabular-nums">
               {item.value.toLocaleString("es-CO")}
             </dd>
@@ -49,12 +49,15 @@ export function SummaryStep({ target, stats, onRestart }: SummaryStepProps) {
       </dl>
 
       <div className="flex flex-wrap gap-2">
-        <Button asChild>
-          <Link href={href as Route}>Ver {label.toLowerCase()}</Link>
-        </Button>
+        <Link
+          href={href as Route}
+          className={buttonVariants()}
+        >
+          Ver {label.toLowerCase()}
+        </Link>
         <Button
           variant="outline"
-          onClick={onRestart}
+          onPress={onRestart}
         >
           Importar otro archivo
         </Button>

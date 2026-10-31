@@ -3,8 +3,7 @@
 import { useTransition } from "react"
 import type { Route } from "next"
 import { useRouter } from "next/navigation"
-import { cn } from "cn"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { ToggleButton, ToggleButtonGroup, cn } from "@heroui/react"
 import type { TransactionType } from "@/features/transactions/filters"
 import { REPORT_LABELS, type ReportLabels } from "../labels"
 import {
@@ -31,8 +30,8 @@ export function ReportTypeToggle({
   const router = useRouter()
   const [pending, startTransition] = useTransition()
 
-  function changeType(value: string) {
-    // Radix entrega "" al pulsar el ítem activo: se ignora
+  function changeType(keys: Set<React.Key>) {
+    const [value] = [...keys]
     if (!value || value === params.type) return
 
     const query = reportQueryFromParams(params, {
@@ -46,16 +45,16 @@ export function ReportTypeToggle({
   }
 
   return (
-    <ToggleGroup
-      type="single"
-      variant="outline"
-      value={params.type}
-      onValueChange={changeType}
+    <ToggleButtonGroup
+      selectionMode="single"
+      disallowEmptySelection
+      selectedKeys={[params.type]}
+      onSelectionChange={changeType}
       className={cn("transition-opacity", pending && "opacity-60")}
       aria-label="Tipo de movimiento"
     >
-      <ToggleGroupItem value="expense">{labels.expense}</ToggleGroupItem>
-      <ToggleGroupItem value="income">{labels.income}</ToggleGroupItem>
-    </ToggleGroup>
+      <ToggleButton id="expense">{labels.expense}</ToggleButton>
+      <ToggleButton id="income">{labels.income}</ToggleButton>
+    </ToggleButtonGroup>
   )
 }

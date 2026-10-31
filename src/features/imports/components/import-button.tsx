@@ -1,7 +1,7 @@
 import type { Route } from "next"
 import Link from "next/link"
+import { buttonVariants } from "@heroui/react"
 import { FileUp } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { IMPORT_PATH } from "../constants"
 import type { ImportTarget } from "../types"
 
@@ -9,14 +9,12 @@ import type { ImportTarget } from "../types"
 // destino elegido (SPEC 08b)
 export function ImportButton({ target }: { target: ImportTarget }) {
   return (
-    <Button
-      variant="outline"
-      asChild
+    <Link
+      href={`${IMPORT_PATH}?target=${target}` as Route}
+      className={buttonVariants({ variant: "outline" })}
     >
-      <Link href={`${IMPORT_PATH}?target=${target}` as Route}>
-        <FileUp data-icon="inline-start" />
-        Importar
-      </Link>
-    </Button>
+      <FileUp className="size-4" />
+      Importar
+    </Link>
   )
 }

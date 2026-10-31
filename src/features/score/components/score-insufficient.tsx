@@ -5,10 +5,10 @@ export function ScoreInsufficient({ reasons }: { reasons: string[] }) {
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-dashed p-4">
       <div className="flex items-center gap-2">
-        <Hourglass className="size-4 text-muted-foreground" />
+        <Hourglass className="size-4 text-muted" />
         <p className="font-medium">Sin datos suficientes</p>
       </div>
-      <ul className="flex list-disc flex-col gap-1 pl-6 text-sm text-muted-foreground">
+      <ul className="flex list-disc flex-col gap-1 pl-6 text-sm text-muted">
         {reasons.map((reason) => (
           <li key={reason}>{reason}</li>
         ))}

@@ -1,12 +1,12 @@
-import { TriangleAlert } from "lucide-react"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+  CardTitle,
+  Skeleton
+} from "@heroui/react"
+import { TriangleAlert } from "lucide-react"
 import { WorkspaceNoTransactions } from "@/features/transactions/components/workspace-no-transactions"
 import type { SearchParams } from "@/features/transactions/filters"
 import { hasAnyTransactions } from "@/features/transactions/queries"

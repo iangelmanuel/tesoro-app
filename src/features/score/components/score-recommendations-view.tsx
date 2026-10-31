@@ -1,13 +1,13 @@
-import { ChartLine } from "lucide-react"
-import { CardEmpty } from "@/components/dashboard/empty-state"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+  CardTitle,
+  Skeleton
+} from "@heroui/react"
+import { ChartLine } from "lucide-react"
+import { CardEmpty } from "@/components/dashboard/empty-state"
 import { hasScore, scoreVariation } from "../curves"
 import type { Recommendation, ScoreResult } from "../types"
 import { HiddenRecommendations } from "./hidden-recommendations"

@@ -1,19 +1,15 @@
 "use client"
 
 import { type ReactNode, useMemo, useState } from "react"
-import { LoaderCircle } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table"
+  Button,
+  Checkbox,
+  Chip,
+  Description,
+  Label,
+  Table
+} from "@heroui/react"
+import { LoaderCircle } from "lucide-react"
 import { formatCurrency, formatDate } from "@/libs/format"
 import { cn } from "@/libs/utils"
 import type { ResultingBalance } from "../balances"
@@ -40,13 +36,14 @@ const STATUS_BADGES: Record<
   RowStatus,
   {
     label: string
-    variant: "default" | "secondary" | "destructive" | "outline"
+    color: "default" | "success" | "warning" | "danger"
+    variant: "secondary" | "soft" | "tertiary"
   }
 > = {
-  ready: { label: "Lista", variant: "secondary" },
-  duplicate: { label: "Duplicado", variant: "outline" },
-  error: { label: "Error", variant: "destructive" },
-  skipped: { label: "Omitida", variant: "outline" }
+  ready: { label: "Lista", color: "default", variant: "secondary" },
+  duplicate: { label: "Duplicado", color: "warning", variant: "soft" },
+  error: { label: "Error", color: "danger", variant: "soft" },
+  skipped: { label: "Omitida", color: "default", variant: "tertiary" }
 }
 
 const TYPE_LABELS = { income: "Ingreso", expense: "Gasto" } as const
@@ -282,8 +279,8 @@ export function PreviewStep<V>({
       >
         <Button
           size="sm"
-          variant={filter === "all" ? "default" : "outline"}
-          onClick={() => changeFilter("all")}
+          variant={filter === "all" ? "primary" : "outline"}
+          onPress={() => changeFilter("all")}
         >
           Todas · {rows.length}
         </Button>
@@ -291,15 +288,15 @@ export function PreviewStep<V>({
           <Button
             key={status}
             size="sm"
-            variant={filter === status ? "default" : "outline"}
-            onClick={() => changeFilter(status)}
+            variant={filter === status ? "primary" : "outline"}
+            onPress={() => changeFilter(status)}
           >
             {STATUS_LABELS[status]} · {counts[status]}
           </Button>
         ))}
       </div>
       {empty > 0 && (
-        <p className="-mt-3 text-sm text-muted-foreground">
+        <p className="-mt-3 text-sm text-muted">
           {empty === 1
             ? "1 fila vacía no se muestra"
             : `${empty} filas vacías no se muestran`}{" "}
@@ -309,73 +306,90 @@ export function PreviewStep<V>({
 
       <div className="overflow-x-auto rounded-lg border">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-10">
-                <span className="sr-only">Importar</span>
-              </TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Hoja · fila</TableHead>
-              {columns.map((column) => (
-                <TableHead
-                  key={column.header}
-                  className={
-                    column.className === AMOUNT_CLASS ? "text-right" : undefined
-                  }
+          <Table.ScrollContainer>
+            <Table.Content aria-label="Vista previa de la importación">
+              <Table.Header>
+                <Table.Column
+                  isRowHeader
+                  className="w-10"
                 >
-                  {column.header}
-                </TableHead>
-              ))}
-              <TableHead>Motivos</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {pageRows.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columnCount}
-                  className="text-center text-muted-foreground"
-                >
-                  No hay filas con este estado
-                </TableCell>
-              </TableRow>
-            ) : (
-              pageRows.map(({ row, index }) => (
-                <TableRow
-                  key={`${row.sheet}-${row.sourceRow}`}
-                  className={cn(!row.selected && "text-muted-foreground")}
-                >
-                  <TableCell>
-                    <Checkbox
-                      aria-label={`Importar fila ${row.sourceRow} de ${row.sheet}`}
-                      checked={row.selected}
-                      disabled={!row.value || importing}
-                      onCheckedChange={() => onToggle(index)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={STATUS_BADGES[row.status].variant}>
-                      {STATUS_BADGES[row.status].label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    {row.sheet} · {row.sourceRow}
-                  </TableCell>
-                  {columns.map((column) => (
-                    <TableCell
-                      key={column.header}
-                      className={column.className}
+                  <span className="sr-only">Importar</span>
+                </Table.Column>
+                <Table.Column>Estado</Table.Column>
+                <Table.Column>Hoja · fila</Table.Column>
+                {columns.map((column) => (
+                  <Table.Column
+                    key={column.header}
+                    className={
+                      column.className === AMOUNT_CLASS
+                        ? "text-right"
+                        : undefined
+                    }
+                  >
+                    {column.header}
+                  </Table.Column>
+                ))}
+                <Table.Column>Motivos</Table.Column>
+              </Table.Header>
+              <Table.Body>
+                {pageRows.length === 0 ? (
+                  <Table.Row>
+                    <Table.Cell
+                      colSpan={columnCount}
+                      className="text-center text-muted"
                     >
-                      {row.value === undefined ? "—" : column.cell(row.value)}
-                    </TableCell>
-                  ))}
-                  <TableCell className="text-sm">
-                    {row.reasons.join(" · ")}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
+                      No hay filas con este estado
+                    </Table.Cell>
+                  </Table.Row>
+                ) : (
+                  pageRows.map(({ row, index }) => (
+                    <Table.Row
+                      key={`${row.sheet}-${row.sourceRow}`}
+                      className={cn(!row.selected && "text-muted")}
+                    >
+                      <Table.Cell>
+                        <Checkbox
+                          aria-label={`Importar fila ${row.sourceRow} de ${row.sheet}`}
+                          isSelected={row.selected}
+                          isDisabled={!row.value || importing}
+                          onChange={() => onToggle(index)}
+                        >
+                          <Checkbox.Control>
+                            <Checkbox.Indicator />
+                          </Checkbox.Control>
+                        </Checkbox>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Chip
+                          size="sm"
+                          color={STATUS_BADGES[row.status].color}
+                          variant={STATUS_BADGES[row.status].variant}
+                        >
+                          {STATUS_BADGES[row.status].label}
+                        </Chip>
+                      </Table.Cell>
+                      <Table.Cell className="whitespace-nowrap">
+                        {row.sheet} · {row.sourceRow}
+                      </Table.Cell>
+                      {columns.map((column) => (
+                        <Table.Cell
+                          key={column.header}
+                          className={column.className}
+                        >
+                          {row.value === undefined
+                            ? "—"
+                            : column.cell(row.value)}
+                        </Table.Cell>
+                      ))}
+                      <Table.Cell className="text-sm">
+                        {row.reasons.join(" · ")}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))
+                )}
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
         </Table>
       </div>
 
@@ -384,19 +398,19 @@ export function PreviewStep<V>({
           <Button
             size="sm"
             variant="outline"
-            disabled={currentPage === 0}
-            onClick={() => setPage(currentPage - 1)}
+            isDisabled={currentPage === 0}
+            onPress={() => setPage(currentPage - 1)}
           >
             Anterior
           </Button>
-          <span className="text-muted-foreground">
+          <span className="text-muted">
             Página {currentPage + 1} de {pageCount}
           </span>
           <Button
             size="sm"
             variant="outline"
-            disabled={currentPage >= pageCount - 1}
-            onClick={() => setPage(currentPage + 1)}
+            isDisabled={currentPage >= pageCount - 1}
+            onPress={() => setPage(currentPage + 1)}
           >
             Siguiente
           </Button>
@@ -408,7 +422,7 @@ export function PreviewStep<V>({
       {(blocked ?? error) && (
         <p
           role="alert"
-          className="text-sm text-destructive"
+          className="text-sm text-danger"
         >
           {blocked ?? error}
         </p>
@@ -417,21 +431,16 @@ export function PreviewStep<V>({
       <div className="flex flex-wrap justify-between gap-2">
         <Button
           variant="outline"
-          disabled={importing}
-          onClick={onBack}
+          isDisabled={importing}
+          onPress={onBack}
         >
           Atrás
         </Button>
         <Button
-          disabled={selectedCount === 0 || importing || Boolean(blocked)}
-          onClick={onConfirm}
+          isDisabled={selectedCount === 0 || importing || Boolean(blocked)}
+          onPress={onConfirm}
         >
-          {importing && (
-            <LoaderCircle
-              data-icon="inline-start"
-              className="animate-spin"
-            />
-          )}
+          {importing && <LoaderCircle className="animate-spin" />}
           Importar {countLabel(selectedCount)}
         </Button>
       </div>
@@ -460,14 +469,14 @@ export function Balances({ title, balances, currency }: BalancesProps) {
           >
             <span>{balance.name}</span>
             <span className="tabular-nums">
-              <span className="text-muted-foreground">
+              <span className="text-muted">
                 {formatCurrency(balance.current, currency)}
               </span>{" "}
               →{" "}
               <span
                 className={cn(
                   "font-medium",
-                  balance.result < 0 && "text-destructive"
+                  balance.result < 0 && "text-danger"
                 )}
               >
                 {formatCurrency(balance.result, currency)}
@@ -493,24 +502,23 @@ export function CreateTransactionsField({
   onChange
 }: CreateTransactionsProps) {
   return (
-    <div className="flex items-start gap-2">
-      <Checkbox
-        id="import-create-transactions"
-        checked={checked}
-        disabled={disabled}
-        onCheckedChange={(value) => onChange(value === true)}
-        className="mt-0.5"
-      />
-      <div className="flex flex-col gap-0.5">
-        <Label htmlFor="import-create-transactions">
-          Registrar también como gasto/ingreso
-        </Label>
-        <p className="text-sm text-muted-foreground">
+    <Checkbox
+      isSelected={checked}
+      isDisabled={disabled}
+      onChange={onChange}
+      className="items-start"
+    >
+      <Checkbox.Control className="mt-0.5">
+        <Checkbox.Indicator />
+      </Checkbox.Control>
+      <Checkbox.Content>
+        <Label>Registrar también como gasto/ingreso</Label>
+        <Description>
           Cada pago de préstamo crea un gasto en «Deudas» y cada abono de una
           cuenta por cobrar, un ingreso en «Cobros». Desmárcala si ya importaste
           estos pagos como movimientos.
-        </p>
-      </div>
-    </div>
+        </Description>
+      </Checkbox.Content>
+    </Checkbox>
   )
 }

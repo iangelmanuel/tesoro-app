@@ -1,11 +1,11 @@
-import { cn } from "cn"
 import {
   Card,
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+  CardTitle,
+  cn
+} from "@heroui/react"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import { formatCurrency } from "@/libs/format"
 import {
@@ -129,7 +129,7 @@ export function SummaryCards({
               >
                 {item.change}
               </span>
-              <span className="text-muted-foreground">vs. mes anterior</span>
+              <span className="text-muted">vs. mes anterior</span>
             </CardFooter>
           </Card>
         ))}
@@ -156,7 +156,7 @@ export function SummaryCards({
               )}
             </CardTitle>
           </CardHeader>
-          <CardFooter className="text-sm text-muted-foreground tabular-nums">
+          <CardFooter className="text-sm text-muted tabular-nums">
             {topCategory
               ? formatCurrency(topCategory.total, currency)
               : "Sin gastos este mes"}
@@ -194,7 +194,7 @@ function SecondaryCard({
           {value}
         </CardTitle>
       </CardHeader>
-      <CardFooter className="text-sm text-muted-foreground">{hint}</CardFooter>
+      <CardFooter className="text-sm text-muted">{hint}</CardFooter>
     </Card>
   )
 }

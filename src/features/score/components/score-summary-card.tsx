@@ -1,14 +1,13 @@
 import type { Route } from "next"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+  CardTitle,
+  buttonVariants
+} from "@heroui/react"
 import { SITE } from "@/config/site"
 import { shiftMonth, todayISO } from "@/libs/dates"
 import { computeScore } from "../calculations"
@@ -80,19 +79,20 @@ export function ScoreSummary<K extends string>({
 }: ScoreSummaryProps<K>) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-        <CardAction>
-          <Button
-            variant="outline"
-            size="sm"
-            asChild
+      <div className="flex items-start justify-between gap-2">
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <div className="shrink-0">
+          <Link
+            href={href as Route}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
           >
-            <Link href={href as Route}>Ver todas</Link>
-          </Button>
-        </CardAction>
-      </CardHeader>
+            Ver todas
+          </Link>
+        </div>
+      </div>
       <CardContent className="grid gap-6 md:grid-cols-[minmax(0,14rem)_1fr]">
         {hasScore(current) ? (
           <div className="flex flex-col gap-2">
@@ -100,7 +100,7 @@ export function ScoreSummary<K extends string>({
               <span className="text-4xl font-semibold tracking-tight tabular-nums">
                 {current.score}
               </span>
-              <span className="pb-1 text-sm text-muted-foreground">/ 100</span>
+              <span className="pb-1 text-sm text-muted">/ 100</span>
             </div>
             <BandBadge band={current.band} />
             <ScoreVariation variation={scoreVariation(current, previous)} />

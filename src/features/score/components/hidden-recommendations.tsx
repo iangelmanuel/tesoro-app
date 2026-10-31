@@ -1,14 +1,7 @@
 "use client"
 
 import { useTransition } from "react"
-import { toast } from "@heroui/react"
-import { ChevronDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger
-} from "@/components/ui/collapsible"
+import { Button, Disclosure, toast } from "@heroui/react"
 import { restoreRecommendation } from "../actions"
 import type { Recommendation } from "../types"
 import { SeverityBadge } from "./recommendation-item"
@@ -22,20 +15,14 @@ export function HiddenRecommendations({
   recommendations: Recommendation<string>[]
 }) {
   return (
-    <Collapsible className="flex flex-col gap-3">
-      <CollapsibleTrigger asChild>
-        <Button
-          variant="ghost"
-          className="group w-fit"
-        >
-          <ChevronDown
-            data-icon="inline-start"
-            className="transition-transform group-data-[state=closed]:-rotate-90"
-          />
+    <Disclosure className="flex flex-col gap-3">
+      <Disclosure.Heading>
+        <Disclosure.Trigger className="flex w-fit items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-default">
+          <Disclosure.Indicator />
           Ocultas este mes ({recommendations.length})
-        </Button>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
+        </Disclosure.Trigger>
+      </Disclosure.Heading>
+      <Disclosure.Content>
         <ul className="divide-y rounded-xl border">
           {recommendations.map((item) => (
             <HiddenRecommendationRow
@@ -45,8 +32,8 @@ export function HiddenRecommendations({
             />
           ))}
         </ul>
-      </CollapsibleContent>
-    </Collapsible>
+      </Disclosure.Content>
+    </Disclosure>
   )
 }
 
@@ -79,15 +66,13 @@ function HiddenRecommendationRow({
           <SeverityBadge severity={recommendation.severity} />
           <p className="font-medium">{recommendation.title}</p>
         </div>
-        <p className="text-sm text-muted-foreground">
-          {recommendation.evidence}
-        </p>
+        <p className="text-sm text-muted">{recommendation.evidence}</p>
       </div>
       <Button
         variant="outline"
         size="sm"
-        disabled={pending}
-        onClick={restore}
+        isDisabled={pending}
+        onPress={restore}
       >
         Mostrar de nuevo
       </Button>

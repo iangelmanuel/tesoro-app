@@ -3,10 +3,8 @@
 import { useRef, useState } from "react"
 import type { Route } from "next"
 import Link from "next/link"
+import { Button, Radio, RadioGroup } from "@heroui/react"
 import { FileSpreadsheet, LoaderCircle, Upload } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { cn } from "@/libs/utils"
 import {
   ImportFileError,
@@ -83,54 +81,56 @@ export function FileStep({
       </p>
       <RadioGroup
         aria-labelledby="import-target"
-        className="sm:grid-cols-2 lg:grid-cols-4"
+        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
         value={target}
-        onValueChange={(value) => onTargetChange(value as ImportTarget)}
+        onChange={(value) => onTargetChange(value as ImportTarget)}
       >
         {(Object.keys(IMPORT_TARGETS) as ImportTarget[]).map((value) => {
           const disabled = unavailable.includes(value)
           const requirement = TARGET_REQUIREMENTS[value]
 
           return (
-            <Label
+            <Radio
               key={value}
-              htmlFor={`import-target-${value}`}
-              className={cn(
-                "flex items-start gap-2 rounded-lg border p-3 font-normal has-data-checked:border-primary has-data-checked:bg-primary/5",
-                disabled ? "opacity-60" : "cursor-pointer"
-              )}
+              value={value}
+              isDisabled={disabled}
             >
-              <RadioGroupItem
-                id={`import-target-${value}`}
-                value={value}
-                disabled={disabled}
-                className="mt-0.5"
-              />
-              <span className="flex flex-col gap-0.5">
-                <span className="font-medium">
-                  {IMPORT_TARGETS[value].label}
-                </span>
-                {disabled && requirement ? (
-                  <Link
-                    href={IMPORT_TARGETS[value].href as Route}
-                    className="text-primary underline-offset-4 hover:underline"
-                  >
-                    {requirement}
-                  </Link>
-                ) : (
-                  <span className="text-muted-foreground">
-                    {TARGET_HINTS[value]}
+              {({ isSelected }) => (
+                <Radio.Content
+                  className={cn(
+                    "flex h-full w-full cursor-pointer items-start gap-2 rounded-xl border border-border p-3 transition-colors data-[selected=true]:border-accent data-[selected=true]:bg-accent-soft",
+                    disabled && "cursor-default opacity-60"
+                  )}
+                  data-selected={isSelected}
+                >
+                  <Radio.Control className="mt-0.5">
+                    <Radio.Indicator />
+                  </Radio.Control>
+                  <span className="flex flex-col gap-0.5 text-sm">
+                    <span className="font-medium">
+                      {IMPORT_TARGETS[value].label}
+                    </span>
+                    {disabled && requirement ? (
+                      <Link
+                        href={IMPORT_TARGETS[value].href as Route}
+                        className="text-link underline underline-offset-4"
+                      >
+                        {requirement}
+                      </Link>
+                    ) : (
+                      <span className="text-muted">{TARGET_HINTS[value]}</span>
+                    )}
                   </span>
-                )}
-              </span>
-            </Label>
+                </Radio.Content>
+              )}
+            </Radio>
           )
         })}
       </RadioGroup>
       <div
         className={cn(
           "flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-10 text-center transition-colors",
-          dragging && "border-primary bg-primary/5"
+          dragging && "border-accent bg-accent-soft"
         )}
         onDragOver={(event) => {
           event.preventDefault()
@@ -145,24 +145,24 @@ export function FileStep({
       >
         {reading ? (
           <>
-            <LoaderCircle className="size-8 animate-spin text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Leyendo archivo…</p>
+            <LoaderCircle className="size-8 animate-spin text-muted" />
+            <p className="text-sm text-muted">Leyendo archivo…</p>
           </>
         ) : (
           <>
-            <FileSpreadsheet className="size-8 text-muted-foreground" />
+            <FileSpreadsheet className="size-8 text-muted" />
             <div className="flex flex-col gap-1">
               <p className="font-medium">Arrastra tu archivo aquí</p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted">
                 Excel (.xlsx) o CSV, de hasta 5 MB. Se lee en tu navegador: el
                 archivo no sale de tu equipo.
               </p>
             </div>
             <Button
               variant="outline"
-              onClick={() => inputRef.current?.click()}
+              onPress={() => inputRef.current?.click()}
             >
-              <Upload data-icon="inline-start" />
+              <Upload />
               Elegir archivo
             </Button>
           </>
@@ -180,7 +180,7 @@ export function FileStep({
       {error && (
         <p
           role="alert"
-          className="text-sm text-destructive"
+          className="text-sm text-danger"
         >
           {error}
         </p>

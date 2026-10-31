@@ -1,6 +1,7 @@
 import { getCategoryTotals, getMonthlyTotals } from "@/features/reports/queries"
 import { historyMonths, monthsBetween } from "@/features/score/curves"
 import { getFirstTransactionOn } from "@/features/score/queries"
+import type { TransactionType } from "@/features/transactions/filters"
 import { monthRange, shiftMonth, todayISO } from "@/libs/dates"
 import { createClient } from "@/libs/supabase/server"
 import { businessInputsStart, businessScoreHistory } from "./calculations"
@@ -123,4 +124,40 @@ export async function getBusinessScoreHistory(
   )
 
   return { inputs, history: businessScoreHistory(inputs) }
+}
+
+export interface CounterpartyTotal {
+  /** Primer valor original del grupo */
+  counterparty: string
+  total: number
+  txCount: number
+}
+
+/**
+ * Totales por contraparte de un tipo entre `from` y `to` (YYYY-MM-DD),
+ * agrupados sin distinguir mayúsculas ni espacios, del mayor al menor
+ */
+export async function getCounterpartyTotals(
+  workspaceId: string,
+  from: string,
+  to: string,
+  type: TransactionType
+): Promise<CounterpartyTotal[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("counterparty_totals", {
+    p_workspace_id: workspaceId,
+    p_from: from,
+    p_to: to,
+    p_type: type
+  })
+
+  if (error) {
+    throw new Error("No se pudieron calcular los totales por contraparte")
+  }
+
+  return data.map((row) => ({
+    counterparty: row.counterparty,
+    total: Number(row.total),
+    txCount: Number(row.tx_count)
+  }))
 }

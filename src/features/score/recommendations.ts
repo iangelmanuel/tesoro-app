@@ -53,7 +53,7 @@ import {
   UNBUDGETED_MIN_CATEGORIES
 } from "./constants"
 import { isIncluded, regularityCounts } from "./curves"
-import type { DismissedRecommendation, ScoreData } from "./queries"
+import type { ScoreData } from "./queries"
 import type { Recommendation } from "./types"
 
 /** Datos del mes actual que usan las reglas, además de los del score */
@@ -399,7 +399,10 @@ function irregularRecordsRule(
 }
 
 /** Severidad (alta, media, baja) y luego monto descendente */
-export function compareRecommendations(a: Recommendation, b: Recommendation) {
+export function compareRecommendations<R extends string>(
+  a: Recommendation<R>,
+  b: Recommendation<R>
+) {
   const bySeverity = SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]
   return bySeverity !== 0 ? bySeverity : b.amount - a.amount
 }
@@ -427,12 +430,12 @@ export function buildRecommendations(inputs: RecommendationInputs) {
  * Separa las recomendaciones activas de las ocultas este mes. Una fila
  * oculta cuya condición ya no se cumple no aparece en ninguna lista.
  */
-export function splitDismissed(
-  recommendations: Recommendation[],
-  dismissed: DismissedRecommendation[]
+export function splitDismissed<R extends string>(
+  recommendations: Recommendation<R>[],
+  dismissed: { rule: string; entityKey: string }[]
 ) {
   const keys = new Set(dismissed.map((row) => `${row.rule}|${row.entityKey}`))
-  const isHidden = (item: Recommendation) =>
+  const isHidden = (item: Recommendation<R>) =>
     keys.has(`${item.rule}|${item.entityKey}`)
 
   return {

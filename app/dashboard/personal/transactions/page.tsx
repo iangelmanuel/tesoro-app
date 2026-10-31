@@ -81,6 +81,7 @@ async function TransactionsContent({
     <>
       <div className="flex flex-wrap gap-2">
         <TransactionDialog
+          workspaceId={workspace.id}
           categories={categories}
           accounts={accounts}
           trigger={
@@ -92,6 +93,7 @@ async function TransactionsContent({
         />
         {canTransfer && (
           <TransferDialog
+            workspaceId={workspace.id}
             accounts={accounts}
             trigger={
               <Button variant="outline">
@@ -110,11 +112,15 @@ async function TransactionsContent({
             Importar
           </Link>
         </Button>
-        <CategoriesSheet categories={categories} />
+        <CategoriesSheet
+          workspaceId={workspace.id}
+          categories={categories}
+        />
       </div>
 
       {isEmptyWorkspace ? (
         <NoTransactions
+          workspaceId={workspace.id}
           categories={categories}
           accounts={accounts}
         />
@@ -131,6 +137,7 @@ async function TransactionsContent({
           />
           {rows.length > 0 ? (
             <TransactionsTable
+              workspaceId={workspace.id}
               rows={rows}
               categories={categories}
               accounts={accounts}

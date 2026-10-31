@@ -29,6 +29,8 @@ export type EditableTransaction = Pick<
   | "description"
   | "note"
   | "account_id"
+  | "counterparty"
+  | "invoice_ref"
   | "recurring_expense_id"
 >
 
@@ -114,7 +116,15 @@ export async function getTransactions(
     }
     if (filters.q) {
       const pattern = quotePostgrestValue(`%${escapeLikePattern(filters.q)}%`)
-      query = query.or(`description.ilike.${pattern},note.ilike.${pattern}`)
+      // Contraparte y factura solo tienen valor en Empresa
+      query = query.or(
+        [
+          `description.ilike.${pattern}`,
+          `note.ilike.${pattern}`,
+          `counterparty.ilike.${pattern}`,
+          `invoice_ref.ilike.${pattern}`
+        ].join(",")
+      )
     }
     return query
   }
@@ -203,6 +213,8 @@ function toLedgerEntry(
       description: row.description as string,
       note: row.note,
       account_id: row.account_id,
+      counterparty: row.counterparty,
+      invoice_ref: row.invoice_ref,
       recurring_expense_id: recurringIds.get(id) ?? null
     }
   }

@@ -31,6 +31,8 @@ import type {
 } from "../types"
 
 interface AccountDialogProps {
+  /** Espacio de la cuenta */
+  workspaceId: string
   /** Si llega, el diálogo edita esta cuenta */
   account?: AccountWithBalance
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
@@ -40,6 +42,7 @@ interface AccountDialogProps {
 }
 
 export function AccountDialog({
+  workspaceId,
   account,
   trigger,
   open: controlledOpen,
@@ -69,6 +72,7 @@ export function AccountDialog({
         </DialogHeader>
         {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
         <AccountForm
+          workspaceId={workspaceId}
           account={account}
           onSaved={() => setOpen(false)}
           onCancel={() => setOpen(false)}
@@ -79,12 +83,18 @@ export function AccountDialog({
 }
 
 interface AccountFormProps {
+  workspaceId: string
   account?: AccountWithBalance
   onSaved: () => void
   onCancel: () => void
 }
 
-function AccountForm({ account, onSaved, onCancel }: AccountFormProps) {
+function AccountForm({
+  workspaceId,
+  account,
+  onSaved,
+  onCancel
+}: AccountFormProps) {
   const isEditing = account !== undefined
 
   const [state, formAction, pending] = useActionState<
@@ -114,6 +124,11 @@ function AccountForm({ account, onSaved, onCancel }: AccountFormProps) {
       className="flex flex-col gap-4"
       noValidate
     >
+      <input
+        type="hidden"
+        name="workspace_id"
+        value={workspaceId}
+      />
       {isEditing && (
         <input
           type="hidden"

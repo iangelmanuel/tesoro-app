@@ -46,6 +46,8 @@ function shiftMonth(month: string, delta: number) {
 }
 
 interface TransactionsFiltersProps {
+  /** Ruta de Movimientos del espacio */
+  path?: string
   filters: TransactionFilters
   categories: Category[]
   /** Cuentas del espacio, activas y archivadas */
@@ -53,6 +55,7 @@ interface TransactionsFiltersProps {
 }
 
 export function TransactionsFilters({
+  path = TRANSACTIONS_PATH,
   filters,
   categories,
   accounts
@@ -71,7 +74,7 @@ export function TransactionsFilters({
   function navigate(overrides: Partial<TransactionFilters>) {
     const query = buildFiltersQuery(filters, { ...overrides, page: 1 })
     startTransition(() => {
-      router.replace(`${TRANSACTIONS_PATH}?${query}` as Route, {
+      router.replace(`${path}?${query}` as Route, {
         scroll: false
       })
     })

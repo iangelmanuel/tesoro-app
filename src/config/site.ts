@@ -131,6 +131,27 @@ export const SITE = {
   // Días entre programar el borrado de la cuenta y la purga (pg_cron)
   accountDeletionGraceDays: 30,
 
+  // Debe coincidir con public.business_workspace_limit(). La BD es la que manda
+  businessLimit: 1,
+
+  // Días entre programar el borrado de una empresa y la purga (pg_cron)
+  workspaceDeletionGraceDays: 30,
+
+  // Sectores de una empresa. Se validan con Zod; la BD guarda el `id`
+  businessSectors: [
+    { id: "commerce", label: "Comercio" },
+    { id: "services", label: "Servicios" },
+    { id: "manufacturing", label: "Manufactura" },
+    { id: "technology", label: "Tecnología" },
+    { id: "food", label: "Alimentos y restaurantes" },
+    { id: "construction", label: "Construcción" },
+    { id: "agriculture", label: "Agro" },
+    { id: "health", label: "Salud" },
+    { id: "education", label: "Educación" },
+    { id: "transport", label: "Transporte" },
+    { id: "other", label: "Otro" }
+  ],
+
   legal: [
     {
       slug: "privacidad",
@@ -187,6 +208,20 @@ export const SITE = {
         href: "/dashboard/personal/recommendations",
         icon: "Lightbulb"
       }
+    ],
+    // `segment` se agrega a /dashboard/business/[id]
+    business: [
+      { name: "Resumen", segment: "", icon: "LayoutDashboard" },
+      { name: "Movimientos", segment: "/transactions", icon: "ArrowLeftRight" },
+      { name: "Cuentas", segment: "/accounts", icon: "Wallet" },
+      { name: "Flujo de caja", segment: "/cash-flow", icon: "Activity" },
+      { name: "Reportes", segment: "/reports", icon: "ChartColumn" },
+      {
+        name: "Recomendaciones",
+        segment: "/recommendations",
+        icon: "Lightbulb"
+      },
+      { name: "Ajustes", segment: "/settings", icon: "Settings" }
     ]
   },
 

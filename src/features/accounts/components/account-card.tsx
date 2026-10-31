@@ -28,17 +28,26 @@ import { AdjustBalanceDialog } from "./adjust-balance-dialog"
 import { useAccountAction } from "./use-account-action"
 
 /** Movimientos de la cuenta, de todos los meses */
-export function accountTransactionsHref(accountId: string) {
-  return `${TRANSACTIONS_PATH}?month=all&account=${accountId}` as Route
+export function accountTransactionsHref(
+  accountId: string,
+  transactionsPath: string = TRANSACTIONS_PATH
+) {
+  return `${transactionsPath}?month=all&account=${accountId}` as Route
 }
 
 interface AccountCardProps {
   /** Cuenta activa */
   account: AccountWithBalance
   currency: string
+  /** Ruta de Movimientos del espacio, para "Ver movimientos" */
+  transactionsPath?: string
 }
 
-export function AccountCard({ account, currency }: AccountCardProps) {
+export function AccountCard({
+  account,
+  currency,
+  transactionsPath
+}: AccountCardProps) {
   const [editing, setEditing] = useState(false)
   const [adjusting, setAdjusting] = useState(false)
   const { pending, run } = useAccountAction(account)
@@ -81,6 +90,7 @@ export function AccountCard({ account, currency }: AccountCardProps) {
           </DropdownMenuContent>
         </DropdownMenu>
         <AccountDialog
+          workspaceId={account.workspace_id}
           account={account}
           open={editing}
           onOpenChange={setEditing}
@@ -131,7 +141,7 @@ export function AccountCard({ account, currency }: AccountCardProps) {
           size="sm"
           asChild
         >
-          <Link href={accountTransactionsHref(account.id)}>
+          <Link href={accountTransactionsHref(account.id, transactionsPath)}>
             <List data-icon="inline-start" />
             Ver movimientos
           </Link>

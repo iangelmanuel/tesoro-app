@@ -44,6 +44,7 @@ async function AccountsContent() {
 
   const createButton = (
     <AccountDialog
+      workspaceId={workspace.id}
       trigger={
         <Button>
           <Plus data-icon="inline-start" />
@@ -70,6 +71,7 @@ async function AccountsContent() {
             {/* Un traspaso necesita al menos dos cuentas activas */}
             {active.length > 1 && (
               <TransferDialog
+                workspaceId={workspace.id}
                 accounts={accounts}
                 trigger={
                   <Button variant="outline">

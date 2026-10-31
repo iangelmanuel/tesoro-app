@@ -238,6 +238,7 @@ async function RecurringTab({ workspace }: { workspace: PersonalWorkspace }) {
         {/* Los pagados del mes siguen en la lista con su monto */}
         {payments.length > 0 && (
           <UpcomingPayments
+            workspaceId={workspace.id}
             payments={payments}
             categories={categories}
             accounts={accounts}

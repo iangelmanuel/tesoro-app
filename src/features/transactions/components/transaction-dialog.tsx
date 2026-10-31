@@ -38,6 +38,7 @@ import {
 } from "@/features/accounts/components/account-select"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
+import type { WorkspaceType } from "@/features/workspaces/queries"
 import { fromLocalDate, toLocalDate, todayISO } from "@/libs/dates"
 import { formatDate } from "@/libs/format"
 import { createTransaction, updateTransaction } from "../actions"
@@ -48,6 +49,22 @@ import type { TransactionFormState } from "../types"
 const AMOUNT_FORMAT = new Intl.NumberFormat("es-CO", {
   maximumFractionDigits: 2
 })
+
+// Textos que cambian entre Personal y Empresa
+const COPY = {
+  personal: {
+    expense: "Gasto",
+    income: "Ingreso",
+    description: "Registra un ingreso o un gasto de tu espacio Personal.",
+    placeholder: { expense: "Mercado de la semana", income: "Salario" }
+  },
+  business: {
+    expense: "Costo o gasto",
+    income: "Venta",
+    description: "Registra una venta o un costo o gasto de tu empresa.",
+    placeholder: { expense: "Compra de insumos", income: "Venta del día" }
+  }
+} as const
 
 /** Valores con los que se prellena un movimiento nuevo */
 export interface TransactionInitialValues {
@@ -64,6 +81,10 @@ export interface RecurringOccurrenceLink {
 }
 
 interface TransactionDialogProps {
+  /** Espacio donde se crea o edita el movimiento */
+  workspaceId: string
+  /** En Empresa cambian los textos y aparecen cliente/proveedor y factura */
+  workspaceType?: WorkspaceType
   /** Categorías del sistema y propias, activas y archivadas */
   categories: Category[]
   /** Cuentas del espacio, activas y archivadas */
@@ -79,6 +100,8 @@ interface TransactionDialogProps {
 }
 
 export function TransactionDialog({
+  workspaceId,
+  workspaceType = "personal",
   categories,
   accounts,
   transaction,
@@ -110,11 +133,13 @@ export function TransactionDialog({
               ? "Cambia los datos del movimiento."
               : isPayment
                 ? "Confirma los datos del pago. Puedes ajustar el monto."
-                : "Registra un ingreso o un gasto de tu espacio Personal."}
+                : COPY[workspaceType].description}
           </DialogDescription>
         </DialogHeader>
         {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
         <TransactionForm
+          workspaceId={workspaceId}
+          workspaceType={workspaceType}
           categories={categories}
           accounts={accounts}
           transaction={transaction}
@@ -129,6 +154,8 @@ export function TransactionDialog({
 }
 
 interface TransactionFormProps {
+  workspaceId: string
+  workspaceType: WorkspaceType
   categories: Category[]
   accounts: AccountOption[]
   transaction?: EditableTransaction
@@ -139,6 +166,8 @@ interface TransactionFormProps {
 }
 
 function TransactionForm({
+  workspaceId,
+  workspaceType,
   categories,
   accounts,
   transaction,
@@ -148,6 +177,8 @@ function TransactionForm({
   onCancel
 }: TransactionFormProps) {
   const isEditing = transaction !== undefined
+  const isBusiness = workspaceType === "business"
+  const copy = COPY[workspaceType]
   // Un pago de gasto fijo, nuevo o editado, siempre es un gasto
   const isLinked =
     recurring !== undefined || Boolean(transaction?.recurring_expense_id)
@@ -227,6 +258,11 @@ function TransactionForm({
       )}
       <input
         type="hidden"
+        name="workspace_id"
+        value={workspaceId}
+      />
+      <input
+        type="hidden"
         name="type"
         value={type}
       />
@@ -263,13 +299,13 @@ function TransactionForm({
           value="expense"
           className="flex-1"
         >
-          Gasto
+          {copy.expense}
         </ToggleGroupItem>
         <ToggleGroupItem
           value="income"
           className="flex-1"
         >
-          Ingreso
+          {copy.income}
         </ToggleGroupItem>
       </ToggleGroup>
 
@@ -409,7 +445,7 @@ function TransactionForm({
           id="description"
           name="description"
           maxLength={120}
-          placeholder={type === "expense" ? "Mercado de la semana" : "Salario"}
+          placeholder={copy.placeholder[type]}
           defaultValue={
             values?.description ??
             transaction?.description ??
@@ -419,6 +455,47 @@ function TransactionForm({
           required
         />
       </Field>
+
+      {isBusiness && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            id="counterparty"
+            label={
+              type === "income" ? "Cliente (opcional)" : "Proveedor (opcional)"
+            }
+            errors={errors?.counterparty}
+          >
+            <Input
+              id="counterparty"
+              name="counterparty"
+              maxLength={80}
+              autoComplete="off"
+              defaultValue={
+                values?.counterparty ?? transaction?.counterparty ?? ""
+              }
+              aria-invalid={Boolean(errors?.counterparty) || undefined}
+            />
+          </Field>
+
+          <Field
+            id="invoice_ref"
+            label="N.º de factura (opcional)"
+            errors={errors?.invoice_ref}
+          >
+            <Input
+              id="invoice_ref"
+              name="invoice_ref"
+              maxLength={40}
+              autoComplete="off"
+              placeholder="FV-001"
+              defaultValue={
+                values?.invoice_ref ?? transaction?.invoice_ref ?? ""
+              }
+              aria-invalid={Boolean(errors?.invoice_ref) || undefined}
+            />
+          </Field>
+        </div>
+      )}
 
       <Field
         id="note"

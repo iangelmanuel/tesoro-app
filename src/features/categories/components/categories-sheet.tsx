@@ -34,10 +34,15 @@ const TYPE_LABELS: Record<TransactionType, string> = {
 }
 
 interface CategoriesSheetProps {
+  /** Espacio dueño de las categorías propias */
+  workspaceId: string
   categories: Category[]
 }
 
-export function CategoriesSheet({ categories }: CategoriesSheetProps) {
+export function CategoriesSheet({
+  workspaceId,
+  categories
+}: CategoriesSheetProps) {
   const [type, setType] = useState<TransactionType>("expense")
   const [editing, setEditing] = useState<Category | null>(null)
   // Cambia tras cada guardado para remontar el formulario vacío
@@ -88,12 +93,14 @@ export function CategoriesSheet({ categories }: CategoriesSheetProps) {
             >
               <CategoryForm
                 key={`${editing?.id ?? "new"}-${tabType}-${formVersion}`}
+                workspaceId={workspaceId}
                 type={tabType}
                 category={editing}
                 onSaved={handleSaved}
                 onCancel={() => setEditing(null)}
               />
               <CategoryList
+                workspaceId={workspaceId}
                 categories={categories.filter((c) => c.type === tabType)}
                 editingId={editing?.id}
                 onEdit={setEditing}
@@ -107,12 +114,18 @@ export function CategoriesSheet({ categories }: CategoriesSheetProps) {
 }
 
 interface CategoryListProps {
+  workspaceId: string
   categories: Category[]
   editingId?: string
   onEdit: (category: Category) => void
 }
 
-function CategoryList({ categories, editingId, onEdit }: CategoryListProps) {
+function CategoryList({
+  workspaceId,
+  categories,
+  editingId,
+  onEdit
+}: CategoryListProps) {
   const system = categories.filter((c) => c.workspace_id === null)
   const own = categories.filter((c) => c.workspace_id !== null)
   const active = own.filter((c) => c.archived_at === null)
@@ -140,7 +153,10 @@ function CategoryList({ categories, editingId, onEdit }: CategoryListProps) {
               >
                 <Pencil />
               </Button>
-              <ArchiveButton category={category} />
+              <ArchiveButton
+                workspaceId={workspaceId}
+                category={category}
+              />
             </CategoryRow>
           ))
         )}
@@ -154,7 +170,10 @@ function CategoryList({ categories, editingId, onEdit }: CategoryListProps) {
               category={category}
               muted
             >
-              <ArchiveButton category={category} />
+              <ArchiveButton
+                workspaceId={workspaceId}
+                category={category}
+              />
             </CategoryRow>
           ))}
         </CategoryGroup>
@@ -211,15 +230,21 @@ function CategoryRow({
   )
 }
 
-function ArchiveButton({ category }: { category: Category }) {
+function ArchiveButton({
+  workspaceId,
+  category
+}: {
+  workspaceId: string
+  category: Category
+}) {
   const [pending, startTransition] = useTransition()
   const isArchived = category.archived_at !== null
 
   function handleClick() {
     startTransition(async () => {
       const result = isArchived
-        ? await restoreCategory(category.id)
-        : await archiveCategory(category.id)
+        ? await restoreCategory(workspaceId, category.id)
+        : await archiveCategory(workspaceId, category.id)
 
       if (result.error) {
         toast.error(result.error)
@@ -249,6 +274,7 @@ function ArchiveButton({ category }: { category: Category }) {
 }
 
 interface CategoryFormProps {
+  workspaceId: string
   type: TransactionType
   category: Category | null
   onSaved: () => void
@@ -256,6 +282,7 @@ interface CategoryFormProps {
 }
 
 function CategoryForm({
+  workspaceId,
   type,
   category,
   onSaved,
@@ -295,6 +322,11 @@ function CategoryForm({
           value={category.id}
         />
       )}
+      <input
+        type="hidden"
+        name="workspace_id"
+        value={workspaceId}
+      />
       <input
         type="hidden"
         name="type"

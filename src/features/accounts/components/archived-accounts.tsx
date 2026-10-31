@@ -18,12 +18,15 @@ import { useAccountAction } from "./use-account-action"
 interface ArchivedAccountsProps {
   accounts: AccountWithBalance[]
   currency: string
+  /** Ruta de Movimientos del espacio, para "Ver movimientos" */
+  transactionsPath?: string
 }
 
 /** Sección plegable "Archivadas", cerrada por defecto */
 export function ArchivedAccounts({
   accounts,
-  currency
+  currency,
+  transactionsPath
 }: ArchivedAccountsProps) {
   return (
     <Collapsible className="flex flex-col gap-3">
@@ -46,6 +49,7 @@ export function ArchivedAccounts({
               key={account.id}
               account={account}
               currency={currency}
+              transactionsPath={transactionsPath}
             />
           ))}
         </ul>
@@ -56,10 +60,12 @@ export function ArchivedAccounts({
 
 function ArchivedAccountRow({
   account,
-  currency
+  currency,
+  transactionsPath
 }: {
   account: AccountWithBalance
   currency: string
+  transactionsPath?: string
 }) {
   const { pending, run } = useAccountAction(account)
 
@@ -81,7 +87,9 @@ function ArchivedAccountRow({
         size="sm"
         asChild
       >
-        <Link href={accountTransactionsHref(account.id)}>Ver movimientos</Link>
+        <Link href={accountTransactionsHref(account.id, transactionsPath)}>
+          Ver movimientos
+        </Link>
       </Button>
       <Button
         variant="outline"

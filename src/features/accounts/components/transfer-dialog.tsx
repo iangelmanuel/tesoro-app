@@ -34,6 +34,8 @@ export interface TransferValues {
 }
 
 interface TransferDialogProps {
+  /** Espacio del traspaso */
+  workspaceId: string
   /** Todas las cuentas del espacio; solo se ofrecen las activas */
   accounts: AccountOption[]
   /** Si llega, el diálogo edita este traspaso */
@@ -45,6 +47,7 @@ interface TransferDialogProps {
 }
 
 export function TransferDialog({
+  workspaceId,
   accounts,
   transfer,
   trigger,
@@ -73,6 +76,7 @@ export function TransferDialog({
         </DialogHeader>
         {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
         <TransferForm
+          workspaceId={workspaceId}
           accounts={accounts}
           transfer={transfer}
           onSaved={() => setOpen(false)}
@@ -84,6 +88,7 @@ export function TransferDialog({
 }
 
 interface TransferFormProps {
+  workspaceId: string
   accounts: AccountOption[]
   transfer?: TransferValues
   onSaved: () => void
@@ -91,6 +96,7 @@ interface TransferFormProps {
 }
 
 function TransferForm({
+  workspaceId,
   accounts,
   transfer,
   onSaved,
@@ -134,6 +140,11 @@ function TransferForm({
           value={transfer.id}
         />
       )}
+      <input
+        type="hidden"
+        name="workspace_id"
+        value={workspaceId}
+      />
       <input
         type="hidden"
         name="occurred_on"

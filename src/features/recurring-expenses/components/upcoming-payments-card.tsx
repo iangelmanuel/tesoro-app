@@ -80,6 +80,7 @@ export async function UpcomingPaymentsCard({
                 </p>
               </div>
               <PayOccurrenceButton
+                workspaceId={workspaceId}
                 payment={payment}
                 categories={categories}
                 accounts={accounts}

@@ -76,6 +76,7 @@ async function ReportsContent({
     ])
     return (
       <NoTransactions
+        workspaceId={workspace.id}
         categories={categories}
         accounts={accounts}
       />

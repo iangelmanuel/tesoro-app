@@ -2,8 +2,11 @@
 
 import type { PostgrestError } from "@supabase/supabase-js"
 import { z } from "zod"
-import { getPersonalWorkspace } from "@/features/workspaces/queries"
-import { revalidatePersonalPages } from "@/libs/revalidate"
+import {
+  type WorkspaceType,
+  requireWritableWorkspace
+} from "@/features/workspaces/queries"
+import { revalidateWorkspacePages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import {
   createTransactionSchema,
@@ -31,6 +34,8 @@ const FIELDS = [
   "description",
   "note",
   "account_id",
+  "counterparty",
+  "invoice_ref",
   "recurring_expense_id",
   "recurring_due_on"
 ] as const
@@ -90,6 +95,15 @@ function parseForm<T>(
   return { values, parsed }
 }
 
+// Contraparte y factura solo existen en Empresa
+function workspaceFields<
+  T extends { counterparty: unknown; invoice_ref: unknown }
+>(data: T, type: WorkspaceType): T {
+  return type === "business"
+    ? data
+    : { ...data, counterparty: null, invoice_ref: null }
+}
+
 function toValidationError(
   error: z.ZodError,
   values: Record<string, string>
@@ -128,21 +142,22 @@ async function validateRecurring(
 }
 
 // La categoría debe existir, ser visible para el usuario (RLS), tener el tipo
-// del movimiento y estar activa. Una archivada solo se acepta si ya era la
-// categoría actual del movimiento que se edita.
+// del movimiento y el scope del espacio, y estar activa. Una archivada solo se
+// acepta si ya era la categoría actual del movimiento que se edita.
 async function validateCategory(
   categoryId: string,
   type: string,
+  scope: WorkspaceType,
   currentCategoryId?: string
 ): Promise<string | null> {
   const supabase = await createClient()
   const { data } = await supabase
     .from("categories")
-    .select("type, archived_at")
+    .select("type, scope, archived_at")
     .eq("id", categoryId)
     .maybeSingle()
 
-  if (!data || data.type !== type) {
+  if (!data || data.type !== type || data.scope !== scope) {
     return INVALID_CATEGORY
   }
   if (data.archived_at !== null && categoryId !== currentCategoryId) {
@@ -166,15 +181,16 @@ export async function createTransaction(
     return { error: RECURRING_MUST_BE_EXPENSE, values }
   }
 
+  const workspace = await requireWritableWorkspace(formData.get("workspace_id"))
+
   const categoryError = await validateCategory(
     parsed.data.category_id,
-    parsed.data.type
+    parsed.data.type,
+    workspace.type
   )
   if (categoryError) {
     return { fieldErrors: { category_id: [categoryError] }, values }
   }
-
-  const workspace = await getPersonalWorkspace()
 
   if (recurring_expense_id !== null && recurring_due_on !== null) {
     const recurringError = await validateRecurring(
@@ -188,15 +204,16 @@ export async function createTransaction(
   }
 
   const supabase = await createClient()
-  const { error } = await supabase
-    .from("transactions")
-    .insert({ ...parsed.data, workspace_id: workspace.id })
+  const { error } = await supabase.from("transactions").insert({
+    ...workspaceFields(parsed.data, workspace.type),
+    workspace_id: workspace.id
+  })
 
   if (error) {
     return toFormError(error, values)
   }
 
-  revalidatePersonalPages()
+  revalidateWorkspacePages(workspace)
   return { ok: true }
 }
 
@@ -215,7 +232,7 @@ export async function updateTransaction(
     return toValidationError(parsed.error, values)
   }
 
-  const workspace = await getPersonalWorkspace()
+  const workspace = await requireWritableWorkspace(formData.get("workspace_id"))
   const supabase = await createClient()
   const { data: current } = await supabase
     .from("transactions")
@@ -234,6 +251,7 @@ export async function updateTransaction(
   const categoryError = await validateCategory(
     parsed.data.category_id,
     parsed.data.type,
+    workspace.type,
     current.category_id
   )
   if (categoryError) {
@@ -242,7 +260,7 @@ export async function updateTransaction(
 
   const { data, error } = await supabase
     .from("transactions")
-    .update(parsed.data)
+    .update(workspaceFields(parsed.data, workspace.type))
     .eq("id", id.data)
     .eq("workspace_id", workspace.id)
     .select("id")
@@ -254,11 +272,12 @@ export async function updateTransaction(
     return { error: NOT_FOUND, values }
   }
 
-  revalidatePersonalPages()
+  revalidateWorkspacePages(workspace)
   return { ok: true }
 }
 
 export async function deleteTransaction(
+  workspaceId: string,
   id: string
 ): Promise<TransactionActionResult> {
   const parsedId = idSchema.safeParse(id)
@@ -267,7 +286,7 @@ export async function deleteTransaction(
     return { error: NOT_FOUND }
   }
 
-  const workspace = await getPersonalWorkspace()
+  const workspace = await requireWritableWorkspace(workspaceId)
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("transactions")
@@ -283,6 +302,6 @@ export async function deleteTransaction(
     return { error: NOT_FOUND }
   }
 
-  revalidatePersonalPages()
+  revalidateWorkspacePages(workspace)
   return {}
 }

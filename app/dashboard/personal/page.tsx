@@ -94,6 +94,7 @@ async function SummaryContent() {
     ])
     return (
       <NoTransactions
+        workspaceId={workspace.id}
         categories={categories}
         accounts={accounts}
       />

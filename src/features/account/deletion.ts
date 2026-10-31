@@ -12,12 +12,14 @@ const LONG_DATE = new Intl.DateTimeFormat(SITE.site.locale, {
 
 /**
  * Día de la purga en America/Bogota (YYYY-MM-DD): `deletion_requested_at` +
- * los días de gracia. Recibe el valor de `user.app_metadata`.
+ * los días de gracia. Recibe el valor de `user.app_metadata` o de
+ * `workspaces.deletion_requested_at` (con SITE.workspaceDeletionGraceDays).
  */
-export function deletionDate(requestedAt: string) {
-  const purgeAt = new Date(
-    new Date(requestedAt).getTime() + SITE.accountDeletionGraceDays * DAY_MS
-  )
+export function deletionDate(
+  requestedAt: string,
+  graceDays: number = SITE.accountDeletionGraceDays
+) {
+  const purgeAt = new Date(new Date(requestedAt).getTime() + graceDays * DAY_MS)
   return todayISO(purgeAt)
 }
 

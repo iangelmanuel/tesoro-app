@@ -19,7 +19,7 @@ import { adjustAccountBalance } from "../actions"
 import type { AccountWithBalance, AdjustAccountFormState } from "../types"
 
 interface AdjustBalanceDialogProps {
-  account: Pick<AccountWithBalance, "id" | "name" | "balance">
+  account: Pick<AccountWithBalance, "id" | "workspace_id" | "name" | "balance">
   currency: string
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
   trigger?: React.ReactNode
@@ -59,6 +59,7 @@ export function AdjustBalanceDialog({
         </DialogHeader>
         {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
         <AdjustBalanceForm
+          workspaceId={account.workspace_id}
           accountId={account.id}
           onSaved={() => setOpen(false)}
           onCancel={() => setOpen(false)}
@@ -69,12 +70,14 @@ export function AdjustBalanceDialog({
 }
 
 interface AdjustBalanceFormProps {
+  workspaceId: string
   accountId: string
   onSaved: () => void
   onCancel: () => void
 }
 
 function AdjustBalanceForm({
+  workspaceId,
   accountId,
   onSaved,
   onCancel
@@ -101,6 +104,11 @@ function AdjustBalanceForm({
       className="flex flex-col gap-4"
       noValidate
     >
+      <input
+        type="hidden"
+        name="workspace_id"
+        value={workspaceId}
+      />
       <input
         type="hidden"
         name="account_id"

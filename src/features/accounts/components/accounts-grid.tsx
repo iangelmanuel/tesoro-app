@@ -7,10 +7,16 @@ interface AccountsGridProps {
   /** Cuentas activas */
   accounts: AccountWithBalance[]
   currency: string
+  /** Ruta de Movimientos del espacio, para "Ver movimientos" */
+  transactionsPath?: string
 }
 
 /** Total "Saldo en cuentas" y una tarjeta por cuenta activa */
-export function AccountsGrid({ accounts, currency }: AccountsGridProps) {
+export function AccountsGrid({
+  accounts,
+  currency,
+  transactionsPath
+}: AccountsGridProps) {
   const total = accounts.reduce((sum, account) => sum + account.balance, 0)
 
   return (
@@ -33,6 +39,7 @@ export function AccountsGrid({ accounts, currency }: AccountsGridProps) {
             key={account.id}
             account={account}
             currency={currency}
+            transactionsPath={transactionsPath}
           />
         ))}
       </ul>

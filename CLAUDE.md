@@ -103,9 +103,17 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
 - Storage: bucket público `avatars` (1 MB, solo WebP), escritura solo en la
   carpeta `<user_id>/`. Postgres no borra archivos de Storage: se borran desde
   las actions con la sesión del usuario.
-- `pg_cron` corre el job diario `purge-deleted-accounts`, que borra las
-  cuentas marcadas para borrar hace más de 30 días
-  (`raw_app_meta_data.deletion_requested_at`).
+- `pg_cron` corre dos jobs diarios:
+  - `purge-deleted-accounts` borra las cuentas marcadas para borrar hace más
+    de 30 días (`raw_app_meta_data.deletion_requested_at`);
+  - `purge-deleted-workspaces` borra las empresas marcadas hace más de 30 días
+    (`workspaces.deletion_requested_at`).
+- `business_workspace_limit()` es el único punto que fija cuántas empresas
+  tiene un usuario (hoy 1). `SITE.businessLimit` solo lo refleja en la UI.
+- Las políticas de escritura de las tablas de un espacio usan
+  `is_workspace_writable(workspace_id)` (dueño y sin marca de borrado). Las de
+  `select` usan `is_workspace_owner`. En las actions, el espacio se resuelve
+  con `requireWritableWorkspace(id)`.
 - Las plantillas de email viven en `supabase/templates/` y enlazan a
   `/auth/confirm` con `token_hash`. `config.toml` solo las aplica en local: en
   remoto se copian a mano al dashboard (ver README).

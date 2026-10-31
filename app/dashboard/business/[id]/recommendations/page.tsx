@@ -36,7 +36,7 @@ export default function BusinessRecommendationsPage({
         <h1 className="text-2xl font-semibold tracking-tight">
           Score y recomendaciones
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted">
           La salud de tu negocio de 0 a 100 y qué hacer para mejorarla.
         </p>
       </header>

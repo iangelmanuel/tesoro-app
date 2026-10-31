@@ -1,6 +1,6 @@
 import { Suspense } from "react"
 import { notFound } from "next/navigation"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@heroui/react"
 import { BusinessDeleted } from "@/features/business/components/business-deleted"
 import { getWorkspace } from "@/features/workspaces/queries"
 

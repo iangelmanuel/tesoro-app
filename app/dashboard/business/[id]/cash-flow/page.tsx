@@ -1,15 +1,15 @@
 import { Suspense } from "react"
 import type { Route } from "next"
 import Link from "next/link"
-import { Info, TriangleAlert } from "lucide-react"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+  CardTitle,
+  Skeleton
+} from "@heroui/react"
+import { Info, TriangleAlert } from "lucide-react"
 import { SITE } from "@/config/site"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { AccountBalancesList } from "@/features/cash-flow/components/account-balances-list"
@@ -45,7 +45,7 @@ export default function BusinessCashFlowPage({
     <section className="flex flex-1 flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Flujo de caja</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted">
           Lo que entra y sale de tu empresa mes a mes, y cuánto queda en tus
           cuentas.
         </p>
@@ -118,7 +118,7 @@ async function CashFlowContent({
           role="status"
           className="flex items-start gap-2 rounded-lg border bg-default/50 p-3 text-sm"
         >
-          <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+          <Info className="mt-0.5 size-4 shrink-0 text-muted" />
           <p>
             {cashFlow.withoutAccount === 1
               ? "1 movimiento del periodo no tiene cuenta y no mueve el saldo."

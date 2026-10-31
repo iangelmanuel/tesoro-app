@@ -1,8 +1,7 @@
 import { Suspense } from "react"
+import { Button, Skeleton } from "@heroui/react"
 import { ArrowLeftRight, Plus, Wallet } from "lucide-react"
 import { EmptyState } from "@/components/dashboard/empty-state"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import { AccountDialog } from "@/features/accounts/components/account-dialog"
 import { AccountsGrid } from "@/features/accounts/components/accounts-grid"
 import { ArchivedAccounts } from "@/features/accounts/components/archived-accounts"
@@ -23,7 +22,7 @@ export default function AccountsPage() {
     <section className="flex flex-1 flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Cuentas</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted">
           Cuánto tienes en efectivo, en el banco y en tus billeteras.
         </p>
       </header>
@@ -47,7 +46,7 @@ async function AccountsContent() {
       workspaceId={workspace.id}
       trigger={
         <Button>
-          <Plus data-icon="inline-start" />
+          <Plus />
           Nueva cuenta
         </Button>
       }
@@ -75,7 +74,7 @@ async function AccountsContent() {
                 accounts={accounts}
                 trigger={
                   <Button variant="outline">
-                    <ArrowLeftRight data-icon="inline-start" />
+                    <ArrowLeftRight />
                     Traspaso
                   </Button>
                 }

@@ -1,4 +1,4 @@
-import { cn } from "cn"
+import { cn } from "@heroui/react"
 import { formatCurrency } from "@/libs/format"
 import type { AccountWithBalance } from "../types"
 import { AccountCard } from "./account-card"
@@ -22,11 +22,11 @@ export function AccountsGrid({
   return (
     <>
       <div className="flex flex-col gap-1 rounded-xl border p-4">
-        <span className="text-sm text-muted-foreground">Saldo en cuentas</span>
+        <span className="text-sm text-muted">Saldo en cuentas</span>
         <span
           className={cn(
             "text-3xl font-semibold tracking-tight tabular-nums",
-            total < 0 && "text-destructive"
+            total < 0 && "text-danger"
           )}
         >
           {formatCurrency(total, currency)}

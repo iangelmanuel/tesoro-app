@@ -3,7 +3,7 @@
 import { useState } from "react"
 import type { Route } from "next"
 import Link from "next/link"
-import { cn } from "cn"
+import { Button, Dropdown, Label, buttonVariants, cn } from "@heroui/react"
 import {
   Archive,
   EllipsisVertical,
@@ -11,13 +11,6 @@ import {
   Pencil,
   RefreshCw
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
 import { GoalIcon } from "@/features/goals/components/goal-icon"
 import { TRANSACTIONS_PATH } from "@/features/transactions/filters"
 import { formatCurrency } from "@/libs/format"
@@ -62,33 +55,45 @@ export function AccountCard({
         />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <span className="truncate font-medium">{account.name}</span>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-muted">
             {ACCOUNT_KIND_META[account.kind].label}
           </span>
         </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-sm"
+        <Dropdown>
+          <Button
+            variant="ghost"
+            isIconOnly
+            size="sm"
+            aria-label={`Acciones de ${account.name}`}
+            isDisabled={pending}
+          >
+            <EllipsisVertical />
+          </Button>
+          <Dropdown.Popover placement="bottom end">
+            <Dropdown.Menu
               aria-label={`Acciones de ${account.name}`}
-              disabled={pending}
+              onAction={(key) =>
+                key === "edit" ? setEditing(true) : run("archive")
+              }
             >
-              <EllipsisVertical />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => setEditing(true)}>
-              <Pencil />
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => run("archive")}>
-              <Archive />
-              Archivar
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <Dropdown.Item
+                id="edit"
+                textValue="Editar"
+              >
+                <Pencil className="size-4" />
+                <Label>Editar</Label>
+              </Dropdown.Item>
+              <Dropdown.Item
+                id="archive"
+                textValue="Archivar"
+              >
+                <Archive className="size-4" />
+                <Label>Archivar</Label>
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown.Popover>
+        </Dropdown>
         <AccountDialog
           workspaceId={account.workspace_id}
           account={account}
@@ -107,18 +112,18 @@ export function AccountCard({
         <span
           className={cn(
             "text-2xl font-semibold tracking-tight tabular-nums",
-            account.balance < 0 && "text-destructive"
+            account.balance < 0 && "text-danger"
           )}
         >
           {formatCurrency(account.balance, currency)}
         </span>
         {hasScheduled && (
-          <span className="text-sm text-muted-foreground tabular-nums">
+          <span className="text-sm text-muted tabular-nums">
             Con lo programado:{" "}
             <span
               className={cn(
                 "font-medium text-foreground",
-                account.scheduled_balance < 0 && "text-destructive"
+                account.scheduled_balance < 0 && "text-danger"
               )}
             >
               {formatCurrency(account.scheduled_balance, currency)}
@@ -131,21 +136,18 @@ export function AccountCard({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setAdjusting(true)}
+          onPress={() => setAdjusting(true)}
         >
-          <RefreshCw data-icon="inline-start" />
+          <RefreshCw />
           Actualizar saldo
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          asChild
+        <Link
+          href={accountTransactionsHref(account.id, transactionsPath)}
+          className={buttonVariants({ variant: "ghost", size: "sm" })}
         >
-          <Link href={accountTransactionsHref(account.id, transactionsPath)}>
-            <List data-icon="inline-start" />
-            Ver movimientos
-          </Link>
-        </Button>
+          <List className="size-4" />
+          Ver movimientos
+        </Link>
       </div>
     </li>
   )

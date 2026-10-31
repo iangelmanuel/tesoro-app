@@ -19,6 +19,8 @@ interface DatePickerFieldProps {
   /** Error de Zod del campo */
   error?: string
   isRequired?: boolean
+  /** Fecha máxima YYYY-MM-DD, p. ej. hoy para pagos y ajustes */
+  maxValue?: string
   className?: string
 }
 
@@ -40,6 +42,7 @@ export function DatePickerField({
   onChange,
   error,
   isRequired,
+  maxValue,
   className = "flex flex-col gap-2"
 }: DatePickerFieldProps) {
   return (
@@ -49,6 +52,7 @@ export function DatePickerField({
       onChange={(date) => onChange(date ? date.toString() : "")}
       isInvalid={Boolean(error)}
       isRequired={isRequired}
+      maxValue={maxValue ? toCalendarDate(maxValue) : undefined}
       validationBehavior="aria"
       className={className}
     >

@@ -1,14 +1,13 @@
 import Link from "next/link"
-import { cn } from "cn"
-import { Button } from "@/components/ui/button"
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+  CardTitle,
+  buttonVariants,
+  cn
+} from "@heroui/react"
 import { formatCurrency } from "@/libs/format"
 import { ACCOUNTS_PATH } from "../constants"
 import { getAccountBalances } from "../queries"
@@ -29,28 +28,27 @@ export async function AccountsCard({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Saldo en cuentas</CardTitle>
-        <CardDescription>
-          {active.length === 1
-            ? "1 cuenta activa"
-            : `${active.length} cuentas activas`}
-        </CardDescription>
-        <CardAction>
-          <Button
-            variant="outline"
-            size="sm"
-            asChild
-          >
-            <Link href={ACCOUNTS_PATH}>Ver cuentas</Link>
-          </Button>
-        </CardAction>
-      </CardHeader>
+      <div className="flex items-start justify-between gap-2">
+        <CardHeader>
+          <CardTitle>Saldo en cuentas</CardTitle>
+          <CardDescription>
+            {active.length === 1
+              ? "1 cuenta activa"
+              : `${active.length} cuentas activas`}
+          </CardDescription>
+        </CardHeader>
+        <Link
+          href={ACCOUNTS_PATH}
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+        >
+          Ver cuentas
+        </Link>
+      </div>
       <CardContent>
         <p
           className={cn(
             "text-3xl font-semibold tracking-tight tabular-nums",
-            total < 0 && "text-destructive"
+            total < 0 && "text-danger"
           )}
         >
           {formatCurrency(total, currency)}

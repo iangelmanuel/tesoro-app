@@ -26,3 +26,11 @@ export function workspaceReportsPath(workspace: {
 }) {
   return `${workspaceBasePath(workspace)}/reports`
 }
+
+/** Flujo de caja de una empresa */
+export function workspaceCashFlowPath(workspace: {
+  id: string
+  type: WorkspaceType
+}) {
+  return `${workspaceBasePath(workspace)}/cash-flow`
+}

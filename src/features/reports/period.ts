@@ -132,15 +132,17 @@ function rangeWarning(from: string | undefined, to: string | undefined) {
 }
 
 // Un valor inválido cae a su valor por defecto. Un rango inválido muestra un
-// aviso y cae al mes actual. Nunca rompe la página.
+// aviso y cae al mes actual. Nunca rompe la página. Sin periodo se usa
+// `defaultPeriod` (Reportes: el mes; Flujo de caja: el año).
 export function parseReportParams(
   searchParams: SearchParams,
-  now = new Date()
+  now = new Date(),
+  defaultPeriod: Exclude<ReportPeriod, "range"> = "month"
 ): ReportParams {
   const parsedPeriod = periodSchema.safeParse(first(searchParams.period))
   const parsedType = typeSchema.safeParse(first(searchParams.type))
   const type = parsedType.success ? parsedType.data : "expense"
-  const period = parsedPeriod.success ? parsedPeriod.data : "month"
+  const period = parsedPeriod.success ? parsedPeriod.data : defaultPeriod
   const rawValue = first(searchParams.value)
 
   if (period === "range") {

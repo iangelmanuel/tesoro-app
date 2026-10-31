@@ -120,8 +120,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - "Registra tu primera venta" empty state on the business summary, cash flow, reports and recommendations pages.
 - "Empresa: flujo de caja, reportes y score" section in `docs/producto.md`.
 
+- Brand identity: a treasure-chest mark and a "Tesoro" wordmark in Geist, with `--income` (emerald) as the accent. SVG sources in `assets/brand/` (`mark.svg`, `logo.svg`, `opengraph.svg`, text converted to paths) and `app/icon.svg`.
+- `pnpm brand:assets` (`scripts/generate-brand-assets.mjs`, `sharp` as an exact devDependency) generates `public/opengraph-image.png`, `public/brand/logo.png`, `public/apple-touch-icon.png`, `public/icons/icon-192.png`, `public/icons/icon-512.png` and a multi-size `app/favicon.ico` (16, 32, 48) built from embedded PNGs.
+- Reusable `Logo` component (mark + wordmark, or mark only) and a light/dark `ThemeToggle`.
+- `app/(public)/` route group with a public header (navigation, theme toggle, a session island in `<Suspense>` that shows "Ir al dashboard" or "Iniciar sesión" / "Crear cuenta", and a mobile `Sheet` menu) and footer (legal links, repository, issues, socials, license, version and author).
+- Full landing page at `/`: hero, features, how it works, score (7 factors with weights and 4 bands), Personal and Empresa, open source and a final CTA, with interim JSX mockups (`LandingHeroVisual`, `LandingScoreVisual`) using fixed sample data.
+- Legal pages at `/legal/privacy` and `/legal/terms` (one `[slug]` route with `generateStaticParams`, 404 for unknown slugs), with a table of contents, last-updated date, `buildMetadata` and breadcrumb JSON-LD. Texts written in Spanish under Colombian Law 1581 of 2012.
+- Terms and privacy acceptance notice on `/sign-up`.
+- `SITE.routes.legal`, `legalHref()`, `SITE.repository.contributing`, an `icon` per `SITE.features` item and "Cómo funciona" in `SITE.navigation.main`.
+- `text-brand` utility for accent-colored small text with AA contrast.
+- "Landing", "Páginas legales" and "Marca" sections in `docs/producto.md`.
+
 ### Changed
 
+- `SITE.legal` slugs are now `privacy` / `terms` (updated 2026-10-31).
+- The home page moved from `app/page.tsx` to `app/(public)/page.tsx`.
+- The auth layout shows the `Logo` instead of the plain name.
+- `/legal/privacy` and `/legal/terms` added to the sitemap.
+- `app/favicon.ico` replaced: it was the default Next.js icon.
 - shadcn `pagination` uses `next/link` and Spanish labels.
 - Transaction and recurring expense actions revalidate the whole Personal workspace (summary, transactions, budgets and reports) instead of only refreshing the current page.
 - The transaction dialog accepts prefilled values and an occurrence link, and locks the type to expense for recurring payments.

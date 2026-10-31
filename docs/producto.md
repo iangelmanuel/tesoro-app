@@ -15,22 +15,23 @@ Visión y alcance de Tesoro. Este documento describe **qué** se construye; el
 
 ## Mapa de rutas
 
-| Ruta                           | Qué es                                    | Indexable |
-| ------------------------------ | ----------------------------------------- | --------- |
-| `/`                            | Landing                                   | Sí        |
-| `/sign-in`                     | Inicio de sesión                          | Sí        |
-| `/sign-up`                     | Registro                                  | Sí        |
-| `/forgot-password`             | Pedir el enlace para recuperar contraseña | Sí        |
-| `/reset-password`              | Elegir la nueva contraseña                | No        |
-| `/check-email`                 | Revisar el correo de confirmación         | No        |
-| `/auth/callback`               | Callback de OAuth (Google, GitHub)        | No        |
-| `/auth/confirm`                | Verifica los enlaces de email             | No        |
-| `/account-deleted`             | Cuenta en periodo de gracia del borrado   | No        |
-| `/dashboard`                   | Redirige a `/dashboard/personal`          | No        |
-| `/dashboard/account`           | Cuenta y perfil                           | No        |
-| `/dashboard/personal/...`      | Espacio Personal (requiere sesión)        | No        |
-| `/dashboard/business`          | Redirige a la empresa o estado vacío      | No        |
-| `/dashboard/business/[id]/...` | Espacio de una empresa                    | No        |
+| Ruta                           | Qué es                                      | Indexable |
+| ------------------------------ | ------------------------------------------- | --------- |
+| `/`                            | Landing                                     | Sí        |
+| `/legal/[slug]`                | Privacidad (`privacy`) y Términos (`terms`) | Sí        |
+| `/sign-in`                     | Inicio de sesión                            | Sí        |
+| `/sign-up`                     | Registro                                    | Sí        |
+| `/forgot-password`             | Pedir el enlace para recuperar contraseña   | Sí        |
+| `/reset-password`              | Elegir la nueva contraseña                  | No        |
+| `/check-email`                 | Revisar el correo de confirmación           | No        |
+| `/auth/callback`               | Callback de OAuth (Google, GitHub)          | No        |
+| `/auth/confirm`                | Verifica los enlaces de email               | No        |
+| `/account-deleted`             | Cuenta en periodo de gracia del borrado     | No        |
+| `/dashboard`                   | Redirige a `/dashboard/personal`            | No        |
+| `/dashboard/account`           | Cuenta y perfil                             | No        |
+| `/dashboard/personal/...`      | Espacio Personal (requiere sesión)          | No        |
+| `/dashboard/business`          | Redirige a la empresa o estado vacío        | No        |
+| `/dashboard/business/[id]/...` | Espacio de una empresa                      | No        |
 
 Las rutas viven en `SITE.routes` y la navegación de los espacios en
 `SITE.navigation.personal` y `SITE.navigation.business` (este con `segment`,
@@ -42,9 +43,89 @@ que se agrega a `/dashboard/business/[id]`). `robots.ts` bloquea `/dashboard/`, 
 
 ## Landing
 
-Presenta el producto y lleva a crear cuenta: propuesta de valor, funciones
-(`SITE.features`), explicación del score, sección de código abierto y CTA a
-`/sign-up`.
+Presenta el producto y lleva a crear cuenta. Vive en el grupo `app/(public)/`,
+cuyo layout pone el header y el footer públicos en `/` y `/legal/*` (no en
+auth ni en el dashboard).
+
+Secciones, en orden (`src/features/landing/components/`):
+
+1. **Hero**: título, `SITE.info.slogan`, CTA "Crear cuenta" y "Ver en GitHub",
+   y el visual `LandingHeroVisual`.
+2. **Funciones** (`#funciones`): los 6 ítems de `SITE.features`, cada uno con
+   su ícono de lucide (`icon`).
+3. **Cómo funciona** (`#como-funciona`): Registra → Visualiza → Mejora.
+4. **Score** (`#score`): los 7 factores con sus pesos, las 4 bandas y
+   `LandingScoreVisual`. Los pesos son constantes de presentación copiadas de
+   [Factores y pesos](#factores-y-pesos); si cambian allí, se cambian en
+   `score-section.tsx`.
+5. **Personal y Empresa**: `SITE.workspaces.types`, con lo que trae cada
+   espacio tomado de `SITE.navigation.personal` y `SITE.navigation.business`.
+6. **Código abierto** (`#open-source`): licencia, repositorio, issues y
+   `CONTRIBUTING`.
+7. **CTA final** a `/sign-up`.
+
+- Los visuales son **mockups JSX interinos** con datos ficticios fijos, en
+  `hero-visual.tsx` y `score-visual.tsx`. Son decorativos (`aria-hidden`) con
+  una descripción `sr-only`. Un spec futuro los reemplaza por videos.
+- **Header**: `Logo`, `SITE.navigation.main`, toggle de tema y botones de
+  sesión. Los botones son una isla en `<Suspense>` que lee la sesión con
+  `getClaims()`; el fallback es el estado sin sesión ("Iniciar sesión" y
+  "Crear cuenta") y con sesión muestra "Ir al dashboard". Así `/` sigue
+  prerenderizada (PPR). En móvil, los enlaces y botones van en un `Sheet`.
+- **Footer**: `Logo`, slogan, legales, repositorio, issues, seguridad, redes de
+  `SITE.social`, licencia, versión y "Hecho por" `SITE.author`.
+- La landing no hace peticiones a dominios externos: sin analítica, sin
+  cookies de terceros y sin contador de estrellas de GitHub.
+
+### Páginas legales
+
+`/legal/privacy` y `/legal/terms` salen de una sola ruta
+`app/(public)/legal/[slug]/page.tsx`, con `generateStaticParams` desde
+`SITE.legal`. Un slug desconocido responde 404.
+
+- El contenido vive en TSX (`src/content/legal/privacy.tsx` y `terms.tsx`):
+  una descripción para la metadata y una lista de secciones (`id`, `title`,
+  `content`). `LegalDocument` pinta título, "Última actualización", índice con
+  anclas y cuerpo.
+- `SITE.legal[].updatedAt` se cambia a mano cada vez que cambia un texto.
+- La URL se arma con `legalHref(slug)`, nunca a mano.
+- Responsable: Angel De La Torre, persona natural en Colombia. Marco: Ley 1581
+  de 2012 y Decreto 1377 de 2013. Edad mínima: 18 años.
+- `/sign-up` muestra bajo el formulario "Al crear tu cuenta aceptas los
+  Términos y Condiciones y la Política de Privacidad". No hay checkbox ni se
+  guarda la versión aceptada.
+
+## Marca
+
+- **Isotipo**: un cofre blanco sobre un cuadro redondeado del acento. Fuente
+  en `assets/brand/mark.svg`; `app/icon.svg` es una copia.
+- **Wordmark**: "Tesoro" en Geist SemiBold.
+- **Acento**: `--income` (emerald). No hay paleta propia de marca. Para texto
+  pequeño se usa la utilidad `text-brand` (`--income` mezclado con el
+  foreground), que cumple contraste AA en claro y oscuro.
+- **Componente** `Logo` (`src/components/brand/logo.tsx`): isotipo inline y
+  wordmark, con variante solo isotipo (`variant="mark"`) y tamaños `default` y
+  `lg`. Si cambia `mark.svg`, se actualiza también aquí.
+
+### Assets
+
+`pnpm brand:assets` (`scripts/generate-brand-assets.mjs`, con sharp) genera
+desde los SVG fuente de `assets/brand/`:
+
+| Archivo                       | Fuente          | Tamaño     |
+| ----------------------------- | --------------- | ---------- |
+| `public/opengraph-image.png`  | `opengraph.svg` | 1200×630   |
+| `public/brand/logo.png`       | `logo.svg`      | 512×512    |
+| `public/apple-touch-icon.png` | `mark.svg`      | 180×180    |
+| `public/icons/icon-192.png`   | `mark.svg`      | 192×192    |
+| `public/icons/icon-512.png`   | `mark.svg`      | 512×512    |
+| `app/favicon.ico`             | `mark.svg`      | 16, 32, 48 |
+
+- Los textos de `logo.svg` y `opengraph.svg` van convertidos a trazos, así el
+  rasterizado no depende de las fuentes del sistema.
+- El `.ico` se arma en el script con PNG embebidos, sin dependencias extra.
+- La salida se commitea; el CI no corre el script. Es determinista: correrlo
+  dos veces da los mismos bytes.
 
 ## Autenticación
 

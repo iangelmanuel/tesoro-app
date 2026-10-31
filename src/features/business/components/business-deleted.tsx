@@ -1,8 +1,10 @@
 import { CalendarX } from "lucide-react"
 import { SITE } from "@/config/site"
 import { deletionDate, formatDeletionDate } from "@/features/account/deletion"
+import { RestoreBusinessButton } from "./restore-business-button"
 
 interface BusinessDeletedProps {
+  workspaceId: string
   name: string
   /** `workspaces.deletion_requested_at` */
   deletionRequestedAt: string
@@ -10,6 +12,7 @@ interface BusinessDeletedProps {
 
 // Reemplaza todas las rutas de una empresa programada para borrarse
 export function BusinessDeleted({
+  workspaceId,
   name,
   deletionRequestedAt
 }: BusinessDeletedProps) {
@@ -31,6 +34,7 @@ export function BusinessDeleted({
           siempre ese día. Hasta entonces puedes restaurarla.
         </p>
       </div>
+      <RestoreBusinessButton workspaceId={workspaceId} />
     </section>
   )
 }

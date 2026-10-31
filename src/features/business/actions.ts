@@ -122,3 +122,63 @@ export async function updateBusiness(
   revalidatePath(SITE.routes.dashboard, "layout")
   return { ok: true }
 }
+
+const DELETE_ERROR = "No se pudo programar el borrado. Intenta de nuevo"
+const RESTORE_ERROR = "No se pudo restaurar la empresa. Intenta de nuevo"
+const NAME_MISMATCH = "El nombre no coincide"
+
+// Programa el borrado (30 días de gracia). El nombre se vuelve a comparar en
+// el servidor aunque el botón del diálogo ya lo exija
+export async function requestBusinessDeletion(
+  _prevState: BusinessFormState,
+  formData: FormData
+): Promise<BusinessFormState> {
+  const confirmName = formData.get("confirmName")
+  const values = {
+    confirmName: typeof confirmName === "string" ? confirmName : ""
+  }
+
+  const workspace = await requireWritableWorkspace(formData.get("workspace_id"))
+  if (workspace.type !== "business") {
+    return { error: NOT_FOUND, values }
+  }
+  if (values.confirmName.trim() !== workspace.name) {
+    return { fieldErrors: { confirmName: [NAME_MISMATCH] }, values }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("request_workspace_deletion", {
+    p_workspace_id: workspace.id
+  })
+
+  if (error) {
+    return { error: DELETE_ERROR, values }
+  }
+
+  // El layout de la empresa pasa a la pantalla de restaurar
+  revalidatePath(SITE.routes.dashboard, "layout")
+  redirect(workspaceBasePath(workspace) as Route)
+}
+
+// Quita la marca y vuelve al Resumen. La RPC solo actúa sobre empresas del
+// usuario, así que un id ajeno no cambia nada
+export async function cancelBusinessDeletion(
+  workspaceId: string
+): Promise<{ error?: string }> {
+  const parsedId = z.uuid().safeParse(workspaceId)
+  if (!parsedId.success) {
+    return { error: NOT_FOUND }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("cancel_workspace_deletion", {
+    p_workspace_id: parsedId.data
+  })
+
+  if (error) {
+    return { error: RESTORE_ERROR }
+  }
+
+  revalidatePath(SITE.routes.dashboard, "layout")
+  redirect(workspaceBasePath({ id: parsedId.data, type: "business" }) as Route)
+}

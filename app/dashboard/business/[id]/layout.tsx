@@ -32,6 +32,7 @@ async function BusinessGate({
   if (workspace.deletionRequestedAt) {
     return (
       <BusinessDeleted
+        workspaceId={workspace.id}
         name={workspace.name}
         deletionRequestedAt={workspace.deletionRequestedAt}
       />

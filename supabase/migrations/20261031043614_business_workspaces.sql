@@ -24,6 +24,14 @@ create table public.business_profiles (
 alter table public.categories
   add column scope public.workspace_type not null default 'personal';
 
+-- Traspasos: solo tenían FK compuestas a accounts (no action), así que borrar
+-- un espacio con traspasos fallaba al final de la cascada. Con esta FK se
+-- borran junto con el espacio (purga de empresas y de cuentas)
+alter table public.transfers
+  add constraint transfers_workspace_id_fkey
+    foreign key (workspace_id)
+    references public.workspaces (id) on delete cascade;
+
 -- Movimientos: contraparte y factura (solo se usan en Empresa)
 alter table public.transactions
   add column counterparty text check (char_length(counterparty) between 1 and 80),

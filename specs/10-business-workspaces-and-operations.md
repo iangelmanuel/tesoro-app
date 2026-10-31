@@ -1,6 +1,6 @@
 # SPEC 10 — Espacio Empresa: crear y registrar operaciones
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 01, SPEC 02, SPEC 08c, SPEC 09
 > **Fecha:** 2026-10-30
 > **Objetivo:** Que el usuario cree su espacio de Empresa con nombre, NIT opcional y sector, y registre en él ventas y costos o gastos operativos con categorías de negocio, cliente o proveedor y número de factura.
@@ -206,10 +206,10 @@ export type Workspace = {
   deletionRequestedAt: string | null
 }
 
-getPersonalWorkspace()           // sin cambios
-getBusinessWorkspaces()          // empresas del usuario, con su perfil
-getWorkspace(id)                 // dueño o notFound(); con `cache`
-requireWritableWorkspace(id)     // para actions: dueño y sin marca, si no lanza error
+getPersonalWorkspace() // sin cambios
+getBusinessWorkspaces() // empresas del usuario, con su perfil
+getWorkspace(id) // dueño o notFound(); con `cache`
+requireWritableWorkspace(id) // para actions: dueño y sin marca, si no lanza error
 ```
 
 - El sector se valida solo con Zod contra `SITE.businessSectors`, sin `check` en la BD.
@@ -270,39 +270,39 @@ requireWritableWorkspace(id)     // para actions: dueño y sin marca, si no lanz
 
 ## Criterios de aceptación
 
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
-- [ ] `pnpm install --frozen-lockfile` funciona y no hay dependencias nuevas.
-- [ ] `supabase db reset` aplica las migraciones sin errores.
-- [ ] Sin empresa, el tab Empresa muestra el estado vacío con "Crear empresa" habilitado.
-- [ ] Crear "Panadería Ana" con sector Alimentos y sin NIT lleva a `/dashboard/business/<id>` y el aside muestra los 7 ítems de Empresa.
-- [ ] Un NIT `900123456-7` se guarda. Un NIT `ABC123` muestra un error de validación y no guarda.
-- [ ] Un nombre de 1 o de 61 caracteres muestra un error de validación y no guarda.
-- [ ] Con una empresa creada, `/dashboard/business` redirige a ella y el estado vacío no aparece.
-- [ ] Llamar `create_business` desde SQL con la sesión de un usuario que ya tiene una empresa falla con "Alcanzaste el límite de empresas".
-- [ ] Con `business_workspace_limit()` cambiado a 2 en local, el selector de empresa aparece en el aside y cambia entre las dos.
-- [ ] `/dashboard/business/<id de otro usuario>` y `/dashboard/business/<id del espacio Personal>` dan 404.
-- [ ] El dialog de movimientos de Empresa solo lista categorías de negocio (sistema y propias). El de Personal no lista ninguna de negocio.
-- [ ] Insertar desde SQL un movimiento de Personal con la categoría "Costo de ventas" falla.
-- [ ] Registrar una venta de 150.000 con cliente "Café Sol" y factura "FV-001" la muestra en la tabla con esos datos.
-- [ ] Buscar "FV-001" o "Café" en Movimientos de Empresa encuentra esa venta y los totales coinciden.
-- [ ] En Personal, el dialog y la tabla no muestran cliente, proveedor ni factura.
-- [ ] Una categoría propia creada en Empresa no aparece en Personal, y viceversa.
-- [ ] La empresa nueva tiene la cuenta "Efectivo". Crear una cuenta y un traspaso en Empresa no los muestra en Personal.
-- [ ] El Resumen de Empresa muestra Ventas, Costos y gastos, y Utilidad (ventas − costos) del mes actual, y los últimos 5 movimientos.
-- [ ] El registro rápido en `/dashboard/business/<id>` crea el movimiento en la empresa, no en Personal.
-- [ ] Flujo de caja, Reportes y Recomendaciones muestran "Próximamente".
-- [ ] Editar nombre, NIT y sector en Ajustes los actualiza en la página y en el aside.
-- [ ] Un `update` directo de `deletion_requested_at` o `type` en `workspaces` con la sesión del usuario falla.
-- [ ] En el dialog de eliminar, el botón queda deshabilitado hasta escribir el nombre exacto.
-- [ ] Programar el borrado muestra en toda ruta de la empresa "Esta empresa se borrará el <hoy + 30 días>" y "Restaurar empresa".
-- [ ] Con la empresa marcada, insertar un movimiento, una categoría o una cuenta en ella desde SQL con la sesión del usuario falla.
-- [ ] Con la empresa marcada, crear otra empresa falla por el límite.
-- [ ] "Restaurar empresa" quita la marca y vuelve al Resumen con todos los datos intactos.
-- [ ] Con la marca a hace 31 días, `select public.purge_deleted_workspaces()` devuelve 1 y no quedan filas de esa empresa en `workspaces`, `business_profiles`, `transactions`, `categories`, `accounts`, `transfers` ni `account_adjustments`. El espacio Personal sigue intacto.
-- [ ] Con la marca a hace 29 días, `purge_deleted_workspaces()` devuelve 0.
-- [ ] Un usuario `authenticated` no puede ejecutar `purge_deleted_workspaces()`. Ejecutar `request_workspace_deletion` con el `id` de Personal o de otro usuario no marca nada.
-- [ ] Movimientos, categorías, cuentas, presupuestos y deudas de Personal funcionan igual que antes de este spec.
-- [ ] Ningún archivo del proyecto usa la `service_role` ni la clave secreta.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] `pnpm install --frozen-lockfile` funciona y no hay dependencias nuevas.
+- [x] `supabase db reset` aplica las migraciones sin errores.
+- [x] Sin empresa, el tab Empresa muestra el estado vacío con "Crear empresa" habilitado.
+- [x] Crear "Panadería Ana" con sector Alimentos y sin NIT lleva a `/dashboard/business/<id>` y el aside muestra los 7 ítems de Empresa.
+- [x] Un NIT `900123456-7` se guarda. Un NIT `ABC123` muestra un error de validación y no guarda.
+- [x] Un nombre de 1 o de 61 caracteres muestra un error de validación y no guarda.
+- [x] Con una empresa creada, `/dashboard/business` redirige a ella y el estado vacío no aparece.
+- [x] Llamar `create_business` desde SQL con la sesión de un usuario que ya tiene una empresa falla con "Alcanzaste el límite de empresas".
+- [x] Con `business_workspace_limit()` cambiado a 2 en local, el selector de empresa aparece en el aside y cambia entre las dos.
+- [x] `/dashboard/business/<id de otro usuario>` y `/dashboard/business/<id del espacio Personal>` dan 404.
+- [x] El dialog de movimientos de Empresa solo lista categorías de negocio (sistema y propias). El de Personal no lista ninguna de negocio.
+- [x] Insertar desde SQL un movimiento de Personal con la categoría "Costo de ventas" falla.
+- [x] Registrar una venta de 150.000 con cliente "Café Sol" y factura "FV-001" la muestra en la tabla con esos datos.
+- [x] Buscar "FV-001" o "Café" en Movimientos de Empresa encuentra esa venta y los totales coinciden.
+- [x] En Personal, el dialog y la tabla no muestran cliente, proveedor ni factura.
+- [x] Una categoría propia creada en Empresa no aparece en Personal, y viceversa.
+- [x] La empresa nueva tiene la cuenta "Efectivo". Crear una cuenta y un traspaso en Empresa no los muestra en Personal.
+- [x] El Resumen de Empresa muestra Ventas, Costos y gastos, y Utilidad (ventas − costos) del mes actual, y los últimos 5 movimientos.
+- [x] El registro rápido en `/dashboard/business/<id>` crea el movimiento en la empresa, no en Personal.
+- [x] Flujo de caja, Reportes y Recomendaciones muestran "Próximamente".
+- [x] Editar nombre, NIT y sector en Ajustes los actualiza en la página y en el aside.
+- [x] Un `update` directo de `deletion_requested_at` o `type` en `workspaces` con la sesión del usuario falla.
+- [x] En el dialog de eliminar, el botón queda deshabilitado hasta escribir el nombre exacto.
+- [x] Programar el borrado muestra en toda ruta de la empresa "Esta empresa se borrará el <hoy + 30 días>" y "Restaurar empresa".
+- [x] Con la empresa marcada, insertar un movimiento, una categoría o una cuenta en ella desde SQL con la sesión del usuario falla.
+- [x] Con la empresa marcada, crear otra empresa falla por el límite.
+- [x] "Restaurar empresa" quita la marca y vuelve al Resumen con todos los datos intactos.
+- [x] Con la marca a hace 31 días, `select public.purge_deleted_workspaces()` devuelve 1 y no quedan filas de esa empresa en `workspaces`, `business_profiles`, `transactions`, `categories`, `accounts`, `transfers` ni `account_adjustments`. El espacio Personal sigue intacto.
+- [x] Con la marca a hace 29 días, `purge_deleted_workspaces()` devuelve 0.
+- [x] Un usuario `authenticated` no puede ejecutar `purge_deleted_workspaces()`. Ejecutar `request_workspace_deletion` con el `id` de Personal o de otro usuario no marca nada.
+- [x] Movimientos, categorías, cuentas, presupuestos y deudas de Personal funcionan igual que antes de este spec.
+- [x] Ningún archivo del proyecto usa la `service_role` ni la clave secreta.
 
 ## Decisiones
 

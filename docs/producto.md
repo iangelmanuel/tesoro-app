@@ -15,27 +15,29 @@ Visión y alcance de Tesoro. Este documento describe **qué** se construye; el
 
 ## Mapa de rutas
 
-| Ruta                      | Qué es                                    | Indexable |
-| ------------------------- | ----------------------------------------- | --------- |
-| `/`                       | Landing                                   | Sí        |
-| `/sign-in`                | Inicio de sesión                          | Sí        |
-| `/sign-up`                | Registro                                  | Sí        |
-| `/forgot-password`        | Pedir el enlace para recuperar contraseña | Sí        |
-| `/reset-password`         | Elegir la nueva contraseña                | No        |
-| `/check-email`            | Revisar el correo de confirmación         | No        |
-| `/auth/callback`          | Callback de OAuth (Google, GitHub)        | No        |
-| `/auth/confirm`           | Verifica los enlaces de email             | No        |
-| `/account-deleted`        | Cuenta en periodo de gracia del borrado   | No        |
-| `/dashboard`              | Redirige a `/dashboard/personal`          | No        |
-| `/dashboard/account`      | Cuenta y perfil                           | No        |
-| `/dashboard/personal/...` | Espacio Personal (requiere sesión)        | No        |
-| `/dashboard/business`     | Espacio Empresa (por ahora, estado vacío) | No        |
+| Ruta                           | Qué es                                    | Indexable |
+| ------------------------------ | ----------------------------------------- | --------- |
+| `/`                            | Landing                                   | Sí        |
+| `/sign-in`                     | Inicio de sesión                          | Sí        |
+| `/sign-up`                     | Registro                                  | Sí        |
+| `/forgot-password`             | Pedir el enlace para recuperar contraseña | Sí        |
+| `/reset-password`              | Elegir la nueva contraseña                | No        |
+| `/check-email`                 | Revisar el correo de confirmación         | No        |
+| `/auth/callback`               | Callback de OAuth (Google, GitHub)        | No        |
+| `/auth/confirm`                | Verifica los enlaces de email             | No        |
+| `/account-deleted`             | Cuenta en periodo de gracia del borrado   | No        |
+| `/dashboard`                   | Redirige a `/dashboard/personal`          | No        |
+| `/dashboard/account`           | Cuenta y perfil                           | No        |
+| `/dashboard/personal/...`      | Espacio Personal (requiere sesión)        | No        |
+| `/dashboard/business`          | Redirige a la empresa o estado vacío      | No        |
+| `/dashboard/business/[id]/...` | Espacio de una empresa                    | No        |
 
-Las rutas viven en `SITE.routes` y la navegación del espacio Personal en
-`SITE.navigation.personal`. `robots.ts` bloquea `/dashboard/`, `/api/` y
+Las rutas viven en `SITE.routes` y la navegación de los espacios en
+`SITE.navigation.personal` y `SITE.navigation.business` (este con `segment`,
+que se agrega a `/dashboard/business/[id]`). `robots.ts` bloquea `/dashboard/`, `/api/` y
 `/auth/`, y `proxy.ts` exige sesión en `/dashboard/*`. Los slugs van en inglés
 (`/transactions`, `/budgets`, `/goals`, `/debts`, `/reports`,
-`/recommendations`); la UI, en español. En el futuro, cada empresa vivirá en
+`/recommendations`); la UI, en español. Cada empresa vive en
 `/dashboard/business/[id]/...`, para que la URL refleje el espacio activo.
 
 ## Landing
@@ -82,24 +84,25 @@ Queda para un spec futuro el magic link.
 Las migraciones viven en `supabase/migrations/`. Toda tabla con datos de
 usuario tiene RLS.
 
-| Tabla                       | Qué guarda                                                                                                                                                                                                                               | RLS (cliente)                          |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| `profiles`                  | Un perfil por usuario: `full_name`, `avatar_url`, `currency` (COP por defecto)                                                                                                                                                           | `select` y `update` del propio perfil  |
-| `workspaces`                | Espacios del usuario: `type` (`personal` / `business`) y `name`                                                                                                                                                                          | `select` de los propios                |
-| `categories`                | Categorías de ingreso o gasto: del sistema (`workspace_id` null) o propias                                                                                                                                                               | `select`, `insert` y `update`          |
-| `transactions`              | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note` y `account_id` opcional                                                                                                                               | `select`, `insert`, `update`, `delete` |
-| `accounts`                  | Cuentas y métodos de pago: `name` (único por espacio), `kind` (`cash` / `bank` / `wallet` / `other`), `icon`, `color`, `opening_balance`, `archived_at`                                                                                  | `select`, `insert`, `update`           |
-| `transfers`                 | Traspasos entre cuentas propias: `from_account_id`, `to_account_id` (distintas), `amount` > 0, `occurred_on`, `note`                                                                                                                     | `select`, `insert`, `update`, `delete` |
-| `account_adjustments`       | Ajustes de saldo de "Actualizar saldo": `account_id`, `amount` ≠ 0 (> 0 sube el saldo), `occurred_on`, `note`                                                                                                                            | `select`, `insert`, `update`, `delete` |
-| `recurring_expenses`        | Gastos fijos: `name`, `amount`, `category_id`, `frequency`, día y mes de pago, vigencia, `is_active`                                                                                                                                     | `select`, `insert`, `update`, `delete` |
-| `budgets`                   | Presupuesto por categoría de gasto y mes (`month` = primer día), único por categoría y mes                                                                                                                                               | `select`, `insert`, `update`, `delete` |
-| `savings_goals`             | Metas de ahorro: `name`, `target_amount`, `target_date` opcional, `icon`, `color`, `status`                                                                                                                                              | `select`, `insert`, `update`           |
-| `goal_contributions`        | Aportes (`amount` > 0) y retiros (`amount` < 0) de una meta, con `occurred_on` y `note`                                                                                                                                                  | `select`, `insert`, `update`, `delete` |
-| `dismissed_recommendations` | Recomendaciones ocultas: `rule`, `entity_key` y `month` en que se ocultaron, únicas por los tres                                                                                                                                         | `select`, `insert`, `delete`           |
-| `imports`                   | Importaciones: `target` (destino), `filename`, `sheets`, `status` (`completed` / `undone`), `stats`, `undone_at`. Las filas importadas llevan `import_id` en `transactions`, `recurring_expenses`, `debt_entries` o `goal_contributions` | `select` (solo escriben las RPC)       |
+| Tabla                       | Qué guarda                                                                                                                                                                                                                               | RLS (cliente)                                   |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `profiles`                  | Un perfil por usuario: `full_name`, `avatar_url`, `currency` (COP por defecto)                                                                                                                                                           | `select` y `update` del propio perfil           |
+| `workspaces`                | Espacios del usuario: `type` (`personal` / `business`), `name` y `deletion_requested_at` (solo Empresa)                                                                                                                                  | `select`; `insert` y `update (name)` de Empresa |
+| `business_profiles`         | Datos de una empresa, 1:1 con su espacio: `tax_id` (NIT opcional) y `sector`                                                                                                                                                             | `select`, `insert`, `update`                    |
+| `categories`                | Categorías de ingreso o gasto: del sistema (`workspace_id` null) o propias, con `scope` (`personal` / `business`)                                                                                                                        | `select`, `insert` y `update`                   |
+| `transactions`              | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note`, `account_id` opcional y, en Empresa, `counterparty` e `invoice_ref`                                                                                  | `select`, `insert`, `update`, `delete`          |
+| `accounts`                  | Cuentas y métodos de pago: `name` (único por espacio), `kind` (`cash` / `bank` / `wallet` / `other`), `icon`, `color`, `opening_balance`, `archived_at`                                                                                  | `select`, `insert`, `update`                    |
+| `transfers`                 | Traspasos entre cuentas propias: `from_account_id`, `to_account_id` (distintas), `amount` > 0, `occurred_on`, `note`                                                                                                                     | `select`, `insert`, `update`, `delete`          |
+| `account_adjustments`       | Ajustes de saldo de "Actualizar saldo": `account_id`, `amount` ≠ 0 (> 0 sube el saldo), `occurred_on`, `note`                                                                                                                            | `select`, `insert`, `update`, `delete`          |
+| `recurring_expenses`        | Gastos fijos: `name`, `amount`, `category_id`, `frequency`, día y mes de pago, vigencia, `is_active`                                                                                                                                     | `select`, `insert`, `update`, `delete`          |
+| `budgets`                   | Presupuesto por categoría de gasto y mes (`month` = primer día), único por categoría y mes                                                                                                                                               | `select`, `insert`, `update`, `delete`          |
+| `savings_goals`             | Metas de ahorro: `name`, `target_amount`, `target_date` opcional, `icon`, `color`, `status`                                                                                                                                              | `select`, `insert`, `update`                    |
+| `goal_contributions`        | Aportes (`amount` > 0) y retiros (`amount` < 0) de una meta, con `occurred_on` y `note`                                                                                                                                                  | `select`, `insert`, `update`, `delete`          |
+| `dismissed_recommendations` | Recomendaciones ocultas: `rule`, `entity_key` y `month` en que se ocultaron, únicas por los tres                                                                                                                                         | `select`, `insert`, `delete`                    |
+| `imports`                   | Importaciones: `target` (destino), `filename`, `sheets`, `status` (`completed` / `undone`), `stats`, `undone_at`. Las filas importadas llevan `import_id` en `transactions`, `recurring_expenses`, `debt_entries` o `goal_contributions` | `select` (solo escriben las RPC)                |
 
-- Cada usuario tiene **un solo** espacio Personal (índice único parcial) y, en
-  el futuro, Empresas ilimitadas.
+- Cada usuario tiene **un solo** espacio Personal (índice único parcial) y
+  hasta `business_workspace_limit()` empresas (hoy 1).
 - El trigger `on_auth_user_created` (función `handle_new_user`, `security
 definer`) crea el perfil y el espacio Personal al insertar en
   `auth.users`. Por eso el cliente no tiene políticas de `insert` ni `delete`.
@@ -107,6 +110,9 @@ definer`) crea el perfil y el espacio Personal al insertar en
   `workspace_id`. Sus políticas RLS usan la función
   `is_workspace_owner(workspace_id)` (`security invoker`), y el trigger
   reutilizable `set_updated_at()` mantiene `updated_at`.
+- Las políticas de escritura de movimientos, categorías, cuentas, traspasos,
+  ajustes y `business_profiles` usan `is_workspace_writable(workspace_id)`:
+  dueño **y** sin marca de borrado. Ver [Espacio Empresa](#espacio-empresa-1).
 
 ## Dashboard
 
@@ -115,7 +121,8 @@ selector tipo tab para cambiar de espacio:
 
 - **Personal** (por defecto): siempre existe, con su estructura completa.
 - **Empresa**: si el usuario no tiene uno, el dashboard muestra un estado vacío
-  que lo invita a crear su espacio de empresa.
+  que lo invita a crear su espacio de empresa. Con una empresa,
+  `/dashboard/business` redirige a ella.
 
 Los espacios están definidos en `SITE.workspaces`.
 
@@ -132,11 +139,13 @@ Los espacios están definidos en `SITE.workspaces`.
 
 ### Espacio Empresa
 
-- Resumen: flujo de caja, utilidad, score
-- Ventas e ingresos
-- Costos y gastos operativos
-- Reportes y gráficas
-- Recomendaciones
+- Resumen: ventas, costos y gastos, y utilidad del mes, más los últimos 5
+  movimientos
+- Movimientos: ventas (ingresos) y costos o gastos (egresos), con cliente o
+  proveedor y factura
+- Cuentas: las mismas de Personal, dentro de la empresa
+- Flujo de caja, Reportes y Recomendaciones (próximamente, SPEC 11)
+- Ajustes: nombre, NIT, sector y eliminar la empresa
 
 ## Movimientos y categorías
 
@@ -1174,6 +1183,117 @@ en su `getUser()` y el usuario no la puede editar.
   cuenta en uso.
 - Nada usa la `service_role`.
 
+## Espacio Empresa
+
+El usuario crea su empresa desde el estado vacío de `/dashboard/business` y
+registra en ella ventas y costos o gastos operativos. Flujo de caja, reportes,
+score y recomendaciones de Empresa llegan en el SPEC 11.
+
+### Crear y editar
+
+- Dialog "Crear empresa": nombre (2 a 60 caracteres), NIT opcional y sector.
+- El NIT se valida solo por formato: 5 a 10 dígitos y dígito de verificación
+  opcional (`900123456-7`), igual en Zod y en el `check` de la BD. El DV no se
+  valida.
+- El sector es una lista cerrada en `SITE.businessSectors`, validada con Zod
+  (sin `check` en la BD): agregar uno no exige migración.
+- `create_business` (RPC `security invoker`) crea el espacio y su
+  `business_profiles` en una transacción. Al crear, la app lleva a
+  `/dashboard/business/[id]`.
+- El trigger `seed_workspace_accounts` (SPEC 08c) le crea la cuenta
+  "Efectivo".
+- En Ajustes se editan nombre, NIT y sector. El nombre se ve en el aside.
+
+### Límite
+
+- Cada usuario tiene **una** empresa. `business_workspace_limit()` devuelve
+  `1` y es el único punto a cambiar con un plan premium.
+- El trigger `check_business_limit` lanza "Alcanzaste el límite de empresas".
+  Una empresa programada para borrar cuenta para el límite, así restaurarla
+  nunca choca con otra activa.
+- `SITE.businessLimit` refleja el valor en la UI. La BD es la que manda.
+- Las rutas (`/dashboard/business/[id]`) y el selector de empresa del aside
+  ya soportan varias. El selector solo se pinta con más de una.
+
+### Rutas
+
+- `/dashboard/business/[id]` lo valida su layout: un `id` ajeno, inexistente
+  o del espacio Personal da 404.
+- Navegación: Resumen, Movimientos, Cuentas, Flujo de caja, Reportes,
+  Recomendaciones y Ajustes. Flujo de caja, Reportes y Recomendaciones
+  muestran "Próximamente".
+- El registro rápido del header registra en la empresa de la ruta.
+
+### Categorías de negocio
+
+- `categories.scope` indica a qué tipo de espacio pertenece una categoría. Las
+  del sistema tienen su scope en la semilla. Las propias toman el tipo de su
+  espacio por trigger (`set_category_scope`).
+- Un espacio solo ve y usa las categorías de su scope: Personal no lista
+  categorías de negocio, ni Empresa las personales.
+  `check_transaction_category` y `check_expense_category` lo exigen en la BD.
+- Semilla de negocio:
+  - Ingresos: Ventas de productos, Ventas de servicios y Otros ingresos.
+  - Gastos: Costo de ventas, Sueldos y honorarios, Arriendo, Servicios
+    públicos, Marketing y publicidad, Transporte y logística, Software y
+    herramientas, Impuestos y tasas, Comisiones bancarias y Otros gastos
+    operativos.
+- Las funciones que buscan categorías del sistema por nombre ("Deudas",
+  "Cobros") filtran `scope = 'personal'`.
+
+### Movimientos de Empresa
+
+- Misma tabla, filtros, totales y paginación que Personal (SPEC 02).
+- Los textos son "Venta" y "Costo o gasto".
+- Campos opcionales, solo en Empresa:
+  - `counterparty`: "Cliente" en ventas, "Proveedor" en costos y gastos (máx.
+    80 caracteres);
+  - `invoice_ref`: "N.º de factura" (máx. 40).
+  - En Personal se guardan como `null` y no se muestran.
+- La búsqueda de Movimientos (tabla y `transaction_totals`) también busca en
+  ellos.
+- Clientes y proveedores son texto libre, no entidades.
+
+### Resumen de Empresa
+
+- Tarjetas del mes actual (America/Bogota), calculadas con
+  `transaction_totals`:
+  - **Ventas**: suma de ingresos;
+  - **Costos y gastos**: suma de gastos;
+  - **Utilidad**: ventas − costos y gastos.
+- Traspasos y ajustes no cuentan.
+- Últimos 5 movimientos. Sin gráficas (SPEC 11).
+
+### Borrado con periodo de gracia
+
+- En Ajustes, "Eliminar empresa" abre un `AlertDialog` que exige escribir el
+  nombre exacto. La action lo revalida en el servidor.
+- `request_workspace_deletion` guarda `workspaces.deletion_requested_at`. Es
+  `security definer`, idempotente y solo actúa sobre empresas propias.
+- Mientras la empresa está marcada:
+  - toda ruta de la empresa muestra "Esta empresa se borrará el <fecha>"
+    (marca + `SITE.workspaceDeletionGraceDays`, 30 días) con "Restaurar
+    empresa" (`cancel_workspace_deletion`);
+  - RLS bloquea escribir en sus movimientos, categorías, cuentas, traspasos,
+    ajustes y perfil (`is_workspace_writable`).
+- El job diario de `pg_cron` `purge-deleted-workspaces` (08:15 UTC) corre
+  `purge_deleted_workspaces()`. Borra las empresas marcadas hace más de 30
+  días, en cascada a todas sus tablas.
+
+### Seguridad
+
+- `workspaces` tiene `insert` solo de Empresa y sin marca. El `update` es
+  solo de Empresa y solo de la columna `name` (privilegio de columna): la marca
+  y el `type` no los cambia el usuario. Sin política de `delete`: solo borra
+  la purga.
+- Personal nunca tiene marca (`check workspaces_personal_not_deleted`).
+- `request_workspace_deletion` y `cancel_workspace_deletion` solo las ejecuta
+  `authenticated`. `purge_deleted_workspaces` no la ejecuta ningún rol de la
+  API.
+- Las actions resuelven el espacio con `requireWritableWorkspace(id)`, que
+  exige dueño y sin marca antes de escribir.
+- Nada usa la `service_role`.
+
 ## Specs
 
 Tesoro se construye en 13 specs (`specs/`), cada uno sobre los anteriores. El
@@ -1190,7 +1310,7 @@ detalle de cada uno (objetivo, alcance, modelo y preguntas abiertas) está en
 8. Importar desde Excel o CSV (más 8b, gastos fijos, deudas y metas, y 8c,
    cuentas y traspasos)
 9. Cuenta y perfil
-10. Espacio Empresa: crear y registrar operaciones
+10. Espacio Empresa: crear y registrar operaciones ✅
 11. Empresa: flujo de caja, reportes, score y recomendaciones
 12. Landing, páginas legales y assets
 13. Lanzamiento v1.0

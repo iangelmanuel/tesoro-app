@@ -99,6 +99,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Daily `pg_cron` job `purge-deleted-accounts` (08:00 UTC) running `purge_deleted_accounts()`, which deletes users marked more than 30 days ago and, by cascade, all their data. Only `pg_cron` can run it.
 - `SITE.routes` entries for the new pages, `SITE.currencies` and `SITE.accountDeletionGraceDays`.
 - "Cuenta y perfil" section in `docs/producto.md` and remote setup steps in the README.
+- Migration `business_workspaces`: `business_profiles` table (NIT and sector, 1:1 with its workspace), `workspaces.deletion_requested_at`, `categories.scope`, optional `transactions.counterparty` and `transactions.invoice_ref`, 13 seeded business system categories, and the `business_workspace_limit()`, `is_workspace_writable()`, `create_business`, `request_workspace_deletion` and `cancel_workspace_deletion` functions.
+- `check_business_limit`, `check_business_profile_workspace` and `set_category_scope` triggers. Each user can have one business, counting businesses scheduled for deletion.
+- Daily `pg_cron` job `purge-deleted-workspaces` (08:15 UTC) running `purge_deleted_workspaces()`, which deletes businesses marked more than 30 days ago and, by cascade, all their data.
+- "Crear empresa" dialog (name, optional NIT, sector) on the Empresa empty state. `/dashboard/business` redirects to the user's business.
+- Business routes under `/dashboard/business/[id]`: summary (sales, costs and expenses, and profit for the current month, plus the 5 latest transactions), transactions, accounts, settings, and "coming soon" cash flow, reports and recommendations pages. Another user's id, or the Personal workspace's id, returns 404.
+- Business navigation in the aside (`SITE.navigation.business`) and a business switcher shown only with more than one business.
+- Customer/supplier and invoice number on business transactions, shown in the dialog and table and included in the search.
+- Business settings: edit name, NIT and sector, and delete the business with a 30-day grace period. Deleting requires typing the exact name. While marked, every business route shows the deletion date and "Restaurar empresa".
+- `getWorkspace`, `getBusinessWorkspaces` and `requireWritableWorkspace` in `src/features/workspaces/queries.ts`, plus `workspaceBasePath` / `workspaceTransactionsPath` and `revalidateWorkspacePages`.
+- `SITE.businessLimit`, `SITE.workspaceDeletionGraceDays`, `SITE.businessSectors`, and the `store`, `package`, `users` and `megaphone` category icons.
+- "Espacio Empresa" section in `docs/producto.md`.
 
 ### Changed
 
@@ -121,9 +132,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/forgot-password` added to the sitemap. `/reset-password`, `/check-email` and `/account-deleted` are `noindex`.
 - `proxy.ts` treats `/forgot-password` as an auth route, sends `/reset-password` without a session to `/forgot-password?error=expired`, and handles the deletion grace period.
 - On `/dashboard/account` the aside keeps the Personal navigation with no active item.
+- Transaction, category and account actions take the workspace id (hidden field or argument), validate it with `requireWritableWorkspace` and revalidate that workspace's pages. Personal passes its own id and behaves as before.
+- `getCategories(workspaceId)` returns only the system categories with the workspace's scope plus the workspace's own categories.
+- Write policies on `transactions`, `categories`, `accounts`, `transfers` and `account_adjustments` use `is_workspace_writable` instead of `is_workspace_owner`. `select` policies are unchanged.
+- `check_transaction_category` and `check_expense_category` also require the category's scope to match the workspace type. `record_debt_payment` and `import_debt_entries` only look up Personal system categories.
+- `transaction_totals` and the `ledger_entries` view include `counterparty` and `invoice_ref`.
+- The quick-add button also shows on `/dashboard/business/[id]/*` and records the transaction in that business.
+- `deletionDate()` takes the grace days, so account and business deletion share it.
+- Transactions filters, pagination, empty states, recent transactions and account cards take the workspace's transactions path.
 
 ### Fixed
 
+- Purging an account or a business failed when the workspace had transfers: `transfers` only referenced `accounts` (`no action`) and had no foreign key to `workspaces`. It now has `transfers_workspace_id_fkey ... on delete cascade`.
 - `Metadata` / `Viewport` were imported as default exports from `next`, which broke type checking.
 - The transactions page read the current date before the session, which made Next.js reject `new Date()` while prerendering when the URL had no `month`.
 

@@ -1,8 +1,8 @@
 import { cn } from "cn"
 import { Badge } from "@/components/ui/badge"
 import { formatDate } from "@/libs/format"
-import { bandInfo } from "../calculations"
 import type { BandTone } from "../constants"
+import { bandInfo } from "../curves"
 import type { Band } from "../types"
 
 const BAND_BADGE_CLASSES: Record<BandTone, string> = {

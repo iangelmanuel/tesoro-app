@@ -25,13 +25,16 @@ export function SeverityBadge({ severity }: { severity: Severity }) {
 }
 
 interface RecommendationItemProps {
-  recommendation: Recommendation
+  /** Espacio de la recomendación, para "Ocultar este mes" */
+  workspaceId: string
+  recommendation: Recommendation<string>
   /** Versión compacta para la tarjeta del Resumen, sin "Ocultar este mes" */
   compact?: boolean
 }
 
 /** Badge de severidad, título, dato, "Ir a …" y "Ocultar este mes" */
 export function RecommendationItem({
+  workspaceId,
   recommendation,
   compact = false
 }: RecommendationItemProps) {
@@ -40,6 +43,7 @@ export function RecommendationItem({
   function dismiss() {
     startTransition(async () => {
       const result = await dismissRecommendation(
+        workspaceId,
         recommendation.rule,
         recommendation.entityKey
       )

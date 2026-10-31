@@ -28,13 +28,16 @@ interface CategorySummaryTableProps {
   totals: CategoryTotal[]
   params: ReportParams
   currency: string
+  /** Ruta de Movimientos del espacio */
+  transactionsPath?: string
 }
 
 // Movimientos solo filtra por mes: con otro periodo el enlace abre todos
 export function CategorySummaryTable({
   totals,
   params,
-  currency
+  currency,
+  transactionsPath = TRANSACTIONS_PATH
 }: CategorySummaryTableProps) {
   const month = params.period === "month" && params.value ? params.value : "all"
   const shares = percentShares(totals.map((row) => row.total))
@@ -53,7 +56,7 @@ export function CategorySummaryTable({
         </TableHeader>
         <TableBody>
           {totals.map((row, index) => {
-            const href = `${TRANSACTIONS_PATH}?${buildFiltersQuery({
+            const href = `${transactionsPath}?${buildFiltersQuery({
               month,
               type: params.type,
               categoryId: row.categoryId,

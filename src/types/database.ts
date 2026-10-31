@@ -873,6 +873,13 @@ export type Database = {
           workspace_id: string
         }[]
       }
+      account_monthly_balances: {
+        Args: { p_from: string; p_to: string; p_workspace_id: string }
+        Returns: {
+          balance: number
+          month: string
+        }[]
+      }
       budget_progress: {
         Args: { p_month: string; p_workspace_id: string }
         Returns: {
@@ -906,6 +913,19 @@ export type Database = {
           color: string
           icon: string
           name: string
+          total: number
+          tx_count: number
+        }[]
+      }
+      counterparty_totals: {
+        Args: {
+          p_from: string
+          p_to: string
+          p_type: Database["public"]["Enums"]["transaction_type"]
+          p_workspace_id: string
+        }
+        Returns: {
+          counterparty: string
           total: number
           tx_count: number
         }[]

@@ -1,3 +1,4 @@
+import type { Route } from "next"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
@@ -10,10 +11,12 @@ import {
 } from "@/components/ui/card"
 import { SITE } from "@/config/site"
 import { shiftMonth, todayISO } from "@/libs/dates"
-import { computeScore, hasScore, scoreVariation } from "../calculations"
+import { computeScore } from "../calculations"
 import { SUMMARY_RECOMMENDATIONS } from "../constants"
+import { hasScore, scoreVariation } from "../curves"
 import { getDismissedRecommendations, getScoreInputs } from "../queries"
 import { getRecommendations, splitDismissed } from "../recommendations"
+import type { Recommendation, ScoreResult } from "../types"
 import { RecommendationList } from "./recommendation-list"
 import { ScoreInsufficient } from "./score-insufficient"
 import { BandBadge, ScoreVariation } from "./score-overview"
@@ -40,23 +43,53 @@ export async function ScoreSummaryCard({
   ])
   const { active } = splitDismissed(recommendations, dismissed)
 
-  const current = computeScore(inputs, month)
-  const previous = computeScore(inputs, previousMonth)
+  return (
+    <ScoreSummary
+      workspaceId={workspaceId}
+      title="Salud financiera"
+      description="Tu score y lo más importante por hacer"
+      href={RECOMMENDATIONS_PATH}
+      current={computeScore(inputs, month)}
+      previous={computeScore(inputs, previousMonth)}
+      recommendations={active}
+    />
+  )
+}
 
+interface ScoreSummaryProps<K extends string> {
+  workspaceId: string
+  title: string
+  description: string
+  /** Página de Recomendaciones del espacio */
+  href: string
+  current: ScoreResult<K>
+  previous: ScoreResult<K>
+  /** Recomendaciones activas, ya ordenadas; se muestran las 3 primeras */
+  recommendations: Recommendation<string>[]
+}
+
+/** Tarjeta del Resumen de cualquier espacio, con los datos ya calculados */
+export function ScoreSummary<K extends string>({
+  workspaceId,
+  title,
+  description,
+  href,
+  current,
+  previous,
+  recommendations
+}: ScoreSummaryProps<K>) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Salud financiera</CardTitle>
-        <CardDescription>
-          Tu score y lo más importante por hacer
-        </CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
         <CardAction>
           <Button
             variant="outline"
             size="sm"
             asChild
           >
-            <Link href={RECOMMENDATIONS_PATH}>Ver todas</Link>
+            <Link href={href as Route}>Ver todas</Link>
           </Button>
         </CardAction>
       </CardHeader>
@@ -76,7 +109,8 @@ export async function ScoreSummaryCard({
           <ScoreInsufficient reasons={current.insufficient} />
         )}
         <RecommendationList
-          recommendations={active.slice(0, SUMMARY_RECOMMENDATIONS)}
+          workspaceId={workspaceId}
+          recommendations={recommendations.slice(0, SUMMARY_RECOMMENDATIONS)}
           compact
         />
       </CardContent>

@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/select"
 import { formatDate } from "@/libs/format"
 import {
-  REPORTS_PATH,
   type ReportParams,
   type ReportPeriod,
   type ReportQuery,
@@ -60,15 +59,17 @@ function toISODate(date: Date) {
 
 interface ReportPeriodPickerProps {
   params: ReportParams
+  /** Ruta de la página que usa el selector (Reportes o Flujo de caja) */
+  path: string
 }
 
-export function ReportPeriodPicker({ params }: ReportPeriodPickerProps) {
+export function ReportPeriodPicker({ params, path }: ReportPeriodPickerProps) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
 
   function navigate(query: ReportQuery) {
     startTransition(() => {
-      router.replace(`${REPORTS_PATH}?${buildReportQuery(query)}` as Route, {
+      router.replace(`${path}?${buildReportQuery(query)}` as Route, {
         scroll: false
       })
     })

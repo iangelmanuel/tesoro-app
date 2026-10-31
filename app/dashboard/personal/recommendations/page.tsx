@@ -1,22 +1,10 @@
 import { Suspense } from "react"
-import { ChartLine } from "lucide-react"
-import { CardEmpty } from "@/components/dashboard/empty-state"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
-import { hasScore, scoreVariation } from "@/features/score/calculations"
-import { HiddenRecommendations } from "@/features/score/components/hidden-recommendations"
-import { RecommendationList } from "@/features/score/components/recommendation-list"
-import { ScoreFactors } from "@/features/score/components/score-factors"
-import { ScoreHistoryChart } from "@/features/score/components/score-history-chart"
-import { ScoreInsufficient } from "@/features/score/components/score-insufficient"
-import { ScoreOverview } from "@/features/score/components/score-overview"
+import {
+  ScoreRecommendationsSkeleton,
+  ScoreRecommendationsView
+} from "@/features/score/components/score-recommendations-view"
+import { FACTOR_LABELS, MONTH_FACTORS } from "@/features/score/constants"
 import {
   getDismissedRecommendations,
   getScoreHistory
@@ -47,7 +35,7 @@ export default function RecommendationsPage() {
         </p>
       </header>
       {/* La sesión y la fecha son dinámicas: van dentro de Suspense */}
-      <Suspense fallback={<RecommendationsSkeleton />}>
+      <Suspense fallback={<ScoreRecommendationsSkeleton />}>
         <RecommendationsContent />
       </Suspense>
     </section>
@@ -67,93 +55,16 @@ async function RecommendationsContent() {
   ])
   const { active, hidden } = splitDismissed(recommendations, dismissed)
 
-  const current = history[history.length - 1]
-  const previous = history[history.length - 2]
-  const points = history.map((result) => ({
-    month: result.month,
-    score: hasScore(result) ? result.score : null
-  }))
-
   return (
-    <>
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Salud financiera</CardTitle>
-            <CardDescription>Score del mes actual</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {hasScore(current) ? (
-              <ScoreOverview
-                score={current.score}
-                band={current.band}
-                variation={scoreVariation(current, previous)}
-                today={today}
-              />
-            ) : (
-              <ScoreInsufficient reasons={current.insufficient} />
-            )}
-          </CardContent>
-        </Card>
-        {hasScore(current) && (
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Desglose</CardTitle>
-              <CardDescription>
-                Un factor sin datos se excluye y los pesos de los demás se
-                reescalan
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScoreFactors factors={current.factors} />
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Evolución</CardTitle>
-          <CardDescription>Últimos 12 meses</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {points.every((point) => point.score === null) ? (
-            <CardEmpty
-              icon={ChartLine}
-              message="Aún no hay histórico"
-            />
-          ) : (
-            <ScoreHistoryChart data={points} />
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Recomendaciones</CardTitle>
-          <CardDescription>
-            Ordenadas por severidad. Cada una dice en qué dato se basa
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <RecommendationList recommendations={active} />
-        </CardContent>
-      </Card>
-
-      {hidden.length > 0 && <HiddenRecommendations recommendations={hidden} />}
-    </>
-  )
-}
-
-function RecommendationsSkeleton() {
-  return (
-    <>
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Skeleton className="h-48" />
-        <Skeleton className="h-48 lg:col-span-2" />
-      </div>
-      <Skeleton className="h-80" />
-      <Skeleton className="h-64" />
-    </>
+    <ScoreRecommendationsView
+      workspaceId={workspace.id}
+      title="Salud financiera"
+      today={today}
+      history={history}
+      factorLabels={FACTOR_LABELS}
+      monthFactors={MONTH_FACTORS}
+      active={active}
+      hidden={hidden}
+    />
   )
 }

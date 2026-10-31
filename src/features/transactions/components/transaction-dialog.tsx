@@ -64,6 +64,8 @@ export interface RecurringOccurrenceLink {
 }
 
 interface TransactionDialogProps {
+  /** Espacio donde se crea o edita el movimiento */
+  workspaceId: string
   /** Categorías del sistema y propias, activas y archivadas */
   categories: Category[]
   /** Cuentas del espacio, activas y archivadas */
@@ -79,6 +81,7 @@ interface TransactionDialogProps {
 }
 
 export function TransactionDialog({
+  workspaceId,
   categories,
   accounts,
   transaction,
@@ -115,6 +118,7 @@ export function TransactionDialog({
         </DialogHeader>
         {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
         <TransactionForm
+          workspaceId={workspaceId}
           categories={categories}
           accounts={accounts}
           transaction={transaction}
@@ -129,6 +133,7 @@ export function TransactionDialog({
 }
 
 interface TransactionFormProps {
+  workspaceId: string
   categories: Category[]
   accounts: AccountOption[]
   transaction?: EditableTransaction
@@ -139,6 +144,7 @@ interface TransactionFormProps {
 }
 
 function TransactionForm({
+  workspaceId,
   categories,
   accounts,
   transaction,
@@ -225,6 +231,11 @@ function TransactionForm({
           value={transaction.id}
         />
       )}
+      <input
+        type="hidden"
+        name="workspace_id"
+        value={workspaceId}
+      />
       <input
         type="hidden"
         name="type"

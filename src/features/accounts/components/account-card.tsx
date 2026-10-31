@@ -81,6 +81,7 @@ export function AccountCard({ account, currency }: AccountCardProps) {
           </DropdownMenuContent>
         </DropdownMenu>
         <AccountDialog
+          workspaceId={account.workspace_id}
           account={account}
           open={editing}
           onOpenChange={setEditing}

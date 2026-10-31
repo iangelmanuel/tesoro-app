@@ -38,6 +38,7 @@ import type { EditableTransaction, LedgerEntry } from "../queries"
 import { TransactionDialog } from "./transaction-dialog"
 
 interface TransactionsTableProps {
+  workspaceId: string
   rows: LedgerEntry[]
   categories: Category[]
   /** Cuentas del espacio, activas y archivadas */
@@ -51,6 +52,7 @@ type AdjustmentEntry = Extract<LedgerEntry, { kind: "adjustment" }>
 // Client: cada fila abre el diálogo de edición, y así las categorías y las
 // cuentas viajan una sola vez en vez de una por fila
 export function TransactionsTable({
+  workspaceId,
   rows,
   categories,
   accounts,
@@ -83,6 +85,7 @@ export function TransactionsTable({
               return (
                 <TransferRow
                   key={row.id}
+                  workspaceId={workspaceId}
                   transfer={row}
                   label={`${accountName(row.from_account_id)} → ${accountName(row.to_account_id)}`}
                   accounts={accounts}
@@ -94,6 +97,7 @@ export function TransactionsTable({
               return (
                 <AdjustmentRow
                   key={row.id}
+                  workspaceId={workspaceId}
                   adjustment={row}
                   label={`Ajuste de saldo · ${accountName(row.account_id)}`}
                   currency={currency}
@@ -146,6 +150,7 @@ export function TransactionsTable({
                 <TableCell>
                   <div className="flex justify-end gap-1">
                     <TransactionDialog
+                      workspaceId={workspaceId}
                       categories={categories}
                       accounts={accounts}
                       transaction={transaction}
@@ -159,7 +164,10 @@ export function TransactionsTable({
                         </Button>
                       }
                     />
-                    <DeleteTransactionButton transaction={transaction} />
+                    <DeleteTransactionButton
+                      workspaceId={workspaceId}
+                      transaction={transaction}
+                    />
                   </div>
                 </TableCell>
               </TableRow>
@@ -193,11 +201,13 @@ function DescriptionCell({
 
 // Traspaso: neutro, sin signo y sin categoría. No suma a los totales.
 function TransferRow({
+  workspaceId,
   transfer,
   label,
   accounts,
   currency
 }: {
+  workspaceId: string
   transfer: TransferEntry
   label: string
   accounts: AccountOption[]
@@ -221,6 +231,7 @@ function TransferRow({
       <TableCell>
         <div className="flex justify-end gap-1">
           <TransferDialog
+            workspaceId={workspaceId}
             accounts={accounts}
             transfer={transfer}
             trigger={
@@ -237,7 +248,7 @@ function TransferRow({
             label={`Traspaso ${label}`}
             title="¿Eliminar este traspaso?"
             success="Traspaso eliminado"
-            onDelete={() => deleteTransfer(transfer.id)}
+            onDelete={() => deleteTransfer(workspaceId, transfer.id)}
           />
         </div>
       </TableCell>
@@ -247,10 +258,12 @@ function TransferRow({
 
 // Ajuste de saldo: neutro, con signo. Solo se elimina.
 function AdjustmentRow({
+  workspaceId,
   adjustment,
   label,
   currency
 }: {
+  workspaceId: string
   adjustment: AdjustmentEntry
   label: string
   currency: string
@@ -277,7 +290,7 @@ function AdjustmentRow({
             label={label}
             title="¿Eliminar este ajuste?"
             success="Ajuste eliminado"
-            onDelete={() => deleteAdjustment(adjustment.id)}
+            onDelete={() => deleteAdjustment(workspaceId, adjustment.id)}
           />
         </div>
       </TableCell>
@@ -286,8 +299,10 @@ function AdjustmentRow({
 }
 
 function DeleteTransactionButton({
+  workspaceId,
   transaction
 }: {
+  workspaceId: string
   transaction: EditableTransaction
 }) {
   return (
@@ -295,7 +310,7 @@ function DeleteTransactionButton({
       label={transaction.description}
       title="¿Eliminar este movimiento?"
       success="Movimiento eliminado"
-      onDelete={() => deleteTransaction(transaction.id)}
+      onDelete={() => deleteTransaction(workspaceId, transaction.id)}
     />
   )
 }

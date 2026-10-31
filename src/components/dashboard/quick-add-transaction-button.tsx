@@ -10,9 +10,11 @@ import { TransactionDialog } from "@/features/transactions/components/transactio
 
 // Solo en el espacio Personal: Empresa aún no tiene movimientos
 export function QuickAddTransactionButton({
+  workspaceId,
   categories,
   accounts
 }: {
+  workspaceId: string
   categories: Category[]
   accounts: AccountOption[]
 }) {
@@ -25,6 +27,7 @@ export function QuickAddTransactionButton({
 
   return (
     <TransactionDialog
+      workspaceId={workspaceId}
       categories={categories}
       accounts={accounts}
       trigger={

@@ -12,12 +12,16 @@ const ACTIONS = {
 export type AccountAction = keyof typeof ACTIONS
 
 /** Archiva o restaura una cuenta y avisa con un toast */
-export function useAccountAction(account: { id: string; name: string }) {
+export function useAccountAction(account: {
+  id: string
+  workspace_id: string
+  name: string
+}) {
   const [pending, startTransition] = useTransition()
 
   function run(action: AccountAction) {
     startTransition(async () => {
-      const result = await ACTIONS[action].run(account.id)
+      const result = await ACTIONS[action].run(account.workspace_id, account.id)
       if (result.error) {
         toast.error(result.error)
       } else {

@@ -32,6 +32,7 @@ export function OccurrenceStatusBadge({
 }
 
 interface PayOccurrenceButtonProps {
+  workspaceId: string
   payment: UpcomingPayment
   categories: Category[]
   accounts: AccountOption[]
@@ -40,12 +41,14 @@ interface PayOccurrenceButtonProps {
 // Abre TransactionDialog prellenado con la ocurrencia y enlazado a ella. El
 // usuario confirma (y puede cambiar el monto) antes de crear el movimiento.
 export function PayOccurrenceButton({
+  workspaceId,
   payment,
   categories,
   accounts
 }: PayOccurrenceButtonProps) {
   return (
     <TransactionDialog
+      workspaceId={workspaceId}
       categories={categories}
       accounts={accounts}
       initialValues={{
@@ -72,6 +75,7 @@ export function PayOccurrenceButton({
 }
 
 interface UpcomingPaymentsProps {
+  workspaceId: string
   payments: UpcomingPayment[]
   categories: Category[]
   accounts: AccountOption[]
@@ -79,6 +83,7 @@ interface UpcomingPaymentsProps {
 }
 
 export function UpcomingPayments({
+  workspaceId,
   payments,
   categories,
   accounts,
@@ -122,6 +127,7 @@ export function UpcomingPayments({
                   {formatCurrency(payment.amount, currency)}
                 </p>
                 <PayOccurrenceButton
+                  workspaceId={workspaceId}
                   payment={payment}
                   categories={categories}
                   accounts={accounts}

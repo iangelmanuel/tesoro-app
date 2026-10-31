@@ -3,7 +3,7 @@
 import { refresh } from "next/cache"
 import type { PostgrestError } from "@supabase/supabase-js"
 import { z } from "zod"
-import { getPersonalWorkspace } from "@/features/workspaces/queries"
+import { requireWritableWorkspace } from "@/features/workspaces/queries"
 import { createClient } from "@/libs/supabase/server"
 import { categorySchema } from "./schemas"
 import type { CategoryActionResult, CategoryFormState } from "./types"
@@ -47,7 +47,9 @@ export async function createCategory(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
   }
 
-  const workspace = await getPersonalWorkspace()
+  const workspace = await requireWritableWorkspace(
+    readString(formData, "workspace_id")
+  )
   const supabase = await createClient()
   const { error } = await supabase
     .from("categories")
@@ -81,7 +83,9 @@ export async function updateCategory(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
   }
 
-  const workspace = await getPersonalWorkspace()
+  const workspace = await requireWritableWorkspace(
+    readString(formData, "workspace_id")
+  )
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("categories")
@@ -102,6 +106,7 @@ export async function updateCategory(
 }
 
 async function setArchived(
+  workspaceId: string,
   id: string,
   archived: boolean
 ): Promise<CategoryActionResult> {
@@ -111,7 +116,7 @@ async function setArchived(
     return { error: NOT_FOUND }
   }
 
-  const workspace = await getPersonalWorkspace()
+  const workspace = await requireWritableWorkspace(workspaceId)
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("categories")
@@ -136,15 +141,17 @@ async function setArchived(
 }
 
 export async function archiveCategory(
+  workspaceId: string,
   id: string
 ): Promise<CategoryActionResult> {
-  return setArchived(id, true)
+  return setArchived(workspaceId, id, true)
 }
 
 // El índice único también cubre las archivadas, así que restaurar nunca
 // duplica un nombre
 export async function restoreCategory(
+  workspaceId: string,
   id: string
 ): Promise<CategoryActionResult> {
-  return setArchived(id, false)
+  return setArchived(workspaceId, id, false)
 }

@@ -15,6 +15,7 @@ async function QuickAddTransactionLoader() {
 
   return (
     <QuickAddTransactionButton
+      workspaceId={workspace.id}
       categories={categories}
       accounts={accounts}
     />

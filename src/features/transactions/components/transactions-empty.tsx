@@ -14,9 +14,11 @@ import {
 import { TransactionDialog } from "./transaction-dialog"
 
 export function NoTransactions({
+  workspaceId,
   categories,
   accounts
 }: {
+  workspaceId: string
   categories: Category[]
   accounts: AccountOption[]
 }) {
@@ -28,6 +30,7 @@ export function NoTransactions({
     >
       <div className="flex flex-wrap justify-center gap-2">
         <TransactionDialog
+          workspaceId={workspaceId}
           categories={categories}
           accounts={accounts}
           trigger={

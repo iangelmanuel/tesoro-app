@@ -2,9 +2,9 @@
 
 import type { PostgrestError } from "@supabase/supabase-js"
 import { z } from "zod"
-import { getPersonalWorkspace } from "@/features/workspaces/queries"
+import { requireWritableWorkspace } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
-import { revalidatePersonalPages } from "@/libs/revalidate"
+import { revalidateWorkspacePages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import { getAccountBalances } from "./queries"
 import { accountSchema, adjustAccountSchema, transferSchema } from "./schemas"
@@ -103,7 +103,7 @@ export async function createAccount(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
   }
 
-  const workspace = await getPersonalWorkspace()
+  const workspace = await requireWritableWorkspace(formData.get("workspace_id"))
   const supabase = await createClient()
   const { error } = await supabase
     .from("accounts")
@@ -113,7 +113,7 @@ export async function createAccount(
     return { ...accountPgError(error), values }
   }
 
-  revalidatePersonalPages()
+  revalidateWorkspacePages(workspace)
   return { ok: true }
 }
 
@@ -133,7 +133,7 @@ export async function updateAccount(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
   }
 
-  const workspace = await getPersonalWorkspace()
+  const workspace = await requireWritableWorkspace(formData.get("workspace_id"))
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("accounts")
@@ -149,12 +149,13 @@ export async function updateAccount(
     return { error: ACCOUNT_NOT_FOUND, values }
   }
 
-  revalidatePersonalPages()
+  revalidateWorkspacePages(workspace)
   return { ok: true }
 }
 
 // Archiva o restaura solo si la cuenta está en el estado contrario
 async function setArchived(
+  workspaceId: string,
   id: string,
   archived: boolean
 ): Promise<AccountActionResult> {
@@ -164,7 +165,7 @@ async function setArchived(
     return { error: ACCOUNT_NOT_FOUND }
   }
 
-  const workspace = await getPersonalWorkspace()
+  const workspace = await requireWritableWorkspace(workspaceId)
   const supabase = await createClient()
   const query = supabase
     .from("accounts")
@@ -185,16 +186,22 @@ async function setArchived(
     return { error: ACCOUNT_NOT_FOUND }
   }
 
-  revalidatePersonalPages()
+  revalidateWorkspacePages(workspace)
   return {}
 }
 
-export async function archiveAccount(id: string): Promise<AccountActionResult> {
-  return setArchived(id, true)
+export async function archiveAccount(
+  workspaceId: string,
+  id: string
+): Promise<AccountActionResult> {
+  return setArchived(workspaceId, id, true)
 }
 
-export async function restoreAccount(id: string): Promise<AccountActionResult> {
-  return setArchived(id, false)
+export async function restoreAccount(
+  workspaceId: string,
+  id: string
+): Promise<AccountActionResult> {
+  return setArchived(workspaceId, id, false)
 }
 
 export async function createTransfer(
@@ -208,7 +215,7 @@ export async function createTransfer(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
   }
 
-  const workspace = await getPersonalWorkspace()
+  const workspace = await requireWritableWorkspace(formData.get("workspace_id"))
   const supabase = await createClient()
   const { error } = await supabase
     .from("transfers")
@@ -218,7 +225,7 @@ export async function createTransfer(
     return { ...transferPgError(error), values }
   }
 
-  revalidatePersonalPages()
+  revalidateWorkspacePages(workspace)
   return { ok: true }
 }
 
@@ -238,7 +245,7 @@ export async function updateTransfer(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
   }
 
-  const workspace = await getPersonalWorkspace()
+  const workspace = await requireWritableWorkspace(formData.get("workspace_id"))
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("transfers")
@@ -254,18 +261,21 @@ export async function updateTransfer(
     return { error: TRANSFER_NOT_FOUND, values }
   }
 
-  revalidatePersonalPages()
+  revalidateWorkspacePages(workspace)
   return { ok: true }
 }
 
-export async function deleteTransfer(id: string): Promise<AccountActionResult> {
+export async function deleteTransfer(
+  workspaceId: string,
+  id: string
+): Promise<AccountActionResult> {
   const parsedId = idSchema.safeParse(id)
 
   if (!parsedId.success) {
     return { error: TRANSFER_NOT_FOUND }
   }
 
-  const workspace = await getPersonalWorkspace()
+  const workspace = await requireWritableWorkspace(workspaceId)
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("transfers")
@@ -281,7 +291,7 @@ export async function deleteTransfer(id: string): Promise<AccountActionResult> {
     return { error: TRANSFER_NOT_FOUND }
   }
 
-  revalidatePersonalPages()
+  revalidateWorkspacePages(workspace)
   return {}
 }
 
@@ -303,7 +313,7 @@ export async function adjustAccountBalance(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
   }
 
-  const workspace = await getPersonalWorkspace()
+  const workspace = await requireWritableWorkspace(formData.get("workspace_id"))
   const account = (await getAccountBalances(workspace.id)).find(
     (row) => row.id === accountId.data
   )
@@ -338,11 +348,12 @@ export async function adjustAccountBalance(
     }
   }
 
-  revalidatePersonalPages()
+  revalidateWorkspacePages(workspace)
   return { ok: true }
 }
 
 export async function deleteAdjustment(
+  workspaceId: string,
   id: string
 ): Promise<AccountActionResult> {
   const parsedId = idSchema.safeParse(id)
@@ -351,7 +362,7 @@ export async function deleteAdjustment(
     return { error: ADJUSTMENT_NOT_FOUND }
   }
 
-  const workspace = await getPersonalWorkspace()
+  const workspace = await requireWritableWorkspace(workspaceId)
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("account_adjustments")
@@ -367,6 +378,6 @@ export async function deleteAdjustment(
     return { error: ADJUSTMENT_NOT_FOUND }
   }
 
-  revalidatePersonalPages()
+  revalidateWorkspacePages(workspace)
   return {}
 }

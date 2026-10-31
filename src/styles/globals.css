@@ -161,3 +161,9 @@
     @apply font-sans;
   }
 }
+
+/* Acento de marca para texto: --income mezclado con el foreground para que
+   el texto pequeño cumpla contraste AA en claro y en oscuro */
+@utility text-brand {
+  color: color-mix(in oklch, var(--income) 70%, var(--foreground));
+}

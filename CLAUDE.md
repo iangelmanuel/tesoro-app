@@ -43,6 +43,7 @@ pnpm check            # tsc --noEmit
 pnpm eslint           # lint (eslint:fix para corregir)
 pnpm prettier         # formatea (prettier:check solo verifica)
 pnpm next typegen     # regenera los tipos de typedRoutes (antes de `check`)
+pnpm brand:assets     # regenera PNG y favicon desde assets/brand/*.svg
 ```
 
 Supabase (CLI global; el proyecto remoto se enlaza con `supabase link`):
@@ -136,11 +137,3 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
 - Al subir de versión, actualiza `package.json`, `SITE.info.version`,
   `CHANGELOG.md` y la tabla de `SECURITY.md`.
 - El estilo de documentación sigue el del proyecto hermano `../angel-website`.
-
-## Pendientes conocidos
-
-- Faltan los assets que `SITE`/metadata ya referencian:
-  - `/opengraph-image.png`
-  - `/brand/logo.png`
-  - `/apple-touch-icon.png`
-  - `/icons/icon-192.png` y `/icons/icon-512.png`

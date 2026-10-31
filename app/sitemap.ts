@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next"
-import { SITE } from "@/config/site"
+import { SITE, legalHref } from "@/config/site"
 
 const STATIC_ROUTES: Array<{
   path: string
@@ -13,7 +13,12 @@ const STATIC_ROUTES: Array<{
     path: SITE.routes.forgotPassword,
     changeFrequency: "yearly",
     priority: 0.3
-  }
+  },
+  ...SITE.legal.map(({ slug }) => ({
+    path: legalHref(slug),
+    changeFrequency: "yearly" as const,
+    priority: 0.3
+  }))
 ]
 
 export default function sitemap(): MetadataRoute.Sitemap {

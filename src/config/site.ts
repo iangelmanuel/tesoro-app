@@ -26,7 +26,9 @@ export const SITE = {
   repository: {
     url: "https://github.com/iangelmanuel/tesoro-app",
     issues: "https://github.com/iangelmanuel/tesoro-app/issues",
-    security: "https://github.com/iangelmanuel/tesoro-app/security"
+    security: "https://github.com/iangelmanuel/tesoro-app/security",
+    contributing:
+      "https://github.com/iangelmanuel/tesoro-app/blob/master/CONTRIBUTING.md"
   },
 
   site: {
@@ -67,34 +69,41 @@ export const SITE = {
     ]
   },
 
+  // `icon` es el nombre del ícono de lucide-react que pinta la landing
   features: [
     {
       title: "Registros como punto de partida",
+      icon: "NotebookPen",
       description:
         "No empiezas de cero: Tesoro trabaja sobre los movimientos que registras y construye el panorama a partir de ellos."
     },
     {
       title: "Gráficas claras",
+      icon: "ChartColumn",
       description:
         "Ingresos, gastos, categorías y tendencias presentados de forma visual y fácil de entender."
     },
     {
       title: "Recomendaciones",
+      icon: "Lightbulb",
       description:
         "Sugerencias concretas para gastar mejor, ahorrar más y anticiparte a meses difíciles."
     },
     {
       title: "Score financiero",
+      icon: "Gauge",
       description:
         "Un puntaje que resume la salud de tus finanzas y muestra cómo evoluciona en el tiempo."
     },
     {
       title: "Personal y Empresa",
+      icon: "Building2",
       description:
         "Dos espacios separados en la misma cuenta: cambia entre tus finanzas personales y las de tu negocio en un clic."
     },
     {
       title: "Código abierto",
+      icon: "Code",
       description:
         "Licencia MIT: úsalo, modifícalo y despliégalo donde quieras, también con fines comerciales."
     }
@@ -113,7 +122,8 @@ export const SITE = {
     forgotPassword: "/forgot-password",
     resetPassword: "/reset-password",
     checkEmail: "/check-email",
-    authConfirm: "/auth/confirm"
+    authConfirm: "/auth/confirm",
+    legal: "/legal"
   },
 
   // Monedas que el usuario puede elegir. Solo cambian el formato de los
@@ -154,14 +164,14 @@ export const SITE = {
 
   legal: [
     {
-      slug: "privacidad",
+      slug: "privacy",
       title: "Política de Privacidad",
-      updatedAt: "2026-10-29"
+      updatedAt: "2026-10-31"
     },
     {
-      slug: "terminos",
+      slug: "terms",
       title: "Términos y Condiciones",
-      updatedAt: "2026-10-29"
+      updatedAt: "2026-10-31"
     }
   ],
 
@@ -169,6 +179,7 @@ export const SITE = {
     main: [
       { name: "Inicio", href: "/" },
       { name: "Funciones", href: "/#funciones" },
+      { name: "Cómo funciona", href: "/#como-funciona" },
       { name: "Score", href: "/#score" },
       { name: "Código abierto", href: "/#open-source" }
     ],
@@ -282,3 +293,10 @@ export const SITE = {
     manifestCategories: ["finance", "business", "productivity"]
   }
 } as const
+
+export type LegalSlug = (typeof SITE.legal)[number]["slug"]
+
+// URL de un documento legal. No se arma a mano en los componentes
+export function legalHref(slug: LegalSlug) {
+  return `${SITE.routes.legal}/${slug}` as const
+}

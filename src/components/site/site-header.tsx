@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Logo } from "@/components/brand/logo"
 import { ThemeToggle } from "@/components/theme/theme-toggle"
 import { SITE } from "@/config/site"
+import { SiteHeaderSession } from "./site-header-session"
 
 export function SiteHeader() {
   return (
@@ -35,6 +36,10 @@ export function SiteHeader() {
 
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
+          {/* Ancho fijo: con o sin sesión la isla no desplaza el header */}
+          <div className="hidden w-56 items-center justify-end gap-2 sm:flex">
+            <SiteHeaderSession />
+          </div>
         </div>
       </div>
     </header>

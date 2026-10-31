@@ -2,8 +2,9 @@ import { type Debt, getDebts } from "@/features/debts/queries"
 import { type Goal, getGoals } from "@/features/goals/queries"
 import { shiftMonth, todayISO } from "@/libs/dates"
 import { createClient } from "@/libs/supabase/server"
-import { historyMonths, scoreHistory } from "./calculations"
+import { scoreHistory } from "./calculations"
 import { CLOSED_MONTHS } from "./constants"
+import { historyMonths } from "./curves"
 import type { MonthlyInput, RuleKey, ScoreInputs } from "./types"
 
 // Las sumas corren en Postgres (RPC security invoker, con RLS) y el score se

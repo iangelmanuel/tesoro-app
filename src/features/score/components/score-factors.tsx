@@ -1,5 +1,5 @@
-import { isIncluded } from "../calculations"
 import { FACTORS } from "../constants"
+import { isIncluded } from "../curves"
 import type { FactorKey, FactorResult } from "../types"
 
 const PERCENT_FORMAT = new Intl.NumberFormat("es-CO", {

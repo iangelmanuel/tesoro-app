@@ -11,12 +11,15 @@ export type FactorKey =
 
 export type Band = "weak" | "fair" | "good" | "excellent"
 
-export type FactorResult =
-  | { key: FactorKey; weight: number; value: number; points: number } // points 0–100
-  | { key: FactorKey; weight: number; excluded: string } // motivo
+// FactorResult, ScoreResult y Recommendation reciben la clave del espacio
+// (Personal por defecto; Empresa usa las de business-score)
 
-export type ScoreResult =
-  | { month: string; score: number; band: Band; factors: FactorResult[] }
+export type FactorResult<K extends string = FactorKey> =
+  | { key: K; weight: number; value: number; points: number } // points 0–100
+  | { key: K; weight: number; excluded: string } // motivo
+
+export type ScoreResult<K extends string = FactorKey> =
+  | { month: string; score: number; band: Band; factors: FactorResult<K>[] }
   | { month: string; insufficient: string[] } // motivos
 
 export type RuleKey =
@@ -33,8 +36,8 @@ export type RuleKey =
 
 export type Severity = "high" | "medium" | "low"
 
-export type Recommendation = {
-  rule: RuleKey
+export type Recommendation<R extends string = RuleKey> = {
+  rule: R
   entityKey: string
   severity: Severity
   title: string

@@ -10,13 +10,13 @@ import {
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
-import { hasScore, scoreVariation } from "@/features/score/calculations"
 import { HiddenRecommendations } from "@/features/score/components/hidden-recommendations"
 import { RecommendationList } from "@/features/score/components/recommendation-list"
 import { ScoreFactors } from "@/features/score/components/score-factors"
 import { ScoreHistoryChart } from "@/features/score/components/score-history-chart"
 import { ScoreInsufficient } from "@/features/score/components/score-insufficient"
 import { ScoreOverview } from "@/features/score/components/score-overview"
+import { hasScore, scoreVariation } from "@/features/score/curves"
 import {
   getDismissedRecommendations,
   getScoreHistory

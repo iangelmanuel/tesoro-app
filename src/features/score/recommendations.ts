@@ -38,9 +38,7 @@ import { formatCurrency } from "@/libs/format"
 import {
   averageExpense,
   cushionFactor,
-  insufficientReasons,
-  isIncluded,
-  regularityCounts
+  insufficientReasons
 } from "./calculations"
 import {
   BUDGET_EXCEEDED_RATIO,
@@ -54,6 +52,7 @@ import {
   TARGET_UTILIZATION_RATIO,
   UNBUDGETED_MIN_CATEGORIES
 } from "./constants"
+import { isIncluded, regularityCounts } from "./curves"
 import type { DismissedRecommendation, ScoreData } from "./queries"
 import type { Recommendation } from "./types"
 

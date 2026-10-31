@@ -1,3 +1,4 @@
+import type { Curve } from "./curves"
 import type { Band, FactorKey, RuleKey, Severity } from "./types"
 
 /** Claves de regla; deben coincidir con el check de dismissed_recommendations */
@@ -13,9 +14,6 @@ export const RULE_KEYS = [
   "unbudgeted_spending",
   "irregular_records"
 ] as const satisfies readonly RuleKey[]
-
-/** Puntos [dato, puntos] de una curva, con el dato en orden ascendente */
-export type Curve = readonly (readonly [number, number])[]
 
 export const FACTORS: Record<
   FactorKey,

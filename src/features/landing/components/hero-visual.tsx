@@ -1,5 +1,5 @@
+import { cn } from "@heroui/react"
 import { formatCurrency } from "@/libs/format"
-import { cn } from "@/libs/utils"
 
 // Mockup interino con datos ficticios fijos. El spec de videos de la landing
 // lo reemplaza; no depende de nada fuera de este archivo

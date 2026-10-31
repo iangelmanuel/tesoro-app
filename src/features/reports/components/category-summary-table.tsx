@@ -65,7 +65,7 @@ export function CategorySummaryTable({
                     <Table.Cell>
                       <Link
                         href={href}
-                        className="inline-flex items-center gap-2 rounded-sm after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-ring"
+                        className="inline-flex items-center gap-2 rounded-sm after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-focus"
                       >
                         <CategoryBadge
                           name={row.name}

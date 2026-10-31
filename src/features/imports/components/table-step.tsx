@@ -9,9 +9,9 @@ import {
   ListBox,
   Select,
   Table,
-  TextField
+  TextField,
+  cn
 } from "@heroui/react"
-import { cn } from "@/libs/utils"
 import { SAMPLE_ROWS } from "../constants"
 import {
   buildTable,

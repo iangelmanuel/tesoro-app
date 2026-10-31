@@ -72,7 +72,7 @@ export function ScoreFactors<K extends string>({
                 className="flex h-2 w-full overflow-hidden rounded-full bg-default"
               >
                 <div
-                  className="h-full bg-primary transition-all"
+                  className="h-full bg-accent transition-all"
                   style={{ width: `${factor.points}%` }}
                 />
               </div>

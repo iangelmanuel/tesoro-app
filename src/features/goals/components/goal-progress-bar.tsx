@@ -64,7 +64,7 @@ export function GoalProgressBar({
       <div
         className={cn(
           "h-full transition-all",
-          status ? GOAL_BAR_CLASSES[status] : "bg-primary"
+          status ? GOAL_BAR_CLASSES[status] : "bg-accent"
         )}
         style={{ width: `${width}%` }}
       />

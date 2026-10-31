@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { Geist } from "next/font/google"
-import { ToastProvider } from "@heroui/react"
+import { ToastProvider, cn } from "@heroui/react"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import { SITE } from "@/config/site"
@@ -10,7 +10,6 @@ import {
   buildMetadata,
   buildWebsiteSchema
 } from "@/libs/seo"
-import { cn } from "@/libs/utils"
 import "@/styles/globals.css"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })

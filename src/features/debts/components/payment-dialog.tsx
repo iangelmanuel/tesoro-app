@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react"
 import {
   Button,
+  Checkbox,
   FieldError,
   Input,
   Label,
@@ -204,16 +205,21 @@ function PaymentForm({
           </p>
         ) : (
           <>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                name="create_transaction"
-                className="size-4 accent-primary"
-                checked={createTransaction}
-                onChange={(event) => setCreateTransaction(event.target.checked)}
-              />
-              {isReceivable ? "Registrar como ingreso" : "Registrar como gasto"}
-            </label>
+            <Checkbox
+              name="create_transaction"
+              value="on"
+              isSelected={createTransaction}
+              onChange={setCreateTransaction}
+            >
+              <Checkbox.Control>
+                <Checkbox.Indicator />
+              </Checkbox.Control>
+              <Checkbox.Content className="text-sm">
+                {isReceivable
+                  ? "Registrar como ingreso"
+                  : "Registrar como gasto"}
+              </Checkbox.Content>
+            </Checkbox>
             {/* La cuenta es la del movimiento: sin él no aplica */}
             {createTransaction && (
               <AccountSelect

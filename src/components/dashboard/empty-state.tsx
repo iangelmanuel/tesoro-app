@@ -15,10 +15,10 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-10 text-center">
-      <Icon className="size-8 text-muted-foreground" />
+      <Icon className="size-8 text-muted" />
       <p className="text-lg font-medium">{title}</p>
       {description && (
-        <p className="max-w-sm text-sm text-muted-foreground">{description}</p>
+        <p className="max-w-sm text-sm text-muted">{description}</p>
       )}
       {children}
     </div>
@@ -35,8 +35,8 @@ export function CardEmpty({
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-8 text-center">
-      <Icon className="size-6 text-muted-foreground" />
-      <p className="text-sm text-muted-foreground">{message}</p>
+      <Icon className="size-6 text-muted" />
+      <p className="text-sm text-muted">{message}</p>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { cn } from "@/libs/utils"
+import { cn } from "@heroui/react"
 import { LandingScoreVisual } from "./score-visual"
 import { SectionHeading } from "./section-heading"
 

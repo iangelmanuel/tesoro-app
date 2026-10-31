@@ -1,4 +1,4 @@
-import { cn } from "@/libs/utils"
+import { cn } from "@heroui/react"
 
 // Mockup interino con datos ficticios fijos. El spec de videos de la landing
 // lo reemplaza; no depende de nada fuera de este archivo

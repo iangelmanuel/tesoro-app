@@ -7,11 +7,11 @@ import {
   Chip,
   Description,
   Label,
-  Table
+  Table,
+  cn
 } from "@heroui/react"
 import { LoaderCircle } from "lucide-react"
 import { formatCurrency, formatDate } from "@/libs/format"
-import { cn } from "@/libs/utils"
 import type { ResultingBalance } from "../balances"
 import { MONTH_NAMES, PREVIEW_PAGE_SIZE } from "../constants"
 import type {

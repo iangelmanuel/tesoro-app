@@ -1,7 +1,5 @@
 @import "tailwindcss";
 @import "@heroui/styles";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -163,35 +161,6 @@
   --accent-soft-hover: color-mix(in oklab, var(--accent) 16%, transparent);
 }
 
-/* TEMPORAL (SPEC 13, se quita en el paso 18): tokens de shadcn apuntando a
-   los de HeroUI para que las pantallas sin migrar sigan legibles. --muted y
-   --accent no se mapean porque HeroUI los usa con otro significado; sus
-   clases en shadcn se cambiaron por bg-default / text-default-foreground.
-   También se declaran en el contenedor del espacio para heredar su primario */
-:root,
-:has(> [data-workspace]) {
-  --card: var(--surface);
-  --card-foreground: var(--surface-foreground);
-  --popover: var(--overlay);
-  --popover-foreground: var(--overlay-foreground);
-  --primary: var(--accent);
-  --primary-foreground: var(--accent-foreground);
-  --secondary: var(--default);
-  --secondary-foreground: var(--default-foreground);
-  --muted-foreground: var(--muted);
-  --destructive: var(--danger);
-  --input: var(--border);
-  --ring: var(--focus);
-  --sidebar: var(--surface);
-  --sidebar-foreground: var(--surface-foreground);
-  --sidebar-primary: var(--accent);
-  --sidebar-primary-foreground: var(--accent-foreground);
-  --sidebar-accent: var(--default);
-  --sidebar-accent-foreground: var(--default-foreground);
-  --sidebar-border: var(--border);
-  --sidebar-ring: var(--focus);
-}
-
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: var(--font-sans);
@@ -200,32 +169,11 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
-  /* TEMPORAL (SPEC 13, paso 18): utilidades de shadcn */
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-destructive: var(--destructive);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-focus/50;
   }
   body {
     @apply bg-background text-foreground;

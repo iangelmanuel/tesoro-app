@@ -78,7 +78,7 @@ export function DebtBar({ percent, tone, className }: DebtBarProps) {
       <div
         className={cn(
           "h-full transition-all",
-          tone ? TONE_BAR_CLASSES[tone] : "bg-primary"
+          tone ? TONE_BAR_CLASSES[tone] : "bg-accent"
         )}
         style={{ width: `${width}%` }}
       />

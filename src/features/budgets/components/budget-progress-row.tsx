@@ -19,7 +19,7 @@ import type { BudgetProgress } from "../queries"
 import { BudgetDialog } from "./budget-dialog"
 
 export const STATUS_BAR_CLASSES: Record<BudgetStatus, string> = {
-  ok: "bg-primary",
+  ok: "bg-accent",
   warning: "bg-amber-500",
   exceeded: "bg-rose-500"
 }

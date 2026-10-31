@@ -1027,6 +1027,7 @@ export type Database = {
         }[]
       }
       purge_deleted_accounts: { Args: never; Returns: number }
+      purge_deleted_workspaces: { Args: never; Returns: number }
       record_debt_payment: {
         Args: {
           p_account_id?: string

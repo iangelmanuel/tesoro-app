@@ -680,3 +680,34 @@ insert into public.categories (workspace_id, scope, type, name, icon, color) val
   (null, 'business', 'expense', 'Impuestos y tasas', 'landmark', 'rose'),
   (null, 'business', 'expense', 'Comisiones bancarias', 'receipt', 'slate'),
   (null, 'business', 'expense', 'Otros gastos operativos', 'tag', 'slate');
+
+-- Purga las empresas marcadas hace más de 30 días. El borrado baja en cascada
+-- a business_profiles y todas las tablas del espacio. La llama pg_cron
+create function public.purge_deleted_workspaces()
+returns integer
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  v_deleted integer;
+begin
+  delete from public.workspaces
+  where type = 'business'
+    and deletion_requested_at < now() - interval '30 days';
+
+  get diagnostics v_deleted = row_count;
+  return v_deleted;
+end;
+$$;
+
+-- Solo pg_cron la ejecuta; no se expone como RPC
+revoke execute on function public.purge_deleted_workspaces() from public, anon, authenticated;
+
+-- 08:15 UTC, después de purge-deleted-accounts
+select cron.schedule(
+  'purge-deleted-workspaces',
+  '15 8 * * *',
+  $$select public.purge_deleted_workspaces()$$
+);

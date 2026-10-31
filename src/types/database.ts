@@ -144,6 +144,38 @@ export type Database = {
           }
         ]
       }
+      business_profiles: {
+        Row: {
+          created_at: string
+          sector: string
+          tax_id: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          sector: string
+          tax_id?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          sector?: string
+          tax_id?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_profiles_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       categories: {
         Row: {
           archived_at: string | null
@@ -152,6 +184,7 @@ export type Database = {
           icon: string
           id: string
           name: string
+          scope: Database["public"]["Enums"]["workspace_type"]
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at: string
           workspace_id: string | null
@@ -163,6 +196,7 @@ export type Database = {
           icon: string
           id?: string
           name: string
+          scope?: Database["public"]["Enums"]["workspace_type"]
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
           workspace_id?: string | null
@@ -174,6 +208,7 @@ export type Database = {
           icon?: string
           id?: string
           name?: string
+          scope?: Database["public"]["Enums"]["workspace_type"]
           type?: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
           workspace_id?: string | null
@@ -614,10 +649,12 @@ export type Database = {
           account_id: string | null
           amount: number
           category_id: string
+          counterparty: string | null
           created_at: string
           description: string
           id: string
           import_id: string | null
+          invoice_ref: string | null
           note: string | null
           occurred_on: string
           recurring_due_on: string | null
@@ -630,10 +667,12 @@ export type Database = {
           account_id?: string | null
           amount: number
           category_id: string
+          counterparty?: string | null
           created_at?: string
           description: string
           id?: string
           import_id?: string | null
+          invoice_ref?: string | null
           note?: string | null
           occurred_on: string
           recurring_due_on?: string | null
@@ -646,10 +685,12 @@ export type Database = {
           account_id?: string | null
           amount?: number
           category_id?: string
+          counterparty?: string | null
           created_at?: string
           description?: string
           id?: string
           import_id?: string | null
+          invoice_ref?: string | null
           note?: string | null
           occurred_on?: string
           recurring_due_on?: string | null
@@ -750,6 +791,7 @@ export type Database = {
       workspaces: {
         Row: {
           created_at: string
+          deletion_requested_at: string | null
           id: string
           name: string
           owner_id: string
@@ -758,6 +800,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deletion_requested_at?: string | null
           id?: string
           name: string
           owner_id: string
@@ -766,6 +809,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deletion_requested_at?: string | null
           id?: string
           name?: string
           owner_id?: string
@@ -789,9 +833,11 @@ export type Database = {
           account_id: string | null
           amount: number | null
           category_id: string | null
+          counterparty: string | null
           created_at: string | null
           description: string | null
           id: string | null
+          invoice_ref: string | null
           kind: string | null
           note: string | null
           occurred_on: string | null
@@ -834,7 +880,12 @@ export type Database = {
           spent: number
         }[]
       }
+      business_workspace_limit: { Args: never; Returns: number }
       cancel_account_deletion: { Args: never; Returns: undefined }
+      cancel_workspace_deletion: {
+        Args: { p_workspace_id: string }
+        Returns: undefined
+      }
       category_totals: {
         Args: {
           p_from: string
@@ -851,6 +902,10 @@ export type Database = {
           total: number
           tx_count: number
         }[]
+      }
+      create_business: {
+        Args: { p_name: string; p_sector: string; p_tax_id: string }
+        Returns: string
       }
       create_import: {
         Args: {
@@ -958,6 +1013,10 @@ export type Database = {
         Returns: string
       }
       is_workspace_owner: { Args: { p_workspace_id: string }; Returns: boolean }
+      is_workspace_writable: {
+        Args: { p_workspace_id: string }
+        Returns: boolean
+      }
       monthly_totals: {
         Args: { p_from: string; p_to: string; p_workspace_id: string }
         Returns: {
@@ -992,6 +1051,10 @@ export type Database = {
         }[]
       }
       request_account_deletion: { Args: never; Returns: string }
+      request_workspace_deletion: {
+        Args: { p_workspace_id: string }
+        Returns: string
+      }
       score_balances: {
         Args: { p_from: string; p_to: string; p_workspace_id: string }
         Returns: {

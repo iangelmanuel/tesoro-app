@@ -16,6 +16,8 @@ import {
   Landmark,
   Laptop,
   type LucideIcon,
+  Megaphone,
+  Package,
   PawPrint,
   PiggyBank,
   Plane,
@@ -23,8 +25,10 @@ import {
   Shirt,
   ShoppingBag,
   Smartphone,
+  Store,
   Tag,
   TrendingUp,
+  Users,
   Utensils,
   Wallet,
   Wrench,
@@ -62,7 +66,11 @@ export const CATEGORY_ICONS = {
   "dumbbell": Dumbbell,
   "tag": Tag,
   "banknote": Banknote,
-  "wallet": Wallet
+  "wallet": Wallet,
+  "store": Store,
+  "package": Package,
+  "users": Users,
+  "megaphone": Megaphone
 } as const satisfies Record<string, LucideIcon>
 
 // Paleta fija con variante dark, legible en claro y oscuro. Las clases van

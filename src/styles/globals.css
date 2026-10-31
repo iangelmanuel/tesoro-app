@@ -95,11 +95,65 @@
   --balance: oklch(74.6% 0.16 232.661);
 }
 
+/* Primario por espacio. WorkspaceThemeRoot pinta un marcador oculto con
+   data-workspace como hijo directo del contenedor del dashboard; :has() pone
+   el primario en ese contenedor, así sidebar, header y contenido cambian
+   juntos. Emerald y naranja llevan texto oscuro: el blanco no da AA */
+:has(> [data-workspace="personal"]) {
+  --accent: oklch(59.6% 0.145 163.225); /* emerald-600 */
+  --accent-foreground: oklch(0.21 0.016 265);
+}
+
+.dark :has(> [data-workspace="personal"]) {
+  --accent: oklch(69.6% 0.17 162.48); /* emerald-500, el del logo */
+  --accent-foreground: oklch(0.19 0.011 265);
+}
+
+:has(> [data-workspace="business"]) {
+  --accent: oklch(64.6% 0.222 41.116); /* orange-600 */
+  --accent-foreground: oklch(0.21 0.016 265);
+}
+
+.dark :has(> [data-workspace="business"]) {
+  --accent: oklch(70.5% 0.213 47.604); /* orange-500 */
+  --accent-foreground: oklch(0.19 0.011 265);
+}
+
+/* Los derivados del primario se recalculan en el contenedor del espacio:
+   HeroUI los declara en :root y ahí se resuelven con el primario neutro */
+:has(> [data-workspace]) {
+  --focus: var(--accent);
+  --accent-hover: color-mix(
+    in oklab,
+    var(--accent) 90%,
+    var(--accent-foreground) 10%
+  );
+  --accent-soft: color-mix(in oklab, var(--accent) 15%, transparent);
+  --accent-soft-foreground: color-mix(
+    in oklab,
+    var(--accent) 70%,
+    var(--foreground) 30%
+  );
+  --accent-soft-hover: color-mix(in oklab, var(--accent) 20%, transparent);
+}
+
+.dark :has(> [data-workspace]) {
+  --accent-soft: color-mix(in oklab, var(--accent) 12%, transparent);
+  --accent-soft-foreground: color-mix(
+    in oklab,
+    var(--accent) 80%,
+    var(--foreground) 30%
+  );
+  --accent-soft-hover: color-mix(in oklab, var(--accent) 16%, transparent);
+}
+
 /* TEMPORAL (SPEC 13, se quita en el paso 18): tokens de shadcn apuntando a
    los de HeroUI para que las pantallas sin migrar sigan legibles. --muted y
    --accent no se mapean porque HeroUI los usa con otro significado; sus
-   clases en shadcn se cambiaron por bg-default / text-default-foreground. */
-:root {
+   clases en shadcn se cambiaron por bg-default / text-default-foreground.
+   También se declaran en el contenedor del espacio para heredar su primario */
+:root,
+:has(> [data-workspace]) {
   --card: var(--surface);
   --card-foreground: var(--surface-foreground);
   --popover: var(--overlay);

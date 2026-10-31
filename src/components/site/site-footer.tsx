@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Logo } from "@/components/brand/logo"
-import { SITE } from "@/config/site"
+import { SITE, legalHref } from "@/config/site"
 
 const PROJECT_LINKS = [
   { name: "Repositorio", href: SITE.repository.url },
@@ -46,8 +46,8 @@ function FooterColumn({
 export function SiteFooter() {
   return (
     <footer className="border-t bg-muted/40">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[2fr_1fr_1fr]">
-        <div className="flex flex-col gap-3">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-3 sm:px-6 md:grid-cols-[2fr_1fr_1fr_1fr]">
+        <div className="flex flex-col gap-3 sm:col-span-3 md:col-span-1">
           <Link
             href={SITE.routes.home}
             aria-label={`${SITE.info.name}, inicio`}
@@ -60,6 +60,21 @@ export function SiteFooter() {
           </p>
         </div>
 
+        <div className="flex flex-col gap-3">
+          <h2 className="text-sm font-medium">Legal</h2>
+          <ul className="flex flex-col gap-2">
+            {SITE.legal.map((document) => (
+              <li key={document.slug}>
+                <Link
+                  href={legalHref(document.slug)}
+                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {document.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
         <FooterColumn
           title="Proyecto"
           links={PROJECT_LINKS}

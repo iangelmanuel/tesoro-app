@@ -1,9 +1,8 @@
 "use client"
 
 import { useTransition } from "react"
-import { toast } from "@heroui/react"
+import { Button, toast } from "@heroui/react"
 import { Copy } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { copyPreviousMonthBudgets } from "../actions"
 
 interface CopyPreviousMonthButtonProps {
@@ -32,10 +31,10 @@ export function CopyPreviousMonthButton({
   return (
     <Button
       variant="outline"
-      disabled={pending}
-      onClick={handleCopy}
+      isDisabled={pending}
+      onPress={handleCopy}
     >
-      <Copy data-icon="inline-start" />
+      <Copy />
       {pending ? "Copiando..." : "Copiar del mes anterior"}
     </Button>
   )

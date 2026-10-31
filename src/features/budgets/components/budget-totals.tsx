@@ -1,10 +1,4 @@
-import { cn } from "cn"
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+import { Card, CardDescription, CardHeader, CardTitle, cn } from "@heroui/react"
 import { formatCurrency } from "@/libs/format"
 import type { BudgetProgress } from "../queries"
 
@@ -28,7 +22,7 @@ export function BudgetTotals({ budgets, currency }: BudgetTotalsProps) {
     {
       label: "Restante",
       value: remaining,
-      className: remaining < 0 ? "text-rose-600 dark:text-rose-400" : undefined
+      className: remaining < 0 ? "text-(--expense)" : undefined
     }
   ]
 

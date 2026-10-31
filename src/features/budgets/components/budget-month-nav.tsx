@@ -3,9 +3,8 @@
 import { useTransition } from "react"
 import type { Route } from "next"
 import { useRouter } from "next/navigation"
-import { cn } from "cn"
+import { Button, cn } from "@heroui/react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import type { BudgetMonth } from "../month"
 import { BUDGETS_PATH } from "../tabs"
 
@@ -36,9 +35,9 @@ export function BudgetMonthNav({ month }: BudgetMonthNavProps) {
     >
       <Button
         variant="outline"
-        size="icon"
+        isIconOnly
         aria-label="Mes anterior"
-        onClick={() => goTo(month.prev)}
+        onPress={() => goTo(month.prev)}
       >
         <ChevronLeft />
       </Button>
@@ -50,9 +49,9 @@ export function BudgetMonthNav({ month }: BudgetMonthNavProps) {
       </p>
       <Button
         variant="outline"
-        size="icon"
+        isIconOnly
         aria-label="Mes siguiente"
-        onClick={() => goTo(month.next)}
+        onPress={() => goTo(month.next)}
       >
         <ChevronRight />
       </Button>

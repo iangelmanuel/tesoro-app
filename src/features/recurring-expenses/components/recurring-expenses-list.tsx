@@ -1,30 +1,16 @@
 "use client"
 
 import { useTransition } from "react"
-import { toast } from "@heroui/react"
-import { cn } from "cn"
-import { Pause, Pencil, Play, Trash2 } from "lucide-react"
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger
-} from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
+  Button,
+  Chip,
   Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table"
+  Tooltip,
+  cn,
+  toast
+} from "@heroui/react"
+import { Pause, Pencil, Play, Trash2 } from "lucide-react"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { formatCurrency, formatDate } from "@/libs/format"
@@ -56,75 +42,84 @@ export function RecurringExpensesList({
   return (
     <div className="rounded-xl border">
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nombre</TableHead>
-            <TableHead>Categoría</TableHead>
-            <TableHead className="text-right">Monto</TableHead>
-            <TableHead>Frecuencia</TableHead>
-            <TableHead>Vigencia</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead className="w-28">
-              <span className="sr-only">Acciones</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {expenses.map((expense) => (
-            <TableRow
-              key={expense.id}
-              className={cn(!expense.is_active && "text-muted-foreground")}
-            >
-              <TableCell className="max-w-48">
-                <p className="truncate font-medium">{expense.name}</p>
-              </TableCell>
-              <TableCell>
-                <CategoryBadge
-                  name={
-                    expense.category.archived_at
-                      ? `${expense.category.name} (archivada)`
-                      : expense.category.name
-                  }
-                  icon={expense.category.icon}
-                  color={expense.category.color}
-                />
-              </TableCell>
-              <TableCell className="text-right font-medium tabular-nums">
-                {formatCurrency(expense.amount, currency)}
-              </TableCell>
-              <TableCell>{frequencyLabel(expense)}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {validityLabel(expense)}
-              </TableCell>
-              <TableCell>
-                {expense.is_active ? (
-                  <Badge variant="secondary">Activo</Badge>
-                ) : (
-                  <Badge variant="outline">Pausado</Badge>
-                )}
-              </TableCell>
-              <TableCell>
-                <div className="flex justify-end gap-1">
-                  <RecurringExpenseDialog
-                    categories={categories}
-                    expense={expense}
-                    trigger={
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={`Editar ${expense.name}`}
+        <Table.ScrollContainer>
+          <Table.Content aria-label="Gastos fijos">
+            <Table.Header>
+              <Table.Column isRowHeader>Nombre</Table.Column>
+              <Table.Column>Categoría</Table.Column>
+              <Table.Column className="text-end">Monto</Table.Column>
+              <Table.Column>Frecuencia</Table.Column>
+              <Table.Column>Vigencia</Table.Column>
+              <Table.Column>Estado</Table.Column>
+              <Table.Column className="w-28">
+                <span className="sr-only">Acciones</span>
+              </Table.Column>
+            </Table.Header>
+            <Table.Body>
+              {expenses.map((expense) => (
+                <Table.Row
+                  key={expense.id}
+                  className={cn(!expense.is_active && "text-muted")}
+                >
+                  <Table.Cell className="max-w-48">
+                    <p className="truncate font-medium">{expense.name}</p>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <CategoryBadge
+                      name={
+                        expense.category.archived_at
+                          ? `${expense.category.name} (archivada)`
+                          : expense.category.name
+                      }
+                      icon={expense.category.icon}
+                      color={expense.category.color}
+                    />
+                  </Table.Cell>
+                  <Table.Cell className="text-end font-medium tabular-nums">
+                    {formatCurrency(expense.amount, currency)}
+                  </Table.Cell>
+                  <Table.Cell>{frequencyLabel(expense)}</Table.Cell>
+                  <Table.Cell className="text-muted">
+                    {validityLabel(expense)}
+                  </Table.Cell>
+                  <Table.Cell>
+                    {expense.is_active ? (
+                      <Chip size="sm">Activo</Chip>
+                    ) : (
+                      <Chip
+                        size="sm"
+                        variant="tertiary"
+                        className="border border-border"
                       >
-                        <Pencil />
-                      </Button>
-                    }
-                  />
-                  <ToggleRecurringExpenseButton expense={expense} />
-                  <DeleteRecurringExpenseButton expense={expense} />
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
+                        Pausado
+                      </Chip>
+                    )}
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex justify-end gap-1">
+                      <RecurringExpenseDialog
+                        categories={categories}
+                        expense={expense}
+                        trigger={
+                          <Button
+                            variant="ghost"
+                            isIconOnly
+                            size="sm"
+                            aria-label={`Editar ${expense.name}`}
+                          >
+                            <Pencil />
+                          </Button>
+                        }
+                      />
+                      <ToggleRecurringExpenseButton expense={expense} />
+                      <DeleteRecurringExpenseButton expense={expense} />
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              ))}
+            </Table.Body>
+          </Table.Content>
+        </Table.ScrollContainer>
       </Table>
     </div>
   )
@@ -157,16 +152,19 @@ function ToggleRecurringExpenseButton({
   }
 
   return (
-    <Button
-      variant="ghost"
-      size="icon-sm"
-      aria-label={label}
-      title={label}
-      disabled={pending}
-      onClick={handleToggle}
-    >
-      {expense.is_active ? <Pause /> : <Play />}
-    </Button>
+    <Tooltip delay={500}>
+      <Button
+        variant="ghost"
+        isIconOnly
+        size="sm"
+        aria-label={label}
+        isDisabled={pending}
+        onPress={handleToggle}
+      >
+        {expense.is_active ? <Pause /> : <Play />}
+      </Button>
+      <Tooltip.Content>{label}</Tooltip.Content>
+    </Tooltip>
   )
 }
 
@@ -190,35 +188,49 @@ function DeleteRecurringExpenseButton({
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={`Eliminar ${expense.name}`}
-          disabled={pending}
-        >
-          <Trash2 />
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>¿Eliminar este gasto fijo?</AlertDialogTitle>
-          <AlertDialogDescription>
-            &ldquo;{expense.name}&rdquo; dejará de aparecer en tus próximos
-            pagos. Los movimientos que ya registraste como pago se conservan en
-            Movimientos.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            onClick={handleDelete}
-          >
-            Eliminar
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
+      <Button
+        variant="ghost"
+        isIconOnly
+        size="sm"
+        aria-label={`Eliminar ${expense.name}`}
+        isDisabled={pending}
+      >
+        <Trash2 />
+      </Button>
+      <AlertDialog.Backdrop isKeyboardDismissDisabled={false}>
+        <AlertDialog.Container>
+          <AlertDialog.Dialog className="sm:max-w-md">
+            <AlertDialog.Header>
+              <AlertDialog.Icon status="danger" />
+              <AlertDialog.Heading>
+                ¿Eliminar este gasto fijo?
+              </AlertDialog.Heading>
+              <AlertDialog.Body>
+                <p className="text-sm text-muted">
+                  &ldquo;{expense.name}&rdquo; dejará de aparecer en tus
+                  próximos pagos. Los movimientos que ya registraste como pago
+                  se conservan en Movimientos.
+                </p>
+              </AlertDialog.Body>
+            </AlertDialog.Header>
+            <AlertDialog.Footer>
+              <Button
+                slot="close"
+                variant="tertiary"
+              >
+                Cancelar
+              </Button>
+              <Button
+                slot="close"
+                variant="danger"
+                onPress={handleDelete}
+              >
+                Eliminar
+              </Button>
+            </AlertDialog.Footer>
+          </AlertDialog.Dialog>
+        </AlertDialog.Container>
+      </AlertDialog.Backdrop>
     </AlertDialog>
   )
 }

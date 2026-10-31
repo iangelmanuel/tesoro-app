@@ -1,22 +1,8 @@
 "use client"
 
 import { useTransition } from "react"
-import { toast } from "@heroui/react"
-import { cn } from "cn"
+import { AlertDialog, Button, Chip, cn, toast } from "@heroui/react"
 import { Pencil, Trash2 } from "lucide-react"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger
-} from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import { formatCurrency } from "@/libs/format"
 import { deleteBudget } from "../actions"
@@ -46,7 +32,7 @@ export const STATUS_BADGE_CLASSES: Record<BudgetStatus, string> = {
 
 // Rayas para el segmento comprometido (pagos pendientes)
 const STRIPES =
-  "bg-[repeating-linear-gradient(135deg,var(--color-muted-foreground)_0_4px,transparent_4px_8px)] opacity-50"
+  "bg-[repeating-linear-gradient(135deg,var(--color-muted)_0_4px,transparent_4px_8px)] opacity-50"
 
 interface BudgetProgressBarProps {
   spent: number
@@ -116,9 +102,16 @@ export function BudgetProgressRow({
           color={budget.color}
         />
         {statusLabel && (
-          <Badge className={STATUS_BADGE_CLASSES[status]}>{statusLabel}</Badge>
+          <Chip
+            size="sm"
+            className={STATUS_BADGE_CLASSES[status]}
+            color="accent"
+            variant="primary"
+          >
+            {statusLabel}
+          </Chip>
         )}
-        <p className="ml-auto text-sm text-muted-foreground tabular-nums">
+        <p className="ml-auto text-sm text-muted tabular-nums">
           <span className="font-medium text-foreground">
             {formatCurrency(budget.spent, currency)}
           </span>{" "}
@@ -132,7 +125,8 @@ export function BudgetProgressRow({
             trigger={
               <Button
                 variant="ghost"
-                size="icon-sm"
+                isIconOnly
+                size="sm"
                 aria-label={`Editar presupuesto de ${budget.name}`}
               >
                 <Pencil />
@@ -152,13 +146,13 @@ export function BudgetProgressRow({
           className={cn(
             "font-medium tabular-nums",
             status === "warning" && "text-amber-600 dark:text-amber-400",
-            status === "exceeded" && "text-rose-600 dark:text-rose-400"
+            status === "exceeded" && "text-(--expense)"
           )}
         >
           {formatPercent(percent)}
         </span>
         {projected !== null && (
-          <span className="text-muted-foreground">
+          <span className="text-muted">
             Con pagos pendientes llegarías al {formatPercent(projected)}
           </span>
         )}
@@ -187,34 +181,48 @@ function DeleteBudgetButton({
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={`Eliminar presupuesto de ${budget.name}`}
-          disabled={pending}
-        >
-          <Trash2 />
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>¿Eliminar este presupuesto?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Se eliminará el presupuesto de &ldquo;{budget.name}&rdquo; de este
-            mes. Tus movimientos no cambian.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            onClick={handleDelete}
-          >
-            Eliminar
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
+      <Button
+        variant="ghost"
+        isIconOnly
+        size="sm"
+        aria-label={`Eliminar presupuesto de ${budget.name}`}
+        isDisabled={pending}
+      >
+        <Trash2 />
+      </Button>
+      <AlertDialog.Backdrop isKeyboardDismissDisabled={false}>
+        <AlertDialog.Container>
+          <AlertDialog.Dialog className="sm:max-w-md">
+            <AlertDialog.Header>
+              <AlertDialog.Icon status="danger" />
+              <AlertDialog.Heading>
+                ¿Eliminar este presupuesto?
+              </AlertDialog.Heading>
+              <AlertDialog.Body>
+                <p className="text-sm text-muted">
+                  Se eliminará el presupuesto de &ldquo;{budget.name}&rdquo; de
+                  este mes. Tus movimientos no cambian.
+                </p>
+              </AlertDialog.Body>
+            </AlertDialog.Header>
+            <AlertDialog.Footer>
+              <Button
+                slot="close"
+                variant="tertiary"
+              >
+                Cancelar
+              </Button>
+              <Button
+                slot="close"
+                variant="danger"
+                onPress={handleDelete}
+              >
+                Eliminar
+              </Button>
+            </AlertDialog.Footer>
+          </AlertDialog.Dialog>
+        </AlertDialog.Container>
+      </AlertDialog.Backdrop>
     </AlertDialog>
   )
 }

@@ -1,5 +1,5 @@
+import { Button } from "@heroui/react"
 import { Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { formatCurrency } from "@/libs/format"
@@ -28,7 +28,7 @@ export function UnbudgetedCategories({
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-semibold">Sin presupuesto</h2>
-        <p className="text-sm text-muted-foreground tabular-nums">
+        <p className="text-sm text-muted tabular-nums">
           {formatCurrency(total, currency)} gastados
         </p>
       </div>
@@ -57,7 +57,7 @@ export function UnbudgetedCategories({
                     size="sm"
                     variant="outline"
                   >
-                    <Plus data-icon="inline-start" />
+                    <Plus />
                     Presupuestar
                   </Button>
                 }

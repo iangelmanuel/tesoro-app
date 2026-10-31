@@ -1,16 +1,15 @@
 import type { Route } from "next"
 import Link from "next/link"
-import { CircleCheck } from "lucide-react"
-import { CardEmpty } from "@/components/dashboard/empty-state"
-import { Button } from "@/components/ui/button"
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+  CardTitle,
+  buttonVariants
+} from "@heroui/react"
+import { CircleCheck } from "lucide-react"
+import { CardEmpty } from "@/components/dashboard/empty-state"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { BUDGETS_PATH } from "@/features/budgets/tabs"
 import { getCategories } from "@/features/categories/queries"
@@ -43,19 +42,20 @@ export async function UpcomingPaymentsCard({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Próximos pagos</CardTitle>
-        <CardDescription>Gastos fijos pendientes</CardDescription>
-        <CardAction>
-          <Button
-            variant="outline"
-            size="sm"
-            asChild
+      <div className="flex items-start justify-between gap-2">
+        <CardHeader>
+          <CardTitle>Próximos pagos</CardTitle>
+          <CardDescription>Gastos fijos pendientes</CardDescription>
+        </CardHeader>
+        <div className="shrink-0">
+          <Link
+            href={RECURRING_HREF}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
           >
-            <Link href={RECURRING_HREF}>Ver todos</Link>
-          </Button>
-        </CardAction>
-      </CardHeader>
+            Ver todos
+          </Link>
+        </div>
+      </div>
       <CardContent>
         {pending.length === 0 && (
           <CardEmpty
@@ -74,7 +74,7 @@ export async function UpcomingPaymentsCard({
                   <p className="truncate font-medium">{payment.name}</p>
                   <OccurrenceStatusBadge status={payment.status} />
                 </div>
-                <p className="text-sm text-muted-foreground tabular-nums">
+                <p className="text-sm text-muted tabular-nums">
                   {formatDate(payment.dueOn)} ·{" "}
                   {formatCurrency(payment.amount, currency)}
                 </p>

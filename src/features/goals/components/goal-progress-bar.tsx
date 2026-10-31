@@ -16,7 +16,7 @@ export const GOAL_BADGE_CLASSES: Record<GoalStatus, string> = {
   on_track:
     "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
   at_risk: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-  archived: "bg-muted text-muted-foreground"
+  archived: "bg-default text-muted-foreground"
 }
 
 /** Etiqueta del estado. Activa sin fecha: sin etiqueta. */
@@ -53,7 +53,7 @@ export function GoalProgressBar({
       aria-valuemax={100}
       aria-valuenow={width}
       className={cn(
-        "flex h-2 w-full overflow-hidden rounded-full bg-muted",
+        "flex h-2 w-full overflow-hidden rounded-full bg-default",
         className
       )}
     >

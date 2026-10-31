@@ -327,7 +327,7 @@ function PaymentSimulator({
   const valid = !Number.isNaN(payment) && payment > 0
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg bg-muted/50 p-3">
+    <div className="flex flex-col gap-3 rounded-lg bg-default/50 p-3">
       <Label htmlFor={`simulator-${debt.id}`}>Si pagaras al mes</Label>
       <Input
         id={`simulator-${debt.id}`}

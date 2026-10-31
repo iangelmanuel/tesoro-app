@@ -56,7 +56,7 @@ export function MobileNav({ children }: { children: React.ReactNode }) {
                 <Link
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className="block rounded-md px-3 py-2 text-base text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                  className="block rounded-md px-3 py-2 text-base text-muted-foreground transition-colors hover:bg-default hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                 >
                   {item.name}
                 </Link>

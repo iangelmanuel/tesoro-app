@@ -27,7 +27,7 @@ export function HowItWorks() {
     <section
       id="como-funciona"
       aria-labelledby="como-funciona-title"
-      className="scroll-mt-16 border-t bg-muted/40"
+      className="scroll-mt-16 border-t bg-default/40"
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 py-20 sm:px-6 sm:py-24">
         <SectionHeading

@@ -289,7 +289,7 @@ export const SITE = {
     operatingSystem: "Web",
     price: "0",
 
-    themeColor: { light: "#FFFFFF", dark: "#050505" },
+    themeColor: { light: "#F9FAFB", dark: "#090A0E" },
     manifestCategories: ["finance", "business", "productivity"]
   }
 } as const

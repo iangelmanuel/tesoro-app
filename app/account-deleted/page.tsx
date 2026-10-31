@@ -27,7 +27,7 @@ export const metadata = buildMetadata({
 // proxy.ts solo deja entrar a usuarios con la cuenta marcada para borrar
 export default function AccountDeletedPage() {
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
+    <main className="flex min-h-svh flex-col items-center justify-center bg-default p-6 md:p-10">
       <div className="flex w-full max-w-sm flex-col gap-6">
         <span className="self-center text-2xl font-semibold tracking-tight">
           {SITE.info.name}

@@ -45,7 +45,7 @@ function FooterColumn({
 
 export function SiteFooter() {
   return (
-    <footer className="border-t bg-muted/40">
+    <footer className="border-t bg-default/40">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-3 sm:px-6 md:grid-cols-[2fr_1fr_1fr_1fr]">
         <div className="flex flex-col gap-3 sm:col-span-3 md:col-span-1">
           <Link

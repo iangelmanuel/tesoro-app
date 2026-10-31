@@ -116,7 +116,7 @@ async function CashFlowContent({
       {cashFlow.withoutAccount > 0 && (
         <div
           role="status"
-          className="flex items-start gap-2 rounded-lg border bg-muted/50 p-3 text-sm"
+          className="flex items-start gap-2 rounded-lg border bg-default/50 p-3 text-sm"
         >
           <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
           <p>

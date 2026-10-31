@@ -203,7 +203,7 @@ function PaymentForm({
           sincroniza el que ya existe */}
       {!isEditing &&
         (debt.kind === "credit_card" ? (
-          <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
+          <p className="rounded-lg bg-default p-3 text-sm text-muted-foreground">
             Las compras con tarjeta se registran como gasto al comprar. Este
             pago no crea un movimiento.
           </p>

@@ -24,7 +24,7 @@ export function WorkspacesSection() {
   return (
     <section
       aria-labelledby="espacios-title"
-      className="border-t bg-muted/40"
+      className="border-t bg-default/40"
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 py-20 sm:px-6 sm:py-24">
         <SectionHeading

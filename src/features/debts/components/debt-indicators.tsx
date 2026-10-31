@@ -13,7 +13,7 @@ const TONE_BADGE_CLASSES: Record<OccurrenceTone, string> = {
     "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
   danger: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
   warning: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-  neutral: "bg-muted text-muted-foreground"
+  neutral: "bg-default text-muted-foreground"
 }
 
 const TONE_BAR_CLASSES: Record<OccurrenceTone, string> = {
@@ -63,7 +63,7 @@ export function DebtBar({ percent, tone, className }: DebtBarProps) {
       aria-valuemax={100}
       aria-valuenow={width}
       className={cn(
-        "flex h-2 w-full overflow-hidden rounded-full bg-muted",
+        "flex h-2 w-full overflow-hidden rounded-full bg-default",
         className
       )}
     >

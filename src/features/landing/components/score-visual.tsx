@@ -42,7 +42,7 @@ export function LandingScoreVisual() {
             <path
               d="M10 60a50 50 0 0 1 100 0"
               fill="none"
-              stroke="var(--muted)"
+              stroke="var(--default)"
               strokeWidth="10"
               strokeLinecap="round"
             />

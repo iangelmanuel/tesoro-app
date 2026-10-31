@@ -66,7 +66,7 @@ export function ReceivableCard({
         {/* Abre el Sheet con el detalle y los abonos */}
         <button
           type="button"
-          className="-m-1 flex min-w-0 flex-1 flex-col gap-1 rounded-lg p-1 text-left transition-colors hover:bg-muted/50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+          className="-m-1 flex min-w-0 flex-1 flex-col gap-1 rounded-lg p-1 text-left transition-colors hover:bg-default/50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
           onClick={() => setDetailOpen(true)}
         >
           <span className="flex flex-wrap items-center gap-2">

@@ -70,7 +70,7 @@ export function BudgetProgressBar({
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.min(budgetPercent(spent, budget), 100)}
-      className="flex h-2 w-full overflow-hidden rounded-full bg-muted"
+      className="flex h-2 w-full overflow-hidden rounded-full bg-default"
     >
       <div
         className={cn("h-full transition-all", STATUS_BAR_CLASSES[status])}

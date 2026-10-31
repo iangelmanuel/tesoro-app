@@ -73,7 +73,7 @@ export function ScoreFactors<K extends string>({
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-valuenow={Math.round(factor.points)}
-                className="flex h-2 w-full overflow-hidden rounded-full bg-muted"
+                className="flex h-2 w-full overflow-hidden rounded-full bg-default"
               >
                 <div
                   className="h-full bg-primary transition-all"

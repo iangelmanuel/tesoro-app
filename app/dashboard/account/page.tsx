@@ -54,7 +54,7 @@ async function AccountContent({
       {notice && (
         <p
           role="status"
-          className="rounded-lg border bg-muted/50 px-4 py-3 text-sm"
+          className="rounded-lg border bg-default/50 px-4 py-3 text-sm"
         >
           {notice}
         </p>

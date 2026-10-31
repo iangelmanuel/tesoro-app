@@ -103,7 +103,7 @@ export function ScoreSection() {
                   </div>
                   <div
                     aria-hidden="true"
-                    className="h-1.5 overflow-hidden rounded-full bg-muted"
+                    className="h-1.5 overflow-hidden rounded-full bg-default"
                   >
                     <div
                       className="h-full rounded-full bg-(--income)"

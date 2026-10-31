@@ -2,6 +2,7 @@ import Link from "next/link"
 import { ArrowRightIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SITE } from "@/config/site"
+import { LandingHeroVisual } from "./hero-visual"
 
 export function Hero() {
   return (
@@ -56,6 +57,7 @@ export function Hero() {
             </Button>
           </div>
         </div>
+        <LandingHeroVisual />
       </div>
     </section>
   )

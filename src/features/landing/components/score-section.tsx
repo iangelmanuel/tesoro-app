@@ -1,4 +1,5 @@
 import { cn } from "@/libs/utils"
+import { LandingScoreVisual } from "./score-visual"
 import { SectionHeading } from "./section-heading"
 
 // Constantes de presentación copiadas de docs/producto.md ("Factores y
@@ -142,6 +143,7 @@ export function ScoreSection() {
               evolución mes a mes. Junto a él, las recomendaciones te dicen qué
               hacer, en qué dato se basan y dónde resolverlo.
             </p>
+            <LandingScoreVisual />
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 # SPEC 13 — Migración completa de la UI a HeroUI
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 12
 > **Fecha:** 2026-10-31
 > **Objetivo:** Que toda la interfaz de Tesoro use HeroUI v3 en lugar de shadcn/ui, con neutros negros y grises azulados y un primario por espacio (emerald en Personal, naranja en Empresa).

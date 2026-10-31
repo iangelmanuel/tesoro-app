@@ -12,8 +12,9 @@ const SIZES = {
   lg: { mark: "size-8", wordmark: "text-2xl" }
 }
 
-// Isotipo de assets/brand/mark.svg con el acento de --income, para que
-// siga al tema. Si cambia el SVG fuente, se actualiza aquí también
+// Isotipo de assets/brand/mark.svg con el emerald de marca (--brand), igual
+// en todos los temas y espacios. Si cambia el SVG fuente, se actualiza aquí
+// también
 function LogoMark({ className }: { className?: string }) {
   return (
     <svg
@@ -25,7 +26,7 @@ function LogoMark({ className }: { className?: string }) {
         width="64"
         height="64"
         rx="14"
-        fill="var(--income)"
+        fill="var(--brand)"
       />
       <path
         d="M14 30v-4a12 12 0 0 1 12-12h12a12 12 0 0 1 12 12v4z"
@@ -46,14 +47,14 @@ function LogoMark({ className }: { className?: string }) {
         height="12"
         rx="2.5"
         fill="#fff"
-        stroke="var(--income)"
+        stroke="var(--brand)"
         strokeWidth="2"
       />
       <circle
         cx="32"
         cy="30.5"
         r="1.75"
-        fill="var(--income)"
+        fill="var(--brand)"
       />
     </svg>
   )

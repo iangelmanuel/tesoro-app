@@ -877,12 +877,15 @@ suficientes".
 
 ### Seguridad
 
-- RLS en `dismissed_recommendations` con `is_workspace_owner`: `select`,
-  `insert` y `delete`, sin `update`. Un `check` limita `rule` a las 10 claves.
+- RLS en `dismissed_recommendations`: `select` con `is_workspace_owner`;
+  `insert` y `delete` con `is_workspace_writable` (SPEC 11); sin `update`. Un
+  `check` limita `rule` a las claves de Personal y de Empresa.
 - Las tres RPC del score son `security invoker` y `stable`, y solo las
   ejecuta `authenticated`. Con un espacio ajeno no devuelven datos.
-- `dismissRecommendation` y `restoreRecommendation` validan con Zod la regla
-  y la entidad, y usan el espacio Personal del usuario autenticado.
+- `dismissRecommendation(workspaceId, rule, entityKey)` y
+  `restoreRecommendation` resuelven el espacio con `requireWritableWorkspace`
+  y validan con Zod la regla contra las claves de su tipo de espacio y la
+  entidad.
 
 ## Importar
 
@@ -1187,7 +1190,8 @@ en su `getUser()` y el usuario no la puede editar.
 
 El usuario crea su empresa desde el estado vacío de `/dashboard/business` y
 registra en ella ventas y costos o gastos operativos. Flujo de caja, reportes,
-score y recomendaciones de Empresa llegan en el SPEC 11.
+score y recomendaciones están en
+[Empresa: flujo de caja, reportes y score](#empresa-flujo-de-caja-reportes-y-score).
 
 ### Crear y editar
 
@@ -1220,8 +1224,7 @@ score y recomendaciones de Empresa llegan en el SPEC 11.
 - `/dashboard/business/[id]` lo valida su layout: un `id` ajeno, inexistente
   o del espacio Personal da 404.
 - Navegación: Resumen, Movimientos, Cuentas, Flujo de caja, Reportes,
-  Recomendaciones y Ajustes. Flujo de caja, Reportes y Recomendaciones
-  muestran "Próximamente".
+  Recomendaciones y Ajustes.
 - El registro rápido del header registra en la empresa de la ruta.
 
 ### Categorías de negocio
@@ -1256,13 +1259,26 @@ score y recomendaciones de Empresa llegan en el SPEC 11.
 
 ### Resumen de Empresa
 
-- Tarjetas del mes actual (America/Bogota), calculadas con
-  `transaction_totals`:
-  - **Ventas**: suma de ingresos;
-  - **Costos y gastos**: suma de gastos;
-  - **Utilidad**: ventas − costos y gastos.
-- Traspasos y ajustes no cuentan.
-- Últimos 5 movimientos. Sin gráficas (SPEC 11).
+Sobre el mes actual en America/Bogota. Traspasos y ajustes no son ventas ni
+costos.
+
+- Tarjeta "Salud del negocio" arriba: score, banda, variación y las 3
+  recomendaciones principales no ocultas.
+- Tarjetas, con `monthly_totals`:
+
+| Tarjeta          | Cálculo                                               | Sin datos                     |
+| ---------------- | ----------------------------------------------------- | ----------------------------- |
+| Ventas / Costos  | Suma de ingresos / gastos; variación % vs. mes previo | variación "—" si anterior = 0 |
+| Utilidad         | ventas − costos; variación como diferencia en dinero  | diferencia contra 0           |
+| Margen           | utilidad / ventas × 100, puede ser negativo           | "—" si ventas = 0             |
+| Saldo en cuentas | Σ `account_balances.balance` de las cuentas activas   | `$ 0`                         |
+
+- La variación de costos usa color invertido: subir es malo.
+- Barras de ventas vs. costos de los últimos 6 meses (meses vacíos en cero) y
+  dona de costos y gastos por categoría del mes (top 6 + "Otras").
+- Últimos 5 movimientos.
+- Sin movimientos: "Registra tu primera venta" con el botón de nuevo
+  movimiento.
 
 ### Borrado con periodo de gracia
 
@@ -1293,6 +1309,144 @@ score y recomendaciones de Empresa llegan en el SPEC 11.
 - Las actions resuelven el espacio con `requireWritableWorkspace(id)`, que
   exige dueño y sin marca antes de escribir.
 - Nada usa la `service_role`.
+
+## Empresa: flujo de caja, reportes y score
+
+Flujo de caja, Reportes y Recomendaciones de cada empresa. Todo se arma con lo
+registrado: movimientos y saldos de cuentas (SPEC 08c). No hay cuentas por
+cobrar ni por pagar.
+
+### Flujo de caja
+
+Página `/dashboard/business/[id]/cash-flow`. Usa el selector de periodo de
+Reportes (mes, trimestre, año o rango de hasta 24 meses); por defecto, el año
+actual.
+
+| Columna                    | Cálculo                                                              |
+| -------------------------- | -------------------------------------------------------------------- |
+| Entradas                   | ventas del mes (`monthly_totals.income`), con o sin cuenta           |
+| Salidas                    | costos y gastos del mes (`monthly_totals.expense`), con o sin cuenta |
+| Neto                       | entradas − salidas                                                   |
+| Saldo en cuentas al cierre | `account_monthly_balances` del mes                                   |
+
+- `account_monthly_balances` suma, al fin de cada mes, las cuentas **activas
+  hoy**: el saldo inicial si la cuenta se creó (en Bogotá) hasta ese día, más
+  ingresos − gastos con cuenta, ± traspasos y + ajustes hasta ese día. Mismas
+  reglas que `account_balances`, así que el cierre del mes actual coincide con
+  "Saldo en cuentas" de la página Cuentas cuando no hay movimientos futuros.
+- Traspasos y ajustes no son entradas ni salidas, pero sí mueven el saldo.
+- El neto y la variación del saldo no cuadran cuando hay movimientos sin
+  cuenta o ajustes. La página avisa "N movimientos del periodo no tienen
+  cuenta y no mueven el saldo" con un enlace a esos movimientos.
+- Gráfica de barras de entradas y salidas con línea de saldo al cierre, tabla
+  mes a mes y saldo a hoy de cada cuenta activa con el total.
+
+### Reportes de Empresa
+
+Página `/dashboard/business/[id]/reports`: la misma de Personal (SPEC 03) con
+"Ventas" y "Costos y gastos". El toggle arranca en costos y gastos y las filas
+de la tabla abren los Movimientos de la empresa.
+
+### Periodo de un mes
+
+Mismas definiciones que el score de Personal (ventana, meses cerrados,
+semanas de ventana, referencia), con ingresos = ventas y gastos = costos y
+gastos. Además:
+
+| Concepto               | Definición                                                                  |
+| ---------------------- | --------------------------------------------------------------------------- |
+| Costo promedio         | `Σ costos de los meses cerrados (hasta 3) / número de meses cerrados`       |
+| Saldo en cuentas       | `account_monthly_balances` al fin de `M`                                    |
+| Trimestre reciente     | Los 3 meses cerrados anteriores a `M`                                       |
+| Trimestre previo       | Los 3 meses cerrados anteriores al trimestre reciente                       |
+| Meses cerrados del año | Hasta 6 meses cerrados anteriores a `M`, desde el mes del primer movimiento |
+
+Datos suficientes: ventas de la ventana > 0 y primer movimiento de hace al
+menos 30 días. Los motivos son "Registra tus ventas" y "Necesitamos 30 días de
+registros (faltan N días)".
+
+### Factores y pesos
+
+Se calcula al vuelo, sin `score_snapshots`, con la mecánica del score de
+Personal (`src/features/score/curves.ts`): interpolación lineal con tope en
+los extremos, exclusión y reescalado, bandas, variación e histórico de 12
+meses. Los factores y reglas están en `src/features/business-score/`.
+
+| Factor                  | Peso | Dato                                                           | Curva                               | Excluido si                                       |
+| ----------------------- | ---- | -------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------- |
+| Margen neto             | 30   | `(ventas − costos) / ventas` de la ventana                     | ≤ 0 % → 0; ≥ 20 % → 100             | nunca                                             |
+| Liquidez                | 25   | `max(saldo en cuentas, 0) / costo promedio`, en meses          | 0 → 0; ≥ 3 → 100                    | sin meses cerrados o costo promedio 0             |
+| Crecimiento de ventas   | 15   | `(ventas del trimestre reciente − previo) / ventas del previo` | ≤ −20 % → 0; 0 % → 50; ≥ 20 % → 100 | menos de 6 meses cerrados o ventas del previo = 0 |
+| Meses con utilidad      | 15   | % de meses cerrados del año con ventas > costos                | 0 % → 0; 100 % → 100                | sin meses cerrados                                |
+| Concentración de costos | 10   | % de los costos de la ventana en la categoría de mayor costo   | ≤ 30 % → 100; ≥ 70 % → 0            | costos de la ventana = 0                          |
+| Regularidad             | 5    | semanas de ventana con ≥ 1 movimiento / semanas de ventana     | 0 % → 0; 100 % → 100                | nunca                                             |
+
+- **Score:** `round(Σ (peso × puntos) / Σ pesos incluidos)`. Bandas iguales a
+  Personal: Débil, Regular, Bueno y Excelente.
+- **Liquidez** usa el saldo real en cuentas (saldos iniciales y ajustes
+  incluidos), no el balance acumulado.
+- **Crecimiento** compara trimestres cerrados: el mes en curso, parcial, haría
+  caer el crecimiento cada inicio de mes.
+
+Ejemplo: hoy 31 oct 2026, primer movimiento el 1 de abril, ventas de
+9.000.000 de abril a junio y 10.000.000 de julio a octubre, costos de
+8.500.000 cada mes ("Costo de ventas" 60 %), saldo en cuentas de 12.750.000 y
+movimientos cada semana. Margen 15 % → 75; liquidez 1,5 meses → 50;
+crecimiento +11,11 % → 77,78; meses con utilidad 6 de 6 → 100; concentración
+60 % → 25; regularidad → 100. Score **69, Bueno**.
+
+### Reglas de recomendación
+
+Se evalúan sobre hoy y el mes actual, aunque el score esté "Sin datos
+suficientes". Orden, "Ocultar este mes" y "Mostrar de nuevo" iguales a
+Personal, sobre `dismissed_recommendations` de la empresa.
+
+| Regla                  | Condición                                                                                                                            | Severidad | Enlace                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------- | ---------------------------------- |
+| `loss_month`           | Último mes cerrado con costos > ventas                                                                                               | alta      | Reportes de ese mes                |
+| `negative_account`     | Cuenta activa con saldo a hoy < 0                                                                                                    | alta      | Cuentas                            |
+| `low_liquidity`        | Factor liquidez incluido en el mes actual y < 1 mes                                                                                  | alta      | Flujo de caja                      |
+| `sales_drop`           | Con 3 meses cerrados antes del último cerrado: ventas del último cerrado ≤ 80 % de su promedio (> 0)                                 | media     | Reportes de ese mes, ventas        |
+| `low_margin`           | Ventas de la ventana > 0 y margen neto de la ventana < 10 %                                                                          | media     | Reportes                           |
+| `cost_growth`          | Con 3 meses completos antes del último cerrado: categoría ≥ 130 % de su promedio de esos meses y diferencia ≥ 5 % del costo promedio | media     | Movimientos de esa categoría y mes |
+| `client_concentration` | Un cliente (`counterparty_totals` de las ventas de la ventana) suma ≥ 50 % de las ventas de la ventana                               | media     | Movimientos de ese cliente, ventas |
+| `cost_concentration`   | Una categoría suma ≥ 50 % de los costos de la ventana                                                                                | baja      | Reportes de costos                 |
+| `missing_accounts`     | Mes actual con movimientos y `(ventas + costos sin cuenta) / (ventas + costos)` ≥ 30 %                                               | baja      | Movimientos sin cuenta             |
+| `irregular_records`    | Regularidad del mes actual < 50 %, solo con datos suficientes. Clave y texto compartidos con Personal                                | baja      | Movimientos                        |
+
+- `client_concentration` agrupa clientes por `lower(btrim())`: "Café Sol" y
+  "café sol " son el mismo. Otra ortografía queda separada; clientes como
+  entidad van en otro spec.
+- En comercio, "Costo de ventas" suele dominar los costos. Por eso la
+  concentración pesa 10 y su regla es de severidad baja. Los umbrales se
+  pueden revisar con datos reales.
+
+### Aproximaciones
+
+- El estado archivado de las cuentas se toma con su **valor actual**:
+  archivar una cuenta cambia el saldo en cuentas de meses pasados. No hay
+  `archived_at` histórico.
+- Movimientos sin cuenta suman en ventas, costos, entradas y salidas, pero no
+  en el saldo en cuentas.
+
+### Estados vacíos
+
+- Empresa sin movimientos: Resumen, Flujo de caja, Reportes y Recomendaciones
+  muestran "Registra tu primera venta" con el botón de nuevo movimiento.
+- Periodo sin movimientos: "No hay movimientos en este periodo".
+- Sin recomendaciones activas: "Todo en orden por ahora".
+- Score sin datos: los motivos.
+
+### Seguridad
+
+- `account_monthly_balances` y `counterparty_totals` son `security invoker`,
+  `stable` y `search_path = ''`. Solo las ejecuta `authenticated`; con una
+  empresa ajena devuelven ceros o vacío.
+- Ocultar o mostrar una recomendación en una empresa marcada para borrar falla
+  por RLS (`is_workspace_writable`). Una regla de Personal sobre una empresa,
+  o al revés, es un error de validación y no escribe.
+- Ocultar en Empresa no oculta nada en Personal: las filas son por
+  `workspace_id`.
 
 ## Specs
 

@@ -1,6 +1,6 @@
 # SPEC 11 — Empresa: flujo de caja, reportes, score y recomendaciones
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 03, SPEC 07, SPEC 08c, SPEC 10
 > **Fecha:** 2026-10-31
 > **Objetivo:** Que el usuario vea en cada empresa su flujo de caja mensual, utilidad y margen, reportes por periodo y categoría, y un score de salud de 0 a 100 con recomendaciones basadas en reglas propias de un negocio.
@@ -253,42 +253,42 @@ En `src/features/business-score/recommendations.ts`. Se evalúan sobre hoy y el 
 
 ## Criterios de aceptación
 
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
-- [ ] `pnpm install --frozen-lockfile` funciona y no hay dependencias nuevas.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] `pnpm install --frozen-lockfile` funciona y no hay dependencias nuevas.
 - [ ] `supabase db reset` aplica las migraciones y `src/types/database.ts` incluye `account_monthly_balances` y `counterparty_totals`.
-- [ ] Flujo de caja, Reportes y Recomendaciones de Empresa ya no muestran "Próximamente".
-- [ ] Con ventas de 10.000.000 y costos de 8.500.000 en el mes actual, el Resumen de Empresa muestra Utilidad `$ 1.500.000` y Margen `15 %`.
-- [ ] Sin ventas en el mes, Margen muestra "—".
-- [ ] La gráfica de 6 meses del Resumen muestra 6 grupos de barras aunque haya meses sin movimientos.
-- [ ] Flujo de caja sin parámetros muestra los 12 meses del año actual con entradas, salidas, neto y saldo al cierre.
-- [ ] Un traspaso entre dos cuentas de la empresa no cambia entradas, salidas ni el saldo total al cierre.
-- [ ] Un ajuste de saldo de +200.000 sube el saldo al cierre de su mes en 200.000 y no cambia entradas ni salidas.
-- [ ] Una venta sin cuenta suma en entradas, no mueve el saldo y hace aparecer el aviso de movimientos sin cuenta.
-- [ ] Una cuenta creada en septiembre con saldo inicial 1.000.000 no suma ese saldo al cierre de agosto.
-- [ ] El saldo al cierre del mes actual coincide con "Saldo en cuentas" de la página Cuentas cuando no hay movimientos futuros.
-- [ ] Reportes de Empresa muestra "Ventas" y "Costos y gastos" en el toggle y la tabla. Clic en una fila abre Movimientos de la empresa, no de Personal.
-- [ ] Reportes de Personal se ve y funciona igual que antes de este spec.
-- [ ] Con los datos del "Ejemplo de score", Recomendaciones de Empresa muestra 69, "Bueno", y los factores con 75, 50, 77,78 (o 78 en la UI), 100, 25 y 100 puntos.
-- [ ] Con los datos del ejemplo, la única recomendación es `cost_concentration` con "Costo de ventas es el 60 % de tus costos de los últimos 3 meses".
-- [ ] Una empresa con 4 meses cerrados excluye "Crecimiento de ventas" con su motivo y reescala los pesos.
-- [ ] Una empresa cuyo primer movimiento es de hace 10 días muestra "Sin datos suficientes" con "Necesitamos 30 días de registros (faltan 20 días)".
-- [ ] Una empresa con 60 días de solo costos muestra "Sin datos suficientes" con "Registra tus ventas".
-- [ ] Un saldo en cuentas negativo da 0 puntos en liquidez.
-- [ ] Un mes cerrado con costos > ventas genera `loss_month` con enlace a Reportes de ese mes.
-- [ ] Una cuenta activa con saldo negativo genera `negative_account` con enlace a Cuentas.
-- [ ] Liquidez de 0,6 meses genera `low_liquidity`; de 1,2 meses no.
-- [ ] Ventas del último mes cerrado al 70 % del promedio de los 3 anteriores generan `sales_drop`; al 85 % no.
-- [ ] Margen de la ventana de 6 % genera `low_margin`; de 12 % no.
-- [ ] Una categoría de costo con 1.500.000 de promedio y 1.950.000 en el último mes cerrado, con costo promedio de 8.500.000, genera `cost_growth` con "+30 %".
-- [ ] Ventas a "Café Sol" y "café sol " que suman el 62 % de la ventana generan una sola `client_concentration` con 62 %.
-- [ ] El 45 % del monto del mes sin cuenta genera `missing_accounts` con enlace a Movimientos `account=none`; el 20 % no.
-- [ ] "Ocultar este mes" en una recomendación de Empresa la mueve a "Ocultas este mes" y la saca del Resumen de Empresa. "Mostrar de nuevo" la devuelve.
-- [ ] Ocultar una recomendación en Empresa no oculta nada en Personal, y viceversa.
-- [ ] `dismissRecommendation` con una regla de Personal sobre una empresa (por ejemplo `budget_exceeded`) devuelve un error de validación y no escribe.
-- [ ] Con la empresa marcada para borrar, insertar en `dismissed_recommendations` con su `id` desde SQL con la sesión del usuario falla.
-- [ ] Registrar una venta desde el registro rápido actualiza el Resumen, el Flujo de caja y el score de la empresa sin recargar a mano.
-- [ ] Un usuario A que llama `account_monthly_balances` o `counterparty_totals` con una empresa de B recibe ceros o vacío. Un cliente `anon` no puede ejecutarlas.
-- [ ] El score, las recomendaciones y los reportes de Personal funcionan igual que antes de este spec.
+- [x] Flujo de caja, Reportes y Recomendaciones de Empresa ya no muestran "Próximamente".
+- [x] Con ventas de 10.000.000 y costos de 8.500.000 en el mes actual, el Resumen de Empresa muestra Utilidad `$ 1.500.000` y Margen `15 %`.
+- [x] Sin ventas en el mes, Margen muestra "—".
+- [x] La gráfica de 6 meses del Resumen muestra 6 grupos de barras aunque haya meses sin movimientos.
+- [x] Flujo de caja sin parámetros muestra los 12 meses del año actual con entradas, salidas, neto y saldo al cierre.
+- [x] Un traspaso entre dos cuentas de la empresa no cambia entradas, salidas ni el saldo total al cierre.
+- [x] Un ajuste de saldo de +200.000 sube el saldo al cierre de su mes en 200.000 y no cambia entradas ni salidas.
+- [x] Una venta sin cuenta suma en entradas, no mueve el saldo y hace aparecer el aviso de movimientos sin cuenta.
+- [x] Una cuenta creada en septiembre con saldo inicial 1.000.000 no suma ese saldo al cierre de agosto.
+- [x] El saldo al cierre del mes actual coincide con "Saldo en cuentas" de la página Cuentas cuando no hay movimientos futuros.
+- [x] Reportes de Empresa muestra "Ventas" y "Costos y gastos" en el toggle y la tabla. Clic en una fila abre Movimientos de la empresa, no de Personal.
+- [x] Reportes de Personal se ve y funciona igual que antes de este spec.
+- [x] Con los datos del "Ejemplo de score", Recomendaciones de Empresa muestra 69, "Bueno", y los factores con 75, 50, 77,78 (o 78 en la UI), 100, 25 y 100 puntos.
+- [x] Con los datos del ejemplo, la única recomendación es `cost_concentration` con "Costo de ventas es el 60 % de tus costos de los últimos 3 meses".
+- [x] Una empresa con 4 meses cerrados excluye "Crecimiento de ventas" con su motivo y reescala los pesos.
+- [x] Una empresa cuyo primer movimiento es de hace 10 días muestra "Sin datos suficientes" con "Necesitamos 30 días de registros (faltan 20 días)".
+- [x] Una empresa con 60 días de solo costos muestra "Sin datos suficientes" con "Registra tus ventas".
+- [x] Un saldo en cuentas negativo da 0 puntos en liquidez.
+- [x] Un mes cerrado con costos > ventas genera `loss_month` con enlace a Reportes de ese mes.
+- [x] Una cuenta activa con saldo negativo genera `negative_account` con enlace a Cuentas.
+- [x] Liquidez de 0,6 meses genera `low_liquidity`; de 1,2 meses no.
+- [x] Ventas del último mes cerrado al 70 % del promedio de los 3 anteriores generan `sales_drop`; al 85 % no.
+- [x] Margen de la ventana de 6 % genera `low_margin`; de 12 % no.
+- [x] Una categoría de costo con 1.500.000 de promedio y 1.950.000 en el último mes cerrado, con costo promedio de 8.500.000, genera `cost_growth` con "+30 %".
+- [x] Ventas a "Café Sol" y "café sol " que suman el 62 % de la ventana generan una sola `client_concentration` con 62 %.
+- [x] El 45 % del monto del mes sin cuenta genera `missing_accounts` con enlace a Movimientos `account=none`; el 20 % no.
+- [x] "Ocultar este mes" en una recomendación de Empresa la mueve a "Ocultas este mes" y la saca del Resumen de Empresa. "Mostrar de nuevo" la devuelve.
+- [x] Ocultar una recomendación en Empresa no oculta nada en Personal, y viceversa.
+- [x] `dismissRecommendation` con una regla de Personal sobre una empresa (por ejemplo `budget_exceeded`) devuelve un error de validación y no escribe.
+- [x] Con la empresa marcada para borrar, insertar en `dismissed_recommendations` con su `id` desde SQL con la sesión del usuario falla.
+- [x] Registrar una venta desde el registro rápido actualiza el Resumen, el Flujo de caja y el score de la empresa sin recargar a mano.
+- [x] Un usuario A que llama `account_monthly_balances` o `counterparty_totals` con una empresa de B recibe ceros o vacío. Un cliente `anon` no puede ejecutarlas.
+- [x] El score, las recomendaciones y los reportes de Personal funcionan igual que antes de este spec.
 
 ## Decisiones
 

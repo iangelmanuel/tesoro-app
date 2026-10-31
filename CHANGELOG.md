@@ -110,6 +110,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `getWorkspace`, `getBusinessWorkspaces` and `requireWritableWorkspace` in `src/features/workspaces/queries.ts`, plus `workspaceBasePath` / `workspaceTransactionsPath` and `revalidateWorkspacePages`.
 - `SITE.businessLimit`, `SITE.workspaceDeletionGraceDays`, `SITE.businessSectors`, and the `store`, `package`, `users` and `megaphone` category icons.
 - "Espacio Empresa" section in `docs/producto.md`.
+- Migration `business_reports_and_score`: the 9 business rule keys in the `dismissed_recommendations` check, and the `account_monthly_balances` (accounts balance at each month end, active accounts only) and `counterparty_totals` (totals per customer or supplier, grouped by `lower(btrim())`) RPCs, `security invoker` and executable only by `authenticated`.
+- Business cash flow page at `/dashboard/business/[id]/cash-flow`: period picker (current year by default), inflows and outflows bars with the accounts balance line at each month end, a month-by-month table (inflows, outflows, net, closing balance), today's balance per active account and a notice for transactions without an account.
+- Business reports page at `/dashboard/business/[id]/reports`, the Personal reports page with "Ventas" and "Costos y gastos" labels and links to the business transactions.
+- Business summary: change vs. the previous month on sales, costs and profit, margin and accounts balance cards, a 6-month sales vs. costs chart and a costs-by-category donut.
+- Business score from 0 to 100 with 6 weighted factors (net margin, liquidity, sales growth, profitable months, cost concentration and regularity), computed on the fly like the Personal score, with a 12-month history and "Sin datos suficientes".
+- 10 business recommendation rules (`loss_month`, `negative_account`, `low_liquidity`, `sales_drop`, `low_margin`, `cost_growth`, `client_concentration`, `cost_concentration`, `missing_accounts`, `irregular_records`) with "Ocultar este mes" / "Mostrar de nuevo".
+- Business score and recommendations page at `/dashboard/business/[id]/recommendations` and a "Salud del negocio" card on the business summary.
+- "Registra tu primera venta" empty state on the business summary, cash flow, reports and recommendations pages.
+- "Empresa: flujo de caja, reportes y score" section in `docs/producto.md`.
 
 ### Changed
 
@@ -140,6 +149,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The quick-add button also shows on `/dashboard/business/[id]/*` and records the transaction in that business.
 - `deletionDate()` takes the grace days, so account and business deletion share it.
 - Transactions filters, pagination, empty states, recent transactions and account cards take the workspace's transactions path.
+- The reports page content is now `ReportsView`, shared by Personal and Business. The period picker, type toggle and category table take the workspace's paths, and the trend chart takes the series labels.
+- `parseReportParams` takes an optional default period (month by default).
+- The score curves, bands, window, weeks and weighting moved to `src/features/score/curves.ts`. `FactorResult`, `ScoreResult` and `Recommendation` take the workspace's key type, and the score components take the factor labels.
+- `dismissRecommendation` and `restoreRecommendation` take the workspace id, resolve it with `requireWritableWorkspace`, validate the rule against that workspace type's keys and revalidate its pages. Personal passes its own id and behaves as before.
+- `dismissed_recommendations` write policies use `is_workspace_writable` instead of `is_workspace_owner`.
+- The variation helpers of the summary cards moved to `src/features/reports/change.ts`.
 
 ### Fixed
 

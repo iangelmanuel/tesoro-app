@@ -1,14 +1,9 @@
 import Link from "next/link"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  buttonVariants
-} from "@heroui/react"
+import { Card, CardContent, buttonVariants } from "@heroui/react"
 import { CreditCard } from "lucide-react"
+import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardEmpty } from "@/components/dashboard/empty-state"
+import { HelpHint } from "@/components/dashboard/help-hint"
 import { formatPercent } from "@/features/budgets/progress"
 import { todayISO } from "@/libs/dates"
 import { formatCurrency } from "@/libs/format"
@@ -39,47 +34,41 @@ export async function DebtsCard({ workspaceId, currency }: DebtsCardProps) {
 
   return (
     <Card>
-      <div className="flex items-start justify-between gap-2">
-        <CardHeader>
-          <CardTitle>Deudas</CardTitle>
-          <CardDescription>Tarjetas y préstamos activos</CardDescription>
-        </CardHeader>
-        <div className="shrink-0">
-          <Link
-            href={DEBTS_PATH}
-            className={buttonVariants({ variant: "outline", size: "sm" })}
-          >
-            Ver todas
-          </Link>
-        </div>
-      </div>
+      <CardHeading
+        title="Deudas"
+        href={DEBTS_PATH}
+        linkLabel="Ver todas"
+        linkContext="las deudas"
+      />
       <CardContent className="flex flex-col gap-4">
         {active.length === 0 ? (
-          <div className="flex flex-col items-center gap-3">
-            <CardEmpty
-              icon={CreditCard}
-              message="No tienes deudas activas"
-            />
-            <Link
-              href={DEBTS_PATH}
-              className={buttonVariants({ variant: "ghost", size: "sm" })}
-            >
-              Registrar deuda
-            </Link>
-          </div>
+          <CardEmpty
+            icon={CreditCard}
+            message="No tienes deudas activas"
+            hint="Registra tarjetas y préstamos para ver qué pagar y cuándo."
+            action={
+              <Link
+                href={DEBTS_PATH}
+                className={buttonVariants({ variant: "secondary", size: "sm" })}
+              >
+                Registrar deuda
+              </Link>
+            }
+          />
         ) : (
           <>
             <dl className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
                 <dt className="text-sm text-muted">Deuda total</dt>
-                <dd className="text-xl font-semibold tabular-nums">
+                <dd className="text-xl font-semibold tracking-tight tabular-nums">
                   {formatCurrency(totalDebt(debts), currency)}
                 </dd>
               </div>
               {utilization !== null && (
                 <div className="flex flex-col gap-1">
-                  <dt className="text-sm text-muted">
+                  <dt className="flex items-center gap-1 text-sm text-muted">
                     Utilización de tarjetas
+                    <HelpHint topic="utilization" />
                   </dt>
                   <dd className="flex flex-wrap items-center gap-2 text-xl font-semibold tabular-nums">
                     {formatPercent(utilization)}

@@ -335,26 +335,33 @@ Páginas `/dashboard/personal` (Resumen) y `/dashboard/personal/reports`
 
 ### Métricas del Resumen
 
-Siempre sobre el mes actual. "Anterior" es el mes anterior completo.
+Siempre sobre el mes actual. "Anterior" es el mes anterior completo. El título
+de la página es el saludo del header ("Buenas tardes, Angel").
 
-| Tarjeta                  | Cálculo                                                | Sin datos                     |
-| ------------------------ | ------------------------------------------------------ | ----------------------------- |
-| Ingresos / Gastos        | Total del mes; variación % vs. anterior                | Variación "—" si anterior = 0 |
-| Balance                  | Ingresos − gastos; variación como diferencia en dinero | Diferencia contra 0           |
-| Tasa de ahorro           | Balance / ingresos × 100, puede ser negativa           | "—" si ingresos = 0           |
-| Gasto promedio diario    | Gastos del mes / días transcurridos (hoy incluido)     | `$ 0`                         |
-| Proyección de gasto      | Promedio diario × días del mes                         | `$ 0`                         |
-| Categoría de mayor gasto | Categoría con más gasto en el mes                      | "—"                           |
-| Balance acumulado        | Ingresos − gastos de toda la historia                  | `$ 0`                         |
-| Movimientos del mes      | Número de movimientos del mes                          | `0`                           |
+| KPI              | Cálculo                                        | Badge de variación                        |
+| ---------------- | ---------------------------------------------- | ----------------------------------------- |
+| Ingresos del mes | Total del mes                                  | % vs. anterior; subir es bueno            |
+| Gastos del mes   | Total del mes                                  | % vs. anterior; subir es malo             |
+| Balance del mes  | Ingresos − gastos                              | % vs. anterior; subir es bueno            |
+| Saldo acumulado  | Ingresos − gastos de toda la historia, con (i) | % vs. el saldo al cierre del mes anterior |
 
-- En gastos el color de la variación se invierte: subir es rojo y bajar es
-  verde.
-- Debajo de las tarjetas: ingresos vs. gastos de los últimos 6 meses (incluido
-  el actual), dona de gastos por categoría del mes (top 6 + "Otras") y los
-  últimos 5 movimientos, con enlace a Movimientos.
-- Entre las tarjetas y las gráficas: "Próximos pagos" y "Presupuestos en
-  riesgo" (ver [Gastos fijos y presupuestos](#gastos-fijos-y-presupuestos)).
+- Sin movimientos en el mes anterior, o con base 0, no hay badge. El color del
+  badge depende del significado, no del signo (`StatCard`, `docs/ui.md`).
+- Debajo, en orden:
+  1. Ingresos vs. gastos de los últimos 6 meses (incluido el actual), con el
+     balance de esos meses como cifra principal; al lado, la columna con
+     "Salud financiera" (score con (i), banda, variación y 3
+     recomendaciones) y "Saldo en cuentas" (total y las 4 cuentas de mayor
+     saldo).
+  2. Los últimos 5 movimientos, con enlace a Movimientos.
+  3. "Próximos pagos", "Presupuestos en riesgo", "Metas de ahorro" y "Deudas"
+     (con (i) en la utilización), dos por fila (ver
+     [Gastos fijos y presupuestos](#gastos-fijos-y-presupuestos)).
+- En SPEC 14 salieron del Resumen, por "claridad antes que cantidad":
+  - la dona por categoría, que sigue en Reportes;
+  - la tasa de ahorro, que pasa a las KPI de Reportes;
+  - el gasto promedio diario, la proyección de gasto, la categoría de mayor
+    gasto y el conteo de movimientos del mes.
 
 ### Periodos de Reportes
 

@@ -1,4 +1,8 @@
 import { Chip, cn } from "@heroui/react"
+import {
+  TONE_BADGE_CLASSES as TONE_BADGE,
+  TONE_BAR_CLASSES as TONE_BAR
+} from "@/components/dashboard/tone"
 import type { OccurrenceTone } from "@/features/recurring-expenses/occurrences"
 import {
   PAYMENT_STATUS,
@@ -8,18 +12,17 @@ import {
 } from "../calculations"
 
 const TONE_BADGE_CLASSES: Record<OccurrenceTone, string> = {
-  success:
-    "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-  danger: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
-  warning: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-  neutral: "bg-default text-muted"
+  success: TONE_BADGE.success,
+  danger: TONE_BADGE.danger,
+  warning: TONE_BADGE.warning,
+  neutral: TONE_BADGE.neutral
 }
 
 const TONE_BAR_CLASSES: Record<OccurrenceTone, string> = {
-  success: "bg-emerald-500",
-  danger: "bg-rose-500",
-  warning: "bg-amber-500",
-  neutral: "bg-muted"
+  success: TONE_BAR.success,
+  danger: TONE_BAR.danger,
+  warning: TONE_BAR.warning,
+  neutral: TONE_BAR.neutral
 }
 
 export function ToneBadge({
@@ -57,11 +60,13 @@ interface DebtBarProps {
   percent: number
   /** Sin tono, la barra usa el color primario */
   tone?: OccurrenceTone
+  /** Nombre accesible de la barra ("Mercado: 85 %") */
+  label?: string
   className?: string
 }
 
 /** Barra de utilización o de avance, con tope visual en 100 % */
-export function DebtBar({ percent, tone, className }: DebtBarProps) {
+export function DebtBar({ percent, tone, label, className }: DebtBarProps) {
   const width = Math.min(percent, 100)
 
   return (
@@ -70,6 +75,7 @@ export function DebtBar({ percent, tone, className }: DebtBarProps) {
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={width}
+      aria-label={label}
       className={cn(
         "flex h-2 w-full overflow-hidden rounded-full bg-default",
         className
@@ -77,7 +83,7 @@ export function DebtBar({ percent, tone, className }: DebtBarProps) {
     >
       <div
         className={cn(
-          "h-full transition-all",
+          "h-full transition-all motion-reduce:transition-none",
           tone ? TONE_BAR_CLASSES[tone] : "bg-accent"
         )}
         style={{ width: `${width}%` }}

@@ -1,14 +1,7 @@
 import type { Route } from "next"
-import Link from "next/link"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  buttonVariants
-} from "@heroui/react"
+import { Card, CardContent } from "@heroui/react"
 import { CircleCheck } from "lucide-react"
+import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { BUDGETS_PATH } from "@/features/budgets/tabs"
@@ -42,25 +35,18 @@ export async function UpcomingPaymentsCard({
 
   return (
     <Card>
-      <div className="flex items-start justify-between gap-2">
-        <CardHeader>
-          <CardTitle>Próximos pagos</CardTitle>
-          <CardDescription>Gastos fijos pendientes</CardDescription>
-        </CardHeader>
-        <div className="shrink-0">
-          <Link
-            href={RECURRING_HREF}
-            className={buttonVariants({ variant: "outline", size: "sm" })}
-          >
-            Ver todos
-          </Link>
-        </div>
-      </div>
+      <CardHeading
+        title="Próximos pagos"
+        href={RECURRING_HREF}
+        linkLabel="Ver todos"
+        linkContext="los gastos fijos"
+      />
       <CardContent>
         {pending.length === 0 && (
           <CardEmpty
             icon={CircleCheck}
             message="No tienes pagos pendientes"
+            hint="Tus gastos fijos aparecen aquí antes de vencer."
           />
         )}
         <ul className="flex flex-col divide-y">

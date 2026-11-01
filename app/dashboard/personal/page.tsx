@@ -1,14 +1,7 @@
 import { Suspense } from "react"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Skeleton
-} from "@heroui/react"
-import { format } from "date-fns"
-import { es } from "date-fns/locale"
+import { Skeleton } from "@heroui/react"
+import { ChartCard } from "@/components/charts/chart-card"
+import { StatCard } from "@/components/dashboard/stat-card"
 import { SITE } from "@/config/site"
 import { AccountsCard } from "@/features/accounts/components/accounts-card"
 import { getAccountBalances } from "@/features/accounts/queries"
@@ -17,14 +10,13 @@ import { getCategories } from "@/features/categories/queries"
 import { DebtsCard } from "@/features/debts/components/debts-card"
 import { GoalsCard } from "@/features/goals/components/goals-card"
 import { UpcomingPaymentsCard } from "@/features/recurring-expenses/components/upcoming-payments-card"
-import { buildCategorySlices } from "@/features/reports/chart-data"
-import { CategoryDonutChart } from "@/features/reports/components/category-donut-chart"
-import { IncomeExpenseChart } from "@/features/reports/components/income-expense-chart"
+import {
+  IncomeExpenseChart,
+  incomeExpenseLegend
+} from "@/features/reports/components/income-expense-chart"
 import { NoPeriodData } from "@/features/reports/components/no-period-data"
 import { RecentTransactions } from "@/features/reports/components/recent-transactions"
-import { SummaryCards } from "@/features/reports/components/summary-cards"
 import {
-  getCategoryTotals,
   getMonthlyTotals,
   getRecentTransactions,
   getWorkspaceBalance
@@ -32,7 +24,8 @@ import {
 import { ScoreSummaryCard } from "@/features/score/components/score-summary-card"
 import { NoTransactions } from "@/features/transactions/components/transactions-empty"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
-import { currentMonth, monthRange, shiftMonth, todayISO } from "@/libs/dates"
+import { currentMonth, monthRange, shiftMonth } from "@/libs/dates"
+import { formatCurrency } from "@/libs/format"
 import { buildMetadata } from "@/libs/seo"
 
 export const metadata = buildMetadata({
@@ -45,15 +38,14 @@ export const metadata = buildMetadata({
 const TREND_MONTHS = 6
 const RECENT_TRANSACTIONS = 5
 
+// El título (saludo) lo pone el header del dashboard: la página no repite
+// su propio h1
 export default function SummaryPage() {
   return (
-    <section className="flex flex-1 flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Resumen</h1>
-        <p className="text-sm text-muted">
-          Tu panorama financiero personal del mes.
-        </p>
-      </header>
+    <section
+      aria-label="Resumen"
+      className="flex flex-1 flex-col gap-4"
+    >
       {/* La sesión y la fecha de hoy son dinámicas: van dentro de Suspense */}
       <Suspense fallback={<SummarySkeleton />}>
         <SummaryContent />
@@ -65,28 +57,18 @@ export default function SummaryPage() {
 async function SummaryContent() {
   const workspace = await getPersonalWorkspace()
   // Mes actual en America/Bogota, no en la zona del servidor
-  const today = todayISO()
   const month = currentMonth()
-  const { from, to } = monthRange(month)
+  const { to } = monthRange(month)
   const trendFrom = monthRange(shiftMonth(month, -(TREND_MONTHS - 1))).from
-  const monthLabel = format(new Date(`${month}-01T12:00:00`), "MMMM yyyy", {
-    locale: es
-  })
 
-  const [monthly, expenseByCategory, accumulatedBalance, recent] =
-    await Promise.all([
-      getMonthlyTotals(workspace.id, trendFrom, to),
-      getCategoryTotals(workspace.id, from, to, "expense"),
-      getWorkspaceBalance(workspace.id),
-      getRecentTransactions(workspace.id, RECENT_TRANSACTIONS)
-    ])
+  // Una sola llamada da la gráfica de 6 meses y el mes anterior de las KPI
+  const [monthly, accumulatedBalance, recent] = await Promise.all([
+    getMonthlyTotals(workspace.id, trendFrom, to),
+    getWorkspaceBalance(workspace.id),
+    getRecentTransactions(workspace.id, RECENT_TRANSACTIONS)
+  ])
 
-  // monthly_totals rellena los meses vacíos: el último es el actual y el
-  // penúltimo el anterior
-  const current = monthly[monthly.length - 1]
-  const previous = monthly[monthly.length - 2]
-
-  // Sin movimientos recientes el espacio está vacío: se invita a registrar
+  // Sin movimientos el espacio está vacío: se invita a registrar
   if (recent.length === 0) {
     const [categories, accounts] = await Promise.all([
       getCategories(workspace.id),
@@ -101,135 +83,153 @@ async function SummaryContent() {
     )
   }
 
+  // monthly_totals rellena los meses vacíos: el último es el actual y el
+  // penúltimo el anterior. Sin movimientos el mes anterior, no hay badge
+  const current = monthly[monthly.length - 1]
+  const previousMonth = monthly[monthly.length - 2]
+  const previous = previousMonth.txCount > 0 ? previousMonth : null
+  // Saldo acumulado al cierre del mes anterior = el de hoy sin este mes
+  const previousAccumulated = accumulatedBalance - current.balance
+  const hadHistory = previousAccumulated !== 0 || previous !== null
+
   const isEmptyTrend = monthly.every((row) => row.txCount === 0)
+  const trendBalance = monthly.reduce((sum, row) => sum + row.balance, 0)
+  const currency = workspace.currency
 
   return (
     <>
-      <Suspense fallback={<Skeleton className="h-56" />}>
-        <ScoreSummaryCard workspaceId={workspace.id} />
-      </Suspense>
-      <SummaryCards
-        current={current}
-        previous={previous}
-        topCategory={expenseByCategory[0] ?? null}
-        accumulatedBalance={accumulatedBalance}
-        today={today}
-        currency={workspace.currency}
-      />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Suspense fallback={<Skeleton className="h-36" />}>
-          <AccountsCard
-            workspaceId={workspace.id}
-            currency={workspace.currency}
-          />
-        </Suspense>
-        <Suspense fallback={<Skeleton className="h-72" />}>
-          <UpcomingPaymentsCard
-            workspaceId={workspace.id}
-            currency={workspace.currency}
-          />
-        </Suspense>
-        <Suspense fallback={<Skeleton className="h-72" />}>
-          <BudgetsAtRiskCard
-            workspaceId={workspace.id}
-            currency={workspace.currency}
-          />
-        </Suspense>
-        <Suspense fallback={<Skeleton className="h-72" />}>
-          <GoalsCard
-            workspaceId={workspace.id}
-            currency={workspace.currency}
-          />
-        </Suspense>
-        <Suspense fallback={<Skeleton className="h-72" />}>
-          <DebtsCard
-            workspaceId={workspace.id}
-            currency={workspace.currency}
-          />
-        </Suspense>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label="Ingresos del mes"
+          value={current.income}
+          previous={previous?.income}
+          trend="higher-is-better"
+          currency={currency}
+        />
+        <StatCard
+          label="Gastos del mes"
+          value={current.expense}
+          previous={previous?.expense}
+          trend="lower-is-better"
+          currency={currency}
+        />
+        <StatCard
+          label="Balance del mes"
+          value={current.balance}
+          previous={previous?.balance}
+          trend="higher-is-better"
+          currency={currency}
+        />
+        <StatCard
+          label="Saldo acumulado"
+          value={accumulatedBalance}
+          previous={hadHistory ? previousAccumulated : null}
+          trend="higher-is-better"
+          currency={currency}
+          help="accumulatedBalance"
+        />
       </div>
-      <div className="grid gap-4 lg:grid-cols-5">
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>Ingresos vs. gastos</CardTitle>
-            <CardDescription>Últimos {TREND_MONTHS} meses</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isEmptyTrend ? (
-              <NoPeriodData
-                message="No hay movimientos en este periodo"
-                className="h-72"
-              />
-            ) : (
-              <IncomeExpenseChart
-                data={monthly}
-                currency={workspace.currency}
-                className="aspect-auto h-72 w-full"
-              />
-            )}
-          </CardContent>
-        </Card>
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Gastos por categoría</CardTitle>
-            <CardDescription className="first-letter:uppercase">
-              {monthLabel}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {expenseByCategory.length > 0 ? (
-              <CategoryDonutChart
-                slices={buildCategorySlices(expenseByCategory)}
-                currency={workspace.currency}
-                title={`Gastos por categoría de ${monthLabel}`}
-              />
-            ) : (
-              <NoPeriodData
-                message={
-                  current.txCount === 0
-                    ? "No hay movimientos en este periodo"
-                    : "No hay gastos en este periodo"
-                }
-                className="h-72"
-              />
-            )}
-          </CardContent>
-        </Card>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <ChartCard
+          title="Ingresos vs. gastos"
+          figure={formatCurrency(trendBalance, currency)}
+          figureCaption={`de balance en los últimos ${TREND_MONTHS} meses`}
+          legend={isEmptyTrend ? undefined : incomeExpenseLegend()}
+          className="lg:col-span-2"
+        >
+          {isEmptyTrend ? (
+            <NoPeriodData
+              message="No hay movimientos en estos meses"
+              className="h-72"
+            />
+          ) : (
+            <IncomeExpenseChart
+              data={monthly}
+              currency={currency}
+              legend="none"
+              className="aspect-auto h-72 w-full"
+            />
+          )}
+        </ChartCard>
+        <div className="flex flex-col gap-4">
+          <Suspense fallback={<Skeleton className="h-64 rounded-3xl" />}>
+            <ScoreSummaryCard workspaceId={workspace.id} />
+          </Suspense>
+          <Suspense fallback={<Skeleton className="h-48 rounded-3xl" />}>
+            <AccountsCard
+              workspaceId={workspace.id}
+              currency={currency}
+            />
+          </Suspense>
+        </div>
       </div>
+
       <RecentTransactions
         rows={recent}
-        currency={workspace.currency}
+        currency={currency}
       />
+
+      {/* Tarjetas secundarias: dos por fila, sin huérfanas */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Suspense fallback={<Skeleton className="h-64 rounded-3xl" />}>
+          <UpcomingPaymentsCard
+            workspaceId={workspace.id}
+            currency={currency}
+          />
+        </Suspense>
+        <Suspense fallback={<Skeleton className="h-64 rounded-3xl" />}>
+          <BudgetsAtRiskCard
+            workspaceId={workspace.id}
+            currency={currency}
+          />
+        </Suspense>
+        <Suspense fallback={<Skeleton className="h-64 rounded-3xl" />}>
+          <GoalsCard
+            workspaceId={workspace.id}
+            currency={currency}
+          />
+        </Suspense>
+        <Suspense fallback={<Skeleton className="h-64 rounded-3xl" />}>
+          <DebtsCard
+            workspaceId={workspace.id}
+            currency={currency}
+          />
+        </Suspense>
+      </div>
     </>
   )
 }
 
+// Misma estructura que el contenido: 4 KPI, gráfica + columna, tabla y
+// cuatro tarjetas
 function SummarySkeleton() {
   return (
     <>
-      <Skeleton className="h-56" />
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Skeleton className="h-32" />
-        <Skeleton className="h-32" />
-        <Skeleton className="h-32" />
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }, (_, index) => (
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }, (_, index) => (
           <Skeleton
             key={index}
-            className="h-28"
+            className="h-28 rounded-3xl"
           />
         ))}
       </div>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Skeleton className="h-72" />
-        <Skeleton className="h-72" />
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Skeleton className="h-96 rounded-3xl lg:col-span-2" />
+        <div className="flex flex-col gap-4">
+          <Skeleton className="h-64 rounded-3xl" />
+          <Skeleton className="h-28 rounded-3xl" />
+        </div>
       </div>
-      <div className="grid gap-4 lg:grid-cols-5">
-        <Skeleton className="h-96 lg:col-span-3" />
-        <Skeleton className="h-96 lg:col-span-2" />
+      <Skeleton className="h-72 rounded-3xl" />
+      <div className="grid gap-4 md:grid-cols-2">
+        {Array.from({ length: 4 }, (_, index) => (
+          <Skeleton
+            key={index}
+            className="h-64 rounded-3xl"
+          />
+        ))}
       </div>
-      <Skeleton className="h-72 w-full" />
     </>
   )
 }

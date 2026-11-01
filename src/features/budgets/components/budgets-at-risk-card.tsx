@@ -1,14 +1,6 @@
-import Link from "next/link"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Chip,
-  buttonVariants
-} from "@heroui/react"
+import { Card, CardContent, Chip } from "@heroui/react"
 import { ShieldCheck } from "lucide-react"
+import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import { currentMonth } from "@/libs/dates"
@@ -49,27 +41,18 @@ export async function BudgetsAtRiskCard({
 
   return (
     <Card>
-      <div className="flex items-start justify-between gap-2">
-        <CardHeader>
-          <CardTitle>Presupuestos en riesgo</CardTitle>
-          <CardDescription>
-            Cerca del límite o excedidos este mes
-          </CardDescription>
-        </CardHeader>
-        <div className="shrink-0">
-          <Link
-            href={BUDGETS_PATH}
-            className={buttonVariants({ variant: "outline", size: "sm" })}
-          >
-            Ver todos
-          </Link>
-        </div>
-      </div>
+      <CardHeading
+        title="Presupuestos en riesgo"
+        href={BUDGETS_PATH}
+        linkLabel="Ver todos"
+        linkContext="los presupuestos"
+      />
       <CardContent>
         {atRisk.length === 0 && (
           <CardEmpty
             icon={ShieldCheck}
             message="Ningún presupuesto en riesgo"
+            hint="Te avisamos aquí cuando uno pase del 80 %."
           />
         )}
         <ul className="flex flex-col divide-y">
@@ -102,6 +85,7 @@ export async function BudgetsAtRiskCard({
                   spent={row.spent}
                   committed={row.committed}
                   budget={row.budgetAmount}
+                  label={`${row.name}: ${formatPercent(budgetPercent(row.spent, row.budgetAmount))}`}
                 />
                 <p className="text-sm text-muted tabular-nums">
                   {formatCurrency(row.spent, currency)} de{" "}

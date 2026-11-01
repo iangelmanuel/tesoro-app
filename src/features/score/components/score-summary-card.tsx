@@ -1,13 +1,5 @@
-import type { Route } from "next"
-import Link from "next/link"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  buttonVariants
-} from "@heroui/react"
+import { Card, CardContent } from "@heroui/react"
+import { CardHeading } from "@/components/dashboard/card-heading"
 import { SITE } from "@/config/site"
 import { shiftMonth, todayISO } from "@/libs/dates"
 import { computeScore } from "../calculations"
@@ -46,7 +38,7 @@ export async function ScoreSummaryCard({
     <ScoreSummary
       workspaceId={workspaceId}
       title="Salud financiera"
-      description="Tu score y lo más importante por hacer"
+      layout="side"
       href={RECOMMENDATIONS_PATH}
       current={computeScore(inputs, month)}
       previous={computeScore(inputs, previousMonth)}
@@ -58,7 +50,11 @@ export async function ScoreSummaryCard({
 interface ScoreSummaryProps<K extends string> {
   workspaceId: string
   title: string
-  description: string
+  /**
+   * "wide": score y recomendaciones lado a lado. "side": apilados, para la
+   * columna lateral del Resumen
+   */
+  layout?: "wide" | "side"
   /** Página de Recomendaciones del espacio */
   href: string
   current: ScoreResult<K>
@@ -71,7 +67,7 @@ interface ScoreSummaryProps<K extends string> {
 export function ScoreSummary<K extends string>({
   workspaceId,
   title,
-  description,
+  layout = "wide",
   href,
   current,
   previous,
@@ -79,30 +75,33 @@ export function ScoreSummary<K extends string>({
 }: ScoreSummaryProps<K>) {
   return (
     <Card>
-      <div className="flex items-start justify-between gap-2">
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
-        <div className="shrink-0">
-          <Link
-            href={href as Route}
-            className={buttonVariants({ variant: "outline", size: "sm" })}
-          >
-            Ver todas
-          </Link>
-        </div>
-      </div>
-      <CardContent className="grid gap-6 md:grid-cols-[minmax(0,14rem)_1fr]">
+      <CardHeading
+        title={title}
+        help="score"
+        href={href}
+        linkLabel="Ver todas"
+        linkContext="las recomendaciones"
+      />
+      <CardContent
+        className={
+          layout === "side"
+            ? "flex flex-col gap-5"
+            : "grid gap-6 md:grid-cols-[minmax(0,14rem)_1fr]"
+        }
+      >
         {hasScore(current) ? (
           <div className="flex flex-col gap-2">
-            <div className="flex items-end gap-2">
-              <span className="text-4xl font-semibold tracking-tight tabular-nums">
-                {current.score}
+            <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
+              <p className="flex items-end gap-1.5">
+                <span className="text-4xl font-semibold tracking-tight tabular-nums">
+                  {current.score}
+                </span>
+                <span className="pb-1 text-sm text-muted">/ 100</span>
+              </p>
+              <span className="pb-1.5">
+                <BandBadge band={current.band} />
               </span>
-              <span className="pb-1 text-sm text-muted">/ 100</span>
             </div>
-            <BandBadge band={current.band} />
             <ScoreVariation variation={scoreVariation(current, previous)} />
           </div>
         ) : (

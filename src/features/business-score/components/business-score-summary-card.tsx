@@ -36,7 +36,6 @@ export async function BusinessScoreSummaryCard({
     <ScoreSummary
       workspaceId={workspace.id}
       title="Salud del negocio"
-      description="El score de tu empresa y lo más importante por hacer"
       href={workspaceRecommendationsPath(workspace)}
       current={computeBusinessScore(inputs, month)}
       previous={computeBusinessScore(inputs, previousMonth)}

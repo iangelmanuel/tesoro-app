@@ -192,6 +192,7 @@ export function QuickSheet({
         <>
           <ContributionDialog
             goals={goals}
+            accounts={workspace.accounts}
             open={dialog === "contribution"}
             onOpenChange={closeDialog}
           />

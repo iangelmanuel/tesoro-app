@@ -146,6 +146,7 @@ function PersonalMoreMenu({
       {/* Controlados por el menú: no tienen trigger propio */}
       <ContributionDialog
         goals={goals}
+        accounts={accounts}
         open={contributionOpen}
         onOpenChange={setContributionOpen}
       />

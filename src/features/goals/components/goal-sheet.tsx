@@ -2,6 +2,7 @@
 
 import { Button, Drawer } from "@heroui/react"
 import { Minus, Plus } from "lucide-react"
+import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { formatCurrency } from "@/libs/format"
 import { goalStatus } from "../progress"
 import type { Goal, GoalContribution } from "../queries"
@@ -18,6 +19,8 @@ interface GoalSheetProps {
   /** Hoy en America/Bogota, calculado en el servidor */
   today: string
   currency: string
+  /** Cuentas con saldo para aportar; solo las metas activas las usan */
+  accounts?: PaymentAccountOption[]
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -31,6 +34,7 @@ export function GoalSheet({
   contributions,
   today,
   currency,
+  accounts,
   open,
   onOpenChange
 }: GoalSheetProps) {
@@ -81,6 +85,7 @@ export function GoalSheet({
                     <ContributionDialog
                       goalId={goal.id}
                       kind="deposit"
+                      accounts={accounts}
                       trigger={
                         <Button>
                           <Plus />
@@ -91,6 +96,7 @@ export function GoalSheet({
                     <ContributionDialog
                       goalId={goal.id}
                       kind="withdrawal"
+                      accounts={accounts}
                       trigger={
                         <Button variant="outline">
                           <Minus />

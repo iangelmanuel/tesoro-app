@@ -56,6 +56,10 @@ function ContributionRow({
   const [editing, setEditing] = useState(false)
   const isWithdrawal = contribution.amount < 0
   const label = isWithdrawal ? "retiro" : "aporte"
+  // Un aporte sale de la cuenta y un retiro entra a ella
+  const accountText = contribution.account_name
+    ? `${isWithdrawal ? "A" : "Desde"} ${contribution.account_name}`
+    : "Fuera de cuentas"
 
   return (
     <li className="flex items-center gap-3 p-3">
@@ -70,7 +74,7 @@ function ContributionRow({
           {formatCurrency(Math.abs(contribution.amount), currency)}
         </span>
         <span className="text-xs text-muted">
-          {formatDate(contribution.occurred_on)}
+          {formatDate(contribution.occurred_on)} · {accountText}
         </span>
         {contribution.note && (
           <span className="truncate text-sm text-muted">

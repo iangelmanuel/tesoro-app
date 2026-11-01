@@ -3,11 +3,7 @@ import { SITE } from "@/config/site"
 import { deletionRequestedAt } from "@/features/account/deletion"
 import { updateSession } from "@/libs/supabase/proxy"
 
-const AUTH_ROUTES: string[] = [
-  SITE.routes.signIn,
-  SITE.routes.signUp,
-  SITE.routes.forgotPassword
-]
+const AUTH_ROUTES: string[] = [SITE.routes.signIn, SITE.routes.signUp]
 
 function isDashboardRoute(pathname: string) {
   return (
@@ -30,13 +26,6 @@ export async function proxy(request: NextRequest) {
   if (!user && isDashboardRoute(pathname)) {
     const url = new URL(SITE.routes.signIn, request.url)
     url.searchParams.set("next", `${pathname}${search}`)
-    return redirectTo(url, response)
-  }
-
-  // /reset-password necesita la sesión que deja el enlace de recuperación
-  if (!user && pathname === SITE.routes.resetPassword) {
-    const url = new URL(SITE.routes.forgotPassword, request.url)
-    url.searchParams.set("error", "expired")
     return redirectTo(url, response)
   }
 

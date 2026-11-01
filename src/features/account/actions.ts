@@ -10,7 +10,6 @@ import { createClient } from "@/libs/supabase/server"
 import { AVATARS_BUCKET, removeAvatarFiles } from "./avatar"
 import { deletionDate } from "./deletion"
 import {
-  changeEmailSchema,
   changePasswordSchema,
   createPasswordSchema,
   currencySchema,
@@ -163,59 +162,6 @@ export async function removeAvatar(): Promise<AccountActionResult> {
 
   revalidateDashboard()
   return {}
-}
-
-export async function changeEmail(
-  _prevState: ProfileFormState,
-  formData: FormData
-): Promise<ProfileFormState> {
-  const values = { email: readString(formData, "email") }
-  const parsed = changeEmailSchema.safeParse(values)
-
-  if (!parsed.success) {
-    return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
-  }
-
-  const supabase = await createClient()
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { error: SESSION_EXPIRED, values }
-  }
-
-  if (parsed.data.email === user.email) {
-    return {
-      fieldErrors: { email: ["Ese ya es tu email actual"] },
-      values
-    }
-  }
-
-  // La plantilla email_change enlaza a /auth/confirm con token_hash. Este
-  // redirect solo aplica si el proyecto aún usa la plantilla por defecto
-  const redirectTo = new URL(SITE.routes.authCallback, SITE.seo.url)
-  redirectTo.searchParams.set(
-    "next",
-    `${SITE.routes.account}?notice=email-confirmed`
-  )
-
-  const { error } = await supabase.auth.updateUser(
-    { email: parsed.data.email },
-    { emailRedirectTo: redirectTo.toString() }
-  )
-
-  if (error) {
-    return { error: translateAuthError(error), values }
-  }
-
-  // Muestra "Cambio pendiente a X" (user.new_email)
-  revalidatePath(SITE.routes.account)
-  return {
-    ok: true,
-    success:
-      "Te enviamos un enlace a tu correo actual y al nuevo. El cambio se aplica cuando confirmes los dos."
-  }
 }
 
 export async function changePassword(

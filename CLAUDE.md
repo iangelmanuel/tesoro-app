@@ -172,9 +172,9 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   `is_workspace_writable(workspace_id)` (dueño y sin marca de borrado). Las de
   `select` usan `is_workspace_owner`. En las actions, el espacio se resuelve
   con `requireWritableWorkspace(id)`.
-- Las plantillas de email viven en `supabase/templates/` y enlazan a
-  `/auth/confirm` con `token_hash`. `config.toml` solo las aplica en local: en
-  remoto se copian a mano al dashboard (ver README).
+- Tesoro no envía correos por ahora: sin confirmación de email, recuperar
+  contraseña ni cambio de email. En Supabase, _Confirm email_ va apagado. Al
+  integrar un servicio de correo propio se reactivan esos flujos.
 
 ## Convenciones
 

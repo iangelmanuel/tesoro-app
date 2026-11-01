@@ -32,8 +32,7 @@ export const getAccount = cache(async (): Promise<AccountData> => {
   return {
     user: {
       id: user.id,
-      email: user.email ?? "",
-      newEmail: user.new_email ?? null
+      email: user.email ?? ""
     },
     profile: {
       fullName: profileResult.data.full_name,

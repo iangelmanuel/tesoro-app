@@ -228,6 +228,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Email features, until a custom email service is added: sign-up email confirmation (`/check-email`, resend), password recovery (`/forgot-password`, `/reset-password`), email change in the account page (now read-only), the `/auth/confirm` route and the `supabase/templates/` email templates. Sign-up now always opens the session directly, so the Supabase project must have "Confirm email" off.
 - `SummaryCards` and the secondary summary metrics (daily average, spending projection, top category, transaction count); the category donut from the Personal summary and from Reports.
 - `quick-add-transaction` components, replaced by the header quick actions.
 - shadcn/ui: `src/components/ui/`, `components.json`, `src/libs/utils.ts` and the `shadcn`, `radix-ui`, `class-variance-authority`, `tw-animate-css`, `cn`, `sonner` and `react-day-picker` packages.

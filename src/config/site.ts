@@ -119,10 +119,6 @@ export const SITE = {
     authCallback: "/auth/callback",
     account: "/dashboard/account",
     accountDeleted: "/account-deleted",
-    forgotPassword: "/forgot-password",
-    resetPassword: "/reset-password",
-    checkEmail: "/check-email",
-    authConfirm: "/auth/confirm",
     legal: "/legal"
   },
 

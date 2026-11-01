@@ -12,8 +12,7 @@ import { FormField } from "./form-field"
 import { OAuthButtons } from "./oauth-buttons"
 
 const QUERY_ERRORS: Record<string, string> = {
-  oauth: "No se pudo iniciar sesión con el proveedor. Intenta de nuevo",
-  link: "El enlace expiró o ya se usó"
+  oauth: "No se pudo iniciar sesión con el proveedor. Intenta de nuevo"
 }
 
 export function SignInForm() {
@@ -74,29 +73,12 @@ export function SignInForm() {
           errors={state.fieldErrors?.password}
           required
         />
-        <Link
-          href={SITE.routes.forgotPassword}
-          className="-mt-2 self-end text-sm text-muted underline-offset-4 hover:text-foreground hover:underline"
-        >
-          ¿Olvidaste tu contraseña?
-        </Link>
         {error && (
           <p
             role="alert"
             className="text-sm text-danger"
           >
             {error}
-            {state.errorCode === "email_not_confirmed" && (
-              <>
-                {" "}
-                <Link
-                  href={`${SITE.routes.checkEmail}?${new URLSearchParams({ email: state.values?.email ?? "" })}`}
-                  className="font-medium underline underline-offset-4"
-                >
-                  Reenviar el correo
-                </Link>
-              </>
-            )}
           </p>
         )}
         <Button

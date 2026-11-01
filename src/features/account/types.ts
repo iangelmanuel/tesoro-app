@@ -2,8 +2,6 @@ export interface AccountData {
   user: {
     id: string
     email: string
-    /** Email nuevo pendiente de confirmar (double_confirm_changes) */
-    newEmail: string | null
   }
   profile: {
     fullName: string

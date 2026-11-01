@@ -21,11 +21,7 @@ Visión y alcance de Tesoro. Este documento describe **qué** se construye; el
 | `/legal/[slug]`                | Privacidad (`privacy`) y Términos (`terms`) | Sí        |
 | `/sign-in`                     | Inicio de sesión                            | Sí        |
 | `/sign-up`                     | Registro                                    | Sí        |
-| `/forgot-password`             | Pedir el enlace para recuperar contraseña   | Sí        |
-| `/reset-password`              | Elegir la nueva contraseña                  | No        |
-| `/check-email`                 | Revisar el correo de confirmación           | No        |
 | `/auth/callback`               | Callback de OAuth (Google, GitHub)          | No        |
-| `/auth/confirm`                | Verifica los enlaces de email               | No        |
 | `/account-deleted`             | Cuenta en periodo de gracia del borrado     | No        |
 | `/dashboard`                   | Redirige a `/dashboard/personal`            | No        |
 | `/dashboard/account`           | Cuenta y perfil                             | No        |
@@ -149,7 +145,7 @@ desde los SVG fuente de `assets/brand/`:
 Supabase Auth con tres métodos:
 
 - **Email y contraseña**: registro con nombre, email y contraseña (mínimo 8
-  caracteres). Por ahora no se pide confirmar el email (ver abajo).
+  caracteres). No se pide confirmar el email (ver abajo).
 - **Google** y **GitHub** (OAuth), con callback en `/auth/callback`. El nombre
   y el avatar salen del proveedor.
 
@@ -158,24 +154,12 @@ perfil y su espacio _Personal_. Quien ya tiene sesión y entra a `/sign-in` o
 `/sign-up` va directo al dashboard; quien no la tiene y entra al dashboard va a
 `/sign-in?next=<ruta>` y vuelve a esa ruta al iniciar sesión.
 
-**Recuperar la contraseña**: "¿Olvidaste tu contraseña?" en `/sign-in` lleva
-a `/forgot-password`. La respuesta es la misma exista o no el email, para no
-enumerar cuentas; solo cambia ante el límite de envíos. El enlace del correo
-abre `/reset-password`, que sin sesión vuelve a
-`/forgot-password?error=expired`.
+**Sin correos por ahora**: Tesoro no envía emails (confirmación de registro,
+recuperar contraseña ni cambio de email). Se quitaron mientras se elige un
+servicio de correo propio, y el proyecto de Supabase debe tener _Confirm email_
+apagado. El email de la cuenta se ve en Perfil, solo lectura.
 
-**Enlaces de email**: las plantillas de `supabase/templates/` enlazan a
-`/auth/confirm?token_hash=…&type=…&next=…`, que verifica el enlace y redirige a
-`next`. Funcionan aunque el correo se abra en otro navegador. Un enlace
-vencido o usado lleva a `/sign-in?error=link`.
-
-**Confirmación de email**: lista pero apagada (`enable_confirmations = false`).
-Si se enciende, el registro lleva a `/check-email` con "Reenviar correo", y
-quien inicia sesión sin confirmar ve el error con el enlace para reenviar.
-Conviene encenderla solo con un SMTP propio: sin él, Supabase envía muy pocos
-correos por hora.
-
-Queda para un spec futuro el magic link.
+Queda para un spec futuro recuperar contraseña, confirmar email, cambiar email y el magic link.
 
 ## Modelo de datos
 
@@ -1353,9 +1337,8 @@ cuatro secciones apiladas.
   `avatars/<user_id>/<uuid>.webp`. Queda un solo archivo por usuario.
   "Quitar foto" vacía la carpeta y vuelve a las iniciales.
 - **Nombre**: de 2 a 80 caracteres, como en el registro.
-- **Email**: el cambio exige confirmar desde el correo actual y desde el
-  nuevo (`double_confirm_changes`). Mientras falta, la sección muestra
-  "Cambio pendiente a X".
+- **Email**: solo lectura. El cambio de email vuelve cuando haya servicio de
+  correo.
 - **Moneda**: COP, USD, EUR, MXN, PEN, CLP o ARS (`SITE.currencies`). Solo
   cambia el formato: los montos guardados no se convierten. COP y CLP se
   muestran sin decimales.

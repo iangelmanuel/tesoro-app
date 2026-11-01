@@ -203,9 +203,14 @@ export async function createTransaction(
     }
   }
 
+  // transfer_* los usa la RPC del paso 6
+  const { transfer_from, transfer_amount, ...fields } = parsed.data
+  void transfer_from
+  void transfer_amount
+
   const supabase = await createClient()
   const { error } = await supabase.from("transactions").insert({
-    ...workspaceFields(parsed.data, workspace.type),
+    ...workspaceFields(fields, workspace.type),
     workspace_id: workspace.id
   })
 

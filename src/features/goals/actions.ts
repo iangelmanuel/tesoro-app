@@ -264,9 +264,14 @@ export async function createContribution(
     return { fieldErrors: { amount: [OVER_WITHDRAWAL] }, values }
   }
 
+  // transfer_* los usa la RPC del paso 5
+  const { transfer_from, transfer_amount, ...fields } = parsed.data
+  void transfer_from
+  void transfer_amount
+
   const supabase = await createClient()
   const { error } = await supabase.from("goal_contributions").insert({
-    ...parsed.data,
+    ...fields,
     goal_id: goal.id,
     workspace_id: goal.workspace_id
   })
@@ -320,10 +325,13 @@ export async function updateContribution(
     return { fieldErrors: { amount: [OVER_WITHDRAWAL] }, values }
   }
 
+  // Editar cambia monto, fecha y nota; la cuenta no se toca (SPEC 16)
+  const { amount, occurred_on, note } = parsed.data
+
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("goal_contributions")
-    .update(parsed.data)
+    .update({ amount, occurred_on, note })
     .eq("id", contribution.id)
     .select("id")
 

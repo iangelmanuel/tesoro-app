@@ -2,7 +2,9 @@ import { z } from "zod"
 import {
   MAX_AMOUNT,
   amountSchema,
-  parseAmount
+  parseAmount,
+  paymentAccountSchema,
+  refinePaymentAccount
 } from "@/features/transactions/schemas"
 import { todayISO } from "@/libs/dates"
 
@@ -231,23 +233,33 @@ export type LoanInput = z.infer<typeof loanSchema>
 export type ReceivableInput = z.infer<typeof receivableSchema>
 
 // Pago de deuda o abono. La casilla de movimiento llega como "on" si está
-// marcada; en tarjetas no existe.
-export const paymentSchema = z.object({
+// marcada; en tarjetas no existe. account_id es la cuenta del movimiento
+// creado o, en una tarjeta, la del pago; vacío = fuera de las cuentas.
+export const paymentSchema = z
+  .object({
+    amount: amountField,
+    occurred_on: pastDateField,
+    note: noteField,
+    create_transaction: z.preprocess(
+      (value) => value === "on" || value === "true" || value === true,
+      z.boolean()
+    ),
+    ...paymentAccountSchema.shape
+  })
+  .superRefine(refinePaymentAccount)
+
+export type PaymentInput = z.infer<typeof paymentSchema>
+
+// Avance de tarjeta: sube el saldo de la deuda y, con cuenta, el de la
+// cuenta. No lleva traspaso.
+export const advanceSchema = z.object({
   amount: amountField,
   occurred_on: pastDateField,
   note: noteField,
-  create_transaction: z.preprocess(
-    (value) => value === "on" || value === "true" || value === true,
-    z.boolean()
-  ),
-  // Cuenta del movimiento creado. Vacío = sin cuenta.
-  account_id: z.preprocess(
-    emptyToNull,
-    z.uuid({ error: "Elige una cuenta válida" }).nullable()
-  )
+  account_id: paymentAccountSchema.shape.account_id
 })
 
-export type PaymentInput = z.infer<typeof paymentSchema>
+export type AdvanceInput = z.infer<typeof advanceSchema>
 
 // "Actualizar saldo": el saldo real, no la diferencia
 export const adjustBalanceSchema = z.object({

@@ -141,7 +141,7 @@ async function findDebt(debtId: string) {
     return null
   }
 
-  // saldo = saldo inicial − pagos + ajustes
+  // saldo = saldo inicial − pagos + ajustes + avances
   const balance = data.entries.reduce(
     (sum, entry) =>
       entry.kind === "payment"

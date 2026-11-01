@@ -3,7 +3,11 @@ import {
   CATEGORY_COLOR_KEYS,
   CATEGORY_ICON_KEYS
 } from "@/features/categories/constants"
-import { amountSchema } from "@/features/transactions/schemas"
+import {
+  amountSchema,
+  paymentAccountSchema,
+  refinePaymentAccount
+} from "@/features/transactions/schemas"
 import { todayISO } from "@/libs/dates"
 
 export const CONTRIBUTION_KINDS = ["deposit", "withdrawal"] as const
@@ -66,11 +70,16 @@ export const contributionSchema = z
       .string()
       .trim()
       .max(120, { error: "La nota debe tener máximo 120 caracteres" })
-      .transform((value) => value || null)
+      .transform((value) => value || null),
+    ...paymentAccountSchema.shape
   })
+  .superRefine(refinePaymentAccount)
   .transform(({ kind, amount, ...data }) => ({
     ...data,
-    amount: kind === "withdrawal" ? -amount : amount
+    amount: kind === "withdrawal" ? -amount : amount,
+    // Un retiro no lleva traspaso
+    transfer_from: kind === "withdrawal" ? null : data.transfer_from,
+    transfer_amount: kind === "withdrawal" ? null : data.transfer_amount
   }))
 
 export type ContributionInput = z.infer<typeof contributionSchema>

@@ -33,6 +33,67 @@ export const amountSchema = z
 // sin cuenta o sin enlace a un gasto fijo
 const emptyToNull = (value: unknown) => (value === "" ? null : value)
 
+// Cuenta de un pago o aporte y, opcionalmente, el traspaso previo desde otra
+// cuenta (SPEC 16). Vive aquí porque amountSchema y parseAmount son de este
+// archivo; accounts/schemas.ts lo reexporta.
+export const paymentAccountSchema = z.object({
+  account_id: z.preprocess(
+    emptyToNull,
+    z.uuid({ error: "Elige una cuenta válida" }).nullable()
+  ),
+  transfer_from: z.preprocess(
+    emptyToNull,
+    z.uuid({ error: "Elige la cuenta de origen" }).nullable()
+  ),
+  transfer_amount: z.preprocess(
+    (value) =>
+      value === "" || value === undefined
+        ? null
+        : typeof value === "string"
+          ? parseAmount(value)
+          : value,
+    amountSchema.nullable()
+  )
+})
+
+type PaymentAccountInput = z.infer<typeof paymentAccountSchema>
+
+// transfer_from exige account_id y es distinta a ella; el monto y el origen
+// van juntos
+export function refinePaymentAccount(
+  data: PaymentAccountInput,
+  ctx: z.RefinementCtx
+) {
+  if (data.transfer_from !== null && data.account_id === null) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["account_id"],
+      message: "Elige la cuenta que paga"
+    })
+  }
+  if (data.transfer_from !== null && data.transfer_from === data.account_id) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["transfer_from"],
+      message: "Elige una cuenta distinta a la que paga"
+    })
+  }
+  if (data.transfer_from === null && data.transfer_amount !== null) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["transfer_from"],
+      message: "Elige la cuenta de origen"
+    })
+  }
+  if (data.transfer_from !== null && data.transfer_amount === null) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["transfer_amount"],
+      message: "Ingresa el monto del traspaso"
+    })
+  }
+}
+
 export const transactionSchema = z.object({
   type: z.enum(TRANSACTION_TYPES, { error: "Elige ingreso o gasto" }),
   amount: amountSchema,
@@ -76,7 +137,20 @@ export const createTransactionSchema = transactionSchema
     recurring_due_on: z.preprocess(
       emptyToNull,
       z.iso.date({ error: "No se encontró el gasto fijo" }).nullable()
-    )
+    ),
+    // Traspaso previo desde otra cuenta; solo en gastos
+    transfer_from: paymentAccountSchema.shape.transfer_from,
+    transfer_amount: paymentAccountSchema.shape.transfer_amount
+  })
+  .superRefine((data, ctx) => {
+    refinePaymentAccount(data, ctx)
+    if (data.transfer_from !== null && data.type !== "expense") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["transfer_from"],
+        message: "Solo un gasto admite traspaso"
+      })
+    }
   })
   .refine(
     (data) =>

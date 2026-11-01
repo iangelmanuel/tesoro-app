@@ -18,5 +18,8 @@ proyecto. Vive versionado en `.claude/skills/impeccable/`, con sus subagentes en
   (`.claude/skills/impeccable/scripts/bin/` está en `.gitignore`): el launcher
   lo descarga la primera vez y lo verifica contra
   `scripts/engine-checksums.txt`.
+- La copia versionada difiere del upstream 4.8.0 solo en formato: pasó una vez
+  por Prettier antes de excluirla en `.prettierignore`. La lógica es la misma.
+  La próxima reinstalación la deja idéntica.
 - Para actualizar, reinstala con `npx skills add pbakaus/impeccable`,
   revisa el diff y actualiza esta tabla.

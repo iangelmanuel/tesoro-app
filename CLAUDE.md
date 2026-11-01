@@ -89,6 +89,9 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
 
 ## UI y tema
 
+- **Contexto de diseño**: `PRODUCT.md` (usuarios, propósito, voz, principios
+  y restricciones visuales) es el contexto de Impeccable
+  (`.claude/skills/impeccable/`). Léelo antes de diseñar o revisar UI.
 - **HeroUI v3** (`@heroui/react` y `@heroui/styles`), sin Provider. Se
   importa **directo de `@heroui/react`**: no hay wrappers ni
   `src/components/ui/`. `cn` también sale de `@heroui/react`.

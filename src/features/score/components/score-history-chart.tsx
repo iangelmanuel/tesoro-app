@@ -2,20 +2,36 @@
 
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ReferenceLine,
+  XAxis,
+  YAxis
+} from "recharts"
 import {
   type ChartConfig,
   ChartContainer
 } from "@/components/charts/chart-container"
+import {
+  AXIS_PROPS,
+  GRID_PROPS,
+  LINE_PROPS
+} from "@/components/charts/chart-style"
 import {
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/charts/chart-tooltip"
 import { ChartDataTable } from "@/features/reports/components/chart-data-table"
 
+// Serie neutra: el acento del espacio (emerald) se confundía con ingresos
 const CHART_CONFIG = {
-  score: { label: "Score", color: "var(--accent)" }
+  score: { label: "Score", color: "var(--chart-1)" }
 } satisfies ChartConfig
+
+// Límites de las bandas (docs/producto.md): Regular, Bueno y Excelente
+const BAND_TICKS = [0, 40, 60, 80, 100]
 
 export interface ScoreHistoryPoint {
   /** YYYY-MM */
@@ -52,24 +68,31 @@ export function ScoreHistoryChart({ data }: { data: ScoreHistoryPoint[] }) {
         <LineChart
           data={data}
           accessibilityLayer
-          margin={{ left: 4, right: 4, top: 8 }}
+          title={description}
+          margin={{ left: 0, right: 4, top: 8 }}
         >
-          <CartesianGrid vertical={false} />
+          <CartesianGrid {...GRID_PROPS} />
           <XAxis
             dataKey="month"
-            tickLine={false}
-            axisLine={false}
-            tickMargin={8}
+            {...AXIS_PROPS}
             tickFormatter={(month: string) =>
               format(toDate(month), "MMM yy", { locale: es })
             }
           />
           <YAxis
             domain={[0, 100]}
-            ticks={[0, 40, 60, 80, 100]}
-            tickLine={false}
-            axisLine={false}
+            ticks={BAND_TICKS}
+            {...AXIS_PROPS}
             width={32}
+          />
+          <ReferenceLine
+            y={60}
+            strokeDasharray="3 4"
+            label={{
+              value: "Bueno",
+              position: "insideTopRight",
+              className: "fill-muted text-xs"
+            }}
           />
           <ChartTooltip
             content={
@@ -82,10 +105,10 @@ export function ScoreHistoryChart({ data }: { data: ScoreHistoryPoint[] }) {
           />
           <Line
             dataKey="score"
-            type="monotone"
             stroke="var(--color-score)"
-            strokeWidth={2}
-            dot={{ fill: "var(--color-score)" }}
+            {...LINE_PROPS}
+            // Con meses sin datos, los puntos dejan ver los valores sueltos
+            dot={{ r: 2.5, fill: "var(--color-score)", strokeWidth: 0 }}
             connectNulls={false}
           />
         </LineChart>

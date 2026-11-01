@@ -5,13 +5,15 @@ import {
   type ChartConfig,
   ChartContainer
 } from "@/components/charts/chart-container"
+import { HORIZONTAL_BAR_PROPS } from "@/components/charts/chart-style"
 import { ChartTooltip } from "@/components/charts/chart-tooltip"
 import { formatCurrency } from "@/libs/format"
 import type { CategorySlice } from "../chart-data"
 import { ChartDataTable } from "./chart-data-table"
 import { CurrencyTooltipContent } from "./currency-tooltip"
 
-const BAR_HEIGHT = 44
+// Cada fila: nombre y monto arriba (no se cortan a 375 px) y la barra debajo
+const ROW_HEIGHT = 48
 
 interface TopCategoriesChartProps {
   categories: CategorySlice[]
@@ -39,7 +41,7 @@ export function TopCategoriesChart({
       <ChartContainer
         config={config}
         className="aspect-auto w-full"
-        style={{ height: categories.length * BAR_HEIGHT + 16 }}
+        style={{ height: categories.length * ROW_HEIGHT + 8 }}
         role="figure"
         aria-label={title}
       >
@@ -47,7 +49,9 @@ export function TopCategoriesChart({
           data={data}
           layout="vertical"
           accessibilityLayer
-          margin={{ left: 0, right: 96 }}
+          title={title}
+          margin={{ left: 0, right: 0, top: 18, bottom: 0 }}
+          barCategoryGap={22}
         >
           <XAxis
             type="number"
@@ -57,9 +61,7 @@ export function TopCategoriesChart({
           <YAxis
             type="category"
             dataKey="name"
-            tickLine={false}
-            axisLine={false}
-            width={112}
+            hide
           />
           <ChartTooltip
             cursor={false}
@@ -74,13 +76,23 @@ export function TopCategoriesChart({
           />
           <Bar
             dataKey="total"
+            {...HORIZONTAL_BAR_PROPS}
             radius={4}
           >
+            {/* Nombre a la izquierda y monto a la derecha, sobre la barra */}
+            <LabelList
+              dataKey="name"
+              position="insideTopLeft"
+              offset={0}
+              dy={-18}
+              className="fill-foreground text-xs"
+            />
             <LabelList
               dataKey="total"
-              position="right"
-              offset={8}
-              className="fill-foreground"
+              position="insideTopRight"
+              offset={0}
+              dy={-18}
+              className="fill-muted text-xs tabular-nums"
               formatter={(value) => formatCurrency(Number(value), currency)}
             />
           </Bar>

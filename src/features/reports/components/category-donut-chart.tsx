@@ -5,6 +5,7 @@ import {
   type ChartConfig,
   ChartContainer
 } from "@/components/charts/chart-container"
+import { ANIMATION_PROPS } from "@/components/charts/chart-style"
 import { ChartTooltip } from "@/components/charts/chart-tooltip"
 import { formatCurrency } from "@/libs/format"
 import type { CategorySlice } from "../chart-data"
@@ -48,7 +49,10 @@ export function CategoryDonutChart({
         role="figure"
         aria-label={`${title}. Total ${formatCurrency(total, currency)}`}
       >
-        <PieChart accessibilityLayer>
+        <PieChart
+          accessibilityLayer
+          title={`${title}. Total ${formatCurrency(total, currency)}`}
+        >
           <ChartTooltip
             content={
               <CurrencyTooltipContent
@@ -63,10 +67,12 @@ export function CategoryDonutChart({
             data={data}
             dataKey="total"
             nameKey="key"
-            innerRadius="62%"
-            outerRadius="90%"
-            paddingAngle={slices.length > 1 ? 2 : 0}
-            strokeWidth={0}
+            innerRadius="68%"
+            outerRadius="92%"
+            cornerRadius={4}
+            // La separación la da el trazo de 2 px del color de la tarjeta
+            paddingAngle={0}
+            {...ANIMATION_PROPS}
           >
             <Label
               content={({ viewBox }) => {
@@ -83,7 +89,7 @@ export function CategoryDonutChart({
                     <tspan
                       x={cx}
                       y={cy}
-                      className="fill-foreground text-base font-semibold"
+                      className="fill-foreground text-base font-semibold tabular-nums"
                     >
                       {formatCurrency(total, currency)}
                     </tspan>
@@ -111,7 +117,7 @@ export function CategoryDonutChart({
             className="flex items-center gap-2"
           >
             <span
-              className="size-2.5 shrink-0 rounded-[2px]"
+              className="size-2 shrink-0 rounded-full"
               style={{ backgroundColor: slice.color }}
             />
             <span className="flex-1 truncate">{slice.name}</span>

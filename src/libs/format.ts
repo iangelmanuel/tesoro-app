@@ -1,5 +1,8 @@
 const LOCALE = "es-CO"
 
+// Las fechas usan espacio duro para no partirse en varias líneas
+const WHITESPACE = /\s/g
+
 // Monedas que la UI muestra sin decimales, aunque la BD guarde centavos
 const ZERO_DECIMAL_CURRENCIES = new Set(["COP", "CLP"])
 
@@ -24,7 +27,9 @@ export function formatDate(date: string | Date) {
     month: "short",
     year: "numeric",
     timeZone: "UTC"
-  }).format(value)
+  })
+    .format(value)
+    .replace(WHITESPACE, "\u00A0")
 }
 
 // Fecha corta sin año ("1 nov") para filas compactas en móvil
@@ -35,5 +40,7 @@ export function formatShortDate(date: string | Date) {
     day: "numeric",
     month: "short",
     timeZone: "UTC"
-  }).format(value)
+  })
+    .format(value)
+    .replace(WHITESPACE, "\u00A0")
 }

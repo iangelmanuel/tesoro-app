@@ -71,9 +71,9 @@ export async function GoalsCard({ workspaceId, currency }: GoalsCardProps) {
                     color={goal.color}
                     className="size-7"
                   />
-                  <p className="truncate font-medium">{goal.name}</p>
+                  <p className="min-w-0 truncate font-medium">{goal.name}</p>
                   <GoalStatusBadge status={status} />
-                  <p className="ml-auto text-sm font-medium tabular-nums">
+                  <p className="ml-auto shrink-0 text-sm font-medium whitespace-nowrap tabular-nums">
                     {formatPercent(percent)}
                   </p>
                 </div>

@@ -56,7 +56,7 @@ export function GoalCard({
           />
           <span className="flex min-w-0 flex-1 flex-col gap-1">
             <span className="flex flex-wrap items-center gap-2">
-              <span className="truncate font-medium">{goal.name}</span>
+              <span className="min-w-0 truncate font-medium">{goal.name}</span>
               <GoalStatusBadge status={goalStatus(goal, today)} />
             </span>
             <span className="text-sm text-muted tabular-nums">
@@ -73,6 +73,7 @@ export function GoalCard({
             variant="ghost"
             isIconOnly
             size="sm"
+            className="shrink-0 max-md:size-11"
             aria-label={`Acciones de ${goal.name}`}
             isDisabled={pending}
           >

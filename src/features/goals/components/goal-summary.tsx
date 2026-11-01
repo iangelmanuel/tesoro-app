@@ -36,21 +36,21 @@ export function GoalSummary({ goal, today, currency }: GoalSummaryProps) {
           percent={percent}
           status={status}
         />
-        <span className="text-sm font-medium tabular-nums">
+        <span className="shrink-0 text-sm font-medium whitespace-nowrap tabular-nums">
           {formatPercent(percent)}
         </span>
       </div>
 
       <dl className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
-        <div className="flex justify-between gap-2 sm:flex-col sm:justify-start">
+        <div className="flex items-baseline justify-between gap-2 sm:flex-col sm:items-start sm:justify-start">
           <dt className="text-muted">Faltan</dt>
-          <dd className="font-medium tabular-nums">
+          <dd className="text-right font-medium whitespace-nowrap tabular-nums sm:text-left">
             {formatCurrency(remaining, currency)}
           </dd>
         </div>
-        <div className="flex justify-between gap-2 sm:flex-col sm:justify-start">
+        <div className="flex items-baseline justify-between gap-2 sm:flex-col sm:items-start sm:justify-start">
           <dt className="text-muted">Fecha objetivo</dt>
-          <dd className="font-medium">
+          <dd className="text-right font-medium whitespace-nowrap sm:text-left">
             {goal.target_date
               ? formatDate(goal.target_date)
               : "Sin fecha objetivo"}
@@ -59,9 +59,9 @@ export function GoalSummary({ goal, today, currency }: GoalSummaryProps) {
         {/* Solo en activas. Al llegar al 100 % el aviso "¡Lo lograste!"
             reemplaza al aporte sugerido */}
         {goal.status === "active" && suggested !== null && !isReached(goal) && (
-          <div className="flex justify-between gap-2 sm:col-span-2 sm:flex-col sm:justify-start">
-            <dt className="text-muted">Aporte mensual sugerido</dt>
-            <dd className="font-medium tabular-nums">
+          <div className="flex items-baseline justify-between gap-2 sm:col-span-2 sm:flex-col sm:items-start sm:justify-start">
+            <dt className="min-w-0 text-muted">Aporte mensual sugerido</dt>
+            <dd className="text-right font-medium whitespace-nowrap tabular-nums sm:text-left">
               {formatCurrency(suggested, currency)}
             </dd>
           </div>

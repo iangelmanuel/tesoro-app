@@ -3,8 +3,8 @@
 import { useEffect, useState, useTransition } from "react"
 import type { Route } from "next"
 import { useRouter } from "next/navigation"
-import { Button, ListBox, SearchField, Select, cn } from "@heroui/react"
-import { ChevronLeft, ChevronRight, X } from "lucide-react"
+import { Button, Drawer, ListBox, SearchField, Select, cn } from "@heroui/react"
+import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from "lucide-react"
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import { NO_ACCOUNT } from "@/features/accounts/constants"
 import type { Category } from "@/features/categories/queries"
@@ -43,17 +43,21 @@ interface TransactionsFiltersProps {
   categories: Category[]
   /** Cuentas del espacio, activas y archivadas */
   accounts: AccountOption[]
+  /** Acceso a Categorías que se muestra dentro de la hoja del teléfono */
+  categoriesAction?: React.ReactNode
 }
 
 export function TransactionsFilters({
   path = TRANSACTIONS_PATH,
   filters,
   categories,
-  accounts
+  accounts,
+  categoriesAction
 }: TransactionsFiltersProps) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [q, setQ] = useState(filters.q ?? "")
+  const [sheetOpen, setSheetOpen] = useState(false)
   // Si la URL cambia desde fuera (p. ej. "limpiar filtros"), el texto la sigue
   const [syncedQ, setSyncedQ] = useState(filters.q)
   if (filters.q !== syncedQ) {
@@ -102,6 +106,75 @@ export function TransactionsFilters({
   const hasExtraFilters = Boolean(
     filters.type || filters.categoryId || filters.accountId || filters.q
   )
+  // Filtros que viven en la hoja del teléfono: el buscador queda fuera.
+  // "Todos los meses" cuenta como activo.
+  const sheetFilterCount =
+    Number(Boolean(filters.type)) +
+    Number(Boolean(filters.categoryId)) +
+    Number(Boolean(filters.accountId)) +
+    Number(isAllMonths)
+
+  const typeSelect = (fullWidth: boolean) => (
+    <FilterSelect
+      label="Tipo"
+      fullWidth={fullWidth}
+      value={filters.type ?? ALL}
+      onChange={(value) =>
+        navigate({
+          type: value === ALL ? undefined : (value as LedgerFilterType),
+          // Una categoría de otro tipo dejaría la tabla vacía
+          categoryId: undefined
+        })
+      }
+      options={[
+        { id: ALL, label: "Todos" },
+        { id: "income", label: "Ingresos" },
+        { id: "expense", label: "Gastos" },
+        { id: "transfer", label: "Traspasos" }
+      ]}
+    />
+  )
+
+  const categorySelect = (fullWidth: boolean) => (
+    <FilterSelect
+      label="Categoría"
+      fullWidth={fullWidth}
+      value={filters.categoryId ?? ALL}
+      onChange={(value) =>
+        navigate({ categoryId: value === ALL ? undefined : value })
+      }
+      options={[
+        { id: ALL, label: "Todas" },
+        ...options.map((category) => ({
+          id: category.id,
+          label: category.archived_at
+            ? `${category.name} (archivada)`
+            : category.name
+        }))
+      ]}
+    />
+  )
+
+  const accountSelect = (fullWidth: boolean) => (
+    <FilterSelect
+      label="Cuenta"
+      fullWidth={fullWidth}
+      value={filters.accountId ?? ALL}
+      onChange={(value) =>
+        navigate({ accountId: value === ALL ? undefined : value })
+      }
+      options={[
+        { id: ALL, label: "Todas" },
+        { id: NO_ACCOUNT, label: "Sin cuenta" },
+        ...accountOptions.map((account) => ({
+          id: account.id,
+          label: account.archived_at
+            ? `${account.name} (archivada)`
+            : account.name
+        }))
+      ]}
+    />
+  )
 
   return (
     <div
@@ -132,116 +205,157 @@ export function TransactionsFilters({
         </SearchField.Group>
       </SearchField>
 
-      {/* El mes es texto (no botón): las flechas lo cambian y el toggle
-          alterna entre un mes y todos */}
-      <div className="flex items-center gap-0.5 rounded-3xl bg-default/60 p-0.5">
+      {/* < 768 px: fila `‹ Mes ›` + Filtros. Desde 768 px la fila se
+          aplana (`contents`) y todo queda en la misma barra */}
+      <div className="flex w-full items-center gap-2 md:contents">
+        {/* El mes es texto (no botón): las flechas lo cambian y el toggle
+            alterna entre un mes y todos */}
+        <div className="flex min-w-0 flex-1 items-center gap-0.5 rounded-3xl bg-default/60 p-0.5 md:flex-none">
+          <Button
+            variant="ghost"
+            size="sm"
+            isIconOnly
+            className="max-md:size-11"
+            aria-label="Mes anterior"
+            isDisabled={isAllMonths}
+            onPress={() => navigate({ month: shiftMonth(month, -1) })}
+          >
+            <ChevronLeft />
+          </Button>
+          <span
+            aria-live="polite"
+            className="min-w-0 flex-1 truncate px-1 text-center text-sm font-medium md:min-w-32 md:flex-none"
+          >
+            {isAllMonths ? "Todos los meses" : formatMonth(month)}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            isIconOnly
+            className="max-md:size-11"
+            aria-label="Mes siguiente"
+            isDisabled={isAllMonths}
+            onPress={() => navigate({ month: shiftMonth(month, 1) })}
+          >
+            <ChevronRight />
+          </Button>
+        </div>
+
         <Button
-          variant="ghost"
-          size="sm"
-          isIconOnly
-          aria-label="Mes anterior"
-          isDisabled={isAllMonths}
-          onPress={() => navigate({ month: shiftMonth(month, -1) })}
+          variant="secondary"
+          className="shrink-0 max-md:min-h-11 md:hidden"
+          onPress={() => setSheetOpen(true)}
         >
-          <ChevronLeft />
-        </Button>
-        <span
-          aria-live="polite"
-          className="min-w-32 px-1 text-center text-sm font-medium"
-        >
-          {isAllMonths ? "Todos los meses" : formatMonth(month)}
-        </span>
-        <Button
-          variant="ghost"
-          size="sm"
-          isIconOnly
-          aria-label="Mes siguiente"
-          isDisabled={isAllMonths}
-          onPress={() => navigate({ month: shiftMonth(month, 1) })}
-        >
-          <ChevronRight />
+          <SlidersHorizontal />
+          Filtros
+          {sheetFilterCount > 0 && (
+            <span
+              aria-label={`${sheetFilterCount} activos`}
+              className="min-w-5 rounded-full bg-accent px-1.5 text-center text-xs font-medium text-accent-foreground tabular-nums"
+            >
+              {sheetFilterCount}
+            </span>
+          )}
         </Button>
       </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        aria-pressed={isAllMonths}
-        onPress={() => navigate({ month: isAllMonths ? month : ALL })}
-      >
-        {isAllMonths ? "Ver por mes" : "Todos los meses"}
-      </Button>
 
-      <FilterSelect
-        label="Tipo"
-        value={filters.type ?? ALL}
-        onChange={(value) =>
-          navigate({
-            type: value === ALL ? undefined : (value as LedgerFilterType),
-            // Una categoría de otro tipo dejaría la tabla vacía
-            categoryId: undefined
-          })
-        }
-        options={[
-          { id: ALL, label: "Todos" },
-          { id: "income", label: "Ingresos" },
-          { id: "expense", label: "Gastos" },
-          { id: "transfer", label: "Traspasos" }
-        ]}
-      />
-
-      <FilterSelect
-        label="Categoría"
-        value={filters.categoryId ?? ALL}
-        onChange={(value) =>
-          navigate({ categoryId: value === ALL ? undefined : value })
-        }
-        options={[
-          { id: ALL, label: "Todas" },
-          ...options.map((category) => ({
-            id: category.id,
-            label: category.archived_at
-              ? `${category.name} (archivada)`
-              : category.name
-          }))
-        ]}
-      />
-
-      <FilterSelect
-        label="Cuenta"
-        value={filters.accountId ?? ALL}
-        onChange={(value) =>
-          navigate({ accountId: value === ALL ? undefined : value })
-        }
-        options={[
-          { id: ALL, label: "Todas" },
-          { id: NO_ACCOUNT, label: "Sin cuenta" },
-          ...accountOptions.map((account) => ({
-            id: account.id,
-            label: account.archived_at
-              ? `${account.name} (archivada)`
-              : account.name
-          }))
-        ]}
-      />
-
-      {hasExtraFilters && (
+      {/* >= 768 px: el resto de filtros en la barra */}
+      <div className="hidden md:contents">
         <Button
           variant="ghost"
           size="sm"
-          onPress={() => {
-            setQ("")
-            navigate({
-              type: undefined,
-              categoryId: undefined,
-              accountId: undefined,
-              q: undefined
-            })
-          }}
+          aria-pressed={isAllMonths}
+          onPress={() => navigate({ month: isAllMonths ? month : ALL })}
         >
-          <X />
-          Limpiar filtros
+          {isAllMonths ? "Ver por mes" : "Todos los meses"}
         </Button>
-      )}
+
+        {typeSelect(false)}
+        {categorySelect(false)}
+        {accountSelect(false)}
+
+        {hasExtraFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onPress={() => {
+              setQ("")
+              navigate({
+                type: undefined,
+                categoryId: undefined,
+                accountId: undefined,
+                q: undefined
+              })
+            }}
+          >
+            <X />
+            Limpiar filtros
+          </Button>
+        )}
+      </div>
+
+      {/* < 768 px: hoja inferior. Aplica al elegir, sin botón "Aplicar" */}
+      <Drawer
+        isOpen={sheetOpen}
+        onOpenChange={setSheetOpen}
+      >
+        <Drawer.Backdrop className="md:hidden">
+          <Drawer.Content placement="bottom">
+            <Drawer.Dialog
+              aria-label="Filtros de movimientos"
+              className="pb-[env(safe-area-inset-bottom)]"
+            >
+              <Drawer.Handle />
+              <Drawer.Header>
+                <Drawer.Heading>Filtros</Drawer.Heading>
+              </Drawer.Header>
+              <Drawer.Body className="flex flex-col gap-3">
+                {typeSelect(true)}
+                {categorySelect(true)}
+                {accountSelect(true)}
+                <Button
+                  variant="secondary"
+                  fullWidth
+                  className="min-h-11"
+                  aria-pressed={isAllMonths}
+                  onPress={() => navigate({ month: isAllMonths ? month : ALL })}
+                >
+                  {isAllMonths ? "Ver por mes" : "Todos los meses"}
+                </Button>
+                {categoriesAction}
+              </Drawer.Body>
+              <Drawer.Footer className="items-center justify-between gap-3">
+                {sheetFilterCount > 0 ? (
+                  <Button
+                    variant="ghost"
+                    className="min-h-11"
+                    onPress={() =>
+                      navigate({
+                        type: undefined,
+                        categoryId: undefined,
+                        accountId: undefined,
+                        month: currentMonth()
+                      })
+                    }
+                  >
+                    <X />
+                    Limpiar filtros
+                  </Button>
+                ) : (
+                  <span />
+                )}
+                <Button
+                  variant="ghost"
+                  className="min-h-11 min-w-11"
+                  onPress={() => setSheetOpen(false)}
+                >
+                  Cerrar
+                </Button>
+              </Drawer.Footer>
+            </Drawer.Dialog>
+          </Drawer.Content>
+        </Drawer.Backdrop>
+      </Drawer>
     </div>
   )
 }
@@ -252,8 +366,10 @@ function FilterSelect({
   label,
   value,
   onChange,
-  options
+  options,
+  fullWidth = false
 }: {
+  fullWidth?: boolean
   label: string
   value: string
   onChange: (value: string) => void
@@ -266,16 +382,22 @@ function FilterSelect({
       aria-label={label}
       value={value}
       onChange={(key) => key != null && onChange(String(key))}
-      className="w-auto"
+      className={fullWidth ? "w-full" : "w-auto"}
     >
       <Select.Trigger
         className={cn(
           "min-h-8 gap-1.5 rounded-3xl py-1 text-sm",
+          fullWidth && "min-h-11 w-full",
           isActive && "bg-accent-soft text-accent-soft-foreground"
         )}
       >
         <span className={cn(!isActive && "text-muted")}>{label}:</span>
-        <Select.Value className="max-w-40 truncate font-medium" />
+        <Select.Value
+          className={cn(
+            "truncate font-medium",
+            fullWidth ? "flex-1 text-left" : "max-w-40"
+          )}
+        />
         <Select.Indicator />
       </Select.Trigger>
       <Select.Popover className="min-w-48">

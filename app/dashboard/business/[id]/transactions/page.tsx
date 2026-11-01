@@ -90,10 +90,13 @@ async function TransactionsContent({
             </Button>
           }
         />
-        <CategoriesSheet
-          workspaceId={workspace.id}
-          categories={categories}
-        />
+        {/* En el teléfono las categorías van dentro de la hoja de filtros */}
+        <div className="hidden md:block">
+          <CategoriesSheet
+            workspaceId={workspace.id}
+            categories={categories}
+          />
+        </div>
       </div>
 
       {isEmptyWorkspace ? (
@@ -110,6 +113,12 @@ async function TransactionsContent({
             filters={filters}
             categories={categories}
             accounts={accounts}
+            categoriesAction={
+              <CategoriesSheet
+                workspaceId={workspace.id}
+                categories={categories}
+              />
+            }
           />
           <TransactionsTotals
             totals={totals}

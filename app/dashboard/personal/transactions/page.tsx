@@ -114,8 +114,14 @@ async function TransactionsContent({
           filters={filters}
           categories={categories}
           accounts={accounts}
+          categoriesAction={
+            <CategoriesSheet
+              workspaceId={workspace.id}
+              categories={categories}
+            />
+          }
         />
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="hidden shrink-0 items-center gap-2 md:flex">
           <CategoriesSheet
             workspaceId={workspace.id}
             categories={categories}

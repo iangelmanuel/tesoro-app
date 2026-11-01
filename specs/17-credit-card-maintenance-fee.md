@@ -1,6 +1,6 @@
 # SPEC 17 — Cuota de manejo automática de la tarjeta
 
-> **Estado:** Borrador
+> **Estado:** Implementado
 > **Depende de:** SPEC 06, SPEC 16
 > **Fecha:** 2026-11-01
 > **Objetivo:** Que cada tarjeta de crédito cobre sola su cuota de manejo cada mes como una entrada que sube su saldo, sin tocar las cuentas del usuario, y que el usuario pueda editarla o borrarla.
@@ -134,23 +134,23 @@ Cálculo (en `src/features/debts/calculations.ts`): `nextFeeDate(debt, today)` d
 
 ## Criterios de aceptación
 
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
-- [ ] Las migraciones se aplican sin errores y `src/types/database.ts` incluye `fee_amount`, `fee_day`, `fee_charged_through`, `debt_entries.generated` y el valor `fee`.
-- [ ] `cron.job` incluye `charge-card-fees` con el horario `10 5 * * *`.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] Las migraciones se aplican sin errores y `src/types/database.ts` incluye `fee_amount`, `fee_day`, `fee_charged_through`, `debt_entries.generated` y el valor `fee`.
+- [x] `cron.job` incluye `charge-card-fees` con el horario `10 5 * * *`.
 - [ ] Crear una tarjeta con cuota $ 22.000 y día 5 no genera entradas el mismo día y el Sheet muestra la próxima cuota.
 - [ ] Ejecutar `charge_card_fees()` el 5 de diciembre agrega una entrada "Cuota de manejo" de $ 22.000 con fecha 5 de diciembre, marcada como automática, y sube el saldo y la utilización de la tarjeta.
-- [ ] Ejecutarla de nuevo el mismo día no duplica la entrada.
-- [ ] La cuota no cambia el saldo de ninguna cuenta ni crea movimiento en Movimientos.
-- [ ] Reportes, Presupuestos y los totales de ingresos y gastos no cambian por una cuota generada.
-- [ ] Eliminar una cuota generada baja el saldo y el job no la vuelve a crear.
-- [ ] Editar el monto de una cuota generada cambia el saldo y se conserva.
-- [ ] Cambiar el monto o el día de la cuota no genera cuotas de meses anteriores.
-- [ ] Una tarjeta con día de cobro 31 cobra el 30 de noviembre de 2026 y el 28 de febrero de 2027.
-- [ ] Archivar una tarjeta detiene las cuotas. Reactivarla no cobra los meses archivados.
-- [ ] Quitar la cuota (campos vacíos) detiene los cobros.
+- [x] Ejecutarla de nuevo el mismo día no duplica la entrada.
+- [x] La cuota no cambia el saldo de ninguna cuenta ni crea movimiento en Movimientos.
+- [x] Reportes, Presupuestos y los totales de ingresos y gastos no cambian por una cuota generada.
+- [x] Eliminar una cuota generada baja el saldo y el job no la vuelve a crear.
+- [x] Editar el monto de una cuota generada cambia el saldo y se conserva.
+- [x] Cambiar el monto o el día de la cuota no genera cuotas de meses anteriores.
+- [x] Una tarjeta con día de cobro 31 cobra el 30 de noviembre de 2026 y el 28 de febrero de 2027.
+- [x] Archivar una tarjeta detiene las cuotas. Reactivarla no cobra los meses archivados.
+- [x] Quitar la cuota (campos vacíos) detiene los cobros.
 - [ ] Un préstamo no muestra los campos de cuota y la BD rechaza `fee_amount` en él.
-- [ ] Un usuario A no puede leer ni cambiar la cuota de las tarjetas de B, y ni A ni `anon` pueden ejecutar `charge_card_fees()`.
-- [ ] Las tarjetas existentes, sin cuota, no cambian de saldo tras la migración.
+- [x] Un usuario A no puede leer ni cambiar la cuota de las tarjetas de B, y ni A ni `anon` pueden ejecutar `charge_card_fees()`.
+- [x] Las tarjetas existentes, sin cuota, no cambian de saldo tras la migración.
 
 ## Decisiones
 

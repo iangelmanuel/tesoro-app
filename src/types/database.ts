@@ -229,6 +229,7 @@ export type Database = {
           amount: number
           created_at: string
           debt_id: string
+          generated: boolean
           id: string
           import_id: string | null
           kind: Database["public"]["Enums"]["debt_entry_kind"]
@@ -243,6 +244,7 @@ export type Database = {
           amount: number
           created_at?: string
           debt_id: string
+          generated?: boolean
           id?: string
           import_id?: string | null
           kind: Database["public"]["Enums"]["debt_entry_kind"]
@@ -257,6 +259,7 @@ export type Database = {
           amount?: number
           created_at?: string
           debt_id?: string
+          generated?: boolean
           id?: string
           import_id?: string | null
           kind?: Database["public"]["Enums"]["debt_entry_kind"]
@@ -306,6 +309,9 @@ export type Database = {
           credit_limit: number | null
           due_day: number | null
           expected_on: string | null
+          fee_amount: number | null
+          fee_charged_through: string | null
+          fee_day: number | null
           id: string
           installment: number | null
           interest_rate: number | null
@@ -328,6 +334,9 @@ export type Database = {
           credit_limit?: number | null
           due_day?: number | null
           expected_on?: string | null
+          fee_amount?: number | null
+          fee_charged_through?: string | null
+          fee_day?: number | null
           id?: string
           installment?: number | null
           interest_rate?: number | null
@@ -350,6 +359,9 @@ export type Database = {
           credit_limit?: number | null
           due_day?: number | null
           expected_on?: string | null
+          fee_amount?: number | null
+          fee_charged_through?: string | null
+          fee_day?: number | null
           id?: string
           installment?: number | null
           interest_rate?: number | null
@@ -937,6 +949,7 @@ export type Database = {
           tx_count: number
         }[]
       }
+      charge_card_fees: { Args: never; Returns: undefined }
       counterparty_totals: {
         Args: {
           p_from: string
@@ -987,6 +1000,9 @@ export type Database = {
           due_day: number
           entries_count: number
           expected_on: string
+          fee_amount: number
+          fee_charged_through: string
+          fee_day: number
           id: string
           installment: number
           interest_rate: number
@@ -1213,7 +1229,7 @@ export type Database = {
     }
     Enums: {
       account_kind: "cash" | "bank" | "wallet" | "other"
-      debt_entry_kind: "payment" | "adjustment" | "advance"
+      debt_entry_kind: "payment" | "adjustment" | "advance" | "fee"
       debt_kind: "credit_card" | "loan" | "receivable"
       debt_status: "active" | "paid" | "archived"
       goal_status: "active" | "completed" | "archived"
@@ -1352,7 +1368,7 @@ export const Constants = {
   public: {
     Enums: {
       account_kind: ["cash", "bank", "wallet", "other"],
-      debt_entry_kind: ["payment", "adjustment", "advance"],
+      debt_entry_kind: ["payment", "adjustment", "advance", "fee"],
       debt_kind: ["credit_card", "loan", "receivable"],
       debt_status: ["active", "paid", "archived"],
       goal_status: ["active", "completed", "archived"],

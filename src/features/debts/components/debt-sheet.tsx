@@ -10,10 +10,12 @@ import {
   type DebtProjection,
   debtProjection,
   debtStatusLabel,
+  formatDayMonth,
   formatMonthYear,
   formatRate,
   isActiveDebt,
-  isReceivableOverdue
+  isReceivableOverdue,
+  nextFeeDate
 } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
 import { AdjustBalanceDialog } from "./adjust-balance-dialog"
@@ -94,6 +96,11 @@ export function DebtSheet({
                     debt={debt}
                     currency={currency}
                   />
+                  <NextFee
+                    debt={debt}
+                    today={today}
+                    currency={currency}
+                  />
                 </div>
 
                 {isActiveDebt(debt) && debt.balance > 0 && (
@@ -169,6 +176,32 @@ export function DebtSheet({
         </Drawer.Content>
       </Drawer.Backdrop>
     </Drawer>
+  )
+}
+
+/** "Próxima cuota: 5 de diciembre · $ 22.000", solo en tarjetas con cuota */
+function NextFee({
+  debt,
+  today,
+  currency
+}: {
+  debt: Debt
+  today: string
+  currency: string
+}) {
+  const dueOn = nextFeeDate(debt, today)
+
+  if (dueOn === null || debt.fee_amount === null) {
+    return null
+  }
+
+  return (
+    <p className="text-sm text-muted tabular-nums">
+      Próxima cuota: {formatDayMonth(dueOn)} ·{" "}
+      <span className="font-medium text-foreground">
+        {formatCurrency(debt.fee_amount, currency)}
+      </span>
+    </p>
   )
 }
 

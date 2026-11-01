@@ -164,9 +164,10 @@ export async function getDuplicateCandidates(
     if (error) return { error: DUPLICATES_ERROR }
     return {
       target: request.target,
-      // El avance (SPEC 16) no se importa: no hay duplicado posible
+      // El avance (SPEC 16) y la cuota (SPEC 17) no se importan: no hay
+      // duplicado posible
       candidates: data.flatMap((row) =>
-        row.kind === "advance"
+        row.kind === "advance" || row.kind === "fee"
           ? []
           : [
               {

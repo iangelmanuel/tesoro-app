@@ -47,7 +47,9 @@ const DEBT_FIELDS: Record<DebtKind, readonly string[]> = {
     "interest_rate",
     "rate_type",
     "min_payment",
-    "closing_day"
+    "closing_day",
+    "fee_amount",
+    "fee_day"
   ],
   loan: [
     "name",
@@ -492,7 +494,7 @@ export async function recordAdvance(
   return { ok: true }
 }
 
-// Edita un pago, un avance o un ajuste. En un pago se cambian monto, fecha y nota (el
+// Edita un pago, un avance, una cuota de manejo o un ajuste. En un pago se cambian monto, fecha y nota (el
 // trigger copia monto y fecha a su movimiento). En un ajuste, el formulario
 // pide el saldo real como en "Actualizar saldo" y el ajuste se recalcula
 // sobre el saldo sin él.
@@ -517,14 +519,16 @@ export async function updateEntry(
   let update: { amount: number; occurred_on: string; note: string | null }
   let values: Record<string, string>
 
-  if (entry.kind === "advance") {
+  // La cuota de manejo (SPEC 17) cambia monto, fecha y nota como un avance:
+  // sube el saldo y no lleva cuenta
+  if (entry.kind === "advance" || entry.kind === "fee") {
     values = readValues(formData, ADVANCE_FIELDS)
     const parsed = advanceSchema.safeParse(values)
 
     if (!parsed.success) {
       return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
     }
-    // Bajar un avance baja el saldo: no puede quedar negativo
+    // Bajar un avance o una cuota baja el saldo: no puede quedar negativo
     if (entry.debt.balance - entry.amount + parsed.data.amount < 0) {
       return { fieldErrors: { amount: [NEGATIVE_BALANCE] }, values }
     }
@@ -617,9 +621,11 @@ export async function deleteEntry(id: string): Promise<DebtActionResult> {
   if (entry.debt.status !== "active") {
     return { error: DEBT_NOT_ACTIVE }
   }
-  // Borrar un ajuste o un avance que subió el saldo lo baja
+  // Borrar un ajuste, un avance o una cuota que subió el saldo lo baja
   if (
-    (entry.kind === "adjustment" || entry.kind === "advance") &&
+    (entry.kind === "adjustment" ||
+      entry.kind === "advance" ||
+      entry.kind === "fee") &&
     entry.debt.balance - entry.amount < 0
   ) {
     return { error: NEGATIVE_BALANCE }

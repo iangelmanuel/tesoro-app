@@ -73,11 +73,14 @@ export function PaymentDialog({
     fixedDebt ?? debts?.find((option) => option.id === selectedDebtId)
   const kind = debt?.kind ?? "loan"
   const isAdvanceEntry = entry?.kind === "advance"
-  const noun = isAdvanceEntry
-    ? "avance"
-    : kind === "receivable"
-      ? "abono"
-      : "pago"
+  const isFeeEntry = entry?.kind === "fee"
+  const noun = isFeeEntry
+    ? "cuota de manejo"
+    : isAdvanceEntry
+      ? "avance"
+      : kind === "receivable"
+        ? "abono"
+        : "pago"
 
   return (
     <Modal
@@ -94,11 +97,13 @@ export function PaymentDialog({
                 {isEditing ? `Editar ${noun}` : `Registrar ${noun}`}
               </Modal.Heading>
               <p className="text-sm text-muted">
-                {isEditing && entry.transaction_id
-                  ? "El movimiento enlazado se actualiza con el monto y la fecha."
-                  : kind === "receivable"
-                    ? "Lo que te pagaron de esta cuenta por cobrar."
-                    : "Lo que pagaste de esta deuda."}
+                {isFeeEntry
+                  ? "Lo que el banco cobró a la tarjeta. No toca tus cuentas."
+                  : isEditing && entry.transaction_id
+                    ? "El movimiento enlazado se actualiza con el monto y la fecha."
+                    : kind === "receivable"
+                      ? "Lo que te pagaron de esta cuenta por cobrar."
+                      : "Lo que pagaste de esta deuda."}
               </p>
             </Modal.Header>
             <Modal.Body>
@@ -203,6 +208,7 @@ function PaymentForm({
     entry?.kind === "advance" ? "advance" : "payment"
   )
   const isAdvance = mode === "advance"
+  const isFee = entry?.kind === "fee"
   const [occurredOn, setOccurredOn] = useState(
     () => entry?.occurred_on ?? todayISO()
   )
@@ -219,7 +225,13 @@ function PaymentForm({
 
     if (result.ok) {
       const noun = isAdvance ? "Avance" : isReceivable ? "Abono" : "Pago"
-      toast.success(isEditing ? `${noun} actualizado` : `${noun} registrado`)
+      toast.success(
+        isFee
+          ? "Cuota actualizada"
+          : isEditing
+            ? `${noun} actualizado`
+            : `${noun} registrado`
+      )
       onSaved()
     }
     return result

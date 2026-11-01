@@ -62,13 +62,16 @@ function EntryRow({
   const [editing, setEditing] = useState(false)
   const isPayment = entry.kind === "payment"
   const isAdvance = entry.kind === "advance"
-  const label = isAdvance
-    ? "Avance"
-    : isPayment
-      ? debt.kind === "receivable"
-        ? "Abono"
-        : "Pago"
-      : "Ajuste"
+  const isFee = entry.kind === "fee"
+  const label = isFee
+    ? "Cuota de manejo"
+    : isAdvance
+      ? "Avance"
+      : isPayment
+        ? debt.kind === "receivable"
+          ? "Abono"
+          : "Pago"
+        : "Ajuste"
   // Los ajustes no mueven cuentas. El abono de una cuenta por cobrar y el
   // avance entran a la cuenta; el resto sale de ella.
   const accountText = isAdvance
@@ -87,6 +90,9 @@ function EntryRow({
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="flex items-center gap-2">
           <span className="text-sm font-medium">{label}</span>
+          {isFee && entry.generated && (
+            <span className="text-xs text-muted">· automática</span>
+          )}
           <span
             className={cn(
               "font-medium tabular-nums",
@@ -128,7 +134,7 @@ function EntryRow({
           >
             <Pencil />
           </Button>
-          {isPayment || isAdvance ? (
+          {isPayment || isAdvance || isFee ? (
             <PaymentDialog
               debt={debt}
               entry={entry}
@@ -147,6 +153,7 @@ function EntryRow({
           <DeleteEntryButton
             entry={entry}
             label={label}
+            feminine={isFee}
           />
         </div>
       )}
@@ -160,10 +167,12 @@ function accountPhrase(preposition: "A" | "Desde", name: string | null) {
 
 function DeleteEntryButton({
   entry,
-  label
+  label,
+  feminine
 }: {
   entry: DebtEntry
   label: string
+  feminine?: boolean
 }) {
   const [pending, startTransition] = useTransition()
 
@@ -173,7 +182,7 @@ function DeleteEntryButton({
       if (result.error) {
         toast.danger(result.error)
       } else {
-        toast.success(`${label} eliminado`)
+        toast.success(`${label} ${feminine ? "eliminada" : "eliminado"}`)
       }
     })
   }
@@ -195,11 +204,12 @@ function DeleteEntryButton({
             <AlertDialog.Header>
               <AlertDialog.Icon status="danger" />
               <AlertDialog.Heading>
-                ¿Eliminar este {label.toLowerCase()}?
+                ¿Eliminar {feminine ? "esta" : "este"} {label.toLowerCase()}?
               </AlertDialog.Heading>
               <AlertDialog.Body>
                 <p className="text-sm text-muted">
-                  El saldo se recalcula sin él.
+                  El saldo se recalcula sin {feminine ? "ella" : "él"}.
+                  {feminine && " No se vuelve a generar."}
                   {entry.transaction_id &&
                     " También se elimina su movimiento en Movimientos."}{" "}
                   Esta acción no se puede deshacer.

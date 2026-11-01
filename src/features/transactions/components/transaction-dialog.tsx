@@ -82,8 +82,10 @@ interface TransactionDialogProps {
   initialValues?: TransactionInitialValues
   /** Si llega, el movimiento nuevo es el pago de esta ocurrencia */
   recurring?: RecurringOccurrenceLink
-  /** Botón que abre el diálogo */
-  trigger: React.ReactNode
+  /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
+  trigger?: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export function TransactionDialog({
@@ -94,9 +96,13 @@ export function TransactionDialog({
   transaction,
   initialValues,
   recurring,
-  trigger
+  trigger,
+  open: controlledOpen,
+  onOpenChange
 }: TransactionDialogProps) {
-  const [open, setOpen] = useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const open = controlledOpen ?? uncontrolledOpen
+  const setOpen = onOpenChange ?? setUncontrolledOpen
   const isEditing = transaction !== undefined
   const isPayment = !isEditing && recurring !== undefined
 

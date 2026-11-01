@@ -1,12 +1,8 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Skeleton
-} from "@heroui/react"
+import { Card, Skeleton } from "@heroui/react"
 import { TriangleAlert } from "lucide-react"
+import { ChartCard } from "@/components/charts/chart-card"
+import { CardHeading } from "@/components/dashboard/card-heading"
+import { StatCard } from "@/components/dashboard/stat-card"
 import { WorkspaceNoTransactions } from "@/features/transactions/components/workspace-no-transactions"
 import type { SearchParams } from "@/features/transactions/filters"
 import { hasAnyTransactions } from "@/features/transactions/queries"
@@ -15,21 +11,23 @@ import {
   workspaceTransactionsPath
 } from "@/features/workspaces/paths"
 import type { Workspace } from "@/features/workspaces/queries"
-import {
-  TOP_CATEGORIES,
-  buildCategorySlices,
-  buildTopCategories
-} from "../chart-data"
+import { monthRange, shiftMonth } from "@/libs/dates"
+import { formatCurrency } from "@/libs/format"
+import { TOP_CATEGORIES, buildTopCategories } from "../chart-data"
+import { getPeriodComparison } from "../comparison"
 import { REPORT_LABELS } from "../labels"
+import { savingsRate } from "../metrics"
 import { parseReportParams } from "../period"
 import { getCategoryTotals, getMonthlyTotals } from "../queries"
-import { CategoryDonutChart } from "./category-donut-chart"
 import { CategorySummaryTable } from "./category-summary-table"
-import { IncomeExpenseChart } from "./income-expense-chart"
+import { IncomeExpenseChart, incomeExpenseLegend } from "./income-expense-chart"
 import { NoPeriodData } from "./no-period-data"
 import { ReportPeriodPicker } from "./report-period-picker"
 import { ReportTypeToggle } from "./report-type-toggle"
 import { TopCategoriesChart } from "./top-categories-chart"
+
+/** La tendencia muestra al menos estos meses, terminando en el periodo */
+const MIN_TREND_MONTHS = 6
 
 interface ReportsViewProps {
   workspace: Pick<Workspace, "id" | "type" | "currency">
@@ -44,13 +42,24 @@ export async function ReportsView({
 }: ReportsViewProps) {
   const params = parseReportParams(searchParams)
   const labels = REPORT_LABELS[workspace.type]
+  const currency = workspace.currency
 
-  const [monthly, categoryTotals] = await Promise.all([
-    getMonthlyTotals(workspace.id, params.from, params.to),
+  // Con un mes (o un trimestre) la tendencia tendría 1–3 barras: se amplía a
+  // los 6 meses que terminan en el periodo elegido
+  const lastMonth = params.to.slice(0, 7)
+  const minTrendFrom = monthRange(
+    shiftMonth(lastMonth, -(MIN_TREND_MONTHS - 1))
+  ).from
+  const trendFrom = params.from < minTrendFrom ? params.from : minTrendFrom
+
+  const [comparison, trend, categoryTotals] = await Promise.all([
+    getPeriodComparison(workspace.id, params.from, params.to),
+    getMonthlyTotals(workspace.id, trendFrom, params.to),
     getCategoryTotals(workspace.id, params.from, params.to, params.type)
   ])
+  const { current, previous } = comparison
 
-  const isEmptyPeriod = monthly.every((row) => row.txCount === 0)
+  const isEmptyPeriod = current.txCount === 0
   // Solo se consulta cuando el periodo no tiene movimientos
   if (isEmptyPeriod && !(await hasAnyTransactions(workspace.id))) {
     return (
@@ -65,10 +74,16 @@ export async function ReportsView({
   const typeNoun =
     params.type === "expense" ? labels.expenseNoun : labels.incomeNoun
   const noTypeData = `No hay ${typeLabel.toLowerCase()} en este periodo`
+  const rate = savingsRate(current.income, current.expense)
+  const previousRate = previous
+    ? savingsRate(previous.income, previous.expense)
+    : null
+  const trendBalance = trend.reduce((sum, row) => sum + row.balance, 0)
 
   return (
     <>
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      {/* Una sola barra: periodo y tipo de las categorías */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <ReportPeriodPicker
           params={params}
           path={workspaceReportsPath(workspace)}
@@ -83,12 +98,44 @@ export async function ReportsView({
       {params.warning && (
         <div
           role="status"
-          className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+          className="flex items-start gap-2 rounded-2xl bg-warning-soft p-3 text-sm text-warning-soft-foreground"
         >
           <TriangleAlert className="mt-0.5 size-4 shrink-0" />
           <p>{params.warning} Se muestra el mes actual.</p>
         </div>
       )}
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label={labels.income}
+          value={current.income}
+          previous={previous?.income}
+          trend="higher-is-better"
+          currency={currency}
+        />
+        <StatCard
+          label={labels.expense}
+          value={current.expense}
+          previous={previous?.expense}
+          trend="lower-is-better"
+          currency={currency}
+        />
+        <StatCard
+          label="Balance"
+          value={current.balance}
+          previous={previous?.balance}
+          trend="higher-is-better"
+          currency={currency}
+        />
+        <StatCard
+          label={labels.rate}
+          value={rate}
+          previous={previousRate}
+          trend="higher-is-better"
+          format="percent"
+          help={workspace.type === "personal" ? "savingsRate" : undefined}
+        />
+      </div>
 
       {isEmptyPeriod ? (
         <NoPeriodData
@@ -97,80 +144,68 @@ export async function ReportsView({
         />
       ) : (
         <>
-          <Card>
-            <CardHeader>
-              <CardTitle>Tendencia mensual</CardTitle>
-              <CardDescription className="first-letter:uppercase">
-                {params.label} · {labels.trend}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <IncomeExpenseChart
-                data={monthly}
-                currency={workspace.currency}
-                showBalance
-                labels={labels}
-                className="aspect-auto h-80 w-full"
-              />
-            </CardContent>
-          </Card>
+          <ChartCard
+            title="Tendencia mensual"
+            figure={formatCurrency(trendBalance, currency)}
+            figureCaption={`de balance en ${trend.length} meses`}
+            legend={incomeExpenseLegend(labels, true)}
+          >
+            <IncomeExpenseChart
+              data={trend}
+              currency={currency}
+              showBalance
+              labels={labels}
+              legend="none"
+              className="aspect-auto h-72 w-full"
+            />
+          </ChartCard>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>{typeLabel} por categoría</CardTitle>
-                <CardDescription className="first-letter:uppercase">
-                  {params.label}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {categoryTotals.length > 0 ? (
-                  <CategoryDonutChart
-                    slices={buildCategorySlices(categoryTotals)}
-                    currency={workspace.currency}
-                    title={`${typeLabel} por categoría de ${params.label}`}
-                  />
-                ) : (
-                  <NoPeriodData message={noTypeData} />
-                )}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  Top {TOP_CATEGORIES} categorías de {typeNoun}
-                </CardTitle>
-                <CardDescription className="first-letter:uppercase">
-                  {params.label}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {categoryTotals.length > 0 ? (
-                  <TopCategoriesChart
-                    categories={buildTopCategories(categoryTotals)}
-                    currency={workspace.currency}
-                    title={`Top ${TOP_CATEGORIES} categorías de ${typeNoun} de ${params.label}`}
-                  />
-                ) : (
-                  <NoPeriodData message={noTypeData} />
-                )}
-              </CardContent>
+          {/* Una sola vista de categorías: el top en barras y, al lado, la
+              tabla completa con el enlace a Movimientos */}
+          <div className="grid gap-4 lg:grid-cols-5">
+            <ChartCard
+              title={`Top ${TOP_CATEGORIES} categorías de ${typeNoun}`}
+              figure={
+                categoryTotals.length > 0
+                  ? formatCurrency(
+                      params.type === "expense"
+                        ? current.expense
+                        : current.income,
+                      currency
+                    )
+                  : undefined
+              }
+              figureCaption={
+                categoryTotals.length > 0
+                  ? `en ${categoryTotals.length} ${categoryTotals.length === 1 ? "categoría" : "categorías"}`
+                  : undefined
+              }
+              className="lg:col-span-2"
+            >
+              {categoryTotals.length > 0 ? (
+                <TopCategoriesChart
+                  categories={buildTopCategories(categoryTotals)}
+                  currency={currency}
+                  title={`Top ${TOP_CATEGORIES} categorías de ${typeNoun} de ${params.label}`}
+                />
+              ) : (
+                <NoPeriodData message={noTypeData} />
+              )}
+            </ChartCard>
+            <Card className="gap-3 lg:col-span-3">
+              <CardHeading title={`${typeLabel} por categoría`} />
+              {categoryTotals.length > 0 ? (
+                <CategorySummaryTable
+                  totals={categoryTotals}
+                  params={params}
+                  currency={currency}
+                  transactionsPath={workspaceTransactionsPath(workspace)}
+                />
+              ) : (
+                <NoPeriodData message={noTypeData} />
+              )}
             </Card>
           </div>
-
-          <section className="flex flex-col gap-3">
-            <h2 className="text-lg font-semibold">Resumen por categoría</h2>
-            {categoryTotals.length > 0 ? (
-              <CategorySummaryTable
-                totals={categoryTotals}
-                params={params}
-                currency={workspace.currency}
-                transactionsPath={workspaceTransactionsPath(workspace)}
-              />
-            ) : (
-              <NoPeriodData message={noTypeData} />
-            )}
-          </section>
         </>
       )}
     </>
@@ -180,16 +215,23 @@ export async function ReportsView({
 export function ReportsViewSkeleton() {
   return (
     <>
-      <div className="flex flex-col gap-3 lg:flex-row lg:justify-between">
-        <Skeleton className="h-9 w-80" />
-        <Skeleton className="h-9 w-48" />
+      <div className="flex flex-wrap justify-between gap-2">
+        <Skeleton className="h-9 w-80 rounded-3xl" />
+        <Skeleton className="h-8 w-44 rounded-3xl" />
       </div>
-      <Skeleton className="h-96 w-full" />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Skeleton className="h-96" />
-        <Skeleton className="h-96" />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }, (_, index) => (
+          <Skeleton
+            key={index}
+            className="h-28 rounded-3xl"
+          />
+        ))}
       </div>
-      <Skeleton className="h-64 w-full" />
+      <Skeleton className="h-96 w-full rounded-3xl" />
+      <div className="grid gap-4 lg:grid-cols-5">
+        <Skeleton className="h-80 rounded-3xl lg:col-span-2" />
+        <Skeleton className="h-80 rounded-3xl lg:col-span-3" />
+      </div>
     </>
   )
 }

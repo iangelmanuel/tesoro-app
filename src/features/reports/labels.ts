@@ -13,6 +13,8 @@ export interface ReportLabels {
   series: string
   /** Descripción de la tendencia mensual */
   trend: string
+  /** KPI de (ingresos − gastos) / ingresos */
+  rate: string
 }
 
 // Personal habla de ingresos y gastos; Empresa, de ventas y costos y gastos.
@@ -24,7 +26,8 @@ export const REPORT_LABELS = {
     incomeNoun: "ingreso",
     expenseNoun: "gasto",
     series: "Ingresos y gastos",
-    trend: "ingresos, gastos y balance por mes"
+    trend: "ingresos, gastos y balance por mes",
+    rate: "Tasa de ahorro"
   },
   business: {
     income: "Ventas",
@@ -32,6 +35,7 @@ export const REPORT_LABELS = {
     incomeNoun: "venta",
     expenseNoun: "costo",
     series: "Ventas y costos",
-    trend: "ventas, costos y gastos, y balance por mes"
+    trend: "ventas, costos y gastos, y balance por mes",
+    rate: "Margen"
   }
 } as const satisfies Record<WorkspaceType, ReportLabels>

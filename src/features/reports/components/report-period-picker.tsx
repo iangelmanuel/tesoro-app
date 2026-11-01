@@ -61,19 +61,21 @@ export function ReportPeriodPicker({ params, path }: ReportPeriodPickerProps) {
 
   return (
     <div
+      aria-busy={pending}
       className={cn(
-        "flex flex-col gap-2 transition-opacity sm:flex-row sm:items-end",
+        "flex flex-wrap items-center gap-2 transition-opacity duration-150 motion-reduce:transition-none",
         pending && "opacity-60"
       )}
     >
       <Select
-        aria-label="Tipo de periodo"
-        className="sm:w-36"
+        aria-label="Periodo"
         value={params.period}
         onChange={(value) => value && changePeriod(value as ReportPeriod)}
+        className="w-auto"
       >
-        <Select.Trigger>
-          <Select.Value />
+        <Select.Trigger className="min-h-8 gap-1.5 rounded-3xl py-1 text-sm">
+          <span className="text-muted">Periodo:</span>
+          <Select.Value className="font-medium" />
           <Select.Indicator />
         </Select.Trigger>
         <Select.Popover>
@@ -133,32 +135,39 @@ function StepControl({
   const isCurrent = value === currentPeriodValue(period)
 
   return (
-    <div className="flex items-center gap-1">
-      <Button
-        variant="outline"
-        isIconOnly
-        aria-label={step.previous}
-        onPress={() => onChange(shiftPeriodValue(period, value, -1))}
-      >
-        <ChevronLeft />
-      </Button>
-      <span
-        className="min-w-36 text-center text-sm font-medium first-letter:uppercase"
-        aria-live="polite"
-      >
-        {label}
-      </span>
-      <Button
-        variant="outline"
-        isIconOnly
-        aria-label={step.next}
-        onPress={() => onChange(shiftPeriodValue(period, value, 1))}
-      >
-        <ChevronRight />
-      </Button>
+    // Mismo control que el mes de Movimientos: flechas y el periodo como
+    // texto en una pill
+    <div className="flex items-center gap-2">
+      <div className="flex items-center gap-0.5 rounded-3xl bg-default/60 p-0.5">
+        <Button
+          variant="ghost"
+          size="sm"
+          isIconOnly
+          aria-label={step.previous}
+          onPress={() => onChange(shiftPeriodValue(period, value, -1))}
+        >
+          <ChevronLeft />
+        </Button>
+        <span
+          className="min-w-32 px-1 text-center text-sm font-medium first-letter:uppercase"
+          aria-live="polite"
+        >
+          {label}
+        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          isIconOnly
+          aria-label={step.next}
+          onPress={() => onChange(shiftPeriodValue(period, value, 1))}
+        >
+          <ChevronRight />
+        </Button>
+      </div>
       {!isCurrent && (
         <Button
           variant="ghost"
+          size="sm"
           onPress={() => onChange(currentPeriodValue(period))}
         >
           Hoy
@@ -179,7 +188,8 @@ function RangeControl({
   onChange: (from: string, to: string) => void
 }) {
   return (
-    <div className="flex items-end gap-2">
+    // Envuelve a 375 px en vez de desbordar
+    <div className="flex flex-wrap items-end gap-2">
       <DatePickerField
         name="from"
         label="Desde"

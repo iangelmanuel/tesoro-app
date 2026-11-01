@@ -358,7 +358,7 @@ de la página es el saludo del header ("Buenas tardes, Angel").
      (con (i) en la utilización), dos por fila (ver
      [Gastos fijos y presupuestos](#gastos-fijos-y-presupuestos)).
 - En SPEC 14 salieron del Resumen, por "claridad antes que cantidad":
-  - la dona por categoría, que sigue en Reportes;
+  - la dona por categoría (en Reportes quedan el top 5 y la tabla);
   - la tasa de ahorro, que pasa a las KPI de Reportes;
   - el gasto promedio diario, la proyección de gasto, la categoría de mayor
     gasto y el conteo de movimientos del mes.
@@ -378,10 +378,17 @@ Periodo y tipo viven en la URL, así un enlace se puede compartir y recargar:
 - Cualquier valor inválido cae a su valor por defecto. Un rango con fechas
   inválidas, `from > to` o más de 24 meses muestra un aviso y cae al mes
   actual.
+- Arriba, 4 KPI del periodo con badge de variación contra el periodo anterior
+  equivalente (los N meses previos, o los mismos días antes en un rango):
+  ingresos, gastos, balance y tasa de ahorro (en Empresa, margen), esta con
+  su (i) y la variación en puntos.
 - La tendencia siempre agrupa por mes (barras de ingresos y gastos, línea de
-  balance) y no cambia con el tipo.
-- El toggle Gastos/Ingresos cambia la dona (top 6 + "Otras"), el top 5 en
-  barras horizontales y la tabla resumen.
+  balance) y no cambia con el tipo. Muestra al menos los 6 meses que terminan
+  en el periodo elegido, para que un mes o un trimestre no quede en 1–3
+  barras.
+- El toggle Gastos/Ingresos cambia el top 5 en barras horizontales y la
+  tabla resumen, lado a lado. Desde SPEC 14 no hay dona en Reportes: repetía
+  los mismos totales por categoría.
 - La tabla muestra por categoría el total, el % del total del tipo (redondeado
   para que sume 100), el número de movimientos y el promedio por movimiento.
   Cada fila abre Movimientos filtrado por categoría y tipo, en ese mes si el

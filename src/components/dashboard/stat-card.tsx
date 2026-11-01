@@ -3,6 +3,7 @@ import { ArrowDownRight, ArrowUpRight } from "lucide-react"
 import type { HelpKey } from "@/config/help"
 import { formatCurrency } from "@/libs/format"
 import { HelpHint } from "./help-hint"
+import { TONE_BADGE_CLASSES } from "./tone"
 
 export type StatTrend = "higher-is-better" | "lower-is-better"
 export type StatFormat = "currency" | "percent" | "number"
@@ -98,12 +99,11 @@ export function StatCard({
           {rounded !== null && rounded !== 0 && (
             <span
               className={cn(
-                // Texto en foreground (el gasto sobre su tinte no da 4.5:1);
-                // la flecha y el tinte llevan el color del significado
-                "inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-medium text-foreground tabular-nums",
-                isGood
-                  ? "bg-(--income)/12 [&>svg]:text-(--income)"
-                  : "bg-(--expense)/12 [&>svg]:text-(--expense)"
+                // Texto y flecha del color del significado, con los pares
+                // *-soft de HeroUI (≥ 6.9:1). --income/--expense sobre su
+                // propio tinte no daban 4.5:1
+                "inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums",
+                isGood ? TONE_BADGE_CLASSES.success : TONE_BADGE_CLASSES.danger
               )}
             >
               {isUp ? (

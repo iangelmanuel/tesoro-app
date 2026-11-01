@@ -92,6 +92,20 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
 - **Contexto de diseño**: `PRODUCT.md` (usuarios, propósito, voz, principios
   y restricciones visuales) es el contexto de Impeccable
   (`.claude/skills/impeccable/`). Léelo antes de diseñar o revisar UI.
+- **`docs/ui.md`** es la guía de la interfaz: tokens, contraste verificado,
+  componentes propios, dónde vive cada pantalla y cómo usar los comandos de
+  Impeccable (`teach`, `audit`, `critique`, `polish`, `distill`, `animate`).
+- **Tema**: Inter (`next/font/google`, `--font-sans`) y oscuro por defecto
+  (`defaultTheme="dark"`; el toggle del aside cambia a claro). Fondo casi
+  negro y tarjetas gris oscuro **sin borde**; radios grandes en tarjetas y
+  pill en botones, tabs y selects. Montos con `tabular-nums`.
+- **Un solo título por pantalla**: lo pone el header (`DashboardTitle`); las
+  páginas no repiten `<h1>`. Las acciones principales van en los accesos
+  rápidos del header, no en la página.
+- KPIs con `StatCard`, cabeceras de tarjeta con `CardHeading`, ayudas con
+  `HelpHint` (textos en `src/config/help.ts`), vacíos con `EmptyState` /
+  `CardEmpty` y carga con `CardSkeleton`. Estados con `tone.ts`, nunca con la
+  paleta cruda de Tailwind.
 - **HeroUI v3** (`@heroui/react` y `@heroui/styles`), sin Provider. Se
   importa **directo de `@heroui/react`**: no hay wrappers ni
   `src/components/ui/`. `cn` también sale de `@heroui/react`.
@@ -105,8 +119,11 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   `validationBehavior="aria"` (valida el servidor).
 - Fechas: `DatePickerField` (`src/components/forms/date-picker-field.tsx`),
   que trabaja con `YYYY-MM-DD`. Toasts: `toast` de `@heroui/react`.
-- Gráficas: Recharts con `src/components/charts/*` (contenedor, tooltip y
-  leyenda con superficie HeroUI); colores siempre desde tokens.
+- Gráficas: Recharts con `src/components/charts/*`: `ChartCard` (cabecera
+  con leyenda y cifra), `ChartContainer`, las props de `chart-style.ts` y los
+  montos abreviados de `chart-format.ts`. Colores siempre desde tokens.
+  Funciones que llaman componentes de servidor no van en archivos
+  `"use client"`.
 - Tokens en `globals.css` con los nombres de HeroUI (`--accent` es el
   primario, `--muted` es texto atenuado, `--surface`, `--overlay`,
   `--default`, `--danger`…), más los propios `--brand`, `--income`,

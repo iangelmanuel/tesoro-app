@@ -1,6 +1,6 @@
 # SPEC 14 — Pulido de la UI con Impeccable (base, shell y pantallas principales)
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 13
 > **Fecha:** 2026-10-31
 > **Objetivo:** Que el dashboard de Tesoro se vea simple, compacto y ordenado sobre fondo negro, con Inter, accesos rápidos en el header y gráficas rediseñadas, usando Impeccable como guía de diseño.

@@ -136,8 +136,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `text-brand` utility for accent-colored small text with AA contrast.
 - "Landing", "Páginas legales" and "Marca" sections in `docs/producto.md`.
 
+- Impeccable 4.8.0 as a versioned project skill in `.claude/skills/impeccable/` with its subagents in `.claude/agents/`. The platform engine binary is ignored by git and downloaded on first use.
+- `PRODUCT.md` with the design context (users, purpose, voice, principles and visual constraints), linked from `CLAUDE.md`.
+- `docs/ui.md`: tokens, verified contrast, own components, where each screen lives and how to use the Impeccable commands.
+- Dashboard header title: a greeting by Bogotá time on the Personal summary ("Buenas tardes, …") and the page title elsewhere, as the only `<h1>` of each screen.
+- Header quick actions: "Registrar movimiento" plus a "Más" menu (goal contribution and debt payment with a goal/debt `Select`, and import) in Personal, and "Registrar operación" in Business.
+- `StatCard` KPIs with a variation badge against the equivalent previous period, colored by meaning (rising expenses are bad), computed on the server with the existing queries (`getPeriodComparison`).
+- `HelpHint` (i) popovers for score, card utilization, savings rate and accumulated balance, with texts in `src/config/help.ts`.
+- `CardHeading`, `CardSkeleton` and status tone classes (`tone.ts`) for dashboard cards.
+- Chart system: `ChartCard` (title, legend, range and headline figure), shared Recharts props (`chart-style.ts`) and abbreviated es-CO axis amounts (`chart-format.ts`).
+- "Saltar al contenido" link and a `<main>` landmark in the dashboard.
+- Reports KPIs (income, expenses, balance and savings rate, or margin in Business).
+
 ### Changed
 
+- Inter replaces Geist, and the dark theme is the default.
+- Dark theme retuned to near-black neutrals with borderless dark-gray cards; light background, money, danger, chart and focus tokens adjusted so every text pair keeps AA and the money series pass a color-blind palette check.
+- Aside reordered: logo, Personal/Business pill tabs, compact navigation, and help, theme toggle and user menu at the bottom. The theme moved out of the user menu.
+- Personal summary redesigned: 4 KPIs, income vs. expenses chart with a side column (score and accounts), recent transactions and 4 secondary cards.
+- Transactions: one-line filter bar with labeled pill filters and "Limpiar filtros", small KPIs, a compact table that hides columns on narrow screens, and no duplicate "Nuevo movimiento" button.
+- Reports: one control bar shared in style with Transactions, a trend of at least 6 months ending at the selected period, and the top 5 categories next to a compact category table.
+- Charts: horizontal dashed grid only, rounded bars, 2 px smooth lines, overlay tooltip with full amounts, focusable surfaces with a visible focus ring and an accessible name.
+- Empty states and skeletons use the card container (no dashed borders), and account cards follow the borderless card style.
+- `getCategories` and `getAccountBalances` are cached per request.
+- `SITE.seo.themeColor` updated to the new backgrounds.
 - Every screen migrated from shadcn/ui to HeroUI: forms, dialogs, alert dialogs, menus, drawers, selects, tabs, tables, pagination, toggles, checkboxes, radios, tooltips, chips, avatars and skeletons. Toasts use HeroUI's `toast` and dates the HeroUI `DatePicker`; values sent by forms are unchanged.
 - Money, category, status and chart colors retuned to the new theme with AA contrast in light and dark mode; `CATEGORY_COLORS` keys are unchanged.
 - `SITE.seo.themeColor` updated to the new light and dark backgrounds.
@@ -183,10 +205,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- `SummaryCards` and the secondary summary metrics (daily average, spending projection, top category, transaction count); the category donut from the Personal summary and from Reports.
+- `quick-add-transaction` components, replaced by the header quick actions.
 - shadcn/ui: `src/components/ui/`, `components.json`, `src/libs/utils.ts` and the `shadcn`, `radix-ui`, `class-variance-authority`, `tw-animate-css`, `cn`, `sonner` and `react-day-picker` packages.
 
 ### Fixed
 
+- The Transactions month button showed one label and announced another (WCAG 2.5.3); the month is now text with a single "Todos los meses" toggle.
+- Charts were keyboard-focusable without a visible focus indicator or a name.
+- Line series were cut short after the chart container resized (stale `stroke-dasharray`).
+- Progress bars had no accessible name, and Ctrl/⌘+B toggled the sidebar while typing in a field.
 - Purging an account or a business failed when the workspace had transfers: `transfers` only referenced `accounts` (`no action`) and had no foreign key to `workspaces`. It now has `transfers_workspace_id_fkey ... on delete cascade`.
 - `Metadata` / `Viewport` were imported as default exports from `next`, which broke type checking.
 - The transactions page read the current date before the session, which made Next.js reject `new Date()` while prerendering when the URL had no `month`.

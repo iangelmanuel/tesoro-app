@@ -6,7 +6,6 @@ import { Button, Dropdown, Label } from "@heroui/react"
 import { ChevronDown, CreditCard, FileUp, Plus, Target } from "lucide-react"
 import { SITE } from "@/config/site"
 import type { AccountOption } from "@/features/accounts/components/account-select"
-import type { Category } from "@/features/categories/queries"
 import { DEBTS_PATH } from "@/features/debts/calculations"
 import {
   type DebtOption,
@@ -19,34 +18,15 @@ import {
 import { GOALS_PATH } from "@/features/goals/progress"
 import { IMPORT_PATH } from "@/features/imports/constants"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
-import type { WorkspaceType } from "@/features/workspaces/queries"
-
-/** Espacio donde el acceso rápido puede crear movimientos */
-export interface QuickActionsWorkspace {
-  id: string
-  type: WorkspaceType
-  categories: Category[]
-  accounts: AccountOption[]
-}
-
-interface QuickActionsMenuProps {
-  workspaces: QuickActionsWorkspace[]
-  /** Metas activas de Personal */
-  goals: GoalOption[]
-  /** Deudas activas de Personal (sin cuentas por cobrar) */
-  debts: DebtOption[]
-}
+import { useQuickActions } from "./quick-actions-context"
 
 type MoreAction = "contribution" | "payment" | "import"
 
 // En /dashboard/personal/* registra en Personal y en
 // /dashboard/business/[id]/* en esa empresa. En otras rutas (cuenta, estado
 // vacío de Empresa) no hay accesos
-export function QuickActionsMenu({
-  workspaces,
-  goals,
-  debts
-}: QuickActionsMenuProps) {
+export function QuickActionsMenu() {
+  const { workspaces, goals, debts } = useQuickActions()
   const pathname = usePathname()
   const params = useParams<{ id?: string }>()
   const personal = SITE.routes.dashboardPersonal

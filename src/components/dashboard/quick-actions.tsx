@@ -5,14 +5,17 @@ import { getCategories } from "@/features/categories/queries"
 import { isActiveDebt } from "@/features/debts/calculations"
 import { getDebts } from "@/features/debts/queries"
 import { getGoals } from "@/features/goals/queries"
+import { getUpcomingPayments } from "@/features/recurring-expenses/queries"
 import {
   getBusinessWorkspaces,
   getPersonalWorkspace
 } from "@/features/workspaces/queries"
 import {
-  QuickActionsMenu,
+  type QuickActionsData,
+  QuickActionsProvider,
   type QuickActionsWorkspace
-} from "./quick-actions-menu"
+} from "./quick-actions-context"
+import { QuickActionsMenu } from "./quick-actions-menu"
 
 // Lee la sesión: va dentro de un Suspense por cacheComponents. El layout no
 // conoce la ruta en el servidor, así que carga Personal (con sus metas y
@@ -30,7 +33,7 @@ async function QuickActionsLoader() {
       .map((business) => ({ id: business.id, type: business.type }))
   ]
 
-  const [workspaces, goals, debts] = await Promise.all([
+  const [workspaces, goals, debts, payments] = await Promise.all([
     Promise.all(
       targets.map(async (workspace): Promise<QuickActionsWorkspace> => {
         const [categories, accounts] = await Promise.all([
@@ -41,19 +44,28 @@ async function QuickActionsLoader() {
       })
     ),
     getGoals(personal.id),
-    getDebts(personal.id)
+    getDebts(personal.id),
+    getUpcomingPayments(personal.id)
   ])
 
+  const data: QuickActionsData = {
+    workspaces,
+    goals: goals
+      .filter((goal) => goal.status === "active")
+      .map(({ id, name }) => ({ id, name })),
+    debts: debts
+      .filter(isActiveDebt)
+      .map(({ id, kind, name }) => ({ id, kind, name })),
+    // Ocurrencias sin pagar: las vencidas quedan primero (orden de vencimiento)
+    pendingPayments: payments.filter(
+      (payment) => payment.transactionId === null
+    )
+  }
+
   return (
-    <QuickActionsMenu
-      workspaces={workspaces}
-      goals={goals
-        .filter((goal) => goal.status === "active")
-        .map(({ id, name }) => ({ id, name }))}
-      debts={debts
-        .filter(isActiveDebt)
-        .map(({ id, kind, name }) => ({ id, kind, name }))}
-    />
+    <QuickActionsProvider value={data}>
+      <QuickActionsMenu />
+    </QuickActionsProvider>
   )
 }
 

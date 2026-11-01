@@ -10,22 +10,25 @@ import {
   ListBox,
   Modal,
   Select,
+  Tabs,
   TextField,
   toast
 } from "@heroui/react"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import {
-  type AccountOption,
-  AccountSelect,
-  selectableAccounts
-} from "@/features/accounts/components/account-select"
+  type PaymentAccountOption,
+  PaymentAccountSection,
+  parsePaymentAmount
+} from "@/features/accounts/components/payment-account-section"
 import { todayISO } from "@/libs/dates"
-import { recordPayment, updateEntry } from "../actions"
+import { recordAdvance, recordPayment, updateEntry } from "../actions"
 import type { Debt, DebtEntry } from "../queries"
 import type { PaymentFormState } from "../types"
 import { amountInput } from "./field"
 
 type PaymentDebt = Pick<Debt, "id" | "kind">
+
+type PaymentMode = "payment" | "advance"
 
 /** Deuda que se puede elegir en el diálogo (acceso rápido del header) */
 export type DebtOption = Pick<Debt, "id" | "kind" | "name">
@@ -35,17 +38,20 @@ interface PaymentDialogProps {
   debt?: PaymentDebt
   /** Deudas activas para elegir; se usa cuando no llega `debt` */
   debts?: DebtOption[]
-  /** Si llega, el diálogo edita este pago */
+  /** Si llega, el diálogo edita este pago o avance */
   entry?: DebtEntry
-  /** Cuentas para el movimiento que crea el pago; solo al registrar */
-  accounts?: AccountOption[]
+  /** Cuentas con saldo para la cuenta del pago; solo al registrar */
+  accounts?: PaymentAccountOption[]
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
   trigger?: React.ReactNode
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
 
-/** Pago de tarjeta o préstamo, o abono de una cuenta por cobrar */
+/**
+ * Pago de tarjeta o préstamo, abono de una cuenta por cobrar y avance de
+ * tarjeta
+ */
 export function PaymentDialog({
   debt: fixedDebt,
   debts,
@@ -66,7 +72,12 @@ export function PaymentDialog({
   const debt: PaymentDebt | undefined =
     fixedDebt ?? debts?.find((option) => option.id === selectedDebtId)
   const kind = debt?.kind ?? "loan"
-  const noun = kind === "receivable" ? "abono" : "pago"
+  const isAdvanceEntry = entry?.kind === "advance"
+  const noun = isAdvanceEntry
+    ? "avance"
+    : kind === "receivable"
+      ? "abono"
+      : "pago"
 
   return (
     <Modal
@@ -161,9 +172,21 @@ function DebtSelect({
 interface PaymentFormProps {
   debt: PaymentDebt
   entry?: DebtEntry
-  accounts: AccountOption[]
+  accounts: PaymentAccountOption[]
   onSaved: () => void
   onCancel: () => void
+}
+
+// Efecto real del pago o avance de una tarjeta según la cuenta elegida
+function cardEffect(mode: PaymentMode, accountName: string | null) {
+  if (mode === "advance") {
+    return accountName
+      ? `Entra dinero a ${accountName} y sube la deuda de la tarjeta. No cuenta como ingreso.`
+      : "El avance no toca tus cuentas: solo sube el saldo de la tarjeta."
+  }
+  return accountName
+    ? `Mueve dinero de ${accountName} a la tarjeta. No cuenta como gasto.`
+    : "Este pago no toca tus cuentas: solo baja el saldo de la tarjeta. Las compras ya son gasto."
 }
 
 function PaymentForm({
@@ -175,6 +198,11 @@ function PaymentForm({
 }: PaymentFormProps) {
   const isEditing = entry !== undefined
   const isReceivable = debt.kind === "receivable"
+  const isCard = debt.kind === "credit_card"
+  const [mode, setMode] = useState<PaymentMode>(
+    entry?.kind === "advance" ? "advance" : "payment"
+  )
+  const isAdvance = mode === "advance"
   const [occurredOn, setOccurredOn] = useState(
     () => entry?.occurred_on ?? todayISO()
   )
@@ -185,10 +213,12 @@ function PaymentForm({
   >(async (prevState, formData) => {
     const result = isEditing
       ? await updateEntry(prevState, formData)
-      : await recordPayment(prevState, formData)
+      : isAdvance
+        ? await recordAdvance(prevState, formData)
+        : await recordPayment(prevState, formData)
 
     if (result.ok) {
-      const noun = isReceivable ? "Abono" : "Pago"
+      const noun = isAdvance ? "Avance" : isReceivable ? "Abono" : "Pago"
       toast.success(isEditing ? `${noun} actualizado` : `${noun} registrado`)
       onSaved()
     }
@@ -197,10 +227,18 @@ function PaymentForm({
 
   const errors = state.fieldErrors
   const values = state.values
+  const [amountText, setAmountText] = useState(
+    () => values?.amount ?? amountInput(entry?.amount)
+  )
   const [createTransaction, setCreateTransaction] = useState(
     () => !values || values.create_transaction === "on"
   )
   const [accountId, setAccountId] = useState("")
+  const accountName =
+    accounts.find((account) => account.id === accountId)?.name ?? null
+
+  // La cuenta se elige al registrar; al editar solo cambian monto, fecha y nota
+  const showAccount = !isEditing && (isCard || createTransaction)
 
   return (
     <form
@@ -222,12 +260,33 @@ function PaymentForm({
         />
       )}
 
+      {isCard && !isEditing && (
+        <Tabs
+          selectedKey={mode}
+          onSelectionChange={(key) => setMode(key as PaymentMode)}
+        >
+          <Tabs.ListContainer>
+            <Tabs.List aria-label="Tipo de movimiento de la tarjeta">
+              <Tabs.Tab id="payment">
+                Pago
+                <Tabs.Indicator />
+              </Tabs.Tab>
+              <Tabs.Tab id="advance">
+                Avance
+                <Tabs.Indicator />
+              </Tabs.Tab>
+            </Tabs.List>
+          </Tabs.ListContainer>
+        </Tabs>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField
           name="amount"
           inputMode="decimal"
           autoComplete="off"
-          defaultValue={values?.amount ?? amountInput(entry?.amount)}
+          value={amountText}
+          onChange={setAmountText}
           isRequired
           isInvalid={Boolean(errors?.amount)}
           validationBehavior="aria"
@@ -259,50 +318,59 @@ function PaymentForm({
       >
         <Label>Nota (opcional)</Label>
         <Input
-          placeholder={isReceivable ? "Primer abono" : "Cuota de noviembre"}
+          placeholder={
+            isAdvance
+              ? "Avance en cajero"
+              : isReceivable
+                ? "Primer abono"
+                : "Cuota de noviembre"
+          }
         />
         <FieldError>{errors?.note?.[0]}</FieldError>
       </TextField>
 
       {/* El movimiento solo se crea al registrar; al editar, el trigger
           sincroniza el que ya existe */}
-      {!isEditing &&
-        (debt.kind === "credit_card" ? (
-          <p className="rounded-lg bg-default p-3 text-sm text-muted">
-            Las compras con tarjeta se registran como gasto al comprar. Este
-            pago no crea un movimiento.
-          </p>
-        ) : (
-          <>
-            <Checkbox
-              name="create_transaction"
-              value="on"
-              isSelected={createTransaction}
-              onChange={setCreateTransaction}
-            >
-              <Checkbox.Control>
-                <Checkbox.Indicator />
-              </Checkbox.Control>
-              <Checkbox.Content className="text-sm">
-                {isReceivable
-                  ? "Registrar como ingreso"
-                  : "Registrar como gasto"}
-              </Checkbox.Content>
-            </Checkbox>
-            {/* La cuenta es la del movimiento: sin él no aplica */}
-            {createTransaction && (
-              <AccountSelect
-                name="account_id"
-                label="Cuenta"
-                value={accountId}
-                onChange={setAccountId}
-                accounts={selectableAccounts(accounts)}
-                allowNone
-                error={errors?.account_id?.[0]}
-              />
-            )}
-          </>
-        ))}
+      {!isEditing && !isCard && (
+        <Checkbox
+          name="create_transaction"
+          value="on"
+          isSelected={createTransaction}
+          onChange={setCreateTransaction}
+        >
+          <Checkbox.Control>
+            <Checkbox.Indicator />
+          </Checkbox.Control>
+          <Checkbox.Content className="text-sm">
+            {isReceivable ? "Registrar como ingreso" : "Registrar como gasto"}
+          </Checkbox.Content>
+        </Checkbox>
+      )}
+
+      {/* En préstamos y cuentas por cobrar la cuenta es la del movimiento: sin
+          él no aplica. El avance no lleva traspaso y un abono es un ingreso */}
+      {showAccount && (
+        <PaymentAccountSection
+          accounts={accounts}
+          amount={parsePaymentAmount(amountText)}
+          errors={{
+            account_id: errors?.account_id?.[0],
+            transfer_from: errors?.transfer_from?.[0],
+            transfer_amount: errors?.transfer_amount?.[0]
+          }}
+          label={
+            isAdvance || isReceivable ? "Cuenta que recibe" : "Cuenta que paga"
+          }
+          allowTransfer={!isAdvance && !isReceivable}
+          onAccountChange={setAccountId}
+        />
+      )}
+
+      {!isEditing && isCard && (
+        <p className="rounded-lg bg-default p-3 text-sm text-muted">
+          {cardEffect(mode, accountName)}
+        </p>
+      )}
 
       {state.error && (
         <p

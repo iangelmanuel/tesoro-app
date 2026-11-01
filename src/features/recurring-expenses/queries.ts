@@ -25,6 +25,8 @@ export interface UpcomingPayment {
   dueOn: string
   transactionId: string | null
   paidAmount: number | null
+  /** Cuenta del pago; null = fuera de las cuentas (o sin pagar) */
+  accountName: string | null
   status: OccurrenceStatus
 }
 
@@ -89,6 +91,27 @@ export async function getUpcomingPayments(
 
   const categoryById = new Map(categories.map((row) => [row.id, row]))
 
+  // Cuenta de cada pago, desde su movimiento enlazado
+  const paidIds = occurrences.flatMap((row) =>
+    row.transaction_id === null ? [] : [row.transaction_id]
+  )
+  const accountByTransaction = new Map<string, string | null>()
+  if (paidIds.length > 0) {
+    const { data: paid, error: paidError } = await supabase
+      .from("transactions")
+      .select(
+        "id, account:accounts!transactions_account_id_workspace_id_fkey (name)"
+      )
+      .in("id", paidIds)
+
+    if (paidError) {
+      throw new Error("No se pudieron cargar los próximos pagos")
+    }
+    for (const row of paid) {
+      accountByTransaction.set(row.id, row.account?.name ?? null)
+    }
+  }
+
   return occurrences.flatMap((row) => {
     const category = categoryById.get(row.category_id)
     if (!category) {
@@ -102,6 +125,10 @@ export async function getUpcomingPayments(
       dueOn: row.due_on,
       transactionId: row.transaction_id,
       paidAmount: row.paid_amount === null ? null : Number(row.paid_amount),
+      accountName:
+        row.transaction_id === null
+          ? null
+          : (accountByTransaction.get(row.transaction_id) ?? null),
       status: getOccurrenceStatus(row, today)
     }
   })

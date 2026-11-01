@@ -2,7 +2,7 @@ import { Button, Chip, cn } from "@heroui/react"
 import { Check } from "lucide-react"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import { TONE_BADGE_CLASSES as TONE_BADGE } from "@/components/dashboard/tone"
-import type { AccountOption } from "@/features/accounts/components/account-select"
+import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
@@ -43,7 +43,7 @@ interface PayOccurrenceButtonProps {
   workspaceId: string
   payment: UpcomingPayment
   categories: Category[]
-  accounts: AccountOption[]
+  accounts: PaymentAccountOption[]
 }
 
 // Abre TransactionDialog prellenado con la ocurrencia y enlazado a ella. El
@@ -86,7 +86,7 @@ interface UpcomingPaymentsProps {
   workspaceId: string
   payments: UpcomingPayment[]
   categories: Category[]
-  accounts: AccountOption[]
+  accounts: PaymentAccountOption[]
   currency: string
 }
 
@@ -114,6 +114,13 @@ export function UpcomingPayments({
             </div>
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
               <span>{formatDate(payment.dueOn)}</span>
+              {payment.transactionId !== null && (
+                <span>
+                  {payment.accountName
+                    ? `Desde ${payment.accountName}`
+                    : "Fuera de cuentas"}
+                </span>
+              )}
               <CategoryBadge
                 name={payment.category.name}
                 icon={payment.category.icon}

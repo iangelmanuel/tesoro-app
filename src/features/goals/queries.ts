@@ -13,6 +13,8 @@ export type Goal = Omit<GoalProgressRow, "target_amount" | "saved"> & {
 
 export type GoalContribution = Omit<ContributionRow, "amount"> & {
   amount: number
+  /** Cuenta del aporte o retiro; null = fuera de las cuentas */
+  account_name: string | null
 }
 
 // Todas las metas del espacio, en cualquier estado, con lo ahorrado
@@ -41,7 +43,9 @@ export async function getGoalContributions(
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("goal_contributions")
-    .select("*")
+    .select(
+      "*, account:accounts!goal_contributions_account_id_workspace_id_fkey (name)"
+    )
     .eq("goal_id", goalId)
     .order("occurred_on", { ascending: false })
     .order("created_at", { ascending: false })
@@ -50,5 +54,9 @@ export async function getGoalContributions(
     throw new Error("No se pudieron cargar los aportes")
   }
 
-  return data.map((row) => ({ ...row, amount: Number(row.amount) }))
+  return data.map(({ account, ...row }) => ({
+    ...row,
+    amount: Number(row.amount),
+    account_name: account?.name ?? null
+  }))
 }

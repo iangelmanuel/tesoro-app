@@ -2,19 +2,29 @@
 
 import { useTransition } from "react"
 import { AlertDialog, Button, Table, cn, toast } from "@heroui/react"
-import { ArrowLeftRight, Pencil, RefreshCw, Trash2 } from "lucide-react"
-import { deleteAdjustment, deleteTransfer } from "@/features/accounts/actions"
 import {
-  AccountLabel,
-  type AccountOption
-} from "@/features/accounts/components/account-select"
+  ArrowLeftRight,
+  Banknote,
+  CreditCard,
+  Pencil,
+  PiggyBank,
+  RefreshCw,
+  Trash2
+} from "lucide-react"
+import { deleteAdjustment, deleteTransfer } from "@/features/accounts/actions"
+import { AccountLabel } from "@/features/accounts/components/account-select"
+import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import type { WorkspaceType } from "@/features/workspaces/queries"
 import { formatCurrency, formatDate } from "@/libs/format"
 import { deleteTransaction } from "../actions"
-import type { EditableTransaction, LedgerEntry } from "../queries"
+import {
+  type AccountMovementKind,
+  type EditableTransaction,
+  type LedgerEntry
+} from "../queries"
 import { TransactionDialog } from "./transaction-dialog"
 
 interface TransactionsTableProps {
@@ -24,7 +34,7 @@ interface TransactionsTableProps {
   rows: LedgerEntry[]
   categories: Category[]
   /** Cuentas del espacio, activas y archivadas */
-  accounts: AccountOption[]
+  accounts: PaymentAccountOption[]
   currency: string
 }
 
@@ -39,6 +49,42 @@ const ROW_ACTION = "pointer-coarse:size-10"
 
 type TransferEntry = Extract<LedgerEntry, { kind: "transfer" }>
 type AdjustmentEntry = Extract<LedgerEntry, { kind: "adjustment" }>
+type AccountMovementEntry = Extract<LedgerEntry, { kind: AccountMovementKind }>
+
+// Pagos, avances y aportes con cuenta: el texto de la fila y si el saldo de la
+// cuenta sube (+) o baja (−). Un retiro de meta (monto < 0) entra a la cuenta.
+function describeAccountMovement(entry: AccountMovementEntry) {
+  switch (entry.kind) {
+    case "debt_payment":
+      return {
+        title: `Pago · ${entry.name}`,
+        type: "Pago de tarjeta",
+        icon: CreditCard,
+        increases: false
+      }
+    case "debt_advance":
+      return {
+        title: `Avance · ${entry.name}`,
+        type: "Avance de tarjeta",
+        icon: Banknote,
+        increases: true
+      }
+    case "goal_contribution":
+      return entry.amount < 0
+        ? {
+            title: `Retiro · ${entry.name}`,
+            type: "Retiro de meta",
+            icon: PiggyBank,
+            increases: true
+          }
+        : {
+            title: `Aporte · ${entry.name}`,
+            type: "Aporte a meta",
+            icon: PiggyBank,
+            increases: false
+          }
+  }
+}
 
 // Client: cada fila abre el diálogo de edición, y así las categorías y las
 // cuentas viajan una sola vez en vez de una por fila
@@ -90,6 +136,17 @@ export function TransactionsTable({
                     transfer={row}
                     label={`${accountName(row.from_account_id)} → ${accountName(row.to_account_id)}`}
                     accounts={accounts}
+                    currency={currency}
+                  />
+                )
+              }
+              if (isAccountMovement(row)) {
+                return (
+                  <AccountMovementRow
+                    key={row.id}
+                    showCounterparty={isBusiness}
+                    entry={row}
+                    account={accountsById.get(row.account_id)}
                     currency={currency}
                   />
                 )
@@ -256,7 +313,7 @@ function TransferRow({
   showCounterparty: boolean
   transfer: TransferEntry
   label: string
-  accounts: AccountOption[]
+  accounts: PaymentAccountOption[]
   currency: string
 }) {
   return (
@@ -302,6 +359,55 @@ function TransferRow({
           />
         </div>
       </Table.Cell>
+    </Table.Row>
+  )
+}
+
+function isAccountMovement(row: LedgerEntry): row is AccountMovementEntry {
+  return (
+    row.kind === "debt_payment" ||
+    row.kind === "debt_advance" ||
+    row.kind === "goal_contribution"
+  )
+}
+
+// Pago de tarjeta, avance o aporte con cuenta: gris, con signo según el saldo
+// de la cuenta, de solo lectura. No suma a los totales.
+function AccountMovementRow({
+  showCounterparty,
+  entry,
+  account,
+  currency
+}: {
+  showCounterparty: boolean
+  entry: AccountMovementEntry
+  account: PaymentAccountOption | undefined
+  currency: string
+}) {
+  const { title, type, icon, increases } = describeAccountMovement(entry)
+
+  return (
+    <Table.Row>
+      <Table.Cell className={cn("text-muted", FROM_SM)}>
+        {formatDate(entry.occurred_on)}
+      </Table.Cell>
+      <DescriptionCell
+        title={title}
+        note={entry.note}
+        date={entry.occurred_on}
+        icon={icon}
+      />
+      <Table.Cell className={cn("text-muted", FROM_MD)}>{type}</Table.Cell>
+      {showCounterparty && <Table.Cell className={FROM_LG} />}
+      <Table.Cell className={FROM_LG}>
+        {account && <AccountLabel account={account} />}
+      </Table.Cell>
+      <Table.Cell className="text-end font-medium text-muted tabular-nums">
+        {increases ? "+" : "−"}
+        {formatCurrency(Math.abs(entry.amount), currency)}
+      </Table.Cell>
+      {/* Se edita desde la deuda o la meta */}
+      <Table.Cell />
     </Table.Row>
   )
 }

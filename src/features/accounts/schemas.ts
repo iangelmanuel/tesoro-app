@@ -10,6 +10,13 @@ import {
 } from "@/features/transactions/schemas"
 import { ACCOUNT_KINDS } from "./constants"
 
+// Cuenta y traspaso al pagar (SPEC 16). Se definen en transactions/schemas.ts
+// para no crear un ciclo de imports.
+export {
+  paymentAccountSchema,
+  refinePaymentAccount
+} from "@/features/transactions/schemas"
+
 // Saldo con signo opcional ("-50.000"): una cuenta puede estar sobregirada.
 // Vacío cuenta como 0.
 export function parseSignedAmount(value: string) {

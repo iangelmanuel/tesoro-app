@@ -62,6 +62,30 @@ export type LedgerEntry =
       note: string | null
       account_id: string
     }
+  | {
+      kind: AccountMovementKind
+      id: string
+      /** En un aporte de meta, < 0 es un retiro */
+      amount: number
+      occurred_on: string
+      note: string | null
+      account_id: string
+      /** Nombre de la deuda o la meta */
+      name: string
+    }
+
+/**
+ * Pagos y avances de tarjeta y aportes de metas que llevan cuenta (SPEC 16).
+ * Mueven capital, no son ingreso ni gasto: solo lectura y fuera de los
+ * totales. Se editan desde la deuda o la meta.
+ */
+export const ACCOUNT_MOVEMENT_KINDS = [
+  "debt_payment",
+  "debt_advance",
+  "goal_contribution"
+] as const
+
+export type AccountMovementKind = (typeof ACCOUNT_MOVEMENT_KINDS)[number]
 
 export interface TransactionTotals {
   income: number
@@ -77,8 +101,8 @@ function quotePostgrestValue(value: string) {
 // PostgREST responde PGRST103 si la página pide un offset mayor que el total
 const RANGE_NOT_SATISFIABLE = "PGRST103"
 
-// Lee la vista ledger_entries para paginar movimientos, traspasos y ajustes
-// juntos, con el orden real. El enlace a un gasto fijo no está en la vista:
+// Lee la vista ledger_entries para paginar movimientos, traspasos, ajustes y
+// pagos con cuenta juntos, con el orden real. El enlace a un gasto fijo no está en la vista:
 // se pide aparte solo para los movimientos de la página.
 export async function getTransactions(
   workspaceId: string,
@@ -98,7 +122,11 @@ export async function getTransactions(
       query = query.gte("occurred_on", range.from).lte("occurred_on", range.to)
     }
     if (filters.type === "transfer") {
-      query = query.in("kind", ["transfer", "adjustment"])
+      query = query.in("kind", [
+        "transfer",
+        "adjustment",
+        ...ACCOUNT_MOVEMENT_KINDS
+      ])
     } else if (filters.type) {
       query = query.eq("kind", filters.type)
     }
@@ -201,6 +229,18 @@ function toLedgerEntry(
     }
   }
 
+  if (isAccountMovementKind(row.kind)) {
+    return {
+      kind: row.kind,
+      id,
+      amount,
+      occurred_on,
+      note: row.note,
+      account_id: row.account_id as string,
+      name: row.description ?? ""
+    }
+  }
+
   const type = row.kind as TransactionType
   return {
     kind: type,
@@ -218,6 +258,12 @@ function toLedgerEntry(
       recurring_expense_id: recurringIds.get(id) ?? null
     }
   }
+}
+
+function isAccountMovementKind(
+  kind: string | null
+): kind is AccountMovementKind {
+  return ACCOUNT_MOVEMENT_KINDS.some((value) => value === kind)
 }
 
 // Para distinguir "sin movimientos" de "sin resultados para los filtros"

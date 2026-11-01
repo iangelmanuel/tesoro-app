@@ -33,6 +33,11 @@ export type Debt = Omit<
 
 export type DebtEntry = Omit<DebtEntryRow, "amount"> & {
   amount: number
+  /**
+   * Cuenta del pago o avance: la propia de una tarjeta o la del movimiento
+   * enlazado en préstamos y cuentas por cobrar. null = fuera de las cuentas.
+   */
+  account_name: string | null
 }
 
 const toNumber = (value: number | string | null) =>
@@ -76,12 +81,14 @@ export async function getDebts(workspaceId: string): Promise<Debt[]> {
   }))
 }
 
-// Pagos y ajustes de una deuda, el más reciente primero
+// Pagos, avances y ajustes de una deuda, el más reciente primero
 export async function getDebtEntries(debtId: string): Promise<DebtEntry[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("debt_entries")
-    .select("*")
+    .select(
+      "*, account:accounts!debt_entries_account_id_workspace_id_fkey (name), transaction:transactions!debt_entries_transaction_id_fkey (account:accounts!transactions_account_id_workspace_id_fkey (name))"
+    )
     .eq("debt_id", debtId)
     .order("occurred_on", { ascending: false })
     .order("created_at", { ascending: false })
@@ -90,5 +97,9 @@ export async function getDebtEntries(debtId: string): Promise<DebtEntry[]> {
     throw new Error("No se pudieron cargar los pagos")
   }
 
-  return data.map((row) => ({ ...row, amount: Number(row.amount) }))
+  return data.map(({ account, transaction, ...row }) => ({
+    ...row,
+    amount: Number(row.amount),
+    account_name: account?.name ?? transaction?.account?.name ?? null
+  }))
 }

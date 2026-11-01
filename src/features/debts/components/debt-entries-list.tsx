@@ -61,11 +61,24 @@ function EntryRow({
 }) {
   const [editing, setEditing] = useState(false)
   const isPayment = entry.kind === "payment"
-  const label = isPayment
-    ? debt.kind === "receivable"
-      ? "Abono"
-      : "Pago"
-    : "Ajuste"
+  const isAdvance = entry.kind === "advance"
+  const label = isAdvance
+    ? "Avance"
+    : isPayment
+      ? debt.kind === "receivable"
+        ? "Abono"
+        : "Pago"
+      : "Ajuste"
+  // Los ajustes no mueven cuentas. El abono de una cuenta por cobrar y el
+  // avance entran a la cuenta; el resto sale de ella.
+  const accountText = isAdvance
+    ? accountPhrase("A", entry.account_name)
+    : isPayment
+      ? accountPhrase(
+          debt.kind === "receivable" ? "A" : "Desde",
+          entry.account_name
+        )
+      : null
   // Un pago baja el saldo; un ajuste lo sube o lo baja según su signo
   const lowersBalance = isPayment || entry.amount < 0
 
@@ -97,6 +110,7 @@ function EntryRow({
         </span>
         <span className="text-xs text-muted">
           {formatDate(entry.occurred_on)}
+          {accountText && ` · ${accountText}`}
         </span>
         {entry.note && (
           <span className="truncate text-sm text-muted">{entry.note}</span>
@@ -114,7 +128,7 @@ function EntryRow({
           >
             <Pencil />
           </Button>
-          {isPayment ? (
+          {isPayment || isAdvance ? (
             <PaymentDialog
               debt={debt}
               entry={entry}
@@ -138,6 +152,10 @@ function EntryRow({
       )}
     </li>
   )
+}
+
+function accountPhrase(preposition: "A" | "Desde", name: string | null) {
+  return name ? `${preposition} ${name}` : "Fuera de cuentas"
 }
 
 function DeleteEntryButton({

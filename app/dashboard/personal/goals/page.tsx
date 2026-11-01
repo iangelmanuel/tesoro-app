@@ -3,6 +3,7 @@ import { Button, Skeleton } from "@heroui/react"
 import { Plus, Target } from "lucide-react"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { EmptyState } from "@/components/dashboard/empty-state"
+import { getAccountBalances } from "@/features/accounts/queries"
 import { GoalCard } from "@/features/goals/components/goal-card"
 import { GoalDialog } from "@/features/goals/components/goal-dialog"
 import { InactiveGoals } from "@/features/goals/components/inactive-goals"
@@ -39,7 +40,11 @@ export default function GoalsPage() {
 
 async function GoalsContent() {
   const workspace = await getPersonalWorkspace()
-  const goals = await getGoals(workspace.id)
+  const [goals, accounts] = await Promise.all([
+    getGoals(workspace.id),
+    getAccountBalances(workspace.id)
+  ])
+  const activeAccounts = accounts.filter((account) => !account.archived_at)
   // Tras leer la sesión: todayISO usa new Date()
   const today = todayISO()
 
@@ -109,6 +114,7 @@ async function GoalsContent() {
               contributions={contributions[goal.id]}
               today={today}
               currency={workspace.currency}
+              accounts={activeAccounts}
             />
           ))}
         </ul>

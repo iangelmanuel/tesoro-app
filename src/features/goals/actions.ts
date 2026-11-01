@@ -23,6 +23,8 @@ const CONTRIBUTION_DEFAULT_ERROR =
 const GOAL_NOT_ACTIVE = "Reactiva la meta para registrar aportes"
 const OVER_WITHDRAWAL = "No puedes retirar más de lo ahorrado"
 const FUTURE_DATE = "La fecha no puede ser futura"
+const ARCHIVED_ACCOUNT = "La cuenta está archivada"
+const SAME_TRANSFER_ACCOUNT = "Elige una cuenta distinta a la que paga"
 
 const GOAL_FIELDS = [
   "name",
@@ -32,7 +34,15 @@ const GOAL_FIELDS = [
   "color"
 ] as const
 
-const CONTRIBUTION_FIELDS = ["kind", "amount", "occurred_on", "note"] as const
+const CONTRIBUTION_FIELDS = [
+  "kind",
+  "amount",
+  "occurred_on",
+  "note",
+  "account_id",
+  "transfer_from",
+  "transfer_amount"
+] as const
 
 const idSchema = z.uuid()
 
@@ -54,6 +64,16 @@ function contributionPgError(error: PostgrestError): ContributionFormState {
   }
   if (error.message.includes("fecha del aporte")) {
     return { fieldErrors: { occurred_on: [FUTURE_DATE] } }
+  }
+  if (error.message.includes(ARCHIVED_ACCOUNT)) {
+    return { fieldErrors: { account_id: [ARCHIVED_ACCOUNT] } }
+  }
+  // El traspaso desde la misma cuenta que paga lo frena transfers_check
+  if (error.message.includes("transfers_check")) {
+    return { fieldErrors: { transfer_from: [SAME_TRANSFER_ACCOUNT] } }
+  }
+  if (error.code === "23503" && error.message.includes("account_id")) {
+    return { fieldErrors: { account_id: ["Elige una cuenta válida"] } }
   }
   if (error.code === "23503") {
     return { error: GOAL_NOT_FOUND }
@@ -264,11 +284,24 @@ export async function createContribution(
     return { fieldErrors: { amount: [OVER_WITHDRAWAL] }, values }
   }
 
+  // Aporte (o retiro) y traspaso previo en una sola transacción
+  const { amount, occurred_on, note, account_id } = parsed.data
+  const hasTransfer = account_id !== null && parsed.data.transfer_from !== null
+
   const supabase = await createClient()
-  const { error } = await supabase.from("goal_contributions").insert({
-    ...parsed.data,
-    goal_id: goal.id,
-    workspace_id: goal.workspace_id
+  const { error } = await supabase.rpc("record_goal_contribution", {
+    p_goal_id: goal.id,
+    p_amount: amount,
+    p_occurred_on: occurred_on,
+    // Los tipos generados no marcan el parámetro como nullable
+    p_note: note as string,
+    p_account_id: account_id ?? undefined,
+    p_transfer_from: hasTransfer
+      ? (parsed.data.transfer_from ?? undefined)
+      : undefined,
+    p_transfer_amount: hasTransfer
+      ? (parsed.data.transfer_amount ?? undefined)
+      : undefined
   })
 
   if (error) {
@@ -320,10 +353,13 @@ export async function updateContribution(
     return { fieldErrors: { amount: [OVER_WITHDRAWAL] }, values }
   }
 
+  // Editar cambia monto, fecha y nota; la cuenta no se toca (SPEC 16)
+  const { amount, occurred_on, note } = parsed.data
+
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("goal_contributions")
-    .update(parsed.data)
+    .update({ amount, occurred_on, note })
     .eq("id", contribution.id)
     .select("id")
 

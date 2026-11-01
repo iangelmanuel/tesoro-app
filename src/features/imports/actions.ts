@@ -164,12 +164,19 @@ export async function getDuplicateCandidates(
     if (error) return { error: DUPLICATES_ERROR }
     return {
       target: request.target,
-      candidates: data.map((row) => ({
-        debtId: row.debt_id,
-        kind: row.kind,
-        amount: Number(row.amount),
-        occurred_on: row.occurred_on
-      }))
+      // El avance (SPEC 16) no se importa: no hay duplicado posible
+      candidates: data.flatMap((row) =>
+        row.kind === "advance"
+          ? []
+          : [
+              {
+                debtId: row.debt_id,
+                kind: row.kind,
+                amount: Number(row.amount),
+                occurred_on: row.occurred_on
+              }
+            ]
+      )
     }
   }
 

@@ -10,6 +10,7 @@ import {
   Pencil
 } from "lucide-react"
 import { SURFACE_ITEM } from "@/components/dashboard/surface"
+import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { formatCurrency } from "@/libs/format"
 import { goalStatus, isReached } from "../progress"
 import type { Goal, GoalContribution } from "../queries"
@@ -26,13 +27,15 @@ interface GoalCardProps {
   /** Hoy en America/Bogota, calculado en el servidor */
   today: string
   currency: string
+  accounts: PaymentAccountOption[]
 }
 
 export function GoalCard({
   goal,
   contributions,
   today,
-  currency
+  currency,
+  accounts
 }: GoalCardProps) {
   const [editing, setEditing] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -111,6 +114,7 @@ export function GoalCard({
           contributions={contributions}
           today={today}
           currency={currency}
+          accounts={accounts}
           open={detailOpen}
           onOpenChange={setDetailOpen}
         />

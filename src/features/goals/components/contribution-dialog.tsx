@@ -15,6 +15,11 @@ import {
   toast
 } from "@heroui/react"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import {
+  type PaymentAccountOption,
+  PaymentAccountSection,
+  parsePaymentAmount
+} from "@/features/accounts/components/payment-account-section"
 import { todayISO } from "@/libs/dates"
 import { createContribution, updateContribution } from "../actions"
 import type { GoalContribution } from "../queries"
@@ -45,6 +50,8 @@ interface ContributionDialogProps {
   kind?: ContributionKind
   /** Si llega, el diálogo edita este aporte */
   contribution?: GoalContribution
+  /** Cuentas con saldo para el aporte; solo al registrar */
+  accounts?: PaymentAccountOption[]
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
   trigger?: React.ReactNode
   open?: boolean
@@ -56,6 +63,7 @@ export function ContributionDialog({
   goals,
   kind = "deposit",
   contribution,
+  accounts = [],
   trigger,
   open: controlledOpen,
   onOpenChange
@@ -89,7 +97,7 @@ export function ContributionDialog({
                     : "Aportar a la meta"}
               </Modal.Heading>
               <p className="text-sm text-muted">
-                Los aportes no cambian tu balance ni tus movimientos.
+                Un aporte no es un gasto. Con cuenta, solo mueve su saldo.
               </p>
             </Modal.Header>
             <Modal.Body>
@@ -99,6 +107,7 @@ export function ContributionDialog({
                 goals={goals}
                 initialKind={initialKind}
                 contribution={contribution}
+                accounts={accounts}
                 onSaved={() => setOpen(false)}
                 onCancel={() => setOpen(false)}
               />
@@ -115,6 +124,7 @@ interface ContributionFormProps {
   goals?: GoalOption[]
   initialKind: ContributionKind
   contribution?: GoalContribution
+  accounts: PaymentAccountOption[]
   onSaved: () => void
   onCancel: () => void
 }
@@ -124,6 +134,7 @@ function ContributionForm({
   goals,
   initialKind,
   contribution,
+  accounts,
   onSaved,
   onCancel
 }: ContributionFormProps) {
@@ -159,6 +170,11 @@ function ContributionForm({
 
   const errors = state.fieldErrors
   const values = state.values
+  const [amountText, setAmountText] = useState(
+    () =>
+      values?.amount ??
+      (contribution ? AMOUNT_FORMAT.format(Math.abs(contribution.amount)) : "")
+  )
 
   return (
     <form
@@ -250,12 +266,8 @@ function ContributionForm({
           name="amount"
           inputMode="decimal"
           autoComplete="off"
-          defaultValue={
-            values?.amount ??
-            (contribution
-              ? AMOUNT_FORMAT.format(Math.abs(contribution.amount))
-              : "")
-          }
+          value={amountText}
+          onChange={setAmountText}
           isRequired
           isInvalid={Boolean(errors?.amount)}
           validationBehavior="aria"
@@ -289,6 +301,24 @@ function ContributionForm({
         <Input placeholder="Prima de diciembre" />
         <FieldError>{errors?.note?.[0]}</FieldError>
       </TextField>
+
+      {/* La cuenta se elige al registrar; al editar solo cambian monto, fecha y
+          nota. Un retiro entra a la cuenta y no lleva traspaso */}
+      {!isEditing && accounts.length > 0 && (
+        <PaymentAccountSection
+          accounts={accounts}
+          amount={parsePaymentAmount(amountText)}
+          errors={{
+            account_id: errors?.account_id?.[0],
+            transfer_from: errors?.transfer_from?.[0],
+            transfer_amount: errors?.transfer_amount?.[0]
+          }}
+          label={
+            kind === "withdrawal" ? "Cuenta que recibe" : "Cuenta que paga"
+          }
+          allowTransfer={kind === "deposit"}
+        />
+      )}
 
       {state.error && (
         <p

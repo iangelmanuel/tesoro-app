@@ -615,7 +615,8 @@ inválido de `tab` cae a Debo.
   crear la deuda.
 - Las compras con tarjeta son gastos al comprar (Movimientos). Por eso
   **pagar la tarjeta no crea un movimiento**: contaría el mismo consumo dos
-  veces. El diálogo de pago de tarjeta lo dice.
+  veces. El diálogo de pago de tarjeta lo dice. Con cuenta, el pago mueve
+  capital entre la cuenta y la tarjeta (ver "Pagos desde cuentas").
 - Un pago de préstamo puede crear un gasto en la categoría de sistema
   "Deudas" ("Pago <nombre>"), y un abono de cuenta por cobrar un ingreso en
   "Cobros" ("Abono <nombre>"). La casilla viene marcada por defecto; se
@@ -861,6 +862,97 @@ saldo = opening_balance
 - Tarjeta "Saldo en cuentas": suma de los saldos a hoy de las cuentas
   activas, con enlace a Cuentas.
 
+### Pagos desde cuentas
+
+Al pagar un gasto fijo, una deuda o una tarjeta, o al aportar a una meta, el
+usuario elige de qué cuenta sale la plata. Es siempre opcional: "Sin cuenta"
+significa que el pago fue por fuera de las cuentas registradas, no toca
+ningún saldo y el historial dice "Fuera de cuentas". Los pagos y aportes
+anteriores a este cambio se muestran así y los saldos no cambian.
+
+**Qué se mueve en cada caso**
+
+| Operación                  | Dónde queda la cuenta                 | Efecto en la cuenta | Crea fila en `transactions` |
+| -------------------------- | ------------------------------------- | ------------------- | --------------------------- |
+| Gasto (incluye gasto fijo) | `transactions.account_id`             | baja                | sí (es un gasto)            |
+| Pago de préstamo           | movimiento enlazado (casilla marcada) | baja                | sí (gasto "Deudas")         |
+| Abono de cuenta por cobrar | movimiento enlazado (casilla marcada) | sube                | sí (ingreso "Cobros")       |
+| Pago de tarjeta            | `debt_entries.account_id`             | baja                | no                          |
+| Avance de tarjeta          | `debt_entries.account_id`             | sube                | no                          |
+| Aporte a una meta          | `goal_contributions.account_id`       | baja                | no                          |
+| Retiro de una meta         | `goal_contributions.account_id`       | sube                | no                          |
+
+Pagos y avances de tarjeta, aportes y retiros mueven capital: **no son
+ingreso ni gasto**, igual que los traspasos. Reportes, Presupuestos y score
+dan los mismos números antes y después de registrarlos con cuenta.
+
+**Fórmulas de saldo** (siempre calculadas, nunca guardadas)
+
+```text
+saldo deuda  = saldo inicial − Σ pagos + Σ ajustes + Σ avances
+saldo cuenta = (fórmula de Cuentas)
+             − Σ pagos de tarjeta con cuenta
+             + Σ avances de tarjeta con cuenta
+             − Σ aportes de metas con cuenta   (un retiro es negativo y suma)
+```
+
+`debt_overview`, `check_debt_balance` y `score_balances` suman los avances al
+saldo de la deuda; `account_balances` y `account_monthly_balances` suman los tres
+orígenes nuevos.
+
+**Avance de tarjeta**
+
+- Solo en tarjetas (la BD lo rechaza en préstamos y cuentas por cobrar). El
+  diálogo de pago tiene los tabs **Pago** y **Avance**.
+- Sube el saldo de la tarjeta y, con cuenta, el de la cuenta. No lleva
+  traspaso. Una comisión o interés propio del avance se corrige con
+  "Actualizar saldo".
+
+**Sección de cuenta** (`PaymentAccountSection`)
+
+1. **Sin cuenta** (por defecto): fuera de las cuentas.
+2. **Con cuenta**: `select` de cuentas activas y, debajo, su saldo a hoy.
+3. **Con traspaso**: `Switch` "Traspasar fondos antes", visible con cuenta
+   elegida y al menos otra cuenta activa. Trae "Desde" (por defecto la de
+   mayor saldo, con su saldo) y el monto del traspaso (por defecto el del
+   pago, editable). La fecha del traspaso es la del pago.
+
+Si el saldo de la cuenta elegida es menor al pago, el diálogo avisa "Nequi
+tiene $ 50.000. Faltan $ 250.000" y el switch arranca encendido. Solo avisa:
+el saldo negativo sigue permitido.
+
+En préstamos y cuentas por cobrar la sección aparece solo con la casilla
+"Registrar como gasto/ingreso" marcada, porque la cuenta es la del
+movimiento creado. Un abono no admite traspaso (el dinero entra). En gastos,
+el traspaso se ofrece en los nuevos de Personal; al editar no hay sección.
+
+**Traspaso al pagar**
+
+- El traspaso y el pago se guardan en una sola transacción (RPC
+  `record_debt_payment`, `record_goal_contribution` y `record_transaction`):
+  si el pago falla, tampoco queda el traspaso. El traspaso desde la misma
+  cuenta que paga falla en el formulario y en la BD.
+- Desde que se crea, el traspaso es independiente: borrar o editar el pago no
+  lo toca. Se corrige en Movimientos.
+- Un retiro de meta ignora el traspaso.
+
+**Edición y borrado**
+
+- Al editar un pago, aporte o avance solo cambian monto, fecha y nota; la
+  cuenta se cambia borrando y volviendo a registrar. Cambiar el monto o la
+  fecha mueve el saldo de la cuenta solo.
+- El historial de deudas, metas y gastos fijos dice "Desde <cuenta>", "A
+  <cuenta>" o "Fuera de cuentas". En préstamos y cuentas por cobrar sale de
+  la cuenta del movimiento enlazado.
+
+**Movimientos**
+
+Los pagos y avances de tarjeta y los aportes y retiros con cuenta aparecen en
+la lista unificada (`ledger_entries`, kinds `debt_payment`, `debt_advance` y
+`goal_contribution`), en gris, sin sumar a los totales y de solo lectura: se
+editan desde la deuda o la meta. Entran en el filtro "Traspasos" y en
+`?account=`.
+
 ### Seguridad
 
 - RLS en `accounts`, `transfers` y `account_adjustments` con
@@ -871,6 +963,12 @@ saldo = opening_balance
   no puede usar una cuenta archivada.
 - `ledger_entries` es `security_invoker` y solo la lee `authenticated`.
   `account_balances` es `security invoker` y solo la ejecuta `authenticated`.
+- Pagos desde cuentas (SPEC 16): FK compuesta `(account_id, workspace_id)` en
+  `debt_entries` y `goal_contributions`, y `check_account_active` en ambas.
+  `check_debt_entry` rechaza `advance` fuera de tarjetas y `account_id` fuera de
+  pagos y avances de tarjeta. `record_card_advance`, `record_goal_contribution`
+  y `record_transaction` son `security invoker` y solo las ejecuta
+  `authenticated`; el traspaso interno (`create_payment_transfer`) no se expone.
 
 ## Score y recomendaciones
 

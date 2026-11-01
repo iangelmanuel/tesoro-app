@@ -1,12 +1,13 @@
 import { Card, CardContent, Table, cn } from "@heroui/react"
 import { CardHeading } from "@/components/dashboard/card-heading"
+import { DataRow, DataRows } from "@/components/dashboard/data-rows"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import {
   TRANSACTIONS_PATH,
   buildFiltersQuery
 } from "@/features/transactions/filters"
 import type { TransactionWithCategory } from "@/features/transactions/queries"
-import { formatCurrency, formatDate } from "@/libs/format"
+import { formatCurrency, formatDate, formatShortDate } from "@/libs/format"
 
 // Los últimos movimientos pueden ser de meses anteriores: "Ver todos" abre
 // Movimientos con todos los meses
@@ -33,7 +34,34 @@ export function RecentTransactions({
         linkContext="los movimientos"
       />
       <CardContent>
-        <Table>
+        {/* < 768 px: tarjetas; la tabla va en display: none */}
+        <DataRows label="Últimos movimientos">
+          {rows.map((transaction) => (
+            <DataRow
+              key={transaction.id}
+              title={transaction.description}
+              value={`${transaction.type === "income" ? "+" : "−"}${formatCurrency(transaction.amount, currency)}`}
+              valueClassName={
+                transaction.type === "income"
+                  ? "text-(--income)"
+                  : "text-(--expense)"
+              }
+              meta={
+                <>
+                  <span className="whitespace-nowrap tabular-nums">
+                    {formatShortDate(transaction.occurred_on)}
+                  </span>
+                  <CategoryBadge
+                    name={transaction.category.name}
+                    icon={transaction.category.icon}
+                    color={transaction.category.color}
+                  />
+                </>
+              }
+            />
+          ))}
+        </DataRows>
+        <Table className="hidden md:block">
           <Table.ScrollContainer>
             <Table.Content aria-label="Últimos movimientos">
               <Table.Header>

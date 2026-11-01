@@ -11,6 +11,7 @@ import {
   toast
 } from "@heroui/react"
 import { Pause, Pencil, Play, Trash2 } from "lucide-react"
+import { DataRow, DataRows } from "@/components/dashboard/data-rows"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { formatCurrency, formatDate } from "@/libs/format"
@@ -40,85 +41,148 @@ export function RecurringExpensesList({
   currency
 }: RecurringExpensesListProps) {
   return (
-    <Table>
-      <Table.ScrollContainer>
-        <Table.Content aria-label="Gastos fijos">
-          <Table.Header>
-            <Table.Column isRowHeader>Nombre</Table.Column>
-            <Table.Column>Categoría</Table.Column>
-            <Table.Column className="text-end">Monto</Table.Column>
-            <Table.Column>Frecuencia</Table.Column>
-            <Table.Column>Vigencia</Table.Column>
-            <Table.Column>Estado</Table.Column>
-            <Table.Column className="w-28">
-              <span className="sr-only">Acciones</span>
-            </Table.Column>
-          </Table.Header>
-          <Table.Body>
-            {expenses.map((expense) => (
-              <Table.Row
-                key={expense.id}
-                className={cn(!expense.is_active && "text-muted")}
-              >
-                <Table.Cell className="max-w-48">
-                  <p className="truncate font-medium">{expense.name}</p>
-                </Table.Cell>
-                <Table.Cell>
-                  <CategoryBadge
-                    name={
-                      expense.category.archived_at
-                        ? `${expense.category.name} (archivada)`
-                        : expense.category.name
-                    }
-                    icon={expense.category.icon}
-                    color={expense.category.color}
-                  />
-                </Table.Cell>
-                <Table.Cell className="text-end font-medium tabular-nums">
-                  {formatCurrency(expense.amount, currency)}
-                </Table.Cell>
-                <Table.Cell>{frequencyLabel(expense)}</Table.Cell>
-                <Table.Cell className="text-muted">
-                  {validityLabel(expense)}
-                </Table.Cell>
-                <Table.Cell>
-                  {expense.is_active ? (
-                    <Chip size="sm">Activo</Chip>
-                  ) : (
-                    <Chip
+    <>
+      {/* < 768 px: una tarjeta por gasto fijo; la tabla va en display: none */}
+      <DataRows
+        boxed
+        label="Gastos fijos"
+      >
+        {expenses.map((expense) => (
+          <DataRow
+            boxed
+            key={expense.id}
+            className={cn(!expense.is_active && "text-muted")}
+            title={expense.name}
+            value={formatCurrency(expense.amount, currency)}
+            meta={
+              <>
+                <CategoryBadge
+                  name={
+                    expense.category.archived_at
+                      ? `${expense.category.name} (archivada)`
+                      : expense.category.name
+                  }
+                  icon={expense.category.icon}
+                  color={expense.category.color}
+                />
+                <span>{frequencyLabel(expense)}</span>
+                <span>{validityLabel(expense)}</span>
+                {expense.is_active ? (
+                  <Chip size="sm">Activo</Chip>
+                ) : (
+                  <Chip
+                    size="sm"
+                    variant="tertiary"
+                  >
+                    Pausado
+                  </Chip>
+                )}
+              </>
+            }
+            actions={
+              <>
+                <RecurringExpenseDialog
+                  categories={categories}
+                  expense={expense}
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      isIconOnly
                       size="sm"
-                      variant="tertiary"
+                      className="max-md:size-11"
+                      aria-label={`Editar ${expense.name}`}
                     >
-                      Pausado
-                    </Chip>
-                  )}
-                </Table.Cell>
-                <Table.Cell>
-                  <div className="flex justify-end gap-1">
-                    <RecurringExpenseDialog
-                      categories={categories}
-                      expense={expense}
-                      trigger={
-                        <Button
-                          variant="ghost"
-                          isIconOnly
-                          size="sm"
-                          aria-label={`Editar ${expense.name}`}
-                        >
-                          <Pencil />
-                        </Button>
+                      <Pencil />
+                    </Button>
+                  }
+                />
+                <ToggleRecurringExpenseButton expense={expense} />
+                <DeleteRecurringExpenseButton expense={expense} />
+              </>
+            }
+          />
+        ))}
+      </DataRows>
+      <Table className="hidden md:block">
+        <Table.ScrollContainer>
+          <Table.Content aria-label="Gastos fijos">
+            <Table.Header>
+              <Table.Column isRowHeader>Nombre</Table.Column>
+              <Table.Column>Categoría</Table.Column>
+              <Table.Column className="text-end">Monto</Table.Column>
+              <Table.Column>Frecuencia</Table.Column>
+              <Table.Column>Vigencia</Table.Column>
+              <Table.Column>Estado</Table.Column>
+              <Table.Column className="w-28">
+                <span className="sr-only">Acciones</span>
+              </Table.Column>
+            </Table.Header>
+            <Table.Body>
+              {expenses.map((expense) => (
+                <Table.Row
+                  key={expense.id}
+                  className={cn(!expense.is_active && "text-muted")}
+                >
+                  <Table.Cell className="max-w-48">
+                    <p className="truncate font-medium">{expense.name}</p>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <CategoryBadge
+                      name={
+                        expense.category.archived_at
+                          ? `${expense.category.name} (archivada)`
+                          : expense.category.name
                       }
+                      icon={expense.category.icon}
+                      color={expense.category.color}
                     />
-                    <ToggleRecurringExpenseButton expense={expense} />
-                    <DeleteRecurringExpenseButton expense={expense} />
-                  </div>
-                </Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table.Content>
-      </Table.ScrollContainer>
-    </Table>
+                  </Table.Cell>
+                  <Table.Cell className="text-end font-medium tabular-nums">
+                    {formatCurrency(expense.amount, currency)}
+                  </Table.Cell>
+                  <Table.Cell>{frequencyLabel(expense)}</Table.Cell>
+                  <Table.Cell className="text-muted">
+                    {validityLabel(expense)}
+                  </Table.Cell>
+                  <Table.Cell>
+                    {expense.is_active ? (
+                      <Chip size="sm">Activo</Chip>
+                    ) : (
+                      <Chip
+                        size="sm"
+                        variant="tertiary"
+                      >
+                        Pausado
+                      </Chip>
+                    )}
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex justify-end gap-1">
+                      <RecurringExpenseDialog
+                        categories={categories}
+                        expense={expense}
+                        trigger={
+                          <Button
+                            variant="ghost"
+                            isIconOnly
+                            size="sm"
+                            aria-label={`Editar ${expense.name}`}
+                          >
+                            <Pencil />
+                          </Button>
+                        }
+                      />
+                      <ToggleRecurringExpenseButton expense={expense} />
+                      <DeleteRecurringExpenseButton expense={expense} />
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              ))}
+            </Table.Body>
+          </Table.Content>
+        </Table.ScrollContainer>
+      </Table>
+    </>
   )
 }
 
@@ -154,6 +218,7 @@ function ToggleRecurringExpenseButton({
         variant="ghost"
         isIconOnly
         size="sm"
+        className="max-md:size-11"
         aria-label={label}
         isDisabled={pending}
         onPress={handleToggle}
@@ -189,6 +254,7 @@ function DeleteRecurringExpenseButton({
         variant="ghost"
         isIconOnly
         size="sm"
+        className="max-md:size-11"
         aria-label={`Eliminar ${expense.name}`}
         isDisabled={pending}
       >

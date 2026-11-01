@@ -3,6 +3,7 @@
 > **Estado:** Implementado
 > **Depende de:** SPEC 13, SPEC 14
 > **Fecha:** 2026-11-01
+> **Nota (SPEC 18):** el tab superior Personal / Empresa fue retirado; el selector de espacio queda solo en el aside.
 > **Objetivo:** Que en el teléfono Tesoro se use como una app: al entrar se abre una hoja de acciones rápidas para registrar al instante, un tab fijo arriba cambia entre Personal y Empresa y una barra inferior reemplaza al aside.
 
 ## Por qué existe este spec

@@ -4,7 +4,6 @@ import { Skeleton } from "@heroui/react"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { AppSidebarSkeleton } from "@/components/dashboard/app-sidebar-skeleton"
 import { DashboardTitle } from "@/components/dashboard/dashboard-title"
-import { MobileWorkspaceTabs } from "@/components/dashboard/mobile/mobile-workspace-tabs"
 import { QuickActions } from "@/components/dashboard/quick-actions"
 import {
   SidebarInset,
@@ -92,17 +91,6 @@ export default function DashboardLayout({
               <QuickActions />
             </div>
           </header>
-          {/* usePathname es dinámico: hasta resolverlo, un placeholder del
-              tamaño del tab para que el contenido no salte */}
-          <Suspense
-            fallback={
-              <div className="px-4 pb-2 md:hidden">
-                <Skeleton className="h-11 w-full rounded-3xl" />
-              </div>
-            }
-          >
-            <MobileWorkspaceTabs />
-          </Suspense>
           <main
             id="contenido"
             tabIndex={-1}

@@ -70,6 +70,7 @@ export async function UpcomingPaymentsCard({
                 payment={payment}
                 categories={categories}
                 accounts={accounts}
+                className="max-md:min-h-11"
               />
             </li>
           ))}

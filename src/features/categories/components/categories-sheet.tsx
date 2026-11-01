@@ -26,11 +26,14 @@ interface CategoriesSheetProps {
   /** Espacio dueño de las categorías propias */
   workspaceId: string
   categories: Category[]
+  /** Botón de 44 px a todo el ancho (dentro de la hoja de filtros) */
+  fullWidthTrigger?: boolean
 }
 
 export function CategoriesSheet({
   workspaceId,
-  categories
+  categories,
+  fullWidthTrigger = false
 }: CategoriesSheetProps) {
   const [type, setType] = useState<TransactionType>("expense")
   const [editing, setEditing] = useState<Category | null>(null)
@@ -52,6 +55,8 @@ export function CategoriesSheet({
       <Button
         variant="secondary"
         size="sm"
+        fullWidth={fullWidthTrigger}
+        className={cn(fullWidthTrigger && "min-h-11")}
       >
         <Tags />
         Categorías

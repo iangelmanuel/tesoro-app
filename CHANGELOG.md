@@ -168,6 +168,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Mobile UI polish (SPEC 18): "Últimos movimientos", cash flow by month and fixed expenses render as cards under 768 px (`DataRows` / `DataRow`, `src/components/dashboard/data-rows.tsx`); the upcoming payments list stacks name + amount, details and a full-width pay button. Tablet and desktop keep the tables.
+- Movimientos filters on mobile: search field, month stepper and a **Filtros** button with an active-filter count that opens a bottom sheet (type, category, account, all months, categories, clear). Desktop keeps the filter bar. The transactions skeletons follow the new layout.
+- Dates and percentages use a non-breaking space (`formatDate`, `formatShortDate`, `formatPercent`) so they never wrap. Goal card: percentage and the remaining / target date / suggested contribution rows stay on one line.
+- Server elements passed as props to client components (`categoriesAction`, the budget dialog `trigger`) are wrapped in a single child to avoid React's missing `key` warning.
+
 - `debt_overview`, `check_debt_balance`, `score_balances`, `check_debt_entry`, `account_balances` and `account_monthly_balances` account for card advances and payments or contributions with an account.
 - Editing a goal contribution only changes amount, date and note; it no longer overwrites the account.
 
@@ -232,6 +237,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- The sticky Personal / Business tab under the mobile header (`MobileWorkspaceTabs`, SPEC 18). The workspace selector lives only in the aside, which opens as a drawer on mobile.
 - Email features, until a custom email service is added: sign-up email confirmation (`/check-email`, resend), password recovery (`/forgot-password`, `/reset-password`), email change in the account page (now read-only), the `/auth/confirm` route and the `supabase/templates/` email templates. Sign-up now always opens the session directly, so the Supabase project must have "Confirm email" off.
 - `SummaryCards` and the secondary summary metrics (daily average, spending projection, top category, transaction count); the category donut from the Personal summary and from Reports.
 - `quick-add-transaction` components, replaced by the header quick actions.

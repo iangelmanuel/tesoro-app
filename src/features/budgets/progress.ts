@@ -27,7 +27,8 @@ export function budgetPercent(amount: number, budget: number) {
 
 /** "93 %" */
 export function formatPercent(value: number) {
-  return `${value} %`
+  // Espacio duro: el porcentaje no se parte en dos líneas
+  return `${value}\u00A0%`
 }
 
 /**

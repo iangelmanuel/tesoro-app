@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { Fragment, useActionState, useState } from "react"
 import {
   Button,
   FieldError,
@@ -53,7 +53,9 @@ export function BudgetDialog({
       isOpen={open}
       onOpenChange={setOpen}
     >
-      {trigger}
+      {/* El trigger llega del servidor: dentro de un array con el
+          Backdrop React le pide `key`. Un Fragment lo deja como hijo único */}
+      <Fragment>{trigger}</Fragment>
       <Modal.Backdrop>
         <Modal.Container scroll="outside">
           <Modal.Dialog className="sm:max-w-md">

@@ -6,6 +6,7 @@ import { MOBILE_QUERY } from "@/hooks/use-is-mobile"
 const AUTO_OPEN_KEY = "tesoro:quick-sheet:auto-open:v1"
 const HIDDEN_AT_KEY = "tesoro:quick-sheet:hidden-at:v1"
 const HIDDEN_THRESHOLD_MS = 5 * 60 * 1000
+const INITIAL_OPEN_DELAY_MS = 400
 
 // Si el almacenamiento falla (modo privado, bloqueado) se usan estos valores
 // en memoria y la hoja se comporta como si el switch estuviera encendido
@@ -94,11 +95,17 @@ export function useQuickSheetAutoOpen({
   )
 
   // Solo al montar el shell: una carga completa. Navegar entre páginas no lo
-  // vuelve a ejecutar porque el layout del dashboard se conserva
+  // vuelve a ejecutar porque el layout del dashboard se conserva.
+  // La apertura espera a que terminen de hidratar los Suspense de la página:
+  // al abrir el overlay, React Aria marca como `inert` el resto del DOM y un
+  // bloque aún sin hidratar vería ese atributo y fallaría la hidratación
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- la preferencia vive en localStorage: solo se puede leer en el cliente
     setAutoOpenState(readAutoOpen())
-    if (canOpen()) setOpen(true)
+    const timer = window.setTimeout(() => {
+      if (canOpen()) setOpen(true)
+    }, INITIAL_OPEN_DELAY_MS)
+    return () => window.clearTimeout(timer)
   }, [canOpen])
 
   useEffect(() => {

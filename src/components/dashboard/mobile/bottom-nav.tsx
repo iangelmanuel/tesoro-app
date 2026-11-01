@@ -4,8 +4,7 @@ import type { Route } from "next"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button, cn } from "@heroui/react"
-import { Ellipsis, Plus } from "lucide-react"
-import { useSidebar } from "@/components/dashboard/sidebar"
+import { Plus } from "lucide-react"
 import { SITE } from "@/config/site"
 import { workspaceBasePath } from "@/features/workspaces/paths"
 import { NAV_ICONS, type NavIcon, isActive } from "../nav"
@@ -23,16 +22,15 @@ interface BottomNavProps {
 }
 
 const ITEM_CLASSES =
-  "flex min-h-14 min-w-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[0.6875rem] leading-tight outline-none focus-visible:ring-2 focus-visible:ring-focus"
+  "flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[0.6875rem] leading-tight outline-none focus-visible:ring-2 focus-visible:ring-focus"
 
-// Barra inferior del teléfono (< 768 px): cuatro destinos del espacio, el
-// botón [+] al centro y "Más", que abre el Drawer del aside. Fuera de un
-// espacio (cuenta, estado vacío de Empresa) muestra los destinos de Personal
-// y "Más", sin botón central. Se oculta mientras hay un diálogo abierto.
+// Barra inferior del teléfono (< 768 px): cuatro destinos del espacio y el
+// botón [+] al centro. Fuera de un espacio (cuenta, estado vacío de Empresa)
+// muestra los destinos de Personal, sin botón central. El aside se abre desde
+// el botón de menú del header. Se oculta mientras hay un diálogo abierto.
 export function BottomNav({ onOpenQuickSheet }: BottomNavProps) {
   const pathname = usePathname()
   const workspace = useActiveWorkspace()
-  const { setOpenMobile } = useSidebar()
 
   const business = workspace?.type === "business" ? workspace : undefined
   const root = business
@@ -66,7 +64,7 @@ export function BottomNav({ onOpenQuickSheet }: BottomNavProps) {
   return (
     <nav
       aria-label="Navegación principal"
-      className="fixed inset-x-0 bottom-0 z-20 bg-background pb-[env(safe-area-inset-bottom)] md:hidden [body:has([role='dialog'])_&]:hidden"
+      className="fixed inset-x-0 bottom-0 z-20 overflow-x-clip bg-background pb-[env(safe-area-inset-bottom)] md:hidden [body:has([role='dialog'])_&]:hidden"
     >
       <ul className="flex items-center px-2 py-1">
         {[first, second].map((item) => (
@@ -104,16 +102,6 @@ export function BottomNav({ onOpenQuickSheet }: BottomNavProps) {
             />
           </li>
         ))}
-        <li className="flex flex-1">
-          <button
-            type="button"
-            className={cn(ITEM_CLASSES, "text-muted")}
-            onClick={() => setOpenMobile(true)}
-          >
-            <Ellipsis className="size-5" />
-            Más
-          </button>
-        </li>
       </ul>
     </nav>
   )
@@ -145,7 +133,7 @@ function NavDestination({
       >
         <Icon className="size-5" />
       </span>
-      {item.name}
+      <span className="max-w-full truncate">{item.name}</span>
     </Link>
   )
 }

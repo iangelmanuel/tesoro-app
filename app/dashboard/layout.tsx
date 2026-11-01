@@ -78,8 +78,8 @@ export default function DashboardLayout({
         </Suspense>
         <SidebarInset>
           <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 bg-background px-4 md:px-6">
-            {/* En el teléfono el aside se abre desde "Más" en la barra inferior */}
-            <SidebarTrigger className="-ml-1.5 max-md:hidden" />
+            {/* En el teléfono abre el Drawer del aside (44 px de área táctil) */}
+            <SidebarTrigger className="-ml-1.5 max-md:size-11" />
             <div className="min-w-0 flex-1">
               {/* La ruta y la sesión son dinámicas: hasta resolverlas, un
                   placeholder del tamaño del título */}

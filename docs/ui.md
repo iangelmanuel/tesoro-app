@@ -155,7 +155,7 @@ Piezas en `src/components/dashboard/mobile/`:
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `quick-sheet.tsx`              | Hoja inferior (`Drawer` con asa). Personal: Gasto, Ingreso, Aporte a meta, Pago de deuda o tarjeta, Marcar gasto fijo pagado. Empresa: Venta, Costo o gasto |
 | `use-quick-sheet-auto-open.ts` | Estado de la hoja y su apertura automática                                                                                                                  |
-| `bottom-nav.tsx`               | Barra inferior: 4 destinos, [+] al centro (abre la hoja) y "Más" (abre el Drawer del aside)                                                                 |
+| `bottom-nav.tsx`               | Barra inferior: 4 destinos, [+] al centro (abre la hoja)                                                                                                    |
 | `mobile-workspace-tabs.tsx`    | Tab Personal / Empresa sticky bajo el header                                                                                                                |
 | `mobile-shell.tsx`             | Une la hoja, la barra y el hook con el mismo estado de apertura                                                                                             |
 
@@ -172,16 +172,16 @@ Piezas en `src/components/dashboard/mobile/`:
   de ocultar, en `sessionStorage` (`tesoro:quick-sheet:hidden-at:v1`). Si el
   almacenamiento falla, usa memoria y la hoja se abre como con el switch
   encendido.
-- **Barra inferior:** Personal: Resumen, Movimientos, [+], Presupuestos, Metas,
-  Más. Empresa: Resumen, Movimientos, [+], Flujo de caja, Reportes, Más. Fuera
+- **Barra inferior:** Personal: Resumen, Movimientos, [+], Presupuestos, Metas.
+  Empresa: Resumen, Movimientos, [+], Flujo de caja, Reportes. Fuera
   de un espacio (cuenta, estado vacío de Empresa) muestra los destinos de
-  Personal y "Más", sin [+]. Los destinos salen de `SITE.navigation.mobile`.
+  Personal, sin [+]. Los destinos salen de `SITE.navigation.mobile`.
   Respeta `safe-area-inset-bottom`, se oculta con un diálogo abierto y el
   `<main>` deja padding inferior para que no tape contenido.
 - **Tab superior:** reusa `WORKSPACE_TABS` y `getActiveWorkspaceTab` de
   `workspace-tabs.tsx`. El primario cambia solo por la ruta
-  (`WorkspaceThemeRoot`). En el teléfono no hay hamburguesa: el aside se abre
-  desde "Más".
+  (`WorkspaceThemeRoot`). En el teléfono el aside se abre desde el botón de
+  menú del header (44 px).
 - **Táctil:** los controles del shell móvil miden 44 × 44 px o más y las
   acciones de la hoja, 56 px de alto o más. Los botones `size="sm"` de HeroUI
   miden 36 px en móvil: en el shell llevan `max-md:h-11 max-md:min-w-11`.

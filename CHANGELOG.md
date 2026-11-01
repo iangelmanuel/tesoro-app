@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Mobile experience (`< 768 px`, SPEC 15): a bottom quick-actions sheet (expense, income, goal contribution, debt or card payment and "mark recurring expense paid" in Personal; sale and cost in Business) that opens on every full load of a workspace route and after 5 or more minutes hidden, with an "Abrir al entrar" switch stored per device; a sticky Personal / Business tab under the header; a bottom navigation bar with a central [+] button and "Más" (opens the aside drawer); and no hamburger on phones.
+- Mobile experience (`< 768 px`, SPEC 15): a bottom quick-actions sheet (expense, income, goal contribution, debt or card payment and "mark recurring expense paid" in Personal; sale and cost in Business) that opens on every full load of a workspace route and after 5 or more minutes hidden, with an "Abrir al entrar" switch stored per device; a sticky Personal / Business tab under the header; and a bottom navigation bar with four destinations and a central [+] button. The aside drawer opens from the header menu button.
 - `QuickActionsProvider` shares the quick-actions data (workspaces, goals, debts, unpaid recurring occurrences) between the header and the mobile sheet, and `useActiveWorkspace` resolves the workspace from the route.
 - `PayOccurrenceDialog` to pick an unpaid recurring occurrence and pay it. `TransactionDialog` accepts an initial `type` in `initialValues` and can be controlled with `open` / `onOpenChange`.
 - `SITE.navigation.mobile` with the bottom-bar destinations, and `src/hooks/use-is-mobile.ts` (`useIsMobile`, `MOBILE_QUERY`).

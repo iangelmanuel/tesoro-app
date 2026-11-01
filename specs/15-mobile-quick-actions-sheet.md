@@ -1,6 +1,6 @@
 # SPEC 15 — Experiencia móvil: hoja de acciones rápidas, tab de espacio y barra inferior
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 13, SPEC 14
 > **Fecha:** 2026-11-01
 > **Objetivo:** Que en el teléfono Tesoro se use como una app: al entrar se abre una hoja de acciones rápidas para registrar al instante, un tab fijo arriba cambia entre Personal y Empresa y una barra inferior reemplaza al aside.
@@ -54,15 +54,14 @@ El trabajo se parte en dos specs, igual que 14:
   - el primario cambia solo por la ruta, con `WorkspaceThemeRoot` (verde en Personal, naranja en Empresa); no se pasa color por props;
   - el cambio entre varias empresas sigue en el switcher del Drawer.
 - **Header móvil:** título de la página (o saludo en el Resumen) y accesos rápidos de SPEC 14.
-  - Se quita la hamburguesa en `< 768 px`: el Drawer del aside se abre desde "Más" en la barra inferior.
+  - A la izquierda del título, un botón de menú de 44 × 44 px abre el Drawer del aside con la navegación completa, Ayuda, tema y usuario.
 - **Barra inferior** (`src/components/dashboard/mobile/bottom-nav.tsx`):
   - fija abajo, con `padding-bottom: env(safe-area-inset-bottom)`;
-  - seis posiciones: dos destinos, botón central, dos destinos, "Más";
-  - **Personal:** Resumen, Movimientos, **[+]**, Presupuestos, Metas, Más;
-  - **Empresa:** Resumen, Movimientos, **[+]**, Flujo de caja, Reportes, Más;
+  - cinco posiciones: dos destinos, botón central, dos destinos;
+  - **Personal:** Resumen, Movimientos, **[+]**, Presupuestos, Metas;
+  - **Empresa:** Resumen, Movimientos, **[+]**, Flujo de caja, Reportes;
   - **[+]** abre la hoja de acciones rápidas (el botón fijo para volver a abrirla);
-  - **Más** abre el Drawer actual del aside con la navegación completa, Ayuda, tema y usuario;
-  - en rutas sin espacio (`/dashboard/account`, estado vacío de Empresa) muestra los destinos de Personal y "Más", sin botón central;
+  - en rutas sin espacio (`/dashboard/account`, estado vacío de Empresa) muestra los 4 destinos de Personal, sin botón central;
   - ítem activo con el primario del espacio, `aria-current="page"`;
   - los destinos se definen en `SITE.navigation.mobile` y se toman de los ítems existentes de `SITE.navigation.personal` / `.business`.
   - El `<main>` recibe padding inferior para que la barra no tape contenido.
@@ -134,39 +133,39 @@ const HIDDEN_THRESHOLD_MS = 5 * 60 * 1000
 5. Crear `PayOccurrenceDialog` en `src/features/recurring-expenses/components/` con `Select` de pendientes y el `TransactionDialog` prellenado.
 6. Crear `quick-sheet.tsx` con las acciones de Personal y Empresa, sus diálogos y los destinos de respaldo sin metas, deudas o pendientes.
 7. Crear `use-quick-sheet-auto-open.ts` con carga, `visibilitychange`, umbral de 5 min, switch en `localStorage` y fallback en memoria.
-8. Agregar `SITE.navigation.mobile` y crear `bottom-nav.tsx` con [+] (abre la hoja) y "Más" (abre el Drawer del aside). Padding inferior en `<main>`.
-9. Crear `mobile-workspace-tabs.tsx` reusando la lógica de `workspace-tabs.tsx`. Montarlo bajo el header en `app/dashboard/layout.tsx` y quitar la hamburguesa en `< 768 px`.
+8. Agregar `SITE.navigation.mobile` y crear `bottom-nav.tsx` con [+] (abre la hoja) (abre la hoja). Padding inferior en `<main>`.
+9. Crear `mobile-workspace-tabs.tsx` reusando la lógica de `workspace-tabs.tsx`. Montarlo bajo el header en `app/dashboard/layout.tsx` y dejar el botón de menú del header como único acceso al Drawer del aside en `< 768 px`.
 10. Generar `icon-maskable-512.png` en `scripts/generate-brand-assets.mjs` y actualizar `app/manifest.ts` y la metadata/viewport de `app/layout.tsx`.
 11. Revisar a 360 y 390 px los tamaños táctiles del shell móvil y la hoja.
 12. Escribir la sección "Móvil" de `docs/ui.md`, actualizar `CLAUDE.md` y `CHANGELOG.md`.
 
 ## Criterios de aceptación
 
-- [ ] A 390 px, al cargar `/dashboard/personal` la hoja de acciones rápidas está abierta con Gasto, Ingreso, Aporte a meta, Pago de deuda o tarjeta y Marcar gasto fijo pagado, en ese orden.
-- [ ] A 390 px, al cargar `/dashboard/business/[id]` la hoja muestra solo Venta y Costo o gasto.
-- [ ] A 1024 px la hoja no se abre sola, no hay barra inferior ni tab superior móvil, y el shell es el de SPEC 14.
-- [ ] Navegar entre páginas del dashboard no abre la hoja.
-- [ ] Ocultar la pestaña menos de 5 minutos y volver no abre la hoja; 5 minutos o más sí.
-- [ ] Con el switch "Abrir al entrar" apagado, recargar no abre la hoja y el switch sigue apagado tras recargar.
-- [ ] En `/dashboard/account` la hoja no se abre sola y la barra inferior no tiene botón central.
-- [ ] La hoja se cierra deslizando hacia abajo, con "Cerrar", tocando el fondo y con Escape.
-- [ ] El botón [+] de la barra inferior vuelve a abrir la hoja.
-- [ ] Cada acción abre su diálogo sin cambiar la URL, y al guardar el registro aparece en la página correspondiente.
-- [ ] "Gasto" e "Ingreso" abren el diálogo con ese tipo ya elegido; "Venta" y "Costo o gasto" igual en Empresa.
-- [ ] Sin metas, "Aporte a meta" navega a `/dashboard/personal/goals`; sin deudas, "Pago de deuda o tarjeta" navega a `/dashboard/personal/debts`; sin pendientes, "Marcar gasto fijo pagado" navega a `/dashboard/personal/budgets?tab=recurring`.
-- [ ] Marcar un gasto fijo pagado desde la hoja crea el movimiento enlazado a la ocurrencia y la ocurrencia pasa a pagada en Gastos fijos.
-- [ ] El tab superior está visible en todas las rutas del dashboard a 390 px; Personal pinta el primario verde y Empresa el naranja.
-- [ ] Sin empresa, el tab Empresa lleva al estado vacío para crearla.
-- [ ] La barra inferior muestra Resumen, Movimientos, [+], Presupuestos, Metas, Más en Personal y Resumen, Movimientos, [+], Flujo de caja, Reportes, Más en Empresa; el destino activo tiene `aria-current="page"`.
-- [ ] "Más" abre el Drawer con la navegación completa, Ayuda, tema y usuario.
-- [ ] La barra inferior no tapa el último elemento de ninguna página.
-- [ ] Todo control de la barra inferior, el tab superior, el header y la hoja mide 44 × 44 px o más a 360 px; las acciones de la hoja, 56 px de alto o más.
-- [ ] Todo campo de monto de la app tiene `inputMode="decimal"`.
-- [ ] El manifest servido tiene un ícono `maskable` de 512 px, `display: "standalone"` y `start_url` `/dashboard/personal`; Chrome Android ofrece "Instalar app" y en iOS "Agregar a inicio" abre sin barra del navegador.
-- [ ] `grep -r "data-workspace" src app` solo devuelve `workspace-theme-root.tsx` y `globals.css`.
-- [ ] `docs/ui.md` tiene la sección "Móvil" y `CHANGELOG.md` la entrada en `[Unreleased]`.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
-- [ ] No hay migraciones nuevas en `supabase/migrations/`.
+- [ ] A 390 px, al cargar `/dashboard/personal` la hoja de acciones rápidas está abierta con Gasto, Ingreso, Aporte a meta, Pago de deuda o tarjeta y Marcar gasto fijo pagado, en ese orden. _(implementado; pendiente de prueba en navegador)_
+- [ ] A 390 px, al cargar `/dashboard/business/[id]` la hoja muestra solo Venta y Costo o gasto. _(implementado; pendiente de prueba en navegador)_
+- [ ] A 1024 px la hoja no se abre sola, no hay barra inferior ni tab superior móvil, y el shell es el de SPEC 14. _(implementado; pendiente de prueba en navegador)_
+- [ ] Navegar entre páginas del dashboard no abre la hoja. _(implementado; pendiente de prueba en navegador)_
+- [ ] Ocultar la pestaña menos de 5 minutos y volver no abre la hoja; 5 minutos o más sí. _(implementado; pendiente de prueba en navegador)_
+- [ ] Con el switch "Abrir al entrar" apagado, recargar no abre la hoja y el switch sigue apagado tras recargar. _(implementado; pendiente de prueba en navegador)_
+- [ ] En `/dashboard/account` la hoja no se abre sola y la barra inferior no tiene botón central. _(implementado; pendiente de prueba en navegador)_
+- [ ] La hoja se cierra deslizando hacia abajo, con "Cerrar", tocando el fondo y con Escape. _(implementado; pendiente de prueba en navegador)_
+- [ ] El botón [+] de la barra inferior vuelve a abrir la hoja. _(implementado; pendiente de prueba en navegador)_
+- [ ] Cada acción abre su diálogo sin cambiar la URL, y al guardar el registro aparece en la página correspondiente. _(implementado; pendiente de prueba en navegador)_
+- [ ] "Gasto" e "Ingreso" abren el diálogo con ese tipo ya elegido; "Venta" y "Costo o gasto" igual en Empresa. _(implementado; pendiente de prueba en navegador)_
+- [ ] Sin metas, "Aporte a meta" navega a `/dashboard/personal/goals`; sin deudas, "Pago de deuda o tarjeta" navega a `/dashboard/personal/debts`; sin pendientes, "Marcar gasto fijo pagado" navega a `/dashboard/personal/budgets?tab=recurring`. _(implementado; pendiente de prueba en navegador)_
+- [ ] Marcar un gasto fijo pagado desde la hoja crea el movimiento enlazado a la ocurrencia y la ocurrencia pasa a pagada en Gastos fijos. _(implementado; pendiente de prueba en navegador)_
+- [ ] El tab superior está visible en todas las rutas del dashboard a 390 px; Personal pinta el primario verde y Empresa el naranja. _(implementado; pendiente de prueba en navegador)_
+- [ ] Sin empresa, el tab Empresa lleva al estado vacío para crearla. _(implementado; pendiente de prueba en navegador)_
+- [ ] La barra inferior muestra Resumen, Movimientos, [+], Presupuestos, Metas en Personal y Resumen, Movimientos, [+], Flujo de caja, Reportes en Empresa, sin desborde horizontal a 360 px; el destino activo tiene `aria-current="page"`. _(implementado; pendiente de prueba en navegador)_
+- [ ] El botón de menú del header abre el Drawer con la navegación completa, Ayuda, tema y usuario. _(implementado; pendiente de prueba en navegador)_
+- [ ] La barra inferior no tapa el último elemento de ninguna página. _(implementado; pendiente de prueba en navegador)_
+- [ ] Todo control de la barra inferior, el tab superior, el header y la hoja mide 44 × 44 px o más a 360 px; las acciones de la hoja, 56 px de alto o más. _(implementado; pendiente de prueba en navegador)_
+- [x] Todo campo de monto de la app tiene `inputMode="decimal"`.
+- [ ] El manifest servido tiene un ícono `maskable` de 512 px, `display: "standalone"` y `start_url` `/dashboard/personal`; Chrome Android ofrece "Instalar app" y en iOS "Agregar a inicio" abre sin barra del navegador. _(manifest servido verificado con `next start`: ícono `maskable` 512, `standalone`, `start_url` correcto, meta `apple-mobile-web-app-*`; falta probar la instalación en Chrome Android e iOS)_
+- [x] `grep -r "data-workspace" src app` solo devuelve `workspace-theme-root.tsx` y `globals.css`.
+- [x] `docs/ui.md` tiene la sección "Móvil" y `CHANGELOG.md` la entrada en `[Unreleased]`.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] No hay migraciones nuevas en `supabase/migrations/`.
 
 ## Decisiones
 
@@ -179,8 +178,8 @@ const HIDDEN_THRESHOLD_MS = 5 * 60 * 1000
 - **No:** preferencia en `profiles`. Cambio de esquema por un ajuste de presentación.
 - **Sí:** solo `< 768 px`, el corte `md` existente. Un solo criterio para sidebar y shell móvil.
 - **No:** incluir tablet o detectar puntero táctil. Menos predecible y más alcance.
-- **Sí:** barra inferior con 4 destinos, [+] central y "Más" con el Drawer existente. Patrón de app; reusa el Drawer.
-- **No:** solo hamburguesa. No se siente como app.
+- **Sí:** barra inferior con 4 destinos y [+] central; el Drawer del aside se abre desde el botón de menú del header. Con "Más" la barra tenía 6 posiciones y se desbordaba a 360 px.
+- **No:** solo hamburguesa sin barra inferior. No se siente como app.
 - **Sí:** cinco acciones fijas en Personal y dos en Empresa. Sin preferencias que guardar.
 - **No:** acciones personalizables. Necesita persistir orden y selección.
 - **Sí:** traspaso desde el diálogo de movimiento, no como acción. Regla de `CLAUDE.md`.

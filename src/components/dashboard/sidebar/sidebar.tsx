@@ -158,7 +158,13 @@ export function SidebarTrigger({ className }: { className?: string }) {
 export function SidebarInset({
   children
 }: Readonly<{ children: React.ReactNode }>) {
-  return <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+  // En el teléfono ningún hijo ensancha la página: un desborde horizontal
+  // desplaza el Drawer fijo respecto de la pantalla
+  return (
+    <div className="flex min-w-0 flex-1 flex-col max-md:overflow-x-clip">
+      {children}
+    </div>
+  )
 }
 
 export function SidebarHeader({

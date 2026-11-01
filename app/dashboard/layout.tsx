@@ -4,6 +4,7 @@ import { Skeleton } from "@heroui/react"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { AppSidebarSkeleton } from "@/components/dashboard/app-sidebar-skeleton"
 import { DashboardTitle } from "@/components/dashboard/dashboard-title"
+import { MobileWorkspaceTabs } from "@/components/dashboard/mobile/mobile-workspace-tabs"
 import { QuickActions } from "@/components/dashboard/quick-actions"
 import {
   SidebarInset,
@@ -77,7 +78,8 @@ export default function DashboardLayout({
         </Suspense>
         <SidebarInset>
           <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 bg-background px-4 md:px-6">
-            <SidebarTrigger className="-ml-1.5" />
+            {/* En el teléfono el aside se abre desde "Más" en la barra inferior */}
+            <SidebarTrigger className="-ml-1.5 max-md:hidden" />
             <div className="min-w-0 flex-1">
               {/* La ruta y la sesión son dinámicas: hasta resolverlas, un
                   placeholder del tamaño del título */}
@@ -90,6 +92,7 @@ export default function DashboardLayout({
               <QuickActions />
             </div>
           </header>
+          <MobileWorkspaceTabs />
           <main
             id="contenido"
             tabIndex={-1}

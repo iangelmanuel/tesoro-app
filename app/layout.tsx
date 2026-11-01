@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Geist } from "next/font/google"
+import { Inter } from "next/font/google"
 import { ToastProvider, cn } from "@heroui/react"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { ThemeProvider } from "@/components/theme/theme-provider"
@@ -12,7 +12,7 @@ import {
 } from "@/libs/seo"
 import "@/styles/globals.css"
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
 const baseMetadata = buildMetadata({ path: "/" })
 
@@ -51,7 +51,7 @@ export default function RootLayout({
   return (
     <html
       lang={SITE.seo.lang}
-      className={cn("font-sans", geist.variable)}
+      className={cn("font-sans", inter.variable)}
       suppressHydrationWarning
     >
       <body>

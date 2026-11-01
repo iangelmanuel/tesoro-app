@@ -99,7 +99,8 @@ Secciones, en orden (`src/features/landing/components/`):
 
 - **Isotipo**: un cofre blanco sobre un cuadro redondeado del acento. Fuente
   en `assets/brand/mark.svg`; `app/icon.svg` es una copia.
-- **Wordmark**: "Tesoro" en Geist SemiBold.
+- **Wordmark**: "Tesoro" en SemiBold. En la UI (`Logo`) usa Inter, la fuente
+  de la app; los SVG de `assets/brand/` conservan sus trazos en Geist.
 - **Color de marca**: `--brand` (emerald-500, `#10b981`), igual en claro y
   oscuro. Lo usan el logo, el isotipo, el favicon y la imagen OG. Para texto
   pequeño se usa la utilidad `text-brand` (`--brand` mezclado con el

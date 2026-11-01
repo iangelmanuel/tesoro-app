@@ -10,10 +10,7 @@ import { getCategories } from "@/features/categories/queries"
 import { DebtsCard } from "@/features/debts/components/debts-card"
 import { GoalsCard } from "@/features/goals/components/goals-card"
 import { UpcomingPaymentsCard } from "@/features/recurring-expenses/components/upcoming-payments-card"
-import {
-  IncomeExpenseChart,
-  incomeExpenseLegend
-} from "@/features/reports/components/income-expense-chart"
+import { IncomeExpenseChart } from "@/features/reports/components/income-expense-chart"
 import { NoPeriodData } from "@/features/reports/components/no-period-data"
 import { RecentTransactions } from "@/features/reports/components/recent-transactions"
 import {
@@ -21,6 +18,7 @@ import {
   getRecentTransactions,
   getWorkspaceBalance
 } from "@/features/reports/queries"
+import { incomeExpenseLegend } from "@/features/reports/series"
 import { ScoreSummaryCard } from "@/features/score/components/score-summary-card"
 import { NoTransactions } from "@/features/transactions/components/transactions-empty"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"

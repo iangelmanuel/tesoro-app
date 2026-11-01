@@ -3,7 +3,6 @@
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts"
-import type { LegendItem } from "@/components/charts/chart-card"
 import {
   type ChartConfig,
   ChartContainer
@@ -38,18 +37,6 @@ function monthLabel(month: string) {
 }
 
 type SeriesLabels = Pick<ReportLabels, "income" | "expense" | "series">
-
-/** Series para la leyenda de la cabecera (ChartCard), en el orden fijo */
-export function incomeExpenseLegend(
-  labels: SeriesLabels = REPORT_LABELS.personal,
-  showBalance = false
-): LegendItem[] {
-  return [
-    { label: labels.income, color: "var(--income)" },
-    { label: labels.expense, color: "var(--expense)" },
-    ...(showBalance ? [{ label: "Balance", color: "var(--balance)" }] : [])
-  ]
-}
 
 interface IncomeExpenseChartProps {
   data: MonthlyTotal[]

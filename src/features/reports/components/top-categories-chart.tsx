@@ -50,8 +50,7 @@ export function TopCategoriesChart({
           layout="vertical"
           accessibilityLayer
           title={title}
-          margin={{ left: 0, right: 0, top: 18, bottom: 0 }}
-          barCategoryGap={22}
+          margin={{ left: 0, right: 0, top: 20, bottom: 0 }}
         >
           <XAxis
             type="number"
@@ -77,23 +76,31 @@ export function TopCategoriesChart({
           <Bar
             dataKey="total"
             {...HORIZONTAL_BAR_PROPS}
+            barSize={12}
             radius={4}
           >
-            {/* Nombre a la izquierda y monto a la derecha, sobre la barra */}
-            <LabelList
-              dataKey="name"
-              position="insideTopLeft"
-              offset={0}
-              dy={-18}
-              className="fill-foreground text-xs"
-            />
+            {/* "Nombre · monto" en una línea sobre la barra. Con `content`
+                propio el texto no se ajusta al ancho de la barra (las
+                posiciones inside* lo partían y se encimaba con el monto) */}
             <LabelList
               dataKey="total"
-              position="insideTopRight"
-              offset={0}
-              dy={-18}
-              className="fill-muted text-xs tabular-nums"
-              formatter={(value) => formatCurrency(Number(value), currency)}
+              content={(props) => {
+                const { x, y, index } = props
+                const row = index === undefined ? undefined : data[index]
+                if (!row) return null
+                return (
+                  <text
+                    x={Number(x)}
+                    y={Number(y) - 8}
+                    className="text-xs"
+                  >
+                    <tspan className="fill-foreground">{row.name}</tspan>
+                    <tspan className="fill-muted tabular-nums">
+                      {` · ${formatCurrency(row.total, currency)}`}
+                    </tspan>
+                  </text>
+                )
+              }}
             />
           </Bar>
         </BarChart>

@@ -83,7 +83,7 @@ export function ScoreHistoryChart({ data }: { data: ScoreHistoryPoint[] }) {
             domain={[0, 100]}
             ticks={BAND_TICKS}
             {...AXIS_PROPS}
-            width={32}
+            width={40}
           />
           <ReferenceLine
             y={60}

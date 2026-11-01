@@ -63,6 +63,10 @@ export function ChartContainer({
           "[&_.recharts-radial-bar-background-sector]:fill-default",
           "[&_.recharts-polar-grid_[stroke='#ccc']]:stroke-separator",
           "[&_.recharts-reference-line_[stroke='#ccc']]:stroke-border",
+          // Recharts fija el stroke-dasharray de las líneas con el ancho
+          // inicial del contenedor y no lo recalcula al crecer: la línea
+          // quedaba cortada. Sin dasharray se dibuja completa
+          "[&_.recharts-line-curve]:[stroke-dasharray:none]",
           // Punto activo de las líneas con anillo del color de la tarjeta
           "[&_.recharts-active-dot_circle]:stroke-surface",
           "[&_.recharts-dot[stroke='#fff']]:stroke-transparent",

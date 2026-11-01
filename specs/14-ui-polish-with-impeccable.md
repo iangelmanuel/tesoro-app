@@ -220,6 +220,17 @@ identidad solo vive en el copy y en el acento.
 | P2        | Reportes    | Tooltip en `font-mono` (`currency-tooltip.tsx:37`); historial del score con ticks irregulares y línea en el color del acento, igual que ingresos (`score-history-chart.tsx:17,69`) | Pasos 11 y 12                                                                                            |
 | P2        | Reportes    | Tokens con comentario AA que no cumplen: `text-brand` 4.19:1 en claro; `--chart-3`/`--chart-4` bajo 3:1 (sin uso hoy)                                                              | Paso 5                                                                                                   |
 
+**Hallazgos de la pasada `polish` (paso 16)**, con capturas en claro, en
+oscuro y a 375 px de una vista con datos ficticios:
+
+| Prioridad | Pantalla          | Hallazgo                                                                                                                                           | Acción                                                                                                            |
+| --------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| P0        | Resumen, Reportes | `incomeExpenseLegend()` se exportaba desde un módulo `"use client"` y la llamaban componentes de servidor: la página fallaba al renderizar         | Resuelto: movida a `src/features/reports/series.ts`                                                               |
+| P1        | Gráficas          | Las líneas (balance, score) quedaban cortadas: Recharts fija `stroke-dasharray` con el ancho inicial del contenedor y no lo recalcula              | Resuelto: `ChartContainer` quita el dasharray de `.recharts-line-curve`                                           |
+| P1        | Reportes          | Top categorías: `barCategoryGap={22}` dejaba barras de 2 px y las etiquetas `inside*` se partían y se encimaban                                    | Resuelto: `barSize={12}` y "Nombre · monto" en una línea sobre la barra                                           |
+| P1        | Score             | El tick "100" del eje Y se cortaba (".00")                                                                                                         | Resuelto: eje de 40 px                                                                                            |
+| P2        | Todas             | Paleta de 12 colores de categorías: no pasa el validador de dataviz (ΔE con daltonismo 0.6 entre violeta e índigo; tonos 400 muy claros en oscuro) | Fuera (rediseño del sistema de colores de categoría; spec propio). Mitigado con nombre y monto junto a cada barra |
+
 ## Criterios de aceptación
 
 - [ ] Impeccable está en `.claude/skills/`, versionado, y sus comandos responden en una sesión nueva tras clonar.

@@ -611,7 +611,8 @@ inválido de `tab` cae a Debo.
 ### Modelo
 
 - **Tarjeta:** nombre, entidad opcional, saldo inicial (≥ 0), cupo, día de
-  pago, y opcionales tasa con su tipo, pago mínimo y día de corte.
+  pago, y opcionales tasa con su tipo, pago mínimo, día de corte y cuota de
+  manejo con su día de cobro (ver "Cuota de manejo").
 - **Préstamo:** nombre, entidad opcional, saldo inicial (> 0), cuota, tasa
   (obligatoria, 0 permitido) con su tipo, día de pago, y opcionales monto
   original y plazo en meses (informativos).
@@ -622,9 +623,10 @@ inválido de `tab` cae a Debo.
 - **Entradas** (`debt_entries`): pagos (monto > 0) y ajustes (monto con
   signo), con fecha hasta hoy y nota opcional de hasta 120 caracteres. Un
   pago de préstamo o un abono puede enlazar su movimiento (`transaction_id`).
-- **Saldo:** no se guarda. Es `saldo inicial − Σ pagos + Σ ajustes`. Así
-  editar un pago viejo no descuadra nada y el historial explica cada cambio.
-  El saldo nunca queda negativo ni hay saldo a favor.
+- **Saldo:** no se guarda. Es `saldo inicial − Σ pagos + Σ ajustes + Σ avances
+  - Σ cuotas de manejo`. Así
+    editar un pago viejo no descuadra nada y el historial explica cada cambio.
+    El saldo nunca queda negativo ni hay saldo a favor.
 - **"Actualizar saldo":** el usuario escribe el saldo real (por ejemplo, el
   del extracto) y se crea un ajuste por la diferencia. Si es 0, "El saldo ya
   es ese". Corrige compras e intereses que el saldo no sube solo.
@@ -756,6 +758,40 @@ Etiquetas de la deuda:
   "Ver todas". Las cuentas por cobrar no aparecen. Como los demás widgets,
   solo se muestra cuando hay movimientos.
 
+### Cuota de manejo
+
+El banco cobra la cuota de manejo directamente al saldo de la tarjeta: el
+usuario no pone plata de sus cuentas y la paga después, dentro del pago de la
+tarjeta. Por eso Tesoro la genera sola, sin tocar cuentas.
+
+- **Configuración:** en la tarjeta, **Cuota de manejo** (monto) y **Día de
+  cobro** (1–31), opcionales y siempre juntos. Solo tarjetas: la BD rechaza
+  `fee_amount` en préstamos y cuentas por cobrar. Vaciar ambos campos detiene
+  los cobros.
+- **Entrada `fee`:** sube el saldo de la tarjeta, nunca lleva cuenta ni
+  movimiento y no cuenta como gasto: Movimientos, Reportes, Presupuestos y
+  score no cambian. El historial la muestra como "Cuota de manejo ·
+  automática" (`debt_entries.generated`). Se puede editar (monto, fecha, nota)
+  y eliminar como cualquier entrada; la corrección no se deshace sola.
+- **Job:** `pg_cron` `charge-card-fees` corre a diario a las 05:10 UTC (00:10
+  en Bogotá) y llama a `charge_card_fees()`. Para cada tarjeta activa con
+  cuota inserta una entrada por cada vencimiento `fee_day` posterior al
+  cursor y hasta hoy, con la fecha del vencimiento. Un día inexistente en el
+  mes cae en el último día del mes (31 → 30 de noviembre, 28 de febrero).
+- **Cursor `fee_charged_through`:** último vencimiento ya procesado. Es lo que
+  evita regenerar una cuota que el usuario borró, y recupera las pendientes si
+  el job no corrió ese día. Una falla en una tarjeta no detiene las demás.
+- **Nunca se cobra hacia atrás:** el cursor pasa a hoy al crear la tarjeta con
+  cuota, al cambiar el monto o el día, y al reactivar una tarjeta pagada o
+  archivada. La primera cuota es el primer `fee_day` posterior a hoy; los meses
+  archivados no se cobran.
+- El Sheet de la tarjeta muestra "Próxima cuota: 5 de diciembre · $ 22.000".
+  Si el usuario ya registraba la cuota con "Actualizar saldo", debe dejar de
+  hacerlo: la cuota no es retroactiva.
+- Fuera de alcance: cuotas variables o escalonadas, exoneración automática,
+  otros cargos (seguros, intereses: siguen por "Actualizar saldo"), cuota en
+  préstamos y registro manual de una cuota.
+
 ### Seguridad
 
 - RLS en `debts` y `debt_entries` con `is_workspace_owner`. Sin política
@@ -776,6 +812,11 @@ workspace_id)`: una entrada siempre es del mismo espacio que su deuda.
 - `debt_overview` y `record_debt_payment` son `security invoker` y solo las
   ejecuta `authenticated`. `record_debt_payment` crea el movimiento y el pago
   en una sola transacción.
+- Cuota de manejo (SPEC 17): `check_debt_entry` acepta `fee` solo en tarjetas y
+  con monto > 0, y un check de tabla impide cuenta o movimiento en una
+  `fee`. `charge_card_fees()` es `security definer` (inserta entradas de todos
+  los espacios) y no se concede a `anon` ni `authenticated`: solo la ejecuta
+  `pg_cron`. Los campos de cuota los protege la RLS de `debts`.
 
 ## Cuentas y traspasos
 

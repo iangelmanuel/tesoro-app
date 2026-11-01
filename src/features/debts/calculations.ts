@@ -85,6 +85,17 @@ export function nextFeeDate(
     : dueInMonth(shiftMonth(thisMonth, 1), debt.fee_day)
 }
 
+const DAY_MONTH_FORMAT = new Intl.DateTimeFormat("es-CO", {
+  day: "numeric",
+  month: "long",
+  timeZone: "UTC"
+})
+
+/** "5 de diciembre", desde una fecha YYYY-MM-DD */
+export function formatDayMonth(date: string) {
+  return DAY_MONTH_FORMAT.format(new Date(`${date}T00:00:00Z`))
+}
+
 /** Activa y de tipo tarjeta o préstamo */
 export function isActiveDebt(debt: Pick<DebtCalcInput, "kind" | "status">) {
   return debt.status === "active" && debt.kind !== "receivable"

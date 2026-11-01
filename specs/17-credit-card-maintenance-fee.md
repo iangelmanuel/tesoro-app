@@ -1,6 +1,6 @@
 # SPEC 17 — Cuota de manejo automática de la tarjeta
 
-> **Estado:** Borrador
+> **Estado:** Aprobado
 > **Depende de:** SPEC 06, SPEC 16
 > **Fecha:** 2026-11-01
 > **Objetivo:** Que cada tarjeta de crédito cobre sola su cuota de manejo cada mes como una entrada que sube su saldo, sin tocar las cuentas del usuario, y que el usuario pueda editarla o borrarla.

@@ -26,3 +26,14 @@ export function formatDate(date: string | Date) {
     timeZone: "UTC"
   }).format(value)
 }
+
+// Fecha corta sin año ("1 nov") para filas compactas en móvil
+export function formatShortDate(date: string | Date) {
+  const value = typeof date === "string" ? new Date(`${date}T00:00:00Z`) : date
+
+  return new Intl.DateTimeFormat(LOCALE, {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC"
+  }).format(value)
+}

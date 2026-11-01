@@ -21,6 +21,7 @@ import {
   AccountSelect,
   selectableAccounts
 } from "@/features/accounts/components/account-select"
+import { TransferForm } from "@/features/accounts/components/transfer-dialog"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import type { WorkspaceType } from "@/features/workspaces/queries"
@@ -99,12 +100,12 @@ export function TransactionDialog({
 
   // `trigger` debe ser un Button de HeroUI: el Modal lo conecta por React Aria
   return (
-    <Modal>
+    <Modal
+      isOpen={open}
+      onOpenChange={setOpen}
+    >
       {trigger}
-      <Modal.Backdrop
-        isOpen={open}
-        onOpenChange={setOpen}
-      >
+      <Modal.Backdrop>
         <Modal.Container scroll="outside">
           <Modal.Dialog className="sm:max-w-md">
             <Modal.CloseTrigger />
@@ -194,6 +195,11 @@ function TransactionForm({
     () => transaction?.occurred_on ?? initialValues?.occurred_on ?? todayISO()
   )
   const [accountId, setAccountId] = useState(transaction?.account_id ?? "")
+  // Un movimiento nuevo y suelto también puede ser un traspaso entre dos
+  // cuentas propias: se guarda en transfers y no cuenta como ingreso ni gasto
+  const [isTransfer, setIsTransfer] = useState(false)
+  const canTransfer =
+    !isEditing && !isLinked && selectableAccounts(accounts).length >= 2
 
   const [state, formAction, pending] = useActionState<
     TransactionFormState,
@@ -227,13 +233,69 @@ function TransactionForm({
 
   function handleTypeChange(keys: Set<React.Key>) {
     const [value] = [...keys]
-    if (!value || value === type) return
+    if (!value) return
+    if (value === "transfer") {
+      setIsTransfer(true)
+      return
+    }
+    setIsTransfer(false)
+    if (value === type) return
     setType(value as TransactionType)
     setCategoryId("")
   }
 
   const errors = state.fieldErrors
   const values = state.values
+
+  const typeToggle = (
+    <ToggleButtonGroup
+      selectionMode="single"
+      disallowEmptySelection
+      selectedKeys={[isTransfer ? "transfer" : type]}
+      onSelectionChange={handleTypeChange}
+      isDisabled={isLinked}
+      fullWidth
+      aria-label="Tipo de movimiento"
+    >
+      <ToggleButton
+        id="expense"
+        className="flex-1"
+      >
+        {copy.expense}
+      </ToggleButton>
+      <ToggleButton
+        id="income"
+        className="flex-1"
+      >
+        {copy.income}
+      </ToggleButton>
+      {canTransfer && (
+        <ToggleButton
+          id="transfer"
+          className="flex-1"
+        >
+          Traspaso
+        </ToggleButton>
+      )}
+    </ToggleButtonGroup>
+  )
+
+  if (isTransfer) {
+    return (
+      <div className="flex flex-col gap-4">
+        {typeToggle}
+        <p className="text-sm text-muted">
+          Mueve plata entre tus cuentas. No cuenta como ingreso ni gasto.
+        </p>
+        <TransferForm
+          workspaceId={workspaceId}
+          accounts={accounts}
+          onSaved={onSaved}
+          onCancel={onCancel}
+        />
+      </div>
+    )
+  }
 
   return (
     <form
@@ -273,28 +335,7 @@ function TransactionForm({
         </>
       )}
 
-      <ToggleButtonGroup
-        selectionMode="single"
-        disallowEmptySelection
-        selectedKeys={[type]}
-        onSelectionChange={handleTypeChange}
-        isDisabled={isLinked}
-        fullWidth
-        aria-label="Tipo de movimiento"
-      >
-        <ToggleButton
-          id="expense"
-          className="flex-1"
-        >
-          {copy.expense}
-        </ToggleButton>
-        <ToggleButton
-          id="income"
-          className="flex-1"
-        >
-          {copy.income}
-        </ToggleButton>
-      </ToggleButtonGroup>
+      {typeToggle}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField

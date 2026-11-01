@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Button, Disclosure } from "@heroui/react"
+import { SURFACE_LIST, SURFACE_ROW } from "@/components/dashboard/surface"
 import { formatCurrency } from "@/libs/format"
 import type { Goal, GoalContribution } from "../queries"
 import { GoalIcon } from "./goal-icon"
@@ -35,7 +36,7 @@ export function InactiveGoals({
         </Disclosure.Trigger>
       </Disclosure.Heading>
       <Disclosure.Content>
-        <ul className="divide-y rounded-xl border">
+        <ul className={SURFACE_LIST}>
           {goals.map((goal) => (
             <InactiveGoalRow
               key={goal.id}
@@ -66,7 +67,7 @@ function InactiveGoalRow({
   const { pending, run } = useGoalAction(goal)
 
   return (
-    <li className="flex flex-wrap items-center gap-3 p-4">
+    <li className={`flex flex-wrap items-center gap-3 ${SURFACE_ROW}`}>
       {/* Abre el Sheet de solo lectura */}
       <button
         type="button"

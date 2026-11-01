@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- "Traspaso" option in the new-movement dialog (next to expense/income, in Personal and Business) when the workspace has two or more active accounts: it saves a transfer between own accounts, not an income or expense. `TransferForm` is now exported from `transfer-dialog.tsx`.
+- `src/components/dashboard/surface.ts` with the borderless surface classes for lists (`SURFACE_LIST`, `SURFACE_ROW`), lists inside a card (`CARD_LIST`, `CARD_ROW`), grid item cards (`SURFACE_ITEM`) and short notes (`SURFACE_NOTE`).
 - HeroUI v3 (`@heroui/react`, `@heroui/styles` 3.2.7) as the UI library, imported directly with no Provider or wrappers. `react-aria` and `@internationalized/date` as direct dependencies.
 - Theme on HeroUI tokens: black and blue-gray neutrals, a neutral primary outside the workspaces, emerald in Personal and orange in Business. `getWorkspaceTheme()` and `WorkspaceThemeRoot` set `data-workspace` from the route; overlays render inside it via `UNSAFE_PortalProvider` and dates use the `es-CO` locale via `I18nProvider`.
 - `--brand` token (emerald-500) for the logo, so brand assets stay emerald on every theme.
@@ -150,6 +152,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Form fields (inputs, selects, date pickers) use a soft fill with no border through the `--field-*` tokens (`--field-background`, `--field-hover`, transparent `--field-border`, no shadow); the focus ring is unchanged. `muted` and `foreground` on the new fill keep AA in light and dark mode.
+- The "Traspaso" buttons on the Personal and Business transactions and accounts pages are gone: transfers are created from the "Registrar movimiento" dialog. Editing a transfer from the table still opens the transfer dialog.
+- Dashboard pages no longer repeat the title and description under the header (debts, budgets, accounts, goals, recommendations, import, account and every Business page); the header `<h1>` is the only title and each `<section>` has an `aria-label`.
+- Debts, budgets, recurring expenses, goals, hidden recommendations and import history lists use borderless surfaces instead of `rounded-xl border` boxes and dashed notes. "Próximos pagos" (debts and recurring expenses) and "Sin presupuesto" are cards with `CardHeading`; debt, receivable and goal cards use the card surface.
+- The paid amount in recurring "Próximos pagos" uses `--income` instead of the raw emerald palette.
+
 - Inter replaces Geist, and the dark theme is the default.
 - Dark theme retuned to near-black neutrals with borderless dark-gray cards; light background, money, danger, chart and focus tokens adjusted so every text pair keeps AA and the money series pass a color-blind palette check.
 - Aside reordered: logo, Personal/Business pill tabs, compact navigation, and help, theme toggle and user menu at the bottom. The theme moved out of the user menu.
@@ -211,6 +219,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Dialogs and sheets (movements, transfers, accounts, budgets, debts, goals, recurring expenses, business) never opened from their trigger buttons: `isOpen`/`onOpenChange` were set on `*.Backdrop`, so React Aria ignored the trigger state. They now go on the `Modal`/`Drawer`/`AlertDialog` root.
+- The recurring expenses table was wrapped in an extra bordered box, drawing a border around its header, and the "Pausado" chip had its own border.
 - The Transactions month button showed one label and announced another (WCAG 2.5.3); the month is now text with a single "Todos los meses" toggle.
 - Charts were keyboard-focusable without a visible focus indicator or a name.
 - Line series were cut short after the chart container resized (stale `stroke-dasharray`).

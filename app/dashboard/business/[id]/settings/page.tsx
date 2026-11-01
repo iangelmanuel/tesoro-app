@@ -20,11 +20,10 @@ export default function BusinessSettingsPage({
   params
 }: BusinessSettingsPageProps) {
   return (
-    <section className="flex flex-1 flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Ajustes</h1>
-        <p className="text-sm text-muted">Los datos de tu empresa.</p>
-      </header>
+    <section
+      aria-label="Ajustes"
+      className="flex flex-1 flex-col gap-6"
+    >
       {/* params y la sesión son dinámicos: van dentro de Suspense */}
       <Suspense fallback={<SettingsSkeleton />}>
         <SettingsContent params={params} />

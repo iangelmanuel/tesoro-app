@@ -4,6 +4,7 @@ import { useTransition } from "react"
 import { AlertDialog, Button, Chip, toast } from "@heroui/react"
 import { FileClock, Undo2 } from "lucide-react"
 import { CardEmpty } from "@/components/dashboard/empty-state"
+import { SURFACE_LIST, SURFACE_ROW } from "@/components/dashboard/surface"
 import { TIME_ZONE } from "@/libs/dates"
 import { undoImport } from "../actions"
 import type { ImportRecord } from "../queries"
@@ -51,7 +52,7 @@ export function ImportHistory({ imports }: { imports: ImportRecord[] }) {
           message="Aún no has importado archivos"
         />
       ) : (
-        <ul className="flex flex-col divide-y rounded-xl border">
+        <ul className={SURFACE_LIST}>
           {imports.map((item) => (
             <ImportHistoryItem
               key={item.id}
@@ -69,7 +70,9 @@ function ImportHistoryItem({ item }: { item: ImportRecord }) {
   const { stats } = item
 
   return (
-    <li className="flex flex-wrap items-center justify-between gap-3 p-4">
+    <li
+      className={`flex flex-wrap items-center justify-between gap-3 ${SURFACE_ROW}`}
+    >
       <div className="flex min-w-0 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="truncate font-medium">{item.filename}</p>

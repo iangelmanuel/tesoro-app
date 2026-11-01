@@ -1,5 +1,7 @@
-import { Button } from "@heroui/react"
+import { Button, Card, CardContent } from "@heroui/react"
 import { Plus } from "lucide-react"
+import { CardHeading } from "@/components/dashboard/card-heading"
+import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { formatCurrency } from "@/libs/format"
@@ -25,47 +27,51 @@ export function UnbudgetedCategories({
   const total = rows.reduce((sum, row) => sum + row.spent, 0)
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-lg font-semibold">Sin presupuesto</h2>
-        <p className="text-sm text-muted tabular-nums">
-          {formatCurrency(total, currency)} gastados
-        </p>
-      </div>
-      <ul className="divide-y rounded-xl border">
-        {rows.map((row) => (
-          <li
-            key={row.categoryId}
-            className="flex flex-wrap items-center gap-3 p-4"
-          >
-            <CategoryBadge
-              name={row.archived ? `${row.name} (archivada)` : row.name}
-              icon={row.icon}
-              color={row.color}
-            />
-            <p className="ml-auto font-medium tabular-nums">
-              {formatCurrency(row.spent, currency)}
-            </p>
-            {/* Una categoría archivada no se puede presupuestar */}
-            {!row.archived && (
-              <BudgetDialog
-                month={month}
-                categories={categories}
-                defaultCategoryId={row.categoryId}
-                trigger={
-                  <Button
-                    size="sm"
-                    variant="outline"
-                  >
-                    <Plus />
-                    Presupuestar
-                  </Button>
-                }
+    <Card>
+      <CardHeading
+        title="Sin presupuesto"
+        action={
+          <p className="text-sm text-muted tabular-nums">
+            {formatCurrency(total, currency)} gastados
+          </p>
+        }
+      />
+      <CardContent>
+        <ul className={CARD_LIST}>
+          {rows.map((row) => (
+            <li
+              key={row.categoryId}
+              className={`flex flex-wrap items-center gap-3 ${CARD_ROW}`}
+            >
+              <CategoryBadge
+                name={row.archived ? `${row.name} (archivada)` : row.name}
+                icon={row.icon}
+                color={row.color}
               />
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
+              <p className="ml-auto font-medium tabular-nums">
+                {formatCurrency(row.spent, currency)}
+              </p>
+              {/* Una categoría archivada no se puede presupuestar */}
+              {!row.archived && (
+                <BudgetDialog
+                  month={month}
+                  categories={categories}
+                  defaultCategoryId={row.categoryId}
+                  trigger={
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                    >
+                      <Plus />
+                      Presupuestar
+                    </Button>
+                  }
+                />
+              )}
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   )
 }

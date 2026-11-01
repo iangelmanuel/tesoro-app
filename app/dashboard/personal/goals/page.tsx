@@ -25,15 +25,10 @@ export const metadata = buildMetadata({
 
 export default function GoalsPage() {
   return (
-    <section className="flex flex-1 flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Metas de ahorro
-        </h1>
-        <p className="text-sm text-muted">
-          Aparta dinero para lo que viene y sigue tu avance.
-        </p>
-      </header>
+    <section
+      aria-label="Metas de ahorro"
+      className="flex flex-1 flex-col gap-6"
+    >
       {/* La sesión es dinámica: va dentro de Suspense */}
       <Suspense fallback={<GoalsSkeleton />}>
         <GoalsContent />

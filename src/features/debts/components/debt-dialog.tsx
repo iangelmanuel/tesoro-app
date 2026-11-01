@@ -41,12 +41,12 @@ export function DebtDialog({
   const isEditing = debt !== undefined
 
   return (
-    <Modal>
+    <Modal
+      isOpen={open}
+      onOpenChange={setOpen}
+    >
       {trigger}
-      <Modal.Backdrop
-        isOpen={open}
-        onOpenChange={setOpen}
-      >
+      <Modal.Backdrop>
         <Modal.Container scroll="outside">
           <Modal.Dialog className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
             <Modal.CloseTrigger />

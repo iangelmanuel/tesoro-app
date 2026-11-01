@@ -26,13 +26,10 @@ type AccountPageProps = PageProps<"/dashboard/account">
 
 export default function AccountPage({ searchParams }: AccountPageProps) {
   return (
-    <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Cuenta</h1>
-        <p className="text-sm text-muted">
-          Tu perfil, tus preferencias y la seguridad de tu cuenta.
-        </p>
-      </header>
+    <section
+      aria-label="Cuenta"
+      className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6"
+    >
       {/* searchParams y la sesión son dinámicos: van dentro de Suspense */}
       <Suspense fallback={<AccountSkeleton />}>
         <AccountContent searchParams={searchParams} />

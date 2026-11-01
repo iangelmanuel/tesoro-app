@@ -29,22 +29,23 @@ El contexto de producto (usuarios, voz, principios) está en
 
 Todo vive en `src/styles/globals.css`, con los nombres de HeroUI v3.
 
-| Token                                           | Qué es                                                    |
-| ----------------------------------------------- | --------------------------------------------------------- |
-| `--background`                                  | Fondo de la página. Oscuro ≈ `#0a0a0a`, claro `#f6f7f9`   |
-| `--surface`                                     | Tarjetas. Oscuro ≈ `#18181b`, claro blanco                |
-| `--surface-secondary`, `--surface-tertiary`     | Superficies escalonadas dentro de una tarjeta             |
-| `--overlay`                                     | Diálogos, menús, popovers y tooltips                      |
-| `--default`                                     | Ítem activo del aside, hover de filas, chips neutros      |
-| `--muted`                                       | Texto atenuado, etiquetas, ticks de gráficas              |
-| `--border`, `--separator`                       | Grilla de gráficas y divisores muy sutiles                |
-| `--accent`, `--accent-foreground`               | Primario. Lo cambia el espacio (ver abajo)                |
-| `--success`, `--warning`, `--danger` y `*-soft` | Estados. Los `*-soft` con su `*-soft-foreground` en chips |
-| `--brand`                                       | Emerald del logo; igual en todos los temas                |
-| `--income`, `--expense`, `--balance`            | Dinero: texto ≥ 4.5:1 y series de gráfica                 |
-| `--category-*`                                  | Los 12 colores que el usuario elige por categoría         |
-| `--chart-1…5`                                   | Serie neutra (score, comparaciones sin significado)       |
-| `--field-radius`                                | Radio de inputs y selects (20 px, pill a su altura)       |
+| Token                                           | Qué es                                                                 |
+| ----------------------------------------------- | ---------------------------------------------------------------------- |
+| `--background`                                  | Fondo de la página. Oscuro ≈ `#0a0a0a`, claro `#f6f7f9`                |
+| `--surface`                                     | Tarjetas. Oscuro ≈ `#18181b`, claro blanco                             |
+| `--surface-secondary`, `--surface-tertiary`     | Superficies escalonadas dentro de una tarjeta                          |
+| `--overlay`                                     | Diálogos, menús, popovers y tooltips                                   |
+| `--default`                                     | Ítem activo del aside, hover de filas, chips neutros                   |
+| `--muted`                                       | Texto atenuado, etiquetas, ticks de gráficas                           |
+| `--border`, `--separator`                       | Grilla de gráficas y divisores muy sutiles                             |
+| `--accent`, `--accent-foreground`               | Primario. Lo cambia el espacio (ver abajo)                             |
+| `--success`, `--warning`, `--danger` y `*-soft` | Estados. Los `*-soft` con su `*-soft-foreground` en chips              |
+| `--brand`                                       | Emerald del logo; igual en todos los temas                             |
+| `--income`, `--expense`, `--balance`            | Dinero: texto ≥ 4.5:1 y series de gráfica                              |
+| `--category-*`                                  | Los 12 colores que el usuario elige por categoría                      |
+| `--chart-1…5`                                   | Serie neutra (score, comparaciones sin significado)                    |
+| `--field-radius`                                | Radio de inputs y selects (20 px, pill a su altura)                    |
+| `--field-background`, `--field-hover`           | Relleno suave de los campos; sin borde (`--field-border` transparente) |
 
 - **Primario por espacio:** `WorkspaceThemeRoot` + `getWorkspaceTheme()`
   ponen `data-workspace` en el contenedor del dashboard y `globals.css`
@@ -74,6 +75,8 @@ OKLCH → sRGB). Mínimos: 4.5:1 texto, 3:1 gráficos y foco.
 | `accent` / `background` Personal (foco) | 3.41  | 8.03   |
 | `accent` / `background` Empresa (foco)  | 3.34  | 6.84   |
 | `text-brand` / `background`             | 5.10  | 11.08  |
+| `muted` / `field-background`            | 5.22  | 5.19   |
+| `foreground` / `field-background`       | 15.41 | 13.07  |
 | `--chart-*` / `surface` (mínimo)        | 4.77  | 3.72   |
 
 Las series de dinero (`--income`, `--expense`, `--balance`) también pasan el
@@ -91,17 +94,18 @@ estos solo agregan lo que HeroUI no trae.
 
 ### Shell del dashboard (`src/components/dashboard/`)
 
-| Pieza                                         | Qué hace                                                                                                                  |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `app-sidebar.tsx`, `sidebar/`                 | Aside: logo → tabs Personal/Empresa → navegación; abajo Ayuda (issues de GitHub), tema y usuario                          |
-| `dashboard-title.tsx`                         | Único `<h1>` de la página, en el header. Saludo según la hora de Bogotá en el Resumen de Personal                         |
-| `quick-actions.tsx`, `quick-actions-menu.tsx` | Accesos del header: "Registrar movimiento" + "Más" (aporte, pago, importar) en Personal; "Registrar operación" en Empresa |
-| `stat-card.tsx`                               | KPI: etiqueta, valor y badge de variación con color por significado (`trend`); `<dl>` accesible                           |
-| `card-heading.tsx`                            | Cabecera de tarjeta: `<h2>`, ayuda (i) opcional y enlace discreto con chevron                                             |
-| `help-hint.tsx`                               | Ícono (i) con `Popover`; los textos viven en `src/config/help.ts` (`HELP`)                                                |
-| `empty-state.tsx`                             | `EmptyState` (página): ícono, qué falta, qué hacer y la acción. `CardEmpty` (dentro de una tarjeta)                       |
-| `card-skeleton.tsx`                           | Placeholder con el mismo contenedor de `Card`; todo bloque que carga usa este, no un `Skeleton` suelto                    |
-| `tone.ts`                                     | Clases de estado (chips, barras, texto) desde tokens                                                                      |
+| Pieza                                         | Qué hace                                                                                                                                                                                                                                        |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app-sidebar.tsx`, `sidebar/`                 | Aside: logo → tabs Personal/Empresa → navegación; abajo Ayuda (issues de GitHub), tema y usuario                                                                                                                                                |
+| `dashboard-title.tsx`                         | Único `<h1>` de la página, en el header. Saludo según la hora de Bogotá en el Resumen de Personal                                                                                                                                               |
+| `quick-actions.tsx`, `quick-actions-menu.tsx` | Accesos del header: "Registrar movimiento" + "Más" (aporte, pago, importar) en Personal; "Registrar operación" en Empresa                                                                                                                       |
+| `stat-card.tsx`                               | KPI: etiqueta, valor y badge de variación con color por significado (`trend`); `<dl>` accesible                                                                                                                                                 |
+| `card-heading.tsx`                            | Cabecera de tarjeta: `<h2>`, ayuda (i) opcional y enlace discreto con chevron                                                                                                                                                                   |
+| `help-hint.tsx`                               | Ícono (i) con `Popover`; los textos viven en `src/config/help.ts` (`HELP`)                                                                                                                                                                      |
+| `empty-state.tsx`                             | `EmptyState` (página): ícono, qué falta, qué hacer y la acción. `CardEmpty` (dentro de una tarjeta)                                                                                                                                             |
+| `card-skeleton.tsx`                           | Placeholder con el mismo contenedor de `Card`; todo bloque que carga usa este, no un `Skeleton` suelto                                                                                                                                          |
+| `tone.ts`                                     | Clases de estado (chips, barras, texto) desde tokens                                                                                                                                                                                            |
+| `surface.ts`                                  | Clases de superficie sin borde: `SURFACE_LIST`/`SURFACE_ROW` (lista sobre el fondo), `CARD_LIST`/`CARD_ROW` (lista dentro de una `Card`), `SURFACE_ITEM` (tarjeta de una grilla) y `SURFACE_NOTE`. Nunca `rounded-xl border` ni `border-dashed` |
 
 ### Gráficas (`src/components/charts/`)
 

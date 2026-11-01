@@ -1,10 +1,8 @@
 import { Suspense } from "react"
-import { Button, Skeleton } from "@heroui/react"
+import { Skeleton } from "@heroui/react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { ArrowLeftRight } from "lucide-react"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
-import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
 import { getCategories } from "@/features/categories/queries"
@@ -96,9 +94,6 @@ async function TransactionsContent({
   // Solo se consulta cuando los filtros no devuelven nada
   const isEmptyWorkspace =
     rows.length === 0 && !(await hasAnyLedgerEntries(workspace.id))
-  // Un traspaso necesita al menos dos cuentas activas
-  const canTransfer =
-    accounts.filter((account) => !account.archived_at).length > 1
 
   if (isEmptyWorkspace) {
     return (
@@ -121,21 +116,6 @@ async function TransactionsContent({
           accounts={accounts}
         />
         <div className="flex shrink-0 items-center gap-2">
-          {canTransfer && (
-            <TransferDialog
-              workspaceId={workspace.id}
-              accounts={accounts}
-              trigger={
-                <Button
-                  variant="secondary"
-                  size="sm"
-                >
-                  <ArrowLeftRight />
-                  Traspaso
-                </Button>
-              }
-            />
-          )}
           <CategoriesSheet
             workspaceId={workspace.id}
             categories={categories}

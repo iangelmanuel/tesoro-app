@@ -31,15 +31,10 @@ export default function BusinessRecommendationsPage({
   params
 }: BusinessRecommendationsPageProps) {
   return (
-    <section className="flex flex-1 flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Score y recomendaciones
-        </h1>
-        <p className="text-sm text-muted">
-          La salud de tu negocio de 0 a 100 y qué hacer para mejorarla.
-        </p>
-      </header>
+    <section
+      aria-label="Score y recomendaciones"
+      className="flex flex-1 flex-col gap-6"
+    >
       {/* params, la sesión y la fecha son dinámicos: van dentro de Suspense */}
       <Suspense fallback={<ScoreRecommendationsSkeleton />}>
         <RecommendationsContent params={params} />

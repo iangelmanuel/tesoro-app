@@ -9,6 +9,7 @@ import {
   Pencil,
   RefreshCw
 } from "lucide-react"
+import { SURFACE_ITEM } from "@/components/dashboard/surface"
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import { formatCurrency, formatDate } from "@/libs/format"
 import {
@@ -63,7 +64,7 @@ export function DebtCard({
   }
 
   return (
-    <li className="flex flex-col gap-4 rounded-xl border p-4">
+    <li className={`flex flex-col gap-4 ${SURFACE_ITEM}`}>
       <div className="flex items-start gap-3">
         {/* Abre el Sheet con el detalle, la proyección y el historial */}
         <button

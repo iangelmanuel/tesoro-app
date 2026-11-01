@@ -25,15 +25,10 @@ export const metadata = buildMetadata({
 
 export default function RecommendationsPage() {
   return (
-    <section className="flex flex-1 flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Score y recomendaciones
-        </h1>
-        <p className="text-sm text-muted">
-          Tu salud financiera de 0 a 100 y qué hacer para mejorarla.
-        </p>
-      </header>
+    <section
+      aria-label="Score y recomendaciones"
+      className="flex flex-1 flex-col gap-6"
+    >
       {/* La sesión y la fecha son dinámicas: van dentro de Suspense */}
       <Suspense fallback={<ScoreRecommendationsSkeleton />}>
         <RecommendationsContent />

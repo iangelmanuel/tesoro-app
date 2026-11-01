@@ -38,11 +38,11 @@ export function GoalSheet({
   const { pending, run } = useGoalAction(goal)
 
   return (
-    <Drawer>
-      <Drawer.Backdrop
-        isOpen={open}
-        onOpenChange={onOpenChange}
-      >
+    <Drawer
+      isOpen={open}
+      onOpenChange={onOpenChange}
+    >
+      <Drawer.Backdrop>
         <Drawer.Content placement="right">
           <Drawer.Dialog className="w-full sm:max-w-md">
             <Drawer.CloseTrigger aria-label="Cerrar" />

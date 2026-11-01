@@ -1,8 +1,10 @@
 import { Suspense } from "react"
-import { Button, Skeleton } from "@heroui/react"
-import { CalendarClock, PiggyBank, Plus } from "lucide-react"
+import { Button, Card, CardContent, Skeleton } from "@heroui/react"
+import { CalendarClock, CircleCheck, PiggyBank, Plus } from "lucide-react"
+import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
-import { EmptyState } from "@/components/dashboard/empty-state"
+import { CardEmpty, EmptyState } from "@/components/dashboard/empty-state"
+import { SURFACE_LIST } from "@/components/dashboard/surface"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { BudgetDialog } from "@/features/budgets/components/budget-dialog"
 import { BudgetMonthNav } from "@/features/budgets/components/budget-month-nav"
@@ -43,13 +45,10 @@ type BudgetsPageProps = PageProps<"/dashboard/personal/budgets">
 
 export default function BudgetsPage({ searchParams }: BudgetsPageProps) {
   return (
-    <section className="flex flex-1 flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Presupuestos</h1>
-        <p className="text-sm text-muted">
-          Planea tu mes: cuánto quieres gastar y qué pagos fijos tienes.
-        </p>
-      </header>
+    <section
+      aria-label="Presupuestos"
+      className="flex flex-1 flex-col gap-6"
+    >
       {/* searchParams y la sesión son dinámicos: van dentro de Suspense */}
       <Suspense fallback={<BudgetsSkeleton />}>
         <BudgetsContent searchParams={searchParams} />
@@ -161,7 +160,7 @@ async function BudgetsTab({
             budgets={budgets}
             currency={workspace.currency}
           />
-          <ul className="divide-y rounded-xl border">
+          <ul className={SURFACE_LIST}>
             {budgets.map((budget) => (
               <BudgetProgressRow
                 key={budget.budgetId}
@@ -228,24 +227,27 @@ async function RecurringTab({ workspace }: { workspace: PersonalWorkspace }) {
         <ImportButton target="recurring_expenses" />
       </div>
 
-      <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Próximos pagos</h2>
-        {isUpToDate && (
-          <p className="rounded-xl border border-dashed p-4 text-center text-sm text-muted">
-            Estás al día con tus pagos
-          </p>
-        )}
-        {/* Los pagados del mes siguen en la lista con su monto */}
-        {payments.length > 0 && (
-          <UpcomingPayments
-            workspaceId={workspace.id}
-            payments={payments}
-            categories={categories}
-            accounts={accounts}
-            currency={workspace.currency}
-          />
-        )}
-      </div>
+      <Card>
+        <CardHeading title="Próximos pagos" />
+        <CardContent className="flex flex-col gap-3">
+          {isUpToDate && (
+            <CardEmpty
+              icon={CircleCheck}
+              message="Estás al día con tus pagos"
+            />
+          )}
+          {/* Los pagados del mes siguen en la lista con su monto */}
+          {payments.length > 0 && (
+            <UpcomingPayments
+              workspaceId={workspace.id}
+              payments={payments}
+              categories={categories}
+              accounts={accounts}
+              currency={workspace.currency}
+            />
+          )}
+        </CardContent>
+      </Card>
 
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Gastos fijos</h2>

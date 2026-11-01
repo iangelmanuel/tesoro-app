@@ -2,12 +2,14 @@ import { Suspense } from "react"
 import {
   Button,
   Card,
+  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
   Skeleton
 } from "@heroui/react"
 import { CreditCard, HandCoins, Plus } from "lucide-react"
+import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { EmptyState } from "@/components/dashboard/empty-state"
 import type { AccountOption } from "@/features/accounts/components/account-select"
@@ -53,13 +55,10 @@ type DebtsPageProps = PageProps<"/dashboard/personal/debts">
 
 export default function DebtsPage({ searchParams }: DebtsPageProps) {
   return (
-    <section className="flex flex-1 flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Deudas</h1>
-        <p className="text-sm text-muted">
-          Lo que debes, lo que te deben y cuándo terminas de pagar.
-        </p>
-      </header>
+    <section
+      aria-label="Deudas"
+      className="flex flex-1 flex-col gap-6"
+    >
       {/* searchParams y la sesión son dinámicos: van dentro de Suspense */}
       <Suspense fallback={<DebtsSkeleton />}>
         <DebtsContent searchParams={searchParams} />
@@ -282,14 +281,16 @@ function PayablesTab({
             currency={workspace.currency}
           />
 
-          <div className="flex flex-col gap-3">
-            <h2 className="text-lg font-semibold">Próximos pagos</h2>
-            <UpcomingDebtPayments
-              debts={active}
-              today={today}
-              currency={workspace.currency}
-            />
-          </div>
+          <Card>
+            <CardHeading title="Próximos pagos" />
+            <CardContent>
+              <UpcomingDebtPayments
+                debts={active}
+                today={today}
+                currency={workspace.currency}
+              />
+            </CardContent>
+          </Card>
 
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center justify-between gap-2">

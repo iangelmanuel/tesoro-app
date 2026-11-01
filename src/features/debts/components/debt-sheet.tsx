@@ -55,11 +55,11 @@ export function DebtSheet({
   const { pending, run } = useDebtAction(debt)
 
   return (
-    <Drawer>
-      <Drawer.Backdrop
-        isOpen={open}
-        onOpenChange={onOpenChange}
-      >
+    <Drawer
+      isOpen={open}
+      onOpenChange={onOpenChange}
+    >
+      <Drawer.Backdrop>
         <Drawer.Content placement="right">
           <Drawer.Dialog className="w-full sm:max-w-md">
             <Drawer.CloseTrigger aria-label="Cerrar" />

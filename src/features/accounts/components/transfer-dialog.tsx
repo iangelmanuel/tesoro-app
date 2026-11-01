@@ -57,12 +57,12 @@ export function TransferDialog({
   const isEditing = transfer !== undefined
 
   return (
-    <Modal>
+    <Modal
+      isOpen={open}
+      onOpenChange={setOpen}
+    >
       {trigger}
-      <Modal.Backdrop
-        isOpen={open}
-        onOpenChange={setOpen}
-      >
+      <Modal.Backdrop>
         <Modal.Container scroll="outside">
           <Modal.Dialog className="sm:max-w-md">
             <Modal.CloseTrigger />
@@ -91,7 +91,7 @@ export function TransferDialog({
   )
 }
 
-interface TransferFormProps {
+export interface TransferFormProps {
   workspaceId: string
   accounts: AccountOption[]
   transfer?: TransferValues
@@ -99,7 +99,8 @@ interface TransferFormProps {
   onCancel: () => void
 }
 
-function TransferForm({
+/** Formulario de traspaso; también lo usa el diálogo de movimientos */
+export function TransferForm({
   workspaceId,
   accounts,
   transfer,

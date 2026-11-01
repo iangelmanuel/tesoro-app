@@ -20,14 +20,10 @@ export default function BusinessReportsPage({
   searchParams
 }: BusinessReportsPageProps) {
   return (
-    <section className="flex flex-1 flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Reportes</h1>
-        <p className="text-sm text-muted">
-          Las ventas, los costos y gastos, y sus categorías en el periodo que
-          elijas.
-        </p>
-      </header>
+    <section
+      aria-label="Reportes"
+      className="flex flex-1 flex-col gap-6"
+    >
       {/* params, searchParams y la sesión son dinámicos: van dentro de Suspense */}
       <Suspense fallback={<ReportsViewSkeleton />}>
         <ReportsContent

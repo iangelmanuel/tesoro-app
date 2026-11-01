@@ -2,6 +2,7 @@
 
 import { useTransition } from "react"
 import { Button, Disclosure, toast } from "@heroui/react"
+import { SURFACE_LIST, SURFACE_ROW } from "@/components/dashboard/surface"
 import { restoreRecommendation } from "../actions"
 import type { Recommendation } from "../types"
 import { SeverityBadge } from "./recommendation-item"
@@ -23,7 +24,7 @@ export function HiddenRecommendations({
         </Disclosure.Trigger>
       </Disclosure.Heading>
       <Disclosure.Content>
-        <ul className="divide-y rounded-xl border">
+        <ul className={SURFACE_LIST}>
           {recommendations.map((item) => (
             <HiddenRecommendationRow
               key={`${item.rule}:${item.entityKey}`}
@@ -60,7 +61,7 @@ function HiddenRecommendationRow({
   }
 
   return (
-    <li className="flex flex-wrap items-center gap-3 p-4">
+    <li className={`flex flex-wrap items-center gap-3 ${SURFACE_ROW}`}>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
           <SeverityBadge severity={recommendation.severity} />

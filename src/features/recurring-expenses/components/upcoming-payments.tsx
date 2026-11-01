@@ -1,5 +1,6 @@
 import { Button, Chip, cn } from "@heroui/react"
 import { Check } from "lucide-react"
+import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import { TONE_BADGE_CLASSES as TONE_BADGE } from "@/components/dashboard/tone"
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
@@ -97,11 +98,14 @@ export function UpcomingPayments({
   currency
 }: UpcomingPaymentsProps) {
   return (
-    <ul className="divide-y rounded-xl border">
+    <ul className={CARD_LIST}>
       {payments.map((payment) => (
         <li
           key={`${payment.recurringExpenseId}-${payment.dueOn}`}
-          className="flex flex-wrap items-center gap-x-4 gap-y-2 p-4"
+          className={cn(
+            "flex flex-wrap items-center gap-x-4 gap-y-2",
+            CARD_ROW
+          )}
         >
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -119,7 +123,7 @@ export function UpcomingPayments({
           </div>
           <div className="flex items-center gap-3">
             {payment.paidAmount !== null ? (
-              <p className="font-medium text-emerald-600 tabular-nums dark:text-emerald-400">
+              <p className="font-medium text-(--income) tabular-nums">
                 {formatCurrency(payment.paidAmount, currency)}
               </p>
             ) : (

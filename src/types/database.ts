@@ -225,6 +225,7 @@ export type Database = {
       }
       debt_entries: {
         Row: {
+          account_id: string | null
           amount: number
           created_at: string
           debt_id: string
@@ -238,6 +239,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          account_id?: string | null
           amount: number
           created_at?: string
           debt_id: string
@@ -251,6 +253,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          account_id?: string | null
           amount?: number
           created_at?: string
           debt_id?: string
@@ -264,6 +267,13 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "debt_entries_account_id_workspace_id_fkey"
+            columns: ["account_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "workspace_id"]
+          },
           {
             foreignKeyName: "debt_entries_debt_id_workspace_id_fkey"
             columns: ["debt_id", "workspace_id"]
@@ -401,6 +411,7 @@ export type Database = {
       }
       goal_contributions: {
         Row: {
+          account_id: string | null
           amount: number
           created_at: string
           goal_id: string
@@ -412,6 +423,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          account_id?: string | null
           amount: number
           created_at?: string
           goal_id: string
@@ -423,6 +435,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          account_id?: string | null
           amount?: number
           created_at?: string
           goal_id?: string
@@ -434,6 +447,13 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "goal_contributions_account_id_workspace_id_fkey"
+            columns: ["account_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "workspace_id"]
+          },
           {
             foreignKeyName: "goal_contributions_goal_id_workspace_id_fkey"
             columns: ["goal_id", "workspace_id"]
@@ -945,6 +965,16 @@ export type Database = {
         }
         Returns: string
       }
+      create_payment_transfer: {
+        Args: {
+          p_amount: number
+          p_from: string
+          p_occurred_on: string
+          p_to: string
+          p_workspace_id: string
+        }
+        Returns: undefined
+      }
       debt_overview: {
         Args: { p_workspace_id: string }
         Returns: {
@@ -1055,6 +1085,16 @@ export type Database = {
       }
       purge_deleted_accounts: { Args: never; Returns: number }
       purge_deleted_workspaces: { Args: never; Returns: number }
+      record_card_advance: {
+        Args: {
+          p_account_id?: string
+          p_amount: number
+          p_debt_id: string
+          p_note: string
+          p_occurred_on: string
+        }
+        Returns: string
+      }
       record_debt_payment: {
         Args: {
           p_account_id?: string
@@ -1063,6 +1103,39 @@ export type Database = {
           p_debt_id: string
           p_note: string
           p_occurred_on: string
+          p_transfer_amount?: number
+          p_transfer_from?: string
+        }
+        Returns: string
+      }
+      record_goal_contribution: {
+        Args: {
+          p_account_id?: string
+          p_amount: number
+          p_goal_id: string
+          p_note: string
+          p_occurred_on: string
+          p_transfer_amount?: number
+          p_transfer_from?: string
+        }
+        Returns: string
+      }
+      record_transaction: {
+        Args: {
+          p_account_id?: string
+          p_amount: number
+          p_category_id: string
+          p_counterparty?: string
+          p_description: string
+          p_invoice_ref?: string
+          p_note?: string
+          p_occurred_on: string
+          p_recurring_due_on?: string
+          p_recurring_expense_id?: string
+          p_transfer_amount?: number
+          p_transfer_from?: string
+          p_type: Database["public"]["Enums"]["transaction_type"]
+          p_workspace_id: string
         }
         Returns: string
       }
@@ -1140,7 +1213,7 @@ export type Database = {
     }
     Enums: {
       account_kind: "cash" | "bank" | "wallet" | "other"
-      debt_entry_kind: "payment" | "adjustment"
+      debt_entry_kind: "payment" | "adjustment" | "advance"
       debt_kind: "credit_card" | "loan" | "receivable"
       debt_status: "active" | "paid" | "archived"
       goal_status: "active" | "completed" | "archived"
@@ -1279,7 +1352,7 @@ export const Constants = {
   public: {
     Enums: {
       account_kind: ["cash", "bank", "wallet", "other"],
-      debt_entry_kind: ["payment", "adjustment"],
+      debt_entry_kind: ["payment", "adjustment", "advance"],
       debt_kind: ["credit_card", "loan", "receivable"],
       debt_status: ["active", "paid", "archived"],
       goal_status: ["active", "completed", "archived"],

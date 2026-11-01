@@ -10,6 +10,7 @@ import {
   getBusinessWorkspaces,
   getPersonalWorkspace
 } from "@/features/workspaces/queries"
+import { MobileShell } from "./mobile/mobile-shell"
 import {
   type QuickActionsData,
   QuickActionsProvider,
@@ -65,6 +66,7 @@ async function QuickActionsLoader() {
   return (
     <QuickActionsProvider value={data}>
       <QuickActionsMenu />
+      <MobileShell />
     </QuickActionsProvider>
   )
 }

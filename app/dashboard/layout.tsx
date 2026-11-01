@@ -93,7 +93,7 @@ export default function DashboardLayout({
           <main
             id="contenido"
             tabIndex={-1}
-            className="flex flex-1 flex-col px-4 pt-2 pb-6 outline-none md:px-6"
+            className="flex flex-1 flex-col px-4 pt-2 pb-[calc(5.5rem+env(safe-area-inset-bottom))] outline-none md:px-6 md:pb-6"
           >
             {children}
           </main>

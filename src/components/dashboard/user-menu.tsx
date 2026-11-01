@@ -2,23 +2,8 @@
 
 import { useTransition } from "react"
 import { useRouter } from "next/navigation"
-import {
-  Avatar,
-  Dropdown,
-  Header,
-  Label,
-  type Selection,
-  Separator
-} from "@heroui/react"
-import {
-  ChevronsUpDown,
-  LogOut,
-  Monitor,
-  Moon,
-  Sun,
-  UserRound
-} from "lucide-react"
-import { useTheme } from "next-themes"
+import { Avatar, Dropdown, Label, Separator } from "@heroui/react"
+import { ChevronsUpDown, LogOut, UserRound } from "lucide-react"
 import { SITE } from "@/config/site"
 import { signOut } from "@/features/auth/actions"
 
@@ -27,12 +12,6 @@ export interface DashboardUser {
   email: string
   avatarUrl: string | null
 }
-
-const THEMES = [
-  { value: "light", label: "Claro", icon: Sun },
-  { value: "dark", label: "Oscuro", icon: Moon },
-  { value: "system", label: "Sistema", icon: Monitor }
-] as const
 
 export function getInitials(name: string) {
   return name
@@ -47,7 +26,7 @@ function UserAvatar({ user }: { user: DashboardUser }) {
   return (
     <Avatar
       size="sm"
-      className="rounded-lg"
+      className="rounded-full"
     >
       {user.avatarUrl && (
         <Avatar.Image
@@ -55,7 +34,7 @@ function UserAvatar({ user }: { user: DashboardUser }) {
           alt={user.name}
         />
       )}
-      <Avatar.Fallback className="rounded-lg">
+      <Avatar.Fallback className="rounded-full">
         {getInitials(user.name)}
       </Avatar.Fallback>
     </Avatar>
@@ -73,7 +52,6 @@ function UserInfo({ user }: { user: DashboardUser }) {
 
 export function UserMenu({ user }: { user: DashboardUser }) {
   const router = useRouter()
-  const { theme, setTheme } = useTheme()
   const [isSigningOut, startSignOut] = useTransition()
 
   function onAction(key: React.Key) {
@@ -84,18 +62,11 @@ export function UserMenu({ user }: { user: DashboardUser }) {
     }
   }
 
-  function onThemeChange(keys: Selection) {
-    const [value] = keys === "all" ? [] : [...keys]
-    if (typeof value === "string") {
-      setTheme(value)
-    }
-  }
-
   return (
     <Dropdown>
       <Dropdown.Trigger
         aria-label="Menú de usuario"
-        className="flex w-full items-center gap-2 rounded-lg p-2 text-left transition-colors outline-none hover:bg-default focus-visible:ring-2 focus-visible:ring-focus data-[pressed=true]:bg-default"
+        className="flex w-full items-center gap-2.5 rounded-xl p-2 text-left transition-colors duration-150 outline-none hover:bg-default focus-visible:ring-2 focus-visible:ring-focus data-[pressed=true]:bg-default motion-reduce:transition-none"
       >
         <UserAvatar user={user} />
         <UserInfo user={user} />
@@ -121,25 +92,6 @@ export function UserMenu({ user }: { user: DashboardUser }) {
             <UserRound className="size-4" />
             <Label>Cuenta</Label>
           </Dropdown.Item>
-          <Separator />
-          <Dropdown.Section
-            selectionMode="single"
-            selectedKeys={[theme ?? "system"]}
-            onSelectionChange={onThemeChange}
-          >
-            <Header>Tema</Header>
-            {THEMES.map(({ value, label, icon: Icon }) => (
-              <Dropdown.Item
-                key={value}
-                id={value}
-                textValue={label}
-              >
-                <Icon className="size-4" />
-                <Label>{label}</Label>
-                <Dropdown.ItemIndicator type="dot" />
-              </Dropdown.Item>
-            ))}
-          </Dropdown.Section>
           <Separator />
           <Dropdown.Item
             id="sign-out"

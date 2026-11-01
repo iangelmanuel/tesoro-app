@@ -94,18 +94,18 @@ estos solo agregan lo que HeroUI no trae.
 
 ### Shell del dashboard (`src/components/dashboard/`)
 
-| Pieza                                         | Qué hace                                                                                                                                                                                                                                        |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app-sidebar.tsx`, `sidebar/`                 | Aside: logo → tabs Personal/Empresa → navegación; abajo Ayuda (issues de GitHub), tema y usuario                                                                                                                                                |
-| `dashboard-title.tsx`                         | Único `<h1>` de la página, en el header. Saludo según la hora de Bogotá en el Resumen de Personal                                                                                                                                               |
-| `quick-actions.tsx`, `quick-actions-menu.tsx` | Accesos del header: "Registrar movimiento" + "Más" (aporte, pago, importar) en Personal; "Registrar operación" en Empresa                                                                                                                       |
-| `stat-card.tsx`                               | KPI: etiqueta, valor y badge de variación con color por significado (`trend`); `<dl>` accesible                                                                                                                                                 |
-| `card-heading.tsx`                            | Cabecera de tarjeta: `<h2>`, ayuda (i) opcional y enlace discreto con chevron                                                                                                                                                                   |
-| `help-hint.tsx`                               | Ícono (i) con `Popover`; los textos viven en `src/config/help.ts` (`HELP`)                                                                                                                                                                      |
-| `empty-state.tsx`                             | `EmptyState` (página): ícono, qué falta, qué hacer y la acción. `CardEmpty` (dentro de una tarjeta)                                                                                                                                             |
-| `card-skeleton.tsx`                           | Placeholder con el mismo contenedor de `Card`; todo bloque que carga usa este, no un `Skeleton` suelto                                                                                                                                          |
-| `tone.ts`                                     | Clases de estado (chips, barras, texto) desde tokens                                                                                                                                                                                            |
-| `surface.ts`                                  | Clases de superficie sin borde: `SURFACE_LIST`/`SURFACE_ROW` (lista sobre el fondo), `CARD_LIST`/`CARD_ROW` (lista dentro de una `Card`), `SURFACE_ITEM` (tarjeta de una grilla) y `SURFACE_NOTE`. Nunca `rounded-xl border` ni `border-dashed` |
+| Pieza                                                                      | Qué hace                                                                                                                                                                                                                                        |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app-sidebar.tsx`, `sidebar/`                                              | Aside: logo → tabs Personal/Empresa → navegación; abajo Ayuda (issues de GitHub), tema y usuario                                                                                                                                                |
+| `dashboard-title.tsx`                                                      | Único `<h1>` de la página, en el header. Saludo según la hora de Bogotá en el Resumen de Personal                                                                                                                                               |
+| `quick-actions.tsx`, `quick-actions-menu.tsx`, `quick-actions-context.tsx` | Accesos del header: "Registrar movimiento" + "Más" (aporte, pago, importar) en Personal; "Registrar operación" en Empresa                                                                                                                       |
+| `stat-card.tsx`                                                            | KPI: etiqueta, valor y badge de variación con color por significado (`trend`); `<dl>` accesible                                                                                                                                                 |
+| `card-heading.tsx`                                                         | Cabecera de tarjeta: `<h2>`, ayuda (i) opcional y enlace discreto con chevron                                                                                                                                                                   |
+| `help-hint.tsx`                                                            | Ícono (i) con `Popover`; los textos viven en `src/config/help.ts` (`HELP`)                                                                                                                                                                      |
+| `empty-state.tsx`                                                          | `EmptyState` (página): ícono, qué falta, qué hacer y la acción. `CardEmpty` (dentro de una tarjeta)                                                                                                                                             |
+| `card-skeleton.tsx`                                                        | Placeholder con el mismo contenedor de `Card`; todo bloque que carga usa este, no un `Skeleton` suelto                                                                                                                                          |
+| `tone.ts`                                                                  | Clases de estado (chips, barras, texto) desde tokens                                                                                                                                                                                            |
+| `surface.ts`                                                               | Clases de superficie sin borde: `SURFACE_LIST`/`SURFACE_ROW` (lista sobre el fondo), `CARD_LIST`/`CARD_ROW` (lista dentro de una `Card`), `SURFACE_ITEM` (tarjeta de una grilla) y `SURFACE_NOTE`. Nunca `rounded-xl border` ni `border-dashed` |
 
 ### Gráficas (`src/components/charts/`)
 
@@ -140,6 +140,56 @@ Reglas de toda gráfica:
 | Resumen Personal | `app/dashboard/personal/page.tsx`                  | 4 `StatCard` → gráfica + columna (score, cuentas) → últimos movimientos → 4 tarjetas |
 | Movimientos      | `app/dashboard/personal/transactions`              | Barra de filtros pill, KPIs pequeñas, tabla compacta (`src/features/transactions/`)  |
 | Reportes         | `src/features/reports/components/reports-view.tsx` | Barra de periodo y tipo, 4 KPI, tendencia, top 5 + tabla de categorías               |
+
+## Móvil
+
+Experiencia de teléfono (SPEC 15). Aplica solo a anchos `< 768 px`, el mismo
+corte `md` del sidebar (`MOBILE_QUERY` y `useIsMobile` en
+`src/hooks/use-is-mobile.ts`). Tablet y escritorio usan el shell de escritorio.
+Formularios a pantalla completa, tablas en tarjetas y gráficas angostas van en
+el SPEC 15b.
+
+Piezas en `src/components/dashboard/mobile/`:
+
+| Pieza                          | Qué hace                                                                                                                                                    |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `quick-sheet.tsx`              | Hoja inferior (`Drawer` con asa). Personal: Gasto, Ingreso, Aporte a meta, Pago de deuda o tarjeta, Marcar gasto fijo pagado. Empresa: Venta, Costo o gasto |
+| `use-quick-sheet-auto-open.ts` | Estado de la hoja y su apertura automática                                                                                                                  |
+| `bottom-nav.tsx`               | Barra inferior: 4 destinos, [+] al centro (abre la hoja)                                                                                                    |
+| `mobile-workspace-tabs.tsx`    | Tab Personal / Empresa sticky bajo el header                                                                                                                |
+| `mobile-shell.tsx`             | Une la hoja, la barra y el hook con el mismo estado de apertura                                                                                             |
+
+- **Hoja:** se cierra deslizando el asa, tocando el fondo, con "Cerrar" o con
+  Escape. Cada acción cierra la hoja y abre su diálogo sin cambiar de página.
+  Sin metas, deudas o gastos fijos pendientes, la acción lleva a la página
+  donde se crean. Solo existe en rutas de un espacio. Los datos salen de
+  `QuickActionsProvider`, la misma carga del header.
+- **Apertura automática:** se abre sola en cada carga completa de una ruta de
+  espacio y al volver visible la pestaña tras 5 minutos o más oculta. Navegar
+  entre páginas no la abre, ni con el switch "Abrir al entrar" apagado, un
+  diálogo abierto, fuera de un espacio o en `>= 768 px`. El switch vive en
+  `localStorage` (`tesoro:quick-sheet:auto-open:v1`, por dispositivo); la hora
+  de ocultar, en `sessionStorage` (`tesoro:quick-sheet:hidden-at:v1`). Si el
+  almacenamiento falla, usa memoria y la hoja se abre como con el switch
+  encendido.
+- **Barra inferior:** Personal: Resumen, Movimientos, [+], Presupuestos, Metas.
+  Empresa: Resumen, Movimientos, [+], Flujo de caja, Reportes. Fuera
+  de un espacio (cuenta, estado vacío de Empresa) muestra los destinos de
+  Personal, sin [+]. Los destinos salen de `SITE.navigation.mobile`.
+  Respeta `safe-area-inset-bottom`, se oculta con un diálogo abierto y el
+  `<main>` deja padding inferior para que no tape contenido.
+- **Tab superior:** reusa `WORKSPACE_TABS` y `getActiveWorkspaceTab` de
+  `workspace-tabs.tsx`. El primario cambia solo por la ruta
+  (`WorkspaceThemeRoot`). En el teléfono el aside se abre desde el botón de
+  menú del header (44 px).
+- **Táctil:** los controles del shell móvil miden 44 × 44 px o más y las
+  acciones de la hoja, 56 px de alto o más. Los botones `size="sm"` de HeroUI
+  miden 36 px en móvil: en el shell llevan `max-md:h-11 max-md:min-w-11`.
+  Todo campo de monto usa `inputMode="decimal"`.
+- **Instalable:** `app/manifest.ts` con ícono `maskable` de 512 px
+  (`public/icons/icon-maskable-512.png`, de `pnpm brand:assets`), `display:
+"standalone"` y `start_url` `/dashboard/personal`; `appleWebApp` y
+  `viewportFit: "cover"` en `app/layout.tsx`. Sin service worker.
 
 ## Movimiento
 

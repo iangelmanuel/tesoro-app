@@ -3,21 +3,7 @@
 import type { Route } from "next"
 import Link from "next/link"
 import { useParams, usePathname } from "next/navigation"
-import {
-  Activity,
-  ArrowLeftRight,
-  ArrowUpRight,
-  ChartColumn,
-  CircleHelp,
-  CreditCard,
-  LayoutDashboard,
-  Lightbulb,
-  type LucideIcon,
-  PiggyBank,
-  Settings,
-  Target,
-  Wallet
-} from "lucide-react"
+import { ArrowUpRight, CircleHelp } from "lucide-react"
 import { Logo } from "@/components/brand/logo"
 import {
   Sidebar,
@@ -34,36 +20,14 @@ import {
   BusinessSwitcher
 } from "@/features/business/components/business-switcher"
 import { workspaceBasePath } from "@/features/workspaces/paths"
+import { NAV_ICONS, type NavIcon, isActive } from "./nav"
 import { type DashboardUser, UserMenu } from "./user-menu"
 import { WorkspaceTabs } from "./workspace-tabs"
-
-type NavIcon =
-  | (typeof SITE.navigation.personal)[number]["icon"]
-  | (typeof SITE.navigation.business)[number]["icon"]
-
-const NAV_ICONS: Record<NavIcon, LucideIcon> = {
-  LayoutDashboard,
-  ArrowLeftRight,
-  Wallet,
-  PiggyBank,
-  Target,
-  CreditCard,
-  ChartColumn,
-  Lightbulb,
-  Activity,
-  Settings
-}
 
 interface NavItem {
   name: string
   href: string
   icon: NavIcon
-}
-
-// El Resumen es la raíz del espacio: solo se marca con coincidencia exacta
-function isActive(pathname: string, href: string, root: string) {
-  if (href === root) return pathname === href
-  return pathname === href || pathname.startsWith(`${href}/`)
 }
 
 interface AppSidebarProps {

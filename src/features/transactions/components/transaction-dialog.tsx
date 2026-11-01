@@ -53,6 +53,8 @@ const COPY = {
 
 /** Valores con los que se prellena un movimiento nuevo */
 export interface TransactionInitialValues {
+  /** Tipo preseleccionado (gasto por defecto) */
+  type?: TransactionType
   amount?: number
   category_id?: string
   occurred_on?: string
@@ -80,8 +82,10 @@ interface TransactionDialogProps {
   initialValues?: TransactionInitialValues
   /** Si llega, el movimiento nuevo es el pago de esta ocurrencia */
   recurring?: RecurringOccurrenceLink
-  /** Botón que abre el diálogo */
-  trigger: React.ReactNode
+  /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
+  trigger?: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export function TransactionDialog({
@@ -92,9 +96,13 @@ export function TransactionDialog({
   transaction,
   initialValues,
   recurring,
-  trigger
+  trigger,
+  open: controlledOpen,
+  onOpenChange
 }: TransactionDialogProps) {
-  const [open, setOpen] = useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const open = controlledOpen ?? uncontrolledOpen
+  const setOpen = onOpenChange ?? setUncontrolledOpen
   const isEditing = transaction !== undefined
   const isPayment = !isEditing && recurring !== undefined
 
@@ -185,7 +193,7 @@ function TransactionForm({
     (initialCategory === undefined || initialCategory.archived_at !== null)
 
   const [type, setType] = useState<TransactionType>(
-    transaction?.type ?? "expense"
+    transaction?.type ?? initialValues?.type ?? "expense"
   )
   const [categoryId, setCategoryId] = useState(
     transaction?.category_id ??

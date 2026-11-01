@@ -1,12 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { useParams, usePathname, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Button, Dropdown, Label } from "@heroui/react"
 import { ChevronDown, CreditCard, FileUp, Plus, Target } from "lucide-react"
-import { SITE } from "@/config/site"
 import type { AccountOption } from "@/features/accounts/components/account-select"
-import type { Category } from "@/features/categories/queries"
 import { DEBTS_PATH } from "@/features/debts/calculations"
 import {
   type DebtOption,
@@ -19,46 +17,17 @@ import {
 import { GOALS_PATH } from "@/features/goals/progress"
 import { IMPORT_PATH } from "@/features/imports/constants"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
-import type { WorkspaceType } from "@/features/workspaces/queries"
-
-/** Espacio donde el acceso rápido puede crear movimientos */
-export interface QuickActionsWorkspace {
-  id: string
-  type: WorkspaceType
-  categories: Category[]
-  accounts: AccountOption[]
-}
-
-interface QuickActionsMenuProps {
-  workspaces: QuickActionsWorkspace[]
-  /** Metas activas de Personal */
-  goals: GoalOption[]
-  /** Deudas activas de Personal (sin cuentas por cobrar) */
-  debts: DebtOption[]
-}
+import { useQuickActions } from "./quick-actions-context"
+import { useActiveWorkspace } from "./use-active-workspace"
 
 type MoreAction = "contribution" | "payment" | "import"
 
 // En /dashboard/personal/* registra en Personal y en
 // /dashboard/business/[id]/* en esa empresa. En otras rutas (cuenta, estado
 // vacío de Empresa) no hay accesos
-export function QuickActionsMenu({
-  workspaces,
-  goals,
-  debts
-}: QuickActionsMenuProps) {
-  const pathname = usePathname()
-  const params = useParams<{ id?: string }>()
-  const personal = SITE.routes.dashboardPersonal
-
-  const workspace =
-    pathname === personal || pathname.startsWith(`${personal}/`)
-      ? workspaces.find((option) => option.type === "personal")
-      : pathname.startsWith(`${SITE.routes.dashboardBusiness}/`)
-        ? workspaces.find(
-            (option) => option.type === "business" && option.id === params.id
-          )
-        : undefined
+export function QuickActionsMenu() {
+  const { goals, debts } = useQuickActions()
+  const workspace = useActiveWorkspace()
 
   if (!workspace) {
     return null
@@ -77,7 +46,10 @@ export function QuickActionsMenu({
         categories={workspace.categories}
         accounts={workspace.accounts}
         trigger={
-          <Button size="sm">
+          <Button
+            size="sm"
+            className="max-md:h-11 max-md:min-w-11"
+          >
             <Plus className="size-4" />
             <span className="hidden sm:inline">{label}</span>
             <span className="sr-only sm:hidden">{label}</span>
@@ -134,6 +106,7 @@ function PersonalMoreMenu({
           variant="secondary"
           size="sm"
           aria-label="Más acciones"
+          className="max-md:h-11 max-md:min-w-11"
         >
           <span className="hidden sm:inline">Más</span>
           <ChevronDown className="size-4" />

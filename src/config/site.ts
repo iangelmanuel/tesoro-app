@@ -233,7 +233,19 @@ export const SITE = {
         icon: "Lightbulb"
       },
       { name: "Ajustes", segment: "/settings", icon: "Settings" }
-    ]
+    ],
+    // Destinos de la barra inferior del teléfono (4, a cada lado del botón
+    // central). Se toman de los ítems de arriba: Personal por `href` y
+    // Empresa por `segment`
+    mobile: {
+      personal: [
+        "/dashboard/personal",
+        "/dashboard/personal/transactions",
+        "/dashboard/personal/budgets",
+        "/dashboard/personal/goals"
+      ],
+      business: ["", "/transactions", "/cash-flow", "/reports"]
+    }
   },
 
   seo: {

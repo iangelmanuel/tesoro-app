@@ -5,36 +5,20 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useState,
-  useSyncExternalStore
+  useState
 } from "react"
 import type { Route } from "next"
 import Link from "next/link"
 import { Button, Drawer, cn } from "@heroui/react"
 import { PanelLeft } from "lucide-react"
+import { MOBILE_QUERY, useIsMobile } from "@/hooks/use-is-mobile"
 
 // Sidebar del dashboard armado con primitivas de HeroUI (Button, Drawer) y
 // tokens del tema. En escritorio es una columna fija que se oculta con el
 // trigger o con Ctrl/⌘+B; en móvil es un panel deslizable (Drawer)
 
-const MOBILE_QUERY = "(max-width: 767px)"
 const KEYBOARD_SHORTCUT = "b"
 const SIDEBAR_ID = "dashboard-sidebar"
-
-function subscribeMobile(onChange: () => void) {
-  const query = window.matchMedia(MOBILE_QUERY)
-  query.addEventListener("change", onChange)
-  return () => query.removeEventListener("change", onChange)
-}
-
-// En el servidor se asume escritorio: el aside se pinta en md+
-function useIsMobile() {
-  return useSyncExternalStore(
-    subscribeMobile,
-    () => window.matchMedia(MOBILE_QUERY).matches,
-    () => false
-  )
-}
 
 // El atajo no debe robarle Ctrl/⌘+B a quien escribe en un campo
 function isEditable(target: EventTarget | null) {
@@ -174,7 +158,13 @@ export function SidebarTrigger({ className }: { className?: string }) {
 export function SidebarInset({
   children
 }: Readonly<{ children: React.ReactNode }>) {
-  return <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+  // En el teléfono ningún hijo ensancha la página: un desborde horizontal
+  // desplaza el Drawer fijo respecto de la pantalla
+  return (
+    <div className="flex min-w-0 flex-1 flex-col max-md:overflow-x-clip">
+      {children}
+    </div>
+  )
 }
 
 export function SidebarHeader({

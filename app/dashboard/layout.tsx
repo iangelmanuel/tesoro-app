@@ -4,6 +4,7 @@ import { Skeleton } from "@heroui/react"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { AppSidebarSkeleton } from "@/components/dashboard/app-sidebar-skeleton"
 import { DashboardTitle } from "@/components/dashboard/dashboard-title"
+import { MobileWorkspaceTabs } from "@/components/dashboard/mobile/mobile-workspace-tabs"
 import { QuickActions } from "@/components/dashboard/quick-actions"
 import {
   SidebarInset,
@@ -77,7 +78,8 @@ export default function DashboardLayout({
         </Suspense>
         <SidebarInset>
           <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 bg-background px-4 md:px-6">
-            <SidebarTrigger className="-ml-1.5" />
+            {/* En el teléfono abre el Drawer del aside (44 px de área táctil) */}
+            <SidebarTrigger className="-ml-1.5 max-md:size-11" />
             <div className="min-w-0 flex-1">
               {/* La ruta y la sesión son dinámicas: hasta resolverlas, un
                   placeholder del tamaño del título */}
@@ -90,10 +92,21 @@ export default function DashboardLayout({
               <QuickActions />
             </div>
           </header>
+          {/* usePathname es dinámico: hasta resolverlo, un placeholder del
+              tamaño del tab para que el contenido no salte */}
+          <Suspense
+            fallback={
+              <div className="px-4 pb-2 md:hidden">
+                <Skeleton className="h-11 w-full rounded-3xl" />
+              </div>
+            }
+          >
+            <MobileWorkspaceTabs />
+          </Suspense>
           <main
             id="contenido"
             tabIndex={-1}
-            className="flex flex-1 flex-col px-4 pt-2 pb-6 outline-none md:px-6"
+            className="flex flex-1 flex-col px-4 pt-2 pb-[calc(5.5rem+env(safe-area-inset-bottom))] outline-none md:px-6 md:pb-6"
           >
             {children}
           </main>

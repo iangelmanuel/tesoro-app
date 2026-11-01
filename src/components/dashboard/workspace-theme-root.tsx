@@ -49,9 +49,12 @@ function WorkspaceThemeMarker() {
   }
 
   return (
+    // Hidrata en su propio Suspense: si un overlay ya se abrió, React Aria
+    // le puso `inert` al HTML del servidor. Es inofensivo en un span oculto
     <span
       hidden
       data-workspace={theme}
+      suppressHydrationWarning
     />
   )
 }

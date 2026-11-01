@@ -5,19 +5,25 @@ import { usePathname } from "next/navigation"
 import { Tabs } from "@heroui/react"
 import { SITE } from "@/config/site"
 
-const WORKSPACE_TABS = [
+export const WORKSPACE_TABS = [
   { id: "personal", label: "Personal", href: SITE.routes.dashboardPersonal },
   { id: "business", label: "Empresa", href: SITE.routes.dashboardBusiness }
 ] as const
+
+// Pestaña activa según la ruta: Empresa bajo /dashboard/business, Personal en
+// el resto (incluida /dashboard/account)
+export function getActiveWorkspaceTab(pathname: string) {
+  return pathname.startsWith(SITE.routes.dashboardBusiness)
+    ? "business"
+    : "personal"
+}
 
 // Selector Personal / Empresa. Son enlaces (Next Link vía `render`); la
 // pestaña activa sale de la ruta. Variante por defecto de HeroUI: pill con
 // el indicador sobre --segment
 export function WorkspaceTabs() {
   const pathname = usePathname()
-  const active = pathname.startsWith(SITE.routes.dashboardBusiness)
-    ? "business"
-    : "personal"
+  const active = getActiveWorkspaceTab(pathname)
 
   return (
     <Tabs

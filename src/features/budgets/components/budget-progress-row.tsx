@@ -3,6 +3,7 @@
 import { useTransition } from "react"
 import { AlertDialog, Button, Chip, cn, toast } from "@heroui/react"
 import { Pencil, Trash2 } from "lucide-react"
+import { SURFACE_ROW } from "@/components/dashboard/surface"
 import {
   TONE_BADGE_CLASSES as TONE_BADGE,
   TONE_BAR_CLASSES as TONE_BAR,
@@ -106,7 +107,7 @@ export function BudgetProgressRow({
   )
 
   return (
-    <li className="flex flex-col gap-3 p-4">
+    <li className={`flex flex-col gap-3 ${SURFACE_ROW}`}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <CategoryBadge
           name={budget.archived ? `${budget.name} (archivada)` : budget.name}

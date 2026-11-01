@@ -1,4 +1,5 @@
 import { cn } from "@heroui/react"
+import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import { formatCurrency, formatDate } from "@/libs/format"
 import { upcomingPayments } from "../calculations"
 import type { Debt } from "../queries"
@@ -14,7 +15,7 @@ interface UpcomingDebtPaymentsProps {
 }
 
 /**
- * Próximo vencimiento de cada tarjeta y préstamo activo con saldo, vencidos
+ * Lista sin caja propia: va dentro de una tarjeta. Próximo vencimiento de cada tarjeta y préstamo activo con saldo, vencidos
  * primero y luego por fecha
  */
 export function UpcomingDebtPayments({
@@ -27,18 +28,21 @@ export function UpcomingDebtPayments({
 
   if (items.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed p-4 text-center text-sm text-muted">
+      <p className="py-2 text-sm text-muted">
         No tienes pagos de deudas pendientes
       </p>
     )
   }
 
   return (
-    <ul className="divide-y rounded-xl border">
+    <ul className={CARD_LIST}>
       {items.map(({ debt, payment }) => (
         <li
           key={debt.id}
-          className="flex flex-wrap items-center gap-x-4 gap-y-2 p-4"
+          className={cn(
+            "flex flex-wrap items-center gap-x-4 gap-y-2",
+            CARD_ROW
+          )}
         >
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2">

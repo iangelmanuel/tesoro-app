@@ -1,12 +1,11 @@
 import { Suspense } from "react"
 import { Button, Skeleton } from "@heroui/react"
-import { ArrowLeftRight, Plus, Wallet } from "lucide-react"
+import { Plus, Wallet } from "lucide-react"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { EmptyState } from "@/components/dashboard/empty-state"
 import { AccountDialog } from "@/features/accounts/components/account-dialog"
 import { AccountsGrid } from "@/features/accounts/components/accounts-grid"
 import { ArchivedAccounts } from "@/features/accounts/components/archived-accounts"
-import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
 import { ACCOUNTS_PATH } from "@/features/accounts/constants"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
@@ -20,13 +19,10 @@ export const metadata = buildMetadata({
 
 export default function AccountsPage() {
   return (
-    <section className="flex flex-1 flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Cuentas</h1>
-        <p className="text-sm text-muted">
-          Cuánto tienes en efectivo, en el banco y en tus billeteras.
-        </p>
-      </header>
+    <section
+      aria-label="Cuentas"
+      className="flex flex-1 flex-col gap-6"
+    >
       {/* La sesión es dinámica: va dentro de Suspense */}
       <Suspense fallback={<AccountsSkeleton />}>
         <AccountsContent />
@@ -66,22 +62,7 @@ async function AccountsContent() {
         </EmptyState>
       ) : (
         <>
-          <div className="flex flex-wrap gap-2">
-            {createButton}
-            {/* Un traspaso necesita al menos dos cuentas activas */}
-            {active.length > 1 && (
-              <TransferDialog
-                workspaceId={workspace.id}
-                accounts={accounts}
-                trigger={
-                  <Button variant="outline">
-                    <ArrowLeftRight />
-                    Traspaso
-                  </Button>
-                }
-              />
-            )}
-          </div>
+          <div className="flex flex-wrap gap-2">{createButton}</div>
           <AccountsGrid
             accounts={active}
             currency={workspace.currency}

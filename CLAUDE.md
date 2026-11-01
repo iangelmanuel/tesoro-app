@@ -106,6 +106,12 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   `HelpHint` (textos en `src/config/help.ts`), vacíos con `EmptyState` /
   `CardEmpty` y carga con `CardSkeleton`. Estados con `tone.ts`, nunca con la
   paleta cruda de Tailwind.
+- Listas y tarjetas de grilla con las clases de
+  `src/components/dashboard/surface.ts`, sin `rounded-xl border` ni
+  `border-dashed`. Los campos de formulario van con relleno suave y sin borde
+  (tokens `--field-*` en `globals.css`).
+- Los traspasos se registran desde el diálogo de movimiento (opción
+  "Traspaso"); las páginas no llevan un botón de traspaso aparte.
 - **HeroUI v3** (`@heroui/react` y `@heroui/styles`), sin Provider. Se
   importa **directo de `@heroui/react`**: no hay wrappers ni
   `src/components/ui/`. `cn` también sale de `@heroui/react`.

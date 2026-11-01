@@ -1,9 +1,8 @@
 import { Suspense } from "react"
 import { Button, Skeleton } from "@heroui/react"
-import { ArrowLeftRight, Plus } from "lucide-react"
+import { Plus } from "lucide-react"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { SITE } from "@/config/site"
-import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
 import { getCategories } from "@/features/categories/queries"
@@ -40,14 +39,10 @@ export default function BusinessTransactionsPage({
   searchParams
 }: BusinessTransactionsPageProps) {
   return (
-    <section className="flex flex-1 flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Movimientos</h1>
-        <p className="text-sm text-muted">
-          Las ventas, los costos y gastos, y los traspasos entre cuentas de tu
-          empresa.
-        </p>
-      </header>
+    <section
+      aria-label="Movimientos"
+      className="flex flex-1 flex-col gap-6"
+    >
       {/* params, searchParams y la sesión son dinámicos: van dentro de Suspense */}
       <Suspense fallback={<TransactionsSkeleton />}>
         <TransactionsContent
@@ -79,9 +74,6 @@ async function TransactionsContent({
   // Solo se consulta cuando los filtros no devuelven nada
   const isEmptyWorkspace =
     rows.length === 0 && !(await hasAnyLedgerEntries(workspace.id))
-  // Un traspaso necesita al menos dos cuentas activas
-  const canTransfer =
-    accounts.filter((account) => !account.archived_at).length > 1
 
   return (
     <>
@@ -98,18 +90,6 @@ async function TransactionsContent({
             </Button>
           }
         />
-        {canTransfer && (
-          <TransferDialog
-            workspaceId={workspace.id}
-            accounts={accounts}
-            trigger={
-              <Button variant="outline">
-                <ArrowLeftRight />
-                Traspaso
-              </Button>
-            }
-          />
-        )}
         <CategoriesSheet
           workspaceId={workspace.id}
           categories={categories}

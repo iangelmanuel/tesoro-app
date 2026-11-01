@@ -9,6 +9,7 @@ import {
   PartyPopper,
   Pencil
 } from "lucide-react"
+import { SURFACE_ITEM } from "@/components/dashboard/surface"
 import { formatCurrency } from "@/libs/format"
 import { goalStatus, isReached } from "../progress"
 import type { Goal, GoalContribution } from "../queries"
@@ -38,7 +39,7 @@ export function GoalCard({
   const { pending, run } = useGoalAction(goal)
 
   return (
-    <li className="flex flex-col gap-4 rounded-xl border p-4">
+    <li className={`flex flex-col gap-4 ${SURFACE_ITEM}`}>
       <div className="flex items-start gap-3">
         {/* Abre el Sheet con el detalle y los aportes */}
         <button

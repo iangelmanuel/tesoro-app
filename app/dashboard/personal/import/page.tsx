@@ -38,14 +38,12 @@ export default function ImportPage({ searchParams }: ImportPageProps) {
           <ArrowLeft className="size-4" />
           Movimientos
         </Link>
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Importar</h1>
-          <p className="text-sm text-muted">
-            Trae tus movimientos, gastos fijos, pagos de deudas o aportes a
-            metas desde un Excel o un CSV. Revisas todo antes de guardar y
-            puedes deshacer la importación.
-          </p>
-        </div>
+        {/* El título "Importar" lo pone el header del dashboard */}
+        <p className="text-sm text-muted">
+          Trae tus movimientos, gastos fijos, pagos de deudas o aportes a metas
+          desde un Excel o un CSV. Revisas todo antes de guardar y puedes
+          deshacer la importación.
+        </p>
       </header>
       {/* searchParams y la sesión son dinámicos: van dentro de Suspense */}
       <Suspense fallback={<ImportSkeleton />}>

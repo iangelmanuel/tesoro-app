@@ -46,13 +46,10 @@ export default function BusinessSummaryPage({
   params
 }: BusinessSummaryPageProps) {
   return (
-    <section className="flex flex-1 flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Resumen</h1>
-        <p className="text-sm text-muted">
-          Las ventas, los costos y la utilidad de tu empresa en el mes.
-        </p>
-      </header>
+    <section
+      aria-label="Resumen"
+      className="flex flex-1 flex-col gap-6"
+    >
       {/* params, la sesión y la fecha de hoy son dinámicos: van dentro de Suspense */}
       <Suspense fallback={<SummarySkeleton />}>
         <SummaryContent params={params} />

@@ -17,12 +17,11 @@ export function ArchiveDebtDialog({
   onConfirm
 }: ArchiveDebtDialogProps) {
   return (
-    <AlertDialog>
-      <AlertDialog.Backdrop
-        isKeyboardDismissDisabled={false}
-        isOpen={open}
-        onOpenChange={onOpenChange}
-      >
+    <AlertDialog
+      isOpen={open}
+      onOpenChange={onOpenChange}
+    >
+      <AlertDialog.Backdrop isKeyboardDismissDisabled={false}>
         <AlertDialog.Container>
           <AlertDialog.Dialog className="sm:max-w-md">
             <AlertDialog.Header>

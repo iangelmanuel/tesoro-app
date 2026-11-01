@@ -43,14 +43,10 @@ export default function BusinessCashFlowPage({
   searchParams
 }: BusinessCashFlowPageProps) {
   return (
-    <section className="flex flex-1 flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Flujo de caja</h1>
-        <p className="text-sm text-muted">
-          Lo que entra y sale de tu empresa mes a mes, y cuánto queda en tus
-          cuentas.
-        </p>
-      </header>
+    <section
+      aria-label="Flujo de caja"
+      className="flex flex-1 flex-col gap-6"
+    >
       {/* params, searchParams y la sesión son dinámicos: van dentro de Suspense */}
       <Suspense fallback={<CashFlowSkeleton />}>
         <CashFlowContent

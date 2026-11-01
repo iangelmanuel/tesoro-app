@@ -49,12 +49,12 @@ export function RecurringExpenseDialog({
   const isEditing = expense !== undefined
 
   return (
-    <Modal>
+    <Modal
+      isOpen={open}
+      onOpenChange={setOpen}
+    >
       {trigger}
-      <Modal.Backdrop
-        isOpen={open}
-        onOpenChange={setOpen}
-      >
+      <Modal.Backdrop>
         <Modal.Container scroll="outside">
           <Modal.Dialog className="sm:max-w-md">
             <Modal.CloseTrigger />

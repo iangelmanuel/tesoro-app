@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Button, Disclosure } from "@heroui/react"
+import { SURFACE_LIST, SURFACE_ROW } from "@/components/dashboard/surface"
 import { formatCurrency } from "@/libs/format"
 import { debtStatusLabel } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
@@ -38,7 +39,7 @@ export function InactiveDebts({
         </Disclosure.Trigger>
       </Disclosure.Heading>
       <Disclosure.Content>
-        <ul className="divide-y rounded-xl border">
+        <ul className={SURFACE_LIST}>
           {debts.map((debt) => (
             <InactiveDebtRow
               key={debt.id}
@@ -70,7 +71,7 @@ function InactiveDebtRow({
   const status = debtStatusLabel(debt)
 
   return (
-    <li className="flex flex-wrap items-center gap-3 p-4">
+    <li className={`flex flex-wrap items-center gap-3 ${SURFACE_ROW}`}>
       {/* Abre el Sheet de solo lectura */}
       <button
         type="button"

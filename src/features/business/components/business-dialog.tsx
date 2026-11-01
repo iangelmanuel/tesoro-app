@@ -37,12 +37,12 @@ export function BusinessDialog({ business, trigger }: BusinessDialogProps) {
   const isEditing = business !== undefined
 
   return (
-    <Modal>
+    <Modal
+      isOpen={open}
+      onOpenChange={setOpen}
+    >
       {trigger}
-      <Modal.Backdrop
-        isOpen={open}
-        onOpenChange={setOpen}
-      >
+      <Modal.Backdrop>
         <Modal.Container scroll="outside">
           <Modal.Dialog className="sm:max-w-md">
             <Modal.CloseTrigger />

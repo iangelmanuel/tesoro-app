@@ -5,8 +5,9 @@ import { cn } from "@heroui/react"
 import { ResponsiveContainer } from "recharts"
 
 // Contenedor de las gráficas de Recharts con los tokens del tema de HeroUI:
-// ejes con --muted, rejilla y cursor con --border y --default. Cada serie
-// expone su color como --color-<clave> para usarlo en fill/stroke
+// ticks con --muted, grilla con --border y cursor con --default. Cada
+// serie expone su color como --color-<clave> para usarlo en fill/stroke.
+// Las props de forma (grilla, ejes, barras, líneas) están en chart-style.ts
 
 const INITIAL_DIMENSION = { width: 320, height: 200 } as const
 
@@ -54,17 +55,22 @@ export function ChartContainer({
       <div
         data-chart={chartId}
         className={cn(
-          "flex aspect-video justify-center text-xs text-foreground",
+          "flex aspect-video justify-center text-xs text-foreground tabular-nums",
           "[&_.recharts-cartesian-axis-tick_text]:fill-muted",
-          "[&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-separator",
+          "[&_.recharts-cartesian-grid_line]:stroke-border",
           "[&_.recharts-curve.recharts-tooltip-cursor]:stroke-border",
-          "[&_.recharts-rectangle.recharts-tooltip-cursor]:fill-default",
+          "[&_.recharts-rectangle.recharts-tooltip-cursor]:fill-default/60",
           "[&_.recharts-radial-bar-background-sector]:fill-default",
           "[&_.recharts-polar-grid_[stroke='#ccc']]:stroke-separator",
           "[&_.recharts-reference-line_[stroke='#ccc']]:stroke-border",
+          // Punto activo de las líneas con anillo del color de la tarjeta
+          "[&_.recharts-active-dot_circle]:stroke-surface",
           "[&_.recharts-dot[stroke='#fff']]:stroke-transparent",
-          "[&_.recharts-sector[stroke='#fff']]:stroke-transparent",
-          "[&_.recharts-layer]:outline-hidden [&_.recharts-sector]:outline-hidden [&_.recharts-surface]:outline-hidden",
+          // 2 px de superficie entre porciones de la dona
+          "[&_.recharts-sector]:stroke-surface [&_.recharts-sector]:stroke-2",
+          "[&_.recharts-layer]:outline-hidden [&_.recharts-sector]:outline-hidden",
+          // Con accessibilityLayer la superficie recibe foco: se marca visible
+          "[&_.recharts-surface]:rounded-lg [&_.recharts-surface]:outline-none [&_.recharts-surface:focus-visible]:outline-2 [&_.recharts-surface:focus-visible]:outline-offset-2 [&_.recharts-surface:focus-visible]:outline-focus",
           className
         )}
         {...props}

@@ -11,7 +11,8 @@ type ChartLegendContentProps = React.ComponentProps<"div"> & {
   nameKey?: string
 } & DefaultLegendContentProps
 
-// Leyenda con la tipografía de HeroUI: texto atenuado y muestra del color
+// Leyenda dentro de Recharts (punto de color + texto). Para la leyenda
+// compacta de la cabecera, usa ChartLegendList de chart-card.tsx
 export function ChartLegendContent({
   className,
   hideIcon = false,
@@ -28,7 +29,7 @@ export function ChartLegendContent({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center justify-center gap-4 text-xs text-muted",
+        "flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted",
         verticalAlign === "top" ? "pb-3" : "pt-3",
         className
       )}
@@ -48,7 +49,7 @@ export function ChartLegendContent({
                 <itemConfig.icon />
               ) : (
                 <span
-                  className="size-2 shrink-0 rounded-[2px]"
+                  className="size-2 shrink-0 rounded-full"
                   style={{ backgroundColor: item.color }}
                 />
               )}

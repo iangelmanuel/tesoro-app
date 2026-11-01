@@ -62,12 +62,12 @@
   --category-blue: oklch(62.3% 0.214 259.815);
   --category-sky: oklch(58.8% 0.158 241.966);
   --category-slate: oklch(55.4% 0.046 257.417);
-  /* Dinero: ≥ 4.5:1 como texto sobre la superficie y el fondo. Ingresos y
-     gastos se separan también en luminosidad (no solo en tono) para que
-     sus series se distingan en las gráficas */
-  --income: oklch(39% 0.085 167); /* entre emerald-800 y 900 */
-  --expense: oklch(55.5% 0.235 17); /* entre rose-600 y 700 */
-  --balance: oklch(50% 0.134 242.749); /* sky-700 */
+  /* Dinero: ≥ 4.5:1 como texto sobre la superficie y el fondo, y a la vez
+     serie de gráfica: los tres pasan el validador de dataviz (banda de
+     luminosidad, ΔE con protanopía/deuteranopía ≥ 8 entre todos los pares) */
+  --income: oklch(50% 0.12 163);
+  --expense: oklch(55% 0.23 25);
+  --balance: oklch(43% 0.16 255);
 }
 
 .dark {
@@ -112,11 +112,11 @@
   --category-blue: oklch(70.7% 0.165 254.624);
   --category-sky: oklch(74.6% 0.16 232.661);
   --category-slate: oklch(70.4% 0.04 256.788);
-  /* Dinero: AA sobre la superficie; ingresos claros y gastos más oscuros
-     para separar las series también en luminosidad */
-  --income: oklch(84.5% 0.143 164.978); /* emerald-300 */
-  --expense: oklch(64.5% 0.246 16.439); /* rose-500 */
-  --balance: oklch(74.6% 0.16 232.661); /* sky-400 */
+  /* Dinero: AA sobre la superficie y dentro de la banda de gráficas en
+     oscuro (validador de dataviz, ΔE CVD ≥ 8 entre todos los pares) */
+  --income: oklch(60% 0.15 170);
+  --expense: oklch(66% 0.23 25);
+  --balance: oklch(67% 0.16 255);
 }
 
 /* Primario por espacio. WorkspaceThemeRoot pinta un marcador oculto con

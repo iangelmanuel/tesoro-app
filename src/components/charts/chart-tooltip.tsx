@@ -15,12 +15,16 @@ type ChartTooltipContentProps = React.ComponentProps<typeof Tooltip> &
     indicator?: "line" | "dot" | "dashed"
     nameKey?: string
     labelKey?: string
+    /** Formato del valor (p. ej. monto completo en la moneda del espacio) */
+    valueFormatter?: (value: number) => string
   } & Omit<
     DefaultTooltipContentProps<TooltipValueType, number | string>,
     "accessibilityLayer"
   >
 
-// Tooltip con la superficie flotante de HeroUI (--overlay y su sombra)
+// Tooltip con la superficie flotante de HeroUI (--overlay y su sombra): la
+// fecha o categoría arriba y, por serie, punto de color, nombre y valor
+// completo
 export function ChartTooltipContent({
   active,
   payload,
@@ -34,7 +38,8 @@ export function ChartTooltipContent({
   formatter,
   color,
   nameKey,
-  labelKey
+  labelKey,
+  valueFormatter
 }: ChartTooltipContentProps) {
   const { config } = useChart()
 
@@ -83,7 +88,7 @@ export function ChartTooltipContent({
   return (
     <div
       className={cn(
-        "grid min-w-32 items-start gap-1.5 rounded-xl bg-overlay px-3 py-2 text-xs text-overlay-foreground shadow-overlay",
+        "grid min-w-40 items-start gap-2 rounded-2xl bg-overlay px-3 py-2.5 text-xs text-overlay-foreground shadow-overlay",
         className
       )}
     >
@@ -114,9 +119,9 @@ export function ChartTooltipContent({
                       !hideIndicator && (
                         <div
                           className={cn(
-                            "shrink-0 rounded-[2px] border-(--indicator) bg-(--indicator)",
+                            "shrink-0 rounded-full border-(--indicator) bg-(--indicator)",
                             {
-                              "size-2.5": indicator === "dot",
+                              "size-2": indicator === "dot",
                               "w-1": indicator === "line",
                               "w-0 border-[1.5px] border-dashed bg-transparent":
                                 indicator === "dashed",
@@ -133,7 +138,7 @@ export function ChartTooltipContent({
                     )}
                     <div
                       className={cn(
-                        "flex flex-1 justify-between leading-none",
+                        "flex flex-1 justify-between gap-4 leading-none",
                         nestLabel ? "items-end" : "items-center"
                       )}
                     >
@@ -144,9 +149,10 @@ export function ChartTooltipContent({
                         </span>
                       </div>
                       {item.value != null && (
-                        <span className="font-mono font-medium tabular-nums">
+                        <span className="font-medium text-foreground tabular-nums">
                           {typeof item.value === "number"
-                            ? item.value.toLocaleString()
+                            ? (valueFormatter?.(item.value) ??
+                              item.value.toLocaleString("es-CO"))
                             : String(item.value)}
                         </span>
                       )}

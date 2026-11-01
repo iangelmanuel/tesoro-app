@@ -1,13 +1,12 @@
 import { Suspense } from "react"
-import Link from "next/link"
-import { Button, Skeleton, buttonVariants } from "@heroui/react"
-import { ArrowLeftRight, FileUp, Plus } from "lucide-react"
+import { Button, Skeleton } from "@heroui/react"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
+import { ArrowLeftRight } from "lucide-react"
 import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
 import { getCategories } from "@/features/categories/queries"
-import { IMPORT_PATH } from "@/features/imports/constants"
-import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
 import {
   NoFilteredTransactions,
   NoTransactions
@@ -26,6 +25,7 @@ import {
   hasAnyLedgerEntries
 } from "@/features/transactions/queries"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
+import { shiftMonth } from "@/libs/dates"
 import { buildMetadata } from "@/libs/seo"
 
 export const metadata = buildMetadata({
@@ -36,17 +36,23 @@ export const metadata = buildMetadata({
 
 type TransactionsPageProps = PageProps<"/dashboard/personal/transactions">
 
+function monthLabel(month: string) {
+  const label = format(new Date(`${month}-01T12:00:00`), "MMMM yyyy", {
+    locale: es
+  })
+  return label.charAt(0).toUpperCase() + label.slice(1)
+}
+
+// El título lo pone el header del dashboard. "Registrar movimiento" también
+// vive allí: la página no lo repite
 export default function TransactionsPage({
   searchParams
 }: TransactionsPageProps) {
   return (
-    <section className="flex flex-1 flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Movimientos</h1>
-        <p className="text-sm text-muted">
-          Tus ingresos, gastos y traspasos entre cuentas.
-        </p>
-      </header>
+    <section
+      aria-label="Movimientos"
+      className="flex flex-1 flex-col gap-4"
+    >
       {/* searchParams y la sesión son dinámicos: van dentro de Suspense */}
       <Suspense fallback={<TransactionsSkeleton />}>
         <TransactionsContent searchParams={searchParams} />
@@ -63,12 +69,29 @@ async function TransactionsContent({
   // Se parsea tras leer la sesión: el mes por defecto usa la fecha de hoy, y
   // new Date() solo se permite después de connection()
   const filters = parseTransactionFilters(query)
-  const [categories, accounts, { rows, count }, totals] = await Promise.all([
-    getCategories(workspace.id),
-    getAccountBalances(workspace.id),
-    getTransactions(workspace.id, filters),
-    getTransactionTotals(workspace.id, filters)
-  ])
+  const isAllMonths = filters.month === "all"
+  const [categories, accounts, { rows, count }, totals, previousTotals] =
+    await Promise.all([
+      getCategories(workspace.id),
+      getAccountBalances(workspace.id),
+      getTransactions(workspace.id, filters),
+      getTransactionTotals(workspace.id, filters),
+      // Mismos filtros en el mes anterior, para el badge de las KPI
+      isAllMonths
+        ? null
+        : getTransactionTotals(workspace.id, {
+            ...filters,
+            month: shiftMonth(filters.month, -1)
+          })
+    ])
+  const previous =
+    previousTotals && (previousTotals.income || previousTotals.expense)
+      ? previousTotals
+      : null
+  const hasExtraFilters = Boolean(
+    filters.type || filters.categoryId || filters.accountId || filters.q
+  )
+  const scope = `${isAllMonths ? "Todos los meses" : monthLabel(filters.month)}${hasExtraFilters ? " · con filtros" : ""}`
   // Solo se consulta cuando los filtros no devuelven nada
   const isEmptyWorkspace =
     rows.length === 0 && !(await hasAnyLedgerEntries(workspace.id))
@@ -76,79 +99,75 @@ async function TransactionsContent({
   const canTransfer =
     accounts.filter((account) => !account.archived_at).length > 1
 
+  if (isEmptyWorkspace) {
+    return (
+      <NoTransactions
+        workspaceId={workspace.id}
+        categories={categories}
+        accounts={accounts}
+      />
+    )
+  }
+
   return (
     <>
-      <div className="flex flex-wrap gap-2">
-        <TransactionDialog
-          workspaceId={workspace.id}
+      {/* Una barra: búsqueda, mes y filtros pill; a la derecha, traspaso y
+          categorías (importar está en "Más" del header) */}
+      <div className="flex flex-wrap items-center gap-2">
+        <TransactionsFilters
+          filters={filters}
           categories={categories}
           accounts={accounts}
-          trigger={
-            <Button>
-              <Plus />
-              Nuevo movimiento
-            </Button>
-          }
         />
-        {canTransfer && (
-          <TransferDialog
+        <div className="flex shrink-0 items-center gap-2">
+          {canTransfer && (
+            <TransferDialog
+              workspaceId={workspace.id}
+              accounts={accounts}
+              trigger={
+                <Button
+                  variant="secondary"
+                  size="sm"
+                >
+                  <ArrowLeftRight />
+                  Traspaso
+                </Button>
+              }
+            />
+          )}
+          <CategoriesSheet
             workspaceId={workspace.id}
-            accounts={accounts}
-            trigger={
-              <Button variant="outline">
-                <ArrowLeftRight />
-                Traspaso
-              </Button>
-            }
+            categories={categories}
           />
-        )}
-        <Link
-          href={IMPORT_PATH}
-          className={buttonVariants({ variant: "outline" })}
-        >
-          <FileUp className="size-4" />
-          Importar
-        </Link>
-        <CategoriesSheet
-          workspaceId={workspace.id}
-          categories={categories}
-        />
+        </div>
       </div>
-
-      {isEmptyWorkspace ? (
-        <NoTransactions
+      <TransactionsTotals
+        totals={totals}
+        previous={previous}
+        currency={workspace.currency}
+        caption={scope}
+      />
+      <p
+        role="status"
+        className="sr-only"
+      >
+        {count === 1 ? "1 movimiento" : `${count} movimientos`}
+      </p>
+      {rows.length > 0 ? (
+        <TransactionsTable
           workspaceId={workspace.id}
+          rows={rows}
           categories={categories}
           accounts={accounts}
+          currency={workspace.currency}
         />
       ) : (
-        <>
-          <TransactionsFilters
-            filters={filters}
-            categories={categories}
-            accounts={accounts}
-          />
-          <TransactionsTotals
-            totals={totals}
-            currency={workspace.currency}
-          />
-          {rows.length > 0 ? (
-            <TransactionsTable
-              workspaceId={workspace.id}
-              rows={rows}
-              categories={categories}
-              accounts={accounts}
-              currency={workspace.currency}
-            />
-          ) : (
-            <NoFilteredTransactions filters={filters} />
-          )}
-          <TransactionsPagination
-            filters={filters}
-            count={count}
-          />
-        </>
+        <NoFilteredTransactions filters={filters} />
       )}
+      <TransactionsPagination
+        filters={filters}
+        count={count}
+      />
     </>
   )
 }
@@ -156,17 +175,19 @@ async function TransactionsContent({
 function TransactionsSkeleton() {
   return (
     <>
-      <div className="flex gap-2">
-        <Skeleton className="h-8 w-40" />
-        <Skeleton className="h-8 w-32" />
+      <div className="flex flex-wrap gap-2">
+        <Skeleton className="h-9 w-64 rounded-3xl" />
+        <Skeleton className="h-9 w-52 rounded-3xl" />
+        <Skeleton className="h-8 w-28 rounded-3xl" />
+        <Skeleton className="h-8 w-32 rounded-3xl" />
+        <Skeleton className="h-8 w-28 rounded-3xl" />
       </div>
-      <Skeleton className="h-8 w-full" />
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Skeleton className="h-24" />
-        <Skeleton className="h-24" />
-        <Skeleton className="h-24" />
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Skeleton className="h-24 rounded-3xl" />
+        <Skeleton className="h-24 rounded-3xl" />
+        <Skeleton className="h-24 rounded-3xl" />
       </div>
-      <Skeleton className="h-96 w-full" />
+      <Skeleton className="h-96 w-full rounded-3xl" />
     </>
   )
 }

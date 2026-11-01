@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react"
 import type { Route } from "next"
 import { useRouter } from "next/navigation"
 import { Button, ListBox, SearchField, Select, cn } from "@heroui/react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, X } from "lucide-react"
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import { NO_ACCOUNT } from "@/features/accounts/constants"
 import type { Category } from "@/features/categories/queries"
@@ -99,148 +99,186 @@ export function TransactionsFilters({
     (a, b) => Number(a.archived_at !== null) - Number(b.archived_at !== null)
   )
 
+  const hasExtraFilters = Boolean(
+    filters.type || filters.categoryId || filters.accountId || filters.q
+  )
+
   return (
     <div
+      aria-busy={pending}
       className={cn(
-        "flex flex-col gap-3 transition-opacity lg:flex-row lg:items-center",
+        "flex min-w-0 flex-1 flex-wrap items-center gap-2 transition-opacity duration-150 motion-reduce:transition-none",
         pending && "opacity-60"
       )}
     >
-      <div className="flex items-center gap-1">
+      {/* Anuncia la recarga a lectores de pantalla; la tabla anuncia el total */}
+      <p
+        role="status"
+        className="sr-only"
+      >
+        {pending ? "Actualizando movimientos…" : ""}
+      </p>
+
+      <SearchField
+        aria-label="Buscar en descripción o nota"
+        value={q}
+        onChange={setQ}
+        className="w-full sm:w-64"
+      >
+        <SearchField.Group>
+          <SearchField.SearchIcon />
+          <SearchField.Input placeholder="Buscar" />
+          <SearchField.ClearButton />
+        </SearchField.Group>
+      </SearchField>
+
+      {/* El mes es texto (no botón): las flechas lo cambian y el toggle
+          alterna entre un mes y todos */}
+      <div className="flex items-center gap-0.5 rounded-3xl bg-default/60 p-0.5">
         <Button
-          variant="outline"
+          variant="ghost"
+          size="sm"
           isIconOnly
           aria-label="Mes anterior"
+          isDisabled={isAllMonths}
           onPress={() => navigate({ month: shiftMonth(month, -1) })}
         >
           <ChevronLeft />
         </Button>
-        <Button
-          variant={isAllMonths ? "ghost" : "outline"}
-          className="min-w-40"
-          onPress={() => navigate({ month: isAllMonths ? month : ALL })}
-          aria-label={isAllMonths ? "Filtrar por mes" : "Ver todos los meses"}
+        <span
+          aria-live="polite"
+          className="min-w-32 px-1 text-center text-sm font-medium"
         >
           {isAllMonths ? "Todos los meses" : formatMonth(month)}
-        </Button>
+        </span>
         <Button
-          variant="outline"
+          variant="ghost"
+          size="sm"
           isIconOnly
           aria-label="Mes siguiente"
+          isDisabled={isAllMonths}
           onPress={() => navigate({ month: shiftMonth(month, 1) })}
         >
           <ChevronRight />
         </Button>
-        {!isAllMonths && (
-          <Button
-            variant="ghost"
-            onPress={() => navigate({ month: ALL })}
-          >
-            Todos
-          </Button>
-        )}
       </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        aria-pressed={isAllMonths}
+        onPress={() => navigate({ month: isAllMonths ? month : ALL })}
+      >
+        {isAllMonths ? "Ver por mes" : "Todos los meses"}
+      </Button>
 
-      <div className="flex flex-col gap-3 sm:flex-row lg:flex-1">
-        <FilterSelect
-          label="Tipo"
-          className="sm:w-40"
-          value={filters.type ?? ALL}
-          onChange={(value) =>
+      <FilterSelect
+        label="Tipo"
+        value={filters.type ?? ALL}
+        onChange={(value) =>
+          navigate({
+            type: value === ALL ? undefined : (value as LedgerFilterType),
+            // Una categoría de otro tipo dejaría la tabla vacía
+            categoryId: undefined
+          })
+        }
+        options={[
+          { id: ALL, label: "Todos" },
+          { id: "income", label: "Ingresos" },
+          { id: "expense", label: "Gastos" },
+          { id: "transfer", label: "Traspasos" }
+        ]}
+      />
+
+      <FilterSelect
+        label="Categoría"
+        value={filters.categoryId ?? ALL}
+        onChange={(value) =>
+          navigate({ categoryId: value === ALL ? undefined : value })
+        }
+        options={[
+          { id: ALL, label: "Todas" },
+          ...options.map((category) => ({
+            id: category.id,
+            label: category.archived_at
+              ? `${category.name} (archivada)`
+              : category.name
+          }))
+        ]}
+      />
+
+      <FilterSelect
+        label="Cuenta"
+        value={filters.accountId ?? ALL}
+        onChange={(value) =>
+          navigate({ accountId: value === ALL ? undefined : value })
+        }
+        options={[
+          { id: ALL, label: "Todas" },
+          { id: NO_ACCOUNT, label: "Sin cuenta" },
+          ...accountOptions.map((account) => ({
+            id: account.id,
+            label: account.archived_at
+              ? `${account.name} (archivada)`
+              : account.name
+          }))
+        ]}
+      />
+
+      {hasExtraFilters && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onPress={() => {
+            setQ("")
             navigate({
-              type: value === ALL ? undefined : (value as LedgerFilterType),
-              // Una categoría de otro tipo dejaría la tabla vacía
-              categoryId: undefined
+              type: undefined,
+              categoryId: undefined,
+              accountId: undefined,
+              q: undefined
             })
-          }
-          options={[
-            { id: ALL, label: "Todos los tipos" },
-            { id: "income", label: "Ingresos" },
-            { id: "expense", label: "Gastos" },
-            { id: "transfer", label: "Traspasos" }
-          ]}
-        />
-
-        <FilterSelect
-          label="Categoría"
-          className="sm:w-52"
-          value={filters.categoryId ?? ALL}
-          onChange={(value) =>
-            navigate({ categoryId: value === ALL ? undefined : value })
-          }
-          options={[
-            { id: ALL, label: "Todas las categorías" },
-            ...options.map((category) => ({
-              id: category.id,
-              label: category.archived_at
-                ? `${category.name} (archivada)`
-                : category.name
-            }))
-          ]}
-        />
-
-        <FilterSelect
-          label="Cuenta"
-          className="sm:w-44"
-          value={filters.accountId ?? ALL}
-          onChange={(value) =>
-            navigate({ accountId: value === ALL ? undefined : value })
-          }
-          options={[
-            { id: ALL, label: "Todas las cuentas" },
-            { id: NO_ACCOUNT, label: "Sin cuenta" },
-            ...accountOptions.map((account) => ({
-              id: account.id,
-              label: account.archived_at
-                ? `${account.name} (archivada)`
-                : account.name
-            }))
-          ]}
-        />
-
-        <SearchField
-          aria-label="Buscar"
-          value={q}
-          onChange={setQ}
-          className="sm:flex-1"
+          }}
         >
-          <SearchField.Group>
-            <SearchField.SearchIcon />
-            <SearchField.Input placeholder="Buscar en descripción o nota" />
-            <SearchField.ClearButton />
-          </SearchField.Group>
-        </SearchField>
-      </div>
+          <X />
+          Limpiar filtros
+        </Button>
+      )}
     </div>
   )
 }
 
-// Select de filtro sin etiqueta visible: navega al elegir
+// Filtro pill: el nombre del filtro va dentro del trigger ("Tipo: Gastos"),
+// así se ve qué filtra aunque haya un valor elegido. Navega al elegir
 function FilterSelect({
   label,
-  className,
   value,
   onChange,
   options
 }: {
   label: string
-  className?: string
   value: string
   onChange: (value: string) => void
   options: { id: string; label: string }[]
 }) {
+  const isActive = value !== ALL
+
   return (
     <Select
       aria-label={label}
-      className={className}
       value={value}
       onChange={(key) => key != null && onChange(String(key))}
+      className="w-auto"
     >
-      <Select.Trigger>
-        <Select.Value />
+      <Select.Trigger
+        className={cn(
+          "min-h-8 gap-1.5 rounded-3xl py-1 text-sm",
+          isActive && "bg-accent-soft text-accent-soft-foreground"
+        )}
+      >
+        <span className={cn(!isActive && "text-muted")}>{label}:</span>
+        <Select.Value className="max-w-40 truncate font-medium" />
         <Select.Indicator />
       </Select.Trigger>
-      <Select.Popover>
+      <Select.Popover className="min-w-48">
         <ListBox>
           {options.map((option) => (
             <ListBox.Item

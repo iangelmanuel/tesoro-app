@@ -38,11 +38,11 @@ export function NoTransactions({
       }
       description={
         isBusiness
-          ? "Anota una venta o un costo o gasto de tu empresa. Con tus movimientos Tesoro arma las ventas, los costos y la utilidad del mes."
-          : "Anota un ingreso o un gasto, o importa los que ya tienes en un Excel o CSV. Con tus movimientos Tesoro arma tus totales, gráficas y recomendaciones."
+          ? "Anota una venta o un costo o gasto de tu empresa."
+          : "Anota un ingreso o un gasto, o importa los que ya tienes en un Excel o CSV."
       }
     >
-      <div className="flex flex-wrap justify-center gap-2">
+      <>
         <TransactionDialog
           workspaceId={workspaceId}
           workspaceType={workspaceType}
@@ -51,20 +51,20 @@ export function NoTransactions({
           trigger={
             <Button>
               <Plus />
-              Nuevo movimiento
+              {isBusiness ? "Registrar operación" : "Registrar movimiento"}
             </Button>
           }
         />
         {!isBusiness && (
           <Link
             href={IMPORT_PATH}
-            className={buttonVariants({ variant: "outline" })}
+            className={buttonVariants({ variant: "secondary" })}
           >
             <FileUp className="size-4" />
             Importar
           </Link>
         )}
-      </div>
+      </>
     </EmptyState>
   )
 }
@@ -94,7 +94,7 @@ export function NoFilteredTransactions({
     >
       <Link
         href={`${path}?${query}` as Route}
-        className={buttonVariants({ variant: "outline" })}
+        className={buttonVariants({ variant: "secondary" })}
       >
         {hasExtraFilters ? "Limpiar filtros" : "Ver todos los meses"}
       </Link>

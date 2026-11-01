@@ -28,6 +28,15 @@ interface TransactionsTableProps {
   currency: string
 }
 
+// A 375 px la tabla no se desborda: la fecha pasa bajo la descripción y
+// categoría, cliente y cuenta se ocultan hasta que hay espacio
+const FROM_SM = "hidden sm:table-cell"
+const FROM_MD = "hidden md:table-cell"
+const FROM_LG = "hidden lg:table-cell"
+
+// Botones de fila: 32 px con mouse, 40 px en pantallas táctiles
+const ROW_ACTION = "pointer-coarse:size-10"
+
 type TransferEntry = Extract<LedgerEntry, { kind: "transfer" }>
 type AdjustmentEntry = Extract<LedgerEntry, { kind: "adjustment" }>
 
@@ -53,18 +62,20 @@ export function TransactionsTable({
       <Table.ScrollContainer>
         <Table.Content
           aria-label="Movimientos"
-          className="min-w-3xl"
+          className="[&_tbody_td]:py-2.5 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150 motion-reduce:[&_tbody_tr]:transition-none [&_tbody_tr:hover]:bg-default/40"
         >
           <Table.Header>
-            <Table.Column className="w-32">Fecha</Table.Column>
+            <Table.Column className={cn("w-32", FROM_SM)}>Fecha</Table.Column>
             <Table.Column isRowHeader>Descripción</Table.Column>
-            <Table.Column>Categoría</Table.Column>
+            <Table.Column className={FROM_MD}>Categoría</Table.Column>
             {isBusiness ? (
-              <Table.Column>Cliente o proveedor</Table.Column>
+              <Table.Column className={FROM_LG}>
+                Cliente o proveedor
+              </Table.Column>
             ) : null}
-            <Table.Column>Cuenta</Table.Column>
+            <Table.Column className={FROM_LG}>Cuenta</Table.Column>
             <Table.Column className="text-end">Monto</Table.Column>
-            <Table.Column className="w-24">
+            <Table.Column className="w-20">
               <span className="sr-only">Acciones</span>
             </Table.Column>
           </Table.Header>
@@ -104,14 +115,15 @@ export function TransactionsTable({
 
               return (
                 <Table.Row key={transaction.id}>
-                  <Table.Cell className="text-muted">
+                  <Table.Cell className={cn("text-muted", FROM_SM)}>
                     {formatDate(transaction.occurred_on)}
                   </Table.Cell>
                   <DescriptionCell
                     title={transaction.description}
                     note={transaction.note}
+                    date={transaction.occurred_on}
                   />
-                  <Table.Cell>
+                  <Table.Cell className={FROM_MD}>
                     {category && (
                       <CategoryBadge
                         name={category.name}
@@ -126,7 +138,7 @@ export function TransactionsTable({
                       invoiceRef={transaction.invoice_ref}
                     />
                   )}
-                  <Table.Cell>
+                  <Table.Cell className={FROM_LG}>
                     {account ? (
                       <AccountLabel account={account} />
                     ) : (
@@ -145,7 +157,7 @@ export function TransactionsTable({
                     {formatCurrency(transaction.amount, currency)}
                   </Table.Cell>
                   <Table.Cell>
-                    <div className="flex justify-end gap-1">
+                    <div className="flex justify-end gap-1 pointer-coarse:gap-2">
                       <TransactionDialog
                         workspaceId={workspaceId}
                         workspaceType={workspaceType}
@@ -157,6 +169,7 @@ export function TransactionsTable({
                             variant="ghost"
                             size="sm"
                             isIconOnly
+                            className={ROW_ACTION}
                             aria-label={`Editar ${transaction.description}`}
                           >
                             <Pencil />
@@ -189,13 +202,13 @@ function CounterpartyCell({
 }) {
   if (!counterparty && !invoiceRef) {
     return (
-      <Table.Cell>
+      <Table.Cell className={FROM_LG}>
         <span className="text-muted">—</span>
       </Table.Cell>
     )
   }
   return (
-    <Table.Cell className="max-w-48">
+    <Table.Cell className={cn("max-w-48", FROM_LG)}>
       {counterparty && <p className="truncate">{counterparty}</p>}
       {invoiceRef && (
         <p className="truncate text-sm text-muted">{invoiceRef}</p>
@@ -207,17 +220,23 @@ function CounterpartyCell({
 function DescriptionCell({
   title,
   note,
+  date,
   icon: Icon
 }: {
   title: string
   note: string | null
+  /** Bajo el título solo en móvil, donde la columna Fecha se oculta */
+  date: string
   icon?: React.ComponentType<{ className?: string }>
 }) {
   return (
-    <Table.Cell className="max-w-64">
+    <Table.Cell className="max-w-40 sm:max-w-64">
       <p className="flex items-center gap-2 truncate font-medium">
         {Icon && <Icon className="size-4 shrink-0 text-muted" />}
         <span className="truncate">{title}</span>
+      </p>
+      <p className="truncate text-xs text-muted sm:hidden">
+        {formatDate(date)}
       </p>
       {note && <p className="truncate text-xs text-muted">{note}</p>}
     </Table.Cell>
@@ -242,22 +261,23 @@ function TransferRow({
 }) {
   return (
     <Table.Row>
-      <Table.Cell className="text-muted">
+      <Table.Cell className={cn("text-muted", FROM_SM)}>
         {formatDate(transfer.occurred_on)}
       </Table.Cell>
       <DescriptionCell
         title={label}
         note={transfer.note}
+        date={transfer.occurred_on}
         icon={ArrowLeftRight}
       />
-      <Table.Cell className="text-muted">Traspaso</Table.Cell>
-      {showCounterparty && <Table.Cell />}
-      <Table.Cell />
+      <Table.Cell className={cn("text-muted", FROM_MD)}>Traspaso</Table.Cell>
+      {showCounterparty && <Table.Cell className={FROM_LG} />}
+      <Table.Cell className={FROM_LG} />
       <Table.Cell className="text-end font-medium text-muted tabular-nums">
         {formatCurrency(transfer.amount, currency)}
       </Table.Cell>
       <Table.Cell>
-        <div className="flex justify-end gap-1">
+        <div className="flex justify-end gap-1 pointer-coarse:gap-2">
           <TransferDialog
             workspaceId={workspaceId}
             accounts={accounts}
@@ -267,6 +287,7 @@ function TransferRow({
                 variant="ghost"
                 size="sm"
                 isIconOnly
+                className={ROW_ACTION}
                 aria-label={`Editar traspaso ${label}`}
               >
                 <Pencil />
@@ -301,23 +322,24 @@ function AdjustmentRow({
 }) {
   return (
     <Table.Row>
-      <Table.Cell className="text-muted">
+      <Table.Cell className={cn("text-muted", FROM_SM)}>
         {formatDate(adjustment.occurred_on)}
       </Table.Cell>
       <DescriptionCell
         title={label}
         note={adjustment.note}
+        date={adjustment.occurred_on}
         icon={RefreshCw}
       />
-      <Table.Cell className="text-muted">Ajuste</Table.Cell>
-      {showCounterparty && <Table.Cell />}
-      <Table.Cell />
+      <Table.Cell className={cn("text-muted", FROM_MD)}>Ajuste</Table.Cell>
+      {showCounterparty && <Table.Cell className={FROM_LG} />}
+      <Table.Cell className={FROM_LG} />
       <Table.Cell className="text-end font-medium text-muted tabular-nums">
         {adjustment.amount > 0 ? "+" : "−"}
         {formatCurrency(Math.abs(adjustment.amount), currency)}
       </Table.Cell>
       <Table.Cell>
-        <div className="flex justify-end gap-1">
+        <div className="flex justify-end gap-1 pointer-coarse:gap-2">
           <DeleteEntryButton
             label={label}
             title="¿Eliminar este ajuste?"
@@ -377,6 +399,7 @@ function DeleteEntryButton({
         variant="ghost"
         size="sm"
         isIconOnly
+        className={ROW_ACTION}
         aria-label={`Eliminar ${label}`}
         isDisabled={pending}
       >

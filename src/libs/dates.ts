@@ -14,6 +14,20 @@ export function todayISO(now = new Date()) {
   return ISO_DATE.format(now)
 }
 
+const HOUR = new Intl.DateTimeFormat("en-US", {
+  timeZone: TIME_ZONE,
+  hour: "numeric",
+  hourCycle: "h23"
+})
+
+/** Saludo según la hora en America/Bogota: mañana 5–11, tarde 12–18 */
+export function greeting(now = new Date()) {
+  const hour = Number(HOUR.format(now))
+  if (hour >= 5 && hour < 12) return "Buenos días"
+  if (hour >= 12 && hour < 19) return "Buenas tardes"
+  return "Buenas noches"
+}
+
 /** Mes actual en America/Bogota (YYYY-MM) */
 export function currentMonth(now = new Date()) {
   return todayISO(now).slice(0, 7)

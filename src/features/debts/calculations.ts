@@ -19,6 +19,8 @@ export interface DebtCalcInput {
   interest_rate: number | null
   rate_type: RateType | null
   expected_on: string | null
+  fee_amount: number | null
+  fee_day: number | null
   created_at: string
   balance: number
   next_due_on: string | null
@@ -50,6 +52,37 @@ const MONTH_YEAR_FORMAT = new Intl.DateTimeFormat("es-CO", {
 /** "octubre de 2027", desde un mes YYYY-MM */
 export function formatMonthYear(month: string) {
   return MONTH_YEAR_FORMAT.format(new Date(`${month}-01T00:00:00Z`))
+}
+
+const pad2 = (value: number) => String(value).padStart(2, "0")
+
+/** Vencimiento de `day` en el mes YYYY-MM; si no existe, el último día */
+function dueInMonth(month: string, day: number) {
+  const [year, monthNumber] = month.split("-").map(Number)
+  const lastDay = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate()
+  return `${month}-${pad2(Math.min(day, lastDay))}`
+}
+
+/**
+ * Próxima cuota de manejo de una tarjeta activa: el primer `fee_day`
+ * posterior a hoy, en el mes actual o el siguiente (el día 31 cae en el
+ * último día de los meses cortos). null sin cuota o si la tarjeta no está
+ * activa.
+ */
+export function nextFeeDate(
+  debt: Pick<DebtCalcInput, "status" | "fee_day">,
+  today = todayISO()
+) {
+  if (debt.status !== "active" || debt.fee_day === null) {
+    return null
+  }
+
+  const thisMonth = today.slice(0, 7)
+  const candidate = dueInMonth(thisMonth, debt.fee_day)
+
+  return candidate > today
+    ? candidate
+    : dueInMonth(shiftMonth(thisMonth, 1), debt.fee_day)
 }
 
 /** Activa y de tipo tarjeta o préstamo */

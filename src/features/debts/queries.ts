@@ -14,6 +14,7 @@ export type Debt = Omit<
   | "installment"
   | "original_amount"
   | "interest_rate"
+  | "fee_amount"
 > & {
   opening_balance: number
   credit_limit: number | null
@@ -21,6 +22,7 @@ export type Debt = Omit<
   installment: number | null
   original_amount: number | null
   interest_rate: number | null
+  fee_amount: number | null
   balance: number
   paid_total: number
   entries_count: number
@@ -63,6 +65,8 @@ export async function getDebts(workspaceId: string): Promise<Debt[]> {
     rate_type: row.rate_type ?? null,
     due_day: row.due_day ?? null,
     expected_on: row.expected_on ?? null,
+    fee_day: row.fee_day ?? null,
+    fee_charged_through: row.fee_charged_through ?? null,
     closed_at: row.closed_at ?? null,
     last_payment_on: row.last_payment_on ?? null,
     next_due_on: row.next_due_on ?? null,
@@ -73,6 +77,7 @@ export async function getDebts(workspaceId: string): Promise<Debt[]> {
     installment: toNumber(row.installment),
     original_amount: toNumber(row.original_amount),
     interest_rate: toNumber(row.interest_rate),
+    fee_amount: toNumber(row.fee_amount),
     balance: Number(row.balance),
     paid_total: Number(row.paid_total),
     entries_count: Number(row.entries_count),

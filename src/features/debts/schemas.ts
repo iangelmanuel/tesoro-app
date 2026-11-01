@@ -149,6 +149,27 @@ function withRateType<
   }
 }
 
+// Cuota de manejo: monto y día de cobro van juntos o ninguno
+function checkFee(
+  data: { fee_amount: number | null; fee_day: number | null },
+  ctx: z.RefinementCtx
+) {
+  if (data.fee_amount !== null && data.fee_day === null) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["fee_day"],
+      message: "Elige el día de cobro de la cuota"
+    })
+  }
+  if (data.fee_day !== null && data.fee_amount === null) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["fee_amount"],
+      message: "Ingresa el monto de la cuota"
+    })
+  }
+}
+
 export const creditCardSchema = z
   .object({
     name: nameField,
@@ -173,9 +194,17 @@ export const creditCardSchema = z
     closing_day: z.preprocess(
       emptyToNull,
       dayField("Elige un día de corte entre 1 y 31").nullable()
+    ),
+    fee_amount: optionalAmountField,
+    fee_day: z.preprocess(
+      emptyToNull,
+      dayField("Elige un día de cobro entre 1 y 31").nullable()
     )
   })
-  .superRefine((data, ctx) => checkRate(data, ctx, false))
+  .superRefine((data, ctx) => {
+    checkRate(data, ctx, false)
+    checkFee(data, ctx)
+  })
   .transform(withRateType)
 
 export const loanSchema = z

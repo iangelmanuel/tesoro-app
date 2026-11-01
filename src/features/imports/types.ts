@@ -4,10 +4,10 @@ export type TransactionType = Database["public"]["Enums"]["transaction_type"]
 export type ImportTarget = Database["public"]["Enums"]["import_target"]
 export type RecurringFrequency =
   Database["public"]["Enums"]["recurring_frequency"]
-// El avance (SPEC 16) no se importa
+// El avance (SPEC 16) y la cuota de manejo (SPEC 17) no se importan
 export type DebtEntryKind = Exclude<
   Database["public"]["Enums"]["debt_entry_kind"],
-  "advance"
+  "advance" | "fee"
 >
 
 export type ImportField =

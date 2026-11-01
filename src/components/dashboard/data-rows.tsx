@@ -1,5 +1,5 @@
 import { cn } from "@heroui/react"
-import { CARD_LIST, CARD_ROW } from "./surface"
+import { CARD_LIST, CARD_ROW, SURFACE_LIST, SURFACE_ROW } from "./surface"
 
 // Patrón de tarjetas para tablas en `< 768 px`: cada fila lleva título y
 // monto en la primera línea y una línea secundaria debajo. Se usa con
@@ -8,15 +8,18 @@ import { CARD_LIST, CARD_ROW } from "./surface"
 
 interface DataRowsProps {
   label: string
+  /** Lista suelta sobre el fondo (con caja propia); sin ella, dentro de una
+   *  tarjeta. Las filas deben llevar el mismo valor en `boxed` */
+  boxed?: boolean
   className?: string
   children: React.ReactNode
 }
 
-export function DataRows({ label, className, children }: DataRowsProps) {
+export function DataRows({ label, boxed, className, children }: DataRowsProps) {
   return (
     <ul
       aria-label={label}
-      className={cn(CARD_LIST, "md:hidden", className)}
+      className={cn(boxed ? SURFACE_LIST : CARD_LIST, "md:hidden", className)}
     >
       {children}
     </ul>
@@ -32,11 +35,29 @@ interface DataRowProps {
   valueClassName?: string
   /** Línea secundaria: fecha corta, categoría, etc. */
   meta?: React.ReactNode
+  /** Botones de la fila (de 44 px o más), alineados a la derecha */
+  actions?: React.ReactNode
+  boxed?: boolean
+  className?: string
 }
 
-export function DataRow({ title, value, valueClassName, meta }: DataRowProps) {
+export function DataRow({
+  title,
+  value,
+  valueClassName,
+  meta,
+  actions,
+  boxed,
+  className
+}: DataRowProps) {
   return (
-    <li className={cn(CARD_ROW, "flex flex-col gap-1.5")}>
+    <li
+      className={cn(
+        boxed ? SURFACE_ROW : CARD_ROW,
+        "flex flex-col gap-1.5",
+        className
+      )}
+    >
       <div className="flex items-start justify-between gap-3">
         <p className="line-clamp-2 min-w-0 font-medium break-words">{title}</p>
         <p
@@ -53,6 +74,7 @@ export function DataRow({ title, value, valueClassName, meta }: DataRowProps) {
           {meta}
         </div>
       )}
+      {actions && <div className="flex justify-end gap-1">{actions}</div>}
     </li>
   )
 }

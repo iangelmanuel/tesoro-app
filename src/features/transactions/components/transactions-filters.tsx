@@ -322,7 +322,9 @@ export function TransactionsFilters({
                 >
                   {isAllMonths ? "Ver por mes" : "Todos los meses"}
                 </Button>
-                {categoriesAction}
+                {/* Elemento del servidor: en un div propio para que React
+                    no le pida `key` dentro del array de hijos */}
+                {categoriesAction && <div>{categoriesAction}</div>}
               </Drawer.Body>
               <Drawer.Footer className="items-center justify-between gap-3">
                 {sheetFilterCount > 0 ? (
@@ -387,7 +389,8 @@ function FilterSelect({
       <Select.Trigger
         className={cn(
           "min-h-8 gap-1.5 rounded-3xl py-1 text-sm",
-          fullWidth && "min-h-11 w-full",
+          fullWidth &&
+            "relative min-h-11 w-full justify-center px-10 text-base",
           isActive && "bg-accent-soft text-accent-soft-foreground"
         )}
       >
@@ -395,10 +398,10 @@ function FilterSelect({
         <Select.Value
           className={cn(
             "truncate font-medium",
-            fullWidth ? "flex-1 text-left" : "max-w-40"
+            fullWidth ? "min-w-0" : "max-w-40"
           )}
         />
-        <Select.Indicator />
+        <Select.Indicator className={cn(fullWidth && "absolute right-4")} />
       </Select.Trigger>
       <Select.Popover className="min-w-48">
         <ListBox>

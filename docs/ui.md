@@ -146,8 +146,8 @@ Reglas de toda gráfica:
 Experiencia de teléfono (SPEC 15). Aplica solo a anchos `< 768 px`, el mismo
 corte `md` del sidebar (`MOBILE_QUERY` y `useIsMobile` en
 `src/hooks/use-is-mobile.ts`). Tablet y escritorio usan el shell de escritorio.
-Formularios a pantalla completa, tablas en tarjetas y gráficas angostas van en
-el SPEC 15b.
+El SPEC 18 quitó el tab superior y pasó filtros y tablas a hoja y tarjetas.
+Formularios a pantalla completa y gráficas angostas siguen pendientes.
 
 Piezas en `src/components/dashboard/mobile/`:
 
@@ -156,7 +156,6 @@ Piezas en `src/components/dashboard/mobile/`:
 | `quick-sheet.tsx`              | Hoja inferior (`Drawer` con asa). Personal: Gasto, Ingreso, Aporte a meta, Pago de deuda o tarjeta, Marcar gasto fijo pagado. Empresa: Venta, Costo o gasto |
 | `use-quick-sheet-auto-open.ts` | Estado de la hoja y su apertura automática                                                                                                                  |
 | `bottom-nav.tsx`               | Barra inferior: 4 destinos, [+] al centro (abre la hoja)                                                                                                    |
-| `mobile-workspace-tabs.tsx`    | Tab Personal / Empresa sticky bajo el header                                                                                                                |
 | `mobile-shell.tsx`             | Une la hoja, la barra y el hook con el mismo estado de apertura                                                                                             |
 
 - **Hoja:** se cierra deslizando el asa, tocando el fondo, con "Cerrar" o con
@@ -178,10 +177,37 @@ Piezas en `src/components/dashboard/mobile/`:
   Personal, sin [+]. Los destinos salen de `SITE.navigation.mobile`.
   Respeta `safe-area-inset-bottom`, se oculta con un diálogo abierto y el
   `<main>` deja padding inferior para que no tape contenido.
-- **Tab superior:** reusa `WORKSPACE_TABS` y `getActiveWorkspaceTab` de
-  `workspace-tabs.tsx`. El primario cambia solo por la ruta
-  (`WorkspaceThemeRoot`). En el teléfono el aside se abre desde el botón de
-  menú del header (44 px).
+- **Selector de espacio:** vive solo en el aside (`WorkspaceTabs` en
+  `app-sidebar.tsx`, con `WORKSPACE_TABS` y `getActiveWorkspaceTab` de
+  `workspace-tabs.tsx`). En el teléfono el aside se abre desde el botón de
+  menú del header (44 px). No hay tab sticky bajo el header (SPEC 18). El
+  primario cambia solo por la ruta (`WorkspaceThemeRoot`).
+- **Tablas como tarjetas (`< 768 px`):** `DataRows` y `DataRow`
+  (`src/components/dashboard/data-rows.tsx`). Cada fila lleva título (hasta 2
+  líneas) y monto a la derecha en una línea, una línea secundaria (`meta`) y
+  `actions` opcionales de 44 px. `boxed` las pone sobre el fondo (lista suelta)
+  en vez de dentro de una tarjeta. La lista va con `md:hidden` y la tabla con
+  `hidden md:block`: la que no aplica queda en `display: none` para que los
+  lectores de pantalla no lean las dos. Usan `DataRows`: Últimos movimientos,
+  Flujo de caja y Gastos fijos. Resumen por categoría ya cabe en 360 px con
+  sus 3 columnas visibles y se dejó como tabla. La tabla de Movimientos y las
+  del asistente de importación no cambian.
+- **Filtros de Movimientos (`< 768 px`):** buscador a todo el ancho; debajo,
+  `‹ Mes ›` y el botón **Filtros** con el número de filtros activos (tipo,
+  categoría, cuenta y "Todos los meses"). La hoja inferior (`Drawer`) trae
+  Tipo, Categoría, Cuenta, el alternador de meses y Categorías
+  (`categoriesAction`), aplica al elegir (`router.replace`) y limpia con
+  "Limpiar filtros". Desde 768 px, la barra de siempre. Los elementos del
+  servidor que se pasan por props a un componente cliente (`categoriesAction`,
+  `trigger`) van como hijo único (`<div>` o `<Fragment>`): dentro de un array de
+  hijos React pide `key`.
+- **Números sin partirse:** `formatDate`, `formatShortDate` y
+  `formatPercent` usan espacio duro (`\u00A0`), así que ninguna fecha ni
+  porcentaje ocupa dos líneas. Los montos ya lo traían de `Intl`.
+- **Pendiente:** filtros unificados en toda la app (Reportes: período, mes y
+  pestañas Gastos / Ingresos a todo el ancho) y el mismo `trigger` con `key`
+  en los demás diálogos (`{trigger}` junto a `Backdrop`). Revisión visual en
+  360 y 390 px de Personal y Empresa.
 - **Táctil:** los controles del shell móvil miden 44 × 44 px o más y las
   acciones de la hoja, 56 px de alto o más. Los botones `size="sm"` de HeroUI
   miden 36 px en móvil: en el shell llevan `max-md:h-11 max-md:min-w-11`.

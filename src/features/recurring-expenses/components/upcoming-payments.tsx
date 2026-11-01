@@ -44,6 +44,8 @@ interface PayOccurrenceButtonProps {
   payment: UpcomingPayment
   categories: Category[]
   accounts: PaymentAccountOption[]
+  /** Clases del botón (ancho y alto táctil en el teléfono) */
+  className?: string
 }
 
 // Abre TransactionDialog prellenado con la ocurrencia y enlazado a ella. El
@@ -52,7 +54,8 @@ export function PayOccurrenceButton({
   workspaceId,
   payment,
   categories,
-  accounts
+  accounts,
+  className
 }: PayOccurrenceButtonProps) {
   return (
     <TransactionDialog
@@ -73,6 +76,7 @@ export function PayOccurrenceButton({
         <Button
           size="sm"
           variant="outline"
+          className={className}
         >
           <Check />
           Marcar como pagado
@@ -90,6 +94,31 @@ interface UpcomingPaymentsProps {
   currency: string
 }
 
+// Monto pagado (verde) o pendiente (rojo si venció), en una sola línea
+function AmountText({
+  payment,
+  currency,
+  className
+}: {
+  payment: UpcomingPayment
+  currency: string
+  className?: string
+}) {
+  const paid = payment.paidAmount !== null
+  return (
+    <p
+      className={cn(
+        "shrink-0 font-medium whitespace-nowrap tabular-nums",
+        paid && "text-(--income)",
+        !paid && payment.status === "overdue" && "text-(--expense)",
+        className
+      )}
+    >
+      {formatCurrency(payment.paidAmount ?? payment.amount, currency)}
+    </p>
+  )
+}
+
 export function UpcomingPayments({
   workspaceId,
   payments,
@@ -103,17 +132,29 @@ export function UpcomingPayments({
         <li
           key={`${payment.recurringExpenseId}-${payment.dueOn}`}
           className={cn(
-            "flex flex-wrap items-center gap-x-4 gap-y-2",
+            "flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:gap-x-4",
             CARD_ROW
           )}
         >
           <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="truncate font-medium">{payment.name}</p>
-              <OccurrenceStatusBadge status={payment.status} />
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <p className="min-w-0 font-medium break-words">
+                  {payment.name}
+                </p>
+                <OccurrenceStatusBadge status={payment.status} />
+              </div>
+              {/* < 768 px: el monto va junto al nombre */}
+              <AmountText
+                payment={payment}
+                currency={currency}
+                className="md:hidden"
+              />
             </div>
-            <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
-              <span>{formatDate(payment.dueOn)}</span>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+              <span className="whitespace-nowrap">
+                {formatDate(payment.dueOn)}
+              </span>
               {payment.transactionId !== null && (
                 <span>
                   {payment.accountName
@@ -128,28 +169,20 @@ export function UpcomingPayments({
               />
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            {payment.paidAmount !== null ? (
-              <p className="font-medium text-(--income) tabular-nums">
-                {formatCurrency(payment.paidAmount, currency)}
-              </p>
-            ) : (
-              <>
-                <p
-                  className={cn(
-                    "font-medium tabular-nums",
-                    payment.status === "overdue" && "text-(--expense)"
-                  )}
-                >
-                  {formatCurrency(payment.amount, currency)}
-                </p>
-                <PayOccurrenceButton
-                  workspaceId={workspaceId}
-                  payment={payment}
-                  categories={categories}
-                  accounts={accounts}
-                />
-              </>
+          <div className="contents md:flex md:items-center md:gap-3">
+            <AmountText
+              payment={payment}
+              currency={currency}
+              className="max-md:hidden"
+            />
+            {payment.paidAmount === null && (
+              <PayOccurrenceButton
+                workspaceId={workspaceId}
+                payment={payment}
+                categories={categories}
+                accounts={accounts}
+                className="max-md:min-h-11 max-md:w-full"
+              />
             )}
           </div>
         </li>

@@ -1,6 +1,6 @@
 # SPEC 18 — Pulido de la UI móvil: sin tab superior, filtros en hoja y tablas como tarjetas
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 14, SPEC 15
 > **Fecha:** 2026-11-01
 > **Objetivo:** Que en el teléfono la app gane espacio útil y se lea sin cortes: se quita el tab Personal / Empresa (queda solo en el aside), los filtros de Movimientos se compactan en una hoja y las tablas de resumen y reportes pasan a tarjetas.
@@ -92,22 +92,24 @@ No hay datos nuevos ni migraciones. El estado de la hoja de filtros (abierta/cer
 
 ## Criterios de aceptación
 
-- [ ] En `< 768 px` no hay fila sticky Personal / Empresa bajo el header en ninguna ruta del dashboard.
-- [ ] `mobile-workspace-tabs.tsx` no existe y `grep -r MobileWorkspaceTabs src app` no devuelve nada.
-- [ ] El Drawer del aside (hamburguesa) sigue mostrando Personal / Empresa y permite cambiar de espacio; el primario cambia de verde a naranja al hacerlo.
+- [x] En `< 768 px` no hay fila sticky Personal / Empresa bajo el header en ninguna ruta del dashboard.
+- [x] `mobile-workspace-tabs.tsx` no existe y `grep -r MobileWorkspaceTabs src app` no devuelve nada.
+- [x] El Drawer del aside (hamburguesa) sigue mostrando Personal / Empresa y permite cambiar de espacio; el primario cambia de verde a naranja al hacerlo.
 - [ ] En `>= 768 px` el aside y el resto del dashboard se ven igual que antes de este spec.
-- [ ] El contenido de cada pantalla empieza más arriba que antes (la fila del tab ya no reserva altura) y la barra inferior no tapa contenido.
+- [x] El contenido de cada pantalla empieza más arriba que antes (la fila del tab ya no reserva altura) y la barra inferior no tapa contenido.
 - [ ] En 360 px, "Últimos movimientos" no tiene scroll horizontal; cada fila muestra descripción, monto, fecha corta y categoría.
 - [ ] En 360 px ninguna fecha, monto ni porcentaje de las pantallas de Personal y Empresa ocupa más de una línea.
 - [ ] En 360 px el porcentaje de la tarjeta de meta ("32 %") queda en una línea y las tres filas de datos de la meta caben sin desbordar.
 - [ ] En 360 px Movimientos muestra buscador, mes y botón "Filtros" antes de la tabla, en no más de dos filas de controles.
 - [ ] El botón "Filtros" muestra el número de filtros activos; elegir Tipo, Categoría o Cuenta en la hoja actualiza la URL y los resultados, y "Limpiar filtros" los reinicia.
 - [ ] En `>= 768 px` los filtros de Movimientos siguen como antes.
-- [ ] La tabla de Movimientos es idéntica en todos los anchos.
+- [x] La tabla de Movimientos es idéntica en todos los anchos.
 - [ ] Los controles nuevos (botón Filtros, selects de la hoja, filas de tarjeta con acción) miden 44 px o más de alto táctil.
 - [ ] Los pares texto/fondo nuevos cumplen AA en claro y oscuro.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
-- [ ] `docs/ui.md`, `CLAUDE.md` y `CHANGELOG.md` están actualizados.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] `docs/ui.md`, `CLAUDE.md` y `CHANGELOG.md` están actualizados.
+
+> Verificados en código y con `pnpm`; los criterios sin marcar (tamaños en 360 px, hoja de filtros, contraste, `>= 768 px` sin cambios) quedan pendientes de revisión visual en el teléfono.
 
 ## Decisiones
 
@@ -118,6 +120,10 @@ No hay datos nuevos ni migraciones. El estado de la hoja de filtros (abierta/cer
 - **La hoja de filtros aplica al elegir**, sin botón "Aplicar": igual que hoy en escritorio y sin estado intermedio que reconciliar con la URL.
 - **Alcance acotado a tablas y filtros.** "Mejorar en general" se leyó como tablas y filtros de toda la app más una pasada de desbordes; formularios y gráficas siguen en un spec propio para no mezclar cuatro dominios.
 - **Qué tablas se convierten se confirma al implementar** mirando 360 px, porque el spec no midió cada una. Las que ya caben se dejan.
+- **Resultado:** se convirtieron `cash-flow-table` (5 columnas) y `recurring-expenses-list` (7 columnas). `category-summary-table` se dejó como tabla: en móvil ya oculta Movimientos y Promedio y quedan 3 columnas (estimado, sin medir en 360 px).
+- **Fechas y porcentajes sin partirse** se resolvió en el formateador (`formatDate`, `formatShortDate`, `formatPercent` con espacio duro) en vez de clases por pantalla.
+- **"Limpiar filtros" de la hoja** reinicia tipo, categoría, cuenta y vuelve al mes actual; no toca el buscador, que está fuera de la hoja.
+- **Añadido al implementar:** "Próximos pagos" (`upcoming-payments.tsx`) pasó a título + monto arriba y botón a todo el ancho en móvil, porque se cortaba en 360 px.
 
 ## Riesgos
 

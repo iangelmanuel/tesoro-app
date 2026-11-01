@@ -116,6 +116,7 @@ async function TransactionsContent({
           accounts={accounts}
           categoriesAction={
             <CategoriesSheet
+              fullWidthTrigger
               workspaceId={workspace.id}
               categories={categories}
             />
@@ -163,11 +164,17 @@ function TransactionsSkeleton() {
   return (
     <>
       <div className="flex flex-wrap gap-2">
-        <Skeleton className="h-9 w-64 rounded-3xl" />
-        <Skeleton className="h-9 w-52 rounded-3xl" />
-        <Skeleton className="h-8 w-28 rounded-3xl" />
-        <Skeleton className="h-8 w-32 rounded-3xl" />
-        <Skeleton className="h-8 w-28 rounded-3xl" />
+        {/* Mismo orden que los filtros: buscador; mes + Filtros en el teléfono */}
+        <Skeleton className="h-11 w-full rounded-3xl md:h-9 md:w-64" />
+        <div className="flex w-full items-center gap-2 md:contents">
+          <Skeleton className="h-11 flex-1 rounded-3xl md:h-9 md:w-52 md:flex-none" />
+          <Skeleton className="h-11 w-28 rounded-3xl md:hidden" />
+        </div>
+        <div className="hidden gap-2 md:contents">
+          <Skeleton className="h-8 w-28 rounded-3xl" />
+          <Skeleton className="h-8 w-32 rounded-3xl" />
+          <Skeleton className="h-8 w-28 rounded-3xl" />
+        </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         <CardSkeleton className="h-24" />

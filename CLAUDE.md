@@ -138,9 +138,11 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   ponen `data-workspace` y `globals.css` lo aplica con `:has()`. Neutro fuera
   del dashboard, emerald en Personal, naranja en Empresa. Nunca se pasa el
   color por props; `data-workspace` solo aparece en esos dos archivos.
-- **Móvil (`< 768 px`)**: hoja de acciones rápidas, tab Personal / Empresa
-  sticky y barra inferior (`src/components/dashboard/mobile/`) en vez del
-  aside; controles de 44 px o más. Ver `docs/ui.md#móvil`.
+- **Móvil (`< 768 px`)**: hoja de acciones rápidas y barra inferior
+  (`src/components/dashboard/mobile/`) en vez del aside; el selector Personal /
+  Empresa vive solo en el aside (Drawer). Tablas como tarjetas
+  (`DataRows`), filtros de Movimientos en hoja y controles de 44 px o más. Ver
+  `docs/ui.md#móvil`.
 - Todo par texto/fondo nuevo debe dar AA (4.5:1 texto, 3:1 gráficos y foco)
   en claro y oscuro.
 - `next.config.ts` tiene activos `cacheComponents`, `partialPrefetching` y

@@ -53,6 +53,8 @@ const COPY = {
 
 /** Valores con los que se prellena un movimiento nuevo */
 export interface TransactionInitialValues {
+  /** Tipo preseleccionado (gasto por defecto) */
+  type?: TransactionType
   amount?: number
   category_id?: string
   occurred_on?: string
@@ -185,7 +187,7 @@ function TransactionForm({
     (initialCategory === undefined || initialCategory.archived_at !== null)
 
   const [type, setType] = useState<TransactionType>(
-    transaction?.type ?? "expense"
+    transaction?.type ?? initialValues?.type ?? "expense"
   )
   const [categoryId, setCategoryId] = useState(
     transaction?.category_id ??

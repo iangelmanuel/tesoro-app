@@ -1,6 +1,6 @@
 # SPEC 18 — Pulido de la UI móvil: sin tab superior, filtros en hoja y tablas como tarjetas
 
-> **Estado:** Borrador
+> **Estado:** Aprobado
 > **Depende de:** SPEC 14, SPEC 15
 > **Fecha:** 2026-11-01
 > **Objetivo:** Que en el teléfono la app gane espacio útil y se lea sin cortes: se quita el tab Personal / Empresa (queda solo en el aside), los filtros de Movimientos se compactan en una hoja y las tablas de resumen y reportes pasan a tarjetas.

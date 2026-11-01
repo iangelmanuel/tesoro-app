@@ -1,8 +1,9 @@
 import { Suspense } from "react"
 import type { Route } from "next"
 import { redirect } from "next/navigation"
-import { Button, Skeleton } from "@heroui/react"
+import { Button } from "@heroui/react"
 import { Building2 } from "lucide-react"
+import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { SITE } from "@/config/site"
 import { BusinessDialog } from "@/features/business/components/business-dialog"
 import { workspaceBasePath } from "@/features/workspaces/paths"
@@ -18,7 +19,7 @@ export const metadata = buildMetadata({
 export default function BusinessPage() {
   return (
     // La sesión es dinámica: va dentro de Suspense
-    <Suspense fallback={<Skeleton className="flex-1 rounded-xl" />}>
+    <Suspense fallback={<CardSkeleton className="flex-1" />}>
       <BusinessContent />
     </Suspense>
   )

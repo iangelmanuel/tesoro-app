@@ -5,7 +5,8 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useState
+  useState,
+  useSyncExternalStore
 } from "react"
 import type { Route } from "next"
 import Link from "next/link"
@@ -18,12 +19,40 @@ import { PanelLeft } from "lucide-react"
 
 const MOBILE_QUERY = "(max-width: 767px)"
 const KEYBOARD_SHORTCUT = "b"
+const SIDEBAR_ID = "dashboard-sidebar"
+
+function subscribeMobile(onChange: () => void) {
+  const query = window.matchMedia(MOBILE_QUERY)
+  query.addEventListener("change", onChange)
+  return () => query.removeEventListener("change", onChange)
+}
+
+// En el servidor se asume escritorio: el aside se pinta en md+
+function useIsMobile() {
+  return useSyncExternalStore(
+    subscribeMobile,
+    () => window.matchMedia(MOBILE_QUERY).matches,
+    () => false
+  )
+}
+
+// El atajo no debe robarle Ctrl/⌘+B a quien escribe en un campo
+function isEditable(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false
+  return (
+    target.isContentEditable ||
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement
+  )
+}
 
 interface SidebarContextValue {
   /** Escritorio: columna visible */
   open: boolean
   /** Móvil: panel abierto */
   openMobile: boolean
+  isMobile: boolean
   setOpenMobile: (open: boolean) => void
   toggle: () => void
 }
@@ -45,6 +74,7 @@ export function SidebarProvider({
 }: Readonly<{ children: React.ReactNode }>) {
   const [open, setOpen] = useState(true)
   const [openMobile, setOpenMobile] = useState(false)
+  const isMobile = useIsMobile()
 
   const toggle = useCallback(() => {
     if (window.matchMedia(MOBILE_QUERY).matches) {
@@ -56,7 +86,11 @@ export function SidebarProvider({
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === KEYBOARD_SHORTCUT && (event.metaKey || event.ctrlKey)) {
+      if (
+        event.key === KEYBOARD_SHORTCUT &&
+        (event.metaKey || event.ctrlKey) &&
+        !isEditable(event.target)
+      ) {
         event.preventDefault()
         toggle()
       }
@@ -68,7 +102,7 @@ export function SidebarProvider({
 
   return (
     <SidebarContext.Provider
-      value={{ open, openMobile, setOpenMobile, toggle }}
+      value={{ open, openMobile, isMobile, setOpenMobile, toggle }}
     >
       <div className="flex min-h-svh w-full">{children}</div>
     </SidebarContext.Provider>
@@ -84,11 +118,12 @@ export function Sidebar({ children }: Readonly<{ children: React.ReactNode }>) {
       <div
         data-state={open ? "expanded" : "collapsed"}
         className={cn(
-          "sticky top-0 hidden h-svh shrink-0 overflow-hidden border-r border-separator bg-surface transition-[width,border-color] duration-200 ease-out md:block",
-          open ? "w-64" : "w-0 border-transparent"
+          "sticky top-0 hidden h-svh shrink-0 overflow-hidden bg-background transition-[width] duration-200 ease-out motion-reduce:transition-none md:block",
+          open ? "w-64" : "w-0"
         )}
       >
         <aside
+          id={SIDEBAR_ID}
           aria-label="Menú del dashboard"
           inert={!open}
           className="flex h-full w-64 flex-col"
@@ -117,7 +152,7 @@ export function Sidebar({ children }: Readonly<{ children: React.ReactNode }>) {
 }
 
 export function SidebarTrigger({ className }: { className?: string }) {
-  const { toggle } = useSidebar()
+  const { open, openMobile, isMobile, toggle } = useSidebar()
 
   return (
     <Button
@@ -125,6 +160,9 @@ export function SidebarTrigger({ className }: { className?: string }) {
       size="sm"
       isIconOnly
       aria-label="Mostrar u ocultar el menú"
+      aria-expanded={isMobile ? openMobile : open}
+      // El Drawer móvil se monta solo al abrirse: no hay id que referenciar
+      aria-controls={isMobile ? undefined : SIDEBAR_ID}
       className={className}
       onPress={toggle}
     >
@@ -144,7 +182,7 @@ export function SidebarHeader({
   children
 }: Readonly<{ className?: string; children: React.ReactNode }>) {
   return (
-    <div className={cn("flex flex-col gap-3 p-3", className)}>{children}</div>
+    <div className={cn("flex flex-col gap-4 p-3", className)}>{children}</div>
   )
 }
 
@@ -167,11 +205,7 @@ export function SidebarContent({
 export function SidebarFooter({
   children
 }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <div className="flex flex-col gap-2 border-t border-separator p-3">
-      {children}
-    </div>
-  )
+  return <div className="flex flex-col gap-1 p-3">{children}</div>
 }
 
 export function SidebarGroupLabel({
@@ -184,7 +218,8 @@ export function SidebarGroupLabel({
   )
 }
 
-/** Enlace del menú. El activo usa el primario del espacio (--accent) */
+/** Enlace del menú. El activo va sobre --default; el primario del espacio
+ *  queda para las tabs y la acción principal */
 export function SidebarNavLink({
   href,
   isActive,
@@ -195,10 +230,10 @@ export function SidebarNavLink({
       href={href}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "flex h-9 items-center gap-2 rounded-lg px-2 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-focus [&>svg]:size-4 [&>svg]:shrink-0",
+        "flex h-9 items-center gap-2.5 rounded-xl px-2.5 text-sm transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-focus motion-reduce:transition-none [&>svg]:size-4 [&>svg]:shrink-0",
         isActive
-          ? "bg-accent-soft font-medium text-accent-soft-foreground"
-          : "text-foreground hover:bg-default"
+          ? "bg-default font-medium text-foreground"
+          : "text-muted hover:bg-default hover:text-foreground active:bg-default"
       )}
     >
       {children}

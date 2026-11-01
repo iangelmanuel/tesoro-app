@@ -1,51 +1,52 @@
-import { Card, CardDescription, CardHeader, CardTitle, cn } from "@heroui/react"
-import { formatCurrency } from "@/libs/format"
+import { StatCard } from "@/components/dashboard/stat-card"
 import type { TransactionTotals } from "../queries"
 
 interface TransactionsTotalsProps {
   totals: TransactionTotals
   currency: string
+  /** Mismos filtros en el mes anterior; null = sin badge (todos los meses) */
+  previous?: TransactionTotals | null
+  /** Alcance de los totales: "Octubre 2026 · con filtros" */
+  caption?: string
 }
 
+// KPI pequeñas de lo que muestra la tabla. El badge compara con los mismos
+// filtros en el mes anterior; con "todos los meses" no hay anterior
 export function TransactionsTotals({
   totals,
-  currency
+  currency,
+  previous,
+  caption
 }: TransactionsTotalsProps) {
-  const items = [
-    {
-      label: "Ingresos",
-      value: totals.income,
-      className: "text-(--income)"
-    },
-    {
-      label: "Gastos",
-      value: totals.expense,
-      className: "text-(--expense)"
-    },
-    {
-      label: "Balance",
-      value: totals.balance,
-      className: totals.balance < 0 ? "text-(--expense)" : undefined
-    }
-  ]
-
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
-      {items.map((item) => (
-        <Card key={item.label}>
-          <CardHeader>
-            <CardDescription>{item.label}</CardDescription>
-            <CardTitle
-              className={cn(
-                "text-2xl font-semibold tabular-nums",
-                item.className
-              )}
-            >
-              {formatCurrency(item.value, currency)}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-      ))}
+    <div className="grid gap-3 sm:grid-cols-3">
+      <StatCard
+        size="sm"
+        label="Ingresos"
+        value={totals.income}
+        previous={previous?.income}
+        trend="higher-is-better"
+        currency={currency}
+        caption={caption}
+      />
+      <StatCard
+        size="sm"
+        label="Gastos"
+        value={totals.expense}
+        previous={previous?.expense}
+        trend="lower-is-better"
+        currency={currency}
+        caption={caption}
+      />
+      <StatCard
+        size="sm"
+        label="Balance"
+        value={totals.balance}
+        previous={previous?.balance}
+        trend="higher-is-better"
+        currency={currency}
+        caption={caption}
+      />
     </div>
   )
 }

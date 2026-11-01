@@ -11,8 +11,8 @@ const WORKSPACE_TABS = [
 ] as const
 
 // Selector Personal / Empresa. Son enlaces (Next Link vía `render`); la
-// pestaña activa sale de la ruta. La variante secondary subraya la activa con
-// el primario del espacio (--accent)
+// pestaña activa sale de la ruta. Variante por defecto de HeroUI: pill con
+// el indicador sobre --segment
 export function WorkspaceTabs() {
   const pathname = usePathname()
   const active = pathname.startsWith(SITE.routes.dashboardBusiness)
@@ -22,7 +22,6 @@ export function WorkspaceTabs() {
   return (
     <Tabs
       selectedKey={active}
-      variant="secondary"
       className="w-full"
     >
       <Tabs.ListContainer>

@@ -1,13 +1,6 @@
-import Link from "next/link"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  buttonVariants,
-  cn
-} from "@heroui/react"
+import { Card, CardContent, cn } from "@heroui/react"
+import { CardHeading } from "@/components/dashboard/card-heading"
+import { GoalIcon } from "@/features/goals/components/goal-icon"
 import { formatCurrency } from "@/libs/format"
 import { ACCOUNTS_PATH } from "../constants"
 import { getAccountBalances } from "../queries"
@@ -17,7 +10,10 @@ interface AccountsCardProps {
   currency: string
 }
 
-// "Saldo en cuentas": suma de los saldos a hoy de las cuentas activas
+const MAX_ACCOUNTS = 4
+
+// "Saldo en cuentas": suma de los saldos a hoy de las cuentas activas y las
+// de mayor saldo
 export async function AccountsCard({
   workspaceId,
   currency
@@ -28,31 +24,57 @@ export async function AccountsCard({
 
   return (
     <Card>
-      <div className="flex items-start justify-between gap-2">
-        <CardHeader>
-          <CardTitle>Saldo en cuentas</CardTitle>
-          <CardDescription>
+      <CardHeading
+        title="Saldo en cuentas"
+        href={ACCOUNTS_PATH}
+        linkLabel="Ver cuentas"
+      />
+      <CardContent className="flex flex-col gap-4">
+        <p className="flex flex-wrap items-baseline gap-x-2">
+          <span
+            className={cn(
+              "text-2xl font-semibold tracking-tight tabular-nums",
+              total < 0 && "text-danger"
+            )}
+          >
+            {formatCurrency(total, currency)}
+          </span>
+          <span className="text-sm text-muted">
             {active.length === 1
-              ? "1 cuenta activa"
-              : `${active.length} cuentas activas`}
-          </CardDescription>
-        </CardHeader>
-        <Link
-          href={ACCOUNTS_PATH}
-          className={buttonVariants({ variant: "outline", size: "sm" })}
-        >
-          Ver cuentas
-        </Link>
-      </div>
-      <CardContent>
-        <p
-          className={cn(
-            "text-3xl font-semibold tracking-tight tabular-nums",
-            total < 0 && "text-danger"
-          )}
-        >
-          {formatCurrency(total, currency)}
+              ? "en 1 cuenta"
+              : `en ${active.length} cuentas`}
+          </span>
         </p>
+        {active.length > 0 && (
+          <ul className="flex flex-col gap-2.5">
+            {[...active]
+              .sort((a, b) => b.balance - a.balance)
+              .slice(0, MAX_ACCOUNTS)
+              .map((account) => (
+                <li
+                  key={account.id}
+                  className="flex items-center gap-2.5 text-sm"
+                >
+                  <GoalIcon
+                    icon={account.icon}
+                    color={account.color}
+                    className="size-6 [&_svg]:size-3.5"
+                  />
+                  <span className="min-w-0 flex-1 truncate">
+                    {account.name}
+                  </span>
+                  <span
+                    className={cn(
+                      "font-medium tabular-nums",
+                      account.balance < 0 && "text-danger"
+                    )}
+                  >
+                    {formatCurrency(account.balance, currency)}
+                  </span>
+                </li>
+              ))}
+          </ul>
+        )}
       </CardContent>
     </Card>
   )

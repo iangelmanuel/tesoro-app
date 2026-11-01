@@ -99,7 +99,8 @@ Secciones, en orden (`src/features/landing/components/`):
 
 - **Isotipo**: un cofre blanco sobre un cuadro redondeado del acento. Fuente
   en `assets/brand/mark.svg`; `app/icon.svg` es una copia.
-- **Wordmark**: "Tesoro" en Geist SemiBold.
+- **Wordmark**: "Tesoro" en SemiBold. En la UI (`Logo`) usa Inter, la fuente
+  de la app; los SVG de `assets/brand/` conservan sus trazos en Geist.
 - **Color de marca**: `--brand` (emerald-500, `#10b981`), igual en claro y
   oscuro. Lo usan el logo, el isotipo, el favicon y la imagen OG. Para texto
   pequeño se usa la utilidad `text-brand` (`--brand` mezclado con el
@@ -334,26 +335,33 @@ Páginas `/dashboard/personal` (Resumen) y `/dashboard/personal/reports`
 
 ### Métricas del Resumen
 
-Siempre sobre el mes actual. "Anterior" es el mes anterior completo.
+Siempre sobre el mes actual. "Anterior" es el mes anterior completo. El título
+de la página es el saludo del header ("Buenas tardes, Angel").
 
-| Tarjeta                  | Cálculo                                                | Sin datos                     |
-| ------------------------ | ------------------------------------------------------ | ----------------------------- |
-| Ingresos / Gastos        | Total del mes; variación % vs. anterior                | Variación "—" si anterior = 0 |
-| Balance                  | Ingresos − gastos; variación como diferencia en dinero | Diferencia contra 0           |
-| Tasa de ahorro           | Balance / ingresos × 100, puede ser negativa           | "—" si ingresos = 0           |
-| Gasto promedio diario    | Gastos del mes / días transcurridos (hoy incluido)     | `$ 0`                         |
-| Proyección de gasto      | Promedio diario × días del mes                         | `$ 0`                         |
-| Categoría de mayor gasto | Categoría con más gasto en el mes                      | "—"                           |
-| Balance acumulado        | Ingresos − gastos de toda la historia                  | `$ 0`                         |
-| Movimientos del mes      | Número de movimientos del mes                          | `0`                           |
+| KPI              | Cálculo                                        | Badge de variación                        |
+| ---------------- | ---------------------------------------------- | ----------------------------------------- |
+| Ingresos del mes | Total del mes                                  | % vs. anterior; subir es bueno            |
+| Gastos del mes   | Total del mes                                  | % vs. anterior; subir es malo             |
+| Balance del mes  | Ingresos − gastos                              | % vs. anterior; subir es bueno            |
+| Saldo acumulado  | Ingresos − gastos de toda la historia, con (i) | % vs. el saldo al cierre del mes anterior |
 
-- En gastos el color de la variación se invierte: subir es rojo y bajar es
-  verde.
-- Debajo de las tarjetas: ingresos vs. gastos de los últimos 6 meses (incluido
-  el actual), dona de gastos por categoría del mes (top 6 + "Otras") y los
-  últimos 5 movimientos, con enlace a Movimientos.
-- Entre las tarjetas y las gráficas: "Próximos pagos" y "Presupuestos en
-  riesgo" (ver [Gastos fijos y presupuestos](#gastos-fijos-y-presupuestos)).
+- Sin movimientos en el mes anterior, o con base 0, no hay badge. El color del
+  badge depende del significado, no del signo (`StatCard`, `docs/ui.md`).
+- Debajo, en orden:
+  1. Ingresos vs. gastos de los últimos 6 meses (incluido el actual), con el
+     balance de esos meses como cifra principal; al lado, la columna con
+     "Salud financiera" (score con (i), banda, variación y 3
+     recomendaciones) y "Saldo en cuentas" (total y las 4 cuentas de mayor
+     saldo).
+  2. Los últimos 5 movimientos, con enlace a Movimientos.
+  3. "Próximos pagos", "Presupuestos en riesgo", "Metas de ahorro" y "Deudas"
+     (con (i) en la utilización), dos por fila (ver
+     [Gastos fijos y presupuestos](#gastos-fijos-y-presupuestos)).
+- En SPEC 14 salieron del Resumen, por "claridad antes que cantidad":
+  - la dona por categoría (en Reportes quedan el top 5 y la tabla);
+  - la tasa de ahorro, que pasa a las KPI de Reportes;
+  - el gasto promedio diario, la proyección de gasto, la categoría de mayor
+    gasto y el conteo de movimientos del mes.
 
 ### Periodos de Reportes
 
@@ -370,10 +378,17 @@ Periodo y tipo viven en la URL, así un enlace se puede compartir y recargar:
 - Cualquier valor inválido cae a su valor por defecto. Un rango con fechas
   inválidas, `from > to` o más de 24 meses muestra un aviso y cae al mes
   actual.
+- Arriba, 4 KPI del periodo con badge de variación contra el periodo anterior
+  equivalente (los N meses previos, o los mismos días antes en un rango):
+  ingresos, gastos, balance y tasa de ahorro (en Empresa, margen), esta con
+  su (i) y la variación en puntos.
 - La tendencia siempre agrupa por mes (barras de ingresos y gastos, línea de
-  balance) y no cambia con el tipo.
-- El toggle Gastos/Ingresos cambia la dona (top 6 + "Otras"), el top 5 en
-  barras horizontales y la tabla resumen.
+  balance) y no cambia con el tipo. Muestra al menos los 6 meses que terminan
+  en el periodo elegido, para que un mes o un trimestre no quede en 1–3
+  barras.
+- El toggle Gastos/Ingresos cambia el top 5 en barras horizontales y la
+  tabla resumen, lado a lado. Desde SPEC 14 no hay dona en Reportes: repetía
+  los mismos totales por categoría.
 - La tabla muestra por categoría el total, el % del total del tipo (redondeado
   para que sume 100), el número de movimientos y el promedio por movimiento.
   Cada fila abre Movimientos filtrado por categoría y tipo, en ese mes si el

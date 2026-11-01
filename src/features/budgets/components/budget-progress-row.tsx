@@ -3,6 +3,11 @@
 import { useTransition } from "react"
 import { AlertDialog, Button, Chip, cn, toast } from "@heroui/react"
 import { Pencil, Trash2 } from "lucide-react"
+import {
+  TONE_BADGE_CLASSES as TONE_BADGE,
+  TONE_BAR_CLASSES as TONE_BAR,
+  TONE_TEXT_CLASSES as TONE_TEXT
+} from "@/components/dashboard/tone"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import { formatCurrency } from "@/libs/format"
 import { deleteBudget } from "../actions"
@@ -20,14 +25,14 @@ import { BudgetDialog } from "./budget-dialog"
 
 export const STATUS_BAR_CLASSES: Record<BudgetStatus, string> = {
   ok: "bg-accent",
-  warning: "bg-amber-500",
-  exceeded: "bg-rose-500"
+  warning: TONE_BAR.warning,
+  exceeded: TONE_BAR.danger
 }
 
 export const STATUS_BADGE_CLASSES: Record<BudgetStatus, string> = {
   ok: "",
-  warning: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-  exceeded: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
+  warning: TONE_BADGE.warning,
+  exceeded: TONE_BADGE.danger
 }
 
 // Rayas para el segmento comprometido (pagos pendientes)
@@ -38,13 +43,16 @@ interface BudgetProgressBarProps {
   spent: number
   committed: number
   budget: number
+  /** Nombre accesible de la barra ("Mercado: 85 %") */
+  label?: string
 }
 
 /** Barra con el gastado sólido y el comprometido rayado */
 export function BudgetProgressBar({
   spent,
   committed,
-  budget
+  budget,
+  label
 }: BudgetProgressBarProps) {
   const status = budgetStatus(spent, budget)
   const spentWidth = Math.min((spent / budget) * 100, 100)
@@ -56,10 +64,14 @@ export function BudgetProgressBar({
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.min(budgetPercent(spent, budget), 100)}
+      aria-label={label}
       className="flex h-2 w-full overflow-hidden rounded-full bg-default"
     >
       <div
-        className={cn("h-full transition-all", STATUS_BAR_CLASSES[status])}
+        className={cn(
+          "h-full transition-all motion-reduce:transition-none",
+          STATUS_BAR_CLASSES[status]
+        )}
         style={{ width: `${spentWidth}%` }}
       />
       {committedWidth > 0 && (
@@ -145,7 +157,7 @@ export function BudgetProgressRow({
         <span
           className={cn(
             "font-medium tabular-nums",
-            status === "warning" && "text-amber-600 dark:text-amber-400",
+            status === "warning" && TONE_TEXT.warning,
             status === "exceeded" && "text-(--expense)"
           )}
         >

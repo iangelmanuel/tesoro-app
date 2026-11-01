@@ -11,7 +11,7 @@ export function NoPeriodData({ message, className }: NoPeriodDataProps) {
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-8 text-center",
+        "flex flex-col items-center justify-center gap-2 rounded-2xl bg-default/40 p-8 text-center",
         className
       )}
     >

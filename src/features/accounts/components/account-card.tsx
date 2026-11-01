@@ -3,7 +3,14 @@
 import { useState } from "react"
 import type { Route } from "next"
 import Link from "next/link"
-import { Button, Dropdown, Label, buttonVariants, cn } from "@heroui/react"
+import {
+  Button,
+  Card,
+  Dropdown,
+  Label,
+  buttonVariants,
+  cn
+} from "@heroui/react"
 import {
   Archive,
   EllipsisVertical,
@@ -47,7 +54,11 @@ export function AccountCard({
   const hasScheduled = account.scheduled_balance !== account.balance
 
   return (
-    <li className="flex flex-col gap-4 rounded-xl border p-4">
+    // Misma superficie que el resto de tarjetas: sin borde, radio grande
+    <Card
+      render={(props) => <li {...(props as React.ComponentProps<"li">)} />}
+      className="gap-4"
+    >
       <div className="flex items-start gap-3">
         <GoalIcon
           icon={account.icon}
@@ -134,7 +145,7 @@ export function AccountCard({
 
       <div className="flex flex-wrap gap-2">
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           onPress={() => setAdjusting(true)}
         >
@@ -149,6 +160,6 @@ export function AccountCard({
           Ver movimientos
         </Link>
       </div>
-    </li>
+    </Card>
   )
 }

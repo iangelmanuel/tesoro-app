@@ -1,22 +1,25 @@
 import { Chip, cn } from "@heroui/react"
+import {
+  TONE_BADGE_CLASSES as TONE_BADGE,
+  TONE_TEXT_CLASSES as TONE_TEXT
+} from "@/components/dashboard/tone"
 import { formatDate } from "@/libs/format"
 import type { BandTone } from "../constants"
 import { bandInfo } from "../curves"
 import type { Band } from "../types"
 
 const BAND_BADGE_CLASSES: Record<BandTone, string> = {
-  danger: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
-  warning: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-  info: "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300",
-  success:
-    "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+  danger: TONE_BADGE.danger,
+  warning: TONE_BADGE.warning,
+  info: TONE_BADGE.info,
+  success: TONE_BADGE.success
 }
 
 const BAND_TEXT_CLASSES: Record<BandTone, string> = {
-  danger: "text-(--expense)",
-  warning: "text-amber-600 dark:text-amber-400",
-  info: "text-sky-600 dark:text-sky-400",
-  success: "text-(--income)"
+  danger: TONE_TEXT.danger,
+  warning: TONE_TEXT.warning,
+  info: TONE_TEXT.info,
+  success: TONE_TEXT.success
 }
 
 /** "Débil", "Regular", "Bueno" o "Excelente" con su color */
@@ -34,10 +37,10 @@ export function BandBadge({ band }: { band: Band }) {
   )
 }
 
-/** "+3 pts vs. el mes anterior", o "—" si el anterior no tiene score */
+/** "+3 pts vs. el mes anterior", o "Sin comparación aún" si el anterior no tiene score */
 export function ScoreVariation({ variation }: { variation: number | null }) {
   if (variation === null) {
-    return <span className="text-sm text-muted">— vs. el mes anterior</span>
+    return <span className="text-sm text-muted">Sin comparación aún</span>
   }
 
   const sign = variation > 0 ? "+" : ""

@@ -1,13 +1,7 @@
 import Link from "next/link"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  buttonVariants
-} from "@heroui/react"
+import { Card, CardContent, buttonVariants } from "@heroui/react"
 import { Target } from "lucide-react"
+import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import { formatPercent } from "@/features/budgets/progress"
 import { todayISO } from "@/libs/dates"
@@ -40,34 +34,27 @@ export async function GoalsCard({ workspaceId, currency }: GoalsCardProps) {
 
   return (
     <Card>
-      <div className="flex items-start justify-between gap-2">
-        <CardHeader>
-          <CardTitle>Metas de ahorro</CardTitle>
-          <CardDescription>Las de fecha más cercana</CardDescription>
-        </CardHeader>
-        <div className="shrink-0">
-          <Link
-            href={GOALS_PATH}
-            className={buttonVariants({ variant: "outline", size: "sm" })}
-          >
-            Ver todas
-          </Link>
-        </div>
-      </div>
+      <CardHeading
+        title="Metas de ahorro"
+        href={GOALS_PATH}
+        linkLabel="Ver todas"
+        linkContext="las metas"
+      />
       <CardContent>
         {active.length === 0 && (
-          <div className="flex flex-col items-center gap-3">
-            <CardEmpty
-              icon={Target}
-              message="No tienes metas activas"
-            />
-            <Link
-              href={GOALS_PATH}
-              className={buttonVariants({ variant: "ghost", size: "sm" })}
-            >
-              Crear meta
-            </Link>
-          </div>
+          <CardEmpty
+            icon={Target}
+            message="No tienes metas activas"
+            hint="Ponle nombre y monto a lo que quieres ahorrar."
+            action={
+              <Link
+                href={GOALS_PATH}
+                className={buttonVariants({ variant: "secondary", size: "sm" })}
+              >
+                Crear meta
+              </Link>
+            }
+          />
         )}
         <ul className="flex flex-col divide-y">
           {active.map((goal) => {
@@ -93,6 +80,7 @@ export async function GoalsCard({ workspaceId, currency }: GoalsCardProps) {
                 <GoalProgressBar
                   percent={percent}
                   status={status}
+                  label={`${goal.name}: ${formatPercent(percent)}`}
                 />
                 <p className="text-sm text-muted tabular-nums">
                   {formatCurrency(goal.saved, currency)} de{" "}

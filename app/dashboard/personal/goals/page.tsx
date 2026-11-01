@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { Button, Skeleton } from "@heroui/react"
 import { Plus, Target } from "lucide-react"
+import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { EmptyState } from "@/components/dashboard/empty-state"
 import { GoalCard } from "@/features/goals/components/goal-card"
 import { GoalDialog } from "@/features/goals/components/goal-dialog"
@@ -133,10 +134,10 @@ async function GoalsContent() {
 function GoalsSkeleton() {
   return (
     <>
-      <Skeleton className="h-9 w-32" />
+      <Skeleton className="h-9 w-32 rounded-3xl" />
       <div className="grid gap-4 lg:grid-cols-2">
-        <Skeleton className="h-56" />
-        <Skeleton className="h-56" />
+        <CardSkeleton className="h-56" />
+        <CardSkeleton className="h-56" />
       </div>
     </>
   )

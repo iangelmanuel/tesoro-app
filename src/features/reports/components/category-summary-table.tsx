@@ -36,68 +36,71 @@ export function CategorySummaryTable({
   const shares = percentShares(totals.map((row) => row.total))
 
   return (
-    <div className="rounded-xl border">
-      <Table>
-        <Table.ScrollContainer>
-          <Table.Content aria-label="Resumen por categoría">
-            <Table.Header>
-              <Table.Column isRowHeader>Categoría</Table.Column>
-              <Table.Column className="text-end">Total</Table.Column>
-              <Table.Column className="text-end">% del total</Table.Column>
-              <Table.Column className="text-end">Movimientos</Table.Column>
-              <Table.Column className="text-end">Promedio</Table.Column>
-            </Table.Header>
-            <Table.Body>
-              {totals.map((row, index) => {
-                const href = `${transactionsPath}?${buildFiltersQuery({
-                  month,
-                  type: params.type,
-                  categoryId: row.categoryId,
-                  page: 1
-                })}` as Route
+    <Table>
+      <Table.ScrollContainer>
+        <Table.Content
+          aria-label="Resumen por categoría"
+          className="[&_tbody_td]:py-2.5 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150 motion-reduce:[&_tbody_tr]:transition-none [&_tbody_tr:hover]:bg-default/40"
+        >
+          <Table.Header>
+            <Table.Column isRowHeader>Categoría</Table.Column>
+            <Table.Column className="text-end">Total</Table.Column>
+            <Table.Column className="text-end">% del total</Table.Column>
+            <Table.Column className="hidden text-end sm:table-cell">
+              Movimientos
+            </Table.Column>
+            <Table.Column className="hidden text-end md:table-cell">
+              Promedio
+            </Table.Column>
+          </Table.Header>
+          <Table.Body>
+            {totals.map((row, index) => {
+              const href = `${transactionsPath}?${buildFiltersQuery({
+                month,
+                type: params.type,
+                categoryId: row.categoryId,
+                page: 1
+              })}` as Route
 
-                return (
-                  // El enlace cubre toda la fila con un pseudo-elemento
-                  <Table.Row
-                    key={row.categoryId}
-                    className="relative"
-                  >
-                    <Table.Cell>
-                      <Link
-                        href={href}
-                        className="inline-flex items-center gap-2 rounded-sm after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-focus"
-                      >
-                        <CategoryBadge
-                          name={row.name}
-                          icon={row.icon}
-                          color={row.color}
-                        />
-                        {row.archived && (
-                          <span className="text-xs text-muted">
-                            (archivada)
-                          </span>
-                        )}
-                      </Link>
-                    </Table.Cell>
-                    <Table.Cell className="text-end font-medium tabular-nums">
-                      {formatCurrency(row.total, currency)}
-                    </Table.Cell>
-                    <Table.Cell className="text-end text-muted tabular-nums">
-                      {PERCENT.format(shares[index] / 100)}
-                    </Table.Cell>
-                    <Table.Cell className="text-end tabular-nums">
-                      {row.txCount}
-                    </Table.Cell>
-                    <Table.Cell className="text-end text-muted tabular-nums">
-                      {formatCurrency(row.total / row.txCount, currency)}
-                    </Table.Cell>
-                  </Table.Row>
-                )
-              })}
-            </Table.Body>
-          </Table.Content>
-        </Table.ScrollContainer>
-      </Table>
-    </div>
+              return (
+                // El enlace cubre toda la fila con un pseudo-elemento
+                <Table.Row
+                  key={row.categoryId}
+                  className="relative"
+                >
+                  <Table.Cell>
+                    <Link
+                      href={href}
+                      className="inline-flex items-center gap-2 rounded-sm after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-focus"
+                    >
+                      <CategoryBadge
+                        name={row.name}
+                        icon={row.icon}
+                        color={row.color}
+                      />
+                      {row.archived && (
+                        <span className="text-xs text-muted">(archivada)</span>
+                      )}
+                    </Link>
+                  </Table.Cell>
+                  <Table.Cell className="text-end font-medium tabular-nums">
+                    {formatCurrency(row.total, currency)}
+                  </Table.Cell>
+                  <Table.Cell className="text-end text-muted tabular-nums">
+                    {PERCENT.format(shares[index] / 100)}
+                  </Table.Cell>
+                  <Table.Cell className="hidden text-end tabular-nums sm:table-cell">
+                    {row.txCount}
+                  </Table.Cell>
+                  <Table.Cell className="hidden text-end text-muted tabular-nums md:table-cell">
+                    {formatCurrency(row.total / row.txCount, currency)}
+                  </Table.Cell>
+                </Table.Row>
+              )
+            })}
+          </Table.Body>
+        </Table.Content>
+      </Table.ScrollContainer>
+    </Table>
   )
 }

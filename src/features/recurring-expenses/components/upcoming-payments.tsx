@@ -1,5 +1,6 @@
 import { Button, Chip, cn } from "@heroui/react"
 import { Check } from "lucide-react"
+import { TONE_BADGE_CLASSES as TONE_BADGE } from "@/components/dashboard/tone"
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
@@ -13,10 +14,9 @@ import {
 import type { UpcomingPayment } from "../queries"
 
 const TONE_CLASSES: Record<OccurrenceTone, string> = {
-  success:
-    "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-  danger: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
-  warning: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+  success: TONE_BADGE.success,
+  danger: TONE_BADGE.danger,
+  warning: TONE_BADGE.warning,
   neutral: "bg-default text-muted"
 }
 

@@ -1,21 +1,23 @@
 import { Chip, cn } from "@heroui/react"
+import {
+  TONE_BADGE_CLASSES as TONE_BADGE,
+  TONE_BAR_CLASSES as TONE_BAR
+} from "@/components/dashboard/tone"
 import { GOAL_STATUS_LABELS, type GoalStatus } from "../progress"
 
 // Sin estado (activa sin fecha) la barra usa el color primario
 export const GOAL_BAR_CLASSES: Record<GoalStatus, string> = {
-  completed: "bg-emerald-500",
-  on_track: "bg-emerald-500",
-  at_risk: "bg-amber-500",
-  archived: "bg-muted"
+  completed: TONE_BAR.success,
+  on_track: TONE_BAR.success,
+  at_risk: TONE_BAR.warning,
+  archived: TONE_BAR.neutral
 }
 
 export const GOAL_BADGE_CLASSES: Record<GoalStatus, string> = {
-  completed:
-    "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-  on_track:
-    "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-  at_risk: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-  archived: "bg-default text-muted"
+  completed: TONE_BADGE.success,
+  on_track: TONE_BADGE.success,
+  at_risk: TONE_BADGE.warning,
+  archived: TONE_BADGE.neutral
 }
 
 /** Etiqueta del estado. Activa sin fecha: sin etiqueta. */
@@ -39,6 +41,8 @@ interface GoalProgressBarProps {
   /** Progreso entero; puede pasar de 100 */
   percent: number
   status: GoalStatus | null
+  /** Nombre accesible de la barra ("Mercado: 85 %") */
+  label?: string
   className?: string
 }
 
@@ -46,6 +50,7 @@ interface GoalProgressBarProps {
 export function GoalProgressBar({
   percent,
   status,
+  label,
   className
 }: GoalProgressBarProps) {
   const width = Math.min(percent, 100)
@@ -56,6 +61,7 @@ export function GoalProgressBar({
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={width}
+      aria-label={label}
       className={cn(
         "flex h-2 w-full overflow-hidden rounded-full bg-default",
         className
@@ -63,7 +69,7 @@ export function GoalProgressBar({
     >
       <div
         className={cn(
-          "h-full transition-all",
+          "h-full transition-all motion-reduce:transition-none",
           status ? GOAL_BAR_CLASSES[status] : "bg-accent"
         )}
         style={{ width: `${width}%` }}

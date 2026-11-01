@@ -7,21 +7,24 @@ import {
   type ChartConfig,
   ChartContainer
 } from "@/components/charts/chart-container"
+import { formatCompactCurrency } from "@/components/charts/chart-format"
 import {
   ChartLegend,
   ChartLegendContent
 } from "@/components/charts/chart-legend"
+import {
+  AXIS_PROPS,
+  BAR_CHART_PROPS,
+  BAR_PROPS,
+  GRID_PROPS,
+  LINE_PROPS
+} from "@/components/charts/chart-style"
 import { ChartTooltip } from "@/components/charts/chart-tooltip"
 import { formatCurrency } from "@/libs/format"
 import { REPORT_LABELS, type ReportLabels } from "../labels"
 import type { MonthlyTotal } from "../queries"
 import { ChartDataTable } from "./chart-data-table"
 import { CurrencyTooltipContent } from "./currency-tooltip"
-
-const COMPACT = new Intl.NumberFormat("es-CO", {
-  notation: "compact",
-  maximumFractionDigits: 1
-})
 
 // `month` es una fecha de Postgres: se arma en local para que no se corra
 function toDate(month: string) {
@@ -33,13 +36,20 @@ function monthLabel(month: string) {
   return format(toDate(month), "MMMM yyyy", { locale: es })
 }
 
+type SeriesLabels = Pick<ReportLabels, "income" | "expense" | "series">
+
 interface IncomeExpenseChartProps {
   data: MonthlyTotal[]
   currency: string
   /** Agrega la línea de balance sobre las barras */
   showBalance?: boolean
   /** Textos de las series según el espacio. Por defecto, los de Personal */
-  labels?: Pick<ReportLabels, "income" | "expense" | "series">
+  labels?: SeriesLabels
+  /**
+   * "inline": leyenda dentro de la gráfica, arriba a la derecha. "none":
+   * la pinta la cabecera de ChartCard con incomeExpenseLegend()
+   */
+  legend?: "inline" | "none"
   className?: string
 }
 
@@ -48,6 +58,7 @@ export function IncomeExpenseChart({
   currency,
   showBalance = false,
   labels = REPORT_LABELS.personal,
+  legend = "inline",
   className
 }: IncomeExpenseChartProps) {
   const seriesLabels = {
@@ -81,23 +92,25 @@ export function IncomeExpenseChart({
         <ComposedChart
           data={data}
           accessibilityLayer
-          margin={{ left: 4, right: 4 }}
+          // Nombre de la superficie enfocable (role="application")
+          title={description}
+          margin={{ left: 0, right: 4, top: 4 }}
+          {...BAR_CHART_PROPS}
         >
-          <CartesianGrid vertical={false} />
+          <CartesianGrid {...GRID_PROPS} />
           <XAxis
             dataKey="month"
-            tickLine={false}
-            axisLine={false}
-            tickMargin={8}
+            {...AXIS_PROPS}
             tickFormatter={(month: string) =>
               format(toDate(month), tickFormat, { locale: es })
             }
           />
           <YAxis
-            tickLine={false}
-            axisLine={false}
-            width={48}
-            tickFormatter={(value: number) => COMPACT.format(value)}
+            {...AXIS_PROPS}
+            width={64}
+            tickFormatter={(value: number) =>
+              formatCompactCurrency(value, currency)
+            }
           />
           <ChartTooltip
             content={
@@ -110,24 +123,28 @@ export function IncomeExpenseChart({
               />
             }
           />
-          <ChartLegend content={<ChartLegendContent />} />
+          {legend === "inline" && (
+            <ChartLegend
+              verticalAlign="top"
+              align="right"
+              content={<ChartLegendContent className="justify-end" />}
+            />
+          )}
           <Bar
             dataKey="income"
             fill="var(--color-income)"
-            radius={4}
+            {...BAR_PROPS}
           />
           <Bar
             dataKey="expense"
             fill="var(--color-expense)"
-            radius={4}
+            {...BAR_PROPS}
           />
           {showBalance && (
             <Line
               dataKey="balance"
-              type="monotone"
               stroke="var(--color-balance)"
-              strokeWidth={2}
-              dot={{ fill: "var(--color-balance)" }}
+              {...LINE_PROPS}
             />
           )}
         </ComposedChart>

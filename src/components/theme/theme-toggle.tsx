@@ -6,14 +6,19 @@ import { useTheme } from "next-themes"
 
 // Los íconos se alternan con la clase `dark`, así el primer render del
 // servidor coincide con el del cliente sin esperar a montar
-export function ThemeToggle() {
+export function ThemeToggle({
+  size,
+  className
+}: Pick<React.ComponentProps<typeof Button>, "size" | "className">) {
   const { resolvedTheme, setTheme } = useTheme()
 
   return (
     <Button
       type="button"
       variant="ghost"
+      size={size}
       isIconOnly
+      className={className}
       aria-label="Cambiar entre tema claro y oscuro"
       onPress={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
     >

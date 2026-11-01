@@ -4,11 +4,11 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
-  Skeleton
+  CardTitle
 } from "@heroui/react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { SITE } from "@/config/site"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { BusinessScoreSummaryCard } from "@/features/business-score/components/business-score-summary-card"
@@ -106,7 +106,7 @@ async function SummaryContent({
 
   return (
     <>
-      <Suspense fallback={<Skeleton className="h-56" />}>
+      <Suspense fallback={<CardSkeleton className="h-56" />}>
         <BusinessScoreSummaryCard workspace={workspace} />
       </Suspense>
       <BusinessSummaryCards
@@ -177,21 +177,21 @@ async function SummaryContent({
 function SummarySkeleton() {
   return (
     <>
-      <Skeleton className="h-56" />
+      <CardSkeleton className="h-56" />
       <div className="grid gap-4 sm:grid-cols-3">
-        <Skeleton className="h-28" />
-        <Skeleton className="h-28" />
-        <Skeleton className="h-28" />
+        <CardSkeleton className="h-28" />
+        <CardSkeleton className="h-28" />
+        <CardSkeleton className="h-28" />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Skeleton className="h-28" />
-        <Skeleton className="h-28" />
+        <CardSkeleton className="h-28" />
+        <CardSkeleton className="h-28" />
       </div>
       <div className="grid gap-4 lg:grid-cols-5">
-        <Skeleton className="h-96 lg:col-span-3" />
-        <Skeleton className="h-96 lg:col-span-2" />
+        <CardSkeleton className="h-96 lg:col-span-3" />
+        <CardSkeleton className="h-96 lg:col-span-2" />
       </div>
-      <Skeleton className="h-72 w-full" />
+      <CardSkeleton className="h-72" />
     </>
   )
 }

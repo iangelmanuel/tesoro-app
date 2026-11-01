@@ -47,3 +47,6 @@ next-env.d.ts
 # archivos de ejemplo para importar (pueden traer datos financieros reales)
 *.xlsx
 *.xls
+
+# motor de Impeccable: binario por plataforma, el launcher lo descarga y verifica
+.claude/skills/impeccable/scripts/bin/

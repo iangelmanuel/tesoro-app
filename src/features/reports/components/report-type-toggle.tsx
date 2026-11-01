@@ -50,7 +50,12 @@ export function ReportTypeToggle({
       disallowEmptySelection
       selectedKeys={[params.type]}
       onSelectionChange={changeType}
-      className={cn("transition-opacity", pending && "opacity-60")}
+      size="sm"
+      aria-busy={pending}
+      className={cn(
+        "transition-opacity duration-150 motion-reduce:transition-none",
+        pending && "opacity-60"
+      )}
       aria-label="Tipo de movimiento"
     >
       <ToggleButton id="expense">{labels.expense}</ToggleButton>

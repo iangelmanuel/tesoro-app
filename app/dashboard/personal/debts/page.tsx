@@ -8,6 +8,7 @@ import {
   Skeleton
 } from "@heroui/react"
 import { CreditCard, HandCoins, Plus } from "lucide-react"
+import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { EmptyState } from "@/components/dashboard/empty-state"
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import { getAccountBalances } from "@/features/accounts/queries"
@@ -329,15 +330,15 @@ function PayablesTab({
 function DebtsSkeleton() {
   return (
     <>
-      <Skeleton className="h-9 w-48" />
+      <Skeleton className="h-9 w-48 rounded-3xl" />
       <div className="grid gap-4 sm:grid-cols-3">
-        <Skeleton className="h-24" />
-        <Skeleton className="h-24" />
-        <Skeleton className="h-24" />
+        <CardSkeleton className="h-24" />
+        <CardSkeleton className="h-24" />
+        <CardSkeleton className="h-24" />
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
-        <Skeleton className="h-56" />
-        <Skeleton className="h-56" />
+        <CardSkeleton className="h-56" />
+        <CardSkeleton className="h-56" />
       </div>
     </>
   )

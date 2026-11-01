@@ -10,6 +10,7 @@ import {
   Skeleton
 } from "@heroui/react"
 import { Info, TriangleAlert } from "lucide-react"
+import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { SITE } from "@/config/site"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { AccountBalancesList } from "@/features/cash-flow/components/account-balances-list"
@@ -192,11 +193,11 @@ async function CashFlowContent({
 function CashFlowSkeleton() {
   return (
     <>
-      <Skeleton className="h-9 w-80" />
-      <Skeleton className="h-96 w-full" />
+      <Skeleton className="h-9 w-80 rounded-3xl" />
+      <CardSkeleton className="h-96" />
       <div className="grid gap-4 lg:grid-cols-3">
-        <Skeleton className="h-96 lg:col-span-2" />
-        <Skeleton className="h-64" />
+        <CardSkeleton className="h-96 lg:col-span-2" />
+        <CardSkeleton className="h-64" />
       </div>
     </>
   )

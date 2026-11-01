@@ -49,7 +49,10 @@ export function CategoriesSheet({
 
   return (
     <Drawer>
-      <Button variant="outline">
+      <Button
+        variant="secondary"
+        size="sm"
+      >
         <Tags />
         Categorías
       </Button>

@@ -17,13 +17,11 @@ type ReportsPageProps = PageProps<"/dashboard/personal/reports">
 
 export default function ReportsPage({ searchParams }: ReportsPageProps) {
   return (
-    <section className="flex flex-1 flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Reportes</h1>
-        <p className="text-sm text-muted">
-          Tus ingresos, gastos y categorías en el periodo que elijas.
-        </p>
-      </header>
+    // El título lo pone el header del dashboard
+    <section
+      aria-label="Reportes"
+      className="flex flex-1 flex-col gap-4"
+    >
       {/* searchParams y la sesión son dinámicos: van dentro de Suspense */}
       <Suspense fallback={<ReportsViewSkeleton />}>
         <ReportsContent searchParams={searchParams} />

@@ -10,7 +10,8 @@ type CurrencyTooltipProps = ComponentProps<typeof ChartTooltipContent> & {
   labels: Record<string, string>
 }
 
-// Tooltip de las gráficas con los valores en moneda en vez de toLocaleString
+// Tooltip de las gráficas con el monto completo en la moneda del espacio y el
+// nombre de cada serie (o de la categoría con `nameKey`)
 export function CurrencyTooltipContent({
   currency,
   labels,
@@ -29,12 +30,13 @@ export function CurrencyTooltipContent({
         return (
           <>
             <span
-              className="size-2.5 shrink-0 rounded-[2px]"
+              aria-hidden="true"
+              className="size-2 shrink-0 rounded-full"
               style={{ backgroundColor: item.payload?.fill ?? item.color }}
             />
             <span className="flex flex-1 items-center justify-between gap-4 leading-none">
               <span className="text-muted">{labels[key] ?? key}</span>
-              <span className="font-mono font-medium tabular-nums">
+              <span className="font-medium text-foreground tabular-nums">
                 {formatCurrency(Number(value), currency)}
               </span>
             </span>

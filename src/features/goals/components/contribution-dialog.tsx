@@ -6,7 +6,9 @@ import {
   FieldError,
   Input,
   Label,
+  ListBox,
   Modal,
+  Select,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
@@ -28,8 +30,17 @@ const KIND_LABELS: Record<ContributionKind, string> = {
   withdrawal: "Retiro"
 }
 
+/** Meta que se puede elegir en el diálogo (acceso rápido del header) */
+export interface GoalOption {
+  id: string
+  name: string
+}
+
 interface ContributionDialogProps {
-  goalId: string
+  /** Meta fija. Sin ella, el diálogo deja elegir entre `goals` */
+  goalId?: string
+  /** Metas activas para elegir; se usa cuando no llega `goalId` */
+  goals?: GoalOption[]
   /** Tipo inicial. Al editar se toma del signo del monto. */
   kind?: ContributionKind
   /** Si llega, el diálogo edita este aporte */
@@ -42,6 +53,7 @@ interface ContributionDialogProps {
 
 export function ContributionDialog({
   goalId,
+  goals,
   kind = "deposit",
   contribution,
   trigger,
@@ -84,6 +96,7 @@ export function ContributionDialog({
               {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
               <ContributionForm
                 goalId={goalId}
+                goals={goals}
                 initialKind={initialKind}
                 contribution={contribution}
                 onSaved={() => setOpen(false)}
@@ -98,7 +111,8 @@ export function ContributionDialog({
 }
 
 interface ContributionFormProps {
-  goalId: string
+  goalId?: string
+  goals?: GoalOption[]
   initialKind: ContributionKind
   contribution?: GoalContribution
   onSaved: () => void
@@ -107,6 +121,7 @@ interface ContributionFormProps {
 
 function ContributionForm({
   goalId,
+  goals,
   initialKind,
   contribution,
   onSaved,
@@ -114,6 +129,11 @@ function ContributionForm({
 }: ContributionFormProps) {
   const isEditing = contribution !== undefined
   const [kind, setKind] = useState<ContributionKind>(initialKind)
+  // Sin meta fija arranca con la primera de la lista
+  const [selectedGoalId, setSelectedGoalId] = useState(
+    () => goalId ?? goals?.[0]?.id ?? ""
+  )
+  const showGoalSelect = !isEditing && !goalId && goals !== undefined
   const [occurredOn, setOccurredOn] = useState(
     () => contribution?.occurred_on ?? todayISO()
   )
@@ -156,8 +176,40 @@ function ContributionForm({
         <input
           type="hidden"
           name="goal_id"
-          value={goalId}
+          value={selectedGoalId}
         />
+      )}
+
+      {showGoalSelect && (
+        <Select
+          fullWidth
+          placeholder="Elige una meta"
+          value={selectedGoalId || null}
+          onChange={(key) => setSelectedGoalId(key == null ? "" : String(key))}
+          isInvalid={Boolean(errors?.goal_id)}
+          className="flex flex-col gap-2"
+        >
+          <Label>Meta</Label>
+          <Select.Trigger>
+            <Select.Value />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox>
+              {goals.map((goal) => (
+                <ListBox.Item
+                  key={goal.id}
+                  id={goal.id}
+                  textValue={goal.name}
+                >
+                  {goal.name}
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
+          <FieldError>{errors?.goal_id?.[0]}</FieldError>
+        </Select>
       )}
       <input
         type="hidden"

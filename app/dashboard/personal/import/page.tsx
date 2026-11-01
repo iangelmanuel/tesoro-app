@@ -1,8 +1,9 @@
 import { Suspense } from "react"
 import type { Route } from "next"
 import Link from "next/link"
-import { Skeleton, buttonVariants } from "@heroui/react"
+import { buttonVariants } from "@heroui/react"
 import { ArrowLeft } from "lucide-react"
+import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { getCategories } from "@/features/categories/queries"
 import { ImportHistory } from "@/features/imports/components/import-history"
@@ -90,8 +91,8 @@ async function ImportContent({
 function ImportSkeleton() {
   return (
     <>
-      <Skeleton className="h-80 w-full" />
-      <Skeleton className="h-40 w-full" />
+      <CardSkeleton className="h-80" />
+      <CardSkeleton className="h-40" />
     </>
   )
 }

@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { Skeleton } from "@heroui/react"
+import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { SITE } from "@/config/site"
 import { AccountSection } from "@/features/account/components/account-section"
 import { AvatarUploader } from "@/features/account/components/avatar-uploader"
@@ -111,10 +111,10 @@ async function AccountContent({
 function AccountSkeleton() {
   return (
     <>
-      <Skeleton className="h-64" />
-      <Skeleton className="h-48" />
-      <Skeleton className="h-40" />
-      <Skeleton className="h-32" />
+      <CardSkeleton className="h-64" />
+      <CardSkeleton className="h-48" />
+      <CardSkeleton className="h-40" />
+      <CardSkeleton className="h-32" />
     </>
   )
 }

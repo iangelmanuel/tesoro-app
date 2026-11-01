@@ -5,13 +5,15 @@ import {
   type ChartConfig,
   ChartContainer
 } from "@/components/charts/chart-container"
+import { HORIZONTAL_BAR_PROPS } from "@/components/charts/chart-style"
 import { ChartTooltip } from "@/components/charts/chart-tooltip"
 import { formatCurrency } from "@/libs/format"
 import type { CategorySlice } from "../chart-data"
 import { ChartDataTable } from "./chart-data-table"
 import { CurrencyTooltipContent } from "./currency-tooltip"
 
-const BAR_HEIGHT = 44
+// Cada fila: nombre y monto arriba (no se cortan a 375 px) y la barra debajo
+const ROW_HEIGHT = 48
 
 interface TopCategoriesChartProps {
   categories: CategorySlice[]
@@ -39,7 +41,7 @@ export function TopCategoriesChart({
       <ChartContainer
         config={config}
         className="aspect-auto w-full"
-        style={{ height: categories.length * BAR_HEIGHT + 16 }}
+        style={{ height: categories.length * ROW_HEIGHT + 8 }}
         role="figure"
         aria-label={title}
       >
@@ -47,7 +49,8 @@ export function TopCategoriesChart({
           data={data}
           layout="vertical"
           accessibilityLayer
-          margin={{ left: 0, right: 96 }}
+          title={title}
+          margin={{ left: 0, right: 0, top: 20, bottom: 0 }}
         >
           <XAxis
             type="number"
@@ -57,9 +60,7 @@ export function TopCategoriesChart({
           <YAxis
             type="category"
             dataKey="name"
-            tickLine={false}
-            axisLine={false}
-            width={112}
+            hide
           />
           <ChartTooltip
             cursor={false}
@@ -74,14 +75,32 @@ export function TopCategoriesChart({
           />
           <Bar
             dataKey="total"
+            {...HORIZONTAL_BAR_PROPS}
+            barSize={12}
             radius={4}
           >
+            {/* "Nombre · monto" en una línea sobre la barra. Con `content`
+                propio el texto no se ajusta al ancho de la barra (las
+                posiciones inside* lo partían y se encimaba con el monto) */}
             <LabelList
               dataKey="total"
-              position="right"
-              offset={8}
-              className="fill-foreground"
-              formatter={(value) => formatCurrency(Number(value), currency)}
+              content={(props) => {
+                const { x, y, index } = props
+                const row = index === undefined ? undefined : data[index]
+                if (!row) return null
+                return (
+                  <text
+                    x={Number(x)}
+                    y={Number(y) - 8}
+                    className="text-xs"
+                  >
+                    <tspan className="fill-foreground">{row.name}</tspan>
+                    <tspan className="fill-muted tabular-nums">
+                      {` · ${formatCurrency(row.total, currency)}`}
+                    </tspan>
+                  </text>
+                )
+              }}
             />
           </Bar>
         </BarChart>

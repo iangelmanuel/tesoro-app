@@ -3,10 +3,10 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
-  Skeleton
+  CardTitle
 } from "@heroui/react"
 import { ChartLine } from "lucide-react"
+import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import { hasScore, scoreVariation } from "../curves"
 import type { Recommendation, ScoreResult } from "../types"
@@ -138,11 +138,11 @@ export function ScoreRecommendationsSkeleton() {
   return (
     <>
       <div className="grid gap-4 lg:grid-cols-3">
-        <Skeleton className="h-48" />
-        <Skeleton className="h-48 lg:col-span-2" />
+        <CardSkeleton className="h-48" />
+        <CardSkeleton className="h-48 lg:col-span-2" />
       </div>
-      <Skeleton className="h-80" />
-      <Skeleton className="h-64" />
+      <CardSkeleton className="h-80" />
+      <CardSkeleton className="h-64" />
     </>
   )
 }

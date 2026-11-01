@@ -1,6 +1,6 @@
 import { Suspense } from "react"
 import { notFound } from "next/navigation"
-import { Skeleton } from "@heroui/react"
+import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { SITE } from "@/config/site"
 import { AccountSection } from "@/features/account/components/account-section"
 import { BusinessForm } from "@/features/business/components/business-dialog"
@@ -80,8 +80,8 @@ async function SettingsContent({
 function SettingsSkeleton() {
   return (
     <>
-      <Skeleton className="h-80" />
-      <Skeleton className="h-32" />
+      <CardSkeleton className="h-80" />
+      <CardSkeleton className="h-32" />
     </>
   )
 }

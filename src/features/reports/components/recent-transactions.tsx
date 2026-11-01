@@ -1,15 +1,5 @@
-import type { Route } from "next"
-import Link from "next/link"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Table,
-  buttonVariants,
-  cn
-} from "@heroui/react"
+import { Card, CardContent, Table, cn } from "@heroui/react"
+import { CardHeading } from "@/components/dashboard/card-heading"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import {
   TRANSACTIONS_PATH,
@@ -36,32 +26,19 @@ export function RecentTransactions({
 }: RecentTransactionsProps) {
   return (
     <Card>
-      <div className="flex items-start justify-between gap-2">
-        <CardHeader>
-          <CardTitle>Últimos movimientos</CardTitle>
-          <CardDescription>Los {rows.length} más recientes</CardDescription>
-        </CardHeader>
-        <div className="shrink-0">
-          <Link
-            href={`${transactionsPath}?${ALL_MONTHS_QUERY}` as Route}
-            className={buttonVariants({ variant: "outline", size: "sm" })}
-          >
-            Ver todos
-          </Link>
-        </div>
-      </div>
+      <CardHeading
+        title="Últimos movimientos"
+        href={`${transactionsPath}?${ALL_MONTHS_QUERY}`}
+        linkLabel="Ver todos"
+        linkContext="los movimientos"
+      />
       <CardContent>
         <Table>
           <Table.ScrollContainer>
             <Table.Content aria-label="Últimos movimientos">
               <Table.Header>
-                <Table.Column
-                  isRowHeader
-                  className="w-32"
-                >
-                  Fecha
-                </Table.Column>
-                <Table.Column>Descripción</Table.Column>
+                <Table.Column className="w-32">Fecha</Table.Column>
+                <Table.Column isRowHeader>Descripción</Table.Column>
                 <Table.Column>Categoría</Table.Column>
                 <Table.Column className="text-end">Monto</Table.Column>
               </Table.Header>

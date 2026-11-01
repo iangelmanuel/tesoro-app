@@ -3,7 +3,7 @@ import Link from "next/link"
 import { Button, buttonVariants } from "@heroui/react"
 import { FileUp, Plus, ReceiptText, SearchX } from "lucide-react"
 import { EmptyState } from "@/components/dashboard/empty-state"
-import type { AccountOption } from "@/features/accounts/components/account-select"
+import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { IMPORT_PATH } from "@/features/imports/constants"
 import type { WorkspaceType } from "@/features/workspaces/queries"
@@ -24,7 +24,7 @@ export function NoTransactions({
   /** Empresa no tiene importar */
   workspaceType?: WorkspaceType
   categories: Category[]
-  accounts: AccountOption[]
+  accounts: PaymentAccountOption[]
 }) {
   const isBusiness = workspaceType === "business"
 

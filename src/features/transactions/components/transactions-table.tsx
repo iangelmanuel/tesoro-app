@@ -4,10 +4,8 @@ import { useTransition } from "react"
 import { AlertDialog, Button, Table, cn, toast } from "@heroui/react"
 import { ArrowLeftRight, Pencil, RefreshCw, Trash2 } from "lucide-react"
 import { deleteAdjustment, deleteTransfer } from "@/features/accounts/actions"
-import {
-  AccountLabel,
-  type AccountOption
-} from "@/features/accounts/components/account-select"
+import { AccountLabel } from "@/features/accounts/components/account-select"
+import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
@@ -24,7 +22,7 @@ interface TransactionsTableProps {
   rows: LedgerEntry[]
   categories: Category[]
   /** Cuentas del espacio, activas y archivadas */
-  accounts: AccountOption[]
+  accounts: PaymentAccountOption[]
   currency: string
 }
 
@@ -256,7 +254,7 @@ function TransferRow({
   showCounterparty: boolean
   transfer: TransferEntry
   label: string
-  accounts: AccountOption[]
+  accounts: PaymentAccountOption[]
   currency: string
 }) {
   return (

@@ -24,6 +24,7 @@ const ALREADY_PAID = "Este pago ya está registrado"
 const RECURRING_MUST_BE_EXPENSE = "El pago de un gasto fijo debe ser un gasto"
 const ARCHIVED_ACCOUNT = "La cuenta está archivada"
 const INVALID_ACCOUNT = "Elige una cuenta válida"
+const SAME_TRANSFER_ACCOUNT = "Elige una cuenta distinta a la que paga"
 const UNIQUE_VIOLATION = "23505"
 
 const FIELDS = [
@@ -37,7 +38,9 @@ const FIELDS = [
   "counterparty",
   "invoice_ref",
   "recurring_expense_id",
-  "recurring_due_on"
+  "recurring_due_on",
+  "transfer_from",
+  "transfer_amount"
 ] as const
 
 const idSchema = z.uuid()
@@ -76,6 +79,10 @@ function toFormError(
   }
   if (error.code === "23503" && error.message.includes("account_id")) {
     return { fieldErrors: { account_id: [INVALID_ACCOUNT] }, values }
+  }
+  // El traspaso desde la misma cuenta que paga lo frena transfers_check
+  if (error.message.includes("transfers_check")) {
+    return { fieldErrors: { transfer_from: [SAME_TRANSFER_ACCOUNT] }, values }
   }
   return {
     ...(PG_ERROR_MESSAGES[error.code] ?? { error: DEFAULT_ERROR }),
@@ -203,16 +210,34 @@ export async function createTransaction(
     }
   }
 
-  // transfer_* los usa la RPC del paso 6
   const { transfer_from, transfer_amount, ...fields } = parsed.data
-  void transfer_from
-  void transfer_amount
+  const row = workspaceFields(fields, workspace.type)
 
   const supabase = await createClient()
-  const { error } = await supabase.from("transactions").insert({
-    ...workspaceFields(fields, workspace.type),
-    workspace_id: workspace.id
-  })
+  // Con traspaso, el traspaso y el movimiento se guardan juntos (RPC); sin
+  // él basta el insert directo
+  const { error } =
+    transfer_from !== null && row.account_id !== null
+      ? await supabase.rpc("record_transaction", {
+          p_workspace_id: workspace.id,
+          p_type: row.type,
+          p_amount: row.amount,
+          p_category_id: row.category_id,
+          p_occurred_on: row.occurred_on,
+          p_description: row.description,
+          p_note: row.note ?? undefined,
+          p_account_id: row.account_id,
+          p_recurring_expense_id: row.recurring_expense_id ?? undefined,
+          p_recurring_due_on: row.recurring_due_on ?? undefined,
+          p_counterparty: row.counterparty ?? undefined,
+          p_invoice_ref: row.invoice_ref ?? undefined,
+          p_transfer_from: transfer_from,
+          p_transfer_amount: transfer_amount ?? undefined
+        })
+      : await supabase.from("transactions").insert({
+          ...row,
+          workspace_id: workspace.id
+        })
 
   if (error) {
     return toFormError(error, values)

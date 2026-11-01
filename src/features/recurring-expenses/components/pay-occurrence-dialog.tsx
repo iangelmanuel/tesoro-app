@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button, Label, ListBox, Modal, Select } from "@heroui/react"
-import type { AccountOption } from "@/features/accounts/components/account-select"
+import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
 import { formatCurrency, formatDate } from "@/libs/format"
@@ -14,7 +14,7 @@ interface PayOccurrenceDialogProps {
   /** Ocurrencias sin pagar, vencidas primero */
   payments: UpcomingPayment[]
   categories: Category[]
-  accounts: AccountOption[]
+  accounts: PaymentAccountOption[]
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
   trigger?: React.ReactNode
   open?: boolean

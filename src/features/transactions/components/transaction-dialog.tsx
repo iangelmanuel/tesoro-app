@@ -17,10 +17,14 @@ import {
 } from "@heroui/react"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import {
-  type AccountOption,
   AccountSelect,
   selectableAccounts
 } from "@/features/accounts/components/account-select"
+import {
+  type PaymentAccountOption,
+  PaymentAccountSection,
+  parsePaymentAmount
+} from "@/features/accounts/components/payment-account-section"
 import { TransferForm } from "@/features/accounts/components/transfer-dialog"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
@@ -75,7 +79,7 @@ interface TransactionDialogProps {
   /** Categorías del sistema y propias, activas y archivadas */
   categories: Category[]
   /** Cuentas del espacio, activas y archivadas */
-  accounts: AccountOption[]
+  accounts: PaymentAccountOption[]
   /** Si llega, el diálogo edita este movimiento */
   transaction?: EditableTransaction
   /** Prellenado de un movimiento nuevo */
@@ -158,7 +162,7 @@ interface TransactionFormProps {
   workspaceId: string
   workspaceType: WorkspaceType
   categories: Category[]
-  accounts: AccountOption[]
+  accounts: PaymentAccountOption[]
   transaction?: EditableTransaction
   initialValues?: TransactionInitialValues
   recurring?: RecurringOccurrenceLink
@@ -203,6 +207,13 @@ function TransactionForm({
     () => transaction?.occurred_on ?? initialValues?.occurred_on ?? todayISO()
   )
   const [accountId, setAccountId] = useState(transaction?.account_id ?? "")
+  const [amountText, setAmountText] = useState(() =>
+    transaction
+      ? AMOUNT_FORMAT.format(transaction.amount)
+      : initialValues?.amount !== undefined
+        ? AMOUNT_FORMAT.format(initialValues.amount)
+        : ""
+  )
   // Un movimiento nuevo y suelto también puede ser un traspaso entre dos
   // cuentas propias: se guarda en transfers y no cuenta como ingreso ni gasto
   const [isTransfer, setIsTransfer] = useState(false)
@@ -254,6 +265,7 @@ function TransactionForm({
 
   const errors = state.fieldErrors
   const values = state.values
+  const showTransfer = !isEditing && type === "expense" && !isBusiness
 
   const typeToggle = (
     <ToggleButtonGroup
@@ -350,14 +362,8 @@ function TransactionForm({
           name="amount"
           inputMode="decimal"
           autoComplete="off"
-          defaultValue={
-            values?.amount ??
-            (transaction
-              ? AMOUNT_FORMAT.format(transaction.amount)
-              : initialValues?.amount !== undefined
-                ? AMOUNT_FORMAT.format(initialValues.amount)
-                : "")
-          }
+          value={amountText}
+          onChange={setAmountText}
           isInvalid={Boolean(errors?.amount)}
           isRequired
           validationBehavior="aria"
@@ -423,17 +429,33 @@ function TransactionForm({
         )}
       </Select>
 
-      {/* Solo activas, más la actual del movimiento editado aunque esté
+      {/* Un gasto nuevo de Personal puede traspasar fondos antes de pagar
+          (SPEC 16). Al editar, y en ingresos o Empresa, solo se elige la
+          cuenta: activas, más la actual del movimiento editado aunque esté
           archivada, para poder guardar sin cambiarla */}
-      <AccountSelect
-        name="account_id"
-        label="Cuenta"
-        value={accountId}
-        onChange={setAccountId}
-        accounts={selectableAccounts(accounts, transaction?.account_id)}
-        allowNone
-        error={errors?.account_id?.[0]}
-      />
+      {showTransfer ? (
+        <PaymentAccountSection
+          accounts={accounts}
+          amount={parsePaymentAmount(amountText)}
+          errors={{
+            account_id: errors?.account_id?.[0],
+            transfer_from: errors?.transfer_from?.[0],
+            transfer_amount: errors?.transfer_amount?.[0]
+          }}
+          defaultAccountId={accountId}
+          onAccountChange={setAccountId}
+        />
+      ) : (
+        <AccountSelect
+          name="account_id"
+          label="Cuenta"
+          value={accountId}
+          onChange={setAccountId}
+          accounts={selectableAccounts(accounts, transaction?.account_id)}
+          allowNone
+          error={errors?.account_id?.[0]}
+        />
+      )}
 
       <TextField
         name="description"

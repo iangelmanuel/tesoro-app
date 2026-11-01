@@ -2,6 +2,7 @@ import { Card, Skeleton } from "@heroui/react"
 import { TriangleAlert } from "lucide-react"
 import { ChartCard } from "@/components/charts/chart-card"
 import { CardHeading } from "@/components/dashboard/card-heading"
+import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { WorkspaceNoTransactions } from "@/features/transactions/components/workspace-no-transactions"
 import type { SearchParams } from "@/features/transactions/filters"
@@ -222,16 +223,16 @@ export function ReportsViewSkeleton() {
       </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }, (_, index) => (
-          <Skeleton
+          <CardSkeleton
             key={index}
-            className="h-28 rounded-3xl"
+            className="h-28"
           />
         ))}
       </div>
-      <Skeleton className="h-96 w-full rounded-3xl" />
+      <CardSkeleton className="h-96" />
       <div className="grid gap-4 lg:grid-cols-5">
-        <Skeleton className="h-80 rounded-3xl lg:col-span-2" />
-        <Skeleton className="h-80 rounded-3xl lg:col-span-3" />
+        <CardSkeleton className="h-80 lg:col-span-2" />
+        <CardSkeleton className="h-80 lg:col-span-3" />
       </div>
     </>
   )

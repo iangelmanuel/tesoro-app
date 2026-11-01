@@ -90,7 +90,9 @@ export function ChartCard({
           </p>
         )}
       </div>
-      {children}
+      {/* Crece con la tarjeta: si la fila es más alta (columna lateral del
+          Resumen), la gráfica ocupa el espacio en vez de dejarlo vacío */}
+      <div className="flex min-h-0 flex-1 flex-col">{children}</div>
     </Card>
   )
 }

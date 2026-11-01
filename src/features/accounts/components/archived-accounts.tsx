@@ -31,7 +31,7 @@ export function ArchivedAccounts({
         </Disclosure.Trigger>
       </Disclosure.Heading>
       <Disclosure.Content>
-        <ul className="divide-y divide-separator rounded-xl border border-border">
+        <ul className="divide-y divide-separator rounded-3xl bg-surface px-2">
           {accounts.map((account) => (
             <ArchivedAccountRow
               key={account.id}

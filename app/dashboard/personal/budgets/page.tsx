@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { Button, Skeleton } from "@heroui/react"
 import { CalendarClock, PiggyBank, Plus } from "lucide-react"
+import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { EmptyState } from "@/components/dashboard/empty-state"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { BudgetDialog } from "@/features/budgets/components/budget-dialog"
@@ -261,13 +262,13 @@ async function RecurringTab({ workspace }: { workspace: PersonalWorkspace }) {
 function BudgetsSkeleton() {
   return (
     <>
-      <Skeleton className="h-8 w-56" />
+      <Skeleton className="h-8 w-56 rounded-3xl" />
       <div className="grid gap-4 sm:grid-cols-3">
-        <Skeleton className="h-24" />
-        <Skeleton className="h-24" />
-        <Skeleton className="h-24" />
+        <CardSkeleton className="h-24" />
+        <CardSkeleton className="h-24" />
+        <CardSkeleton className="h-24" />
       </div>
-      <Skeleton className="h-96 w-full" />
+      <CardSkeleton className="h-96" />
     </>
   )
 }

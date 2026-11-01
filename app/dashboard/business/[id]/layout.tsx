@@ -1,6 +1,6 @@
 import { Suspense } from "react"
 import { notFound } from "next/navigation"
-import { Skeleton } from "@heroui/react"
+import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { BusinessDeleted } from "@/features/business/components/business-deleted"
 import { getWorkspace } from "@/features/workspaces/queries"
 
@@ -11,7 +11,7 @@ export default function BusinessLayout({
   params
 }: LayoutProps<"/dashboard/business/[id]">) {
   return (
-    <Suspense fallback={<Skeleton className="flex-1 rounded-xl" />}>
+    <Suspense fallback={<CardSkeleton className="flex-1" />}>
       <BusinessGate params={params}>{children}</BusinessGate>
     </Suspense>
   )

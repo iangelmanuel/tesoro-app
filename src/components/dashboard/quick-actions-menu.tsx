@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useParams, usePathname, useRouter } from "next/navigation"
-import { Button, Dropdown, Label, buttonVariants } from "@heroui/react"
+import { Button, Dropdown, Label } from "@heroui/react"
 import { ChevronDown, CreditCard, FileUp, Plus, Target } from "lucide-react"
 import { SITE } from "@/config/site"
 import type { AccountOption } from "@/features/accounts/components/account-select"
@@ -128,13 +128,16 @@ function PersonalMoreMenu({
   return (
     <>
       <Dropdown>
-        <Dropdown.Trigger
+        {/* Button de HeroUI como trigger (igual que en las tarjetas de
+            cuentas): Dropdown.Trigger no aplica el layout del botón */}
+        <Button
+          variant="secondary"
+          size="sm"
           aria-label="Más acciones"
-          className={buttonVariants({ variant: "secondary", size: "sm" })}
         >
           <span className="hidden sm:inline">Más</span>
           <ChevronDown className="size-4" />
-        </Dropdown.Trigger>
+        </Button>
         <Dropdown.Popover
           placement="bottom end"
           className="min-w-52"

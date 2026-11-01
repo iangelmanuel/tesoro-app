@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { Button, Skeleton } from "@heroui/react"
 import { ArrowLeftRight, Plus, Wallet } from "lucide-react"
+import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { EmptyState } from "@/components/dashboard/empty-state"
 import { SITE } from "@/config/site"
 import { AccountDialog } from "@/features/accounts/components/account-dialog"
@@ -113,12 +114,12 @@ async function AccountsContent({
 function AccountsSkeleton() {
   return (
     <>
-      <Skeleton className="h-9 w-40" />
-      <Skeleton className="h-24" />
+      <Skeleton className="h-9 w-40 rounded-3xl" />
+      <CardSkeleton className="h-24" />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <Skeleton className="h-44" />
-        <Skeleton className="h-44" />
-        <Skeleton className="h-44" />
+        <CardSkeleton className="h-44" />
+        <CardSkeleton className="h-44" />
+        <CardSkeleton className="h-44" />
       </div>
     </>
   )

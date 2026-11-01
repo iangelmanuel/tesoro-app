@@ -1,4 +1,4 @@
-import { cn } from "@heroui/react"
+import { Card, cn } from "@heroui/react"
 import { formatCurrency } from "@/libs/format"
 import type { AccountWithBalance } from "../types"
 import { AccountCard } from "./account-card"
@@ -21,17 +21,17 @@ export function AccountsGrid({
 
   return (
     <>
-      <div className="flex flex-col gap-1 rounded-xl border p-4">
+      <Card className="gap-2">
         <span className="text-sm text-muted">Saldo en cuentas</span>
         <span
           className={cn(
-            "text-3xl font-semibold tracking-tight tabular-nums",
+            "text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl",
             total < 0 && "text-danger"
           )}
         >
           {formatCurrency(total, currency)}
         </span>
-      </div>
+      </Card>
 
       <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {accounts.map((account) => (

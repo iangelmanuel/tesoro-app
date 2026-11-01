@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { Skeleton } from "@heroui/react"
 import { ChartCard } from "@/components/charts/chart-card"
+import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { SITE } from "@/config/site"
 import { AccountsCard } from "@/features/accounts/components/accounts-card"
@@ -146,15 +146,15 @@ async function SummaryContent() {
               data={monthly}
               currency={currency}
               legend="none"
-              className="aspect-auto h-72 w-full"
+              className="aspect-auto min-h-72 w-full flex-1"
             />
           )}
         </ChartCard>
         <div className="flex flex-col gap-4">
-          <Suspense fallback={<Skeleton className="h-64 rounded-3xl" />}>
+          <Suspense fallback={<CardSkeleton className="h-64" />}>
             <ScoreSummaryCard workspaceId={workspace.id} />
           </Suspense>
-          <Suspense fallback={<Skeleton className="h-48 rounded-3xl" />}>
+          <Suspense fallback={<CardSkeleton className="h-48" />}>
             <AccountsCard
               workspaceId={workspace.id}
               currency={currency}
@@ -170,25 +170,25 @@ async function SummaryContent() {
 
       {/* Tarjetas secundarias: dos por fila, sin huérfanas */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Suspense fallback={<Skeleton className="h-64 rounded-3xl" />}>
+        <Suspense fallback={<CardSkeleton className="h-64" />}>
           <UpcomingPaymentsCard
             workspaceId={workspace.id}
             currency={currency}
           />
         </Suspense>
-        <Suspense fallback={<Skeleton className="h-64 rounded-3xl" />}>
+        <Suspense fallback={<CardSkeleton className="h-64" />}>
           <BudgetsAtRiskCard
             workspaceId={workspace.id}
             currency={currency}
           />
         </Suspense>
-        <Suspense fallback={<Skeleton className="h-64 rounded-3xl" />}>
+        <Suspense fallback={<CardSkeleton className="h-64" />}>
           <GoalsCard
             workspaceId={workspace.id}
             currency={currency}
           />
         </Suspense>
-        <Suspense fallback={<Skeleton className="h-64 rounded-3xl" />}>
+        <Suspense fallback={<CardSkeleton className="h-64" />}>
           <DebtsCard
             workspaceId={workspace.id}
             currency={currency}
@@ -206,25 +206,25 @@ function SummarySkeleton() {
     <>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }, (_, index) => (
-          <Skeleton
+          <CardSkeleton
             key={index}
-            className="h-28 rounded-3xl"
+            className="h-28"
           />
         ))}
       </div>
       <div className="grid gap-4 lg:grid-cols-3">
-        <Skeleton className="h-96 rounded-3xl lg:col-span-2" />
+        <CardSkeleton className="h-96 lg:col-span-2" />
         <div className="flex flex-col gap-4">
-          <Skeleton className="h-64 rounded-3xl" />
-          <Skeleton className="h-28 rounded-3xl" />
+          <CardSkeleton className="h-64" />
+          <CardSkeleton className="h-28" />
         </div>
       </div>
-      <Skeleton className="h-72 rounded-3xl" />
+      <CardSkeleton className="h-72" />
       <div className="grid gap-4 md:grid-cols-2">
         {Array.from({ length: 4 }, (_, index) => (
-          <Skeleton
+          <CardSkeleton
             key={index}
-            className="h-64 rounded-3xl"
+            className="h-64"
           />
         ))}
       </div>

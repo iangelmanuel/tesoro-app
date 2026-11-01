@@ -3,6 +3,7 @@ import { Button, Skeleton } from "@heroui/react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { ArrowLeftRight } from "lucide-react"
+import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
@@ -183,11 +184,11 @@ function TransactionsSkeleton() {
         <Skeleton className="h-8 w-28 rounded-3xl" />
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
-        <Skeleton className="h-24 rounded-3xl" />
-        <Skeleton className="h-24 rounded-3xl" />
-        <Skeleton className="h-24 rounded-3xl" />
+        <CardSkeleton className="h-24" />
+        <CardSkeleton className="h-24" />
+        <CardSkeleton className="h-24" />
       </div>
-      <Skeleton className="h-96 w-full rounded-3xl" />
+      <CardSkeleton className="h-96" />
     </>
   )
 }

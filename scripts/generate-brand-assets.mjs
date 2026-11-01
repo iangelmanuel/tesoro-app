@@ -17,6 +17,13 @@ const PNG_TARGETS = [
   ["mark.svg", 64, "public/icons/icon-512.png", 512, 512]
 ]
 
+// Ícono maskable: el sistema recorta el borde (círculo, squircle…), así que el
+// fondo va a sangre y la marca se reduce para quedar dentro de la zona segura
+// (círculo central del 80 %)
+const MASKABLE_TARGET = ["public/icons/icon-maskable-512.png", 512]
+const MASKABLE_BACKGROUND = "#10b981"
+const MASKABLE_MARK_SCALE = 0.8
+
 const ICO_SIZES = [16, 32, 48]
 
 // Rasteriza el SVG a la densidad justa para no escalar un bitmap
@@ -24,6 +31,22 @@ async function renderPng(source, sourceWidth, width, height) {
   const svg = await readFile(path.join(BRAND, source))
   return sharp(svg, { density: (72 * width) / sourceWidth })
     .resize(width, height)
+    .png({ compressionLevel: 9 })
+    .toBuffer()
+}
+
+async function renderMaskable(size) {
+  const markSize = Math.round(size * MASKABLE_MARK_SCALE)
+  const mark = await renderPng("mark.svg", 64, markSize, markSize)
+  return sharp({
+    create: {
+      width: size,
+      height: size,
+      channels: 4,
+      background: MASKABLE_BACKGROUND
+    }
+  })
+    .composite([{ input: mark, gravity: "center" }])
     .png({ compressionLevel: 9 })
     .toBuffer()
 }
@@ -60,6 +83,13 @@ async function main() {
     await writeFile(file, await renderPng(source, sourceWidth, width, height))
     console.log(`✓ ${output} (${width}×${height})`)
   }
+
+  const [maskableOutput, maskableSize] = MASKABLE_TARGET
+  await writeFile(
+    path.join(ROOT, maskableOutput),
+    await renderMaskable(maskableSize)
+  )
+  console.log(`✓ ${maskableOutput} (${maskableSize}×${maskableSize})`)
 
   const icons = await Promise.all(
     ICO_SIZES.map(async (size) => ({

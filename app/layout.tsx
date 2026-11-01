@@ -25,6 +25,12 @@ export const metadata: Metadata = {
   },
   applicationName: SITE.info.name,
   manifest: "/manifest.webmanifest",
+  // iOS: "Agregar a inicio" abre sin la barra del navegador
+  appleWebApp: {
+    capable: true,
+    title: SITE.info.name,
+    statusBarStyle: "black"
+  },
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png"
@@ -32,6 +38,8 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
+  // El shell móvil usa env(safe-area-inset-*) (barra inferior, hoja)
+  viewportFit: "cover",
   colorScheme: "dark light",
   themeColor: [
     {

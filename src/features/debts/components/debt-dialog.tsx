@@ -12,6 +12,7 @@ import {
   ToggleButtonGroup,
   toast
 } from "@heroui/react"
+import { HelpHint } from "@/components/dashboard/help-hint"
 import { createDebt, updateDebt } from "../actions"
 import type { Debt } from "../queries"
 import type { RateType } from "../schemas"
@@ -281,20 +282,54 @@ function DebtForm({ debt, onSaved, onCancel }: DebtFormProps) {
       </div>
 
       {isCard ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <AmountField
-            id="min_payment"
-            label="Pago mínimo (opcional)"
-            errors={errors?.min_payment}
-            defaultValue={values?.min_payment ?? amountInput(debt?.min_payment)}
-          />
-          <DayField
-            id="closing_day"
-            label="Día de corte (opcional)"
-            errors={errors?.closing_day}
-            defaultValue={values?.closing_day ?? debt?.closing_day ?? undefined}
-          />
-        </div>
+        <>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <AmountField
+              id="min_payment"
+              label="Pago mínimo (opcional)"
+              errors={errors?.min_payment}
+              defaultValue={
+                values?.min_payment ?? amountInput(debt?.min_payment)
+              }
+            />
+            <DayField
+              id="closing_day"
+              label="Día de corte (opcional)"
+              errors={errors?.closing_day}
+              defaultValue={
+                values?.closing_day ?? debt?.closing_day ?? undefined
+              }
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-1">
+              <span className="text-sm font-medium">
+                Cuota de manejo (opcional)
+              </span>
+              <HelpHint topic="maintenanceFee" />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <AmountField
+                id="fee_amount"
+                label="Monto mensual"
+                errors={errors?.fee_amount}
+                defaultValue={
+                  values?.fee_amount ?? amountInput(debt?.fee_amount)
+                }
+              />
+              <DayField
+                id="fee_day"
+                label="Día de cobro"
+                errors={errors?.fee_day}
+                defaultValue={values?.fee_day ?? debt?.fee_day ?? undefined}
+              />
+            </div>
+            <p className="text-sm text-muted">
+              Desde hoy se cobra sola. No la registres a mano.
+            </p>
+          </div>
+        </>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           <AmountField

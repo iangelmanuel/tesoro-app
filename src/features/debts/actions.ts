@@ -47,7 +47,9 @@ const DEBT_FIELDS: Record<DebtKind, readonly string[]> = {
     "interest_rate",
     "rate_type",
     "min_payment",
-    "closing_day"
+    "closing_day",
+    "fee_amount",
+    "fee_day"
   ],
   loan: [
     "name",

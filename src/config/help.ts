@@ -9,7 +9,9 @@ export const HELP = {
   savingsRate:
     "La parte de tus ingresos que te quedó después de gastar. Si es negativa, gastaste más de lo que entró. Un 20 % o más es una meta sana.",
   accumulatedBalance:
-    "Todo lo que te ha entrado menos todo lo que has gastado desde tu primer registro. No es el saldo de tus cuentas: no cuenta traspasos ni saldos iniciales."
+    "Todo lo que te ha entrado menos todo lo que has gastado desde tu primer registro. No es el saldo de tus cuentas: no cuenta traspasos ni saldos iniciales.",
+  maintenanceFee:
+    "Lo que el banco le suma cada mes al saldo de tu tarjeta. Tesoro lo registra solo el día de cobro y no toca tus cuentas: lo pagas dentro del pago de la tarjeta."
 } as const
 
 export type HelpKey = keyof typeof HELP
@@ -19,5 +21,6 @@ export const HELP_LABELS: Record<HelpKey, string> = {
   score: "el score",
   utilization: "la utilización de tarjetas",
   savingsRate: "la tasa de ahorro",
-  accumulatedBalance: "el balance acumulado"
+  accumulatedBalance: "el balance acumulado",
+  maintenanceFee: "la cuota de manejo"
 }

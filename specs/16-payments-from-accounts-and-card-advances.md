@@ -1,6 +1,6 @@
 # SPEC 16 — Pagos desde cuentas, traspaso al pagar y avances de tarjeta
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 04, SPEC 05, SPEC 06, SPEC 08c, SPEC 15
 > **Fecha:** 2026-11-01
 > **Objetivo:** Que al pagar un gasto fijo, una deuda o una tarjeta, o al aportar a una meta, el usuario elija de qué cuenta sale la plata (o que fue por fuera de sus cuentas), traspase fondos al pagar si la cuenta no alcanza, y registre pagos y avances de tarjeta como movimientos entre una cuenta y la tarjeta.
@@ -191,32 +191,32 @@ Reglas de interfaz:
 
 ## Criterios de aceptación
 
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
-- [ ] Las migraciones se aplican sin errores y `src/types/database.ts` incluye `debt_entries.account_id`, `goal_contributions.account_id`, el valor `advance` y las RPC `record_card_advance`, `record_goal_contribution` y `record_transaction`.
-- [ ] Pagar 300.000 a una tarjeta "Sin cuenta" baja el saldo de la tarjeta, no cambia ninguna cuenta y el historial dice "Fuera de cuentas".
-- [ ] Pagar 300.000 a la tarjeta desde Nequi baja el saldo de la tarjeta y el de Nequi en 300.000, y el historial dice "Desde Nequi".
-- [ ] Ese pago aparece en Movimientos en gris y los totales de ingresos y gastos del mes no cambian.
-- [ ] Reportes, Presupuestos y el score dan los mismos números antes y después de pagos de tarjeta, avances y aportes con cuenta.
-- [ ] Un avance de 200.000 a Nequi sube el saldo de la tarjeta y el de Nequi en 200.000, y no crea ingreso.
-- [ ] Un avance "Sin cuenta" solo sube el saldo de la tarjeta.
-- [ ] Los tabs Pago y Avance solo existen en tarjetas. En un préstamo no hay avance, ni desde la UI ni llamando a la RPC.
-- [ ] Un pago de préstamo con la casilla marcada y cuenta Bancolombia crea el gasto con esa cuenta y baja Bancolombia. Con la casilla desmarcada, la sección de cuenta no se muestra.
-- [ ] Un abono de una cuenta por cobrar con ingreso y cuenta Nequi sube Nequi.
-- [ ] Un aporte de 100.000 a una meta desde Efectivo baja Efectivo en 100.000 y no crea gasto. Un retiro de 40.000 a Efectivo lo sube en 40.000.
-- [ ] Con Nequi en $ 50.000 y un pago de $ 300.000, el diálogo muestra "Nequi tiene $ 50.000. Faltan $ 250.000" y el switch de traspaso arranca encendido.
-- [ ] Con el switch encendido, "Desde" propone la cuenta de mayor saldo y el monto del traspaso arranca en $ 300.000 y se puede editar.
-- [ ] Pagar con traspaso de 300.000 desde Bancolombia a Nequi crea el traspaso y el pago; Bancolombia baja 300.000, Nequi queda igual (+300.000 −300.000).
-- [ ] Si el pago falla (por ejemplo, supera el saldo de la deuda), tampoco queda el traspaso.
-- [ ] Traspasar desde la misma cuenta que paga falla en el formulario y en la BD.
-- [ ] Con una sola cuenta activa, el diálogo no muestra el switch de traspaso.
-- [ ] Marcar un gasto fijo como pagado con traspaso inline crea el traspaso, el gasto enlazado a la ocurrencia con la cuenta elegida, y la ocurrencia pasa a pagada.
-- [ ] Una cuenta archivada no aparece en la sección de cuenta y la BD rechaza usarla en una entrada o aporte nuevos.
-- [ ] Editar el monto de un pago de tarjeta con cuenta cambia el saldo de la cuenta y el de la tarjeta.
-- [ ] Eliminar un pago de tarjeta con cuenta devuelve ambos saldos y deja intacto un traspaso inline.
-- [ ] Un usuario A, con su sesión y la clave publicable, no puede usar cuentas de B en pagos, avances o aportes, ni ejecutar las RPC con el espacio de B.
-- [ ] Un cliente `anon` no puede ejecutar `record_card_advance`, `record_goal_contribution` ni `record_transaction`.
-- [ ] Los pagos y aportes viejos, sin `account_id`, se muestran como "Fuera de cuentas" y los saldos de las cuentas no cambian tras la migración.
-- [ ] Las acciones de la hoja móvil de SPEC 15 (Aporte a meta, Pago de deuda o tarjeta) muestran la sección de cuenta.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] Las migraciones se aplican sin errores y `src/types/database.ts` incluye `debt_entries.account_id`, `goal_contributions.account_id`, el valor `advance` y las RPC `record_card_advance`, `record_goal_contribution` y `record_transaction`.
+- [x] Pagar 300.000 a una tarjeta "Sin cuenta" baja el saldo de la tarjeta, no cambia ninguna cuenta y el historial dice "Fuera de cuentas".
+- [x] Pagar 300.000 a la tarjeta desde Nequi baja el saldo de la tarjeta y el de Nequi en 300.000, y el historial dice "Desde Nequi".
+- [x] Ese pago aparece en Movimientos en gris y los totales de ingresos y gastos del mes no cambian.
+- [x] Reportes, Presupuestos y el score dan los mismos números antes y después de pagos de tarjeta, avances y aportes con cuenta.
+- [x] Un avance de 200.000 a Nequi sube el saldo de la tarjeta y el de Nequi en 200.000, y no crea ingreso.
+- [x] Un avance "Sin cuenta" solo sube el saldo de la tarjeta.
+- [x] Los tabs Pago y Avance solo existen en tarjetas. En un préstamo no hay avance, ni desde la UI ni llamando a la RPC.
+- [x] Un pago de préstamo con la casilla marcada y cuenta Bancolombia crea el gasto con esa cuenta y baja Bancolombia. Con la casilla desmarcada, la sección de cuenta no se muestra.
+- [x] Un abono de una cuenta por cobrar con ingreso y cuenta Nequi sube Nequi.
+- [x] Un aporte de 100.000 a una meta desde Efectivo baja Efectivo en 100.000 y no crea gasto. Un retiro de 40.000 a Efectivo lo sube en 40.000.
+- [x] Con Nequi en $ 50.000 y un pago de $ 300.000, el diálogo muestra "Nequi tiene $ 50.000. Faltan $ 250.000" y el switch de traspaso arranca encendido.
+- [x] Con el switch encendido, "Desde" propone la cuenta de mayor saldo y el monto del traspaso arranca en $ 300.000 y se puede editar.
+- [x] Pagar con traspaso de 300.000 desde Bancolombia a Nequi crea el traspaso y el pago; Bancolombia baja 300.000, Nequi queda igual (+300.000 −300.000).
+- [x] Si el pago falla (por ejemplo, supera el saldo de la deuda), tampoco queda el traspaso.
+- [x] Traspasar desde la misma cuenta que paga falla en el formulario y en la BD.
+- [x] Con una sola cuenta activa, el diálogo no muestra el switch de traspaso.
+- [x] Marcar un gasto fijo como pagado con traspaso inline crea el traspaso, el gasto enlazado a la ocurrencia con la cuenta elegida, y la ocurrencia pasa a pagada.
+- [x] Una cuenta archivada no aparece en la sección de cuenta y la BD rechaza usarla en una entrada o aporte nuevos.
+- [x] Editar el monto de un pago de tarjeta con cuenta cambia el saldo de la cuenta y el de la tarjeta.
+- [x] Eliminar un pago de tarjeta con cuenta devuelve ambos saldos y deja intacto un traspaso inline.
+- [x] Un usuario A, con su sesión y la clave publicable, no puede usar cuentas de B en pagos, avances o aportes, ni ejecutar las RPC con el espacio de B.
+- [x] Un cliente `anon` no puede ejecutar `record_card_advance`, `record_goal_contribution` ni `record_transaction`.
+- [x] Los pagos y aportes viejos, sin `account_id`, se muestran como "Fuera de cuentas" y los saldos de las cuentas no cambian tras la migración.
+- [x] Las acciones de la hoja móvil de SPEC 15 (Aporte a meta, Pago de deuda o tarjeta) muestran la sección de cuenta.
 
 ## Decisiones
 

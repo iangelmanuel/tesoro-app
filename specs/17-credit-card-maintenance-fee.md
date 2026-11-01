@@ -169,13 +169,13 @@ Cálculo (en `src/features/debts/calculations.ts`): `nextFeeDate(debt, today)` d
 
 ## Riesgos
 
-| Riesgo                                                                | Mitigación                                                                                               |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| El job no corrió (Supabase pausado) y quedan días sin cobrar          | El cursor recupera todos los vencimientos pendientes en la siguiente ejecución, con su fecha real        |
-| El usuario ya había registrado la cuota con "Actualizar saldo"         | Aviso en el diálogo: "Desde hoy se cobra sola. No la registres a mano"; la cuota no es retroactiva       |
-| Una entrada generada falla por el trigger y bloquea las demás         | El bucle atrapa el error por tarjeta y sigue con la siguiente                                             |
-| `security definer` abre una puerta a otros espacios                    | Sin `grant` a `anon` ni `authenticated`; solo lo ejecuta `pg_cron`; criterio de aceptación de permisos   |
-| El banco cobra la cuota otro día que `fee_day`                         | El saldo se corrige con "Actualizar saldo" o editando la fecha de la entrada                             |
+| Riesgo                                                         | Mitigación                                                                                             |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| El job no corrió (Supabase pausado) y quedan días sin cobrar   | El cursor recupera todos los vencimientos pendientes en la siguiente ejecución, con su fecha real      |
+| El usuario ya había registrado la cuota con "Actualizar saldo" | Aviso en el diálogo: "Desde hoy se cobra sola. No la registres a mano"; la cuota no es retroactiva     |
+| Una entrada generada falla por el trigger y bloquea las demás  | El bucle atrapa el error por tarjeta y sigue con la siguiente                                          |
+| `security definer` abre una puerta a otros espacios            | Sin `grant` a `anon` ni `authenticated`; solo lo ejecuta `pg_cron`; criterio de aceptación de permisos |
+| El banco cobra la cuota otro día que `fee_day`                 | El saldo se corrige con "Actualizar saldo" o editando la fecha de la entrada                           |
 
 ## Lo que **no** entra en este spec
 

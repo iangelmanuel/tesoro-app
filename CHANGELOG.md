@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Payments from accounts (SPEC 16): paying a recurring expense, a loan or credit card, or contributing to a goal can now pick the account the money comes from, or none ("Fuera de cuentas"). New `PaymentAccountSection` (account select with today's balance, a "shortfall" notice and a "Traspasar fondos antes" switch with a source account and an editable amount).
+- Credit card advances: `debt_entry_kind` gets `advance`, and the payment dialog has Pago / Avance tabs for credit cards. Card payments and advances, goal contributions and withdrawals move an account but are neither income nor expense, so reports, budgets and the score do not change; they appear read-only and grey in Movimientos (`ledger_entries` kinds `debt_payment`, `debt_advance`, `goal_contribution`) and under the "Traspasos" filter.
+- Migrations `add_debt_entry_advance` and `payments_from_accounts`: `account_id` on `debt_entries` and `goal_contributions` (composite FK, partial indexes, `check_account_active`), and the RPCs `record_card_advance`, `record_goal_contribution` and `record_transaction`. `record_debt_payment` takes `p_account_id`, `p_transfer_from` and `p_transfer_amount`.
+- A transfer made while paying is saved in the same transaction as the payment, so a failed payment leaves no transfer behind.
+- Debt, goal and recurring-expense histories show "Desde <account>", "A <account>" or "Fuera de cuentas".
+
 - Mobile experience (`< 768 px`, SPEC 15): a bottom quick-actions sheet (expense, income, goal contribution, debt or card payment and "mark recurring expense paid" in Personal; sale and cost in Business) that opens on every full load of a workspace route and after 5 or more minutes hidden, with an "Abrir al entrar" switch stored per device; a sticky Personal / Business tab under the header; and a bottom navigation bar with four destinations and a central [+] button. The aside drawer opens from the header menu button.
 - `QuickActionsProvider` shares the quick-actions data (workspaces, goals, debts, unpaid recurring occurrences) between the header and the mobile sheet, and `useActiveWorkspace` resolves the workspace from the route.
 - `PayOccurrenceDialog` to pick an unpaid recurring occurrence and pay it. `TransactionDialog` accepts an initial `type` in `initialValues` and can be controlled with `open` / `onOpenChange`.
@@ -157,6 +163,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reports KPIs (income, expenses, balance and savings rate, or margin in Business).
 
 ### Changed
+
+- `debt_overview`, `check_debt_balance`, `score_balances`, `check_debt_entry`, `account_balances` and `account_monthly_balances` account for card advances and payments or contributions with an account.
+- Editing a goal contribution only changes amount, date and note; it no longer overwrites the account.
 
 - Form fields (inputs, selects, date pickers) use a soft fill with no border through the `--field-*` tokens (`--field-background`, `--field-hover`, transparent `--field-border`, no shadow); the focus ring is unchanged. `muted` and `foreground` on the new fill keep AA in light and dark mode.
 - The "Traspaso" buttons on the Personal and Business transactions and accounts pages are gone: transfers are created from the "Registrar movimiento" dialog. Editing a transfer from the table still opens the transfer dialog.

@@ -4,7 +4,7 @@ import { Skeleton } from "@heroui/react"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { AppSidebarSkeleton } from "@/components/dashboard/app-sidebar-skeleton"
 import { DashboardTitle } from "@/components/dashboard/dashboard-title"
-import { QuickAddTransaction } from "@/components/dashboard/quick-add-transaction"
+import { QuickActions } from "@/components/dashboard/quick-actions"
 import {
   SidebarInset,
   SidebarProvider,
@@ -87,7 +87,7 @@ export default function DashboardLayout({
             </div>
             {/* Accesos rápidos del espacio */}
             <div className="flex shrink-0 items-center gap-2">
-              <QuickAddTransaction />
+              <QuickActions />
             </div>
           </header>
           <main

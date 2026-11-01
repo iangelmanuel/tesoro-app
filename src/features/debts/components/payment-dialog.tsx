@@ -7,7 +7,9 @@ import {
   FieldError,
   Input,
   Label,
+  ListBox,
   Modal,
+  Select,
   TextField,
   toast
 } from "@heroui/react"
@@ -23,8 +25,16 @@ import type { Debt, DebtEntry } from "../queries"
 import type { PaymentFormState } from "../types"
 import { amountInput } from "./field"
 
+type PaymentDebt = Pick<Debt, "id" | "kind">
+
+/** Deuda que se puede elegir en el diálogo (acceso rápido del header) */
+export type DebtOption = Pick<Debt, "id" | "kind" | "name">
+
 interface PaymentDialogProps {
-  debt: Pick<Debt, "id" | "kind">
+  /** Deuda fija. Sin ella, el diálogo deja elegir entre `debts` */
+  debt?: PaymentDebt
+  /** Deudas activas para elegir; se usa cuando no llega `debt` */
+  debts?: DebtOption[]
   /** Si llega, el diálogo edita este pago */
   entry?: DebtEntry
   /** Cuentas para el movimiento que crea el pago; solo al registrar */
@@ -37,7 +47,8 @@ interface PaymentDialogProps {
 
 /** Pago de tarjeta o préstamo, o abono de una cuenta por cobrar */
 export function PaymentDialog({
-  debt,
+  debt: fixedDebt,
+  debts,
   entry,
   accounts = [],
   trigger,
@@ -48,7 +59,14 @@ export function PaymentDialog({
   const open = controlledOpen ?? uncontrolledOpen
   const setOpen = onOpenChange ?? setUncontrolledOpen
   const isEditing = entry !== undefined
-  const noun = debt.kind === "receivable" ? "abono" : "pago"
+  // Sin deuda fija arranca con la primera de la lista
+  const [selectedDebtId, setSelectedDebtId] = useState(
+    () => debts?.[0]?.id ?? ""
+  )
+  const debt: PaymentDebt | undefined =
+    fixedDebt ?? debts?.find((option) => option.id === selectedDebtId)
+  const kind = debt?.kind ?? "loan"
+  const noun = kind === "receivable" ? "abono" : "pago"
 
   return (
     <Modal>
@@ -67,20 +85,31 @@ export function PaymentDialog({
               <p className="text-sm text-muted">
                 {isEditing && entry.transaction_id
                   ? "El movimiento enlazado se actualiza con el monto y la fecha."
-                  : debt.kind === "receivable"
+                  : kind === "receivable"
                     ? "Lo que te pagaron de esta cuenta por cobrar."
                     : "Lo que pagaste de esta deuda."}
               </p>
             </Modal.Header>
             <Modal.Body>
               {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-              <PaymentForm
-                debt={debt}
-                entry={entry}
-                accounts={accounts}
-                onSaved={() => setOpen(false)}
-                onCancel={() => setOpen(false)}
-              />
+              {!fixedDebt && debts && !isEditing && (
+                <DebtSelect
+                  debts={debts}
+                  value={selectedDebtId}
+                  onChange={setSelectedDebtId}
+                />
+              )}
+              {debt && (
+                <PaymentForm
+                  // Cambiar de deuda reinicia el formulario (tipo y textos)
+                  key={debt.id}
+                  debt={debt}
+                  entry={entry}
+                  accounts={accounts}
+                  onSaved={() => setOpen(false)}
+                  onCancel={() => setOpen(false)}
+                />
+              )}
             </Modal.Body>
           </Modal.Dialog>
         </Modal.Container>
@@ -89,8 +118,48 @@ export function PaymentDialog({
   )
 }
 
+function DebtSelect({
+  debts,
+  value,
+  onChange
+}: {
+  debts: DebtOption[]
+  value: string
+  onChange: (value: string) => void
+}) {
+  return (
+    <Select
+      fullWidth
+      placeholder="Elige una deuda"
+      value={value || null}
+      onChange={(key) => onChange(key == null ? "" : String(key))}
+      className="mb-4 flex flex-col gap-2"
+    >
+      <Label>Deuda</Label>
+      <Select.Trigger>
+        <Select.Value />
+        <Select.Indicator />
+      </Select.Trigger>
+      <Select.Popover>
+        <ListBox>
+          {debts.map((option) => (
+            <ListBox.Item
+              key={option.id}
+              id={option.id}
+              textValue={option.name}
+            >
+              {option.name}
+              <ListBox.ItemIndicator />
+            </ListBox.Item>
+          ))}
+        </ListBox>
+      </Select.Popover>
+    </Select>
+  )
+}
+
 interface PaymentFormProps {
-  debt: Pick<Debt, "id" | "kind">
+  debt: PaymentDebt
   entry?: DebtEntry
   accounts: AccountOption[]
   onSaved: () => void

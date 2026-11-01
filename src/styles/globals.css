@@ -3,12 +3,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Tema de Tesoro sobre los tokens de HeroUI v3: neutros negros y grises
-   azulados y primario (--accent) neutro. Cada espacio cambia el primario
-   con [data-workspace]. */
+/* Tema de Tesoro sobre los tokens de HeroUI v3. Oscuro por defecto: fondo
+   casi negro y tarjetas gris oscuro sin borde (las separa el contraste
+   fondo/superficie). Claro con la misma estructura: tarjeta blanca sobre un
+   gris muy claro, más la sombra suave de HeroUI. Primario (--accent) neutro;
+   cada espacio lo cambia con [data-workspace]. Pares verificados en AA
+   (4.5:1 texto, 3:1 gráficos y foco) en docs/ui.md. */
 :root {
   color-scheme: light;
-  --background: oklch(0.985 0.002 264);
+  --background: oklch(0.975 0.003 264);
   --foreground: oklch(0.21 0.016 265);
   --surface: oklch(1 0 0);
   --surface-foreground: var(--foreground);
@@ -18,8 +21,8 @@
   --surface-tertiary-foreground: var(--foreground);
   --overlay: oklch(1 0 0);
   --overlay-foreground: var(--foreground);
-  --muted: oklch(0.52 0.02 262);
-  --default: oklch(0.945 0.006 264);
+  --muted: oklch(0.5 0.02 262);
+  --default: oklch(0.935 0.006 264);
   --default-foreground: var(--foreground);
   --field-background: oklch(1 0 0);
   --field-foreground: var(--foreground);
@@ -31,17 +34,18 @@
   --accent-foreground: oklch(0.985 0.002 264);
   --focus: var(--accent);
   --link: var(--foreground);
+  /* Serie neutra de gráficas: ≥ 3:1 contra la superficie */
   --chart-1: oklch(44.6% 0.043 257.281); /* slate-600 */
   --chart-2: oklch(55.4% 0.046 257.417); /* slate-500 */
-  --chart-3: oklch(70.4% 0.04 256.788); /* slate-400 */
-  --chart-4: oklch(86.9% 0.022 252.894); /* slate-300 */
-  --chart-5: oklch(37.2% 0.044 257.287); /* slate-700 */
+  --chart-3: oklch(37.2% 0.044 257.287); /* slate-700 */
+  --chart-4: oklch(27.9% 0.041 260.031); /* slate-800 */
+  --chart-5: oklch(20.8% 0.042 265.755); /* slate-900 */
   /* Estados: AA como texto sobre la superficie y con su foreground */
   --success: oklch(52.7% 0.154 150.069); /* green-700 */
   --success-foreground: oklch(1 0 0);
   --warning: oklch(55.5% 0.163 48.998); /* amber-700 */
   --warning-foreground: oklch(1 0 0);
-  --danger: oklch(57.7% 0.245 27.325); /* red-600 */
+  --danger: oklch(54% 0.235 27.4); /* entre red-600 y red-700 */
   --danger-foreground: oklch(1 0 0);
   /* Marca: el emerald del logo. No cambia con el tema ni con el espacio */
   --brand: oklch(69.6% 0.17 162.48);
@@ -58,40 +62,44 @@
   --category-blue: oklch(62.3% 0.214 259.815);
   --category-sky: oklch(58.8% 0.158 241.966);
   --category-slate: oklch(55.4% 0.046 257.417);
-  /* Dinero: ≥ 4.5:1 como texto sobre la superficie y el fondo */
-  --income: oklch(50.8% 0.118 165.612); /* emerald-700 */
-  --expense: oklch(51.4% 0.222 16.935); /* rose-700 */
+  /* Dinero: ≥ 4.5:1 como texto sobre la superficie y el fondo. Ingresos y
+     gastos se separan también en luminosidad (no solo en tono) para que
+     sus series se distingan en las gráficas */
+  --income: oklch(39% 0.085 167); /* entre emerald-800 y 900 */
+  --expense: oklch(55.5% 0.235 17); /* entre rose-600 y 700 */
   --balance: oklch(50% 0.134 242.749); /* sky-700 */
 }
 
 .dark {
   color-scheme: dark;
-  --background: oklch(0.145 0.008 265);
-  --foreground: oklch(0.97 0.004 264);
-  --surface: oklch(0.19 0.011 265);
-  --surface-secondary: oklch(0.225 0.012 265);
-  --surface-tertiary: oklch(0.255 0.013 265);
-  --overlay: oklch(0.205 0.012 265);
-  --muted: oklch(0.71 0.02 262);
-  --default: oklch(0.26 0.013 265);
-  --field-background: oklch(0.205 0.012 265);
-  --segment: oklch(0.32 0.014 265);
-  --border: oklch(0.285 0.013 265);
-  --separator: oklch(0.25 0.012 265);
-  --accent: oklch(0.97 0.004 264);
-  --accent-foreground: oklch(0.19 0.011 265);
+  /* Negros neutros (zinc): fondo ~#0a0a0a, tarjeta ~#18181b. Iguales en
+     Personal y Empresa; solo cambia el acento */
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --surface: oklch(0.21 0.006 286);
+  --surface-secondary: oklch(0.245 0.006 286);
+  --surface-tertiary: oklch(0.274 0.006 286);
+  --overlay: oklch(0.23 0.006 286);
+  --muted: oklch(0.705 0.015 286); /* zinc-400 */
+  --default: oklch(0.274 0.006 286);
+  --field-background: oklch(0.27 0.006 286);
+  --segment: oklch(0.35 0.006 286);
+  --border: oklch(0.274 0.006 286);
+  --separator: oklch(0.25 0.006 286);
+  --accent: oklch(0.985 0 0);
+  --accent-foreground: oklch(0.21 0.006 286);
   --chart-1: oklch(86.9% 0.022 252.894); /* slate-300 */
   --chart-2: oklch(70.4% 0.04 256.788); /* slate-400 */
   --chart-3: oklch(55.4% 0.046 257.417); /* slate-500 */
-  --chart-4: oklch(44.6% 0.043 257.281); /* slate-600 */
-  --chart-5: oklch(92.9% 0.013 255.508); /* slate-200 */
+  --chart-4: oklch(92.9% 0.013 255.508); /* slate-200 */
+  --chart-5: oklch(96.8% 0.007 247.896); /* slate-100 */
   --success: oklch(79.2% 0.209 151.711); /* green-400 */
-  --success-foreground: oklch(0.19 0.011 265);
+  --success-foreground: oklch(0.21 0.006 286);
   --warning: oklch(82.8% 0.189 84.429); /* amber-400 */
-  --warning-foreground: oklch(0.19 0.011 265);
+  --warning-foreground: oklch(0.21 0.006 286);
   --danger: oklch(70.4% 0.191 22.216); /* red-400 */
-  --danger-foreground: oklch(0.19 0.011 265);
-  /* Categorías y dinero: tono 400, AA sobre la superficie oscura */
+  --danger-foreground: oklch(0.21 0.006 286);
+  /* Categorías: tono 400, ≥ 3:1 sobre la superficie oscura */
   --category-emerald: oklch(76.5% 0.177 163.223);
   --category-teal: oklch(77.7% 0.152 181.912);
   --category-lime: oklch(84.1% 0.238 128.85);
@@ -104,8 +112,10 @@
   --category-blue: oklch(70.7% 0.165 254.624);
   --category-sky: oklch(74.6% 0.16 232.661);
   --category-slate: oklch(70.4% 0.04 256.788);
-  --income: oklch(76.5% 0.177 163.223); /* emerald-400 */
-  --expense: oklch(71.2% 0.194 13.428); /* rose-400 */
+  /* Dinero: AA sobre la superficie; ingresos claros y gastos más oscuros
+     para separar las series también en luminosidad */
+  --income: oklch(84.5% 0.143 164.978); /* emerald-300 */
+  --expense: oklch(64.5% 0.246 16.439); /* rose-500 */
   --balance: oklch(74.6% 0.16 232.661); /* sky-400 */
 }
 
@@ -120,7 +130,7 @@
 
 .dark :has(> [data-workspace="personal"]) {
   --accent: oklch(69.6% 0.17 162.48); /* emerald-500, el del logo */
-  --accent-foreground: oklch(0.19 0.011 265);
+  --accent-foreground: oklch(0.21 0.006 286);
 }
 
 :has(> [data-workspace="business"]) {
@@ -130,7 +140,7 @@
 
 .dark :has(> [data-workspace="business"]) {
   --accent: oklch(70.5% 0.213 47.604); /* orange-500 */
-  --accent-foreground: oklch(0.19 0.011 265);
+  --accent-foreground: oklch(0.21 0.006 286);
 }
 
 /* Los derivados del primario se recalculan en el contenedor del espacio:
@@ -156,9 +166,16 @@
   --accent-soft-foreground: color-mix(
     in oklab,
     var(--accent) 80%,
-    var(--foreground) 30%
+    var(--foreground) 20%
   );
   --accent-soft-hover: color-mix(in oklab, var(--accent) 16%, transparent);
+}
+
+/* Radios: tarjetas grandes (HeroUI usa --radius-3xl, 24 px) y botones y
+   tabs pill. Los campos (selects e inputs) suben a 20 px, pill a su
+   altura de 36–40 px */
+:root {
+  --field-radius: calc(var(--radius) * 2.5);
 }
 
 @theme inline {
@@ -173,7 +190,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-focus/50;
+    @apply border-border outline-focus;
   }
   body {
     @apply bg-background text-foreground;
@@ -184,7 +201,7 @@
 }
 
 /* Acento de marca para texto: --brand mezclado con el foreground para que
-   el texto pequeño cumpla contraste AA en claro y en oscuro */
+   el texto pequeño cumpla contraste AA (5.1:1 en claro, 11:1 en oscuro) */
 @utility text-brand {
-  color: color-mix(in oklch, var(--brand) 70%, var(--foreground));
+  color: color-mix(in oklch, var(--brand) 60%, var(--foreground));
 }

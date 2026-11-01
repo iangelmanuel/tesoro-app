@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button, Dropdown, Label } from "@heroui/react"
 import { ChevronDown, CreditCard, FileUp, Plus, Target } from "lucide-react"
-import type { AccountOption } from "@/features/accounts/components/account-select"
+import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { DEBTS_PATH } from "@/features/debts/calculations"
 import {
   type DebtOption,
@@ -74,7 +74,7 @@ function PersonalMoreMenu({
 }: {
   goals: GoalOption[]
   debts: DebtOption[]
-  accounts: AccountOption[]
+  accounts: PaymentAccountOption[]
 }) {
   const router = useRouter()
   const [contributionOpen, setContributionOpen] = useState(false)

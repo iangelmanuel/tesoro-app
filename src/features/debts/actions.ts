@@ -11,6 +11,7 @@ import {
   DEBT_SCHEMAS,
   type DebtKind,
   adjustBalanceSchema,
+  advanceSchema,
   paymentSchema
 } from "./schemas"
 import type {
@@ -32,6 +33,9 @@ const SAME_BALANCE = "El saldo ya es ese"
 const FUTURE_DATE = "La fecha no puede ser futura"
 const CARD_TRANSACTION = "Un pago de tarjeta no crea un movimiento"
 const ARCHIVED_ACCOUNT = "La cuenta está archivada"
+const ADVANCE_ONLY_CARD = "Solo una tarjeta admite avances"
+const SAME_TRANSFER_ACCOUNT = "Elige una cuenta distinta a la que paga"
+const RECEIVABLE_TRANSFER = "Un abono no admite traspaso"
 
 const DEBT_FIELDS: Record<DebtKind, readonly string[]> = {
   credit_card: [
@@ -64,8 +68,12 @@ const PAYMENT_FIELDS = [
   "occurred_on",
   "note",
   "create_transaction",
-  "account_id"
+  "account_id",
+  "transfer_from",
+  "transfer_amount"
 ] as const
+
+const ADVANCE_FIELDS = ["amount", "occurred_on", "note", "account_id"] as const
 
 const ADJUST_FIELDS = ["balance", "occurred_on", "note"] as const
 
@@ -95,6 +103,13 @@ function debtPgError(
   }
   if (error.message.includes(CARD_TRANSACTION)) {
     return { error: CARD_TRANSACTION }
+  }
+  if (error.message.includes(ADVANCE_ONLY_CARD)) {
+    return { error: ADVANCE_ONLY_CARD }
+  }
+  // El traspaso desde la misma cuenta que paga lo frena transfers_check
+  if (error.message.includes("transfers_check")) {
+    return { fieldErrors: { transfer_from: [SAME_TRANSFER_ACCOUNT] } }
   }
   // Cuenta del movimiento de un pago: archivada o de otro espacio
   if (error.message.includes(ARCHIVED_ACCOUNT)) {
@@ -388,6 +403,17 @@ export async function recordPayment(
   if (parsed.data.amount > debt.balance) {
     return { fieldErrors: { amount: [OVER_PAYMENT] }, values }
   }
+  if (debt.kind === "receivable" && parsed.data.transfer_from) {
+    return { fieldErrors: { transfer_from: [RECEIVABLE_TRANSFER] }, values }
+  }
+
+  // Cuenta del pago: la de la entrada en una tarjeta y la del movimiento en
+  // un préstamo o una cuenta por cobrar. Sin movimiento no aplica.
+  const accountId =
+    debt.kind === "credit_card" || parsed.data.create_transaction
+      ? (parsed.data.account_id ?? undefined)
+      : undefined
+  const hasTransfer = accountId !== undefined && parsed.data.transfer_from
 
   const supabase = await createClient()
   const { error } = await supabase.rpc("record_debt_payment", {
@@ -397,9 +423,12 @@ export async function recordPayment(
     // Los tipos generados no marcan el parámetro como nullable
     p_note: parsed.data.note as string,
     p_create_transaction: parsed.data.create_transaction,
-    // Solo cuenta si se crea el movimiento
-    p_account_id: parsed.data.create_transaction
-      ? (parsed.data.account_id ?? undefined)
+    p_account_id: accountId,
+    p_transfer_from: hasTransfer
+      ? (parsed.data.transfer_from ?? undefined)
+      : undefined,
+    p_transfer_amount: hasTransfer
+      ? (parsed.data.transfer_amount ?? undefined)
       : undefined
   })
 
@@ -414,7 +443,56 @@ export async function recordPayment(
   return { ok: true }
 }
 
-// Edita un pago o un ajuste. En un pago se cambian monto, fecha y nota (el
+// Avance de tarjeta: sube el saldo de la deuda y, con cuenta, el de la cuenta
+// (record_card_advance). No crea movimiento ni lleva traspaso.
+export async function recordAdvance(
+  _prevState: PaymentFormState,
+  formData: FormData
+): Promise<PaymentFormState> {
+  const values = readValues(formData, ADVANCE_FIELDS)
+  const parsed = advanceSchema.safeParse(values)
+  const debtId = idSchema.safeParse(formData.get("debt_id"))
+
+  if (!debtId.success) {
+    return { error: DEBT_NOT_FOUND, values }
+  }
+  if (!parsed.success) {
+    return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
+  }
+
+  const debt = await findDebt(debtId.data)
+  if (!debt) {
+    return { error: DEBT_NOT_FOUND, values }
+  }
+  if (debt.status !== "active") {
+    return { error: DEBT_NOT_ACTIVE, values }
+  }
+  if (debt.kind !== "credit_card") {
+    return { error: ADVANCE_ONLY_CARD, values }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("record_card_advance", {
+    p_debt_id: debt.id,
+    p_amount: parsed.data.amount,
+    p_occurred_on: parsed.data.occurred_on,
+    // Los tipos generados no marcan el parámetro como nullable
+    p_note: parsed.data.note as string,
+    p_account_id: parsed.data.account_id ?? undefined
+  })
+
+  if (error) {
+    return {
+      ...debtPgError(error, "amount", NEGATIVE_BALANCE, ENTRY_DEFAULT_ERROR),
+      values
+    }
+  }
+
+  revalidatePersonalPages()
+  return { ok: true }
+}
+
+// Edita un pago, un avance o un ajuste. En un pago se cambian monto, fecha y nota (el
 // trigger copia monto y fecha a su movimiento). En un ajuste, el formulario
 // pide el saldo real como en "Actualizar saldo" y el ajuste se recalcula
 // sobre el saldo sin él.
@@ -439,7 +517,21 @@ export async function updateEntry(
   let update: { amount: number; occurred_on: string; note: string | null }
   let values: Record<string, string>
 
-  if (entry.kind === "payment") {
+  if (entry.kind === "advance") {
+    values = readValues(formData, ADVANCE_FIELDS)
+    const parsed = advanceSchema.safeParse(values)
+
+    if (!parsed.success) {
+      return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
+    }
+    // Bajar un avance baja el saldo: no puede quedar negativo
+    if (entry.debt.balance - entry.amount + parsed.data.amount < 0) {
+      return { fieldErrors: { amount: [NEGATIVE_BALANCE] }, values }
+    }
+
+    const { amount, occurred_on, note } = parsed.data
+    update = { amount, occurred_on, note }
+  } else if (entry.kind === "payment") {
     const payment = parsePayment(formData)
     values = payment.values
 
@@ -494,7 +586,7 @@ export async function updateEntry(
     return {
       ...debtPgError(
         error,
-        entry.kind === "payment" ? "amount" : "balance",
+        entry.kind === "adjustment" ? "balance" : "amount",
         entry.kind === "payment" ? OVER_PAYMENT : NEGATIVE_BALANCE,
         ENTRY_DEFAULT_ERROR
       ),
@@ -525,8 +617,11 @@ export async function deleteEntry(id: string): Promise<DebtActionResult> {
   if (entry.debt.status !== "active") {
     return { error: DEBT_NOT_ACTIVE }
   }
-  // Borrar un ajuste que subió el saldo lo baja
-  if (entry.kind === "adjustment" && entry.debt.balance - entry.amount < 0) {
+  // Borrar un ajuste o un avance que subió el saldo lo baja
+  if (
+    (entry.kind === "adjustment" || entry.kind === "advance") &&
+    entry.debt.balance - entry.amount < 0
+  ) {
     return { error: NEGATIVE_BALANCE }
   }
 

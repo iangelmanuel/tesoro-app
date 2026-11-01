@@ -39,6 +39,8 @@ interface PaymentAccountSectionProps {
   allowTransfer?: boolean
   /** Cuenta elegida al abrir */
   defaultAccountId?: string
+  /** Avisa al formulario de la cuenta elegida ("" = sin cuenta) */
+  onAccountChange?: (accountId: string) => void
 }
 
 // Cuenta del pago y traspaso previo. Envía account_id, transfer_from y
@@ -50,7 +52,8 @@ export function PaymentAccountSection({
   errors,
   label = "Cuenta",
   allowTransfer = true,
-  defaultAccountId = ""
+  defaultAccountId = "",
+  onAccountChange
 }: PaymentAccountSectionProps) {
   const [accountId, setAccountId] = useState(defaultAccountId)
   // null = sigue la sugerencia (faltante → encendido); true/false = decisión
@@ -76,7 +79,10 @@ export function PaymentAccountSection({
         name="account_id"
         label={label}
         value={accountId}
-        onChange={setAccountId}
+        onChange={(id) => {
+          setAccountId(id)
+          onAccountChange?.(id)
+        }}
         accounts={active}
         allowNone
         error={errors?.account_id}

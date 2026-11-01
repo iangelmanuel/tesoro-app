@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext } from "react"
-import type { AccountOption } from "@/features/accounts/components/account-select"
+import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import type { DebtOption } from "@/features/debts/components/payment-dialog"
 import type { GoalOption } from "@/features/goals/components/contribution-dialog"
@@ -13,7 +13,7 @@ export interface QuickActionsWorkspace {
   id: string
   type: WorkspaceType
   categories: Category[]
-  accounts: AccountOption[]
+  accounts: PaymentAccountOption[]
 }
 
 export interface QuickActionsData {

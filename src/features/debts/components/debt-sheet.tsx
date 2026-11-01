@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button, Drawer, Input, Label, TextField } from "@heroui/react"
 import { Plus, RefreshCw } from "lucide-react"
-import type { AccountOption } from "@/features/accounts/components/account-select"
+import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { parseAmount } from "@/features/transactions/schemas"
 import { formatCurrency, formatDate } from "@/libs/format"
 import {
@@ -27,7 +27,7 @@ interface DebtSheetProps {
   debt: Debt
   entries: DebtEntry[]
   /** Cuentas para el movimiento de un pago nuevo; solo en deudas activas */
-  accounts?: AccountOption[]
+  accounts?: PaymentAccountOption[]
   /** Hoy en America/Bogota, calculado en el servidor */
   today: string
   currency: string

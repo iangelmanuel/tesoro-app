@@ -12,7 +12,7 @@ import { CreditCard, HandCoins, Plus } from "lucide-react"
 import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { EmptyState } from "@/components/dashboard/empty-state"
-import type { AccountOption } from "@/features/accounts/components/account-select"
+import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { getAccountBalances } from "@/features/accounts/queries"
 import {
   DEBTS_PATH,
@@ -130,7 +130,7 @@ function ReceivablesTab({
   /** Abonos y ajustes por id de cuenta */
   entries: Record<string, DebtEntry[]>
   /** Cuentas activas, para el movimiento de un abono */
-  accounts: AccountOption[]
+  accounts: PaymentAccountOption[]
   workspace: PersonalWorkspace
   today: string
 }) {
@@ -231,7 +231,7 @@ function PayablesTab({
   /** Pagos y ajustes por id de deuda */
   entries: Record<string, DebtEntry[]>
   /** Cuentas activas, para el movimiento de un pago */
-  accounts: AccountOption[]
+  accounts: PaymentAccountOption[]
   workspace: PersonalWorkspace
   today: string
 }) {

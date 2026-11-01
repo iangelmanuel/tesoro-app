@@ -10,7 +10,7 @@ import {
   RefreshCw
 } from "lucide-react"
 import { SURFACE_ITEM } from "@/components/dashboard/surface"
-import type { AccountOption } from "@/features/accounts/components/account-select"
+import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { formatCurrency, formatDate } from "@/libs/format"
 import {
   debtProjection,
@@ -35,7 +35,7 @@ interface DebtCardProps {
   debt: Debt
   entries: DebtEntry[]
   /** Cuentas activas, para el movimiento de un pago */
-  accounts: AccountOption[]
+  accounts: PaymentAccountOption[]
   /** Hoy en America/Bogota, calculado en el servidor */
   today: string
   currency: string

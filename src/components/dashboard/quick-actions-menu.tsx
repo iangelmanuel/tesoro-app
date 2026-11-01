@@ -46,7 +46,10 @@ export function QuickActionsMenu() {
         categories={workspace.categories}
         accounts={workspace.accounts}
         trigger={
-          <Button size="sm">
+          <Button
+            size="sm"
+            className="max-md:h-11 max-md:min-w-11"
+          >
             <Plus className="size-4" />
             <span className="hidden sm:inline">{label}</span>
             <span className="sr-only sm:hidden">{label}</span>
@@ -103,6 +106,7 @@ function PersonalMoreMenu({
           variant="secondary"
           size="sm"
           aria-label="Más acciones"
+          className="max-md:h-11 max-md:min-w-11"
         >
           <span className="hidden sm:inline">Más</span>
           <ChevronDown className="size-4" />

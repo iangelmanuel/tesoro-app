@@ -92,7 +92,17 @@ export default function DashboardLayout({
               <QuickActions />
             </div>
           </header>
-          <MobileWorkspaceTabs />
+          {/* usePathname es dinámico: hasta resolverlo, un placeholder del
+              tamaño del tab para que el contenido no salte */}
+          <Suspense
+            fallback={
+              <div className="px-4 pb-2 md:hidden">
+                <Skeleton className="h-11 w-full rounded-3xl" />
+              </div>
+            }
+          >
+            <MobileWorkspaceTabs />
+          </Suspense>
           <main
             id="contenido"
             tabIndex={-1}

@@ -145,11 +145,80 @@ Tokens: se reutilizan los nombres de HeroUI y los propios de SPEC 13. No se reno
 
 ## Registro de hallazgos
 
-Se llena en el paso 3, antes de escribir código. Formato:
+Se llenó en el paso 3 (2026-10-31), antes de escribir código.
 
-| Prioridad | Pantalla | Hallazgo | Acción |
-| --------- | -------- | -------- | ------ |
-| P0        | …        | …        | …      |
+**Método:**
+
+- Impeccable 4.8.0 con tres subagentes aislados:
+  - `critique` A, revisión de diseño;
+  - `critique` B, detector;
+  - `audit` técnico.
+- Se revisó el código fuente. No hubo navegador con sesión, así que las reglas
+  del detector que necesitan la página dibujada no corrieron.
+- El contraste se calculó desde los tokens OKLCH de `globals.css`.
+
+**Puntajes de partida:**
+
+| Revisión                | Puntaje          |
+| ----------------------- | ---------------- |
+| `critique` (Nielsen)    | 24/40, Aceptable |
+| `audit`                 | 13/20, Aceptable |
+| Detector (`critique` B) | 0 hallazgos      |
+
+La verificación de `critique` es "intercambiable con cualquier SaaS": la
+identidad solo vive en el copy y en el acento.
+
+**Cómo leer la tabla:**
+
+- No hubo P0. Nada impide completar una tarea.
+- Los P3 de Impeccable se registran como P2.
+- La columna "Acción" indica el paso de este plan que lo resuelve, o "Fuera"
+  si es funcionalidad nueva o una pantalla de 14b.
+
+| Prioridad | Pantalla    | Hallazgo                                                                                                                                                                           | Acción                                                                                                   |
+| --------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| P1        | Shell       | Sin `<main>` ni enlace para saltar al contenido; el teclado recorre ~13 controles del shell en cada página (`app/dashboard/layout.tsx:70`). WCAG 1.3.1, 2.4.1                      | Paso 7: `<main id="contenido">` en el header/inset + "Saltar al contenido"                               |
+| P1        | Shell       | El acceso rápido usa fallback `null` en `Suspense`: el botón de registrar aparece tarde y mueve el layout (`quick-add-transaction.tsx:43`)                                         | Paso 8: fallback con el botón deshabilitado                                                              |
+| P1        | Shell       | El header repite "Tesoro" (`layout.tsx:65`) y no da título ni contexto de página                                                                                                   | Paso 7: título/saludo en el header                                                                       |
+| P2        | Shell       | El foco base `outline-focus/50` da 1.88–2.72:1 con emerald/naranja (enlace de marca del aside, `globals.css:176`). WCAG 1.4.11                                                     | Paso 5: quitar `/50` del outline base                                                                    |
+| P2        | Shell       | El toggle del aside no expone `aria-expanded`/`aria-controls` (`sidebar/sidebar.tsx:119-133`)                                                                                      | Paso 6                                                                                                   |
+| P2        | Shell       | Ctrl/⌘+B se dispara dentro de campos de texto (`sidebar.tsx:59`)                                                                                                                   | Paso 6: ignorar el atajo en elementos editables                                                          |
+| P2        | Shell       | El colapso anima `width` y no respeta `prefers-reduced-motion` (`sidebar.tsx:87`); no hay `motion-reduce` en ninguna parte de la app                                               | Paso 6 + paso 16 (`animate`)                                                                             |
+| P2        | Shell       | Sin isotipo en el aside; 8 ítems planos (`app-sidebar.tsx:101-106`)                                                                                                                | Paso 6: logo con isotipo arriba. Agrupar la nav: fuera (cambia `SITE.navigation`, se evalúa en 14b)      |
+| P2        | Shell       | Geist en vez de Inter (`app/layout.tsx:2,15`) y `defaultTheme="system"` (`theme-provider.tsx:12`)                                                                                  | Pasos 4 y 5                                                                                              |
+| P2        | Shell       | Aside vacío en `/dashboard/business` sin empresa (`app-sidebar.tsx:116`)                                                                                                           | Fuera (Empresa, 14b)                                                                                     |
+| P2        | Shell       | El estado colapsado del aside no se recuerda al recargar (`sidebar.tsx:46`)                                                                                                        | Fuera (persistencia nueva; anotar para 15)                                                               |
+| P2        | Shell       | `--accent-soft-foreground` oscuro mezcla 80% + 30% (`globals.css:156-160`)                                                                                                         | Paso 5                                                                                                   |
+| P1        | Resumen     | ~17 tarjetas y ~25 cifras compiten; 9 KPI en dos grillas (`page.tsx:106-203`, `summary-cards.tsx:112-171`). Rompe "claridad antes que cantidad"                                    | Paso 13: 4 KPI, gráfica + columna lateral, tabla y grilla secundaria con menos texto                     |
+| P1        | Resumen     | Tres "balance" que compiten ("Balance", "Balance acumulado", "Saldo en cuentas"); "Saldo en cuentas" en `text-3xl` es la cifra más grande (`accounts-card.tsx:50`)                 | Paso 13: jerarquía de los 4 KPI del spec + paso 9: ayuda de "saldo acumulado"                            |
+| P1        | Resumen     | Score, tasa de ahorro y utilización sin explicar (`score-summary-card.tsx:99-106`, `summary-cards.tsx:82`, `debts-card.tsx:81-87`). Rompe el principio 2                           | Paso 9: `help-hint` + `src/config/help.ts`                                                               |
+| P2        | Resumen     | Montos KPI como `<h3>` (`CardTitle`) con la etiqueta en `<p>`; salto h1→h3 (`summary-cards.tsx:116-124`)                                                                           | Paso 10: `stat-card` con `<dl>`/`<dt>`/`<dd>`; h2 en secciones                                           |
+| P2        | Resumen     | Gastos siempre en rosa aunque sean normales (`summary-cards.tsx:67`); tono alarmista contra la voz de PRODUCT.md                                                                   | Paso 10: valor neutro, color solo en el badge de variación por significado                               |
+| P2        | Resumen     | 7 botones outline "Ver todos/todas" con el mismo peso; ambiguos para lectores de pantalla                                                                                          | Paso 13: enlace discreto con chevron + sufijo `sr-only`                                                  |
+| P2        | Resumen     | 5 widgets en `lg:grid-cols-2` dejan uno huérfano (`page.tsx:119`); el skeleton no coincide con el layout (`page.tsx:207-234`)                                                      | Paso 13                                                                                                  |
+| P2        | Resumen     | Después del primer registro aparecen 4–5 tarjetas vacías ("No tienes…") seguidas                                                                                                   | Paso 9 (`empty-state` rediseñado) + paso 13 (vacíos compactos)                                           |
+| P2        | Resumen     | Barras de progreso sin nombre accesible (`budget-progress-row.tsx:54-58`, `goal-progress-bar.tsx:55-58`, `debt-indicators.tsx:69`). WCAG 4.1.2                                     | Paso 13 (las que aparecen en el Resumen)                                                                 |
+| P2        | Resumen     | Chips y barras de estado con paleta cruda `amber/rose/emerald/sky-*` en ~10 archivos (`score-overview.tsx:7-19`, `budget-progress-row.tsx:23-30`…)                                 | Paso 5: tokens `--*-soft`; se aplican en paso 13 a lo del Resumen, el resto en 14b                       |
+| P2        | Resumen     | `getCategories` y `getAccountBalances` sin `cache()`: 2–3 llamadas por request (`categories/queries.ts:11`, `accounts/queries.ts:6`)                                               | Paso 10 (al tocar las queries del Resumen)                                                               |
+| P1        | Movimientos | El botón del mes muestra "Octubre de 2026" pero su `aria-label` es "Ver todos los meses"; "Todos" hace lo mismo (`transactions-filters.tsx:118-141`). WCAG 2.5.3 (A)               | Paso 14: el mes como texto `aria-live` y un solo control "Todos los meses"                               |
+| P1        | Movimientos | "Nuevo movimiento" duplicado (header + toolbar) y ~11 controles antes de la primera fila (`transactions/page.tsx:81-116`)                                                          | Pasos 8 y 14: un solo primario en el header; Importar/Categorías en "Más"; barra de filtros en una línea |
+| P2        | Movimientos | Los totales no dicen a qué periodo o filtro corresponden y usan montos como `<h3>` (`transactions-totals.tsx:35-47`)                                                               | Paso 14: KPI pequeños con `stat-card` y leyenda de alcance                                               |
+| P2        | Movimientos | Los filtros no tienen etiqueta visible: el trigger muestra solo "Bancolombia" (`transactions-filters.tsx:233-257`)                                                                 | Paso 14: prefijo ("Cuenta: …") en pill + "Limpiar filtros"                                               |
+| P2        | Movimientos | Los filtros actualizan sin anunciarlo: solo `opacity-60`, sin `aria-busy` ni conteo en vivo (`transactions-filters.tsx:103-107`). WCAG 4.1.3                                       | Paso 14                                                                                                  |
+| P2        | Movimientos | Tabla `min-w-3xl` a 375 px: monto y acciones quedan fuera de vista (`transactions-table.tsx:56`)                                                                                   | Paso 14: columna de monto visible (sticky o menos columnas en `sm`); el layout móvil completo es del 15  |
+| P2        | Movimientos | Acciones por fila de 36×32 px, juntas (`transactions-table.tsx:156-163`)                                                                                                           | Paso 14                                                                                                  |
+| P2        | Movimientos | Registro lento para el cierre de mes: sin "Guardar y agregar otro", descripción obligatoria, fecha que vuelve a hoy, sin atajo                                                     | Fuera (funcionalidad nueva; los atajos están excluidos). Anotar para un spec futuro                      |
+| P1        | Reportes    | Gráficas enfocables sin indicador de foco ni nombre: `outline-hidden` en `.recharts-surface` (`chart-container.tsx:67`), `role="application"` sin nombre. WCAG 2.4.7               | Paso 11                                                                                                  |
+| P1        | Reportes    | La tendencia mensual muestra un solo par de barras con el periodo por defecto "Mes" (`reports-view.tsx:100-116`, `period.ts:140`)                                                  | Paso 15: mostrar los meses previos hasta el periodo elegido con `getMonthlyTotals`                       |
+| P1        | Reportes    | Las categorías se pintan 3 veces (dona + top 5 + tabla) y no hay totales del periodo (`reports-view.tsx:118-173`)                                                                  | Paso 15: KPI con variación + una vista de categorías ligada a la tabla compacta                          |
+| P1        | Reportes    | Ingresos y gastos solo se distinguen por tono: luminancia 1.13:1 claro, 1.48:1 oscuro (`income-expense-chart.tsx:114-123`). WCAG 1.4.1                                             | Paso 5 (separar luminosidad de `--income`/`--expense` en gráficas) + paso 11                             |
+| P2        | Reportes    | Dos patrones de periodo distintos (Reportes vs Movimientos)                                                                                                                        | Pasos 14 y 15: un mismo control de periodo                                                               |
+| P2        | Reportes    | Aviso de periodo con `amber-*` crudo (`reports-view.tsx:84-90`)                                                                                                                    | Paso 15 con el token de warning                                                                          |
+| P2        | Reportes    | Top categorías con `YAxis width={112}` y margen fijo de 96: ~100 px para barras a 375 px (`top-categories-chart.tsx:50,62`)                                                        | Paso 12                                                                                                  |
+| P2        | Reportes    | El rango personalizado pone dos `DatePickerField` sin wrap; puede desbordar a 375 px (`report-period-picker.tsx:182`)                                                              | Paso 15                                                                                                  |
+| P2        | Reportes    | Periodo y tipo actualizan sin `aria-busy` (`report-period-picker.tsx:63-67`, `report-type-toggle.tsx:53`)                                                                          | Paso 15                                                                                                  |
+| P2        | Reportes    | Tooltip en `font-mono` (`currency-tooltip.tsx:37`); historial del score con ticks irregulares y línea en el color del acento, igual que ingresos (`score-history-chart.tsx:17,69`) | Pasos 11 y 12                                                                                            |
+| P2        | Reportes    | Tokens con comentario AA que no cumplen: `text-brand` 4.19:1 en claro; `--chart-3`/`--chart-4` bajo 3:1 (sin uso hoy)                                                              | Paso 5                                                                                                   |
 
 ## Criterios de aceptación
 

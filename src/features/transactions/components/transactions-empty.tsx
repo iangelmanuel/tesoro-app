@@ -1,8 +1,8 @@
 import type { Route } from "next"
 import Link from "next/link"
+import { Button, buttonVariants } from "@heroui/react"
 import { FileUp, Plus, ReceiptText, SearchX } from "lucide-react"
 import { EmptyState } from "@/components/dashboard/empty-state"
-import { Button } from "@/components/ui/button"
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import type { Category } from "@/features/categories/queries"
 import { IMPORT_PATH } from "@/features/imports/constants"
@@ -50,21 +50,19 @@ export function NoTransactions({
           accounts={accounts}
           trigger={
             <Button>
-              <Plus data-icon="inline-start" />
+              <Plus />
               Nuevo movimiento
             </Button>
           }
         />
         {!isBusiness && (
-          <Button
-            variant="outline"
-            asChild
+          <Link
+            href={IMPORT_PATH}
+            className={buttonVariants({ variant: "outline" })}
           >
-            <Link href={IMPORT_PATH}>
-              <FileUp data-icon="inline-start" />
-              Importar
-            </Link>
-          </Button>
+            <FileUp className="size-4" />
+            Importar
+          </Link>
         )}
       </div>
     </EmptyState>
@@ -94,14 +92,12 @@ export function NoFilteredTransactions({
       title="No hay movimientos con estos filtros"
       description="Prueba con otro mes, tipo, categoría, cuenta o texto."
     >
-      <Button
-        variant="outline"
-        asChild
+      <Link
+        href={`${path}?${query}` as Route}
+        className={buttonVariants({ variant: "outline" })}
       >
-        <Link href={`${path}?${query}` as Route}>
-          {hasExtraFilters ? "Limpiar filtros" : "Ver todos los meses"}
-        </Link>
-      </Button>
+        {hasExtraFilters ? "Limpiar filtros" : "Ver todos los meses"}
+      </Link>
     </EmptyState>
   )
 }

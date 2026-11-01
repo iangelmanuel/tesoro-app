@@ -2,7 +2,7 @@
 
 import { useActionState } from "react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { Button } from "@heroui/react"
 import { SITE } from "@/config/site"
 import { signUp } from "../actions"
 import type { AuthFormState } from "../types"
@@ -53,28 +53,28 @@ export function SignUpForm() {
         {state.error && (
           <p
             role="alert"
-            className="text-sm text-destructive"
+            className="text-sm text-danger"
           >
             {state.error}
           </p>
         )}
         <Button
           type="submit"
-          className="w-full"
-          disabled={pending}
+          fullWidth
+          isDisabled={pending}
         >
           {pending ? "Creando cuenta..." : "Crear cuenta"}
         </Button>
       </form>
 
-      <div className="flex items-center gap-3 text-xs text-muted-foreground uppercase">
+      <div className="flex items-center gap-3 text-xs text-muted uppercase">
         <span className="h-px flex-1 bg-border" />o
         <span className="h-px flex-1 bg-border" />
       </div>
 
       <OAuthButtons />
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-center text-sm text-muted">
         ¿Ya tienes cuenta?{" "}
         <Link
           href={SITE.routes.signIn}

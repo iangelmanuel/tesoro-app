@@ -1,5 +1,5 @@
+import { cn } from "@heroui/react"
 import { formatCurrency } from "@/libs/format"
-import { cn } from "@/libs/utils"
 
 // Mockup interino con datos ficticios fijos. El spec de videos de la landing
 // lo reemplaza; no depende de nada fuera de este archivo
@@ -29,17 +29,15 @@ export function LandingHeroVisual() {
       </figcaption>
       <div
         aria-hidden="true"
-        className="rounded-2xl border bg-card p-4 shadow-xl shadow-black/5 sm:p-6 dark:shadow-black/40"
+        className="rounded-2xl border bg-surface p-4 shadow-xl shadow-black/5 sm:p-6 dark:shadow-black/40"
       >
         <div className="mb-5 flex items-center justify-between">
           <div className="flex gap-1.5">
-            <span className="size-2.5 rounded-full bg-muted-foreground/30" />
-            <span className="size-2.5 rounded-full bg-muted-foreground/30" />
-            <span className="size-2.5 rounded-full bg-muted-foreground/30" />
+            <span className="size-2.5 rounded-full bg-muted/30" />
+            <span className="size-2.5 rounded-full bg-muted/30" />
+            <span className="size-2.5 rounded-full bg-muted/30" />
           </div>
-          <span className="text-xs text-muted-foreground">
-            Resumen · octubre
-          </span>
+          <span className="text-xs text-muted">Resumen · octubre</span>
         </div>
 
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
@@ -48,7 +46,7 @@ export function LandingHeroVisual() {
               key={stat.label}
               className="flex min-w-0 flex-col gap-1 rounded-lg border bg-background p-2.5 sm:p-3"
             >
-              <span className="flex items-center gap-1.5 text-[0.7rem] text-muted-foreground sm:text-xs">
+              <span className="flex items-center gap-1.5 text-[0.7rem] text-muted sm:text-xs">
                 <span className={cn("size-2 rounded-full", stat.color)} />
                 {stat.label}
               </span>
@@ -76,9 +74,7 @@ export function LandingHeroVisual() {
                     style={{ height: `${(item.expense / MAX) * 100}%` }}
                   />
                 </div>
-                <span className="text-[0.7rem] text-muted-foreground">
-                  {item.month}
-                </span>
+                <span className="text-[0.7rem] text-muted">{item.month}</span>
               </div>
             ))}
           </div>

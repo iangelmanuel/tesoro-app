@@ -1,27 +1,9 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { cn } from "cn"
+import { AlertDialog, Button, Tooltip, cn, toast } from "@heroui/react"
 import { Link2, Pencil, Receipt, Trash2 } from "lucide-react"
-import { toast } from "sonner"
 import { CardEmpty } from "@/components/dashboard/empty-state"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger
-} from "@/components/ui/tooltip"
 import { formatCurrency, formatDate } from "@/libs/format"
 import { deleteEntry } from "../actions"
 import type { Debt, DebtEntry } from "../queries"
@@ -95,33 +77,29 @@ function EntryRow({
           <span
             className={cn(
               "font-medium tabular-nums",
-              lowersBalance
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-rose-600 dark:text-rose-400"
+              lowersBalance ? "text-(--income)" : "text-(--expense)"
             )}
           >
             {lowersBalance ? "−" : "+"}{" "}
             {formatCurrency(Math.abs(entry.amount), currency)}
           </span>
           {entry.transaction_id && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link2
-                  className="size-4 text-muted-foreground"
-                  aria-label="Tiene un movimiento enlazado"
-                />
-              </TooltipTrigger>
-              <TooltipContent>Tiene un movimiento enlazado</TooltipContent>
+            <Tooltip delay={500}>
+              <Tooltip.Trigger
+                aria-label="Tiene un movimiento enlazado"
+                className="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-focus"
+              >
+                <Link2 className="size-4 text-muted" />
+              </Tooltip.Trigger>
+              <Tooltip.Content>Tiene un movimiento enlazado</Tooltip.Content>
             </Tooltip>
           )}
         </span>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs text-muted">
           {formatDate(entry.occurred_on)}
         </span>
         {entry.note && (
-          <span className="truncate text-sm text-muted-foreground">
-            {entry.note}
-          </span>
+          <span className="truncate text-sm text-muted">{entry.note}</span>
         )}
       </div>
 
@@ -129,9 +107,10 @@ function EntryRow({
         <div className="flex gap-1">
           <Button
             variant="ghost"
-            size="icon-sm"
+            isIconOnly
+            size="sm"
             aria-label={`Editar ${label.toLowerCase()}`}
-            onClick={() => setEditing(true)}
+            onPress={() => setEditing(true)}
           >
             <Pencil />
           </Button>
@@ -174,7 +153,7 @@ function DeleteEntryButton({
     startTransition(async () => {
       const result = await deleteEntry(entry.id)
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success(`${label} eliminado`)
       }
@@ -183,38 +162,50 @@ function DeleteEntryButton({
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={`Eliminar ${label.toLowerCase()}`}
-          disabled={pending}
-        >
-          <Trash2 />
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>
-            ¿Eliminar este {label.toLowerCase()}?
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            El saldo se recalcula sin él.
-            {entry.transaction_id &&
-              " También se elimina su movimiento en Movimientos."}{" "}
-            Esta acción no se puede deshacer.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            onClick={handleDelete}
-          >
-            Eliminar
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
+      <Button
+        variant="ghost"
+        isIconOnly
+        size="sm"
+        aria-label={`Eliminar ${label.toLowerCase()}`}
+        isDisabled={pending}
+      >
+        <Trash2 />
+      </Button>
+      <AlertDialog.Backdrop isKeyboardDismissDisabled={false}>
+        <AlertDialog.Container>
+          <AlertDialog.Dialog className="sm:max-w-md">
+            <AlertDialog.Header>
+              <AlertDialog.Icon status="danger" />
+              <AlertDialog.Heading>
+                ¿Eliminar este {label.toLowerCase()}?
+              </AlertDialog.Heading>
+              <AlertDialog.Body>
+                <p className="text-sm text-muted">
+                  El saldo se recalcula sin él.
+                  {entry.transaction_id &&
+                    " También se elimina su movimiento en Movimientos."}{" "}
+                  Esta acción no se puede deshacer.
+                </p>
+              </AlertDialog.Body>
+            </AlertDialog.Header>
+            <AlertDialog.Footer>
+              <Button
+                slot="close"
+                variant="tertiary"
+              >
+                Cancelar
+              </Button>
+              <Button
+                slot="close"
+                variant="danger"
+                onPress={handleDelete}
+              >
+                Eliminar
+              </Button>
+            </AlertDialog.Footer>
+          </AlertDialog.Dialog>
+        </AlertDialog.Container>
+      </AlertDialog.Backdrop>
     </AlertDialog>
   )
 }

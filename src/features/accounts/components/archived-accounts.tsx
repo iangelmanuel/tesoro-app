@@ -1,13 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger
-} from "@/components/ui/collapsible"
+import { Button, Disclosure, buttonVariants } from "@heroui/react"
 import { GoalIcon } from "@/features/goals/components/goal-icon"
 import { formatCurrency } from "@/libs/format"
 import { ACCOUNT_KIND_META } from "../constants"
@@ -29,21 +23,15 @@ export function ArchivedAccounts({
   transactionsPath
 }: ArchivedAccountsProps) {
   return (
-    <Collapsible className="flex flex-col gap-3">
-      <CollapsibleTrigger asChild>
-        <Button
-          variant="ghost"
-          className="group w-fit"
-        >
-          <ChevronDown
-            data-icon="inline-start"
-            className="transition-transform group-data-[state=closed]:-rotate-90"
-          />
+    <Disclosure className="flex flex-col gap-3">
+      <Disclosure.Heading>
+        <Disclosure.Trigger className="flex w-fit items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-default">
+          <Disclosure.Indicator />
           Archivadas ({accounts.length})
-        </Button>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <ul className="divide-y rounded-xl border">
+        </Disclosure.Trigger>
+      </Disclosure.Heading>
+      <Disclosure.Content>
+        <ul className="divide-y divide-separator rounded-xl border border-border">
           {accounts.map((account) => (
             <ArchivedAccountRow
               key={account.id}
@@ -53,8 +41,8 @@ export function ArchivedAccounts({
             />
           ))}
         </ul>
-      </CollapsibleContent>
-    </Collapsible>
+      </Disclosure.Content>
+    </Disclosure>
   )
 }
 
@@ -77,25 +65,22 @@ function ArchivedAccountRow({
       />
       <span className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="truncate font-medium">{account.name}</span>
-        <span className="text-sm text-muted-foreground tabular-nums">
+        <span className="text-sm text-muted tabular-nums">
           {ACCOUNT_KIND_META[account.kind].label} ·{" "}
           {formatCurrency(account.balance, currency)}
         </span>
       </span>
-      <Button
-        variant="ghost"
-        size="sm"
-        asChild
+      <Link
+        href={accountTransactionsHref(account.id, transactionsPath)}
+        className={buttonVariants({ variant: "ghost", size: "sm" })}
       >
-        <Link href={accountTransactionsHref(account.id, transactionsPath)}>
-          Ver movimientos
-        </Link>
-      </Button>
+        Ver movimientos
+      </Link>
       <Button
         variant="outline"
         size="sm"
-        disabled={pending}
-        onClick={() => run("restore")}
+        isDisabled={pending}
+        onPress={() => run("restore")}
       >
         Restaurar
       </Button>

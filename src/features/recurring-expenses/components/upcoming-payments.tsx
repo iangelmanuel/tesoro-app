@@ -1,7 +1,5 @@
-import { cn } from "cn"
+import { Button, Chip, cn } from "@heroui/react"
 import { Check } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
@@ -19,7 +17,7 @@ const TONE_CLASSES: Record<OccurrenceTone, string> = {
     "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
   danger: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
   warning: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-  neutral: "bg-muted text-muted-foreground"
+  neutral: "bg-default text-muted"
 }
 
 export function OccurrenceStatusBadge({
@@ -28,7 +26,16 @@ export function OccurrenceStatusBadge({
   status: OccurrenceStatus
 }) {
   const { label, tone } = OCCURRENCE_STATUS[status]
-  return <Badge className={TONE_CLASSES[tone]}>{label}</Badge>
+  return (
+    <Chip
+      size="sm"
+      className={TONE_CLASSES[tone]}
+      color="accent"
+      variant="primary"
+    >
+      {label}
+    </Chip>
+  )
 }
 
 interface PayOccurrenceButtonProps {
@@ -66,7 +73,7 @@ export function PayOccurrenceButton({
           size="sm"
           variant="outline"
         >
-          <Check data-icon="inline-start" />
+          <Check />
           Marcar como pagado
         </Button>
       }
@@ -101,7 +108,7 @@ export function UpcomingPayments({
               <p className="truncate font-medium">{payment.name}</p>
               <OccurrenceStatusBadge status={payment.status} />
             </div>
-            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
               <span>{formatDate(payment.dueOn)}</span>
               <CategoryBadge
                 name={payment.category.name}
@@ -120,8 +127,7 @@ export function UpcomingPayments({
                 <p
                   className={cn(
                     "font-medium tabular-nums",
-                    payment.status === "overdue" &&
-                      "text-rose-600 dark:text-rose-400"
+                    payment.status === "overdue" && "text-(--expense)"
                   )}
                 >
                   {formatCurrency(payment.amount, currency)}

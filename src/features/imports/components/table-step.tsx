@@ -1,26 +1,17 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
+  Button,
+  Checkbox,
+  Chip,
+  Input,
+  Label,
+  ListBox,
   Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
-import {
   Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table"
-import { cn } from "@/libs/utils"
+  TextField,
+  cn
+} from "@heroui/react"
 import { SAMPLE_ROWS } from "../constants"
 import {
   buildTable,
@@ -75,7 +66,7 @@ export function TableStep({
       {!file.isCsv && (
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-2 text-sm font-medium">Hojas a importar</legend>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted">
             La primera hoja marcada define la tabla y el mapeo. En las demás se
             busca una tabla con los mismos encabezados.
           </p>
@@ -92,23 +83,36 @@ export function TableStep({
                   key={sheet.name}
                   className="flex flex-wrap items-center gap-3 px-3 py-2"
                 >
-                  <Label className="flex flex-1 cursor-pointer items-center gap-2 font-normal">
-                    <Checkbox
-                      checked={checked}
-                      onCheckedChange={() => onToggleSheet(sheet.name)}
-                    />
-                    {sheet.name}
-                  </Label>
-                  {checked && isPrimary && <Badge>Define el mapeo</Badge>}
+                  <Checkbox
+                    isSelected={checked}
+                    onChange={() => onToggleSheet(sheet.name)}
+                    className="flex-1"
+                  >
+                    <Checkbox.Control>
+                      <Checkbox.Indicator />
+                    </Checkbox.Control>
+                    <Checkbox.Content>{sheet.name}</Checkbox.Content>
+                  </Checkbox>
+                  {checked && isPrimary && (
+                    <Chip
+                      size="sm"
+                      color="accent"
+                      variant="primary"
+                    >
+                      Define el mapeo
+                    </Chip>
+                  )}
                   {checked && !isPrimary && match?.table && (
-                    <Badge variant="secondary">
-                      Coincide · {tableLabel(match.table)}
-                    </Badge>
+                    <Chip size="sm">Coincide · {tableLabel(match.table)}</Chip>
                   )}
                   {checked && !isPrimary && match && !match.table && (
-                    <Badge variant="destructive">
+                    <Chip
+                      size="sm"
+                      color="danger"
+                      variant="soft"
+                    >
                       No coincide · se excluye
-                    </Badge>
+                    </Chip>
                   )}
                 </li>
               )
@@ -125,21 +129,19 @@ export function TableStep({
           onChange={onTableChange}
         />
       ) : (
-        <p className="text-sm text-muted-foreground">
-          Marca al menos una hoja.
-        </p>
+        <p className="text-sm text-muted">Marca al menos una hoja.</p>
       )}
 
       <div className="flex flex-wrap justify-between gap-2">
         <Button
           variant="outline"
-          onClick={onBack}
+          onPress={onBack}
         >
           Elegir otro archivo
         </Button>
         <Button
-          disabled={!canContinue}
-          onClick={onNext}
+          isDisabled={!canContinue}
+          onPress={onNext}
         >
           Continuar con{" "}
           {included.length === 1 ? "1 hoja" : `${included.length} hojas`}
@@ -180,7 +182,7 @@ function PrimaryTable({ sheet, detected, table, onChange }: PrimaryTableProps) {
     <section className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <h2 className="text-sm font-medium">Tabla de «{sheet.name}»</h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted">
           {detected.length > 0
             ? "Elige una de las tablas detectadas o ajusta la fila de encabezados y las columnas."
             : "No detectamos una tabla. Indica la fila de encabezados y las columnas."}
@@ -193,8 +195,8 @@ function PrimaryTable({ sheet, detected, table, onChange }: PrimaryTableProps) {
             <Button
               key={`${item.headerRow}-${item.startCol}`}
               size="sm"
-              variant={sameRange(item, table) ? "default" : "outline"}
-              onClick={() => onChange(item)}
+              variant={sameRange(item, table) ? "primary" : "outline"}
+              onPress={() => onChange(item)}
             >
               {tableLabel(item)}
             </Button>
@@ -203,22 +205,23 @@ function PrimaryTable({ sheet, detected, table, onChange }: PrimaryTableProps) {
       )}
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="import-header-row">Fila de encabezados</Label>
+        <TextField
+          value={String((table?.headerRow ?? 0) + 1)}
+          onChange={(next) => {
+            const value = Number(next)
+            if (Number.isInteger(value) && value >= 1 && value <= rowCount) {
+              adjust({ headerRow: value - 1 })
+            }
+          }}
+          className="flex flex-col gap-1.5"
+        >
+          <Label>Fila de encabezados</Label>
           <Input
-            id="import-header-row"
             type="number"
             min={1}
             max={rowCount}
-            value={(table?.headerRow ?? 0) + 1}
-            onChange={(event) => {
-              const value = Number(event.target.value)
-              if (Number.isInteger(value) && value >= 1 && value <= rowCount) {
-                adjust({ headerRow: value - 1 })
-              }
-            }}
           />
-        </div>
+        </TextField>
         <ColumnSelect
           id="import-start-col"
           label="Columna inicial"
@@ -238,50 +241,55 @@ function PrimaryTable({ sheet, detected, table, onChange }: PrimaryTableProps) {
       {table && (
         <div className="overflow-x-auto rounded-lg border">
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12 text-muted-foreground">
-                  Fila
-                </TableHead>
-                {table.headers.map((header, index) => (
-                  <TableHead key={index}>{header}</TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sampleRows.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={table.headers.length + 1}
-                    className="text-center text-muted-foreground"
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Datos de la hoja">
+                <Table.Header>
+                  <Table.Column
+                    isRowHeader
+                    className="w-12 text-muted"
                   >
-                    La tabla no tiene filas de datos
-                  </TableCell>
-                </TableRow>
-              ) : (
-                sampleRows.map((row) => (
-                  <TableRow key={row}>
-                    <TableCell className="text-muted-foreground">
-                      {row + 1}
-                    </TableCell>
-                    {tableRowCells(sheet.cells, table, row).map(
-                      (cell, index) => (
-                        <TableCell
-                          key={index}
-                          className={cn(
-                            "max-w-48 truncate",
-                            typeof cell === "number" &&
-                              "text-right tabular-nums"
-                          )}
-                        >
-                          {cellText(cell)}
-                        </TableCell>
-                      )
-                    )}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
+                    Fila
+                  </Table.Column>
+                  {table.headers.map((header, index) => (
+                    <Table.Column key={index}>{header}</Table.Column>
+                  ))}
+                </Table.Header>
+                <Table.Body>
+                  {sampleRows.length === 0 ? (
+                    <Table.Row>
+                      <Table.Cell
+                        colSpan={table.headers.length + 1}
+                        className="text-center text-muted"
+                      >
+                        La tabla no tiene filas de datos
+                      </Table.Cell>
+                    </Table.Row>
+                  ) : (
+                    sampleRows.map((row) => (
+                      <Table.Row key={row}>
+                        <Table.Cell className="text-muted">
+                          {row + 1}
+                        </Table.Cell>
+                        {tableRowCells(sheet.cells, table, row).map(
+                          (cell, index) => (
+                            <Table.Cell
+                              key={index}
+                              className={cn(
+                                "max-w-48 truncate",
+                                typeof cell === "number" &&
+                                  "text-right tabular-nums"
+                              )}
+                            >
+                              {cellText(cell)}
+                            </Table.Cell>
+                          )
+                        )}
+                      </Table.Row>
+                    ))
+                  )}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
           </Table>
         </div>
       )}
@@ -308,25 +316,30 @@ function ColumnSelect({
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={id}>{label}</Label>
       <Select
-        value={String(value)}
-        onValueChange={(next) => onChange(Number(next))}
+        value={String(value) || null}
+        onChange={(key) =>
+          key != null && ((next) => onChange(Number(next)))(String(key))
+        }
+        fullWidth
       >
-        <SelectTrigger
-          id={id}
-          className="w-full"
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {columns.map((column) => (
-            <SelectItem
-              key={column}
-              value={String(column)}
-            >
-              {columnName(column)}
-            </SelectItem>
-          ))}
-        </SelectContent>
+        <Select.Trigger id={id}>
+          <Select.Value />
+          <Select.Indicator />
+        </Select.Trigger>
+        <Select.Popover>
+          <ListBox>
+            {columns.map((column) => (
+              <ListBox.Item
+                key={column}
+                id={String(column)}
+                textValue={String(columnName(column))}
+              >
+                {columnName(column)}
+                <ListBox.ItemIndicator />
+              </ListBox.Item>
+            ))}
+          </ListBox>
+        </Select.Popover>
       </Select>
     </div>
   )

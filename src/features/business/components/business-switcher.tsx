@@ -1,15 +1,9 @@
 "use client"
 
 import type { Route } from "next"
-import Link from "next/link"
-import { Building2, Check, ChevronsUpDown } from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
-import { SidebarMenuButton } from "@/components/ui/sidebar"
+import { useRouter } from "next/navigation"
+import { Dropdown, Label } from "@heroui/react"
+import { Building2, ChevronsUpDown } from "lucide-react"
 import { workspaceBasePath } from "@/features/workspaces/paths"
 
 export interface BusinessOption {
@@ -28,6 +22,7 @@ export function BusinessSwitcher({
   businesses,
   activeId
 }: BusinessSwitcherProps) {
+  const router = useRouter()
   const active = businesses.find((business) => business.id === activeId)
 
   if (businesses.length < 2 || !active) {
@@ -35,40 +30,41 @@ export function BusinessSwitcher({
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <SidebarMenuButton
-          size="lg"
-          className="border"
-        >
-          <Building2 />
-          <span className="truncate font-medium">{active.name}</span>
-          <ChevronsUpDown className="ml-auto" />
-        </SidebarMenuButton>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="start"
-        className="w-(--radix-dropdown-menu-trigger-width)"
+    <Dropdown>
+      <Dropdown.Trigger
+        aria-label={`Empresa: ${active.name}. Cambiar de empresa`}
+        className="flex h-12 w-full items-center gap-2 rounded-lg border border-border px-2 text-left text-sm transition-colors outline-none hover:bg-default focus-visible:ring-2 focus-visible:ring-focus [&>svg]:size-4 [&>svg]:shrink-0"
       >
-        {businesses.map((business) => (
-          <DropdownMenuItem
-            key={business.id}
-            asChild
-          >
-            <Link
-              href={
-                workspaceBasePath({
-                  id: business.id,
-                  type: "business"
-                }) as Route
-              }
+        <Building2 />
+        <span className="truncate font-medium">{active.name}</span>
+        <ChevronsUpDown className="ml-auto text-muted" />
+      </Dropdown.Trigger>
+      <Dropdown.Popover
+        placement="bottom start"
+        className="min-w-(--trigger-width)"
+      >
+        <Dropdown.Menu
+          aria-label="Empresas"
+          selectionMode="single"
+          selectedKeys={[activeId]}
+          onAction={(key) =>
+            router.push(
+              workspaceBasePath({ id: String(key), type: "business" }) as Route
+            )
+          }
+        >
+          {businesses.map((business) => (
+            <Dropdown.Item
+              key={business.id}
+              id={business.id}
+              textValue={business.name}
             >
-              <span className="truncate">{business.name}</span>
-              {business.id === activeId && <Check className="ml-auto" />}
-            </Link>
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+              <Label className="truncate">{business.name}</Label>
+              <Dropdown.ItemIndicator />
+            </Dropdown.Item>
+          ))}
+        </Dropdown.Menu>
+      </Dropdown.Popover>
+    </Dropdown>
   )
 }

@@ -1,9 +1,4 @@
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+import { Card, CardDescription, CardHeader, CardTitle } from "@heroui/react"
 import { formatPercent } from "@/features/budgets/progress"
 import { formatCurrency } from "@/libs/format"
 import {
@@ -37,7 +32,7 @@ export function DebtTotals({ debts, currency }: DebtTotalsProps) {
         <CardHeader>
           <CardDescription>Utilización de tarjetas</CardDescription>
           {utilization === null ? (
-            <CardTitle className="text-2xl font-semibold text-muted-foreground">
+            <CardTitle className="text-2xl font-semibold text-muted">
               Sin tarjetas
             </CardTitle>
           ) : (

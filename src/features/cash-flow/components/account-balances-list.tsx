@@ -1,4 +1,4 @@
-import { cn } from "cn"
+import { cn } from "@heroui/react"
 import { ACCOUNT_KIND_META } from "@/features/accounts/constants"
 import type { AccountWithBalance } from "@/features/accounts/types"
 import { GoalIcon } from "@/features/goals/components/goal-icon"
@@ -32,7 +32,7 @@ export function AccountBalancesList({
             />
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="truncate font-medium">{account.name}</span>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-muted">
                 {ACCOUNT_KIND_META[account.kind].label}
               </span>
             </div>

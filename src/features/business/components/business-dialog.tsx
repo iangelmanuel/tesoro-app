@@ -1,24 +1,17 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import {
+  Button,
+  FieldError,
+  Input,
+  Label,
+  ListBox,
+  Modal,
   Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
+  TextField,
+  toast
+} from "@heroui/react"
 import { SITE } from "@/config/site"
 import { Field } from "@/features/debts/components/field"
 import { createBusiness, updateBusiness } from "../actions"
@@ -44,30 +37,37 @@ export function BusinessDialog({ business, trigger }: BusinessDialogProps) {
   const isEditing = business !== undefined
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={setOpen}
-    >
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Editar empresa" : "Crear empresa"}
-          </DialogTitle>
-          <DialogDescription>
-            {isEditing
-              ? "Cambia los datos de tu empresa. Sus movimientos no cambian."
-              : "Un espacio separado de tus finanzas personales para las ventas, costos y gastos de tu negocio."}
-          </DialogDescription>
-        </DialogHeader>
-        {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-        <BusinessForm
-          business={business}
-          onSaved={() => setOpen(false)}
-          onCancel={() => setOpen(false)}
-        />
-      </DialogContent>
-    </Dialog>
+    <Modal>
+      {trigger}
+      <Modal.Backdrop
+        isOpen={open}
+        onOpenChange={setOpen}
+      >
+        <Modal.Container scroll="outside">
+          <Modal.Dialog className="sm:max-w-md">
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <Modal.Heading>
+                {isEditing ? "Editar empresa" : "Crear empresa"}
+              </Modal.Heading>
+              <p className="text-sm text-muted">
+                {isEditing
+                  ? "Cambia los datos de tu empresa. Sus movimientos no cambian."
+                  : "Un espacio separado de tus finanzas personales para las ventas, costos y gastos de tu negocio."}
+              </p>
+            </Modal.Header>
+            <Modal.Body>
+              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
+              <BusinessForm
+                business={business}
+                onSaved={() => setOpen(false)}
+                onCancel={() => setOpen(false)}
+              />
+            </Modal.Body>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
   )
 }
 
@@ -119,38 +119,34 @@ export function BusinessForm({
         />
       )}
 
-      <Field
-        id="business_name"
-        label="Nombre"
-        errors={errors?.name}
+      <TextField
+        name="name"
+        maxLength={60}
+        defaultValue={values?.name ?? business?.name}
+        isRequired
+        isInvalid={Boolean(errors?.name)}
+        validationBehavior="aria"
+        className="flex flex-col gap-2"
       >
-        <Input
-          id="business_name"
-          name="name"
-          maxLength={60}
-          placeholder="Panadería Ana"
-          defaultValue={values?.name ?? business?.name}
-          aria-invalid={Boolean(errors?.name) || undefined}
-          required
-        />
-      </Field>
+        <Label>Nombre</Label>
+        <Input placeholder="Panadería Ana" />
+        <FieldError>{errors?.name?.[0]}</FieldError>
+      </TextField>
 
-      <Field
-        id="tax_id"
-        label="NIT (opcional)"
-        errors={errors?.tax_id}
+      <TextField
+        name="tax_id"
+        inputMode="numeric"
+        autoComplete="off"
+        maxLength={12}
+        defaultValue={values?.tax_id ?? business?.taxId ?? ""}
+        isInvalid={Boolean(errors?.tax_id)}
+        validationBehavior="aria"
+        className="flex flex-col gap-2"
       >
-        <Input
-          id="tax_id"
-          name="tax_id"
-          inputMode="numeric"
-          autoComplete="off"
-          maxLength={12}
-          placeholder="900123456-7"
-          defaultValue={values?.tax_id ?? business?.taxId ?? ""}
-          aria-invalid={Boolean(errors?.tax_id) || undefined}
-        />
-      </Field>
+        <Label>NIT (opcional)</Label>
+        <Input placeholder="900123456-7" />
+        <FieldError>{errors?.tax_id?.[0]}</FieldError>
+      </TextField>
 
       <Field
         id="sector"
@@ -159,33 +155,37 @@ export function BusinessForm({
       >
         <Select
           name="sector"
-          value={sector}
-          onValueChange={setSector}
+          value={sector || null}
+          onChange={(key) => key != null && setSector(String(key))}
+          fullWidth
+          isInvalid={Boolean(errors?.sector)}
+          placeholder="Elige un sector"
         >
-          <SelectTrigger
-            id="sector"
-            className="w-full"
-            aria-invalid={Boolean(errors?.sector) || undefined}
-          >
-            <SelectValue placeholder="Elige un sector" />
-          </SelectTrigger>
-          <SelectContent>
-            {SITE.businessSectors.map((option) => (
-              <SelectItem
-                key={option.id}
-                value={option.id}
-              >
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
+          <Select.Trigger id="sector">
+            <Select.Value />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox>
+              {SITE.businessSectors.map((option) => (
+                <ListBox.Item
+                  key={option.id}
+                  id={option.id}
+                  textValue={String(option.label)}
+                >
+                  {option.label}
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
         </Select>
       </Field>
 
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-destructive"
+          className="text-sm text-danger"
         >
           {state.error}
         </p>
@@ -194,16 +194,15 @@ export function BusinessForm({
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         {onCancel && (
           <Button
-            type="button"
             variant="ghost"
-            onClick={onCancel}
+            onPress={onCancel}
           >
             Cancelar
           </Button>
         )}
         <Button
           type="submit"
-          disabled={pending}
+          isDisabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear empresa"}
         </Button>

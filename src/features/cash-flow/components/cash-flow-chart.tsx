@@ -5,11 +5,13 @@ import { es } from "date-fns/locale"
 import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts"
 import {
   type ChartConfig,
-  ChartContainer,
+  ChartContainer
+} from "@/components/charts/chart-container"
+import {
   ChartLegend,
-  ChartLegendContent,
-  ChartTooltip
-} from "@/components/ui/chart"
+  ChartLegendContent
+} from "@/components/charts/chart-legend"
+import { ChartTooltip } from "@/components/charts/chart-tooltip"
 import { ChartDataTable } from "@/features/reports/components/chart-data-table"
 import { CurrencyTooltipContent } from "@/features/reports/components/currency-tooltip"
 import { formatCurrency } from "@/libs/format"

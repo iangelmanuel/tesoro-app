@@ -4,8 +4,8 @@ import { formatCurrency } from "@/libs/format"
 // Resumen. Lo comparten Personal y Empresa.
 
 export const EMPTY = "—"
-export const POSITIVE = "text-emerald-600 dark:text-emerald-400"
-export const NEGATIVE = "text-rose-600 dark:text-rose-400"
+export const POSITIVE = "text-(--income)"
+export const NEGATIVE = "text-(--expense)"
 
 export const PERCENT = new Intl.NumberFormat("es-CO", {
   style: "percent",
@@ -29,6 +29,6 @@ export function formatSignedCurrency(amount: number, currency: string) {
 
 // Verde si el cambio es bueno y rojo si es malo. En gastos subir es malo.
 export function changeTone(change: number | null, inverted = false) {
-  if (!change) return "text-muted-foreground"
+  if (!change) return "text-muted"
   return change > 0 !== inverted ? POSITIVE : NEGATIVE
 }

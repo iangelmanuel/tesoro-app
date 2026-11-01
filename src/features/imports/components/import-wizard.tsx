@@ -1,9 +1,9 @@
 "use client"
 
 import { useMemo, useReducer, useState, useTransition } from "react"
+import { cn } from "@heroui/react"
 import { Check } from "lucide-react"
 import { formatCurrency } from "@/libs/format"
-import { cn } from "@/libs/utils"
 import {
   type ConfirmImportResult,
   confirmDebtEntriesImport,
@@ -662,14 +662,15 @@ function StepIndicator({
             aria-current={active ? "step" : undefined}
             className={cn(
               "flex items-center gap-2",
-              active ? "font-medium text-foreground" : "text-muted-foreground"
+              active ? "font-medium text-foreground" : "text-muted"
             )}
           >
             <span
               className={cn(
                 "flex size-6 items-center justify-center rounded-full border text-xs",
-                active && "border-primary bg-primary text-primary-foreground",
-                done && "border-primary text-primary"
+                active && "border-accent bg-accent text-accent-foreground",
+                done &&
+                  "border-accent bg-accent-soft text-accent-soft-foreground"
               )}
             >
               {done ? <Check className="size-3.5" /> : index + 1}

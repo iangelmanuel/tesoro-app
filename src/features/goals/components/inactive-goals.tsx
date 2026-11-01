@@ -1,13 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger
-} from "@/components/ui/collapsible"
+import { Button, Disclosure } from "@heroui/react"
 import { formatCurrency } from "@/libs/format"
 import type { Goal, GoalContribution } from "../queries"
 import { GoalIcon } from "./goal-icon"
@@ -33,20 +27,14 @@ export function InactiveGoals({
   currency
 }: InactiveGoalsProps) {
   return (
-    <Collapsible className="flex flex-col gap-3">
-      <CollapsibleTrigger asChild>
-        <Button
-          variant="ghost"
-          className="group w-fit"
-        >
-          <ChevronDown
-            data-icon="inline-start"
-            className="transition-transform group-data-[state=closed]:-rotate-90"
-          />
+    <Disclosure className="flex flex-col gap-3">
+      <Disclosure.Heading>
+        <Disclosure.Trigger className="flex w-fit items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-default">
+          <Disclosure.Indicator />
           Cumplidas y archivadas ({goals.length})
-        </Button>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
+        </Disclosure.Trigger>
+      </Disclosure.Heading>
+      <Disclosure.Content>
         <ul className="divide-y rounded-xl border">
           {goals.map((goal) => (
             <InactiveGoalRow
@@ -58,8 +46,8 @@ export function InactiveGoals({
             />
           ))}
         </ul>
-      </CollapsibleContent>
-    </Collapsible>
+      </Disclosure.Content>
+    </Disclosure>
   )
 }
 
@@ -82,7 +70,7 @@ function InactiveGoalRow({
       {/* Abre el Sheet de solo lectura */}
       <button
         type="button"
-        className="-m-1 flex min-w-0 flex-1 items-center gap-3 rounded-lg p-1 text-left transition-colors hover:bg-muted/50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+        className="-m-1 flex min-w-0 flex-1 items-center gap-3 rounded-lg p-1 text-left transition-colors hover:bg-default/50 focus-visible:ring-[3px] focus-visible:ring-focus/50 focus-visible:outline-none"
         onClick={() => setDetailOpen(true)}
       >
         <GoalIcon
@@ -96,7 +84,7 @@ function InactiveGoalRow({
               status={goal.status === "active" ? null : goal.status}
             />
           </span>
-          <span className="text-sm text-muted-foreground tabular-nums">
+          <span className="text-sm text-muted tabular-nums">
             {formatCurrency(goal.saved, currency)} de{" "}
             {formatCurrency(goal.target_amount, currency)}
           </span>
@@ -105,8 +93,8 @@ function InactiveGoalRow({
       <Button
         variant="outline"
         size="sm"
-        disabled={pending}
-        onClick={() => run("reactivate")}
+        isDisabled={pending}
+        onPress={() => run("reactivate")}
       >
         Reactivar
       </Button>

@@ -44,12 +44,10 @@ export function ScoreFactors<K extends string>({
           >
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
               <p className="font-medium">{label}</p>
-              <p className="text-xs text-muted-foreground">
-                Peso {factor.weight}
-              </p>
+              <p className="text-xs text-muted">Peso {factor.weight}</p>
               {isIncluded(factor) ? (
                 <p className="ml-auto text-sm tabular-nums">
-                  <span className="text-muted-foreground">
+                  <span className="text-muted">
                     {formatFactorValue(
                       factor.value,
                       monthFactors.includes(factor.key)
@@ -61,9 +59,7 @@ export function ScoreFactors<K extends string>({
                   </span>
                 </p>
               ) : (
-                <p className="ml-auto text-sm text-muted-foreground">
-                  Excluido
-                </p>
+                <p className="ml-auto text-sm text-muted">Excluido</p>
               )}
             </div>
             {isIncluded(factor) ? (
@@ -73,15 +69,15 @@ export function ScoreFactors<K extends string>({
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-valuenow={Math.round(factor.points)}
-                className="flex h-2 w-full overflow-hidden rounded-full bg-muted"
+                className="flex h-2 w-full overflow-hidden rounded-full bg-default"
               >
                 <div
-                  className="h-full bg-primary transition-all"
+                  className="h-full bg-accent transition-all"
                   style={{ width: `${factor.points}%` }}
                 />
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">{factor.excluded}</p>
+              <p className="text-sm text-muted">{factor.excluded}</p>
             )}
           </li>
         )

@@ -1,38 +1,35 @@
+import { Skeleton } from "@heroui/react"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem
-} from "@/components/ui/sidebar"
-import { Skeleton } from "@/components/ui/skeleton"
+  SidebarHeader
+} from "@/components/dashboard/sidebar"
 import { SITE } from "@/config/site"
 
+// Anchos fijos: Math.random() no se permite al prerenderizar (cacheComponents)
 export function AppSidebarSkeleton() {
   return (
-    <Sidebar collapsible="offcanvas">
-      <SidebarHeader className="gap-3">
-        <Skeleton className="mx-2 mt-1 h-7 w-24" />
-        <Skeleton className="h-9 w-full" />
+    <Sidebar>
+      <SidebarHeader>
+        <Skeleton className="mx-2 mt-1 h-7 w-24 rounded-lg" />
+        <Skeleton className="h-9 w-full rounded-lg" />
       </SidebarHeader>
-      <SidebarContent className="p-2">
-        <SidebarMenu>
+      <SidebarContent>
+        <ul className="flex flex-col gap-0.5">
           {SITE.navigation.personal.map((item) => (
-            // No se usa SidebarMenuSkeleton: su ancho sale de Math.random(),
-            // que cacheComponents no permite al prerenderizar
-            <SidebarMenuItem
+            <li
               key={item.href}
-              className="flex h-8 items-center gap-2 px-2"
+              className="flex h-9 items-center gap-2 px-2"
             >
               <Skeleton className="size-4 rounded-md" />
-              <Skeleton className="h-4 flex-1" />
-            </SidebarMenuItem>
+              <Skeleton className="h-4 flex-1 rounded-md" />
+            </li>
           ))}
-        </SidebarMenu>
+        </ul>
       </SidebarContent>
       <SidebarFooter>
-        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full rounded-lg" />
       </SidebarFooter>
     </Sidebar>
   )

@@ -3,7 +3,7 @@
 import { useActionState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
+import { Button } from "@heroui/react"
 import { SITE } from "@/config/site"
 import { formatDeletionDate } from "@/features/account/deletion"
 import { signIn } from "../actions"
@@ -39,7 +39,7 @@ export function SignInForm() {
       {deletionNotice && (
         <p
           role="status"
-          className="rounded-lg border bg-muted/50 px-4 py-3 text-sm"
+          className="rounded-lg border bg-default/50 px-4 py-3 text-sm"
         >
           {deletionNotice}
         </p>
@@ -76,14 +76,14 @@ export function SignInForm() {
         />
         <Link
           href={SITE.routes.forgotPassword}
-          className="-mt-2 self-end text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          className="-mt-2 self-end text-sm text-muted underline-offset-4 hover:text-foreground hover:underline"
         >
           ¿Olvidaste tu contraseña?
         </Link>
         {error && (
           <p
             role="alert"
-            className="text-sm text-destructive"
+            className="text-sm text-danger"
           >
             {error}
             {state.errorCode === "email_not_confirmed" && (
@@ -101,21 +101,21 @@ export function SignInForm() {
         )}
         <Button
           type="submit"
-          className="w-full"
-          disabled={pending}
+          fullWidth
+          isDisabled={pending}
         >
           {pending ? "Iniciando sesión..." : "Iniciar sesión"}
         </Button>
       </form>
 
-      <div className="flex items-center gap-3 text-xs text-muted-foreground uppercase">
+      <div className="flex items-center gap-3 text-xs text-muted uppercase">
         <span className="h-px flex-1 bg-border" />o
         <span className="h-px flex-1 bg-border" />
       </div>
 
       <OAuthButtons next={next} />
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-center text-sm text-muted">
         ¿No tienes cuenta?{" "}
         <Link
           href={SITE.routes.signUp}

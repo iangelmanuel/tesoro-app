@@ -1,17 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { Button, Drawer, Input, Label, TextField } from "@heroui/react"
 import { Plus, RefreshCw } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle
-} from "@/components/ui/sheet"
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import { parseAmount } from "@/features/transactions/schemas"
 import { formatCurrency, formatDate } from "@/libs/format"
@@ -64,110 +55,120 @@ export function DebtSheet({
   const { pending, run } = useDebtAction(debt)
 
   return (
-    <Sheet
-      open={open}
-      onOpenChange={onOpenChange}
-    >
-      <SheetContent className="w-full overflow-y-auto sm:max-w-md">
-        <SheetHeader>
-          <div className="flex flex-wrap items-center gap-2">
-            <SheetTitle className="truncate">{debt.name}</SheetTitle>
-            {status && <ToneBadge tone={status.tone}>{status.label}</ToneBadge>}
-            {isReceivableOverdue(debt, today) && (
-              <ToneBadge tone="warning">Vencida</ToneBadge>
-            )}
-          </div>
-          <SheetDescription className="tabular-nums">
-            Saldo{" "}
-            <span className="font-medium text-foreground">
-              {formatCurrency(debt.balance, currency)}
-            </span>
-          </SheetDescription>
-        </SheetHeader>
-
-        <div className="flex flex-col gap-6 px-4 pb-4">
-          <div className="flex flex-col gap-4">
-            {isReceivable ? (
-              <ReceivableProgress debt={debt} />
-            ) : (
-              <DebtProgress debt={debt} />
-            )}
-            <DebtDetails
-              debt={debt}
-              currency={currency}
-            />
-          </div>
-
-          {isActiveDebt(debt) && debt.balance > 0 && (
-            <section className="flex flex-col gap-3">
-              <h3 className="text-xs font-medium text-muted-foreground uppercase">
-                Proyección
-              </h3>
-              <ProjectionDetails
-                projection={debtProjection(debt)}
-                currency={currency}
-              />
-              <PaymentSimulator
-                debt={debt}
-                currency={currency}
-              />
-            </section>
-          )}
-
-          {isActive ? (
-            <div className="grid grid-cols-2 gap-2">
-              <PaymentDialog
-                debt={debt}
-                accounts={accounts}
-                trigger={
-                  <Button disabled={debt.balance <= 0}>
-                    <Plus data-icon="inline-start" />
-                    {isReceivable ? "Registrar abono" : "Registrar pago"}
-                  </Button>
-                }
-              />
-              <AdjustBalanceDialog
-                debt={debt}
-                currency={currency}
-                trigger={
-                  <Button variant="outline">
-                    <RefreshCw data-icon="inline-start" />
-                    Actualizar saldo
-                  </Button>
-                }
-              />
-            </div>
-          ) : (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed p-3">
-              <p className="text-sm text-muted-foreground">
-                {status?.label}. Reactívala para registrar{" "}
-                {isReceivable ? "abonos" : "pagos"}.
+    <Drawer>
+      <Drawer.Backdrop
+        isOpen={open}
+        onOpenChange={onOpenChange}
+      >
+        <Drawer.Content placement="right">
+          <Drawer.Dialog className="w-full sm:max-w-md">
+            <Drawer.CloseTrigger aria-label="Cerrar" />
+            <Drawer.Header>
+              <div className="flex flex-wrap items-center gap-2">
+                <Drawer.Heading className="truncate">
+                  {debt.name}
+                </Drawer.Heading>
+                {status && (
+                  <ToneBadge tone={status.tone}>{status.label}</ToneBadge>
+                )}
+                {isReceivableOverdue(debt, today) && (
+                  <ToneBadge tone="warning">Vencida</ToneBadge>
+                )}
+              </div>
+              <p className="text-sm text-muted tabular-nums">
+                Saldo{" "}
+                <span className="font-medium text-foreground">
+                  {formatCurrency(debt.balance, currency)}
+                </span>
               </p>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={pending}
-                onClick={() => run("reactivate")}
-              >
-                Reactivar
-              </Button>
-            </div>
-          )}
+            </Drawer.Header>
+            <Drawer.Body>
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-4">
+                  {isReceivable ? (
+                    <ReceivableProgress debt={debt} />
+                  ) : (
+                    <DebtProgress debt={debt} />
+                  )}
+                  <DebtDetails
+                    debt={debt}
+                    currency={currency}
+                  />
+                </div>
 
-          <section className="flex flex-col gap-2">
-            <h3 className="text-xs font-medium text-muted-foreground uppercase">
-              Historial
-            </h3>
-            <DebtEntriesList
-              debt={debt}
-              entries={entries}
-              currency={currency}
-              readOnly={!isActive}
-            />
-          </section>
-        </div>
-      </SheetContent>
-    </Sheet>
+                {isActiveDebt(debt) && debt.balance > 0 && (
+                  <section className="flex flex-col gap-3">
+                    <h3 className="text-xs font-medium text-muted uppercase">
+                      Proyección
+                    </h3>
+                    <ProjectionDetails
+                      projection={debtProjection(debt)}
+                      currency={currency}
+                    />
+                    <PaymentSimulator
+                      debt={debt}
+                      currency={currency}
+                    />
+                  </section>
+                )}
+
+                {isActive ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <PaymentDialog
+                      debt={debt}
+                      accounts={accounts}
+                      trigger={
+                        <Button isDisabled={debt.balance <= 0}>
+                          <Plus />
+                          {isReceivable ? "Registrar abono" : "Registrar pago"}
+                        </Button>
+                      }
+                    />
+                    <AdjustBalanceDialog
+                      debt={debt}
+                      currency={currency}
+                      trigger={
+                        <Button variant="outline">
+                          <RefreshCw />
+                          Actualizar saldo
+                        </Button>
+                      }
+                    />
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed p-3">
+                    <p className="text-sm text-muted">
+                      {status?.label}. Reactívala para registrar{" "}
+                      {isReceivable ? "abonos" : "pagos"}.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      isDisabled={pending}
+                      onPress={() => run("reactivate")}
+                    >
+                      Reactivar
+                    </Button>
+                  </div>
+                )}
+
+                <section className="flex flex-col gap-2">
+                  <h3 className="text-xs font-medium text-muted uppercase">
+                    Historial
+                  </h3>
+                  <DebtEntriesList
+                    debt={debt}
+                    entries={entries}
+                    currency={currency}
+                    readOnly={!isActive}
+                  />
+                </section>
+              </div>
+            </Drawer.Body>
+          </Drawer.Dialog>
+        </Drawer.Content>
+      </Drawer.Backdrop>
+    </Drawer>
   )
 }
 
@@ -244,7 +245,7 @@ function DebtDetails({ debt, currency }: { debt: Debt; currency: string }) {
             key={label}
             className="flex justify-between gap-2 sm:flex-col sm:justify-start"
           >
-            <dt className="text-muted-foreground">{label}</dt>
+            <dt className="text-muted">{label}</dt>
             <dd className="font-medium tabular-nums">{value}</dd>
           </div>
         ))}
@@ -267,13 +268,13 @@ function ProjectionDetails({
   switch (projection.kind) {
     case "needs_min_payment":
       return (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted">
           Agrega el pago mínimo para ver la proyección
         </p>
       )
     case "no_progress":
       return (
-        <p className="text-sm font-medium text-rose-600 dark:text-rose-400">
+        <p className="text-sm font-medium text-(--expense)">
           Con este pago la deuda no baja
         </p>
       )
@@ -288,24 +289,24 @@ function ProjectionDetails({
         <div className="flex flex-col gap-2">
           <dl className="grid grid-cols-3 gap-2 text-sm">
             <div className="flex flex-col">
-              <dt className="text-muted-foreground">Meses</dt>
+              <dt className="text-muted">Meses</dt>
               <dd className="font-medium tabular-nums">{projection.months}</dd>
             </div>
             <div className="flex flex-col">
-              <dt className="text-muted-foreground">Terminas en</dt>
+              <dt className="text-muted">Terminas en</dt>
               <dd className="font-medium">
                 {formatMonthYear(projection.payoffMonth)}
               </dd>
             </div>
             <div className="flex flex-col">
-              <dt className="text-muted-foreground">Intereses</dt>
+              <dt className="text-muted">Intereses</dt>
               <dd className="font-medium tabular-nums">
                 {formatCurrency(projection.totalInterest, currency)}
               </dd>
             </div>
           </dl>
           {projection.withoutRate && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted">
               Sin tasa, la proyección no incluye intereses
             </p>
           )}
@@ -327,16 +328,17 @@ function PaymentSimulator({
   const valid = !Number.isNaN(payment) && payment > 0
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg bg-muted/50 p-3">
-      <Label htmlFor={`simulator-${debt.id}`}>Si pagaras al mes</Label>
-      <Input
-        id={`simulator-${debt.id}`}
+    <div className="flex flex-col gap-3 rounded-lg bg-default/50 p-3">
+      <TextField
         inputMode="decimal"
         autoComplete="off"
-        placeholder="0"
         value={value}
-        onChange={(event) => setValue(event.target.value)}
-      />
+        onChange={setValue}
+        className="flex flex-col gap-2"
+      >
+        <Label>Si pagaras al mes</Label>
+        <Input placeholder="0" />
+      </TextField>
       {valid && (
         <ProjectionDetails
           projection={debtProjection(debt, payment)}

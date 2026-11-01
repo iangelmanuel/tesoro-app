@@ -1,138 +1,97 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import "@heroui/styles";
 
 @custom-variant dark (&:is(.dark *));
 
+/* Tema de Tesoro sobre los tokens de HeroUI v3: neutros negros y grises
+   azulados y primario (--accent) neutro. Cada espacio cambia el primario
+   con [data-workspace]. */
 :root {
   color-scheme: light;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  /* Gráficas: tono 500 de Tailwind por categoría, ingreso, gasto y balance */
-  --category-emerald: oklch(69.6% 0.17 162.48);
-  --category-teal: oklch(70.4% 0.14 182.503);
-  --category-lime: oklch(76.8% 0.233 130.85);
-  --category-amber: oklch(76.9% 0.188 70.08);
-  --category-orange: oklch(70.5% 0.213 47.604);
+  --background: oklch(0.985 0.002 264);
+  --foreground: oklch(0.21 0.016 265);
+  --surface: oklch(1 0 0);
+  --surface-foreground: var(--foreground);
+  --surface-secondary: oklch(0.967 0.004 264);
+  --surface-secondary-foreground: var(--foreground);
+  --surface-tertiary: oklch(0.948 0.006 264);
+  --surface-tertiary-foreground: var(--foreground);
+  --overlay: oklch(1 0 0);
+  --overlay-foreground: var(--foreground);
+  --muted: oklch(0.52 0.02 262);
+  --default: oklch(0.945 0.006 264);
+  --default-foreground: var(--foreground);
+  --field-background: oklch(1 0 0);
+  --field-foreground: var(--foreground);
+  --segment: oklch(1 0 0);
+  --segment-foreground: var(--foreground);
+  --border: oklch(0.912 0.008 264);
+  --separator: oklch(0.93 0.006 264);
+  --accent: oklch(0.21 0.016 265);
+  --accent-foreground: oklch(0.985 0.002 264);
+  --focus: var(--accent);
+  --link: var(--foreground);
+  --chart-1: oklch(44.6% 0.043 257.281); /* slate-600 */
+  --chart-2: oklch(55.4% 0.046 257.417); /* slate-500 */
+  --chart-3: oklch(70.4% 0.04 256.788); /* slate-400 */
+  --chart-4: oklch(86.9% 0.022 252.894); /* slate-300 */
+  --chart-5: oklch(37.2% 0.044 257.287); /* slate-700 */
+  /* Estados: AA como texto sobre la superficie y con su foreground */
+  --success: oklch(52.7% 0.154 150.069); /* green-700 */
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(55.5% 0.163 48.998); /* amber-700 */
+  --warning-foreground: oklch(1 0 0);
+  --danger: oklch(57.7% 0.245 27.325); /* red-600 */
+  --danger-foreground: oklch(1 0 0);
+  /* Marca: el emerald del logo. No cambia con el tema ni con el espacio */
+  --brand: oklch(69.6% 0.17 162.48);
+  /* Categorías (gráficas): ≥ 3:1 contra la superficie y el fondo */
+  --category-emerald: oklch(59.6% 0.145 163.225);
+  --category-teal: oklch(60% 0.118 184.704);
+  --category-lime: oklch(53.2% 0.157 131.589);
+  --category-amber: oklch(66.6% 0.179 58.318);
+  --category-orange: oklch(64.6% 0.222 41.116);
   --category-rose: oklch(64.5% 0.246 16.439);
   --category-pink: oklch(65.6% 0.241 354.308);
   --category-violet: oklch(60.6% 0.25 292.717);
   --category-indigo: oklch(58.5% 0.233 277.117);
   --category-blue: oklch(62.3% 0.214 259.815);
-  --category-sky: oklch(68.5% 0.169 237.323);
+  --category-sky: oklch(58.8% 0.158 241.966);
   --category-slate: oklch(55.4% 0.046 257.417);
-  --income: oklch(69.6% 0.17 162.48);
-  --expense: oklch(64.5% 0.246 16.439);
-  --balance: oklch(68.5% 0.169 237.323);
-}
-
-@theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --color-foreground: var(--foreground);
-  --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  /* Dinero: ≥ 4.5:1 como texto sobre la superficie y el fondo */
+  --income: oklch(50.8% 0.118 165.612); /* emerald-700 */
+  --expense: oklch(51.4% 0.222 16.935); /* rose-700 */
+  --balance: oklch(50% 0.134 242.749); /* sky-700 */
 }
 
 .dark {
   color-scheme: dark;
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-  /* Gráficas: tono 400 en oscuro para mantener el contraste */
+  --background: oklch(0.145 0.008 265);
+  --foreground: oklch(0.97 0.004 264);
+  --surface: oklch(0.19 0.011 265);
+  --surface-secondary: oklch(0.225 0.012 265);
+  --surface-tertiary: oklch(0.255 0.013 265);
+  --overlay: oklch(0.205 0.012 265);
+  --muted: oklch(0.71 0.02 262);
+  --default: oklch(0.26 0.013 265);
+  --field-background: oklch(0.205 0.012 265);
+  --segment: oklch(0.32 0.014 265);
+  --border: oklch(0.285 0.013 265);
+  --separator: oklch(0.25 0.012 265);
+  --accent: oklch(0.97 0.004 264);
+  --accent-foreground: oklch(0.19 0.011 265);
+  --chart-1: oklch(86.9% 0.022 252.894); /* slate-300 */
+  --chart-2: oklch(70.4% 0.04 256.788); /* slate-400 */
+  --chart-3: oklch(55.4% 0.046 257.417); /* slate-500 */
+  --chart-4: oklch(44.6% 0.043 257.281); /* slate-600 */
+  --chart-5: oklch(92.9% 0.013 255.508); /* slate-200 */
+  --success: oklch(79.2% 0.209 151.711); /* green-400 */
+  --success-foreground: oklch(0.19 0.011 265);
+  --warning: oklch(82.8% 0.189 84.429); /* amber-400 */
+  --warning-foreground: oklch(0.19 0.011 265);
+  --danger: oklch(70.4% 0.191 22.216); /* red-400 */
+  --danger-foreground: oklch(0.19 0.011 265);
+  /* Categorías y dinero: tono 400, AA sobre la superficie oscura */
   --category-emerald: oklch(76.5% 0.177 163.223);
   --category-teal: oklch(77.7% 0.152 181.912);
   --category-lime: oklch(84.1% 0.238 128.85);
@@ -145,14 +104,76 @@
   --category-blue: oklch(70.7% 0.165 254.624);
   --category-sky: oklch(74.6% 0.16 232.661);
   --category-slate: oklch(70.4% 0.04 256.788);
-  --income: oklch(76.5% 0.177 163.223);
-  --expense: oklch(71.2% 0.194 13.428);
-  --balance: oklch(74.6% 0.16 232.661);
+  --income: oklch(76.5% 0.177 163.223); /* emerald-400 */
+  --expense: oklch(71.2% 0.194 13.428); /* rose-400 */
+  --balance: oklch(74.6% 0.16 232.661); /* sky-400 */
+}
+
+/* Primario por espacio. WorkspaceThemeRoot pinta un marcador oculto con
+   data-workspace como hijo directo del contenedor del dashboard; :has() pone
+   el primario en ese contenedor, así sidebar, header y contenido cambian
+   juntos. Emerald y naranja llevan texto oscuro: el blanco no da AA */
+:has(> [data-workspace="personal"]) {
+  --accent: oklch(59.6% 0.145 163.225); /* emerald-600 */
+  --accent-foreground: oklch(0.21 0.016 265);
+}
+
+.dark :has(> [data-workspace="personal"]) {
+  --accent: oklch(69.6% 0.17 162.48); /* emerald-500, el del logo */
+  --accent-foreground: oklch(0.19 0.011 265);
+}
+
+:has(> [data-workspace="business"]) {
+  --accent: oklch(64.6% 0.222 41.116); /* orange-600 */
+  --accent-foreground: oklch(0.21 0.016 265);
+}
+
+.dark :has(> [data-workspace="business"]) {
+  --accent: oklch(70.5% 0.213 47.604); /* orange-500 */
+  --accent-foreground: oklch(0.19 0.011 265);
+}
+
+/* Los derivados del primario se recalculan en el contenedor del espacio:
+   HeroUI los declara en :root y ahí se resuelven con el primario neutro */
+:has(> [data-workspace]) {
+  --focus: var(--accent);
+  --accent-hover: color-mix(
+    in oklab,
+    var(--accent) 90%,
+    var(--accent-foreground) 10%
+  );
+  --accent-soft: color-mix(in oklab, var(--accent) 15%, transparent);
+  --accent-soft-foreground: color-mix(
+    in oklab,
+    var(--accent) 70%,
+    var(--foreground) 30%
+  );
+  --accent-soft-hover: color-mix(in oklab, var(--accent) 20%, transparent);
+}
+
+.dark :has(> [data-workspace]) {
+  --accent-soft: color-mix(in oklab, var(--accent) 12%, transparent);
+  --accent-soft-foreground: color-mix(
+    in oklab,
+    var(--accent) 80%,
+    var(--foreground) 30%
+  );
+  --accent-soft-hover: color-mix(in oklab, var(--accent) 16%, transparent);
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: var(--font-sans);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-focus/50;
   }
   body {
     @apply bg-background text-foreground;
@@ -162,8 +183,8 @@
   }
 }
 
-/* Acento de marca para texto: --income mezclado con el foreground para que
+/* Acento de marca para texto: --brand mezclado con el foreground para que
    el texto pequeño cumpla contraste AA en claro y en oscuro */
 @utility text-brand {
-  color: color-mix(in oklch, var(--income) 70%, var(--foreground));
+  color: color-mix(in oklch, var(--brand) 70%, var(--foreground));
 }

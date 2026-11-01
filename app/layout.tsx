@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next"
 import { Geist } from "next/font/google"
+import { ToastProvider, cn } from "@heroui/react"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { ThemeProvider } from "@/components/theme/theme-provider"
-import { Toaster } from "@/components/ui/sonner"
 import { SITE } from "@/config/site"
 import {
   buildApplicationSchema,
@@ -10,7 +10,6 @@ import {
   buildMetadata,
   buildWebsiteSchema
 } from "@/libs/seo"
-import { cn } from "@/libs/utils"
 import "@/styles/globals.css"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
@@ -65,7 +64,7 @@ export default function RootLayout({
         />
         <ThemeProvider>
           {children}
-          <Toaster />
+          <ToastProvider placement="bottom end" />
         </ThemeProvider>
       </body>
     </html>

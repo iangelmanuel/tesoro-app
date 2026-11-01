@@ -1,4 +1,4 @@
-import { cn } from "@/libs/utils"
+import { cn } from "@heroui/react"
 
 type SectionHeadingProps = {
   id: string
@@ -27,7 +27,7 @@ export function SectionHeading({
         {title}
       </h2>
       {description && (
-        <p className="text-base text-pretty text-muted-foreground sm:text-lg">
+        <p className="text-base text-pretty text-muted sm:text-lg">
           {description}
         </p>
       )}

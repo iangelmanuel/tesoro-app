@@ -1,34 +1,49 @@
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { FieldError, Input, Label, TextField } from "@heroui/react"
 
-interface FormFieldProps extends React.ComponentProps<typeof Input> {
+interface FormFieldProps {
   name: string
   label: string
+  /** Errores de Zod del campo; se muestra el primero */
   errors?: string[]
+  type?: "text" | "email" | "password"
+  autoComplete?: string
+  placeholder?: string
+  defaultValue?: string
+  maxLength?: number
+  required?: boolean
 }
 
-export function FormField({ name, label, errors, ...props }: FormFieldProps) {
-  const errorId = `${name}-error`
-  const hasError = Boolean(errors?.length)
+// Campo de texto de HeroUI para formularios con useActionState. La
+// validación es del servidor (Zod): `aria` evita la validación nativa del
+// navegador y el error llega por `errors`
+export function FormField({
+  name,
+  label,
+  errors,
+  type = "text",
+  autoComplete,
+  placeholder,
+  defaultValue,
+  maxLength,
+  required
+}: FormFieldProps) {
+  const error = errors?.[0]
 
   return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor={name}>{label}</Label>
-      <Input
-        id={name}
-        name={name}
-        aria-invalid={hasError || undefined}
-        aria-describedby={hasError ? errorId : undefined}
-        {...props}
-      />
-      {hasError && (
-        <p
-          id={errorId}
-          className="text-sm text-destructive"
-        >
-          {errors?.[0]}
-        </p>
-      )}
-    </div>
+    <TextField
+      name={name}
+      type={type}
+      autoComplete={autoComplete}
+      defaultValue={defaultValue}
+      maxLength={maxLength}
+      isRequired={required}
+      isInvalid={Boolean(error)}
+      validationBehavior="aria"
+      className="flex flex-col gap-2"
+    >
+      <Label>{label}</Label>
+      <Input placeholder={placeholder} />
+      <FieldError>{error}</FieldError>
+    </TextField>
   )
 }

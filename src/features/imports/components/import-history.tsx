@@ -1,22 +1,9 @@
 "use client"
 
 import { useTransition } from "react"
+import { AlertDialog, Button, Chip, toast } from "@heroui/react"
 import { FileClock, Undo2 } from "lucide-react"
-import { toast } from "sonner"
 import { CardEmpty } from "@/components/dashboard/empty-state"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger
-} from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { TIME_ZONE } from "@/libs/dates"
 import { undoImport } from "../actions"
 import type { ImportRecord } from "../queries"
@@ -86,18 +73,30 @@ function ImportHistoryItem({ item }: { item: ImportRecord }) {
       <div className="flex min-w-0 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="truncate font-medium">{item.filename}</p>
-          <Badge variant="outline">{IMPORT_TARGETS[item.target].label}</Badge>
+          <Chip
+            size="sm"
+            variant="tertiary"
+            className="border border-border"
+          >
+            {IMPORT_TARGETS[item.target].label}
+          </Chip>
           {undone ? (
-            <Badge variant="outline">Deshecho</Badge>
+            <Chip
+              size="sm"
+              variant="tertiary"
+              className="border border-border"
+            >
+              Deshecho
+            </Chip>
           ) : (
-            <Badge variant="secondary">Completado</Badge>
+            <Chip size="sm">Completado</Chip>
           )}
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted">
           {DATE_TIME.format(new Date(item.created_at))}
           {item.sheets.length > 0 && ` · ${item.sheets.join(", ")}`}
         </p>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted">
           {plural(stats.imported, "importada", "importadas")} ·{" "}
           {plural(stats.skipped, "omitida", "omitidas")} ·{" "}
           {plural(stats.duplicates, "duplicada omitida", "duplicadas omitidas")}{" "}
@@ -118,7 +117,7 @@ function UndoImportButton({ item }: { item: ImportRecord }) {
     startTransition(async () => {
       const result = await undoImport(item.id)
       if (result.error !== undefined) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success(
           `Importación deshecha: ${countLabel(item.target, result.deleted)} ${result.deleted === 1 ? "borrado" : "borrados"}`
@@ -129,35 +128,48 @@ function UndoImportButton({ item }: { item: ImportRecord }) {
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={pending}
-        >
-          <Undo2 data-icon="inline-start" />
-          Deshacer
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>¿Deshacer esta importación?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Se borrarán {rows} de &ldquo;{item.filename}&rdquo;, también los que
-            hayas editado después.{" "}
-            {undoNotes(item.target, item.linked_transactions)}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            onClick={handleUndo}
-          >
-            Borrar {rows}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
+      <Button
+        variant="outline"
+        size="sm"
+        isDisabled={pending}
+      >
+        <Undo2 />
+        Deshacer
+      </Button>
+      <AlertDialog.Backdrop isKeyboardDismissDisabled={false}>
+        <AlertDialog.Container>
+          <AlertDialog.Dialog className="sm:max-w-md">
+            <AlertDialog.Header>
+              <AlertDialog.Icon status="danger" />
+              <AlertDialog.Heading>
+                ¿Deshacer esta importación?
+              </AlertDialog.Heading>
+              <AlertDialog.Body>
+                <p className="text-sm text-muted">
+                  Se borrarán {rows} de &ldquo;{item.filename}&rdquo;, también
+                  los que hayas editado después.{" "}
+                  {undoNotes(item.target, item.linked_transactions)}
+                </p>
+              </AlertDialog.Body>
+            </AlertDialog.Header>
+            <AlertDialog.Footer>
+              <Button
+                slot="close"
+                variant="tertiary"
+              >
+                Cancelar
+              </Button>
+              <Button
+                slot="close"
+                variant="danger"
+                onPress={handleUndo}
+              >
+                Borrar {rows}
+              </Button>
+            </AlertDialog.Footer>
+          </AlertDialog.Dialog>
+        </AlertDialog.Container>
+      </AlertDialog.Backdrop>
     </AlertDialog>
   )
 }

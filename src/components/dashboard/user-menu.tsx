@@ -1,7 +1,15 @@
 "use client"
 
 import { useTransition } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
+import {
+  Avatar,
+  Dropdown,
+  Header,
+  Label,
+  type Selection,
+  Separator
+} from "@heroui/react"
 import {
   ChevronsUpDown,
   LogOut,
@@ -11,22 +19,6 @@ import {
   UserRound
 } from "lucide-react"
 import { useTheme } from "next-themes"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem
-} from "@/components/ui/sidebar"
 import { SITE } from "@/config/site"
 import { signOut } from "@/features/auth/actions"
 
@@ -53,97 +45,111 @@ export function getInitials(name: string) {
 
 function UserAvatar({ user }: { user: DashboardUser }) {
   return (
-    <Avatar className="size-8 rounded-lg">
+    <Avatar
+      size="sm"
+      className="rounded-lg"
+    >
       {user.avatarUrl && (
-        <AvatarImage
+        <Avatar.Image
           src={user.avatarUrl}
           alt={user.name}
         />
       )}
-      <AvatarFallback className="rounded-lg">
+      <Avatar.Fallback className="rounded-lg">
         {getInitials(user.name)}
-      </AvatarFallback>
+      </Avatar.Fallback>
     </Avatar>
   )
 }
 
 function UserInfo({ user }: { user: DashboardUser }) {
   return (
-    <div className="grid flex-1 text-left text-sm leading-tight">
+    <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
       <span className="truncate font-medium">{user.name}</span>
-      <span className="truncate text-xs text-muted-foreground">
-        {user.email}
-      </span>
+      <span className="truncate text-xs text-muted">{user.email}</span>
     </div>
   )
 }
 
 export function UserMenu({ user }: { user: DashboardUser }) {
+  const router = useRouter()
   const { theme, setTheme } = useTheme()
   const [isSigningOut, startSignOut] = useTransition()
 
+  function onAction(key: React.Key) {
+    if (key === "account") {
+      router.push(SITE.routes.account)
+    } else if (key === "sign-out") {
+      startSignOut(() => signOut())
+    }
+  }
+
+  function onThemeChange(keys: Selection) {
+    const [value] = keys === "all" ? [] : [...keys]
+    if (typeof value === "string") {
+      setTheme(value)
+    }
+  }
+
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <UserAvatar user={user} />
-              <UserInfo user={user} />
-              <ChevronsUpDown className="ml-auto size-4" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side="top"
-            align="start"
-            sideOffset={4}
+    <Dropdown>
+      <Dropdown.Trigger
+        aria-label="Menú de usuario"
+        className="flex w-full items-center gap-2 rounded-lg p-2 text-left transition-colors outline-none hover:bg-default focus-visible:ring-2 focus-visible:ring-focus data-[pressed=true]:bg-default"
+      >
+        <UserAvatar user={user} />
+        <UserInfo user={user} />
+        <ChevronsUpDown className="ml-auto size-4 shrink-0 text-muted" />
+      </Dropdown.Trigger>
+      <Dropdown.Popover
+        placement="top start"
+        className="min-w-56"
+      >
+        <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+          <UserAvatar user={user} />
+          <UserInfo user={user} />
+        </div>
+        <Dropdown.Menu
+          aria-label="Opciones de la cuenta"
+          disabledKeys={isSigningOut ? ["sign-out"] : []}
+          onAction={onAction}
+        >
+          <Dropdown.Item
+            id="account"
+            textValue="Cuenta"
           >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5">
-                <UserAvatar user={user} />
-                <UserInfo user={user} />
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href={SITE.routes.account}>
-                <UserRound />
-                Cuenta
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Tema
-            </DropdownMenuLabel>
-            <DropdownMenuRadioGroup
-              value={theme ?? "system"}
-              onValueChange={setTheme}
-            >
-              {THEMES.map(({ value, label, icon: Icon }) => (
-                <DropdownMenuRadioItem
-                  key={value}
-                  value={value}
-                >
-                  <Icon />
-                  {label}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              disabled={isSigningOut}
-              onSelect={() => startSignOut(() => signOut())}
-            >
-              <LogOut />
-              Cerrar sesión
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
+            <UserRound className="size-4" />
+            <Label>Cuenta</Label>
+          </Dropdown.Item>
+          <Separator />
+          <Dropdown.Section
+            selectionMode="single"
+            selectedKeys={[theme ?? "system"]}
+            onSelectionChange={onThemeChange}
+          >
+            <Header>Tema</Header>
+            {THEMES.map(({ value, label, icon: Icon }) => (
+              <Dropdown.Item
+                key={value}
+                id={value}
+                textValue={label}
+              >
+                <Icon className="size-4" />
+                <Label>{label}</Label>
+                <Dropdown.ItemIndicator type="dot" />
+              </Dropdown.Item>
+            ))}
+          </Dropdown.Section>
+          <Separator />
+          <Dropdown.Item
+            id="sign-out"
+            textValue="Cerrar sesión"
+          >
+            <LogOut className="size-4" />
+            <Label>Cerrar sesión</Label>
+          </Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown.Popover>
+    </Dropdown>
   )
 }

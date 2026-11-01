@@ -1,9 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { cn } from "cn"
-import { Label } from "@/components/ui/label"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Label, ToggleButton, ToggleButtonGroup, cn } from "@heroui/react"
 import {
   CATEGORY_COLORS,
   CATEGORY_COLOR_KEYS,
@@ -45,49 +43,57 @@ export function IconColorPicker({
       />
 
       <div className="flex flex-col gap-2">
-        <Label>Icono</Label>
-        <ToggleGroup
-          type="single"
-          variant="outline"
+        <Label id="category-icon-label">Icono</Label>
+        <ToggleButtonGroup
+          aria-labelledby="category-icon-label"
+          selectionMode="single"
+          disallowEmptySelection
+          selectedKeys={[icon]}
+          onSelectionChange={(keys) => {
+            const [value] = [...keys]
+            if (value) setIcon(String(value))
+          }}
           size="sm"
-          spacing={1}
-          value={icon}
-          onValueChange={(value) => value && setIcon(value)}
-          className="w-full flex-wrap"
+          isDetached
+          className="flex-wrap"
         >
           {CATEGORY_ICON_KEYS.map((key: CategoryIconKey) => {
             const Icon = CATEGORY_ICONS[key]
             return (
-              <ToggleGroupItem
+              <ToggleButton
                 key={key}
-                value={key}
+                id={key}
+                isIconOnly
                 aria-label={key}
               >
                 <Icon />
-              </ToggleGroupItem>
+              </ToggleButton>
             )
           })}
-        </ToggleGroup>
-        {iconErrors && (
-          <p className="text-sm text-destructive">{iconErrors[0]}</p>
-        )}
+        </ToggleButtonGroup>
+        {iconErrors && <p className="text-sm text-danger">{iconErrors[0]}</p>}
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label>Color</Label>
-        <ToggleGroup
-          type="single"
-          variant="outline"
+        <Label id="category-color-label">Color</Label>
+        <ToggleButtonGroup
+          aria-labelledby="category-color-label"
+          selectionMode="single"
+          disallowEmptySelection
+          selectedKeys={[color]}
+          onSelectionChange={(keys) => {
+            const [value] = [...keys]
+            if (value) setColor(String(value))
+          }}
           size="sm"
-          spacing={1}
-          value={color}
-          onValueChange={(value) => value && setColor(value)}
-          className="w-full flex-wrap"
+          isDetached
+          className="flex-wrap"
         >
           {CATEGORY_COLOR_KEYS.map((key: CategoryColorKey) => (
-            <ToggleGroupItem
+            <ToggleButton
               key={key}
-              value={key}
+              id={key}
+              isIconOnly
               aria-label={key}
             >
               <span
@@ -98,12 +104,10 @@ export function IconColorPicker({
               >
                 <span className="size-2 rounded-full bg-current" />
               </span>
-            </ToggleGroupItem>
+            </ToggleButton>
           ))}
-        </ToggleGroup>
-        {colorErrors && (
-          <p className="text-sm text-destructive">{colorErrors[0]}</p>
-        )}
+        </ToggleButtonGroup>
+        {colorErrors && <p className="text-sm text-danger">{colorErrors[0]}</p>}
       </div>
     </>
   )

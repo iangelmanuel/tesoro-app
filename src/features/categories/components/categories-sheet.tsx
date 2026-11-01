@@ -1,19 +1,8 @@
 "use client"
 
 import { useActionState, useState, useTransition } from "react"
-import { cn } from "cn"
+import { Button, Drawer, Tabs, cn, toast } from "@heroui/react"
 import { Archive, ArchiveRestore, Pencil, Tags } from "lucide-react"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger
-} from "@/components/ui/sheet"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { FormField } from "@/features/auth/components/form-field"
 import {
   archiveCategory,
@@ -48,7 +37,7 @@ export function CategoriesSheet({
   // Cambia tras cada guardado para remontar el formulario vacío
   const [formVersion, setFormVersion] = useState(0)
 
-  function handleTypeChange(value: string) {
+  function handleTypeChange(value: React.Key) {
     setType(value as TransactionType)
     setEditing(null)
   }
@@ -59,57 +48,74 @@ export function CategoriesSheet({
   }
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="outline">
-          <Tags data-icon="inline-start" />
-          Categorías
-        </Button>
-      </SheetTrigger>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>Categorías</SheetTitle>
-          <SheetDescription>
-            Las del sistema son fijas. Las tuyas se pueden editar, archivar y
-            restaurar.
-          </SheetDescription>
-        </SheetHeader>
+    <Drawer>
+      <Button variant="outline">
+        <Tags />
+        Categorías
+      </Button>
+      <Drawer.Backdrop>
+        <Drawer.Content placement="right">
+          <Drawer.Dialog className="w-full sm:max-w-md">
+            <Drawer.CloseTrigger aria-label="Cerrar" />
+            <Drawer.Header>
+              <Drawer.Heading>Categorías</Drawer.Heading>
+              <p className="text-sm text-muted">
+                Las del sistema son fijas. Las tuyas se pueden editar, archivar
+                y restaurar.
+              </p>
+            </Drawer.Header>
 
-        <Tabs
-          value={type}
-          onValueChange={handleTypeChange}
-          className="px-4 pb-4"
-        >
-          <TabsList className="w-full">
-            <TabsTrigger value="expense">{TYPE_LABELS.expense}</TabsTrigger>
-            <TabsTrigger value="income">{TYPE_LABELS.income}</TabsTrigger>
-          </TabsList>
+            <Drawer.Body>
+              <Tabs
+                selectedKey={type}
+                onSelectionChange={handleTypeChange}
+              >
+                <Tabs.ListContainer>
+                  <Tabs.List
+                    aria-label="Tipo de categoría"
+                    className="w-full"
+                  >
+                    {(["expense", "income"] as const).map((tabType) => (
+                      <Tabs.Tab
+                        key={tabType}
+                        id={tabType}
+                        className="flex-1"
+                      >
+                        {TYPE_LABELS[tabType]}
+                        <Tabs.Indicator />
+                      </Tabs.Tab>
+                    ))}
+                  </Tabs.List>
+                </Tabs.ListContainer>
 
-          {(["expense", "income"] as const).map((tabType) => (
-            <TabsContent
-              key={tabType}
-              value={tabType}
-              className="flex flex-col gap-6 pt-2"
-            >
-              <CategoryForm
-                key={`${editing?.id ?? "new"}-${tabType}-${formVersion}`}
-                workspaceId={workspaceId}
-                type={tabType}
-                category={editing}
-                onSaved={handleSaved}
-                onCancel={() => setEditing(null)}
-              />
-              <CategoryList
-                workspaceId={workspaceId}
-                categories={categories.filter((c) => c.type === tabType)}
-                editingId={editing?.id}
-                onEdit={setEditing}
-              />
-            </TabsContent>
-          ))}
-        </Tabs>
-      </SheetContent>
-    </Sheet>
+                {(["expense", "income"] as const).map((tabType) => (
+                  <Tabs.Panel
+                    key={tabType}
+                    id={tabType}
+                    className="flex flex-col gap-6 pt-4"
+                  >
+                    <CategoryForm
+                      key={`${editing?.id ?? "new"}-${tabType}-${formVersion}`}
+                      workspaceId={workspaceId}
+                      type={tabType}
+                      category={editing}
+                      onSaved={handleSaved}
+                      onCancel={() => setEditing(null)}
+                    />
+                    <CategoryList
+                      workspaceId={workspaceId}
+                      categories={categories.filter((c) => c.type === tabType)}
+                      editingId={editing?.id}
+                      onEdit={setEditing}
+                    />
+                  </Tabs.Panel>
+                ))}
+              </Tabs>
+            </Drawer.Body>
+          </Drawer.Dialog>
+        </Drawer.Content>
+      </Drawer.Backdrop>
+    </Drawer>
   )
 }
 
@@ -135,7 +141,7 @@ function CategoryList({
     <div className="flex flex-col gap-6">
       <CategoryGroup title="Tus categorías">
         {active.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted">
             Aún no tienes categorías propias.
           </p>
         ) : (
@@ -146,10 +152,11 @@ function CategoryList({
             >
               <Button
                 variant="ghost"
-                size="icon-sm"
+                size="sm"
+                isIconOnly
                 aria-label={`Editar ${category.name}`}
                 aria-pressed={editingId === category.id}
-                onClick={() => onEdit(category)}
+                onPress={() => onEdit(category)}
               >
                 <Pencil />
               </Button>
@@ -200,9 +207,7 @@ function CategoryGroup({
 }) {
   return (
     <section className="flex flex-col gap-2">
-      <h3 className="text-xs font-medium text-muted-foreground uppercase">
-        {title}
-      </h3>
+      <h3 className="text-xs font-medium text-muted uppercase">{title}</h3>
       <ul className="flex flex-col gap-1">{children}</ul>
     </section>
   )
@@ -247,7 +252,7 @@ function ArchiveButton({
         : await archiveCategory(workspaceId, category.id)
 
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success(
           isArchived
@@ -261,12 +266,13 @@ function ArchiveButton({
   return (
     <Button
       variant="ghost"
-      size="icon-sm"
+      size="sm"
+      isIconOnly
       aria-label={
         isArchived ? `Restaurar ${category.name}` : `Archivar ${category.name}`
       }
-      disabled={pending}
-      onClick={handleClick}
+      isDisabled={pending}
+      onPress={handleClick}
     >
       {isArchived ? <ArchiveRestore /> : <Archive />}
     </Button>
@@ -308,7 +314,7 @@ function CategoryForm({
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-4 rounded-lg border p-4"
+      className="flex flex-col gap-4 rounded-xl border border-border p-4"
       noValidate
     >
       <h3 className="text-sm font-medium">
@@ -355,7 +361,7 @@ function CategoryForm({
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-destructive"
+          className="text-sm text-danger"
         >
           {state.error}
         </p>
@@ -364,16 +370,15 @@ function CategoryForm({
       <div className="flex justify-end gap-2">
         {isEditing && (
           <Button
-            type="button"
             variant="ghost"
-            onClick={onCancel}
+            onPress={onCancel}
           >
             Cancelar
           </Button>
         )}
         <Button
           type="submit"
-          disabled={pending}
+          isDisabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear"}
         </Button>

@@ -3,8 +3,7 @@
 import { useTransition } from "react"
 import type { Route } from "next"
 import { useRouter, useSearchParams } from "next/navigation"
-import { cn } from "cn"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, cn } from "@heroui/react"
 import { BUDGETS_PATH, type BudgetsTab } from "../tabs"
 
 interface BudgetsTabsProps {
@@ -20,7 +19,7 @@ export function BudgetsTabs({ tab, children }: BudgetsTabsProps) {
   const searchParams = useSearchParams()
   const [pending, startTransition] = useTransition()
 
-  function changeTab(value: string) {
+  function changeTab(value: React.Key) {
     if (value === tab) return
 
     const query = new URLSearchParams()
@@ -42,23 +41,32 @@ export function BudgetsTabs({ tab, children }: BudgetsTabsProps) {
 
   return (
     <Tabs
-      value={tab}
-      onValueChange={changeTab}
+      selectedKey={tab}
+      onSelectionChange={changeTab}
       className="gap-6"
     >
-      <TabsList>
-        <TabsTrigger value="budgets">Presupuestos</TabsTrigger>
-        <TabsTrigger value="recurring">Gastos fijos</TabsTrigger>
-      </TabsList>
-      <TabsContent
-        value={tab}
+      <Tabs.ListContainer>
+        <Tabs.List aria-label="Presupuestos y gastos fijos">
+          <Tabs.Tab id="budgets">
+            Presupuestos
+            <Tabs.Indicator />
+          </Tabs.Tab>
+          <Tabs.Tab id="recurring">
+            Gastos fijos
+            <Tabs.Indicator />
+          </Tabs.Tab>
+        </Tabs.List>
+      </Tabs.ListContainer>
+      {/* Solo se pinta la tab activa: su contenido llega del servidor */}
+      <Tabs.Panel
+        id={tab}
         className={cn(
           "flex flex-col gap-6 transition-opacity",
           pending && "opacity-60"
         )}
       >
         {children}
-      </TabsContent>
+      </Tabs.Panel>
     </Tabs>
   )
 }

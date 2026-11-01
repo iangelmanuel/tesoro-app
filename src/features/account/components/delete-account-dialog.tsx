@@ -1,21 +1,16 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import { Trash2 } from "lucide-react"
 import {
   AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+  Button,
+  FieldError,
+  Input,
+  Label,
+  TextField
+} from "@heroui/react"
+import { Trash2 } from "lucide-react"
 import { SITE } from "@/config/site"
-import { Field } from "@/features/debts/components/field"
 import { requestAccountDeletion } from "../actions"
 import type { ProfileFormState } from "../types"
 
@@ -30,64 +25,79 @@ export function DeleteAccountDialog({ email }: { email: string }) {
 
   return (
     <AlertDialog onOpenChange={() => setConfirmEmail("")}>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="destructive"
-          className="self-start"
-        >
-          <Trash2 data-icon="inline-start" />
-          Eliminar cuenta
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>¿Eliminar tu cuenta?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Se cierra tu sesión y tu foto se borra ahora. Tus movimientos,
-            cuentas, metas y demás datos se borran para siempre en{" "}
-            {SITE.accountDeletionGraceDays} días. Antes de eso puedes
-            restaurarla iniciando sesión.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <form
-          action={formAction}
-          className="flex flex-col gap-4"
-          noValidate
-        >
-          <Field
-            id="confirmEmail"
-            label={`Escribe ${email} para confirmar`}
-            errors={state.fieldErrors?.confirmEmail}
-          >
-            <Input
-              id="confirmEmail"
-              name="confirmEmail"
-              type="email"
-              autoComplete="off"
-              value={confirmEmail}
-              onChange={(event) => setConfirmEmail(event.target.value)}
-            />
-          </Field>
-          {state.error && (
-            <p
-              role="alert"
-              className="text-sm text-destructive"
-            >
-              {state.error}
-            </p>
-          )}
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={pending}>Cancelar</AlertDialogCancel>
-            <Button
-              type="submit"
-              variant="destructive"
-              disabled={!matches || pending}
-            >
-              {pending ? "Eliminando..." : "Eliminar cuenta"}
-            </Button>
-          </AlertDialogFooter>
-        </form>
-      </AlertDialogContent>
+      <Button
+        variant="danger"
+        className="self-start"
+      >
+        <Trash2 />
+        Eliminar cuenta
+      </Button>
+      <AlertDialog.Backdrop isKeyboardDismissDisabled={false}>
+        <AlertDialog.Container>
+          <AlertDialog.Dialog className="sm:max-w-md">
+            <AlertDialog.Header>
+              <AlertDialog.Icon status="danger" />
+              <AlertDialog.Heading>¿Eliminar tu cuenta?</AlertDialog.Heading>
+            </AlertDialog.Header>
+            <AlertDialog.Body className="flex flex-col gap-4">
+              <p className="text-sm text-muted">
+                Se cierra tu sesión y tu foto se borra ahora. Tus movimientos,
+                cuentas, metas y demás datos se borran para siempre en{" "}
+                {SITE.accountDeletionGraceDays} días. Antes de eso puedes
+                restaurarla iniciando sesión.
+              </p>
+              <form
+                id="delete-account-form"
+                action={formAction}
+                className="flex flex-col gap-4"
+                noValidate
+              >
+                <TextField
+                  name="confirmEmail"
+                  type="email"
+                  autoComplete="off"
+                  value={confirmEmail}
+                  onChange={setConfirmEmail}
+                  isInvalid={Boolean(state.fieldErrors?.confirmEmail)}
+                  validationBehavior="aria"
+                  className="flex flex-col gap-2"
+                >
+                  <Label>{`Escribe ${email} para confirmar`}</Label>
+                  <Input />
+                  <FieldError>
+                    {state.fieldErrors?.confirmEmail?.[0]}
+                  </FieldError>
+                </TextField>
+                {state.error && (
+                  <p
+                    role="alert"
+                    className="text-sm text-danger"
+                  >
+                    {state.error}
+                  </p>
+                )}
+              </form>
+            </AlertDialog.Body>
+            <AlertDialog.Footer>
+              <Button
+                slot="close"
+                variant="tertiary"
+                isDisabled={pending}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                form="delete-account-form"
+                variant="danger"
+                isDisabled={!matches || pending}
+              >
+                {pending ? "Eliminando..." : "Eliminar cuenta"}
+              </Button>
+            </AlertDialog.Footer>
+          </AlertDialog.Dialog>
+        </AlertDialog.Container>
+      </AlertDialog.Backdrop>
     </AlertDialog>
   )
 }

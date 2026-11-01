@@ -23,7 +23,7 @@ export function DebtProgress({ debt }: { debt: Debt }) {
             {formatPercent(percent)}
           </span>
         </div>
-        <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+        <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
           Utilización del cupo
           <UtilizationBadge percent={percent} />
         </p>
@@ -44,7 +44,7 @@ export function DebtProgress({ debt }: { debt: Debt }) {
           {formatPercent(percent)}
         </span>
       </div>
-      <p className="text-sm text-muted-foreground">Pagado del monto original</p>
+      <p className="text-sm text-muted">Pagado del monto original</p>
     </div>
   )
 }
@@ -64,7 +64,7 @@ export function ReceivableProgress({ debt }: { debt: Debt }) {
           {formatPercent(percent)}
         </span>
       </div>
-      <p className="text-sm text-muted-foreground">Cobrado</p>
+      <p className="text-sm text-muted">Cobrado</p>
     </div>
   )
 }

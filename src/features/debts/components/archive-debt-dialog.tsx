@@ -1,15 +1,6 @@
 "use client"
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog"
+import { AlertDialog, Button } from "@heroui/react"
 
 interface ArchiveDebtDialogProps {
   name: string
@@ -26,23 +17,42 @@ export function ArchiveDebtDialog({
   onConfirm
 }: ArchiveDebtDialogProps) {
   return (
-    <AlertDialog
-      open={open}
-      onOpenChange={onOpenChange}
-    >
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>¿Archivar &quot;{name}&quot;?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Esta deuda tiene saldo. Al archivarla sale de los totales y de los
-            próximos pagos.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Archivar</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
+    <AlertDialog>
+      <AlertDialog.Backdrop
+        isKeyboardDismissDisabled={false}
+        isOpen={open}
+        onOpenChange={onOpenChange}
+      >
+        <AlertDialog.Container>
+          <AlertDialog.Dialog className="sm:max-w-md">
+            <AlertDialog.Header>
+              <AlertDialog.Heading>
+                ¿Archivar &quot;{name}&quot;?
+              </AlertDialog.Heading>
+              <AlertDialog.Body>
+                <p className="text-sm text-muted">
+                  Esta deuda tiene saldo. Al archivarla sale de los totales y de
+                  los próximos pagos.
+                </p>
+              </AlertDialog.Body>
+            </AlertDialog.Header>
+            <AlertDialog.Footer>
+              <Button
+                slot="close"
+                variant="tertiary"
+              >
+                Cancelar
+              </Button>
+              <Button
+                slot="close"
+                onPress={onConfirm}
+              >
+                Archivar
+              </Button>
+            </AlertDialog.Footer>
+          </AlertDialog.Dialog>
+        </AlertDialog.Container>
+      </AlertDialog.Backdrop>
     </AlertDialog>
   )
 }

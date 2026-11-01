@@ -1,6 +1,6 @@
 import { Suspense } from "react"
 import { notFound } from "next/navigation"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@heroui/react"
 import { SITE } from "@/config/site"
 import { AccountSection } from "@/features/account/components/account-section"
 import { BusinessForm } from "@/features/business/components/business-dialog"
@@ -23,9 +23,7 @@ export default function BusinessSettingsPage({
     <section className="flex flex-1 flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Ajustes</h1>
-        <p className="text-sm text-muted-foreground">
-          Los datos de tu empresa.
-        </p>
+        <p className="text-sm text-muted">Los datos de tu empresa.</p>
       </header>
       {/* params y la sesión son dinámicos: van dentro de Suspense */}
       <Suspense fallback={<SettingsSkeleton />}>

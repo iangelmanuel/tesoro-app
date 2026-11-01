@@ -1,8 +1,7 @@
 import { Suspense } from "react"
+import { Button, Skeleton } from "@heroui/react"
 import { Plus, Target } from "lucide-react"
 import { EmptyState } from "@/components/dashboard/empty-state"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import { GoalCard } from "@/features/goals/components/goal-card"
 import { GoalDialog } from "@/features/goals/components/goal-dialog"
 import { InactiveGoals } from "@/features/goals/components/inactive-goals"
@@ -30,7 +29,7 @@ export default function GoalsPage() {
         <h1 className="text-2xl font-semibold tracking-tight">
           Metas de ahorro
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted">
           Aparta dinero para lo que viene y sigue tu avance.
         </p>
       </header>
@@ -68,7 +67,7 @@ async function GoalsContent() {
     <GoalDialog
       trigger={
         <Button>
-          <Plus data-icon="inline-start" />
+          <Plus />
           Nueva meta
         </Button>
       }

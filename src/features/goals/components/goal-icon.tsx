@@ -1,4 +1,4 @@
-import { cn } from "cn"
+import { cn } from "@heroui/react"
 import { Tag } from "lucide-react"
 import {
   CATEGORY_COLORS,

@@ -1,11 +1,9 @@
 "use client"
 
 import { useRef, useTransition } from "react"
+import { Avatar, Button, toast } from "@heroui/react"
 import { ImageUp, Trash2 } from "lucide-react"
-import { toast } from "sonner"
 import { getInitials } from "@/components/dashboard/user-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 import { createClient } from "@/libs/supabase/client"
 import { removeAvatar, setAvatar } from "../actions"
 import { AVATARS_BUCKET } from "../avatar"
@@ -72,11 +70,11 @@ export function AvatarUploader({
 
   function upload(file: File) {
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      toast.error("La foto debe ser JPG, PNG o WebP")
+      toast.danger("La foto debe ser JPG, PNG o WebP")
       return
     }
     if (file.size > MAX_FILE_SIZE) {
-      toast.error("La foto debe pesar máximo 5 MB")
+      toast.danger("La foto debe pesar máximo 5 MB")
       return
     }
 
@@ -85,7 +83,7 @@ export function AvatarUploader({
       try {
         blob = await toSquareWebp(file)
       } catch {
-        toast.error("No se pudo procesar la foto. Prueba con otra")
+        toast.danger("No se pudo procesar la foto. Prueba con otra")
         return
       }
 
@@ -96,13 +94,13 @@ export function AvatarUploader({
         .upload(path, blob, { contentType: "image/webp", upsert: false })
 
       if (uploadError) {
-        toast.error("No se pudo subir la foto. Intenta de nuevo")
+        toast.danger("No se pudo subir la foto. Intenta de nuevo")
         return
       }
 
       const result = await setAvatar(path)
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success("Foto actualizada")
       }
@@ -113,7 +111,7 @@ export function AvatarUploader({
     startTransition(async () => {
       const result = await removeAvatar()
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success("Foto quitada")
       }
@@ -122,43 +120,44 @@ export function AvatarUploader({
 
   return (
     <div className="flex items-center gap-4">
-      <Avatar className="size-16 rounded-xl">
+      <Avatar
+        size="lg"
+        className="size-16 rounded-xl"
+      >
         {avatarUrl && (
-          <AvatarImage
+          <Avatar.Image
             src={avatarUrl}
             alt={name}
           />
         )}
-        <AvatarFallback className="rounded-xl text-lg">
+        <Avatar.Fallback className="rounded-xl text-lg">
           {getInitials(name)}
-        </AvatarFallback>
+        </Avatar.Fallback>
       </Avatar>
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap gap-2">
           <Button
-            type="button"
             variant="outline"
             size="sm"
-            disabled={pending}
-            onClick={() => inputRef.current?.click()}
+            isDisabled={pending}
+            onPress={() => inputRef.current?.click()}
           >
-            <ImageUp data-icon="inline-start" />
+            <ImageUp />
             {pending ? "Guardando..." : "Subir foto"}
           </Button>
           {avatarUrl && (
             <Button
-              type="button"
               variant="ghost"
               size="sm"
-              disabled={pending}
-              onClick={remove}
+              isDisabled={pending}
+              onPress={remove}
             >
-              <Trash2 data-icon="inline-start" />
+              <Trash2 />
               Quitar foto
             </Button>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-muted">
           JPG, PNG o WebP de hasta 5 MB. Se recorta en cuadrado.
         </p>
       </div>

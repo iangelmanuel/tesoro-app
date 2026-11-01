@@ -1,10 +1,14 @@
 "use client"
 
 import { useActionState, useRef } from "react"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Field } from "@/features/debts/components/field"
+import {
+  Button,
+  FieldError,
+  Input,
+  Label,
+  TextField,
+  toast
+} from "@heroui/react"
 import { changePassword, createPassword } from "../actions"
 import type { ProfileFormState } from "../types"
 
@@ -42,50 +46,47 @@ export function PasswordForm({ hasPassword }: PasswordFormProps) {
       noValidate
     >
       {hasPassword && (
-        <Field
-          id="currentPassword"
-          label="Contraseña actual"
-          errors={errors?.currentPassword}
+        <TextField
+          name="currentPassword"
+          type="password"
+          autoComplete="current-password"
+          isInvalid={Boolean(errors?.currentPassword)}
+          validationBehavior="aria"
+          className="flex flex-col gap-2"
         >
-          <Input
-            id="currentPassword"
-            name="currentPassword"
-            type="password"
-            autoComplete="current-password"
-            aria-invalid={Boolean(errors?.currentPassword) || undefined}
-          />
-        </Field>
+          <Label>Contraseña actual</Label>
+          <Input />
+          <FieldError>{errors?.currentPassword?.[0]}</FieldError>
+        </TextField>
       )}
-      <Field
-        id="password"
-        label="Nueva contraseña"
-        errors={errors?.password}
+      <TextField
+        name="password"
+        type="password"
+        autoComplete="new-password"
+        isInvalid={Boolean(errors?.password)}
+        validationBehavior="aria"
+        className="flex flex-col gap-2"
       >
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          aria-invalid={Boolean(errors?.password) || undefined}
-        />
-      </Field>
-      <Field
-        id="confirmPassword"
-        label="Confirma la contraseña"
-        errors={errors?.confirmPassword}
+        <Label>Nueva contraseña</Label>
+        <Input />
+        <FieldError>{errors?.password?.[0]}</FieldError>
+      </TextField>
+      <TextField
+        name="confirmPassword"
+        type="password"
+        autoComplete="new-password"
+        isInvalid={Boolean(errors?.confirmPassword)}
+        validationBehavior="aria"
+        className="flex flex-col gap-2"
       >
-        <Input
-          id="confirmPassword"
-          name="confirmPassword"
-          type="password"
-          autoComplete="new-password"
-          aria-invalid={Boolean(errors?.confirmPassword) || undefined}
-        />
-      </Field>
+        <Label>Confirma la contraseña</Label>
+        <Input />
+        <FieldError>{errors?.confirmPassword?.[0]}</FieldError>
+      </TextField>
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-destructive"
+          className="text-sm text-danger"
         >
           {state.error}
         </p>
@@ -93,7 +94,7 @@ export function PasswordForm({ hasPassword }: PasswordFormProps) {
       <Button
         type="submit"
         className="self-start"
-        disabled={pending}
+        isDisabled={pending}
       >
         {pending
           ? "Guardando..."

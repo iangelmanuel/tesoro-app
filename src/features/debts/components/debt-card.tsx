@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { Button, Dropdown, Label } from "@heroui/react"
 import {
   Archive,
   CircleCheck,
@@ -8,13 +9,6 @@ import {
   Pencil,
   RefreshCw
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import { formatCurrency, formatDate } from "@/libs/format"
 import {
@@ -74,12 +68,12 @@ export function DebtCard({
         {/* Abre el Sheet con el detalle, la proyección y el historial */}
         <button
           type="button"
-          className="-m-1 flex min-w-0 flex-1 flex-col gap-1 rounded-lg p-1 text-left transition-colors hover:bg-muted/50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+          className="-m-1 flex min-w-0 flex-1 flex-col gap-1 rounded-lg p-1 text-left transition-colors hover:bg-default/50 focus-visible:ring-[3px] focus-visible:ring-focus/50 focus-visible:outline-none"
           onClick={() => setDetailOpen(true)}
         >
           <span className="flex flex-wrap items-center gap-2">
             <span className="truncate font-medium">{debt.name}</span>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted">
               {debt.kind === "loan"
                 ? KIND_LABELS.loan
                 : KIND_LABELS.credit_card}
@@ -89,45 +83,58 @@ export function DebtCard({
           <span className="text-2xl font-semibold tabular-nums">
             {formatCurrency(debt.balance, currency)}
           </span>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-muted">
             {debt.interest_rate !== null && debt.rate_type !== null
               ? formatRate(debt.interest_rate, debt.rate_type)
               : "Sin tasa"}
           </span>
         </button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Acciones de ${debt.name}`}
-              disabled={pending}
-            >
-              <EllipsisVertical />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => setEditing(true)}>
-              <Pencil />
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => setAdjusting(true)}>
-              <RefreshCw />
-              Actualizar saldo
-            </DropdownMenuItem>
-            {zeroBalance && (
-              <DropdownMenuItem onSelect={() => run("markPaid")}>
-                <CircleCheck />
-                Marcar como pagada
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem onSelect={archive}>
-              <Archive />
-              Archivar
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Dropdown>
+          <Button
+            variant="ghost"
+            isIconOnly
+            size="sm"
+            aria-label={`Acciones de ${debt.name}`}
+            isDisabled={pending}
+          >
+            <EllipsisVertical />
+          </Button>
+          <Dropdown.Popover placement="bottom end">
+            <Dropdown.Menu aria-label={`Acciones de ${debt.name}`}>
+              <Dropdown.Item
+                onAction={() => setEditing(true)}
+                textValue="Editar"
+              >
+                <Pencil className="size-4" />
+                <Label>Editar</Label>
+              </Dropdown.Item>
+              <Dropdown.Item
+                onAction={() => setAdjusting(true)}
+                textValue="Actualizar saldo"
+              >
+                <RefreshCw className="size-4" />
+                <Label>Actualizar saldo</Label>
+              </Dropdown.Item>
+              {zeroBalance && (
+                <Dropdown.Item
+                  onAction={() => run("markPaid")}
+                  textValue="Marcar como pagada"
+                >
+                  <CircleCheck className="size-4" />
+                  <Label>Marcar como pagada</Label>
+                </Dropdown.Item>
+              )}
+              <Dropdown.Item
+                onAction={archive}
+                textValue="Archivar"
+              >
+                <Archive className="size-4" />
+                <Label>Archivar</Label>
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown.Popover>
+        </Dropdown>
         <DebtDialog
           debt={debt}
           open={editing}
@@ -165,8 +172,8 @@ export function DebtCard({
           </p>
           <Button
             size="sm"
-            disabled={pending}
-            onClick={() => run("markPaid")}
+            isDisabled={pending}
+            onPress={() => run("markPaid")}
           >
             Marcar como pagada
           </Button>
@@ -179,7 +186,7 @@ export function DebtCard({
             currency={currency}
           />
           <div className="flex justify-between gap-2 sm:flex-col sm:justify-start">
-            <dt className="text-muted-foreground">Proyección</dt>
+            <dt className="text-muted">Proyección</dt>
             <dd className="font-medium">
               <ProjectionSummary debt={debt} />
             </dd>
@@ -207,7 +214,7 @@ function NextDue({
 
   return (
     <div className="flex justify-between gap-2 sm:flex-col sm:justify-start">
-      <dt className="text-muted-foreground">Próximo pago</dt>
+      <dt className="text-muted">Próximo pago</dt>
       <dd className="flex flex-wrap items-center gap-2 font-medium">
         {formatDate(payment.dueOn)}
         {payment.amount !== null && (
@@ -232,7 +239,7 @@ export function ProjectionSummary({ debt }: { debt: Debt }) {
   switch (projection.kind) {
     case "needs_min_payment":
       return (
-        <span className="text-muted-foreground">
+        <span className="text-muted">
           Agrega el pago mínimo para ver la proyección
         </span>
       )
@@ -245,7 +252,7 @@ export function ProjectionSummary({ debt }: { debt: Debt }) {
         <span className="flex flex-col">
           Terminas en {formatMonthYear(projection.payoffMonth)}
           {projection.withoutRate && (
-            <span className="text-xs font-normal text-muted-foreground">
+            <span className="text-xs font-normal text-muted">
               Sin tasa, la proyección no incluye intereses
             </span>
           )}

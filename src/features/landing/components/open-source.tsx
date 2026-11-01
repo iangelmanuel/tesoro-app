@@ -1,5 +1,5 @@
+import { buttonVariants } from "@heroui/react"
 import { BookOpenIcon, BugIcon, CodeIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import { SectionHeading } from "./section-heading"
 
@@ -8,7 +8,7 @@ const LINKS = [
     label: "Ver el repositorio",
     href: SITE.repository.url,
     icon: CodeIcon,
-    variant: "default"
+    variant: "primary"
   },
   {
     label: "Reportar un problema",
@@ -40,22 +40,16 @@ export function OpenSource() {
         />
         <div className="flex flex-wrap gap-3">
           {LINKS.map((link) => (
-            <Button
+            <a
               key={link.href}
-              asChild
-              size="lg"
-              variant={link.variant}
-              className="h-11 px-5"
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonVariants({ size: "lg", variant: link.variant })}
             >
-              <a
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <link.icon data-icon="inline-start" />
-                {link.label}
-              </a>
-            </Button>
+              <link.icon className="size-4" />
+              {link.label}
+            </a>
           ))}
         </div>
       </div>

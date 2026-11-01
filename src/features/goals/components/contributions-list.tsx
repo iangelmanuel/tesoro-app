@@ -1,22 +1,9 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { cn } from "cn"
+import { AlertDialog, Button, cn, toast } from "@heroui/react"
 import { Pencil, PiggyBank, Trash2 } from "lucide-react"
-import { toast } from "sonner"
 import { CardEmpty } from "@/components/dashboard/empty-state"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
 import { formatCurrency, formatDate } from "@/libs/format"
 import { deleteContribution } from "../actions"
 import type { GoalContribution } from "../queries"
@@ -76,19 +63,17 @@ function ContributionRow({
         <span
           className={cn(
             "font-medium tabular-nums",
-            isWithdrawal
-              ? "text-rose-600 dark:text-rose-400"
-              : "text-emerald-600 dark:text-emerald-400"
+            isWithdrawal ? "text-(--expense)" : "text-(--income)"
           )}
         >
           {isWithdrawal ? "−" : "+"}
           {formatCurrency(Math.abs(contribution.amount), currency)}
         </span>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs text-muted">
           {formatDate(contribution.occurred_on)}
         </span>
         {contribution.note && (
-          <span className="truncate text-sm text-muted-foreground">
+          <span className="truncate text-sm text-muted">
             {contribution.note}
           </span>
         )}
@@ -98,9 +83,10 @@ function ContributionRow({
         <div className="flex gap-1">
           <Button
             variant="ghost"
-            size="icon-sm"
+            isIconOnly
+            size="sm"
             aria-label={`Editar ${label}`}
-            onClick={() => setEditing(true)}
+            onPress={() => setEditing(true)}
           >
             <Pencil />
           </Button>
@@ -133,7 +119,7 @@ function DeleteContributionButton({
     startTransition(async () => {
       const result = await deleteContribution(contribution.id)
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success(
           label === "retiro" ? "Retiro eliminado" : "Aporte eliminado"
@@ -144,34 +130,46 @@ function DeleteContributionButton({
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={`Eliminar ${label}`}
-          disabled={pending}
-        >
-          <Trash2 />
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>¿Eliminar este {label}?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Lo ahorrado en la meta se recalcula sin él. Esta acción no se puede
-            deshacer.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            onClick={handleDelete}
-          >
-            Eliminar
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
+      <Button
+        variant="ghost"
+        isIconOnly
+        size="sm"
+        aria-label={`Eliminar ${label}`}
+        isDisabled={pending}
+      >
+        <Trash2 />
+      </Button>
+      <AlertDialog.Backdrop isKeyboardDismissDisabled={false}>
+        <AlertDialog.Container>
+          <AlertDialog.Dialog className="sm:max-w-md">
+            <AlertDialog.Header>
+              <AlertDialog.Icon status="danger" />
+              <AlertDialog.Heading>¿Eliminar este {label}?</AlertDialog.Heading>
+              <AlertDialog.Body>
+                <p className="text-sm text-muted">
+                  Lo ahorrado en la meta se recalcula sin él. Esta acción no se
+                  puede deshacer.
+                </p>
+              </AlertDialog.Body>
+            </AlertDialog.Header>
+            <AlertDialog.Footer>
+              <Button
+                slot="close"
+                variant="tertiary"
+              >
+                Cancelar
+              </Button>
+              <Button
+                slot="close"
+                variant="danger"
+                onPress={handleDelete}
+              >
+                Eliminar
+              </Button>
+            </AlertDialog.Footer>
+          </AlertDialog.Dialog>
+        </AlertDialog.Container>
+      </AlertDialog.Backdrop>
     </AlertDialog>
   )
 }

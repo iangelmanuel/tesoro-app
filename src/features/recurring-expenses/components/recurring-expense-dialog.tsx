@@ -1,39 +1,24 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import { CalendarIcon, X } from "lucide-react"
-import { es } from "react-day-picker/locale"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover"
-import {
+  Button,
+  FieldError,
+  Input,
+  Label,
+  ListBox,
+  Modal,
   Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  toast
+} from "@heroui/react"
+import { X } from "lucide-react"
+import { DatePickerField } from "@/components/forms/date-picker-field"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
-import { fromLocalDate, toLocalDate, todayISO } from "@/libs/dates"
-import { formatDate } from "@/libs/format"
+import { todayISO } from "@/libs/dates"
 import { createRecurringExpense, updateRecurringExpense } from "../actions"
 import { monthName } from "../occurrences"
 import type { RecurringExpense } from "../queries"
@@ -64,31 +49,38 @@ export function RecurringExpenseDialog({
   const isEditing = expense !== undefined
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={setOpen}
-    >
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Editar gasto fijo" : "Nuevo gasto fijo"}
-          </DialogTitle>
-          <DialogDescription>
-            {isEditing
-              ? "Cambia los datos del gasto fijo."
-              : "Un pago que se repite cada mes o cada año, como el arriendo o una suscripción."}
-          </DialogDescription>
-        </DialogHeader>
-        {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-        <RecurringExpenseForm
-          categories={categories}
-          expense={expense}
-          onSaved={() => setOpen(false)}
-          onCancel={() => setOpen(false)}
-        />
-      </DialogContent>
-    </Dialog>
+    <Modal>
+      {trigger}
+      <Modal.Backdrop
+        isOpen={open}
+        onOpenChange={setOpen}
+      >
+        <Modal.Container scroll="outside">
+          <Modal.Dialog className="sm:max-w-md">
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <Modal.Heading>
+                {isEditing ? "Editar gasto fijo" : "Nuevo gasto fijo"}
+              </Modal.Heading>
+              <p className="text-sm text-muted">
+                {isEditing
+                  ? "Cambia los datos del gasto fijo."
+                  : "Un pago que se repite cada mes o cada año, como el arriendo o una suscripción."}
+              </p>
+            </Modal.Header>
+            <Modal.Body>
+              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
+              <RecurringExpenseForm
+                categories={categories}
+                expense={expense}
+                onSaved={() => setOpen(false)}
+                onCancel={() => setOpen(false)}
+              />
+            </Modal.Body>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
   )
 }
 
@@ -144,7 +136,8 @@ function RecurringExpenseForm({
     return result
   }, {})
 
-  function handleFrequencyChange(value: string) {
+  function handleFrequencyChange(keys: Set<React.Key>) {
+    const [value] = [...keys]
     if (!value || value === frequency) return
     setFrequency(value as RecurringFrequency)
   }
@@ -170,318 +163,220 @@ function RecurringExpenseForm({
         name="frequency"
         value={frequency}
       />
-      <input
-        type="hidden"
-        name="starts_on"
-        value={startsOn}
-      />
-      <input
-        type="hidden"
-        name="ends_on"
-        value={endsOn}
-      />
 
-      <Field
-        id="name"
-        label="Nombre"
-        errors={errors?.name}
+      <TextField
+        name="name"
+        maxLength={60}
+        defaultValue={values?.name ?? expense?.name}
+        isRequired
+        isInvalid={Boolean(errors?.name)}
+        validationBehavior="aria"
+        className="flex flex-col gap-2"
       >
-        <Input
-          id="name"
-          name="name"
-          maxLength={60}
-          placeholder="Arriendo"
-          defaultValue={values?.name ?? expense?.name}
-          aria-invalid={Boolean(errors?.name) || undefined}
-          required
-        />
-      </Field>
+        <Label>Nombre</Label>
+        <Input placeholder="Arriendo" />
+        <FieldError>{errors?.name?.[0]}</FieldError>
+      </TextField>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          id="amount"
-          label="Monto"
-          errors={errors?.amount}
+        <TextField
+          name="amount"
+          inputMode="decimal"
+          autoComplete="off"
+          defaultValue={
+            values?.amount ??
+            (expense ? AMOUNT_FORMAT.format(expense.amount) : "")
+          }
+          isRequired
+          isInvalid={Boolean(errors?.amount)}
+          validationBehavior="aria"
+          className="flex flex-col gap-2"
         >
-          <Input
-            id="amount"
-            name="amount"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="0"
-            defaultValue={
-              values?.amount ??
-              (expense ? AMOUNT_FORMAT.format(expense.amount) : "")
-            }
-            aria-invalid={Boolean(errors?.amount) || undefined}
-            required
-          />
-        </Field>
+          <Label>Monto</Label>
+          <Input placeholder="0" />
+          <FieldError>{errors?.amount?.[0]}</FieldError>
+        </TextField>
 
-        <Field
-          id="category_id"
-          label="Categoría"
-          errors={errors?.category_id}
+        <Select
+          name="category_id"
+          fullWidth
+          placeholder="Elige una categoría"
+          value={categoryId || null}
+          onChange={(key) => setCategoryId(key == null ? "" : String(key))}
+          isInvalid={Boolean(errors?.category_id)}
+          className="flex flex-col gap-2"
         >
-          <Select
-            name="category_id"
-            value={categoryId}
-            onValueChange={setCategoryId}
-          >
-            <SelectTrigger
-              id="category_id"
-              className="w-full"
-              aria-invalid={Boolean(errors?.category_id) || undefined}
-            >
-              <SelectValue placeholder="Elige una categoría" />
-            </SelectTrigger>
-            <SelectContent>
+          <Label>Categoría</Label>
+          <Select.Trigger>
+            <Select.Value />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox>
               {options.map((category) => (
-                <SelectItem
+                <ListBox.Item
                   key={category.id}
-                  value={category.id}
+                  id={category.id}
+                  textValue={category.name}
                 >
                   <CategoryBadge
                     name={category.name}
                     icon={category.icon}
                     color={category.color}
                   />
-                </SelectItem>
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
               ))}
-            </SelectContent>
-          </Select>
+            </ListBox>
+          </Select.Popover>
+          <FieldError>{errors?.category_id?.[0]}</FieldError>
           {currentCategoryArchived && !categoryId && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted">
               La categoría de este gasto fijo está archivada. Elige otra.
             </p>
           )}
-        </Field>
+        </Select>
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label>Frecuencia</Label>
-        <ToggleGroup
-          type="single"
-          variant="outline"
-          value={frequency}
-          onValueChange={handleFrequencyChange}
-          className="w-full"
-          aria-label="Frecuencia"
+        <Label id="frequency-label">Frecuencia</Label>
+        <ToggleButtonGroup
+          aria-labelledby="frequency-label"
+          selectionMode="single"
+          disallowEmptySelection
+          selectedKeys={[frequency]}
+          onSelectionChange={handleFrequencyChange}
+          fullWidth
         >
-          <ToggleGroupItem
-            value="monthly"
+          <ToggleButton
+            id="monthly"
             className="flex-1"
           >
             Mensual
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="yearly"
+          </ToggleButton>
+          <ToggleButton
+            id="yearly"
             className="flex-1"
           >
             Anual
-          </ToggleGroupItem>
-        </ToggleGroup>
+          </ToggleButton>
+        </ToggleButtonGroup>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          id="day_of_month"
-          label="Día de pago"
-          errors={errors?.day_of_month}
+        <TextField
+          name="day_of_month"
+          inputMode="numeric"
+          defaultValue={
+            values?.day_of_month ??
+            (expense ? String(expense.day_of_month) : undefined)
+          }
+          isRequired
+          isInvalid={Boolean(errors?.day_of_month)}
+          validationBehavior="aria"
+          className="flex flex-col gap-2"
         >
+          <Label>Día de pago</Label>
           <Input
-            id="day_of_month"
-            name="day_of_month"
             type="number"
-            inputMode="numeric"
             min={1}
             max={31}
             placeholder="5"
-            defaultValue={
-              values?.day_of_month ?? expense?.day_of_month ?? undefined
-            }
-            aria-invalid={Boolean(errors?.day_of_month) || undefined}
-            required
           />
-        </Field>
+          <FieldError>{errors?.day_of_month?.[0]}</FieldError>
+        </TextField>
 
         {/* El mes de pago solo aplica a los anuales */}
         {frequency === "yearly" && (
-          <Field
-            id="month_of_year"
-            label="Mes de pago"
-            errors={errors?.month_of_year}
+          <Select
+            name="month_of_year"
+            fullWidth
+            placeholder="Elige un mes"
+            value={monthOfYear || null}
+            onChange={(key) => setMonthOfYear(key == null ? "" : String(key))}
+            isInvalid={Boolean(errors?.month_of_year)}
+            className="flex flex-col gap-2"
           >
-            <Select
-              name="month_of_year"
-              value={monthOfYear}
-              onValueChange={setMonthOfYear}
-            >
-              <SelectTrigger
-                id="month_of_year"
-                className="w-full capitalize"
-                aria-invalid={Boolean(errors?.month_of_year) || undefined}
-              >
-                <SelectValue placeholder="Elige un mes" />
-              </SelectTrigger>
-              <SelectContent>
+            <Label>Mes de pago</Label>
+            <Select.Trigger className="capitalize">
+              <Select.Value />
+              <Select.Indicator />
+            </Select.Trigger>
+            <Select.Popover>
+              <ListBox>
                 {MONTHS.map((month) => (
-                  <SelectItem
+                  <ListBox.Item
                     key={month}
-                    value={String(month)}
+                    id={String(month)}
+                    textValue={monthName(month)}
                     className="capitalize"
                   >
                     {monthName(month)}
-                  </SelectItem>
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
                 ))}
-              </SelectContent>
-            </Select>
-          </Field>
+              </ListBox>
+            </Select.Popover>
+            <FieldError>{errors?.month_of_year?.[0]}</FieldError>
+          </Select>
         )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          id="starts_on"
+        <DatePickerField
+          name="starts_on"
           label="Desde"
-          errors={errors?.starts_on}
-        >
-          <DatePicker
-            id="starts_on"
-            value={startsOn}
-            onChange={setStartsOn}
-          />
-        </Field>
+          value={startsOn}
+          onChange={setStartsOn}
+          error={errors?.starts_on?.[0]}
+          isRequired
+        />
 
-        <Field
-          id="ends_on"
-          label="Hasta (opcional)"
-          errors={errors?.ends_on}
-        >
-          <div className="flex gap-1">
-            <DatePicker
-              id="ends_on"
-              value={endsOn}
-              onChange={setEndsOn}
-              placeholder="Sin fecha de fin"
-            />
-            {endsOn && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label="Quitar fecha de fin"
-                onClick={() => setEndsOn("")}
-              >
-                <X />
-              </Button>
-            )}
-          </div>
-        </Field>
+        <div className="flex items-end gap-1">
+          <DatePickerField
+            name="ends_on"
+            label="Hasta (opcional)"
+            value={endsOn}
+            onChange={setEndsOn}
+            error={errors?.ends_on?.[0]}
+            className="flex flex-1 flex-col gap-2"
+          />
+          {endsOn && (
+            <Button
+              variant="ghost"
+              isIconOnly
+              aria-label="Quitar fecha de fin"
+              onPress={() => setEndsOn("")}
+            >
+              <X />
+            </Button>
+          )}
+        </div>
       </div>
 
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-destructive"
+          className="text-sm text-danger"
         >
           {state.error}
         </p>
       )}
 
-      <DialogFooter>
+      <div className="flex justify-end gap-2">
         <Button
-          type="button"
           variant="ghost"
-          onClick={onCancel}
+          onPress={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          disabled={pending}
+          isDisabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear"}
         </Button>
-      </DialogFooter>
+      </div>
     </form>
-  )
-}
-
-function DatePicker({
-  id,
-  value,
-  onChange,
-  placeholder
-}: {
-  id: string
-  /** YYYY-MM-DD, o "" sin fecha */
-  value: string
-  onChange: (value: string) => void
-  placeholder?: string
-}) {
-  const [open, setOpen] = useState(false)
-  const selected = value ? toLocalDate(value) : undefined
-
-  return (
-    <Popover
-      open={open}
-      onOpenChange={setOpen}
-    >
-      <PopoverTrigger asChild>
-        <Button
-          id={id}
-          type="button"
-          variant="outline"
-          className="flex-1 justify-start font-normal"
-        >
-          <CalendarIcon data-icon="inline-start" />
-          {value ? (
-            formatDate(value)
-          ) : (
-            <span className="text-muted-foreground">{placeholder}</span>
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        className="w-auto p-0"
-        align="start"
-      >
-        <Calendar
-          mode="single"
-          locale={es}
-          selected={selected}
-          defaultMonth={selected}
-          onSelect={(date) => {
-            if (date) {
-              onChange(fromLocalDate(date))
-              setOpen(false)
-            }
-          }}
-        />
-      </PopoverContent>
-    </Popover>
-  )
-}
-
-function Field({
-  id,
-  label,
-  errors,
-  children
-}: {
-  id: string
-  label: string
-  errors?: string[]
-  children: React.ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>{label}</Label>
-      {children}
-      {errors?.length ? (
-        <p className="text-sm text-destructive">{errors[0]}</p>
-      ) : null}
-    </div>
   )
 }

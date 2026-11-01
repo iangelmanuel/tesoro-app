@@ -1,16 +1,15 @@
 import Link from "next/link"
-import { ShieldCheck } from "lucide-react"
-import { CardEmpty } from "@/components/dashboard/empty-state"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+  CardTitle,
+  Chip,
+  buttonVariants
+} from "@heroui/react"
+import { ShieldCheck } from "lucide-react"
+import { CardEmpty } from "@/components/dashboard/empty-state"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import { currentMonth } from "@/libs/dates"
 import { formatCurrency } from "@/libs/format"
@@ -50,19 +49,22 @@ export async function BudgetsAtRiskCard({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Presupuestos en riesgo</CardTitle>
-        <CardDescription>Cerca del límite o excedidos este mes</CardDescription>
-        <CardAction>
-          <Button
-            variant="outline"
-            size="sm"
-            asChild
+      <div className="flex items-start justify-between gap-2">
+        <CardHeader>
+          <CardTitle>Presupuestos en riesgo</CardTitle>
+          <CardDescription>
+            Cerca del límite o excedidos este mes
+          </CardDescription>
+        </CardHeader>
+        <div className="shrink-0">
+          <Link
+            href={BUDGETS_PATH}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
           >
-            <Link href={BUDGETS_PATH}>Ver todos</Link>
-          </Button>
-        </CardAction>
-      </CardHeader>
+            Ver todos
+          </Link>
+        </div>
+      </div>
       <CardContent>
         {atRisk.length === 0 && (
           <CardEmpty
@@ -84,9 +86,14 @@ export async function BudgetsAtRiskCard({
                     icon={row.icon}
                     color={row.color}
                   />
-                  <Badge className={STATUS_BADGE_CLASSES[status]}>
+                  <Chip
+                    size="sm"
+                    className={STATUS_BADGE_CLASSES[status]}
+                    color="accent"
+                    variant="primary"
+                  >
                     {BUDGET_STATUS_LABELS[status]}
-                  </Badge>
+                  </Chip>
                   <p className="ml-auto text-sm font-medium tabular-nums">
                     {formatPercent(budgetPercent(row.spent, row.budgetAmount))}
                   </p>
@@ -96,7 +103,7 @@ export async function BudgetsAtRiskCard({
                   committed={row.committed}
                   budget={row.budgetAmount}
                 />
-                <p className="text-sm text-muted-foreground tabular-nums">
+                <p className="text-sm text-muted tabular-nums">
                   {formatCurrency(row.spent, currency)} de{" "}
                   {formatCurrency(row.budgetAmount, currency)}
                 </p>

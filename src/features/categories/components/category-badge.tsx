@@ -1,6 +1,5 @@
-import { cn } from "cn"
+import { Chip, cn } from "@heroui/react"
 import { Tag } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { CATEGORY_COLORS, CATEGORY_ICONS } from "../constants"
 
 interface CategoryBadgeProps {
@@ -24,9 +23,12 @@ export function CategoryBadge({
     CATEGORY_COLORS.slate
 
   return (
-    <Badge className={cn(colorClass, className)}>
-      <Icon data-icon="inline-start" />
-      {name}
-    </Badge>
+    <Chip
+      size="sm"
+      className={cn("gap-1", colorClass, className)}
+    >
+      <Icon className="size-3 shrink-0" />
+      <Chip.Label>{name}</Chip.Label>
+    </Chip>
   )
 }

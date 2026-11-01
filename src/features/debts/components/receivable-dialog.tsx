@@ -1,24 +1,21 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import { X } from "lucide-react"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+  Button,
+  FieldError,
+  Input,
+  Label,
+  Modal,
+  TextField,
+  toast
+} from "@heroui/react"
+import { X } from "lucide-react"
+import { DatePickerField } from "@/components/forms/date-picker-field"
 import { createDebt, updateDebt } from "../actions"
 import type { Debt } from "../queries"
 import type { DebtFormState } from "../types"
-import { DatePicker } from "./date-picker"
-import { Field, amountInput } from "./field"
+import { amountInput } from "./field"
 
 interface ReceivableDialogProps {
   /** Si llega, el diálogo edita esta cuenta por cobrar */
@@ -41,30 +38,39 @@ export function ReceivableDialog({
   const isEditing = receivable !== undefined
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={setOpen}
-    >
-      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Editar cuenta por cobrar" : "Nueva cuenta por cobrar"}
-          </DialogTitle>
-          <DialogDescription>
-            {isEditing
-              ? "Cambia los datos de la cuenta por cobrar. Sus abonos y ajustes no cambian."
-              : "Dinero que prestaste o que alguien te debe."}
-          </DialogDescription>
-        </DialogHeader>
-        {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-        <ReceivableForm
-          receivable={receivable}
-          onSaved={() => setOpen(false)}
-          onCancel={() => setOpen(false)}
-        />
-      </DialogContent>
-    </Dialog>
+    <Modal>
+      {trigger}
+      <Modal.Backdrop
+        isOpen={open}
+        onOpenChange={setOpen}
+      >
+        <Modal.Container scroll="outside">
+          <Modal.Dialog className="sm:max-w-md">
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <Modal.Heading>
+                {isEditing
+                  ? "Editar cuenta por cobrar"
+                  : "Nueva cuenta por cobrar"}
+              </Modal.Heading>
+              <p className="text-sm text-muted">
+                {isEditing
+                  ? "Cambia los datos de la cuenta por cobrar. Sus abonos y ajustes no cambian."
+                  : "Dinero que prestaste o que alguien te debe."}
+              </p>
+            </Modal.Header>
+            <Modal.Body>
+              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
+              <ReceivableForm
+                receivable={receivable}
+                onSaved={() => setOpen(false)}
+                onCancel={() => setOpen(false)}
+              />
+            </Modal.Body>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
   )
 }
 
@@ -123,120 +129,99 @@ function ReceivableForm({
           value="receivable"
         />
       )}
-      <input
-        type="hidden"
-        name="expected_on"
-        value={expectedOn}
-      />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          id="name"
-          label="Nombre"
-          errors={errors?.name}
+        <TextField
+          name="name"
+          maxLength={60}
+          defaultValue={values?.name ?? receivable?.name}
+          isRequired
+          isInvalid={Boolean(errors?.name)}
+          validationBehavior="aria"
+          className="flex flex-col gap-2"
         >
-          <Input
-            id="name"
-            name="name"
-            maxLength={60}
-            placeholder="Préstamo a Juan"
-            defaultValue={values?.name ?? receivable?.name}
-            aria-invalid={Boolean(errors?.name) || undefined}
-            required
-          />
-        </Field>
+          <Label>Nombre</Label>
+          <Input placeholder="Préstamo a Juan" />
+          <FieldError>{errors?.name?.[0]}</FieldError>
+        </TextField>
 
-        <Field
-          id="counterparty"
-          label="Deudor (opcional)"
-          errors={errors?.counterparty}
+        <TextField
+          name="counterparty"
+          maxLength={60}
+          defaultValue={values?.counterparty ?? receivable?.counterparty ?? ""}
+          isInvalid={Boolean(errors?.counterparty)}
+          validationBehavior="aria"
+          className="flex flex-col gap-2"
         >
-          <Input
-            id="counterparty"
-            name="counterparty"
-            maxLength={60}
-            placeholder="Juan"
-            defaultValue={
-              values?.counterparty ?? receivable?.counterparty ?? ""
-            }
-            aria-invalid={Boolean(errors?.counterparty) || undefined}
-          />
-        </Field>
+          <Label>Deudor (opcional)</Label>
+          <Input placeholder="Juan" />
+          <FieldError>{errors?.counterparty?.[0]}</FieldError>
+        </TextField>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          id="opening_balance"
-          label={isEditing ? "Monto inicial" : "Monto que te deben"}
-          errors={errors?.opening_balance}
+        <TextField
+          name="opening_balance"
+          inputMode="decimal"
+          autoComplete="off"
+          defaultValue={
+            values?.opening_balance ?? amountInput(receivable?.opening_balance)
+          }
+          isRequired
+          isInvalid={Boolean(errors?.opening_balance)}
+          validationBehavior="aria"
+          className="flex flex-col gap-2"
         >
-          <Input
-            id="opening_balance"
-            name="opening_balance"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="0"
-            defaultValue={
-              values?.opening_balance ??
-              amountInput(receivable?.opening_balance)
-            }
-            aria-invalid={Boolean(errors?.opening_balance) || undefined}
-            required
-          />
-        </Field>
+          <Label>{isEditing ? "Monto inicial" : "Monto que te deben"}</Label>
+          <Input placeholder="0" />
+          <FieldError>{errors?.opening_balance?.[0]}</FieldError>
+        </TextField>
 
-        <Field
-          id="expected_on"
-          label="Fecha esperada (opcional)"
-          errors={errors?.expected_on}
-        >
-          <div className="flex gap-1">
-            <DatePicker
-              id="expected_on"
-              value={expectedOn}
-              onChange={setExpectedOn}
-              allowFuture
-              className="flex-1"
-            />
-            {expectedOn && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label="Quitar fecha esperada"
-                onClick={() => setExpectedOn("")}
-              >
-                <X />
-              </Button>
-            )}
-          </div>
-        </Field>
+        <div className="flex items-end gap-1">
+          <DatePickerField
+            name="expected_on"
+            label="Fecha esperada (opcional)"
+            value={expectedOn}
+            onChange={setExpectedOn}
+            error={errors?.expected_on?.[0]}
+            className="flex flex-1 flex-col gap-2"
+          />
+          {expectedOn && (
+            <Button
+              variant="ghost"
+              isIconOnly
+              aria-label="Quitar fecha esperada"
+              onPress={() => setExpectedOn("")}
+            >
+              <X />
+            </Button>
+          )}
+        </div>
       </div>
 
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-destructive"
+          className="text-sm text-danger"
         >
           {state.error}
         </p>
       )}
 
-      <DialogFooter>
+      <div className="flex justify-end gap-2">
         <Button
-          type="button"
           variant="ghost"
-          onClick={onCancel}
+          onPress={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          disabled={pending}
+          isDisabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear"}
         </Button>
-      </DialogFooter>
+      </div>
     </form>
   )
 }

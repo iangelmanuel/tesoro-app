@@ -1,9 +1,14 @@
 "use client"
 
 import { useActionState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Field } from "@/features/debts/components/field"
+import {
+  Button,
+  Description,
+  FieldError,
+  Input,
+  Label,
+  TextField
+} from "@heroui/react"
 import { changeEmail } from "../actions"
 import type { ProfileFormState } from "../types"
 
@@ -25,30 +30,29 @@ export function ChangeEmailForm({ email, newEmail }: ChangeEmailFormProps) {
       className="flex flex-col gap-4"
       noValidate
     >
-      <Field
-        id="email"
-        label="Email"
-        errors={state.fieldErrors?.email}
+      <TextField
+        name="email"
+        type="email"
+        autoComplete="email"
+        defaultValue={state.values?.email ?? email}
+        isInvalid={Boolean(state.fieldErrors?.email)}
+        validationBehavior="aria"
+        className="flex flex-col gap-2"
       >
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          defaultValue={state.values?.email ?? email}
-          aria-invalid={Boolean(state.fieldErrors?.email) || undefined}
-        />
+        <Label>Email</Label>
+        <Input />
         {newEmail && (
-          <p className="text-sm text-muted-foreground">
+          <Description>
             Cambio pendiente a{" "}
             <span className="font-medium text-foreground">{newEmail}</span>
-          </p>
+          </Description>
         )}
-      </Field>
+        <FieldError>{state.fieldErrors?.email?.[0]}</FieldError>
+      </TextField>
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-destructive"
+          className="text-sm text-danger"
         >
           {state.error}
         </p>
@@ -56,7 +60,7 @@ export function ChangeEmailForm({ email, newEmail }: ChangeEmailFormProps) {
       {state.success && (
         <p
           role="status"
-          className="text-sm text-muted-foreground"
+          className="text-sm text-muted"
         >
           {state.success}
         </p>
@@ -65,7 +69,7 @@ export function ChangeEmailForm({ email, newEmail }: ChangeEmailFormProps) {
         type="submit"
         variant="outline"
         className="self-start"
-        disabled={pending}
+        isDisabled={pending}
       >
         {pending ? "Enviando..." : "Cambiar email"}
       </Button>

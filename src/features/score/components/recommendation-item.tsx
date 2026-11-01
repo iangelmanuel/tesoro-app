@@ -2,8 +2,7 @@
 
 import { useTransition } from "react"
 import Link from "next/link"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants, toast } from "@heroui/react"
 import { ToneBadge } from "@/features/debts/components/debt-indicators"
 import type { OccurrenceTone } from "@/features/recurring-expenses/occurrences"
 import { dismissRecommendation } from "../actions"
@@ -48,7 +47,7 @@ export function RecommendationItem({
         recommendation.entityKey
       )
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success("Recomendación oculta este mes")
       }
@@ -61,21 +60,20 @@ export function RecommendationItem({
         <SeverityBadge severity={recommendation.severity} />
         <p className="font-medium">{recommendation.title}</p>
       </div>
-      <p className="text-sm text-muted-foreground">{recommendation.evidence}</p>
+      <p className="text-sm text-muted">{recommendation.evidence}</p>
       <div className="flex flex-wrap gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          asChild
+        <Link
+          href={recommendation.href}
+          className={buttonVariants({ variant: "outline", size: "sm" })}
         >
-          <Link href={recommendation.href}>{recommendation.linkLabel}</Link>
-        </Button>
+          {recommendation.linkLabel}
+        </Link>
         {!compact && (
           <Button
             variant="ghost"
             size="sm"
-            disabled={pending}
-            onClick={dismiss}
+            isDisabled={pending}
+            onPress={dismiss}
           >
             Ocultar este mes
           </Button>

@@ -1,33 +1,38 @@
 import { Suspense } from "react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@heroui/react"
 import { SITE } from "@/config/site"
 import { createClient } from "@/libs/supabase/server"
 
 // Botones de sesión del header. El fallback es el estado sin sesión, así el
-// shell prerenderizado ya trae enlaces útiles mientras la isla resuelve
+// shell prerenderizado ya trae enlaces útiles mientras la isla resuelve.
+// Son enlaces con el estilo del Button de HeroUI
 export function SessionButtons({ signedIn }: { signedIn: boolean }) {
   if (signedIn) {
     return (
-      <Button asChild>
-        <Link href={SITE.routes.dashboard}>Ir al dashboard</Link>
-      </Button>
+      <Link
+        href={SITE.routes.dashboard}
+        className={buttonVariants()}
+      >
+        Ir al dashboard
+      </Link>
     )
   }
 
   return (
     <>
-      <Button
-        asChild
-        variant="ghost"
+      <Link
+        href={SITE.navigation.secondary.href}
+        className={buttonVariants({ variant: "ghost" })}
       >
-        <Link href={SITE.navigation.secondary.href}>
-          {SITE.navigation.secondary.label}
-        </Link>
-      </Button>
-      <Button asChild>
-        <Link href={SITE.navigation.cta.href}>{SITE.navigation.cta.label}</Link>
-      </Button>
+        {SITE.navigation.secondary.label}
+      </Link>
+      <Link
+        href={SITE.navigation.cta.href}
+        className={buttonVariants()}
+      >
+        {SITE.navigation.cta.label}
+      </Link>
     </>
   )
 }

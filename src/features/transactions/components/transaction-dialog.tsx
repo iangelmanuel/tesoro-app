@@ -1,36 +1,21 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import { CalendarIcon } from "lucide-react"
-import { es } from "react-day-picker/locale"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover"
-import {
+  Button,
+  FieldError,
+  Input,
+  Label,
+  ListBox,
+  Modal,
   Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+  TextArea,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  toast
+} from "@heroui/react"
+import { DatePickerField } from "@/components/forms/date-picker-field"
 import {
   type AccountOption,
   AccountSelect,
@@ -39,8 +24,7 @@ import {
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import type { WorkspaceType } from "@/features/workspaces/queries"
-import { fromLocalDate, toLocalDate, todayISO } from "@/libs/dates"
-import { formatDate } from "@/libs/format"
+import { todayISO } from "@/libs/dates"
 import { createTransaction, updateTransaction } from "../actions"
 import type { TransactionType } from "../filters"
 import type { EditableTransaction } from "../queries"
@@ -113,43 +97,51 @@ export function TransactionDialog({
   const isEditing = transaction !== undefined
   const isPayment = !isEditing && recurring !== undefined
 
+  // `trigger` debe ser un Button de HeroUI: el Modal lo conecta por React Aria
   return (
-    <Dialog
-      open={open}
-      onOpenChange={setOpen}
-    >
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing
-              ? "Editar movimiento"
-              : isPayment
-                ? "Registrar pago"
-                : "Nuevo movimiento"}
-          </DialogTitle>
-          <DialogDescription>
-            {isEditing
-              ? "Cambia los datos del movimiento."
-              : isPayment
-                ? "Confirma los datos del pago. Puedes ajustar el monto."
-                : COPY[workspaceType].description}
-          </DialogDescription>
-        </DialogHeader>
-        {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-        <TransactionForm
-          workspaceId={workspaceId}
-          workspaceType={workspaceType}
-          categories={categories}
-          accounts={accounts}
-          transaction={transaction}
-          initialValues={isEditing ? undefined : initialValues}
-          recurring={isEditing ? undefined : recurring}
-          onSaved={() => setOpen(false)}
-          onCancel={() => setOpen(false)}
-        />
-      </DialogContent>
-    </Dialog>
+    <Modal>
+      {trigger}
+      <Modal.Backdrop
+        isOpen={open}
+        onOpenChange={setOpen}
+      >
+        <Modal.Container scroll="outside">
+          <Modal.Dialog className="sm:max-w-md">
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <Modal.Heading>
+                {isEditing
+                  ? "Editar movimiento"
+                  : isPayment
+                    ? "Registrar pago"
+                    : "Nuevo movimiento"}
+              </Modal.Heading>
+              <p className="text-sm text-muted">
+                {isEditing
+                  ? "Cambia los datos del movimiento."
+                  : isPayment
+                    ? "Confirma los datos del pago. Puedes ajustar el monto."
+                    : COPY[workspaceType].description}
+              </p>
+            </Modal.Header>
+            {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
+            <Modal.Body>
+              <TransactionForm
+                workspaceId={workspaceId}
+                workspaceType={workspaceType}
+                categories={categories}
+                accounts={accounts}
+                transaction={transaction}
+                initialValues={isEditing ? undefined : initialValues}
+                recurring={isEditing ? undefined : recurring}
+                onSaved={() => setOpen(false)}
+                onCancel={() => setOpen(false)}
+              />
+            </Modal.Body>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
   )
 }
 
@@ -201,7 +193,6 @@ function TransactionForm({
   const [date, setDate] = useState(
     () => transaction?.occurred_on ?? initialValues?.occurred_on ?? todayISO()
   )
-  const [calendarOpen, setCalendarOpen] = useState(false)
   const [accountId, setAccountId] = useState(transaction?.account_id ?? "")
 
   const [state, formAction, pending] = useActionState<
@@ -234,7 +225,8 @@ function TransactionForm({
         category.id === transaction?.category_id)
   )
 
-  function handleTypeChange(value: string) {
+  function handleTypeChange(keys: Set<React.Key>) {
+    const [value] = [...keys]
     if (!value || value === type) return
     setType(value as TransactionType)
     setCategoryId("")
@@ -266,11 +258,6 @@ function TransactionForm({
         name="type"
         value={type}
       />
-      <input
-        type="hidden"
-        name="occurred_on"
-        value={date}
-      />
       {recurring && (
         <>
           <input
@@ -286,278 +273,211 @@ function TransactionForm({
         </>
       )}
 
-      <ToggleGroup
-        type="single"
-        variant="outline"
-        value={type}
-        onValueChange={handleTypeChange}
-        className="w-full"
+      <ToggleButtonGroup
+        selectionMode="single"
+        disallowEmptySelection
+        selectedKeys={[type]}
+        onSelectionChange={handleTypeChange}
+        isDisabled={isLinked}
+        fullWidth
         aria-label="Tipo de movimiento"
-        disabled={isLinked}
       >
-        <ToggleGroupItem
-          value="expense"
+        <ToggleButton
+          id="expense"
           className="flex-1"
         >
           {copy.expense}
-        </ToggleGroupItem>
-        <ToggleGroupItem
-          value="income"
+        </ToggleButton>
+        <ToggleButton
+          id="income"
           className="flex-1"
         >
           {copy.income}
-        </ToggleGroupItem>
-      </ToggleGroup>
+        </ToggleButton>
+      </ToggleButtonGroup>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          id="amount"
-          label="Monto"
-          errors={errors?.amount}
+        <TextField
+          name="amount"
+          inputMode="decimal"
+          autoComplete="off"
+          defaultValue={
+            values?.amount ??
+            (transaction
+              ? AMOUNT_FORMAT.format(transaction.amount)
+              : initialValues?.amount !== undefined
+                ? AMOUNT_FORMAT.format(initialValues.amount)
+                : "")
+          }
+          isInvalid={Boolean(errors?.amount)}
+          isRequired
+          validationBehavior="aria"
+          className="flex flex-col gap-2"
         >
-          <Input
-            id="amount"
-            name="amount"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="0"
-            defaultValue={
-              values?.amount ??
-              (transaction
-                ? AMOUNT_FORMAT.format(transaction.amount)
-                : initialValues?.amount !== undefined
-                  ? AMOUNT_FORMAT.format(initialValues.amount)
-                  : "")
-            }
-            aria-invalid={Boolean(errors?.amount) || undefined}
-            required
-          />
-        </Field>
+          <Label>Monto</Label>
+          <Input placeholder="0" />
+          <FieldError>{errors?.amount?.[0]}</FieldError>
+        </TextField>
 
-        <Field
-          id="occurred_on"
+        <DatePickerField
+          name="occurred_on"
           label="Fecha"
-          errors={errors?.occurred_on}
-        >
-          <Popover
-            open={calendarOpen}
-            onOpenChange={setCalendarOpen}
-          >
-            <PopoverTrigger asChild>
-              <Button
-                id="occurred_on"
-                type="button"
-                variant="outline"
-                className="justify-start font-normal"
-              >
-                <CalendarIcon data-icon="inline-start" />
-                {formatDate(date)}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-auto p-0"
-              align="start"
-            >
-              <Calendar
-                mode="single"
-                locale={es}
-                selected={toLocalDate(date)}
-                defaultMonth={toLocalDate(date)}
-                onSelect={(value) => {
-                  if (value) {
-                    setDate(fromLocalDate(value))
-                    setCalendarOpen(false)
-                  }
-                }}
-              />
-            </PopoverContent>
-          </Popover>
-        </Field>
+          value={date}
+          onChange={setDate}
+          error={errors?.occurred_on?.[0]}
+          isRequired
+        />
       </div>
 
-      <Field
-        id="category_id"
-        label="Categoría"
-        errors={errors?.category_id}
+      <Select
+        name="category_id"
+        fullWidth
+        placeholder="Elige una categoría"
+        value={categoryId || null}
+        onChange={(key) => setCategoryId(key == null ? "" : String(key))}
+        isInvalid={Boolean(errors?.category_id)}
+        className="flex flex-col gap-2"
       >
-        <Select
-          name="category_id"
-          value={categoryId}
-          onValueChange={setCategoryId}
-        >
-          <SelectTrigger
-            id="category_id"
-            className="w-full"
-            aria-invalid={Boolean(errors?.category_id) || undefined}
-          >
-            <SelectValue placeholder="Elige una categoría" />
-          </SelectTrigger>
-          <SelectContent>
-            {options.map((category) => (
-              <SelectItem
-                key={category.id}
-                value={category.id}
-              >
-                <CategoryBadge
-                  name={
-                    category.archived_at
-                      ? `${category.name} (archivada)`
-                      : category.name
-                  }
-                  icon={category.icon}
-                  color={category.color}
-                />
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Label>Categoría</Label>
+        <Select.Trigger>
+          <Select.Value />
+          <Select.Indicator />
+        </Select.Trigger>
+        <Select.Popover>
+          <ListBox>
+            {options.map((category) => {
+              const name = category.archived_at
+                ? `${category.name} (archivada)`
+                : category.name
+              return (
+                <ListBox.Item
+                  key={category.id}
+                  id={category.id}
+                  textValue={name}
+                >
+                  <CategoryBadge
+                    name={name}
+                    icon={category.icon}
+                    color={category.color}
+                  />
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              )
+            })}
+          </ListBox>
+        </Select.Popover>
+        <FieldError>{errors?.category_id?.[0]}</FieldError>
         {initialCategoryUnavailable && !categoryId && (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted">
             La categoría de este gasto fijo está archivada. Elige otra.
           </p>
         )}
-      </Field>
+      </Select>
 
-      <Field
-        id="account_id"
+      {/* Solo activas, más la actual del movimiento editado aunque esté
+          archivada, para poder guardar sin cambiarla */}
+      <AccountSelect
+        name="account_id"
         label="Cuenta"
-        errors={errors?.account_id}
-      >
-        {/* Solo activas, más la actual del movimiento editado aunque esté
-            archivada, para poder guardar sin cambiarla */}
-        <AccountSelect
-          id="account_id"
-          name="account_id"
-          value={accountId}
-          onChange={setAccountId}
-          accounts={selectableAccounts(accounts, transaction?.account_id)}
-          allowNone
-          invalid={Boolean(errors?.account_id)}
-        />
-      </Field>
+        value={accountId}
+        onChange={setAccountId}
+        accounts={selectableAccounts(accounts, transaction?.account_id)}
+        allowNone
+        error={errors?.account_id?.[0]}
+      />
 
-      <Field
-        id="description"
-        label="Descripción"
-        errors={errors?.description}
+      <TextField
+        name="description"
+        maxLength={120}
+        defaultValue={
+          values?.description ??
+          transaction?.description ??
+          initialValues?.description
+        }
+        isInvalid={Boolean(errors?.description)}
+        isRequired
+        validationBehavior="aria"
+        className="flex flex-col gap-2"
       >
-        <Input
-          id="description"
-          name="description"
-          maxLength={120}
-          placeholder={copy.placeholder[type]}
-          defaultValue={
-            values?.description ??
-            transaction?.description ??
-            initialValues?.description
-          }
-          aria-invalid={Boolean(errors?.description) || undefined}
-          required
-        />
-      </Field>
+        <Label>Descripción</Label>
+        <Input placeholder={copy.placeholder[type]} />
+        <FieldError>{errors?.description?.[0]}</FieldError>
+      </TextField>
 
       {isBusiness && (
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field
-            id="counterparty"
-            label={
-              type === "income" ? "Cliente (opcional)" : "Proveedor (opcional)"
+          <TextField
+            name="counterparty"
+            maxLength={80}
+            autoComplete="off"
+            defaultValue={
+              values?.counterparty ?? transaction?.counterparty ?? ""
             }
-            errors={errors?.counterparty}
+            isInvalid={Boolean(errors?.counterparty)}
+            validationBehavior="aria"
+            className="flex flex-col gap-2"
           >
-            <Input
-              id="counterparty"
-              name="counterparty"
-              maxLength={80}
-              autoComplete="off"
-              defaultValue={
-                values?.counterparty ?? transaction?.counterparty ?? ""
-              }
-              aria-invalid={Boolean(errors?.counterparty) || undefined}
-            />
-          </Field>
+            <Label>
+              {type === "income"
+                ? "Cliente (opcional)"
+                : "Proveedor (opcional)"}
+            </Label>
+            <Input />
+            <FieldError>{errors?.counterparty?.[0]}</FieldError>
+          </TextField>
 
-          <Field
-            id="invoice_ref"
-            label="N.º de factura (opcional)"
-            errors={errors?.invoice_ref}
+          <TextField
+            name="invoice_ref"
+            maxLength={40}
+            autoComplete="off"
+            defaultValue={values?.invoice_ref ?? transaction?.invoice_ref ?? ""}
+            isInvalid={Boolean(errors?.invoice_ref)}
+            validationBehavior="aria"
+            className="flex flex-col gap-2"
           >
-            <Input
-              id="invoice_ref"
-              name="invoice_ref"
-              maxLength={40}
-              autoComplete="off"
-              placeholder="FV-001"
-              defaultValue={
-                values?.invoice_ref ?? transaction?.invoice_ref ?? ""
-              }
-              aria-invalid={Boolean(errors?.invoice_ref) || undefined}
-            />
-          </Field>
+            <Label>N.º de factura (opcional)</Label>
+            <Input placeholder="FV-001" />
+            <FieldError>{errors?.invoice_ref?.[0]}</FieldError>
+          </TextField>
         </div>
       )}
 
-      <Field
-        id="note"
-        label="Nota (opcional)"
-        errors={errors?.note}
+      <TextField
+        name="note"
+        maxLength={500}
+        defaultValue={values?.note ?? transaction?.note ?? ""}
+        isInvalid={Boolean(errors?.note)}
+        validationBehavior="aria"
+        className="flex flex-col gap-2"
       >
-        <Textarea
-          id="note"
-          name="note"
-          maxLength={500}
-          rows={3}
-          defaultValue={values?.note ?? transaction?.note ?? ""}
-          aria-invalid={Boolean(errors?.note) || undefined}
-        />
-      </Field>
+        <Label>Nota (opcional)</Label>
+        <TextArea rows={3} />
+        <FieldError>{errors?.note?.[0]}</FieldError>
+      </TextField>
 
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-destructive"
+          className="text-sm text-danger"
         >
           {state.error}
         </p>
       )}
 
-      <DialogFooter>
+      <div className="flex justify-end gap-2">
         <Button
-          type="button"
           variant="ghost"
-          onClick={onCancel}
+          onPress={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          disabled={pending}
+          isDisabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Registrar"}
         </Button>
-      </DialogFooter>
+      </div>
     </form>
-  )
-}
-
-function Field({
-  id,
-  label,
-  errors,
-  children
-}: {
-  id: string
-  label: string
-  errors?: string[]
-  children: React.ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>{label}</Label>
-      {children}
-      {errors?.length ? (
-        <p className="text-sm text-destructive">{errors[0]}</p>
-      ) : null}
-    </div>
   )
 }

@@ -1,13 +1,6 @@
 import type { Route } from "next"
 import Link from "next/link"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table"
+import { Table } from "@heroui/react"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import {
   TRANSACTIONS_PATH,
@@ -45,63 +38,65 @@ export function CategorySummaryTable({
   return (
     <div className="rounded-xl border">
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Categoría</TableHead>
-            <TableHead className="text-right">Total</TableHead>
-            <TableHead className="text-right">% del total</TableHead>
-            <TableHead className="text-right">Movimientos</TableHead>
-            <TableHead className="text-right">Promedio</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {totals.map((row, index) => {
-            const href = `${transactionsPath}?${buildFiltersQuery({
-              month,
-              type: params.type,
-              categoryId: row.categoryId,
-              page: 1
-            })}` as Route
+        <Table.ScrollContainer>
+          <Table.Content aria-label="Resumen por categoría">
+            <Table.Header>
+              <Table.Column isRowHeader>Categoría</Table.Column>
+              <Table.Column className="text-end">Total</Table.Column>
+              <Table.Column className="text-end">% del total</Table.Column>
+              <Table.Column className="text-end">Movimientos</Table.Column>
+              <Table.Column className="text-end">Promedio</Table.Column>
+            </Table.Header>
+            <Table.Body>
+              {totals.map((row, index) => {
+                const href = `${transactionsPath}?${buildFiltersQuery({
+                  month,
+                  type: params.type,
+                  categoryId: row.categoryId,
+                  page: 1
+                })}` as Route
 
-            return (
-              // El enlace cubre toda la fila con un pseudo-elemento
-              <TableRow
-                key={row.categoryId}
-                className="relative"
-              >
-                <TableCell>
-                  <Link
-                    href={href}
-                    className="inline-flex items-center gap-2 rounded-sm after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-ring"
+                return (
+                  // El enlace cubre toda la fila con un pseudo-elemento
+                  <Table.Row
+                    key={row.categoryId}
+                    className="relative"
                   >
-                    <CategoryBadge
-                      name={row.name}
-                      icon={row.icon}
-                      color={row.color}
-                    />
-                    {row.archived && (
-                      <span className="text-xs text-muted-foreground">
-                        (archivada)
-                      </span>
-                    )}
-                  </Link>
-                </TableCell>
-                <TableCell className="text-right font-medium tabular-nums">
-                  {formatCurrency(row.total, currency)}
-                </TableCell>
-                <TableCell className="text-right text-muted-foreground tabular-nums">
-                  {PERCENT.format(shares[index] / 100)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {row.txCount}
-                </TableCell>
-                <TableCell className="text-right text-muted-foreground tabular-nums">
-                  {formatCurrency(row.total / row.txCount, currency)}
-                </TableCell>
-              </TableRow>
-            )
-          })}
-        </TableBody>
+                    <Table.Cell>
+                      <Link
+                        href={href}
+                        className="inline-flex items-center gap-2 rounded-sm after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-focus"
+                      >
+                        <CategoryBadge
+                          name={row.name}
+                          icon={row.icon}
+                          color={row.color}
+                        />
+                        {row.archived && (
+                          <span className="text-xs text-muted">
+                            (archivada)
+                          </span>
+                        )}
+                      </Link>
+                    </Table.Cell>
+                    <Table.Cell className="text-end font-medium tabular-nums">
+                      {formatCurrency(row.total, currency)}
+                    </Table.Cell>
+                    <Table.Cell className="text-end text-muted tabular-nums">
+                      {PERCENT.format(shares[index] / 100)}
+                    </Table.Cell>
+                    <Table.Cell className="text-end tabular-nums">
+                      {row.txCount}
+                    </Table.Cell>
+                    <Table.Cell className="text-end text-muted tabular-nums">
+                      {formatCurrency(row.total / row.txCount, currency)}
+                    </Table.Cell>
+                  </Table.Row>
+                )
+              })}
+            </Table.Body>
+          </Table.Content>
+        </Table.ScrollContainer>
       </Table>
     </div>
   )

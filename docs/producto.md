@@ -100,9 +100,25 @@ Secciones, en orden (`src/features/landing/components/`):
 - **Isotipo**: un cofre blanco sobre un cuadro redondeado del acento. Fuente
   en `assets/brand/mark.svg`; `app/icon.svg` es una copia.
 - **Wordmark**: "Tesoro" en Geist SemiBold.
-- **Acento**: `--income` (emerald). No hay paleta propia de marca. Para texto
-  pequeño se usa la utilidad `text-brand` (`--income` mezclado con el
+- **Color de marca**: `--brand` (emerald-500, `#10b981`), igual en claro y
+  oscuro. Lo usan el logo, el isotipo, el favicon y la imagen OG. Para texto
+  pequeño se usa la utilidad `text-brand` (`--brand` mezclado con el
   foreground), que cumple contraste AA en claro y oscuro.
+- **Primario de la UI** (`--accent` de HeroUI), según dónde estés:
+  - **Neutro** fuera de los espacios (landing, auth, legales, cuenta y el
+    estado vacío de Empresa): casi negro en claro, casi blanco en oscuro.
+  - **Emerald** en `/dashboard/personal/**` (emerald-600 en claro, 500 en
+    oscuro).
+  - **Naranja** en `/dashboard/business/[id]/**` (orange-600 en claro, 500 en
+    oscuro).
+  - Sobre emerald y naranja el texto es oscuro: el blanco no da AA.
+  - Lo decide la ruta: `WorkspaceThemeRoot` (layout del dashboard) pinta un
+    marcador `data-workspace` y `globals.css` cambia el primario con
+    `:has()`. Ningún componente recibe un color por props.
+  - Los overlays de HeroUI (diálogos, menús, drawers) se montan dentro de ese
+    contenedor (`UNSAFE_PortalProvider`), así también toman el primario.
+- **Neutros**: negros y grises azulados (fondo, superficie, bordes, texto y
+  texto atenuado), con AA en claro y oscuro.
 - **Componente** `Logo` (`src/components/brand/logo.tsx`): isotipo inline y
   wordmark, con variante solo isotipo (`variant="mark"`) y tamaños `default` y
   `lg`. Si cambia `mark.svg`, se actualiza también aquí.
@@ -309,8 +325,9 @@ Páginas `/dashboard/personal` (Resumen) y `/dashboard/personal/reports`
 - Mes calendario en `America/Bogota`. Los movimientos con fecha futura cuentan
   en el mes de su fecha, igual que en Movimientos.
 - Colores: cada categoría usa en las gráficas el mismo color que su badge
-  (`CATEGORY_CHART_COLORS`, variables `--category-*` con tono 500 en claro y
-  400 en oscuro). Ingresos en emerald, gastos en rose y balance en sky.
+  (`CATEGORY_CHART_COLORS`, variables `--category-*`, al menos 3:1 contra la
+  superficie en claro y oscuro). Ingresos en emerald, gastos en rose y balance
+  en sky: `--income`, `--expense` y `--balance` dan al menos 4.5:1 como texto.
   "Otras" usa el gris de texto secundario.
 - Cada gráfica tiene `aria-label`, una tabla `sr-only` con sus datos y tooltip
   navegable con teclado.

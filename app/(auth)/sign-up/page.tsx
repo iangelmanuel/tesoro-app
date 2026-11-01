@@ -5,7 +5,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle
-} from "@/components/ui/card"
+} from "@heroui/react"
 import { SITE, legalHref } from "@/config/site"
 import { SignUpForm } from "@/features/auth/components/sign-up-form"
 import { buildMetadata } from "@/libs/seo"
@@ -29,7 +29,7 @@ export default function SignUpPage() {
       </CardHeader>
       <CardContent>
         <SignUpForm />
-        <p className="mt-6 text-center text-xs text-balance text-muted-foreground">
+        <p className="mt-6 text-center text-xs text-balance text-muted">
           Al crear tu cuenta aceptas los{" "}
           <Link
             href={legalHref("terms")}

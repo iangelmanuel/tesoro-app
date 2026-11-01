@@ -1,8 +1,7 @@
 import { Suspense } from "react"
+import { Button, Skeleton } from "@heroui/react"
 import { CalendarClock, PiggyBank, Plus } from "lucide-react"
 import { EmptyState } from "@/components/dashboard/empty-state"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { BudgetDialog } from "@/features/budgets/components/budget-dialog"
 import { BudgetMonthNav } from "@/features/budgets/components/budget-month-nav"
@@ -46,7 +45,7 @@ export default function BudgetsPage({ searchParams }: BudgetsPageProps) {
     <section className="flex flex-1 flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Presupuestos</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted">
           Planea tu mes: cuánto quieres gastar y qué pagos fijos tienes.
         </p>
       </header>
@@ -126,7 +125,7 @@ async function BudgetsTab({
               categories={available}
               trigger={
                 <Button>
-                  <Plus data-icon="inline-start" />
+                  <Plus />
                   Nuevo presupuesto
                 </Button>
               }
@@ -147,7 +146,7 @@ async function BudgetsTab({
               categories={available}
               trigger={
                 <Button>
-                  <Plus data-icon="inline-start" />
+                  <Plus />
                   Crear presupuesto
                 </Button>
               }
@@ -199,7 +198,7 @@ async function RecurringTab({ workspace }: { workspace: PersonalWorkspace }) {
       categories={categories}
       trigger={
         <Button>
-          <Plus data-icon="inline-start" />
+          <Plus />
           Nuevo gasto fijo
         </Button>
       }
@@ -231,7 +230,7 @@ async function RecurringTab({ workspace }: { workspace: PersonalWorkspace }) {
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Próximos pagos</h2>
         {isUpToDate && (
-          <p className="rounded-xl border border-dashed p-4 text-center text-sm text-muted-foreground">
+          <p className="rounded-xl border border-dashed p-4 text-center text-sm text-muted">
             Estás al día con tus pagos
           </p>
         )}

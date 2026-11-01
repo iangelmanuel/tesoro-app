@@ -1,26 +1,17 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
+  Button,
+  FieldError,
+  Input,
+  Label,
+  ListBox,
+  Modal,
   Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
+  TextField,
+  toast
+} from "@heroui/react"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { upsertBudget } from "../actions"
@@ -58,32 +49,39 @@ export function BudgetDialog({
   const isEditing = budget !== undefined
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={setOpen}
-    >
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Editar presupuesto" : "Nuevo presupuesto"}
-          </DialogTitle>
-          <DialogDescription>
-            Cuánto quieres gastar como máximo en{" "}
-            <span className="capitalize">{month.label}</span>.
-          </DialogDescription>
-        </DialogHeader>
-        {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-        <BudgetForm
-          month={month}
-          categories={categories}
-          budget={budget}
-          defaultCategoryId={defaultCategoryId}
-          onSaved={() => setOpen(false)}
-          onCancel={() => setOpen(false)}
-        />
-      </DialogContent>
-    </Dialog>
+    <Modal>
+      {trigger}
+      <Modal.Backdrop
+        isOpen={open}
+        onOpenChange={setOpen}
+      >
+        <Modal.Container scroll="outside">
+          <Modal.Dialog className="sm:max-w-md">
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <Modal.Heading>
+                {isEditing ? "Editar presupuesto" : "Nuevo presupuesto"}
+              </Modal.Heading>
+              <p className="text-sm text-muted">
+                Cuánto quieres gastar como máximo en{" "}
+                <span className="capitalize">{month.label}</span>.
+              </p>
+            </Modal.Header>
+            <Modal.Body>
+              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
+              <BudgetForm
+                month={month}
+                categories={categories}
+                budget={budget}
+                defaultCategoryId={defaultCategoryId}
+                onSaved={() => setOpen(false)}
+                onCancel={() => setOpen(false)}
+              />
+            </Modal.Body>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
   )
 }
 
@@ -139,108 +137,110 @@ function BudgetForm({
         value={monthStart(month.month)}
       />
 
-      <Field
-        id="category_id"
-        label="Categoría"
-        errors={errors?.category_id}
-      >
-        {isEditing ? (
-          <>
-            <input
-              type="hidden"
-              name="category_id"
-              value={budget.categoryId}
-            />
-            <div>
-              <CategoryBadge
-                name={budget.name}
-                icon={budget.icon}
-                color={budget.color}
-              />
-            </div>
-          </>
-        ) : (
-          <Select
+      {isEditing ? (
+        <Field
+          id="category_id"
+          label="Categoría"
+          errors={errors?.category_id}
+        >
+          <input
+            type="hidden"
             name="category_id"
-            value={categoryId}
-            onValueChange={setCategoryId}
-          >
-            <SelectTrigger
-              id="category_id"
-              className="w-full"
-              aria-invalid={Boolean(errors?.category_id) || undefined}
-            >
-              <SelectValue placeholder="Elige una categoría" />
-            </SelectTrigger>
-            <SelectContent>
+            value={budget.categoryId}
+          />
+          <div>
+            <CategoryBadge
+              name={budget.name}
+              icon={budget.icon}
+              color={budget.color}
+            />
+          </div>
+        </Field>
+      ) : (
+        <Select
+          name="category_id"
+          fullWidth
+          placeholder="Elige una categoría"
+          value={categoryId || null}
+          onChange={(key) => setCategoryId(key == null ? "" : String(key))}
+          isInvalid={Boolean(errors?.category_id)}
+          className="flex flex-col gap-2"
+        >
+          <Label>Categoría</Label>
+          <Select.Trigger>
+            <Select.Value />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox>
               {categories.map((category) => (
-                <SelectItem
+                <ListBox.Item
                   key={category.id}
-                  value={category.id}
+                  id={category.id}
+                  textValue={category.name}
                 >
                   <CategoryBadge
                     name={category.name}
                     icon={category.icon}
                     color={category.color}
                   />
-                </SelectItem>
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
               ))}
-            </SelectContent>
-          </Select>
-        )}
-        {!isEditing && categories.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            Todas tus categorías de gasto ya tienen presupuesto este mes.
-          </p>
-        )}
-      </Field>
+            </ListBox>
+          </Select.Popover>
+          <FieldError>{errors?.category_id?.[0]}</FieldError>
+          {categories.length === 0 && (
+            <p className="text-sm text-muted">
+              Todas tus categorías de gasto ya tienen presupuesto este mes.
+            </p>
+          )}
+        </Select>
+      )}
 
-      <Field
-        id="amount"
-        label="Monto"
-        errors={errors?.amount}
+      <TextField
+        name="amount"
+        inputMode="decimal"
+        autoComplete="off"
+        defaultValue={
+          values?.amount ??
+          (budget?.budgetAmount
+            ? AMOUNT_FORMAT.format(budget.budgetAmount)
+            : "")
+        }
+        isRequired
+        isInvalid={Boolean(errors?.amount)}
+        validationBehavior="aria"
+        className="flex flex-col gap-2"
       >
-        <Input
-          id="amount"
-          name="amount"
-          inputMode="decimal"
-          autoComplete="off"
-          placeholder="0"
-          defaultValue={
-            values?.amount ??
-            (budget?.budgetAmount
-              ? AMOUNT_FORMAT.format(budget.budgetAmount)
-              : "")
-          }
-          aria-invalid={Boolean(errors?.amount) || undefined}
-          required
-        />
-      </Field>
+        <Label>Monto</Label>
+        <Input placeholder="0" />
+        <FieldError>{errors?.amount?.[0]}</FieldError>
+      </TextField>
 
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-destructive"
+          className="text-sm text-danger"
         >
           {state.error}
         </p>
       )}
 
-      <DialogFooter>
+      <div className="flex justify-end gap-2">
         <Button
-          type="button"
           variant="ghost"
-          onClick={onCancel}
+          onPress={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          disabled={pending}
+          isDisabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear"}
         </Button>
-      </DialogFooter>
+      </div>
     </form>
   )
 }
@@ -261,7 +261,7 @@ function Field({
       <Label htmlFor={id}>{label}</Label>
       {children}
       {errors?.length ? (
-        <p className="text-sm text-destructive">{errors[0]}</p>
+        <p className="text-sm text-danger">{errors[0]}</p>
       ) : null}
     </div>
   )

@@ -27,7 +27,7 @@ export function HowItWorks() {
     <section
       id="como-funciona"
       aria-labelledby="como-funciona-title"
-      className="scroll-mt-16 border-t bg-muted/40"
+      className="scroll-mt-16 border-t bg-default/40"
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 py-20 sm:px-6 sm:py-24">
         <SectionHeading
@@ -47,13 +47,11 @@ export function HowItWorks() {
                 </span>
                 <step.icon
                   aria-hidden="true"
-                  className="size-5 text-muted-foreground"
+                  className="size-5 text-muted"
                 />
               </div>
               <h3 className="text-lg font-medium">{step.title}</h3>
-              <p className="text-sm text-muted-foreground">
-                {step.description}
-              </p>
+              <p className="text-sm text-muted">{step.description}</p>
             </li>
           ))}
         </ol>

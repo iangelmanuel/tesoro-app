@@ -1,26 +1,11 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useTransition } from "react"
 import type { Route } from "next"
 import { useRouter } from "next/navigation"
-import { cn } from "cn"
-import { es } from "date-fns/locale"
-import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
-import { formatDate } from "@/libs/format"
+import { Button, ListBox, Select, cn } from "@heroui/react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import { DatePickerField } from "@/components/forms/date-picker-field"
 import {
   type ReportParams,
   type ReportPeriod,
@@ -44,17 +29,6 @@ const STEP_LABELS: Record<
   month: { previous: "Mes anterior", next: "Mes siguiente" },
   quarter: { previous: "Trimestre anterior", next: "Trimestre siguiente" },
   year: { previous: "Año anterior", next: "Año siguiente" }
-}
-
-function toDate(value: string) {
-  const [year, month, day] = value.split("-").map(Number)
-  return new Date(year, month - 1, day)
-}
-
-function toISODate(date: Date) {
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-  return `${date.getFullYear()}-${month}-${day}`
 }
 
 interface ReportPeriodPickerProps {
@@ -88,30 +62,34 @@ export function ReportPeriodPicker({ params, path }: ReportPeriodPickerProps) {
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 transition-opacity sm:flex-row sm:items-center",
+        "flex flex-col gap-2 transition-opacity sm:flex-row sm:items-end",
         pending && "opacity-60"
       )}
     >
       <Select
+        aria-label="Tipo de periodo"
+        className="sm:w-36"
         value={params.period}
-        onValueChange={(value) => changePeriod(value as ReportPeriod)}
+        onChange={(value) => value && changePeriod(value as ReportPeriod)}
       >
-        <SelectTrigger
-          className="sm:w-36"
-          aria-label="Tipo de periodo"
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {Object.entries(PERIOD_LABELS).map(([value, label]) => (
-            <SelectItem
-              key={value}
-              value={value}
-            >
-              {label}
-            </SelectItem>
-          ))}
-        </SelectContent>
+        <Select.Trigger>
+          <Select.Value />
+          <Select.Indicator />
+        </Select.Trigger>
+        <Select.Popover>
+          <ListBox>
+            {Object.entries(PERIOD_LABELS).map(([value, label]) => (
+              <ListBox.Item
+                key={value}
+                id={value}
+                textValue={label}
+              >
+                {label}
+                <ListBox.ItemIndicator />
+              </ListBox.Item>
+            ))}
+          </ListBox>
+        </Select.Popover>
       </Select>
 
       {params.period === "range" ? (
@@ -158,9 +136,9 @@ function StepControl({
     <div className="flex items-center gap-1">
       <Button
         variant="outline"
-        size="icon"
+        isIconOnly
         aria-label={step.previous}
-        onClick={() => onChange(shiftPeriodValue(period, value, -1))}
+        onPress={() => onChange(shiftPeriodValue(period, value, -1))}
       >
         <ChevronLeft />
       </Button>
@@ -172,16 +150,16 @@ function StepControl({
       </span>
       <Button
         variant="outline"
-        size="icon"
+        isIconOnly
         aria-label={step.next}
-        onClick={() => onChange(shiftPeriodValue(period, value, 1))}
+        onPress={() => onChange(shiftPeriodValue(period, value, 1))}
       >
         <ChevronRight />
       </Button>
       {!isCurrent && (
         <Button
           variant="ghost"
-          onClick={() => onChange(currentPeriodValue(period))}
+          onPress={() => onChange(currentPeriodValue(period))}
         >
           Hoy
         </Button>
@@ -190,6 +168,7 @@ function StepControl({
   )
 }
 
+// Cada fecha navega al elegirla; "Desde" no pasa de "Hasta" ni al revés
 function RangeControl({
   from,
   to,
@@ -200,70 +179,21 @@ function RangeControl({
   onChange: (from: string, to: string) => void
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <DateField
+    <div className="flex items-end gap-2">
+      <DatePickerField
+        name="from"
         label="Desde"
         value={from}
-        disabled={{ after: toDate(to) }}
-        onSelect={(value) => onChange(value, to)}
+        maxValue={to}
+        onChange={(value) => value && onChange(value, to)}
       />
-      <span className="text-muted-foreground">–</span>
-      <DateField
+      <DatePickerField
+        name="to"
         label="Hasta"
         value={to}
-        disabled={{ before: toDate(from) }}
-        onSelect={(value) => onChange(from, value)}
+        minValue={from}
+        onChange={(value) => value && onChange(from, value)}
       />
     </div>
-  )
-}
-
-function DateField({
-  label,
-  value,
-  disabled,
-  onSelect
-}: {
-  label: string
-  value: string
-  disabled: { after: Date } | { before: Date }
-  onSelect: (value: string) => void
-}) {
-  const [open, setOpen] = useState(false)
-
-  return (
-    <Popover
-      open={open}
-      onOpenChange={setOpen}
-    >
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className="justify-start font-normal"
-          aria-label={`${label}: ${formatDate(value)}`}
-        >
-          <CalendarIcon data-icon="inline-start" />
-          {formatDate(value)}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        className="w-auto p-0"
-        align="start"
-      >
-        <Calendar
-          mode="single"
-          locale={es}
-          selected={toDate(value)}
-          defaultMonth={toDate(value)}
-          disabled={disabled}
-          onSelect={(date) => {
-            if (date) {
-              onSelect(toISODate(date))
-              setOpen(false)
-            }
-          }}
-        />
-      </PopoverContent>
-    </Popover>
   )
 }

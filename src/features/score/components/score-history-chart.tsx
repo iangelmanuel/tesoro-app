@@ -5,14 +5,16 @@ import { es } from "date-fns/locale"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 import {
   type ChartConfig,
-  ChartContainer,
+  ChartContainer
+} from "@/components/charts/chart-container"
+import {
   ChartTooltip,
   ChartTooltipContent
-} from "@/components/ui/chart"
+} from "@/components/charts/chart-tooltip"
 import { ChartDataTable } from "@/features/reports/components/chart-data-table"
 
 const CHART_CONFIG = {
-  score: { label: "Score", color: "var(--primary)" }
+  score: { label: "Score", color: "var(--accent)" }
 } satisfies ChartConfig
 
 export interface ScoreHistoryPoint {

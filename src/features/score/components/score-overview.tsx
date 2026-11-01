@@ -1,5 +1,4 @@
-import { cn } from "cn"
-import { Badge } from "@/components/ui/badge"
+import { Chip, cn } from "@heroui/react"
 import { formatDate } from "@/libs/format"
 import type { BandTone } from "../constants"
 import { bandInfo } from "../curves"
@@ -14,26 +13,31 @@ const BAND_BADGE_CLASSES: Record<BandTone, string> = {
 }
 
 const BAND_TEXT_CLASSES: Record<BandTone, string> = {
-  danger: "text-rose-600 dark:text-rose-400",
+  danger: "text-(--expense)",
   warning: "text-amber-600 dark:text-amber-400",
   info: "text-sky-600 dark:text-sky-400",
-  success: "text-emerald-600 dark:text-emerald-400"
+  success: "text-(--income)"
 }
 
 /** "Débil", "Regular", "Bueno" o "Excelente" con su color */
 export function BandBadge({ band }: { band: Band }) {
   const { label, tone } = bandInfo(band)
-  return <Badge className={BAND_BADGE_CLASSES[tone]}>{label}</Badge>
+  return (
+    <Chip
+      size="sm"
+      className={BAND_BADGE_CLASSES[tone]}
+      color="accent"
+      variant="primary"
+    >
+      {label}
+    </Chip>
+  )
 }
 
 /** "+3 pts vs. el mes anterior", o "—" si el anterior no tiene score */
 export function ScoreVariation({ variation }: { variation: number | null }) {
   if (variation === null) {
-    return (
-      <span className="text-sm text-muted-foreground">
-        — vs. el mes anterior
-      </span>
-    )
+    return <span className="text-sm text-muted">— vs. el mes anterior</span>
   }
 
   const sign = variation > 0 ? "+" : ""
@@ -41,9 +45,9 @@ export function ScoreVariation({ variation }: { variation: number | null }) {
     <span
       className={cn(
         "text-sm tabular-nums",
-        variation > 0 && "text-emerald-600 dark:text-emerald-400",
-        variation < 0 && "text-rose-600 dark:text-rose-400",
-        variation === 0 && "text-muted-foreground"
+        variation > 0 && "text-(--income)",
+        variation < 0 && "text-(--expense)",
+        variation === 0 && "text-muted"
       )}
     >
       {sign}
@@ -78,13 +82,13 @@ export function ScoreOverview({
         >
           {score}
         </span>
-        <span className="pb-1.5 text-sm text-muted-foreground">/ 100</span>
+        <span className="pb-1.5 text-sm text-muted">/ 100</span>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <BandBadge band={band} />
         <ScoreVariation variation={variation} />
       </div>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-muted">
         Calculado con tus datos hasta hoy, {formatDate(today)}
       </p>
     </div>

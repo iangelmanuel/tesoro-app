@@ -20,7 +20,7 @@ export default function ReportsPage({ searchParams }: ReportsPageProps) {
     <section className="flex flex-1 flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Reportes</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted">
           Tus ingresos, gastos y categorías en el periodo que elijas.
         </p>
       </header>

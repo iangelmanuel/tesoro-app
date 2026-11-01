@@ -1,13 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger
-} from "@/components/ui/collapsible"
+import { Button, Disclosure } from "@heroui/react"
 import { formatCurrency } from "@/libs/format"
 import { debtStatusLabel } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
@@ -36,20 +30,14 @@ export function InactiveDebts({
   title = "Pagadas y archivadas"
 }: InactiveDebtsProps) {
   return (
-    <Collapsible className="flex flex-col gap-3">
-      <CollapsibleTrigger asChild>
-        <Button
-          variant="ghost"
-          className="group w-fit"
-        >
-          <ChevronDown
-            data-icon="inline-start"
-            className="transition-transform group-data-[state=closed]:-rotate-90"
-          />
+    <Disclosure className="flex flex-col gap-3">
+      <Disclosure.Heading>
+        <Disclosure.Trigger className="flex w-fit items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-default">
+          <Disclosure.Indicator />
           {title} ({debts.length})
-        </Button>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
+        </Disclosure.Trigger>
+      </Disclosure.Heading>
+      <Disclosure.Content>
         <ul className="divide-y rounded-xl border">
           {debts.map((debt) => (
             <InactiveDebtRow
@@ -61,8 +49,8 @@ export function InactiveDebts({
             />
           ))}
         </ul>
-      </CollapsibleContent>
-    </Collapsible>
+      </Disclosure.Content>
+    </Disclosure>
   )
 }
 
@@ -86,14 +74,14 @@ function InactiveDebtRow({
       {/* Abre el Sheet de solo lectura */}
       <button
         type="button"
-        className="-m-1 flex min-w-0 flex-1 flex-col gap-1 rounded-lg p-1 text-left transition-colors hover:bg-muted/50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+        className="-m-1 flex min-w-0 flex-1 flex-col gap-1 rounded-lg p-1 text-left transition-colors hover:bg-default/50 focus-visible:ring-[3px] focus-visible:ring-focus/50 focus-visible:outline-none"
         onClick={() => setDetailOpen(true)}
       >
         <span className="flex flex-wrap items-center gap-2">
           <span className="truncate font-medium">{debt.name}</span>
           {status && <ToneBadge tone={status.tone}>{status.label}</ToneBadge>}
         </span>
-        <span className="text-sm text-muted-foreground tabular-nums">
+        <span className="text-sm text-muted tabular-nums">
           Saldo {formatCurrency(debt.balance, currency)}
         </span>
       </button>
@@ -108,8 +96,8 @@ function InactiveDebtRow({
       <Button
         variant="outline"
         size="sm"
-        disabled={pending}
-        onClick={() => run("reactivate")}
+        isDisabled={pending}
+        onPress={() => run("reactivate")}
       >
         Reactivar
       </Button>

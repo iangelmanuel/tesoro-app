@@ -1,29 +1,8 @@
 "use client"
 
 import { useTransition } from "react"
-import { cn } from "cn"
+import { AlertDialog, Button, Table, cn, toast } from "@heroui/react"
 import { ArrowLeftRight, Pencil, RefreshCw, Trash2 } from "lucide-react"
-import { toast } from "sonner"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table"
 import { deleteAdjustment, deleteTransfer } from "@/features/accounts/actions"
 import {
   AccountLabel,
@@ -70,127 +49,133 @@ export function TransactionsTable({
   const isBusiness = workspaceType === "business"
 
   return (
-    <div className="rounded-xl border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-32">Fecha</TableHead>
-            <TableHead>Descripción</TableHead>
-            <TableHead>Categoría</TableHead>
-            {isBusiness && <TableHead>Cliente o proveedor</TableHead>}
-            <TableHead>Cuenta</TableHead>
-            <TableHead className="text-right">Monto</TableHead>
-            <TableHead className="w-24">
+    <Table>
+      <Table.ScrollContainer>
+        <Table.Content
+          aria-label="Movimientos"
+          className="min-w-3xl"
+        >
+          <Table.Header>
+            <Table.Column className="w-32">Fecha</Table.Column>
+            <Table.Column isRowHeader>Descripción</Table.Column>
+            <Table.Column>Categoría</Table.Column>
+            {isBusiness ? (
+              <Table.Column>Cliente o proveedor</Table.Column>
+            ) : null}
+            <Table.Column>Cuenta</Table.Column>
+            <Table.Column className="text-end">Monto</Table.Column>
+            <Table.Column className="w-24">
               <span className="sr-only">Acciones</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => {
-            if (row.kind === "transfer") {
-              return (
-                <TransferRow
-                  key={row.id}
-                  workspaceId={workspaceId}
-                  showCounterparty={isBusiness}
-                  transfer={row}
-                  label={`${accountName(row.from_account_id)} → ${accountName(row.to_account_id)}`}
-                  accounts={accounts}
-                  currency={currency}
-                />
-              )
-            }
-            if (row.kind === "adjustment") {
-              return (
-                <AdjustmentRow
-                  key={row.id}
-                  workspaceId={workspaceId}
-                  showCounterparty={isBusiness}
-                  adjustment={row}
-                  label={`Ajuste de saldo · ${accountName(row.account_id)}`}
-                  currency={currency}
-                />
-              )
-            }
-
-            const transaction = row.transaction
-            const category = categoriesById.get(transaction.category_id)
-            const account = transaction.account_id
-              ? accountsById.get(transaction.account_id)
-              : undefined
-
-            return (
-              <TableRow key={transaction.id}>
-                <TableCell className="text-muted-foreground">
-                  {formatDate(transaction.occurred_on)}
-                </TableCell>
-                <DescriptionCell
-                  title={transaction.description}
-                  note={transaction.note}
-                />
-                <TableCell>
-                  {category && (
-                    <CategoryBadge
-                      name={category.name}
-                      icon={category.icon}
-                      color={category.color}
-                    />
-                  )}
-                </TableCell>
-                {isBusiness && (
-                  <CounterpartyCell
-                    counterparty={transaction.counterparty}
-                    invoiceRef={transaction.invoice_ref}
+            </Table.Column>
+          </Table.Header>
+          <Table.Body>
+            {rows.map((row) => {
+              if (row.kind === "transfer") {
+                return (
+                  <TransferRow
+                    key={row.id}
+                    workspaceId={workspaceId}
+                    showCounterparty={isBusiness}
+                    transfer={row}
+                    label={`${accountName(row.from_account_id)} → ${accountName(row.to_account_id)}`}
+                    accounts={accounts}
+                    currency={currency}
                   />
-                )}
-                <TableCell>
-                  {account ? (
-                    <AccountLabel account={account} />
-                  ) : (
-                    <span className="text-muted-foreground">Sin cuenta</span>
-                  )}
-                </TableCell>
-                <TableCell
-                  className={cn(
-                    "text-right font-medium tabular-nums",
-                    transaction.type === "income"
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-rose-600 dark:text-rose-400"
-                  )}
-                >
-                  {transaction.type === "income" ? "+" : "−"}
-                  {formatCurrency(transaction.amount, currency)}
-                </TableCell>
-                <TableCell>
-                  <div className="flex justify-end gap-1">
-                    <TransactionDialog
-                      workspaceId={workspaceId}
-                      workspaceType={workspaceType}
-                      categories={categories}
-                      accounts={accounts}
-                      transaction={transaction}
-                      trigger={
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label={`Editar ${transaction.description}`}
-                        >
-                          <Pencil />
-                        </Button>
-                      }
+                )
+              }
+              if (row.kind === "adjustment") {
+                return (
+                  <AdjustmentRow
+                    key={row.id}
+                    workspaceId={workspaceId}
+                    showCounterparty={isBusiness}
+                    adjustment={row}
+                    label={`Ajuste de saldo · ${accountName(row.account_id)}`}
+                    currency={currency}
+                  />
+                )
+              }
+
+              const transaction = row.transaction
+              const category = categoriesById.get(transaction.category_id)
+              const account = transaction.account_id
+                ? accountsById.get(transaction.account_id)
+                : undefined
+
+              return (
+                <Table.Row key={transaction.id}>
+                  <Table.Cell className="text-muted">
+                    {formatDate(transaction.occurred_on)}
+                  </Table.Cell>
+                  <DescriptionCell
+                    title={transaction.description}
+                    note={transaction.note}
+                  />
+                  <Table.Cell>
+                    {category && (
+                      <CategoryBadge
+                        name={category.name}
+                        icon={category.icon}
+                        color={category.color}
+                      />
+                    )}
+                  </Table.Cell>
+                  {isBusiness && (
+                    <CounterpartyCell
+                      counterparty={transaction.counterparty}
+                      invoiceRef={transaction.invoice_ref}
                     />
-                    <DeleteTransactionButton
-                      workspaceId={workspaceId}
-                      transaction={transaction}
-                    />
-                  </div>
-                </TableCell>
-              </TableRow>
-            )
-          })}
-        </TableBody>
-      </Table>
-    </div>
+                  )}
+                  <Table.Cell>
+                    {account ? (
+                      <AccountLabel account={account} />
+                    ) : (
+                      <span className="text-muted">Sin cuenta</span>
+                    )}
+                  </Table.Cell>
+                  <Table.Cell
+                    className={cn(
+                      "text-end font-medium tabular-nums",
+                      transaction.type === "income"
+                        ? "text-(--income)"
+                        : "text-(--expense)"
+                    )}
+                  >
+                    {transaction.type === "income" ? "+" : "−"}
+                    {formatCurrency(transaction.amount, currency)}
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex justify-end gap-1">
+                      <TransactionDialog
+                        workspaceId={workspaceId}
+                        workspaceType={workspaceType}
+                        categories={categories}
+                        accounts={accounts}
+                        transaction={transaction}
+                        trigger={
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            isIconOnly
+                            aria-label={`Editar ${transaction.description}`}
+                          >
+                            <Pencil />
+                          </Button>
+                        }
+                      />
+                      <DeleteTransactionButton
+                        workspaceId={workspaceId}
+                        transaction={transaction}
+                      />
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              )
+            })}
+          </Table.Body>
+        </Table.Content>
+      </Table.ScrollContainer>
+    </Table>
   )
 }
 
@@ -204,18 +189,18 @@ function CounterpartyCell({
 }) {
   if (!counterparty && !invoiceRef) {
     return (
-      <TableCell>
-        <span className="text-muted-foreground">—</span>
-      </TableCell>
+      <Table.Cell>
+        <span className="text-muted">—</span>
+      </Table.Cell>
     )
   }
   return (
-    <TableCell className="max-w-48">
+    <Table.Cell className="max-w-48">
       {counterparty && <p className="truncate">{counterparty}</p>}
       {invoiceRef && (
-        <p className="truncate text-sm text-muted-foreground">{invoiceRef}</p>
+        <p className="truncate text-sm text-muted">{invoiceRef}</p>
       )}
-    </TableCell>
+    </Table.Cell>
   )
 }
 
@@ -229,13 +214,13 @@ function DescriptionCell({
   icon?: React.ComponentType<{ className?: string }>
 }) {
   return (
-    <TableCell className="max-w-64">
+    <Table.Cell className="max-w-64">
       <p className="flex items-center gap-2 truncate font-medium">
-        {Icon && <Icon className="size-4 shrink-0 text-muted-foreground" />}
+        {Icon && <Icon className="size-4 shrink-0 text-muted" />}
         <span className="truncate">{title}</span>
       </p>
-      {note && <p className="truncate text-xs text-muted-foreground">{note}</p>}
-    </TableCell>
+      {note && <p className="truncate text-xs text-muted">{note}</p>}
+    </Table.Cell>
   )
 }
 
@@ -256,22 +241,22 @@ function TransferRow({
   currency: string
 }) {
   return (
-    <TableRow>
-      <TableCell className="text-muted-foreground">
+    <Table.Row>
+      <Table.Cell className="text-muted">
         {formatDate(transfer.occurred_on)}
-      </TableCell>
+      </Table.Cell>
       <DescriptionCell
         title={label}
         note={transfer.note}
         icon={ArrowLeftRight}
       />
-      <TableCell className="text-muted-foreground">Traspaso</TableCell>
-      {showCounterparty && <TableCell />}
-      <TableCell />
-      <TableCell className="text-right font-medium text-muted-foreground tabular-nums">
+      <Table.Cell className="text-muted">Traspaso</Table.Cell>
+      {showCounterparty && <Table.Cell />}
+      <Table.Cell />
+      <Table.Cell className="text-end font-medium text-muted tabular-nums">
         {formatCurrency(transfer.amount, currency)}
-      </TableCell>
-      <TableCell>
+      </Table.Cell>
+      <Table.Cell>
         <div className="flex justify-end gap-1">
           <TransferDialog
             workspaceId={workspaceId}
@@ -280,7 +265,8 @@ function TransferRow({
             trigger={
               <Button
                 variant="ghost"
-                size="icon-sm"
+                size="sm"
+                isIconOnly
                 aria-label={`Editar traspaso ${label}`}
               >
                 <Pencil />
@@ -294,8 +280,8 @@ function TransferRow({
             onDelete={() => deleteTransfer(workspaceId, transfer.id)}
           />
         </div>
-      </TableCell>
-    </TableRow>
+      </Table.Cell>
+    </Table.Row>
   )
 }
 
@@ -314,23 +300,23 @@ function AdjustmentRow({
   currency: string
 }) {
   return (
-    <TableRow>
-      <TableCell className="text-muted-foreground">
+    <Table.Row>
+      <Table.Cell className="text-muted">
         {formatDate(adjustment.occurred_on)}
-      </TableCell>
+      </Table.Cell>
       <DescriptionCell
         title={label}
         note={adjustment.note}
         icon={RefreshCw}
       />
-      <TableCell className="text-muted-foreground">Ajuste</TableCell>
-      {showCounterparty && <TableCell />}
-      <TableCell />
-      <TableCell className="text-right font-medium text-muted-foreground tabular-nums">
+      <Table.Cell className="text-muted">Ajuste</Table.Cell>
+      {showCounterparty && <Table.Cell />}
+      <Table.Cell />
+      <Table.Cell className="text-end font-medium text-muted tabular-nums">
         {adjustment.amount > 0 ? "+" : "−"}
         {formatCurrency(Math.abs(adjustment.amount), currency)}
-      </TableCell>
-      <TableCell>
+      </Table.Cell>
+      <Table.Cell>
         <div className="flex justify-end gap-1">
           <DeleteEntryButton
             label={label}
@@ -339,8 +325,8 @@ function AdjustmentRow({
             onDelete={() => deleteAdjustment(workspaceId, adjustment.id)}
           />
         </div>
-      </TableCell>
-    </TableRow>
+      </Table.Cell>
+    </Table.Row>
   )
 }
 
@@ -378,7 +364,7 @@ function DeleteEntryButton({
     startTransition(async () => {
       const result = await onDelete()
       if (result.error) {
-        toast.error(result.error)
+        toast.danger(result.error)
       } else {
         toast.success(success)
       }
@@ -387,34 +373,46 @@ function DeleteEntryButton({
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={`Eliminar ${label}`}
-          disabled={pending}
-        >
-          <Trash2 />
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>
-            &ldquo;{label}&rdquo; se eliminará de forma permanente. Esta acción
-            no se puede deshacer.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            onClick={handleDelete}
-          >
-            Eliminar
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
+      <Button
+        variant="ghost"
+        size="sm"
+        isIconOnly
+        aria-label={`Eliminar ${label}`}
+        isDisabled={pending}
+      >
+        <Trash2 />
+      </Button>
+      <AlertDialog.Backdrop isKeyboardDismissDisabled={false}>
+        <AlertDialog.Container>
+          <AlertDialog.Dialog className="sm:max-w-md">
+            <AlertDialog.Header>
+              <AlertDialog.Icon status="danger" />
+              <AlertDialog.Heading>{title}</AlertDialog.Heading>
+            </AlertDialog.Header>
+            <AlertDialog.Body>
+              <p>
+                &ldquo;{label}&rdquo; se eliminará de forma permanente. Esta
+                acción no se puede deshacer.
+              </p>
+            </AlertDialog.Body>
+            <AlertDialog.Footer>
+              <Button
+                slot="close"
+                variant="tertiary"
+              >
+                Cancelar
+              </Button>
+              <Button
+                slot="close"
+                variant="danger"
+                onPress={handleDelete}
+              >
+                Eliminar
+              </Button>
+            </AlertDialog.Footer>
+          </AlertDialog.Dialog>
+        </AlertDialog.Container>
+      </AlertDialog.Backdrop>
     </AlertDialog>
   )
 }

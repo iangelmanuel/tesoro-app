@@ -1,4 +1,4 @@
-import { cn } from "@/libs/utils"
+import { cn } from "@heroui/react"
 import { LandingScoreVisual } from "./score-visual"
 import { SectionHeading } from "./section-heading"
 
@@ -97,13 +97,13 @@ export function ScoreSection() {
                 >
                   <div className="flex items-baseline justify-between gap-4 text-sm">
                     <span className="font-medium">{factor.label}</span>
-                    <span className="text-muted-foreground tabular-nums">
+                    <span className="text-muted tabular-nums">
                       {factor.weight} %
                     </span>
                   </div>
                   <div
                     aria-hidden="true"
-                    className="h-1.5 overflow-hidden rounded-full bg-muted"
+                    className="h-1.5 overflow-hidden rounded-full bg-default"
                   >
                     <div
                       className="h-full rounded-full bg-(--income)"
@@ -112,9 +112,7 @@ export function ScoreSection() {
                       }}
                     />
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {factor.description}
-                  </p>
+                  <p className="text-sm text-muted">{factor.description}</p>
                 </li>
               ))}
             </ul>
@@ -138,7 +136,7 @@ export function ScoreSection() {
                 ))}
               </ul>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted">
               El score se recalcula cada vez que registras algo y muestra su
               evolución mes a mes. Junto a él, las recomendaciones te dicen qué
               hacer, en qué dato se basan y dónde resolverlo.

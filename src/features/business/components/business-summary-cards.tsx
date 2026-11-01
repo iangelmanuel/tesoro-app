@@ -1,11 +1,11 @@
-import { cn } from "cn"
 import {
   Card,
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+  CardTitle,
+  cn
+} from "@heroui/react"
 import {
   EMPTY,
   NEGATIVE,
@@ -114,7 +114,7 @@ export function BusinessSummaryCards({
               >
                 {card.change}
               </span>
-              <span className="text-muted-foreground">vs. mes anterior</span>
+              <span className="text-muted">vs. mes anterior</span>
             </CardFooter>
           </Card>
         ))}
@@ -133,9 +133,7 @@ export function BusinessSummaryCards({
                 {card.value}
               </CardTitle>
             </CardHeader>
-            <CardFooter className="text-sm text-muted-foreground">
-              {card.hint}
-            </CardFooter>
+            <CardFooter className="text-sm text-muted">{card.hint}</CardFooter>
           </Card>
         ))}
       </div>

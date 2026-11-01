@@ -1,23 +1,15 @@
 import type { Route } from "next"
 import Link from "next/link"
-import { cn } from "cn"
-import { Button } from "@/components/ui/button"
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
-import {
+  CardTitle,
   Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table"
+  buttonVariants,
+  cn
+} from "@heroui/react"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import {
   TRANSACTIONS_PATH,
@@ -44,63 +36,69 @@ export function RecentTransactions({
 }: RecentTransactionsProps) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Últimos movimientos</CardTitle>
-        <CardDescription>Los {rows.length} más recientes</CardDescription>
-        <CardAction>
-          <Button
-            variant="outline"
-            size="sm"
-            asChild
+      <div className="flex items-start justify-between gap-2">
+        <CardHeader>
+          <CardTitle>Últimos movimientos</CardTitle>
+          <CardDescription>Los {rows.length} más recientes</CardDescription>
+        </CardHeader>
+        <div className="shrink-0">
+          <Link
+            href={`${transactionsPath}?${ALL_MONTHS_QUERY}` as Route}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
           >
-            <Link href={`${transactionsPath}?${ALL_MONTHS_QUERY}` as Route}>
-              Ver todos
-            </Link>
-          </Button>
-        </CardAction>
-      </CardHeader>
+            Ver todos
+          </Link>
+        </div>
+      </div>
       <CardContent>
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-32">Fecha</TableHead>
-              <TableHead>Descripción</TableHead>
-              <TableHead>Categoría</TableHead>
-              <TableHead className="text-right">Monto</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((transaction) => (
-              <TableRow key={transaction.id}>
-                <TableCell className="text-muted-foreground">
-                  {formatDate(transaction.occurred_on)}
-                </TableCell>
-                <TableCell className="max-w-64">
-                  <p className="truncate font-medium">
-                    {transaction.description}
-                  </p>
-                </TableCell>
-                <TableCell>
-                  <CategoryBadge
-                    name={transaction.category.name}
-                    icon={transaction.category.icon}
-                    color={transaction.category.color}
-                  />
-                </TableCell>
-                <TableCell
-                  className={cn(
-                    "text-right font-medium tabular-nums",
-                    transaction.type === "income"
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-rose-600 dark:text-rose-400"
-                  )}
+          <Table.ScrollContainer>
+            <Table.Content aria-label="Últimos movimientos">
+              <Table.Header>
+                <Table.Column
+                  isRowHeader
+                  className="w-32"
                 >
-                  {transaction.type === "income" ? "+" : "−"}
-                  {formatCurrency(transaction.amount, currency)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+                  Fecha
+                </Table.Column>
+                <Table.Column>Descripción</Table.Column>
+                <Table.Column>Categoría</Table.Column>
+                <Table.Column className="text-end">Monto</Table.Column>
+              </Table.Header>
+              <Table.Body>
+                {rows.map((transaction) => (
+                  <Table.Row key={transaction.id}>
+                    <Table.Cell className="text-muted">
+                      {formatDate(transaction.occurred_on)}
+                    </Table.Cell>
+                    <Table.Cell className="max-w-64">
+                      <p className="truncate font-medium">
+                        {transaction.description}
+                      </p>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <CategoryBadge
+                        name={transaction.category.name}
+                        icon={transaction.category.icon}
+                        color={transaction.category.color}
+                      />
+                    </Table.Cell>
+                    <Table.Cell
+                      className={cn(
+                        "text-right font-medium tabular-nums",
+                        transaction.type === "income"
+                          ? "text-(--income)"
+                          : "text-(--expense)"
+                      )}
+                    >
+                      {transaction.type === "income" ? "+" : "−"}
+                      {formatCurrency(transaction.amount, currency)}
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
         </Table>
       </CardContent>
     </Card>

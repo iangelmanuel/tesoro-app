@@ -1,20 +1,17 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { DatePicker } from "@/features/debts/components/date-picker"
-import { Field, amountInput } from "@/features/debts/components/field"
+  Button,
+  FieldError,
+  Input,
+  Label,
+  Modal,
+  TextField,
+  toast
+} from "@heroui/react"
+import { DatePickerField } from "@/components/forms/date-picker-field"
+import { amountInput } from "@/features/debts/components/field"
 import { todayISO } from "@/libs/dates"
 import { createTransfer, updateTransfer } from "../actions"
 import type { TransferFormState } from "../types"
@@ -60,30 +57,37 @@ export function TransferDialog({
   const isEditing = transfer !== undefined
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={setOpen}
-    >
-      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Editar traspaso" : "Nuevo traspaso"}
-          </DialogTitle>
-          <DialogDescription>
-            Mueve plata entre tus cuentas. No cuenta como ingreso ni gasto.
-          </DialogDescription>
-        </DialogHeader>
-        {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-        <TransferForm
-          workspaceId={workspaceId}
-          accounts={accounts}
-          transfer={transfer}
-          onSaved={() => setOpen(false)}
-          onCancel={() => setOpen(false)}
-        />
-      </DialogContent>
-    </Dialog>
+    <Modal>
+      {trigger}
+      <Modal.Backdrop
+        isOpen={open}
+        onOpenChange={setOpen}
+      >
+        <Modal.Container scroll="outside">
+          <Modal.Dialog className="sm:max-w-md">
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <Modal.Heading>
+                {isEditing ? "Editar traspaso" : "Nuevo traspaso"}
+              </Modal.Heading>
+              <p className="text-sm text-muted">
+                Mueve plata entre tus cuentas. No cuenta como ingreso ni gasto.
+              </p>
+            </Modal.Header>
+            <Modal.Body>
+              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
+              <TransferForm
+                workspaceId={workspaceId}
+                accounts={accounts}
+                transfer={transfer}
+                onSaved={() => setOpen(false)}
+                onCancel={() => setOpen(false)}
+              />
+            </Modal.Body>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
   )
 }
 
@@ -145,117 +149,91 @@ function TransferForm({
         name="workspace_id"
         value={workspaceId}
       />
-      <input
-        type="hidden"
-        name="occurred_on"
-        value={occurredOn}
-      />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          id="from_account_id"
+        <AccountSelect
+          name="from_account_id"
           label="Desde"
-          errors={errors?.from_account_id}
-        >
-          <AccountSelect
-            id="from_account_id"
-            name="from_account_id"
-            value={fromId}
-            onChange={setFromId}
-            accounts={selectableAccounts(accounts, transfer?.from_account_id)}
-            placeholder="Cuenta de origen"
-            invalid={Boolean(errors?.from_account_id)}
-          />
-        </Field>
+          value={fromId}
+          onChange={setFromId}
+          accounts={selectableAccounts(accounts, transfer?.from_account_id)}
+          placeholder="Cuenta de origen"
+          error={errors?.from_account_id?.[0]}
+        />
 
-        <Field
-          id="to_account_id"
+        <AccountSelect
+          name="to_account_id"
           label="Hacia"
-          errors={errors?.to_account_id}
-        >
-          <AccountSelect
-            id="to_account_id"
-            name="to_account_id"
-            value={toId}
-            onChange={setToId}
-            accounts={selectableAccounts(accounts, transfer?.to_account_id)}
-            placeholder="Cuenta de destino"
-            invalid={Boolean(errors?.to_account_id)}
-          />
-        </Field>
+          value={toId}
+          onChange={setToId}
+          accounts={selectableAccounts(accounts, transfer?.to_account_id)}
+          placeholder="Cuenta de destino"
+          error={errors?.to_account_id?.[0]}
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          id="amount"
-          label="Monto"
-          errors={errors?.amount}
+        <TextField
+          name="amount"
+          inputMode="decimal"
+          autoComplete="off"
+          defaultValue={values?.amount ?? amountInput(transfer?.amount)}
+          isRequired
+          isInvalid={Boolean(errors?.amount)}
+          validationBehavior="aria"
+          className="flex flex-col gap-2"
         >
-          <Input
-            id="amount"
-            name="amount"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="0"
-            defaultValue={values?.amount ?? amountInput(transfer?.amount)}
-            aria-invalid={Boolean(errors?.amount) || undefined}
-            required
-          />
-        </Field>
+          <Label>Monto</Label>
+          <Input placeholder="0" />
+          <FieldError>{errors?.amount?.[0]}</FieldError>
+        </TextField>
 
-        <Field
-          id="occurred_on"
+        <DatePickerField
+          name="occurred_on"
           label="Fecha"
-          errors={errors?.occurred_on}
-        >
-          <DatePicker
-            id="occurred_on"
-            value={occurredOn}
-            onChange={setOccurredOn}
-            allowFuture
-          />
-        </Field>
+          value={occurredOn}
+          onChange={setOccurredOn}
+          error={errors?.occurred_on?.[0]}
+          isRequired
+        />
       </div>
 
-      <Field
-        id="note"
-        label="Nota (opcional)"
-        errors={errors?.note}
+      <TextField
+        name="note"
+        maxLength={120}
+        defaultValue={values?.note ?? transfer?.note ?? ""}
+        isInvalid={Boolean(errors?.note)}
+        validationBehavior="aria"
+        className="flex flex-col gap-2"
       >
-        <Input
-          id="note"
-          name="note"
-          maxLength={120}
-          placeholder="Retiro en cajero"
-          defaultValue={values?.note ?? transfer?.note ?? ""}
-          aria-invalid={Boolean(errors?.note) || undefined}
-        />
-      </Field>
+        <Label>Nota (opcional)</Label>
+        <Input placeholder="Retiro en cajero" />
+        <FieldError>{errors?.note?.[0]}</FieldError>
+      </TextField>
 
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-destructive"
+          className="text-sm text-danger"
         >
           {state.error}
         </p>
       )}
 
-      <DialogFooter>
+      <div className="flex justify-end gap-2">
         <Button
-          type="button"
           variant="ghost"
-          onClick={onCancel}
+          onPress={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          disabled={pending}
+          isDisabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Registrar"}
         </Button>
-      </DialogFooter>
+      </div>
     </form>
   )
 }

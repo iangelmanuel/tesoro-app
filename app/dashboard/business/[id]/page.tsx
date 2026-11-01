@@ -1,14 +1,14 @@
 import { Suspense } from "react"
-import { format } from "date-fns"
-import { es } from "date-fns/locale"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+  CardTitle,
+  Skeleton
+} from "@heroui/react"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 import { SITE } from "@/config/site"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { BusinessScoreSummaryCard } from "@/features/business-score/components/business-score-summary-card"
@@ -49,7 +49,7 @@ export default function BusinessSummaryPage({
     <section className="flex flex-1 flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Resumen</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted">
           Las ventas, los costos y la utilidad de tu empresa en el mes.
         </p>
       </header>

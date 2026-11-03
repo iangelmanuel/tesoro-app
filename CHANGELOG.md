@@ -180,6 +180,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Movimientos bar (SPEC 20): search (fills the free width, min `18rem`), month, Filtros (phones) and Verificar share one 44 px row; on phones the search takes its own row. Verificar is icon-only below 640 px and reaches the bar through the new `trailing` prop of `TransactionsFilters`.
 - "Sin presupuesto" and the budget progress rows use a fixed grid (category, amount, action) so amounts line up; "Presupuestar" is a compact fixed-width button.
+- Toolbar controls (SPEC 20): the search field, month pill, Filtros, Verificar, Categorías, inactive filter pills, the reports period picker and the budget month navigation share the card and table gray (`bg-surface`) through `CONTROL_SURFACE` and `CONTROL_BUTTON` in `surface.ts`, with the same 44 px height in the Movimientos row. Buttons are `ghost` instead of `secondary` or bordered `outline` (budget month navigation and "Copiar del mes anterior").
+- Delete icons are red in row action menus and inline buttons, and in "Quitar foto".
 - Mobile bottom bar in Personal shows Cuentas instead of Metas (`SITE.navigation.mobile.personal`). Metas stays in the aside. Business is unchanged.
 - Gastos fijos, Últimos movimientos, Resumen por categoría and Flujo de caja are single scrollable tables on phones instead of cards or hidden columns.
 

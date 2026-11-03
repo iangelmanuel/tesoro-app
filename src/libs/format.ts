@@ -44,3 +44,20 @@ export function formatShortDate(date: string | Date) {
     .format(value)
     .replace(WHITESPACE, "\u00A0")
 }
+
+// Hora de un evento ("14:30" o "14:30:00" de Postgres) como "2:30 p. m.". La
+// hora es del día del usuario, sin zona: se formatea en UTC para que no se
+// corra. Espacio duro para no partirse en varias líneas.
+export function formatTime(time: string) {
+  const [hours, minutes] = time.split(":").map(Number)
+  const value = new Date(Date.UTC(1970, 0, 1, hours, minutes))
+
+  return new Intl.DateTimeFormat(LOCALE, {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "UTC"
+  })
+    .format(value)
+    .replace(WHITESPACE, " ")
+}

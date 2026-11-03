@@ -6,7 +6,8 @@ import {
 import {
   amountSchema,
   paymentAccountSchema,
-  refinePaymentAccount
+  refinePaymentAccount,
+  timeSchema
 } from "@/features/transactions/schemas"
 import { todayISO } from "@/libs/dates"
 
@@ -66,6 +67,7 @@ export const contributionSchema = z
       .refine((value) => value <= todayISO(), {
         error: "La fecha no puede ser futura"
       }),
+    occurred_time: timeSchema,
     note: z
       .string()
       .trim()

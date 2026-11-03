@@ -44,7 +44,7 @@ const TRANSFER_FIELDS = [
   "note"
 ] as const
 
-const ADJUST_FIELDS = ["balance", "note"] as const
+const ADJUST_FIELDS = ["balance", "occurred_time", "note"] as const
 
 const idSchema = z.uuid()
 
@@ -337,6 +337,7 @@ export async function adjustAccountBalance(
     account_id: account.id,
     amount,
     occurred_on: todayISO(),
+    occurred_time: parsed.data.occurred_time,
     note: parsed.data.note
   })
 

@@ -10,6 +10,7 @@ import {
   TextField,
   toast
 } from "@heroui/react"
+import { TimePickerField } from "@/components/forms/time-picker-field"
 import { formatCurrency } from "@/libs/format"
 import { adjustAccountBalance } from "../actions"
 import type { AccountWithBalance, AdjustAccountFormState } from "../types"
@@ -98,6 +99,7 @@ function AdjustBalanceForm({
     return result
   }, {})
 
+  const [time, setTime] = useState("")
   const errors = state.fieldErrors
   const values = state.values
 
@@ -132,6 +134,13 @@ function AdjustBalanceForm({
         <Input placeholder="0" />
         <FieldError>{errors?.balance?.[0]}</FieldError>
       </TextField>
+
+      <TimePickerField
+        name="occurred_time"
+        value={time}
+        onChange={setTime}
+        error={errors?.occurred_time?.[0]}
+      />
 
       <TextField
         name="note"

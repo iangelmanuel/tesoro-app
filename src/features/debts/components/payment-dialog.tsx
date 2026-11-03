@@ -15,6 +15,7 @@ import {
   toast
 } from "@heroui/react"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import { TimePickerField } from "@/components/forms/time-picker-field"
 import {
   type PaymentAccountOption,
   PaymentAccountSection,
@@ -212,6 +213,9 @@ function PaymentForm({
   const [occurredOn, setOccurredOn] = useState(
     () => entry?.occurred_on ?? todayISO()
   )
+  const [time, setTime] = useState(
+    () => entry?.occurred_time?.slice(0, 5) ?? ""
+  )
 
   const [state, formAction, pending] = useActionState<
     PaymentFormState,
@@ -292,23 +296,23 @@ function PaymentForm({
         </Tabs>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
-          name="amount"
-          inputMode="decimal"
-          autoComplete="off"
-          value={amountText}
-          onChange={setAmountText}
-          isRequired
-          isInvalid={Boolean(errors?.amount)}
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <Label>Monto</Label>
-          <Input placeholder="0" />
-          <FieldError>{errors?.amount?.[0]}</FieldError>
-        </TextField>
+      <TextField
+        name="amount"
+        inputMode="decimal"
+        autoComplete="off"
+        value={amountText}
+        onChange={setAmountText}
+        isRequired
+        isInvalid={Boolean(errors?.amount)}
+        validationBehavior="aria"
+        className="flex flex-col gap-2"
+      >
+        <Label>Monto</Label>
+        <Input placeholder="0" />
+        <FieldError>{errors?.amount?.[0]}</FieldError>
+      </TextField>
 
+      <div className="grid gap-4 md:grid-cols-2">
         <DatePickerField
           name="occurred_on"
           label="Fecha"
@@ -317,6 +321,13 @@ function PaymentForm({
           error={errors?.occurred_on?.[0]}
           maxValue={todayISO()}
           isRequired
+        />
+
+        <TimePickerField
+          name="occurred_time"
+          value={time}
+          onChange={setTime}
+          error={errors?.occurred_time?.[0]}
         />
       </div>
 

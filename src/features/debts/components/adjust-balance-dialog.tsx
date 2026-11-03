@@ -11,6 +11,7 @@ import {
   toast
 } from "@heroui/react"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import { TimePickerField } from "@/components/forms/time-picker-field"
 import { todayISO } from "@/libs/dates"
 import { formatCurrency } from "@/libs/format"
 import { adjustBalance, updateEntry } from "../actions"
@@ -99,6 +100,9 @@ function AdjustBalanceForm({
   const [occurredOn, setOccurredOn] = useState(
     () => entry?.occurred_on ?? todayISO()
   )
+  const [time, setTime] = useState(
+    () => entry?.occurred_time?.slice(0, 5) ?? ""
+  )
 
   const [state, formAction, pending] = useActionState<
     AdjustBalanceFormState,
@@ -138,24 +142,24 @@ function AdjustBalanceForm({
         />
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
-          name="balance"
-          inputMode="decimal"
-          autoComplete="off"
-          defaultValue={
-            values?.balance ?? (isEditing ? amountInput(debt.balance) : "")
-          }
-          isRequired
-          isInvalid={Boolean(errors?.balance)}
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <Label>Saldo real</Label>
-          <Input placeholder="0" />
-          <FieldError>{errors?.balance?.[0]}</FieldError>
-        </TextField>
+      <TextField
+        name="balance"
+        inputMode="decimal"
+        autoComplete="off"
+        defaultValue={
+          values?.balance ?? (isEditing ? amountInput(debt.balance) : "")
+        }
+        isRequired
+        isInvalid={Boolean(errors?.balance)}
+        validationBehavior="aria"
+        className="flex flex-col gap-2"
+      >
+        <Label>Saldo real</Label>
+        <Input placeholder="0" />
+        <FieldError>{errors?.balance?.[0]}</FieldError>
+      </TextField>
 
+      <div className="grid gap-4 md:grid-cols-2">
         <DatePickerField
           name="occurred_on"
           label="Fecha"
@@ -164,6 +168,13 @@ function AdjustBalanceForm({
           error={errors?.occurred_on?.[0]}
           maxValue={todayISO()}
           isRequired
+        />
+
+        <TimePickerField
+          name="occurred_time"
+          value={time}
+          onChange={setTime}
+          error={errors?.occurred_time?.[0]}
         />
       </div>
 

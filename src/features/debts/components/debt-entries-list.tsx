@@ -4,7 +4,7 @@ import { useState, useTransition } from "react"
 import { AlertDialog, Button, Tooltip, cn, toast } from "@heroui/react"
 import { Link2, Pencil, Receipt, Trash2 } from "lucide-react"
 import { CardEmpty } from "@/components/dashboard/empty-state"
-import { formatCurrency, formatDate } from "@/libs/format"
+import { formatCurrency, formatDate, formatTime } from "@/libs/format"
 import { deleteEntry } from "../actions"
 import type { Debt, DebtEntry } from "../queries"
 import { AdjustBalanceDialog } from "./adjust-balance-dialog"
@@ -116,6 +116,7 @@ function EntryRow({
         </span>
         <span className="text-xs text-muted">
           {formatDate(entry.occurred_on)}
+          {entry.occurred_time && ` · ${formatTime(entry.occurred_time)}`}
           {accountText && ` · ${accountText}`}
         </span>
         {entry.note && (

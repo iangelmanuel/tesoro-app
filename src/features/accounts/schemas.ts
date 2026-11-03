@@ -89,6 +89,7 @@ export type TransferInput = z.infer<typeof transferSchema>
 // "Actualizar saldo": el saldo real, no la diferencia
 export const adjustAccountSchema = z.object({
   balance: balanceField,
+  occurred_time: timeSchema,
   note: noteField
 })
 

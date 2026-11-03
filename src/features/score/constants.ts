@@ -12,7 +12,8 @@ export const RULE_KEYS = [
   "overdue_payment",
   "low_cushion",
   "unbudgeted_spending",
-  "irregular_records"
+  "irregular_records",
+  "negative_account"
 ] as const satisfies readonly RuleKey[]
 
 export const FACTORS: Record<

@@ -140,6 +140,14 @@ export const SITE = {
   // Debe coincidir con public.business_workspace_limit(). La BD es la que manda
   businessLimit: 1,
 
+  // Conciliación de cuentas (SPEC 21). El aviso "faltan movimientos" salta si la
+  // diferencia supera warnPercent % del saldo calculado o warnAmount (COP)
+  reconciliation: {
+    warnPercent: 5,
+    warnAmount: 50000,
+    note: "Conciliación con saldo real"
+  },
+
   // Días entre programar el borrado de una empresa y la purga (pg_cron)
   workspaceDeletionGraceDays: 30,
 

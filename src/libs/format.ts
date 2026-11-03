@@ -6,8 +6,15 @@ const WHITESPACE = /\s/g
 // Monedas que la UI muestra sin decimales, aunque la BD guarde centavos
 const ZERO_DECIMAL_CURRENCIES = new Set(["COP", "CLP"])
 
-export function formatCurrency(amount: number, currency = "COP") {
-  const digits = ZERO_DECIMAL_CURRENCIES.has(currency) ? 0 : 2
+// `fractionDigits` fuerza los decimales (p. ej. 2 al conciliar, donde importan
+// los centavos)
+export function formatCurrency(
+  amount: number,
+  currency = "COP",
+  fractionDigits?: number
+) {
+  const digits =
+    fractionDigits ?? (ZERO_DECIMAL_CURRENCIES.has(currency) ? 0 : 2)
 
   return new Intl.NumberFormat(LOCALE, {
     style: "currency",

@@ -2,16 +2,23 @@
 
 import type { PostgrestError } from "@supabase/supabase-js"
 import { z } from "zod"
+import { SITE } from "@/config/site"
 import { requireWritableWorkspace } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
 import { revalidateWorkspacePages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
-import { getAccountBalances } from "./queries"
-import { accountSchema, adjustAccountSchema, transferSchema } from "./schemas"
+import { getAccountBalanceAt, getAccountBalances } from "./queries"
+import {
+  accountSchema,
+  adjustAccountSchema,
+  reconcileAccountSchema,
+  transferSchema
+} from "./schemas"
 import type {
   AccountActionResult,
   AccountFormState,
   AdjustAccountFormState,
+  ReconcileFormState,
   TransferFormState
 } from "./types"
 
@@ -26,13 +33,17 @@ const DUPLICATE_NAME = "Ya existe una cuenta con ese nombre"
 const ACCOUNT_ARCHIVED = "La cuenta está archivada"
 const SAME_ACCOUNT = "Elige una cuenta distinta a la de origen"
 const SAME_BALANCE = "El saldo ya coincide"
+const ALREADY_RECONCILED = "La cuenta ya cuadra"
+const RECONCILE_DEFAULT_ERROR =
+  "No se pudo conciliar la cuenta. Intenta de nuevo"
 
 const ACCOUNT_FIELDS = [
   "name",
   "kind",
   "icon",
   "color",
-  "opening_balance"
+  "opening_balance",
+  "opening_balance_on"
 ] as const
 
 const TRANSFER_FIELDS = [
@@ -45,6 +56,8 @@ const TRANSFER_FIELDS = [
 ] as const
 
 const ADJUST_FIELDS = ["balance", "occurred_time", "note"] as const
+
+const RECONCILE_FIELDS = ["balance", "occurred_on"] as const
 
 const idSchema = z.uuid()
 
@@ -346,6 +359,120 @@ export async function adjustAccountBalance(
       error: error.message.includes(ACCOUNT_ARCHIVED)
         ? ACCOUNT_ARCHIVED
         : ADJUST_DEFAULT_ERROR,
+      values
+    }
+  }
+
+  revalidateWorkspacePages(workspace)
+  return { ok: true }
+}
+
+// Saldo calculado a una fecha para el diálogo de conciliar. Solo lectura: la
+// diferencia que se guarda la recalcula reconcileAccountAction.
+export async function getReconcileBalanceAction(
+  workspaceId: string,
+  accountId: string,
+  on: string
+): Promise<{ balance?: number; error?: string }> {
+  const parsedId = idSchema.safeParse(accountId)
+  const parsedOn = z.iso
+    .date()
+    .refine((value) => value <= todayISO())
+    .safeParse(on)
+
+  if (!parsedId.success || !parsedOn.success) {
+    return { error: ACCOUNT_NOT_FOUND }
+  }
+
+  const workspace = await requireWritableWorkspace(workspaceId)
+  const account = (await getAccountBalances(workspace.id)).find(
+    (row) => row.id === parsedId.data
+  )
+
+  if (!account) {
+    return { error: ACCOUNT_NOT_FOUND }
+  }
+
+  const balance = await getAccountBalanceAt(account.id, parsedOn.data)
+  return balance === null ? { error: ACCOUNT_NOT_FOUND } : { balance }
+}
+
+// Conciliar (SPEC 21): crea un ajuste a la fecha elegida por la diferencia
+// entre el saldo real y el saldo calculado a esa fecha. La diferencia se
+// calcula aquí: el cliente solo la muestra.
+export async function reconcileAccountAction(
+  _prevState: ReconcileFormState,
+  formData: FormData
+): Promise<ReconcileFormState> {
+  const values = readValues(formData, RECONCILE_FIELDS)
+  const accountId = idSchema.safeParse(formData.get("account_id"))
+
+  if (!accountId.success) {
+    return { error: ACCOUNT_NOT_FOUND, values }
+  }
+
+  const parsed = reconcileAccountSchema.safeParse(values)
+  if (!parsed.success) {
+    return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
+  }
+
+  const workspace = await requireWritableWorkspace(formData.get("workspace_id"))
+  const account = (await getAccountBalances(workspace.id)).find(
+    (row) => row.id === accountId.data
+  )
+
+  if (!account) {
+    return { error: ACCOUNT_NOT_FOUND, values }
+  }
+  if (account.archived_at) {
+    return { error: ACCOUNT_ARCHIVED, values }
+  }
+
+  const calculated = await getAccountBalanceAt(
+    account.id,
+    parsed.data.occurred_on
+  )
+  if (calculated === null) {
+    return { error: ACCOUNT_NOT_FOUND, values }
+  }
+
+  const amount = roundCents(parsed.data.balance - calculated)
+  if (amount === 0) {
+    return { fieldErrors: { balance: [ALREADY_RECONCILED] }, values }
+  }
+
+  const supabase = await createClient()
+
+  // Sin hora y al final del día: day_position 0 es "arriba", así que va una
+  // posición después de la mayor del día en el espacio
+  const { data: last, error: lastError } = await supabase
+    .from("ledger_entries")
+    .select("day_position")
+    .eq("workspace_id", workspace.id)
+    .eq("occurred_on", parsed.data.occurred_on)
+    .order("day_position", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (lastError) {
+    return { error: RECONCILE_DEFAULT_ERROR, values }
+  }
+
+  const { error } = await supabase.from("account_adjustments").insert({
+    workspace_id: workspace.id,
+    account_id: account.id,
+    amount,
+    occurred_on: parsed.data.occurred_on,
+    occurred_time: null,
+    day_position: (last?.day_position ?? 0) + 1,
+    note: SITE.reconciliation.note
+  })
+
+  if (error) {
+    return {
+      error: error.message.includes(ACCOUNT_ARCHIVED)
+        ? ACCOUNT_ARCHIVED
+        : RECONCILE_DEFAULT_ERROR,
       values
     }
   }

@@ -33,6 +33,7 @@ export type RuleKey =
   | "low_cushion"
   | "unbudgeted_spending"
   | "irregular_records"
+  | "negative_account"
 
 export type Severity = "high" | "medium" | "low"
 

@@ -1,6 +1,6 @@
 # SPEC 21 — Conciliación de cuentas y fecha del saldo inicial
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 08c, SPEC 16, SPEC 19, SPEC 20
 > **Fecha:** 2026-11-03
 > **Objetivo:** Que el usuario pueda cuadrar una cuenta con su saldo real desde un diálogo que calcula la diferencia a una fecha y crea el ajuste, que Tesoro avise de saldos negativos en billeteras y bancos, y que el saldo inicial tenga fecha.
@@ -100,12 +100,12 @@ reconciliation: {
 - [ ] Una cuenta de otro espacio o de otro usuario nunca se puede conciliar: la action falla y la RLS impide ver o insertar (probado con dos usuarios).
 - [ ] Una cuenta en un espacio marcado para borrar no se puede conciliar (`requireWritableWorkspace`).
 - [ ] Con `opening_balance_on` posterior a un movimiento, ese movimiento se suma sin el saldo inicial en `account_balance_at` y en `account_balances`.
-- [ ] Con `opening_balance_on` nulo, los saldos actuales no cambian.
+- [x] Con `opening_balance_on` nulo, los saldos actuales no cambian.
 - [ ] El diálogo de cuenta muestra y guarda la fecha del saldo inicial.
 - [ ] Tras crear el ajuste hay toast de éxito y se actualizan cuentas, movimientos y resumen sin recargar.
 - [ ] Controles de 44 px o más en móvil, AA en claro y oscuro, sin `<h1>` repetido.
-- [ ] `pnpm next typegen`, `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan; `database.ts` regenerado y con Prettier.
-- [ ] `docs/producto.md`, `docs/ui.md` y `[Unreleased]` (en inglés) documentan el cambio.
+- [x] `pnpm next typegen`, `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan; `database.ts` regenerado y con Prettier.
+- [x] `docs/producto.md`, `docs/ui.md` y `[Unreleased]` (en inglés) documentan el cambio.
 
 ## Decisiones
 

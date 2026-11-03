@@ -12,8 +12,10 @@ import {
   TextField,
   toast
 } from "@heroui/react"
+import { DatePickerField } from "@/components/forms/date-picker-field"
 import { IconColorPicker } from "@/features/categories/components/icon-color-picker"
 import { amountInput } from "@/features/debts/components/field"
+import { todayISO } from "@/libs/dates"
 import { createAccount, updateAccount } from "../actions"
 import { ACCOUNT_KINDS, ACCOUNT_KIND_META } from "../constants"
 import type {
@@ -116,6 +118,9 @@ function AccountForm({
   const [kind, setKind] = useState<AccountKind>(
     (values?.kind as AccountKind | undefined) ?? account?.kind ?? "wallet"
   )
+  const [openingOn, setOpeningOn] = useState(
+    values?.opening_balance_on ?? account?.opening_balance_on ?? ""
+  )
 
   return (
     <form
@@ -200,6 +205,21 @@ function AccountForm({
           <Input placeholder="0" />
           <FieldError>{errors?.opening_balance?.[0]}</FieldError>
         </TextField>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <DatePickerField
+          name="opening_balance_on"
+          label="Fecha del saldo inicial"
+          value={openingOn}
+          onChange={setOpeningOn}
+          error={errors?.opening_balance_on?.[0]}
+          maxValue={todayISO()}
+        />
+        <p className="text-xs text-muted">
+          Opcional. Sin fecha, el saldo inicial cuenta desde el primer
+          movimiento.
+        </p>
       </div>
 
       {/* Al crear, cambiar el tipo reinicia el icono y el color a los del tipo */}

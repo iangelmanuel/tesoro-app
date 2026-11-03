@@ -16,15 +16,19 @@ import {
   EllipsisVertical,
   List,
   Pencil,
-  RefreshCw
+  RefreshCw,
+  Scale
 } from "lucide-react"
+import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
 import { GoalIcon } from "@/features/goals/components/goal-icon"
 import { TRANSACTIONS_PATH } from "@/features/transactions/filters"
 import { formatCurrency } from "@/libs/format"
 import { ACCOUNT_KIND_META } from "../constants"
+import { isNegativeAccount } from "../negative-balance"
 import type { AccountWithBalance } from "../types"
 import { AccountDialog } from "./account-dialog"
 import { AdjustBalanceDialog } from "./adjust-balance-dialog"
+import { ReconcileDialog } from "./reconcile-dialog"
 import { useAccountAction } from "./use-account-action"
 
 /** Movimientos de la cuenta, de todos los meses */
@@ -50,8 +54,11 @@ export function AccountCard({
 }: AccountCardProps) {
   const [editing, setEditing] = useState(false)
   const [adjusting, setAdjusting] = useState(false)
+  const [reconciling, setReconciling] = useState(false)
   const { pending, run } = useAccountAction(account)
   const hasScheduled = account.scheduled_balance !== account.balance
+  // Billeteras y bancos no deberían quedar en rojo; efectivo y otras sí pueden
+  const warnNegative = isNegativeAccount(account)
 
   return (
     // Misma superficie que el resto de tarjetas: sin borde, radio grande
@@ -117,6 +124,12 @@ export function AccountCard({
           open={adjusting}
           onOpenChange={setAdjusting}
         />
+        <ReconcileDialog
+          account={account}
+          currency={currency}
+          open={reconciling}
+          onOpenChange={setReconciling}
+        />
       </div>
 
       <div className="flex flex-col gap-1">
@@ -143,6 +156,26 @@ export function AccountCard({
         )}
       </div>
 
+      {warnNegative && (
+        <div
+          role="status"
+          className={cn(
+            "flex flex-wrap items-center justify-between gap-2 rounded-2xl p-3 text-sm",
+            TONE_BADGE_CLASSES.danger
+          )}
+        >
+          <span>Saldo negativo: probablemente faltan movimientos.</span>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="max-md:h-11"
+            onPress={() => setReconciling(true)}
+          >
+            Conciliar
+          </Button>
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2">
         <Button
           variant="secondary"
@@ -151,6 +184,15 @@ export function AccountCard({
         >
           <RefreshCw />
           Actualizar saldo
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="max-md:h-11"
+          onPress={() => setReconciling(true)}
+        >
+          <Scale />
+          Conciliar
         </Button>
         <Link
           href={accountTransactionsHref(account.id, transactionsPath)}

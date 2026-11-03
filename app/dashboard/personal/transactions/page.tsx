@@ -14,6 +14,7 @@ import { TransactionsFilters } from "@/features/transactions/components/transact
 import { TransactionsPagination } from "@/features/transactions/components/transactions-pagination"
 import { TransactionsTable } from "@/features/transactions/components/transactions-table"
 import { TransactionsTotals } from "@/features/transactions/components/transactions-totals"
+import { VerifyMovementsDialog } from "@/features/transactions/components/verify-movements-dialog"
 import {
   TRANSACTIONS_PATH,
   parseTransactionFilters
@@ -121,6 +122,12 @@ async function TransactionsContent({
               categories={categories}
             />
           }
+        />
+        <VerifyMovementsDialog
+          workspaceId={workspace.id}
+          accounts={accounts}
+          currency={workspace.currency}
+          showAccountFilter
         />
         <div className="hidden shrink-0 items-center gap-2 md:flex">
           <CategoriesSheet

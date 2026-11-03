@@ -8,6 +8,7 @@ import {
 } from "@/features/workspaces/queries"
 import { revalidateWorkspacePages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
+import { type VerifyEntry, getVerifyEntries } from "./queries"
 import {
   createTransactionSchema,
   parseAmount,
@@ -397,4 +398,34 @@ export async function moveLedgerEntry(
 
   revalidateWorkspacePages(workspace)
   return {}
+}
+
+const verifySchema = z.object({
+  workspaceId: z.uuid(),
+  accountId: z.uuid().nullable(),
+  offset: z.number().int().min(0).max(100_000)
+})
+
+// Página de Verificar movimientos. Solo lectura: RLS limita las filas al dueño
+// del espacio, así que no hace falta resolver el espacio con permiso de
+// escritura.
+export async function loadVerifyEntries(
+  workspaceId: string,
+  accountId: string | null,
+  offset: number
+): Promise<{ rows: VerifyEntry[]; hasMore: boolean } | { error: string }> {
+  const parsed = verifySchema.safeParse({ workspaceId, accountId, offset })
+
+  if (!parsed.success) {
+    return { error: "No se pudieron cargar los movimientos" }
+  }
+
+  try {
+    return await getVerifyEntries(parsed.data.workspaceId, {
+      accountId: parsed.data.accountId ?? undefined,
+      offset: parsed.data.offset
+    })
+  } catch {
+    return { error: "No se pudieron cargar los movimientos" }
+  }
 }

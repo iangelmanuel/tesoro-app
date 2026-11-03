@@ -15,6 +15,7 @@ import { TransactionsFilters } from "@/features/transactions/components/transact
 import { TransactionsPagination } from "@/features/transactions/components/transactions-pagination"
 import { TransactionsTable } from "@/features/transactions/components/transactions-table"
 import { TransactionsTotals } from "@/features/transactions/components/transactions-totals"
+import { VerifyMovementsDialog } from "@/features/transactions/components/verify-movements-dialog"
 import { parseTransactionFilters } from "@/features/transactions/filters"
 import {
   getTransactionTotals,
@@ -89,6 +90,11 @@ async function TransactionsContent({
               Nuevo movimiento
             </Button>
           }
+        />
+        <VerifyMovementsDialog
+          workspaceId={workspace.id}
+          accounts={accounts}
+          currency={workspace.currency}
         />
         {/* En el teléfono las categorías van dentro de la hoja de filtros */}
         <div className="hidden md:block">

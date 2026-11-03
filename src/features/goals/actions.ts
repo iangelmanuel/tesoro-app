@@ -38,6 +38,7 @@ const CONTRIBUTION_FIELDS = [
   "kind",
   "amount",
   "occurred_on",
+  "occurred_time",
   "note",
   "account_id",
   "transfer_from",
@@ -285,7 +286,7 @@ export async function createContribution(
   }
 
   // Aporte (o retiro) y traspaso previo en una sola transacción
-  const { amount, occurred_on, note, account_id } = parsed.data
+  const { amount, occurred_on, occurred_time, note, account_id } = parsed.data
   const hasTransfer = account_id !== null && parsed.data.transfer_from !== null
 
   const supabase = await createClient()
@@ -293,6 +294,7 @@ export async function createContribution(
     p_goal_id: goal.id,
     p_amount: amount,
     p_occurred_on: occurred_on,
+    p_occurred_time: occurred_time ?? undefined,
     // Los tipos generados no marcan el parámetro como nullable
     p_note: note as string,
     p_account_id: account_id ?? undefined,
@@ -353,13 +355,13 @@ export async function updateContribution(
     return { fieldErrors: { amount: [OVER_WITHDRAWAL] }, values }
   }
 
-  // Editar cambia monto, fecha y nota; la cuenta no se toca (SPEC 16)
-  const { amount, occurred_on, note } = parsed.data
+  // Editar cambia monto, fecha, hora y nota; la cuenta no se toca (SPEC 16)
+  const { amount, occurred_on, occurred_time, note } = parsed.data
 
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("goal_contributions")
-    .update({ amount, occurred_on, note })
+    .update({ amount, occurred_on, occurred_time, note })
     .eq("id", contribution.id)
     .select("id")
 

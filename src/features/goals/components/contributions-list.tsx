@@ -4,7 +4,7 @@ import { useState, useTransition } from "react"
 import { AlertDialog, Button, cn, toast } from "@heroui/react"
 import { Pencil, PiggyBank, Trash2 } from "lucide-react"
 import { CardEmpty } from "@/components/dashboard/empty-state"
-import { formatCurrency, formatDate } from "@/libs/format"
+import { formatCurrency, formatDate, formatTime } from "@/libs/format"
 import { deleteContribution } from "../actions"
 import type { GoalContribution } from "../queries"
 import { ContributionDialog } from "./contribution-dialog"
@@ -74,7 +74,10 @@ function ContributionRow({
           {formatCurrency(Math.abs(contribution.amount), currency)}
         </span>
         <span className="text-xs text-muted">
-          {formatDate(contribution.occurred_on)} · {accountText}
+          {formatDate(contribution.occurred_on)}
+          {contribution.occurred_time &&
+            ` · ${formatTime(contribution.occurred_time)}`}{" "}
+          · {accountText}
         </span>
         {contribution.note && (
           <span className="truncate text-sm text-muted">

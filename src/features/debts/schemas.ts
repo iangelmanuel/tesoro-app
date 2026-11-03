@@ -4,7 +4,8 @@ import {
   amountSchema,
   parseAmount,
   paymentAccountSchema,
-  refinePaymentAccount
+  refinePaymentAccount,
+  timeSchema
 } from "@/features/transactions/schemas"
 import { todayISO } from "@/libs/dates"
 
@@ -268,6 +269,7 @@ export const paymentSchema = z
   .object({
     amount: amountField,
     occurred_on: pastDateField,
+    occurred_time: timeSchema,
     note: noteField,
     create_transaction: z.preprocess(
       (value) => value === "on" || value === "true" || value === true,
@@ -284,6 +286,7 @@ export type PaymentInput = z.infer<typeof paymentSchema>
 export const advanceSchema = z.object({
   amount: amountField,
   occurred_on: pastDateField,
+  occurred_time: timeSchema,
   note: noteField,
   account_id: paymentAccountSchema.shape.account_id
 })
@@ -294,6 +297,7 @@ export type AdvanceInput = z.infer<typeof advanceSchema>
 export const adjustBalanceSchema = z.object({
   balance: balanceField,
   occurred_on: pastDateField,
+  occurred_time: timeSchema,
   note: noteField
 })
 

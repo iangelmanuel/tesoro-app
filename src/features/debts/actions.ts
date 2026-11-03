@@ -68,6 +68,7 @@ const DEBT_FIELDS: Record<DebtKind, readonly string[]> = {
 const PAYMENT_FIELDS = [
   "amount",
   "occurred_on",
+  "occurred_time",
   "note",
   "create_transaction",
   "account_id",
@@ -75,9 +76,20 @@ const PAYMENT_FIELDS = [
   "transfer_amount"
 ] as const
 
-const ADVANCE_FIELDS = ["amount", "occurred_on", "note", "account_id"] as const
+const ADVANCE_FIELDS = [
+  "amount",
+  "occurred_on",
+  "occurred_time",
+  "note",
+  "account_id"
+] as const
 
-const ADJUST_FIELDS = ["balance", "occurred_on", "note"] as const
+const ADJUST_FIELDS = [
+  "balance",
+  "occurred_on",
+  "occurred_time",
+  "note"
+] as const
 
 const idSchema = z.uuid()
 const kindSchema = z.enum(DEBT_KINDS)
@@ -422,6 +434,7 @@ export async function recordPayment(
     p_debt_id: debt.id,
     p_amount: parsed.data.amount,
     p_occurred_on: parsed.data.occurred_on,
+    p_occurred_time: parsed.data.occurred_time ?? undefined,
     // Los tipos generados no marcan el parámetro como nullable
     p_note: parsed.data.note as string,
     p_create_transaction: parsed.data.create_transaction,
@@ -478,6 +491,7 @@ export async function recordAdvance(
     p_debt_id: debt.id,
     p_amount: parsed.data.amount,
     p_occurred_on: parsed.data.occurred_on,
+    p_occurred_time: parsed.data.occurred_time ?? undefined,
     // Los tipos generados no marcan el parámetro como nullable
     p_note: parsed.data.note as string,
     p_account_id: parsed.data.account_id ?? undefined
@@ -516,7 +530,12 @@ export async function updateEntry(
     return { error: DEBT_NOT_ACTIVE }
   }
 
-  let update: { amount: number; occurred_on: string; note: string | null }
+  let update: {
+    amount: number
+    occurred_on: string
+    occurred_time: string | null
+    note: string | null
+  }
   let values: Record<string, string>
 
   // La cuota de manejo (SPEC 17) cambia monto, fecha y nota como un avance:
@@ -533,8 +552,8 @@ export async function updateEntry(
       return { fieldErrors: { amount: [NEGATIVE_BALANCE] }, values }
     }
 
-    const { amount, occurred_on, note } = parsed.data
-    update = { amount, occurred_on, note }
+    const { amount, occurred_on, occurred_time, note } = parsed.data
+    update = { amount, occurred_on, occurred_time, note }
   } else if (entry.kind === "payment") {
     const payment = parsePayment(formData)
     values = payment.values
@@ -550,8 +569,8 @@ export async function updateEntry(
       return { fieldErrors: { amount: [OVER_PAYMENT] }, values }
     }
 
-    const { amount, occurred_on, note } = payment.parsed.data
-    update = { amount, occurred_on, note }
+    const { amount, occurred_on, occurred_time, note } = payment.parsed.data
+    update = { amount, occurred_on, occurred_time, note }
   } else {
     values = readValues(formData, ADJUST_FIELDS)
     const parsed = adjustBalanceSchema.safeParse(values)
@@ -575,6 +594,7 @@ export async function updateEntry(
     update = {
       amount,
       occurred_on: parsed.data.occurred_on,
+      occurred_time: parsed.data.occurred_time,
       note: parsed.data.note
     }
   }
@@ -692,6 +712,7 @@ export async function adjustBalance(
     kind: "adjustment",
     amount,
     occurred_on: parsed.data.occurred_on,
+    occurred_time: parsed.data.occurred_time,
     note: parsed.data.note
   })
 

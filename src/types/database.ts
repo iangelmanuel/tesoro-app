@@ -19,27 +19,33 @@ export type Database = {
           account_id: string
           amount: number
           created_at: string
+          day_position: number
           id: string
           note: string | null
           occurred_on: string
+          occurred_time: string | null
           workspace_id: string
         }
         Insert: {
           account_id: string
           amount: number
           created_at?: string
+          day_position?: number
           id?: string
           note?: string | null
           occurred_on: string
+          occurred_time?: string | null
           workspace_id: string
         }
         Update: {
           account_id?: string
           amount?: number
           created_at?: string
+          day_position?: number
           id?: string
           note?: string | null
           occurred_on?: string
+          occurred_time?: string | null
           workspace_id?: string
         }
         Relationships: [
@@ -228,6 +234,7 @@ export type Database = {
           account_id: string | null
           amount: number
           created_at: string
+          day_position: number
           debt_id: string
           generated: boolean
           id: string
@@ -235,6 +242,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["debt_entry_kind"]
           note: string | null
           occurred_on: string
+          occurred_time: string | null
           transaction_id: string | null
           updated_at: string
           workspace_id: string
@@ -243,6 +251,7 @@ export type Database = {
           account_id?: string | null
           amount: number
           created_at?: string
+          day_position?: number
           debt_id: string
           generated?: boolean
           id?: string
@@ -250,6 +259,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["debt_entry_kind"]
           note?: string | null
           occurred_on: string
+          occurred_time?: string | null
           transaction_id?: string | null
           updated_at?: string
           workspace_id: string
@@ -258,6 +268,7 @@ export type Database = {
           account_id?: string | null
           amount?: number
           created_at?: string
+          day_position?: number
           debt_id?: string
           generated?: boolean
           id?: string
@@ -265,6 +276,7 @@ export type Database = {
           kind?: Database["public"]["Enums"]["debt_entry_kind"]
           note?: string | null
           occurred_on?: string
+          occurred_time?: string | null
           transaction_id?: string | null
           updated_at?: string
           workspace_id?: string
@@ -426,11 +438,13 @@ export type Database = {
           account_id: string | null
           amount: number
           created_at: string
+          day_position: number
           goal_id: string
           id: string
           import_id: string | null
           note: string | null
           occurred_on: string
+          occurred_time: string | null
           updated_at: string
           workspace_id: string
         }
@@ -438,11 +452,13 @@ export type Database = {
           account_id?: string | null
           amount: number
           created_at?: string
+          day_position?: number
           goal_id: string
           id?: string
           import_id?: string | null
           note?: string | null
           occurred_on: string
+          occurred_time?: string | null
           updated_at?: string
           workspace_id: string
         }
@@ -450,11 +466,13 @@ export type Database = {
           account_id?: string | null
           amount?: number
           created_at?: string
+          day_position?: number
           goal_id?: string
           id?: string
           import_id?: string | null
           note?: string | null
           occurred_on?: string
+          occurred_time?: string | null
           updated_at?: string
           workspace_id?: string
         }
@@ -683,12 +701,14 @@ export type Database = {
           category_id: string
           counterparty: string | null
           created_at: string
+          day_position: number
           description: string
           id: string
           import_id: string | null
           invoice_ref: string | null
           note: string | null
           occurred_on: string
+          occurred_time: string | null
           recurring_due_on: string | null
           recurring_expense_id: string | null
           type: Database["public"]["Enums"]["transaction_type"]
@@ -701,12 +721,14 @@ export type Database = {
           category_id: string
           counterparty?: string | null
           created_at?: string
+          day_position?: number
           description: string
           id?: string
           import_id?: string | null
           invoice_ref?: string | null
           note?: string | null
           occurred_on: string
+          occurred_time?: string | null
           recurring_due_on?: string | null
           recurring_expense_id?: string | null
           type: Database["public"]["Enums"]["transaction_type"]
@@ -719,12 +741,14 @@ export type Database = {
           category_id?: string
           counterparty?: string | null
           created_at?: string
+          day_position?: number
           description?: string
           id?: string
           import_id?: string | null
           invoice_ref?: string | null
           note?: string | null
           occurred_on?: string
+          occurred_time?: string | null
           recurring_due_on?: string | null
           recurring_expense_id?: string | null
           type?: Database["public"]["Enums"]["transaction_type"]
@@ -773,10 +797,12 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          day_position: number
           from_account_id: string
           id: string
           note: string | null
           occurred_on: string
+          occurred_time: string | null
           to_account_id: string
           updated_at: string
           workspace_id: string
@@ -784,10 +810,12 @@ export type Database = {
         Insert: {
           amount: number
           created_at?: string
+          day_position?: number
           from_account_id: string
           id?: string
           note?: string | null
           occurred_on: string
+          occurred_time?: string | null
           to_account_id: string
           updated_at?: string
           workspace_id: string
@@ -795,10 +823,12 @@ export type Database = {
         Update: {
           amount?: number
           created_at?: string
+          day_position?: number
           from_account_id?: string
           id?: string
           note?: string | null
           occurred_on?: string
+          occurred_time?: string | null
           to_account_id?: string
           updated_at?: string
           workspace_id?: string
@@ -874,12 +904,14 @@ export type Database = {
           category_id: string | null
           counterparty: string | null
           created_at: string | null
+          day_position: number | null
           description: string | null
           id: string | null
           invoice_ref: string | null
           kind: string | null
           note: string | null
           occurred_on: string | null
+          occurred_time: string | null
           to_account_id: string | null
           workspace_id: string | null
         }
@@ -983,6 +1015,7 @@ export type Database = {
           p_amount: number
           p_from: string
           p_occurred_on: string
+          p_occurred_time?: string
           p_to: string
           p_workspace_id: string
         }
@@ -1099,6 +1132,16 @@ export type Database = {
           tx_count: number
         }[]
       }
+      move_ledger_entry: {
+        Args: {
+          p_id: string
+          p_kind: string
+          p_target_id: string
+          p_target_kind: string
+          p_workspace_id: string
+        }
+        Returns: undefined
+      }
       purge_deleted_accounts: { Args: never; Returns: number }
       purge_deleted_workspaces: { Args: never; Returns: number }
       record_card_advance: {
@@ -1108,6 +1151,7 @@ export type Database = {
           p_debt_id: string
           p_note: string
           p_occurred_on: string
+          p_occurred_time?: string
         }
         Returns: string
       }
@@ -1119,6 +1163,7 @@ export type Database = {
           p_debt_id: string
           p_note: string
           p_occurred_on: string
+          p_occurred_time?: string
           p_transfer_amount?: number
           p_transfer_from?: string
         }
@@ -1131,6 +1176,7 @@ export type Database = {
           p_goal_id: string
           p_note: string
           p_occurred_on: string
+          p_occurred_time?: string
           p_transfer_amount?: number
           p_transfer_from?: string
         }
@@ -1146,6 +1192,7 @@ export type Database = {
           p_invoice_ref?: string
           p_note?: string
           p_occurred_on: string
+          p_occurred_time?: string
           p_recurring_due_on?: string
           p_recurring_expense_id?: string
           p_transfer_amount?: number

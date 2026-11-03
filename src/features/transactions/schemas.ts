@@ -29,6 +29,14 @@ export const amountSchema = z
     error: "El monto es demasiado grande"
   })
 
+// Hora opcional de un evento (SPEC 19): HH:MM o "" sin hora, que pasa a null.
+// Compartido por todos los esquemas de evento.
+export const timeSchema = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Hora inválida")
+  .or(z.literal(""))
+  .transform((value) => value || null)
+
 // Los campos opcionales del formulario llegan como "" cuando están vacíos:
 // sin cuenta o sin enlace a un gasto fijo
 const emptyToNull = (value: unknown) => (value === "" ? null : value)
@@ -98,6 +106,7 @@ export const transactionSchema = z.object({
   type: z.enum(TRANSACTION_TYPES, { error: "Elige ingreso o gasto" }),
   amount: amountSchema,
   occurred_on: z.iso.date({ error: "Elige una fecha válida" }),
+  occurred_time: timeSchema,
   category_id: z.uuid({ error: "Elige una categoría" }),
   description: z
     .string()

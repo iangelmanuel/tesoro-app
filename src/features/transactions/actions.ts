@@ -8,6 +8,7 @@ import {
 } from "@/features/workspaces/queries"
 import { revalidateWorkspacePages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
+import { type VerifyEntry, getVerifyEntries } from "./queries"
 import {
   createTransactionSchema,
   parseAmount,
@@ -31,6 +32,7 @@ const FIELDS = [
   "type",
   "amount",
   "occurred_on",
+  "occurred_time",
   "category_id",
   "description",
   "note",
@@ -224,6 +226,7 @@ export async function createTransaction(
           p_amount: row.amount,
           p_category_id: row.category_id,
           p_occurred_on: row.occurred_on,
+          p_occurred_time: row.occurred_time ?? undefined,
           p_description: row.description,
           p_note: row.note ?? undefined,
           p_account_id: row.account_id,
@@ -334,4 +337,95 @@ export async function deleteTransaction(
 
   revalidateWorkspacePages(workspace)
   return {}
+}
+
+const LEDGER_KINDS = [
+  "income",
+  "expense",
+  "transfer",
+  "adjustment",
+  "debt_payment",
+  "debt_advance",
+  "goal_contribution"
+] as const
+
+const moveSchema = z.object({
+  kind: z.enum(LEDGER_KINDS),
+  id: z.uuid(),
+  targetKind: z.enum(LEDGER_KINDS),
+  targetId: z.uuid()
+})
+
+const MOVE_DEFAULT_ERROR = "No se pudo reordenar el movimiento"
+const MOVE_FORBIDDEN = "No tienes permiso para reordenar en este espacio"
+const MOVE_OTHER_DAY = "Solo se puede reordenar dentro del mismo día"
+
+// Mueve una fila a la posición de otra del mismo día. Cubre movimientos,
+// traspasos, ajustes, pagos de tarjeta, avances y aportes: el orden es el de
+// la lista unificada (SPEC 19).
+export async function moveLedgerEntry(
+  workspaceId: string,
+  kind: string,
+  id: string,
+  targetKind: string,
+  targetId: string
+): Promise<TransactionActionResult> {
+  const parsed = moveSchema.safeParse({ kind, id, targetKind, targetId })
+
+  if (!parsed.success) {
+    return { error: NOT_FOUND }
+  }
+
+  const workspace = await requireWritableWorkspace(workspaceId)
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("move_ledger_entry", {
+    p_workspace_id: workspace.id,
+    p_kind: parsed.data.kind,
+    p_id: parsed.data.id,
+    p_target_kind: parsed.data.targetKind,
+    p_target_id: parsed.data.targetId
+  })
+
+  if (error) {
+    if (error.code === "42501") {
+      return { error: MOVE_FORBIDDEN }
+    }
+    if (error.message.includes("mismo día")) {
+      return { error: MOVE_OTHER_DAY }
+    }
+    return { error: MOVE_DEFAULT_ERROR }
+  }
+
+  revalidateWorkspacePages(workspace)
+  return {}
+}
+
+const verifySchema = z.object({
+  workspaceId: z.uuid(),
+  accountId: z.uuid().nullable(),
+  offset: z.number().int().min(0).max(100_000)
+})
+
+// Página de Verificar movimientos. Solo lectura: RLS limita las filas al dueño
+// del espacio, así que no hace falta resolver el espacio con permiso de
+// escritura.
+export async function loadVerifyEntries(
+  workspaceId: string,
+  accountId: string | null,
+  offset: number
+): Promise<{ rows: VerifyEntry[]; hasMore: boolean } | { error: string }> {
+  const parsed = verifySchema.safeParse({ workspaceId, accountId, offset })
+
+  if (!parsed.success) {
+    return { error: "No se pudieron cargar los movimientos" }
+  }
+
+  try {
+    return await getVerifyEntries(parsed.data.workspaceId, {
+      accountId: parsed.data.accountId ?? undefined,
+      offset: parsed.data.offset
+    })
+  } catch {
+    return { error: "No se pudieron cargar los movimientos" }
+  }
 }

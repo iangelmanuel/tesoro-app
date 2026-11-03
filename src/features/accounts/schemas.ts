@@ -6,7 +6,8 @@ import {
 import {
   MAX_AMOUNT,
   amountSchema,
-  parseAmount
+  parseAmount,
+  timeSchema
 } from "@/features/transactions/schemas"
 import { ACCOUNT_KINDS } from "./constants"
 
@@ -75,6 +76,7 @@ export const transferSchema = z
       amountSchema
     ),
     occurred_on: z.iso.date({ error: "Elige una fecha válida" }),
+    occurred_time: timeSchema,
     note: noteField
   })
   .refine((data) => data.from_account_id !== data.to_account_id, {
@@ -87,6 +89,7 @@ export type TransferInput = z.infer<typeof transferSchema>
 // "Actualizar saldo": el saldo real, no la diferencia
 export const adjustAccountSchema = z.object({
   balance: balanceField,
+  occurred_time: timeSchema,
   note: noteField
 })
 

@@ -173,7 +173,7 @@ usuario tiene RLS.
 | `business_profiles`         | Datos de una empresa, 1:1 con su espacio: `tax_id` (NIT opcional) y `sector`                                                                                                                                                             | `select`, `insert`, `update`                    |
 | `categories`                | Categorías de ingreso o gasto: del sistema (`workspace_id` null) o propias, con `scope` (`personal` / `business`)                                                                                                                        | `select`, `insert` y `update`                   |
 | `transactions`              | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note`, `occurred_time` y `day_position` (SPEC 19), `account_id` opcional y, en Empresa, `counterparty` e `invoice_ref`                                      | `select`, `insert`, `update`, `delete`          |
-| `accounts`                  | Cuentas y métodos de pago: `name` (único por espacio), `kind` (`cash` / `bank` / `wallet` / `other`), `icon`, `color`, `opening_balance`, `archived_at`                                                                                  | `select`, `insert`, `update`                    |
+| `accounts`                  | Cuentas y métodos de pago: `name` (único por espacio), `kind` (`cash` / `bank` / `wallet` / `other`), `icon`, `color`, `opening_balance`, `opening_balance_on`, `archived_at`                                                            | `select`, `insert`, `update`                    |
 | `transfers`                 | Traspasos entre cuentas propias: `from_account_id`, `to_account_id` (distintas), `amount` > 0, `occurred_on`, `note`                                                                                                                     | `select`, `insert`, `update`, `delete`          |
 | `account_adjustments`       | Ajustes de saldo de "Actualizar saldo": `account_id`, `amount` ≠ 0 (> 0 sube el saldo), `occurred_on`, `note`                                                                                                                            | `select`, `insert`, `update`, `delete`          |
 | `recurring_expenses`        | Gastos fijos: `name`, `amount`, `category_id`, `frequency`, día y mes de pago, vigencia, `is_active`                                                                                                                                     | `select`, `insert`, `update`, `delete`          |
@@ -881,6 +881,11 @@ dónde sale la plata: efectivo, bancos y billeteras como Nequi.
 - Nombre (1 a 40 caracteres, único por espacio sin distinguir mayúsculas),
   tipo, ícono y color (los del picker de categorías) y saldo inicial, que
   puede ser negativo.
+- **Fecha del saldo inicial** (`opening_balance_on`, opcional, no futura): el
+  saldo inicial solo cuenta en saldos a esa fecha o posteriores. Los
+  movimientos anteriores se suman igual. Vacía, el saldo inicial aplica antes
+  de cualquier movimiento (comportamiento anterior). Se edita en el diálogo de
+  la cuenta.
 - Cada espacio, nuevo o existente, trae la cuenta "Efectivo" con saldo 0
   (trigger `seed_workspace_accounts` y backfill).
 - Se archivan y restauran, no se borran. Una cuenta archivada sale de los
@@ -898,11 +903,17 @@ dónde sale la plata: efectivo, bancos y billeteras como Nequi.
 El saldo no se guarda: se calcula con la RPC `account_balances`.
 
 ```text
-saldo = opening_balance
+saldo = opening_balance             (si opening_balance_on es nulo o ya llegó)
       + Σ ingresos − Σ gastos           (transactions con esa account_id)
       + Σ traspasos entrantes − Σ salientes
       + Σ ajustes
 ```
+
+La RPC `account_balance_at(p_account_id, p_on)` (`security invoker`) aplica las
+mismas reglas con todas las filas de `occurred_on ≤ p_on`, incluidas las
+entradas de deudas y los aportes a metas con cuenta. Devuelve `null` si la
+cuenta no existe o la RLS no la deja ver. `account_balances` también devuelve
+`opening_balance_on`.
 
 - **Saldo a hoy:** solo filas con `occurred_on ≤ hoy` (`America/Bogota`). Es
   el que se muestra, en rojo si es negativo.
@@ -912,6 +923,41 @@ saldo = opening_balance
   `saldo real − saldo a hoy` con fecha de hoy. Si la diferencia es 0, no crea
   nada ("El saldo ya coincide").
 - Los movimientos sin cuenta no cuentan en ningún saldo.
+
+### Conciliar una cuenta
+
+Botón **Conciliar** en la tarjeta de cada cuenta (Personal y Empresa). Sirve
+para cuadrar la cuenta con el saldo real de un banco o billetera a una fecha.
+
+- El usuario escribe el **saldo real** y la **fecha** (hoy por defecto, no
+  futura). El diálogo muestra el **saldo calculado por Tesoro** a esa fecha
+  (se recalcula al cambiar la fecha) y la **diferencia** = real − calculado,
+  con signo (verde si es positiva, rojo si es negativa).
+- **Crear ajuste** inserta en `account_adjustments` un ajuste por la
+  diferencia, con `occurred_on` = la fecha elegida, nota "Conciliación con
+  saldo real", sin hora y al final del día (`day_position` = la mayor del día
+  - 1). La diferencia se **recalcula en el servidor**; la del cliente solo se
+    muestra. No corrige `opening_balance`: el ajuste es visible y se borra desde
+    Movimientos como cualquier otro. No hay tabla de conciliaciones.
+- Diferencia 0: "La cuenta ya cuadra", el botón queda deshabilitado y el
+  servidor rechaza crear un ajuste de 0.
+- **Aviso** (no bloquea): si la diferencia absoluta supera el 5 % del saldo
+  calculado **o** $ 50.000, se muestra "Probablemente faltan movimientos por
+  registrar". Los umbrales son `SITE.reconciliation.warnPercent` y
+  `warnAmount`. Se usa "o" porque el 5 % de un saldo cercano a 0 es casi 0.
+- Con una fecha pasada, el saldo a esa fecha queda en el real, pero el saldo
+  de hoy se mueve por los movimientos posteriores (lo explica el (i) del
+  diálogo).
+- Escribe con `requireWritableWorkspace`: una cuenta de otro usuario o de un
+  espacio marcado para borrar no se puede conciliar.
+
+### Aviso de saldo negativo
+
+Una cuenta activa de tipo `wallet` o `bank` con saldo a hoy < 0 muestra un
+aviso en su tarjeta ("Saldo negativo: probablemente faltan movimientos") con
+acceso directo a **Conciliar**. `cash` y `other` quedan fuera. La condición es
+`isNegativeAccount` (`src/features/accounts/negative-balance.ts`) y la usan
+también las recomendaciones `negative_account` de Personal y Empresa.
 
 ### Cuenta en movimientos
 
@@ -1154,6 +1200,7 @@ suficientes".
 | `low_cushion`         | Factor colchón incluido y < 3 meses                                                                                                                        | media     | Metas                        |
 | `unbudgeted_spending` | ≥ 2 categorías con gastos en el mes actual y sin presupuesto                                                                                               | baja      | Presupuestos                 |
 | `irregular_records`   | Regularidad del mes actual < 50 %, solo con datos suficientes                                                                                              | baja      | Movimientos                  |
+| `negative_account`    | Billetera o banco activo con saldo a hoy < 0 (`isNegativeAccount`; `cash` y `other` no cuentan)                                                            | alta      | Cuentas                      |
 
 - **Orden:** severidad (alta, media, baja) y luego monto descendente (déficit,
   exceso, faltante, interés…). Las 3 primeras no ocultas van al Resumen.
@@ -1692,7 +1739,7 @@ Personal, sobre `dismissed_recommendations` de la empresa.
 | Regla                  | Condición                                                                                                                            | Severidad | Enlace                             |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------- | ---------------------------------- |
 | `loss_month`           | Último mes cerrado con costos > ventas                                                                                               | alta      | Reportes de ese mes                |
-| `negative_account`     | Cuenta activa con saldo a hoy < 0                                                                                                    | alta      | Cuentas                            |
+| `negative_account`     | Billetera o banco activo con saldo a hoy < 0 (`cash` y `other` no cuentan). Clave y condición compartidas con Personal               | alta      | Cuentas                            |
 | `low_liquidity`        | Factor liquidez incluido en el mes actual y < 1 mes                                                                                  | alta      | Flujo de caja                      |
 | `sales_drop`           | Con 3 meses cerrados antes del último cerrado: ventas del último cerrado ≤ 80 % de su promedio (> 0)                                 | media     | Reportes de ese mes, ventas        |
 | `low_margin`           | Ventas de la ventana > 0 y margen neto de la ventana < 10 %                                                                          | media     | Reportes                           |

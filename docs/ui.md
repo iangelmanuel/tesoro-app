@@ -152,6 +152,22 @@ Reglas:
 - El orden manual se mueve al instante con `useOptimistic` y vuelve a su lugar
   con un toast si la action falla.
 
+### Conciliar cuenta (SPEC 21)
+
+| Pieza                                      | Qué hace                                                                                                                                                                                                                                                                               |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `accounts/components/reconcile-dialog.tsx` | `ReconcileDialog`: saldo real, `DatePickerField` (no futura), panel con saldo calculado y diferencia (`TONE_TEXT_CLASSES`: `success` si > 0, `danger` si < 0, neutro en 0) y `HelpHint` `reconciliation`. Modal centrado en escritorio y hoja inferior (`placement="bottom"`) en móvil |
+| `accounts/components/account-card.tsx`     | Botón **Conciliar** (`Scale`) y, solo en `wallet` / `bank` con saldo < 0, un aviso `TONE_BADGE_CLASSES.danger` con su propio botón **Conciliar**                                                                                                                                       |
+
+Reglas:
+
+- Los montos del diálogo llevan centavos (`formatCurrency(amount, currency, 2)`),
+  porque la diferencia importa al centavo; el resto de la app los oculta en COP.
+- "La cuenta ya cuadra" y "Probablemente faltan movimientos por registrar" son
+  `role="status"`; el segundo no bloquea el botón. El panel de cifras es
+  `aria-live="polite"`.
+- Botones del diálogo y del aviso de 44 px en móvil (`max-md:h-11`).
+
 ## Dónde vive cada pantalla
 
 | Pantalla         | Ruta                                               | Piezas                                                                               |

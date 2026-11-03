@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Account reconciliation (SPEC 21): a **Conciliar** button on every account card (Personal and Business) opens `ReconcileDialog` (a bottom sheet on phones). The user enters the real balance and a date (today by default, never in the future); the dialog shows the balance Tesoro calculates at that date and the difference, and **Crear ajuste** inserts an `account_adjustments` row for that difference (note "Conciliación con saldo real", no time, last position of the day). The difference is recalculated on the server (`reconcileAccountAction`, `requireWritableWorkspace`) and a difference of 0 is rejected. A non-blocking "Probablemente faltan movimientos por registrar" warning appears when the difference exceeds 5 % of the calculated balance or $50,000 (`SITE.reconciliation`).
+- Opening balance date: `accounts.opening_balance_on` (nullable; null keeps the previous behaviour). The opening balance only counts from that date; earlier movements are summed anyway. The account dialog shows and edits it.
+- Migration `account_reconciliation`: the `opening_balance_on` column, the `account_balance_at(p_account_id, p_on)` function (`security invoker`, `authenticated` only) and `account_balances` recreated to apply the date and return `opening_balance_on`.
+- `getAccountBalanceAt` query and `getReconcileBalanceAction` (read-only) for the dialog; `formatCurrency` takes an optional `fractionDigits`; new `reconciliation` help hint.
+- Negative-balance warning on `wallet` and `bank` account cards with a shortcut to **Conciliar**. The condition lives in the shared `isNegativeAccount` helper.
+- `negative_account` recommendation in Personal (high severity, link to Cuentas), sharing the key, the condition and the `dismissed_recommendations` check with Business.
+
 - Readable tables on phones, per-row action menus and a new bottom bar (SPEC 20). `ScrollTable` shows each table in full below 768 px and scrolls it horizontally, with an edge fade and a sticky, opaque actions column (`STICKY_ACTIONS`). Descriptions wrap up to 3 lines instead of being cut off.
 - `RowActions`: from 768 px a single three-dots `Dropdown` per row (destructive actions last, `danger` tone); on phones the same actions are inline 44 px buttons. Used in Movimientos, Gastos fijos, Presupuestos, debt entries and goal contributions. `DeleteDialog` is the shared controlled delete confirmation; `RecurringExpenseDialog` and `BudgetDialog` can now be controlled with `open` / `onOpenChange`.
 
@@ -178,6 +185,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The Business `negative_account` recommendation now only fires for active `wallet` and `bank` accounts with a negative balance; `cash` and `other` no longer trigger it (SPEC 21).
 - Movimientos bar (SPEC 20): search (fills the free width, min `18rem`), month, Filtros (phones) and Verificar share one 44 px row; on phones the search takes its own row. Verificar is icon-only below 640 px and reaches the bar through the new `trailing` prop of `TransactionsFilters`.
 - "Sin presupuesto" and the budget progress rows use a fixed grid (category, amount, action) so amounts line up; "Presupuestar" is a compact fixed-width button.
 - Toolbar controls (SPEC 20): the search field, month pill, Filtros, Verificar, Categorías, inactive filter pills, the reports period picker and the budget month navigation share the card and table gray (`bg-surface`) through `CONTROL_SURFACE` and `CONTROL_BUTTON` in `surface.ts`, with the same 44 px height in the Movimientos row. Buttons are `ghost` instead of `secondary` or bordered `outline` (budget month navigation and "Copiar del mes anterior").

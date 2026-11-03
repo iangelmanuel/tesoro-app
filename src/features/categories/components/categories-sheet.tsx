@@ -3,6 +3,7 @@
 import { useActionState, useState, useTransition } from "react"
 import { Button, Drawer, Tabs, cn, toast } from "@heroui/react"
 import { Archive, ArchiveRestore, Pencil, Tags } from "lucide-react"
+import { CONTROL_BUTTON } from "@/components/dashboard/surface"
 import { FormField } from "@/features/auth/components/form-field"
 import {
   archiveCategory,
@@ -53,10 +54,15 @@ export function CategoriesSheet({
   return (
     <Drawer>
       <Button
-        variant="secondary"
-        size="sm"
+        variant={fullWidthTrigger ? "secondary" : "ghost"}
+        size={fullWidthTrigger ? "sm" : undefined}
         fullWidth={fullWidthTrigger}
-        className={cn(fullWidthTrigger && "min-h-11")}
+        className={cn(
+          "min-h-11",
+          // En la barra: igual que Verificar y el mes. En la hoja, el
+          // botón secundario de siempre
+          !fullWidthTrigger && CONTROL_BUTTON
+        )}
       >
         <Tags />
         Categorías

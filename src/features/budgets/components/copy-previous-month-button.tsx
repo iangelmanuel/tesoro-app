@@ -3,6 +3,7 @@
 import { useTransition } from "react"
 import { Button, toast } from "@heroui/react"
 import { Copy } from "lucide-react"
+import { CONTROL_BUTTON } from "@/components/dashboard/surface"
 import { copyPreviousMonthBudgets } from "../actions"
 
 interface CopyPreviousMonthButtonProps {
@@ -30,7 +31,8 @@ export function CopyPreviousMonthButton({
 
   return (
     <Button
-      variant="outline"
+      variant="ghost"
+      className={CONTROL_BUTTON}
       isDisabled={pending}
       onPress={handleCopy}
     >

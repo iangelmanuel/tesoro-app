@@ -7,7 +7,7 @@ import {
   DragOverlay
 } from "@dnd-kit/react"
 import { isSortable, useSortable } from "@dnd-kit/react/sortable"
-import { AlertDialog, Button, Table, cn, toast } from "@heroui/react"
+import { Table, cn, toast } from "@heroui/react"
 import {
   ArrowLeftRight,
   Banknote,
@@ -18,6 +18,13 @@ import {
   RefreshCw,
   Trash2
 } from "lucide-react"
+import { DeleteDialog } from "@/components/dashboard/delete-dialog"
+import { RowActions } from "@/components/dashboard/row-actions"
+import {
+  STICKY_ACTIONS,
+  STICKY_ACTIONS_HEAD,
+  ScrollTable
+} from "@/components/dashboard/scroll-table"
 import { deleteAdjustment, deleteTransfer } from "@/features/accounts/actions"
 import { AccountLabel } from "@/features/accounts/components/account-select"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
@@ -27,11 +34,7 @@ import type { Category } from "@/features/categories/queries"
 import type { WorkspaceType } from "@/features/workspaces/queries"
 import { formatCurrency, formatDate, formatTime } from "@/libs/format"
 import { deleteTransaction, moveLedgerEntry } from "../actions"
-import {
-  type AccountMovementKind,
-  type EditableTransaction,
-  type LedgerEntry
-} from "../queries"
+import { type AccountMovementKind, type LedgerEntry } from "../queries"
 import { TransactionDialog } from "./transaction-dialog"
 
 interface TransactionsTableProps {
@@ -47,14 +50,10 @@ interface TransactionsTableProps {
   canReorder?: boolean
 }
 
-// A 375 px la tabla no se desborda: la fecha pasa bajo la descripción y
-// categoría, cliente y cuenta se ocultan hasta que hay espacio
-const FROM_SM = "hidden sm:table-cell"
-const FROM_MD = "hidden md:table-cell"
-const FROM_LG = "hidden lg:table-cell"
-
-// Botones de fila: 32 px con mouse, 40 px en pantallas táctiles
-const ROW_ACTION = "pointer-coarse:size-10"
+// En móvil la tabla se muestra completa y se desliza en horizontal: fecha,
+// categoría, cuenta y monto no se parten en varias líneas
+const NOWRAP = "whitespace-nowrap"
+const ACTIONS_COLUMN = cn("w-28 md:w-16", STICKY_ACTIONS_HEAD)
 
 /** Reordenar una fila dentro de su día arrastrando su asa (⋮⋮) */
 interface Reorder {
@@ -266,162 +265,163 @@ export function TransactionsTable({
       }}
       onDragEnd={handleDragEnd}
     >
-      <Table>
-        <Table.ScrollContainer>
-          <Table.Content
-            aria-label="Movimientos"
-            className="[&_tbody_td]:py-2.5 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150 motion-reduce:[&_tbody_tr]:transition-none [&_tbody_tr:hover]:bg-default/40"
-          >
-            <Table.Header>
-              {canReorder ? (
-                <Table.Column className="w-7 ps-2 pe-0">
-                  <span className="sr-only">Orden</span>
+      <ScrollTable minWidth={isBusiness ? "64rem" : "46rem"}>
+        <Table>
+          <Table.ScrollContainer>
+            <Table.Content
+              aria-label="Movimientos"
+              className="[&_tbody_td]:py-2.5 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150 motion-reduce:[&_tbody_tr]:transition-none [&_tbody_tr:hover]:bg-default/40"
+            >
+              <Table.Header>
+                {canReorder ? (
+                  <Table.Column className="w-7 ps-2 pe-0">
+                    <span className="sr-only">Orden</span>
+                  </Table.Column>
+                ) : null}
+                <Table.Column className={cn("w-32", NOWRAP)}>
+                  Fecha
                 </Table.Column>
-              ) : null}
-              <Table.Column className={cn("w-32", FROM_SM)}>Fecha</Table.Column>
-              <Table.Column isRowHeader>Descripción</Table.Column>
-              <Table.Column className={FROM_MD}>Categoría</Table.Column>
-              {isBusiness ? (
-                <Table.Column className={FROM_LG}>
-                  Cliente o proveedor
+                <Table.Column isRowHeader>Descripción</Table.Column>
+                <Table.Column className={NOWRAP}>Categoría</Table.Column>
+                {isBusiness ? (
+                  <Table.Column className={NOWRAP}>
+                    Cliente o proveedor
+                  </Table.Column>
+                ) : null}
+                <Table.Column className={NOWRAP}>Cuenta</Table.Column>
+                <Table.Column className={cn("text-end", NOWRAP)}>
+                  Monto
                 </Table.Column>
-              ) : null}
-              <Table.Column className={FROM_LG}>Cuenta</Table.Column>
-              <Table.Column className="text-end">Monto</Table.Column>
-              <Table.Column className="w-20">
-                <span className="sr-only">Acciones</span>
-              </Table.Column>
-            </Table.Header>
-            <Table.Body>
-              {orderedRows.map((row, index) => {
-                if (row.kind === "transfer") {
-                  return (
-                    <TransferRow
-                      key={row.id}
-                      workspaceId={workspaceId}
-                      showCounterparty={isBusiness}
-                      transfer={row}
-                      reorder={reorderFor(index)}
-                      label={`${accountName(row.from_account_id)} → ${accountName(row.to_account_id)}`}
-                      accounts={accounts}
-                      currency={currency}
-                    />
-                  )
-                }
-                if (isAccountMovement(row)) {
-                  return (
-                    <AccountMovementRow
-                      key={row.id}
-                      showCounterparty={isBusiness}
-                      entry={row}
-                      reorder={reorderFor(index)}
-                      account={accountsById.get(row.account_id)}
-                      currency={currency}
-                    />
-                  )
-                }
-                if (row.kind === "adjustment") {
-                  return (
-                    <AdjustmentRow
-                      key={row.id}
-                      workspaceId={workspaceId}
-                      showCounterparty={isBusiness}
-                      adjustment={row}
-                      reorder={reorderFor(index)}
-                      label={`Ajuste de saldo · ${accountName(row.account_id)}`}
-                      currency={currency}
-                    />
-                  )
-                }
-
-                const transaction = row.transaction
-                const reorder = reorderFor(index)
-                const category = categoriesById.get(transaction.category_id)
-                const account = transaction.account_id
-                  ? accountsById.get(transaction.account_id)
-                  : undefined
-
-                return (
-                  <SortableRow
-                    key={transaction.id}
-                    reorder={reorder}
-                  >
-                    <DateCell
-                      date={transaction.occurred_on}
-                      time={row.occurred_time}
-                    />
-                    <DescriptionCell
-                      title={transaction.description}
-                      note={transaction.note}
-                      date={transaction.occurred_on}
-                      time={row.occurred_time}
-                    />
-                    <Table.Cell className={FROM_MD}>
-                      {category && (
-                        <CategoryBadge
-                          name={category.name}
-                          icon={category.icon}
-                          color={category.color}
-                        />
-                      )}
-                    </Table.Cell>
-                    {isBusiness && (
-                      <CounterpartyCell
-                        counterparty={transaction.counterparty}
-                        invoiceRef={transaction.invoice_ref}
+                <Table.Column className={ACTIONS_COLUMN}>
+                  <span className="sr-only">Acciones</span>
+                </Table.Column>
+              </Table.Header>
+              <Table.Body>
+                {orderedRows.map((row, index) => {
+                  if (row.kind === "transfer") {
+                    return (
+                      <TransferRow
+                        key={row.id}
+                        workspaceId={workspaceId}
+                        showCounterparty={isBusiness}
+                        transfer={row}
+                        reorder={reorderFor(index)}
+                        label={`${accountName(row.from_account_id)} → ${accountName(row.to_account_id)}`}
+                        accounts={accounts}
+                        currency={currency}
                       />
-                    )}
-                    <Table.Cell className={FROM_LG}>
-                      {account ? (
-                        <AccountLabel account={account} />
-                      ) : (
-                        <span className="text-muted">Sin cuenta</span>
-                      )}
-                    </Table.Cell>
-                    <Table.Cell
-                      className={cn(
-                        "text-end font-medium tabular-nums",
-                        transaction.type === "income"
-                          ? "text-(--income)"
-                          : "text-(--expense)"
-                      )}
+                    )
+                  }
+                  if (isAccountMovement(row)) {
+                    return (
+                      <AccountMovementRow
+                        key={row.id}
+                        showCounterparty={isBusiness}
+                        entry={row}
+                        reorder={reorderFor(index)}
+                        account={accountsById.get(row.account_id)}
+                        currency={currency}
+                      />
+                    )
+                  }
+                  if (row.kind === "adjustment") {
+                    return (
+                      <AdjustmentRow
+                        key={row.id}
+                        workspaceId={workspaceId}
+                        showCounterparty={isBusiness}
+                        adjustment={row}
+                        reorder={reorderFor(index)}
+                        label={`Ajuste de saldo · ${accountName(row.account_id)}`}
+                        currency={currency}
+                      />
+                    )
+                  }
+
+                  const transaction = row.transaction
+                  const reorder = reorderFor(index)
+                  const category = categoriesById.get(transaction.category_id)
+                  const account = transaction.account_id
+                    ? accountsById.get(transaction.account_id)
+                    : undefined
+
+                  return (
+                    <SortableRow
+                      key={transaction.id}
+                      reorder={reorder}
                     >
-                      {transaction.type === "income" ? "+" : "−"}
-                      {formatCurrency(transaction.amount, currency)}
-                    </Table.Cell>
-                    <Table.Cell>
-                      <div className="flex justify-end gap-1 pointer-coarse:gap-2">
-                        <TransactionDialog
-                          workspaceId={workspaceId}
-                          workspaceType={workspaceType}
-                          categories={categories}
-                          accounts={accounts}
-                          transaction={transaction}
-                          trigger={
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              isIconOnly
-                              className={ROW_ACTION}
-                              aria-label={`Editar ${transaction.description}`}
-                            >
-                              <Pencil />
-                            </Button>
-                          }
+                      <DateCell
+                        date={transaction.occurred_on}
+                        time={row.occurred_time}
+                      />
+                      <DescriptionCell
+                        title={transaction.description}
+                        note={transaction.note}
+                      />
+                      <Table.Cell className={NOWRAP}>
+                        {category && (
+                          <CategoryBadge
+                            name={category.name}
+                            icon={category.icon}
+                            color={category.color}
+                          />
+                        )}
+                      </Table.Cell>
+                      {isBusiness && (
+                        <CounterpartyCell
+                          counterparty={transaction.counterparty}
+                          invoiceRef={transaction.invoice_ref}
                         />
-                        <DeleteTransactionButton
-                          workspaceId={workspaceId}
-                          transaction={transaction}
+                      )}
+                      <Table.Cell className={NOWRAP}>
+                        {account ? (
+                          <AccountLabel account={account} />
+                        ) : (
+                          <span className="text-muted">Sin cuenta</span>
+                        )}
+                      </Table.Cell>
+                      <Table.Cell
+                        className={cn(
+                          "text-end font-medium tabular-nums",
+                          NOWRAP,
+                          transaction.type === "income"
+                            ? "text-(--income)"
+                            : "text-(--expense)"
+                        )}
+                      >
+                        {transaction.type === "income" ? "+" : "−"}
+                        {formatCurrency(transaction.amount, currency)}
+                      </Table.Cell>
+                      <Table.Cell className={STICKY_ACTIONS}>
+                        <EntryActions
+                          label={transaction.description}
+                          remove={{
+                            title: "¿Eliminar este movimiento?",
+                            success: "Movimiento eliminado",
+                            onDelete: () =>
+                              deleteTransaction(workspaceId, transaction.id)
+                          }}
+                          renderEdit={(dialog) => (
+                            <TransactionDialog
+                              workspaceId={workspaceId}
+                              workspaceType={workspaceType}
+                              categories={categories}
+                              accounts={accounts}
+                              transaction={transaction}
+                              open={dialog.open}
+                              onOpenChange={dialog.onOpenChange}
+                            />
+                          )}
                         />
-                      </div>
-                    </Table.Cell>
-                  </SortableRow>
-                )
-              })}
-            </Table.Body>
-          </Table.Content>
-        </Table.ScrollContainer>
-      </Table>
+                      </Table.Cell>
+                    </SortableRow>
+                  )
+                })}
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+        </Table>
+      </ScrollTable>
       <DragOverlay>
         {(source) => (
           <div className="flex w-fit max-w-full items-center gap-2 rounded-2xl bg-surface px-4 py-2.5 text-sm font-medium shadow-lg ring-1 ring-accent">
@@ -447,13 +447,13 @@ function CounterpartyCell({
 }) {
   if (!counterparty && !invoiceRef) {
     return (
-      <Table.Cell className={FROM_LG}>
+      <Table.Cell className={NOWRAP}>
         <span className="text-muted">—</span>
       </Table.Cell>
     )
   }
   return (
-    <Table.Cell className={cn("max-w-48", FROM_LG)}>
+    <Table.Cell className="max-w-48">
       {counterparty && <p className="truncate">{counterparty}</p>}
       {invoiceRef && (
         <p className="truncate text-sm text-muted">{invoiceRef}</p>
@@ -521,7 +521,7 @@ function SortableRow({
 // Fecha y, debajo, la hora si el usuario la puso
 function DateCell({ date, time }: { date: string; time: string | null }) {
   return (
-    <Table.Cell className={cn("text-muted", FROM_SM)}>
+    <Table.Cell className={cn("text-muted", NOWRAP)}>
       {formatDate(date)}
       {time && <span className="block text-xs">{formatTime(time)}</span>}
     </Table.Cell>
@@ -531,28 +531,31 @@ function DateCell({ date, time }: { date: string; time: string | null }) {
 function DescriptionCell({
   title,
   note,
-  date,
-  time,
   icon: Icon
 }: {
   title: string
   note: string | null
-  /** Bajo el título solo en móvil, donde la columna Fecha se oculta */
-  date: string
-  time: string | null
   icon?: React.ComponentType<{ className?: string }>
 }) {
+  // Sin truncar a una línea: el texto envuelve (máximo 3 líneas) y el
+  // completo queda en `title` y en el diálogo de edición
   return (
-    <Table.Cell className="max-w-40 sm:max-w-64">
-      <p className="flex items-center gap-2 truncate font-medium">
-        {Icon && <Icon className="size-4 shrink-0 text-muted" />}
-        <span className="truncate">{title}</span>
+    <Table.Cell className="max-w-72 min-w-56">
+      <p
+        title={title}
+        className="flex items-start gap-2 font-medium"
+      >
+        {Icon && <Icon className="mt-0.5 size-4 shrink-0 text-muted" />}
+        <span className="line-clamp-3 min-w-0 break-words">{title}</span>
       </p>
-      <p className="truncate text-xs text-muted sm:hidden">
-        {formatDate(date)}
-        {time && ` · ${formatTime(time)}`}
-      </p>
-      {note && <p className="truncate text-xs text-muted">{note}</p>}
+      {note && (
+        <p
+          title={note}
+          className="line-clamp-3 text-xs break-words text-muted"
+        >
+          {note}
+        </p>
+      )}
     </Table.Cell>
   )
 }
@@ -584,41 +587,34 @@ function TransferRow({
       <DescriptionCell
         title={label}
         note={transfer.note}
-        date={transfer.occurred_on}
-        time={transfer.occurred_time}
         icon={ArrowLeftRight}
       />
-      <Table.Cell className={cn("text-muted", FROM_MD)}>Traspaso</Table.Cell>
-      {showCounterparty && <Table.Cell className={FROM_LG} />}
-      <Table.Cell className={FROM_LG} />
-      <Table.Cell className="text-end font-medium text-muted tabular-nums">
+      <Table.Cell className={cn("text-muted", NOWRAP)}>Traspaso</Table.Cell>
+      {showCounterparty && <Table.Cell />}
+      <Table.Cell />
+      <Table.Cell
+        className={cn("text-end font-medium text-muted tabular-nums", NOWRAP)}
+      >
         {formatCurrency(transfer.amount, currency)}
       </Table.Cell>
-      <Table.Cell>
-        <div className="flex justify-end gap-1 pointer-coarse:gap-2">
-          <TransferDialog
-            workspaceId={workspaceId}
-            accounts={accounts}
-            transfer={transfer}
-            trigger={
-              <Button
-                variant="ghost"
-                size="sm"
-                isIconOnly
-                className={ROW_ACTION}
-                aria-label={`Editar traspaso ${label}`}
-              >
-                <Pencil />
-              </Button>
-            }
-          />
-          <DeleteEntryButton
-            label={`Traspaso ${label}`}
-            title="¿Eliminar este traspaso?"
-            success="Traspaso eliminado"
-            onDelete={() => deleteTransfer(workspaceId, transfer.id)}
-          />
-        </div>
+      <Table.Cell className={STICKY_ACTIONS}>
+        <EntryActions
+          label={`Traspaso ${label}`}
+          remove={{
+            title: "¿Eliminar este traspaso?",
+            success: "Traspaso eliminado",
+            onDelete: () => deleteTransfer(workspaceId, transfer.id)
+          }}
+          renderEdit={(dialog) => (
+            <TransferDialog
+              workspaceId={workspaceId}
+              accounts={accounts}
+              transfer={transfer}
+              open={dialog.open}
+              onOpenChange={dialog.onOpenChange}
+            />
+          )}
+        />
       </Table.Cell>
     </SortableRow>
   )
@@ -658,21 +654,21 @@ function AccountMovementRow({
       <DescriptionCell
         title={title}
         note={entry.note}
-        date={entry.occurred_on}
-        time={entry.occurred_time}
         icon={icon}
       />
-      <Table.Cell className={cn("text-muted", FROM_MD)}>{type}</Table.Cell>
-      {showCounterparty && <Table.Cell className={FROM_LG} />}
-      <Table.Cell className={FROM_LG}>
+      <Table.Cell className={cn("text-muted", NOWRAP)}>{type}</Table.Cell>
+      {showCounterparty && <Table.Cell />}
+      <Table.Cell className={NOWRAP}>
         {account && <AccountLabel account={account} />}
       </Table.Cell>
-      <Table.Cell className="text-end font-medium text-muted tabular-nums">
+      <Table.Cell
+        className={cn("text-end font-medium text-muted tabular-nums", NOWRAP)}
+      >
         {increases ? "+" : "−"}
         {formatCurrency(Math.abs(entry.amount), currency)}
       </Table.Cell>
       {/* Se edita desde la deuda o la meta */}
-      <Table.Cell />
+      <Table.Cell className={STICKY_ACTIONS} />
     </SortableRow>
   )
 }
@@ -702,60 +698,102 @@ function AdjustmentRow({
       <DescriptionCell
         title={label}
         note={adjustment.note}
-        date={adjustment.occurred_on}
-        time={adjustment.occurred_time}
         icon={RefreshCw}
       />
-      <Table.Cell className={cn("text-muted", FROM_MD)}>Ajuste</Table.Cell>
-      {showCounterparty && <Table.Cell className={FROM_LG} />}
-      <Table.Cell className={FROM_LG} />
-      <Table.Cell className="text-end font-medium text-muted tabular-nums">
+      <Table.Cell className={cn("text-muted", NOWRAP)}>Ajuste</Table.Cell>
+      {showCounterparty && <Table.Cell />}
+      <Table.Cell />
+      <Table.Cell
+        className={cn("text-end font-medium text-muted tabular-nums", NOWRAP)}
+      >
         {adjustment.amount > 0 ? "+" : "−"}
         {formatCurrency(Math.abs(adjustment.amount), currency)}
       </Table.Cell>
-      <Table.Cell>
-        <div className="flex justify-end gap-1 pointer-coarse:gap-2">
-          <DeleteEntryButton
-            label={label}
-            title="¿Eliminar este ajuste?"
-            success="Ajuste eliminado"
-            onDelete={() => deleteAdjustment(workspaceId, adjustment.id)}
-          />
-        </div>
+      <Table.Cell className={STICKY_ACTIONS}>
+        <EntryActions
+          label={label}
+          remove={{
+            title: "¿Eliminar este ajuste?",
+            success: "Ajuste eliminado",
+            onDelete: () => deleteAdjustment(workspaceId, adjustment.id)
+          }}
+        />
       </Table.Cell>
     </SortableRow>
   )
 }
 
-function DeleteTransactionButton({
-  workspaceId,
-  transaction
-}: {
-  workspaceId: string
-  transaction: EditableTransaction
-}) {
-  return (
-    <DeleteEntryButton
-      label={transaction.description}
-      title="¿Eliminar este movimiento?"
-      success="Movimiento eliminado"
-      onDelete={() => deleteTransaction(workspaceId, transaction.id)}
-    />
-  )
-}
-
-function DeleteEntryButton({
-  label,
-  title,
-  success,
-  onDelete
-}: {
-  label: string
+interface RemoveConfig {
   title: string
   success: string
   onDelete: () => Promise<{ error?: string }>
+}
+
+// Acciones de una fila: Editar (si hay diálogo) y Eliminar. Los diálogos se
+// controlan desde aquí porque el menú de escritorio no puede alojar triggers
+function EntryActions({
+  label,
+  remove,
+  renderEdit
+}: {
+  label: string
+  remove: RemoveConfig
+  renderEdit?: (dialog: {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+  }) => React.ReactNode
 }) {
-  const [pending, startTransition] = useTransition()
+  const [editing, setEditing] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  return (
+    <>
+      <RowActions
+        label={label}
+        actions={[
+          ...(renderEdit
+            ? [
+                {
+                  id: "edit",
+                  label: "Editar",
+                  icon: <Pencil className="size-4" />,
+                  onAction: () => setEditing(true)
+                }
+              ]
+            : []),
+          {
+            id: "delete",
+            label: "Eliminar",
+            icon: <Trash2 className="size-4" />,
+            destructive: true,
+            onAction: () => setDeleting(true)
+          }
+        ]}
+      />
+      {renderEdit?.({ open: editing, onOpenChange: setEditing })}
+      <DeleteEntryDialog
+        label={label}
+        {...remove}
+        open={deleting}
+        onOpenChange={setDeleting}
+      />
+    </>
+  )
+}
+
+function DeleteEntryDialog({
+  label,
+  title,
+  success,
+  onDelete,
+  open,
+  onOpenChange
+}: RemoveConfig & {
+  label: string
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const [, startTransition] = useTransition()
 
   function handleDelete() {
     startTransition(async () => {
@@ -769,48 +807,16 @@ function DeleteEntryButton({
   }
 
   return (
-    <AlertDialog>
-      <Button
-        variant="ghost"
-        size="sm"
-        isIconOnly
-        className={ROW_ACTION}
-        aria-label={`Eliminar ${label}`}
-        isDisabled={pending}
-      >
-        <Trash2 />
-      </Button>
-      <AlertDialog.Backdrop isKeyboardDismissDisabled={false}>
-        <AlertDialog.Container>
-          <AlertDialog.Dialog className="sm:max-w-md">
-            <AlertDialog.Header>
-              <AlertDialog.Icon status="danger" />
-              <AlertDialog.Heading>{title}</AlertDialog.Heading>
-            </AlertDialog.Header>
-            <AlertDialog.Body>
-              <p>
-                &ldquo;{label}&rdquo; se eliminará de forma permanente. Esta
-                acción no se puede deshacer.
-              </p>
-            </AlertDialog.Body>
-            <AlertDialog.Footer>
-              <Button
-                slot="close"
-                variant="tertiary"
-              >
-                Cancelar
-              </Button>
-              <Button
-                slot="close"
-                variant="danger"
-                onPress={handleDelete}
-              >
-                Eliminar
-              </Button>
-            </AlertDialog.Footer>
-          </AlertDialog.Dialog>
-        </AlertDialog.Container>
-      </AlertDialog.Backdrop>
-    </AlertDialog>
+    <DeleteDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={title}
+      onConfirm={handleDelete}
+    >
+      <p>
+        &ldquo;{label}&rdquo; se eliminará de forma permanente. Esta acción no
+        se puede deshacer.
+      </p>
+    </DeleteDialog>
   )
 }

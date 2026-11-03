@@ -5,6 +5,7 @@ import type { Route } from "next"
 import { useRouter } from "next/navigation"
 import { Button, Drawer, ListBox, SearchField, Select, cn } from "@heroui/react"
 import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from "lucide-react"
+import { CONTROL_BUTTON, CONTROL_SURFACE } from "@/components/dashboard/surface"
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import { NO_ACCOUNT } from "@/features/accounts/constants"
 import type { Category } from "@/features/categories/queries"
@@ -45,6 +46,8 @@ interface TransactionsFiltersProps {
   accounts: AccountOption[]
   /** Acceso a Categorías que se muestra dentro de la hoja del teléfono */
   categoriesAction?: React.ReactNode
+  /** Controles al final de la fila principal (Verificar), con su misma altura */
+  trailing?: React.ReactNode
 }
 
 export function TransactionsFilters({
@@ -52,7 +55,8 @@ export function TransactionsFilters({
   filters,
   categories,
   accounts,
-  categoriesAction
+  categoriesAction,
+  trailing
 }: TransactionsFiltersProps) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -180,7 +184,7 @@ export function TransactionsFilters({
     <div
       aria-busy={pending}
       className={cn(
-        "flex min-w-0 flex-1 flex-wrap items-center gap-2 transition-opacity duration-150 motion-reduce:transition-none",
+        "flex min-w-0 flex-1 flex-col gap-2 transition-opacity duration-150 motion-reduce:transition-none",
         pending && "opacity-60"
       )}
     >
@@ -192,30 +196,37 @@ export function TransactionsFilters({
         {pending ? "Actualizando movimientos…" : ""}
       </p>
 
-      <SearchField
-        aria-label="Buscar en descripción o nota"
-        value={q}
-        onChange={setQ}
-        className="w-full sm:w-64"
-      >
-        <SearchField.Group>
-          <SearchField.SearchIcon />
-          <SearchField.Input placeholder="Buscar" />
-          <SearchField.ClearButton />
-        </SearchField.Group>
-      </SearchField>
+      {/* Fila principal, todo a 44 px y centrado: buscador (ocupa el ancho
+          libre) · mes · Filtros (< 768 px) · Verificar. En el teléfono el
+          buscador ocupa una fila y los controles van debajo */}
+      <div className="flex flex-wrap items-center gap-2">
+        <SearchField
+          aria-label="Buscar en descripción o nota"
+          value={q}
+          onChange={setQ}
+          className="w-full md:min-w-72 md:flex-1 md:basis-72"
+        >
+          {/* Mismo gris que las tarjetas y tablas (`bg-surface`). `bg-field` lo fija el CSS de HeroUI directo, no por la variable */}
+          <SearchField.Group className="h-11 bg-surface [--search-field-group-bg-focus:var(--surface)] [--search-field-group-bg-hover:var(--surface-secondary)] [--search-field-group-bg:var(--surface)] focus-within:bg-surface hover:bg-surface-secondary">
+            <SearchField.SearchIcon />
+            <SearchField.Input placeholder="Buscar" />
+            <SearchField.ClearButton />
+          </SearchField.Group>
+        </SearchField>
 
-      {/* < 768 px: fila `‹ Mes ›` + Filtros. Desde 768 px la fila se
-          aplana (`contents`) y todo queda en la misma barra */}
-      <div className="flex w-full items-center gap-2 md:contents">
         {/* El mes es texto (no botón): las flechas lo cambian y el toggle
             alterna entre un mes y todos */}
-        <div className="flex min-w-0 flex-1 items-center gap-0.5 rounded-3xl bg-default/60 p-0.5 md:flex-none">
+        <div
+          className={cn(
+            "flex min-h-11 min-w-0 flex-1 items-center gap-0.5 rounded-3xl p-0.5 md:flex-none",
+            CONTROL_SURFACE
+          )}
+        >
           <Button
             variant="ghost"
             size="sm"
             isIconOnly
-            className="max-md:size-11"
+            className="size-11 md:size-10"
             aria-label="Mes anterior"
             isDisabled={isAllMonths}
             onPress={() => navigate({ month: shiftMonth(month, -1) })}
@@ -232,7 +243,7 @@ export function TransactionsFilters({
             variant="ghost"
             size="sm"
             isIconOnly
-            className="max-md:size-11"
+            className="size-11 md:size-10"
             aria-label="Mes siguiente"
             isDisabled={isAllMonths}
             onPress={() => navigate({ month: shiftMonth(month, 1) })}
@@ -242,8 +253,8 @@ export function TransactionsFilters({
         </div>
 
         <Button
-          variant="secondary"
-          className="shrink-0 max-md:min-h-11 md:hidden"
+          variant="ghost"
+          className={cn("min-h-11 shrink-0 md:hidden", CONTROL_BUTTON)}
           onPress={() => setSheetOpen(true)}
         >
           <SlidersHorizontal />
@@ -257,10 +268,11 @@ export function TransactionsFilters({
             </span>
           )}
         </Button>
+        {trailing}
       </div>
 
       {/* >= 768 px: el resto de filtros en la barra */}
-      <div className="hidden md:contents">
+      <div className="hidden flex-wrap items-center gap-2 md:flex">
         <Button
           variant="ghost"
           size="sm"
@@ -391,6 +403,7 @@ function FilterSelect({
           "min-h-8 gap-1.5 rounded-3xl py-1 text-sm",
           fullWidth &&
             "relative min-h-11 w-full justify-center px-10 text-base",
+          !fullWidth && !isActive && CONTROL_BUTTON,
           isActive && "bg-accent-soft text-accent-soft-foreground"
         )}
       >

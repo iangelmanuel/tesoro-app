@@ -238,7 +238,7 @@ export const SITE = {
         "/dashboard/personal",
         "/dashboard/personal/transactions",
         "/dashboard/personal/budgets",
-        "/dashboard/personal/goals"
+        "/dashboard/personal/accounts"
       ],
       business: ["", "/transactions", "/cash-flow", "/reports"]
     }

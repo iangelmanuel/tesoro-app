@@ -36,16 +36,22 @@ interface RecurringExpenseDialogProps {
   categories: Category[]
   /** Si llega, el diálogo edita este gasto fijo */
   expense?: RecurringExpense
-  /** Botón que abre el diálogo */
-  trigger: React.ReactNode
+  /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
+  trigger?: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export function RecurringExpenseDialog({
   categories,
   expense,
-  trigger
+  trigger,
+  open: controlledOpen,
+  onOpenChange
 }: RecurringExpenseDialogProps) {
-  const [open, setOpen] = useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const open = controlledOpen ?? uncontrolledOpen
+  const setOpen = onOpenChange ?? setUncontrolledOpen
   const isEditing = expense !== undefined
 
   return (

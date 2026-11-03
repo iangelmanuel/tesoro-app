@@ -9,6 +9,10 @@ import type { BudgetMonth } from "../month"
 import type { BudgetProgress } from "../queries"
 import { BudgetDialog } from "./budget-dialog"
 
+// categoría | monto | acción. En el teléfono la acción es solo el ícono
+const UNBUDGETED_GRID =
+  "grid-cols-[minmax(0,1fr)_6.5rem_2.75rem] sm:grid-cols-[minmax(0,1fr)_8rem_8.5rem]"
+
 interface UnbudgetedCategoriesProps {
   /** Categorías de gasto con movimientos en el mes y sin presupuesto */
   rows: BudgetProgress[]
@@ -39,20 +43,28 @@ export function UnbudgetedCategories({
       <CardContent>
         <ul className={CARD_LIST}>
           {rows.map((row) => (
+            // Tres columnas fijas: categoría (envuelve), monto a la derecha y
+            // acción de ancho constante, así los montos quedan alineados
             <li
               key={row.categoryId}
-              className={`flex flex-wrap items-center gap-3 ${CARD_ROW}`}
+              className={`grid ${UNBUDGETED_GRID} items-center gap-3 ${CARD_ROW}`}
             >
-              <CategoryBadge
-                name={row.archived ? `${row.name} (archivada)` : row.name}
-                icon={row.icon}
-                color={row.color}
-              />
-              <p className="ml-auto font-medium tabular-nums">
+              <div className="min-w-0">
+                <CategoryBadge
+                  name={row.archived ? `${row.name} (archivada)` : row.name}
+                  icon={row.icon}
+                  color={row.color}
+                  className="max-w-full min-w-0 shrink break-words whitespace-normal"
+                />
+              </div>
+              <p className="text-right font-medium whitespace-nowrap tabular-nums">
                 {formatCurrency(row.spent, currency)}
               </p>
-              {/* Una categoría archivada no se puede presupuestar */}
-              {!row.archived && (
+              {/* Una categoría archivada no se puede presupuestar: la celda
+                  queda vacía para no mover las demás columnas */}
+              {row.archived ? (
+                <span aria-hidden="true" />
+              ) : (
                 <BudgetDialog
                   month={month}
                   categories={categories}
@@ -61,9 +73,12 @@ export function UnbudgetedCategories({
                     <Button
                       size="sm"
                       variant="secondary"
+                      fullWidth
+                      aria-label={`Presupuestar ${row.name}`}
+                      className="min-h-11 md:min-h-8"
                     >
                       <Plus />
-                      Presupuestar
+                      <span className="max-sm:sr-only">Presupuestar</span>
                     </Button>
                   }
                 />

@@ -1,8 +1,10 @@
 "use client"
 
-import { useTransition } from "react"
-import { AlertDialog, Button, Chip, cn, toast } from "@heroui/react"
+import { useState, useTransition } from "react"
+import { Chip, cn, toast } from "@heroui/react"
 import { Pencil, Trash2 } from "lucide-react"
+import { DeleteDialog } from "@/components/dashboard/delete-dialog"
+import { RowActions } from "@/components/dashboard/row-actions"
 import { SURFACE_ROW } from "@/components/dashboard/surface"
 import {
   TONE_BADGE_CLASSES as TONE_BADGE,
@@ -108,45 +110,37 @@ export function BudgetProgressRow({
 
   return (
     <li className={`flex flex-col gap-3 ${SURFACE_ROW}`}>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <CategoryBadge
-          name={budget.archived ? `${budget.name} (archivada)` : budget.name}
-          icon={budget.icon}
-          color={budget.color}
-        />
-        {statusLabel && (
-          <Chip
-            size="sm"
-            className={STATUS_BADGE_CLASSES[status]}
-            color="accent"
-            variant="primary"
-          >
-            {statusLabel}
-          </Chip>
-        )}
-        <p className="ml-auto text-sm text-muted tabular-nums">
+      {/* Misma grilla que "Sin presupuesto": categoría | monto | acciones.
+          En el teléfono el monto baja a una segunda línea */}
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 md:grid-cols-[minmax(0,1fr)_auto_auto]">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
+          <CategoryBadge
+            name={budget.archived ? `${budget.name} (archivada)` : budget.name}
+            icon={budget.icon}
+            color={budget.color}
+          />
+          {statusLabel && (
+            <Chip
+              size="sm"
+              className={STATUS_BADGE_CLASSES[status]}
+              color="accent"
+              variant="primary"
+            >
+              {statusLabel}
+            </Chip>
+          )}
+        </div>
+        <p className="col-span-2 row-start-2 text-sm whitespace-nowrap text-muted tabular-nums md:col-span-1 md:col-start-2 md:row-start-1 md:text-right">
           <span className="font-medium text-foreground">
             {formatCurrency(budget.spent, currency)}
           </span>{" "}
           de {formatCurrency(budget.budgetAmount, currency)}
         </p>
-        <div className="flex gap-1">
-          <BudgetDialog
-            month={month}
-            categories={[]}
+        <div className="col-start-2 row-start-1 md:col-start-3">
+          <BudgetActions
             budget={budget}
-            trigger={
-              <Button
-                variant="ghost"
-                isIconOnly
-                size="sm"
-                aria-label={`Editar presupuesto de ${budget.name}`}
-              >
-                <Pencil />
-              </Button>
-            }
+            month={month}
           />
-          <DeleteBudgetButton budget={budget} />
         </div>
       </div>
       <BudgetProgressBar
@@ -174,12 +168,16 @@ export function BudgetProgressRow({
   )
 }
 
-function DeleteBudgetButton({
-  budget
+function BudgetActions({
+  budget,
+  month
 }: {
   budget: BudgetProgress & { budgetId: string }
+  month: BudgetMonth
 }) {
-  const [pending, startTransition] = useTransition()
+  const [editing, setEditing] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [, startTransition] = useTransition()
 
   function handleDelete() {
     startTransition(async () => {
@@ -193,49 +191,43 @@ function DeleteBudgetButton({
   }
 
   return (
-    <AlertDialog>
-      <Button
-        variant="ghost"
-        isIconOnly
-        size="sm"
-        aria-label={`Eliminar presupuesto de ${budget.name}`}
-        isDisabled={pending}
+    <>
+      <RowActions
+        label={`presupuesto de ${budget.name}`}
+        actions={[
+          {
+            id: "edit",
+            label: "Editar",
+            icon: <Pencil className="size-4" />,
+            onAction: () => setEditing(true)
+          },
+          {
+            id: "delete",
+            label: "Eliminar",
+            icon: <Trash2 className="size-4" />,
+            destructive: true,
+            onAction: () => setDeleting(true)
+          }
+        ]}
+      />
+      <BudgetDialog
+        month={month}
+        categories={[]}
+        budget={budget}
+        open={editing}
+        onOpenChange={setEditing}
+      />
+      <DeleteDialog
+        open={deleting}
+        onOpenChange={setDeleting}
+        title="¿Eliminar este presupuesto?"
+        onConfirm={handleDelete}
       >
-        <Trash2 />
-      </Button>
-      <AlertDialog.Backdrop isKeyboardDismissDisabled={false}>
-        <AlertDialog.Container>
-          <AlertDialog.Dialog className="sm:max-w-md">
-            <AlertDialog.Header>
-              <AlertDialog.Icon status="danger" />
-              <AlertDialog.Heading>
-                ¿Eliminar este presupuesto?
-              </AlertDialog.Heading>
-              <AlertDialog.Body>
-                <p className="text-sm text-muted">
-                  Se eliminará el presupuesto de &ldquo;{budget.name}&rdquo; de
-                  este mes. Tus movimientos no cambian.
-                </p>
-              </AlertDialog.Body>
-            </AlertDialog.Header>
-            <AlertDialog.Footer>
-              <Button
-                slot="close"
-                variant="tertiary"
-              >
-                Cancelar
-              </Button>
-              <Button
-                slot="close"
-                variant="danger"
-                onPress={handleDelete}
-              >
-                Eliminar
-              </Button>
-            </AlertDialog.Footer>
-          </AlertDialog.Dialog>
-        </AlertDialog.Container>
-      </AlertDialog.Backdrop>
-    </AlertDialog>
+        <p className="text-sm text-muted">
+          Se eliminará el presupuesto de &ldquo;{budget.name}&rdquo; de este
+          mes. Tus movimientos no cambian.
+        </p>
+      </DeleteDialog>
+    </>
   )
 }

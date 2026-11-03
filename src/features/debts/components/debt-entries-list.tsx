@@ -1,9 +1,11 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { AlertDialog, Button, Tooltip, cn, toast } from "@heroui/react"
+import { Tooltip, cn, toast } from "@heroui/react"
 import { Link2, Pencil, Receipt, Trash2 } from "lucide-react"
+import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { CardEmpty } from "@/components/dashboard/empty-state"
+import { RowActions } from "@/components/dashboard/row-actions"
 import { formatCurrency, formatDate, formatTime } from "@/libs/format"
 import { deleteEntry } from "../actions"
 import type { Debt, DebtEntry } from "../queries"
@@ -60,6 +62,8 @@ function EntryRow({
   readOnly?: boolean
 }) {
   const [editing, setEditing] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [, startTransition] = useTransition()
   const isPayment = entry.kind === "payment"
   const isAdvance = entry.kind === "advance"
   const isFee = entry.kind === "fee"
@@ -84,6 +88,18 @@ function EntryRow({
       : null
   // Un pago baja el saldo; un ajuste lo sube o lo baja según su signo
   const lowersBalance = isPayment || entry.amount < 0
+  const feminine = isFee
+
+  function handleDelete() {
+    startTransition(async () => {
+      const result = await deleteEntry(entry.id)
+      if (result.error) {
+        toast.danger(result.error)
+      } else {
+        toast.success(`${label} ${feminine ? "eliminada" : "eliminado"}`)
+      }
+    })
+  }
 
   return (
     <li className="flex items-center gap-3 p-3">
@@ -120,21 +136,32 @@ function EntryRow({
           {accountText && ` · ${accountText}`}
         </span>
         {entry.note && (
-          <span className="truncate text-sm text-muted">{entry.note}</span>
+          <span className="line-clamp-3 text-sm break-words text-muted">
+            {entry.note}
+          </span>
         )}
       </div>
 
       {!readOnly && (
-        <div className="flex gap-1">
-          <Button
-            variant="ghost"
-            isIconOnly
-            size="sm"
-            aria-label={`Editar ${label.toLowerCase()}`}
-            onPress={() => setEditing(true)}
-          >
-            <Pencil />
-          </Button>
+        <>
+          <RowActions
+            label={label.toLowerCase()}
+            actions={[
+              {
+                id: "edit",
+                label: "Editar",
+                icon: <Pencil className="size-4" />,
+                onAction: () => setEditing(true)
+              },
+              {
+                id: "delete",
+                label: "Eliminar",
+                icon: <Trash2 className="size-4" />,
+                destructive: true,
+                onAction: () => setDeleting(true)
+              }
+            ]}
+          />
           {isPayment || isAdvance || isFee ? (
             <PaymentDialog
               debt={debt}
@@ -151,12 +178,21 @@ function EntryRow({
               onOpenChange={setEditing}
             />
           )}
-          <DeleteEntryButton
-            entry={entry}
-            label={label}
-            feminine={isFee}
-          />
-        </div>
+          <DeleteDialog
+            open={deleting}
+            onOpenChange={setDeleting}
+            title={`¿Eliminar ${feminine ? "esta" : "este"} ${label.toLowerCase()}?`}
+            onConfirm={handleDelete}
+          >
+            <p className="text-sm text-muted">
+              El saldo se recalcula sin {feminine ? "ella" : "él"}.
+              {feminine && " No se vuelve a generar."}
+              {entry.transaction_id &&
+                " También se elimina su movimiento en Movimientos."}{" "}
+              Esta acción no se puede deshacer.
+            </p>
+          </DeleteDialog>
+        </>
       )}
     </li>
   )
@@ -164,77 +200,4 @@ function EntryRow({
 
 function accountPhrase(preposition: "A" | "Desde", name: string | null) {
   return name ? `${preposition} ${name}` : "Fuera de cuentas"
-}
-
-function DeleteEntryButton({
-  entry,
-  label,
-  feminine
-}: {
-  entry: DebtEntry
-  label: string
-  feminine?: boolean
-}) {
-  const [pending, startTransition] = useTransition()
-
-  function handleDelete() {
-    startTransition(async () => {
-      const result = await deleteEntry(entry.id)
-      if (result.error) {
-        toast.danger(result.error)
-      } else {
-        toast.success(`${label} ${feminine ? "eliminada" : "eliminado"}`)
-      }
-    })
-  }
-
-  return (
-    <AlertDialog>
-      <Button
-        variant="ghost"
-        isIconOnly
-        size="sm"
-        aria-label={`Eliminar ${label.toLowerCase()}`}
-        isDisabled={pending}
-      >
-        <Trash2 />
-      </Button>
-      <AlertDialog.Backdrop isKeyboardDismissDisabled={false}>
-        <AlertDialog.Container>
-          <AlertDialog.Dialog className="sm:max-w-md">
-            <AlertDialog.Header>
-              <AlertDialog.Icon status="danger" />
-              <AlertDialog.Heading>
-                ¿Eliminar {feminine ? "esta" : "este"} {label.toLowerCase()}?
-              </AlertDialog.Heading>
-              <AlertDialog.Body>
-                <p className="text-sm text-muted">
-                  El saldo se recalcula sin {feminine ? "ella" : "él"}.
-                  {feminine && " No se vuelve a generar."}
-                  {entry.transaction_id &&
-                    " También se elimina su movimiento en Movimientos."}{" "}
-                  Esta acción no se puede deshacer.
-                </p>
-              </AlertDialog.Body>
-            </AlertDialog.Header>
-            <AlertDialog.Footer>
-              <Button
-                slot="close"
-                variant="tertiary"
-              >
-                Cancelar
-              </Button>
-              <Button
-                slot="close"
-                variant="danger"
-                onPress={handleDelete}
-              >
-                Eliminar
-              </Button>
-            </AlertDialog.Footer>
-          </AlertDialog.Dialog>
-        </AlertDialog.Container>
-      </AlertDialog.Backdrop>
-    </AlertDialog>
-  )
 }

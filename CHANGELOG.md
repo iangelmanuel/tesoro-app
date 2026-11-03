@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Readable tables on phones, per-row action menus and a new bottom bar (SPEC 20). `ScrollTable` shows each table in full below 768 px and scrolls it horizontally, with an edge fade and a sticky, opaque actions column (`STICKY_ACTIONS`). Descriptions wrap up to 3 lines instead of being cut off.
+- `RowActions`: from 768 px a single three-dots `Dropdown` per row (destructive actions last, `danger` tone); on phones the same actions are inline 44 px buttons. Used in Movimientos, Gastos fijos, Presupuestos, debt entries and goal contributions. `DeleteDialog` is the shared controlled delete confirmation; `RecurringExpenseDialog` and `BudgetDialog` can now be controlled with `open` / `onOpenChange`.
+
 - Optional time and manual order within a day (SPEC 19). Movements, transfers, account adjustments, debt entries and goal contributions get an optional `occurred_time` (local `America/Bogota` time, informational only) and a `day_position` integer. The list order is `occurred_on desc, day_position asc, created_at desc, id`; new rows enter with `day_position = 0` and stay on top of their day.
 - Migrations `add_time_and_day_order` and `sync_debt_entry_time`: the new columns, the `reset_day_position` trigger (changing `occurred_on` resets the position to 0), `ledger_entries` exposing `occurred_time` and `day_position`, the `move_ledger_entry` RPC (`security invoker`, `authenticated` only; renumbers a whole day in one statement and rejects rows from another day), a trailing `p_occurred_time` parameter on `record_transaction`, `record_debt_payment`, `record_card_advance`, `record_goal_contribution` and `create_payment_transfer`, and `sync_debt_entry_transaction` copying the time to the linked movement. `check_debt_entry` and `check_goal_contribution` let through updates that only change time or day position, so rows of closed debts and inactive goals can be reordered.
 - `@dnd-kit/react` 0.5.3 (exact version) as a direct dependency for the Movimientos table drag and drop.
@@ -175,6 +178,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Movimientos bar (SPEC 20): search (fills the free width, min `18rem`), month, Filtros (phones) and Verificar share one 44 px row; on phones the search takes its own row. Verificar is icon-only below 640 px and reaches the bar through the new `trailing` prop of `TransactionsFilters`.
+- "Sin presupuesto" and the budget progress rows use a fixed grid (category, amount, action) so amounts line up; "Presupuestar" is a compact fixed-width button.
+- Toolbar controls (SPEC 20): the search field, month pill, Filtros, Verificar, Categorías, inactive filter pills, the reports period picker and the budget month navigation share the card and table gray (`bg-surface`) through `CONTROL_SURFACE` and `CONTROL_BUTTON` in `surface.ts`, with the same 44 px height in the Movimientos row. Buttons are `ghost` instead of `secondary` or bordered `outline` (budget month navigation and "Copiar del mes anterior").
+- Delete icons are red in row action menus and inline buttons, and in "Quitar foto".
+- Mobile bottom bar in Personal shows Cuentas instead of Metas (`SITE.navigation.mobile.personal`). Metas stays in the aside. Business is unchanged.
+- Gastos fijos, Últimos movimientos, Resumen por categoría and Flujo de caja are single scrollable tables on phones instead of cards or hidden columns.
+
 - Mobile UI polish (SPEC 18): "Últimos movimientos", cash flow by month and fixed expenses render as cards under 768 px (`DataRows` / `DataRow`, `src/components/dashboard/data-rows.tsx`); the upcoming payments list stacks name + amount, details and a full-width pay button. Tablet and desktop keep the tables.
 - Movimientos filters on mobile: search field, month stepper and a **Filtros** button with an active-filter count that opens a bottom sheet (type, category, account, all months, categories, clear). Desktop keeps the filter bar. The transactions skeletons follow the new layout.
 - Dates and percentages use a non-breaking space (`formatDate`, `formatShortDate`, `formatPercent`) so they never wrap. Goal card: percentage and the remaining / target date / suggested contribution rows stay on one line.
@@ -244,6 +254,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- `DataRows` / `DataRow` (SPEC 18 card pattern for tables): no longer used after SPEC 20.
 - The sticky Personal / Business tab under the mobile header (`MobileWorkspaceTabs`, SPEC 18). The workspace selector lives only in the aside, which opens as a drawer on mobile.
 - Email features, until a custom email service is added: sign-up email confirmation (`/check-email`, resend), password recovery (`/forgot-password`, `/reset-password`), email change in the account page (now read-only), the `/auth/confirm` route and the `supabase/templates/` email templates. Sign-up now always opens the session directly, so the Supabase project must have "Confirm email" off.
 - `SummaryCards` and the secondary summary metrics (daily average, spending projection, top category, transaction count); the category donut from the Personal summary and from Reports.

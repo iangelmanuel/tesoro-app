@@ -24,6 +24,7 @@ import { GoalIcon } from "@/features/goals/components/goal-icon"
 import { TRANSACTIONS_PATH } from "@/features/transactions/filters"
 import { formatCurrency } from "@/libs/format"
 import { ACCOUNT_KIND_META } from "../constants"
+import { isNegativeAccount } from "../negative-balance"
 import type { AccountWithBalance } from "../types"
 import { AccountDialog } from "./account-dialog"
 import { AdjustBalanceDialog } from "./adjust-balance-dialog"
@@ -57,9 +58,7 @@ export function AccountCard({
   const { pending, run } = useAccountAction(account)
   const hasScheduled = account.scheduled_balance !== account.balance
   // Billeteras y bancos no deberían quedar en rojo; efectivo y otras sí pueden
-  const warnNegative =
-    (account.kind === "wallet" || account.kind === "bank") &&
-    account.balance < 0
+  const warnNegative = isNegativeAccount(account)
 
   return (
     // Misma superficie que el resto de tarjetas: sin borde, radio grande

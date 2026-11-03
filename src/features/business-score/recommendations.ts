@@ -1,6 +1,7 @@
 // Motor de recomendaciones de Empresa (SPEC 11). Se evalúa sobre hoy y el mes
 // actual, aunque el score esté "Sin datos suficientes".
 import type { Route } from "next"
+import { isNegativeAccount } from "@/features/accounts/negative-balance"
 import { getAccountBalances } from "@/features/accounts/queries"
 import type { AccountWithBalance } from "@/features/accounts/types"
 import { monthName } from "@/features/recurring-expenses/occurrences"
@@ -141,14 +142,14 @@ function lossMonthRule(
   ]
 }
 
-// 2. Cuenta activa con saldo a hoy < 0
+// 2. Billetera o banco activo con saldo a hoy < 0 (isNegativeAccount)
 function negativeAccountRule(
   inputs: BusinessRecommendationInputs
 ): BusinessRecommendation[] {
   const { workspace } = inputs
 
   return inputs.accounts.flatMap((account) => {
-    if (account.archived_at !== null || account.balance >= 0) return []
+    if (!isNegativeAccount(account)) return []
 
     return {
       rule: "negative_account",

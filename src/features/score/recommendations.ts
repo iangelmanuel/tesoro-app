@@ -3,6 +3,10 @@
 // datos suficientes". Cada una muestra el dato que la dispara y enlaza a
 // donde se actúa.
 import type { Route } from "next"
+import { ACCOUNTS_PATH } from "@/features/accounts/constants"
+import { isNegativeAccount } from "@/features/accounts/negative-balance"
+import { getAccountBalances } from "@/features/accounts/queries"
+import type { AccountWithBalance } from "@/features/accounts/types"
 import { budgetPercent } from "@/features/budgets/progress"
 import {
   type BudgetProgress,
@@ -65,6 +69,8 @@ export interface RecommendationInputs {
   baseCategories: CategoryTotal[]
   budgets: BudgetProgress[]
   upcomingPayments: UpcomingPayment[]
+  /** Cuentas del espacio con su saldo a hoy, para `negative_account` */
+  accounts: AccountWithBalance[]
 }
 
 // Pequeña tolerancia para que 1.300.000 / 1.000.000 cuente como 130 %
@@ -398,6 +404,24 @@ function irregularRecordsRule(
   ]
 }
 
+// 11. Billetera o banco activo con saldo a hoy < 0 (isNegativeAccount, SPEC 21)
+function negativeAccountRule(accounts: AccountWithBalance[]): Recommendation[] {
+  return accounts.flatMap((account) => {
+    if (!isNegativeAccount(account)) return []
+
+    return {
+      rule: "negative_account",
+      entityKey: account.id,
+      severity: "high",
+      title: `La cuenta ${account.name} está en negativo`,
+      evidence: `${account.name} tiene saldo de −${formatCurrency(Math.abs(account.balance))}`,
+      amount: Math.abs(account.balance),
+      href: ACCOUNTS_PATH as Route,
+      linkLabel: "Ir a Cuentas"
+    }
+  })
+}
+
 /** Severidad (alta, media, baja) y luego monto descendente */
 export function compareRecommendations<R extends string>(
   a: Recommendation<R>,
@@ -407,7 +431,7 @@ export function compareRecommendations<R extends string>(
   return bySeverity !== 0 ? bySeverity : b.amount - a.amount
 }
 
-/** Las 10 reglas sobre el mes actual, ordenadas */
+/** Las 11 reglas sobre el mes actual, ordenadas */
 export function buildRecommendations(inputs: RecommendationInputs) {
   const { score } = inputs
   const month = score.today.slice(0, 7)
@@ -422,7 +446,8 @@ export function buildRecommendations(inputs: RecommendationInputs) {
     ...overduePaymentRule(inputs),
     ...lowCushionRule(score, month),
     ...unbudgetedSpendingRule(inputs.budgets),
-    ...irregularRecordsRule(score, month)
+    ...irregularRecordsRule(score, month),
+    ...negativeAccountRule(inputs.accounts)
   ].sort(compareRecommendations)
 }
 
@@ -452,19 +477,26 @@ export async function getRecommendations(
   const month = score.today.slice(0, 7)
   const { last, base } = categoryGrowthRanges(month)
 
-  const [lastClosedCategories, baseCategories, budgets, upcomingPayments] =
-    await Promise.all([
-      getCategoryTotals(workspaceId, last.from, last.to, "expense"),
-      getCategoryTotals(workspaceId, base.from, base.to, "expense"),
-      getBudgetProgress(workspaceId, month),
-      getUpcomingPayments(workspaceId)
-    ])
+  const [
+    lastClosedCategories,
+    baseCategories,
+    budgets,
+    upcomingPayments,
+    accounts
+  ] = await Promise.all([
+    getCategoryTotals(workspaceId, last.from, last.to, "expense"),
+    getCategoryTotals(workspaceId, base.from, base.to, "expense"),
+    getBudgetProgress(workspaceId, month),
+    getUpcomingPayments(workspaceId),
+    getAccountBalances(workspaceId)
+  ])
 
   return buildRecommendations({
     score,
     lastClosedCategories,
     baseCategories,
     budgets,
-    upcomingPayments
+    upcomingPayments,
+    accounts
   })
 }

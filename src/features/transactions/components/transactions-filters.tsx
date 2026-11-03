@@ -5,6 +5,7 @@ import type { Route } from "next"
 import { useRouter } from "next/navigation"
 import { Button, Drawer, ListBox, SearchField, Select, cn } from "@heroui/react"
 import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from "lucide-react"
+import { CONTROL_BUTTON, CONTROL_SURFACE } from "@/components/dashboard/surface"
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import { NO_ACCOUNT } from "@/features/accounts/constants"
 import type { Category } from "@/features/categories/queries"
@@ -205,7 +206,8 @@ export function TransactionsFilters({
           onChange={setQ}
           className="w-full md:min-w-72 md:flex-1 md:basis-72"
         >
-          <SearchField.Group className="h-11">
+          {/* Mismo gris que las tarjetas y tablas (`bg-surface`). `bg-field` lo fija el CSS de HeroUI directo, no por la variable */}
+          <SearchField.Group className="h-11 bg-surface [--search-field-group-bg-focus:var(--surface)] [--search-field-group-bg-hover:var(--surface-secondary)] [--search-field-group-bg:var(--surface)] focus-within:bg-surface hover:bg-surface-secondary">
             <SearchField.SearchIcon />
             <SearchField.Input placeholder="Buscar" />
             <SearchField.ClearButton />
@@ -214,7 +216,12 @@ export function TransactionsFilters({
 
         {/* El mes es texto (no botón): las flechas lo cambian y el toggle
             alterna entre un mes y todos */}
-        <div className="flex min-h-11 min-w-0 flex-1 items-center gap-0.5 rounded-3xl bg-default/60 p-0.5 md:flex-none">
+        <div
+          className={cn(
+            "flex min-h-11 min-w-0 flex-1 items-center gap-0.5 rounded-3xl p-0.5 md:flex-none",
+            CONTROL_SURFACE
+          )}
+        >
           <Button
             variant="ghost"
             size="sm"
@@ -246,8 +253,8 @@ export function TransactionsFilters({
         </div>
 
         <Button
-          variant="secondary"
-          className="min-h-11 shrink-0 md:hidden"
+          variant="ghost"
+          className={cn("min-h-11 shrink-0 md:hidden", CONTROL_BUTTON)}
           onPress={() => setSheetOpen(true)}
         >
           <SlidersHorizontal />
@@ -396,6 +403,7 @@ function FilterSelect({
           "min-h-8 gap-1.5 rounded-3xl py-1 text-sm",
           fullWidth &&
             "relative min-h-11 w-full justify-center px-10 text-base",
+          !fullWidth && !isActive && CONTROL_BUTTON,
           isActive && "bg-accent-soft text-accent-soft-foreground"
         )}
       >

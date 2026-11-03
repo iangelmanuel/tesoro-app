@@ -5,6 +5,7 @@ import type { Route } from "next"
 import { useRouter } from "next/navigation"
 import { Button, ListBox, Select, cn } from "@heroui/react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { CONTROL_BUTTON, CONTROL_SURFACE } from "@/components/dashboard/surface"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import {
   type ReportParams,
@@ -73,7 +74,12 @@ export function ReportPeriodPicker({ params, path }: ReportPeriodPickerProps) {
         onChange={(value) => value && changePeriod(value as ReportPeriod)}
         className="w-auto"
       >
-        <Select.Trigger className="min-h-8 gap-1.5 rounded-3xl py-1 text-sm">
+        <Select.Trigger
+          className={cn(
+            "min-h-8 gap-1.5 rounded-3xl py-1 text-sm",
+            CONTROL_BUTTON
+          )}
+        >
           <span className="text-muted">Periodo:</span>
           <Select.Value className="font-medium" />
           <Select.Indicator />
@@ -138,7 +144,12 @@ function StepControl({
     // Mismo control que el mes de Movimientos: flechas y el periodo como
     // texto en una pill
     <div className="flex items-center gap-2">
-      <div className="flex items-center gap-0.5 rounded-3xl bg-default/60 p-0.5">
+      <div
+        className={cn(
+          "flex items-center gap-0.5 rounded-3xl p-0.5",
+          CONTROL_SURFACE
+        )}
+      >
         <Button
           variant="ghost"
           size="sm"

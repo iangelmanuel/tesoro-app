@@ -21,3 +21,12 @@ export const SURFACE_ITEM =
 /** Aviso corto sobre el fondo ("Estás al día con tus pagos") */
 export const SURFACE_NOTE =
   "rounded-3xl bg-surface p-4 text-center text-sm text-muted"
+
+/** Pill de control sobre el fondo (selector de mes, grupo de flechas): el
+ *  mismo gris que las tarjetas y las tablas */
+export const CONTROL_SURFACE = "bg-surface"
+
+/** Botón de barra de herramientas (Verificar, Categorías, Filtros, mes
+ *  anterior/siguiente): `variant="ghost"` más este relleno, para que
+ *  concuerde con las tarjetas vecinas y con la pill del mes */
+export const CONTROL_BUTTON = "bg-surface hover:bg-surface-secondary"

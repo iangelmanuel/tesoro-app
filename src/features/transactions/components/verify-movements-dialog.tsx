@@ -1,8 +1,9 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { Button, Label, ListBox, Modal, Select } from "@heroui/react"
+import { Button, Label, ListBox, Modal, Select, cn } from "@heroui/react"
 import { ListChecks } from "lucide-react"
+import { CONTROL_BUTTON } from "@/components/dashboard/surface"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { loadVerifyEntries } from "../actions"
 import type { VerifyEntry } from "../queries"
@@ -91,8 +92,11 @@ export function VerifyMovementsDialog({
       onOpenChange={handleOpenChange}
     >
       <Button
-        variant="secondary"
-        className="min-h-11 shrink-0 max-sm:min-w-11 max-sm:px-0"
+        variant="ghost"
+        className={cn(
+          "min-h-11 shrink-0 max-sm:min-w-11 max-sm:px-0",
+          CONTROL_BUTTON
+        )}
         aria-label="Verificar movimientos"
       >
         <ListChecks />

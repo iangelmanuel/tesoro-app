@@ -152,7 +152,7 @@ export function AvatarUploader({
               isDisabled={pending}
               onPress={remove}
             >
-              <Trash2 />
+              <Trash2 className="text-danger" />
               Quitar foto
             </Button>
           )}

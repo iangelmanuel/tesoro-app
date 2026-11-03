@@ -56,7 +56,9 @@ export function RowActions({ label, actions }: RowActionsProps) {
             onPress={action.onAction}
             className={`size-11 min-w-11 ${action.destructive ? "text-danger" : ""}`}
           >
-            {action.icon}
+            <span className={action.destructive ? "text-danger" : undefined}>
+              {action.icon}
+            </span>
           </Button>
         ))}
       </div>
@@ -87,7 +89,11 @@ export function RowActions({ label, actions }: RowActionsProps) {
                   variant={action.destructive ? "danger" : "default"}
                   isDisabled={action.isDisabled}
                 >
-                  {action.icon}
+                  <span
+                    className={action.destructive ? "text-danger" : undefined}
+                  >
+                    {action.icon}
+                  </span>
                   <Label>{action.label}</Label>
                 </Dropdown.Item>
               ))}

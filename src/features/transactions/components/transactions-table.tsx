@@ -7,7 +7,7 @@ import {
   DragOverlay
 } from "@dnd-kit/react"
 import { isSortable, useSortable } from "@dnd-kit/react/sortable"
-import { AlertDialog, Button, Table, cn, toast } from "@heroui/react"
+import { Table, cn, toast } from "@heroui/react"
 import {
   ArrowLeftRight,
   Banknote,
@@ -18,6 +18,7 @@ import {
   RefreshCw,
   Trash2
 } from "lucide-react"
+import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { RowActions } from "@/components/dashboard/row-actions"
 import {
   STICKY_ACTIONS,
@@ -805,41 +806,16 @@ function DeleteEntryDialog({
   }
 
   return (
-    <AlertDialog
-      isOpen={open}
+    <DeleteDialog
+      open={open}
       onOpenChange={onOpenChange}
+      title={title}
+      onConfirm={handleDelete}
     >
-      <AlertDialog.Backdrop isKeyboardDismissDisabled={false}>
-        <AlertDialog.Container>
-          <AlertDialog.Dialog className="sm:max-w-md">
-            <AlertDialog.Header>
-              <AlertDialog.Icon status="danger" />
-              <AlertDialog.Heading>{title}</AlertDialog.Heading>
-            </AlertDialog.Header>
-            <AlertDialog.Body>
-              <p>
-                &ldquo;{label}&rdquo; se eliminará de forma permanente. Esta
-                acción no se puede deshacer.
-              </p>
-            </AlertDialog.Body>
-            <AlertDialog.Footer>
-              <Button
-                slot="close"
-                variant="tertiary"
-              >
-                Cancelar
-              </Button>
-              <Button
-                slot="close"
-                variant="danger"
-                onPress={handleDelete}
-              >
-                Eliminar
-              </Button>
-            </AlertDialog.Footer>
-          </AlertDialog.Dialog>
-        </AlertDialog.Container>
-      </AlertDialog.Backdrop>
-    </AlertDialog>
+      <p>
+        &ldquo;{label}&rdquo; se eliminará de forma permanente. Esta acción no
+        se puede deshacer.
+      </p>
+    </DeleteDialog>
   )
 }

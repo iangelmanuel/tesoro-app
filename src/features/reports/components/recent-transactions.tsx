@@ -1,13 +1,13 @@
 import { Card, CardContent, Table, cn } from "@heroui/react"
 import { CardHeading } from "@/components/dashboard/card-heading"
-import { DataRow, DataRows } from "@/components/dashboard/data-rows"
+import { ScrollTable } from "@/components/dashboard/scroll-table"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import {
   TRANSACTIONS_PATH,
   buildFiltersQuery
 } from "@/features/transactions/filters"
 import type { TransactionWithCategory } from "@/features/transactions/queries"
-import { formatCurrency, formatDate, formatShortDate } from "@/libs/format"
+import { formatCurrency, formatDate } from "@/libs/format"
 
 // Los últimos movimientos pueden ser de meses anteriores: "Ver todos" abre
 // Movimientos con todos los meses
@@ -34,77 +34,61 @@ export function RecentTransactions({
         linkContext="los movimientos"
       />
       <CardContent>
-        {/* < 768 px: tarjetas; la tabla va en display: none */}
-        <DataRows label="Últimos movimientos">
-          {rows.map((transaction) => (
-            <DataRow
-              key={transaction.id}
-              title={transaction.description}
-              value={`${transaction.type === "income" ? "+" : "−"}${formatCurrency(transaction.amount, currency)}`}
-              valueClassName={
-                transaction.type === "income"
-                  ? "text-(--income)"
-                  : "text-(--expense)"
-              }
-              meta={
-                <>
-                  <span className="whitespace-nowrap tabular-nums">
-                    {formatShortDate(transaction.occurred_on)}
-                  </span>
-                  <CategoryBadge
-                    name={transaction.category.name}
-                    icon={transaction.category.icon}
-                    color={transaction.category.color}
-                  />
-                </>
-              }
-            />
-          ))}
-        </DataRows>
-        <Table className="hidden md:block">
-          <Table.ScrollContainer>
-            <Table.Content aria-label="Últimos movimientos">
-              <Table.Header>
-                <Table.Column className="w-32">Fecha</Table.Column>
-                <Table.Column isRowHeader>Descripción</Table.Column>
-                <Table.Column>Categoría</Table.Column>
-                <Table.Column className="text-end">Monto</Table.Column>
-              </Table.Header>
-              <Table.Body>
-                {rows.map((transaction) => (
-                  <Table.Row key={transaction.id}>
-                    <Table.Cell className="text-muted">
-                      {formatDate(transaction.occurred_on)}
-                    </Table.Cell>
-                    <Table.Cell className="max-w-64">
-                      <p className="truncate font-medium">
-                        {transaction.description}
-                      </p>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <CategoryBadge
-                        name={transaction.category.name}
-                        icon={transaction.category.icon}
-                        color={transaction.category.color}
-                      />
-                    </Table.Cell>
-                    <Table.Cell
-                      className={cn(
-                        "text-right font-medium tabular-nums",
-                        transaction.type === "income"
-                          ? "text-(--income)"
-                          : "text-(--expense)"
-                      )}
-                    >
-                      {transaction.type === "income" ? "+" : "−"}
-                      {formatCurrency(transaction.amount, currency)}
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
-              </Table.Body>
-            </Table.Content>
-          </Table.ScrollContainer>
-        </Table>
+        <ScrollTable minWidth="36rem">
+          <Table>
+            <Table.ScrollContainer>
+              <Table.Content aria-label="Últimos movimientos">
+                <Table.Header>
+                  <Table.Column className="w-32 whitespace-nowrap">
+                    Fecha
+                  </Table.Column>
+                  <Table.Column isRowHeader>Descripción</Table.Column>
+                  <Table.Column className="whitespace-nowrap">
+                    Categoría
+                  </Table.Column>
+                  <Table.Column className="text-end whitespace-nowrap">
+                    Monto
+                  </Table.Column>
+                </Table.Header>
+                <Table.Body>
+                  {rows.map((transaction) => (
+                    <Table.Row key={transaction.id}>
+                      <Table.Cell className="whitespace-nowrap text-muted">
+                        {formatDate(transaction.occurred_on)}
+                      </Table.Cell>
+                      <Table.Cell className="max-w-64 min-w-44">
+                        <p
+                          title={transaction.description}
+                          className="line-clamp-3 font-medium break-words"
+                        >
+                          {transaction.description}
+                        </p>
+                      </Table.Cell>
+                      <Table.Cell className="whitespace-nowrap">
+                        <CategoryBadge
+                          name={transaction.category.name}
+                          icon={transaction.category.icon}
+                          color={transaction.category.color}
+                        />
+                      </Table.Cell>
+                      <Table.Cell
+                        className={cn(
+                          "text-right font-medium whitespace-nowrap tabular-nums",
+                          transaction.type === "income"
+                            ? "text-(--income)"
+                            : "text-(--expense)"
+                        )}
+                      >
+                        {transaction.type === "income" ? "+" : "−"}
+                        {formatCurrency(transaction.amount, currency)}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
+        </ScrollTable>
       </CardContent>
     </Card>
   )

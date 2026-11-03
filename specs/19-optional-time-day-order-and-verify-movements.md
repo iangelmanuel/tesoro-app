@@ -1,4 +1,4 @@
-# SPEC 20 — Hora opcional, orden manual dentro del día y Verificar movimientos
+# SPEC 19 — Hora opcional, orden manual dentro del día y Verificar movimientos
 
 > **Estado:** Aprobado
 > **Depende de:** SPEC 02, SPEC 08c, SPEC 16, SPEC 18

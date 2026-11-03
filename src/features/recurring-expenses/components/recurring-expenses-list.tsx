@@ -7,6 +7,7 @@ import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { RowActions } from "@/components/dashboard/row-actions"
 import {
   STICKY_ACTIONS,
+  STICKY_ACTIONS_HEAD,
   ScrollTable
 } from "@/components/dashboard/scroll-table"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
@@ -53,7 +54,7 @@ export function RecurringExpensesList({
               <Table.Column className={NOWRAP}>Frecuencia</Table.Column>
               <Table.Column className={NOWRAP}>Vigencia</Table.Column>
               <Table.Column className={NOWRAP}>Estado</Table.Column>
-              <Table.Column className={cn("w-28 md:w-16", STICKY_ACTIONS)}>
+              <Table.Column className={cn("w-28 md:w-16", STICKY_ACTIONS_HEAD)}>
                 <span className="sr-only">Acciones</span>
               </Table.Column>
             </Table.Header>

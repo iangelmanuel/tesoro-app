@@ -67,6 +67,7 @@ export function RowActions({ label, actions }: RowActionsProps) {
             variant="ghost"
             isIconOnly
             size="sm"
+            className="pointer-coarse:size-11"
             aria-label={ariaLabel}
           >
             <EllipsisVertical />

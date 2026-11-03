@@ -22,6 +22,7 @@ import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { RowActions } from "@/components/dashboard/row-actions"
 import {
   STICKY_ACTIONS,
+  STICKY_ACTIONS_HEAD,
   ScrollTable
 } from "@/components/dashboard/scroll-table"
 import { deleteAdjustment, deleteTransfer } from "@/features/accounts/actions"
@@ -52,7 +53,7 @@ interface TransactionsTableProps {
 // En móvil la tabla se muestra completa y se desliza en horizontal: fecha,
 // categoría, cuenta y monto no se parten en varias líneas
 const NOWRAP = "whitespace-nowrap"
-const ACTIONS_COLUMN = cn("w-28 md:w-16", STICKY_ACTIONS)
+const ACTIONS_COLUMN = cn("w-28 md:w-16", STICKY_ACTIONS_HEAD)
 
 /** Reordenar una fila dentro de su día arrastrando su asa (⋮⋮) */
 interface Reorder {

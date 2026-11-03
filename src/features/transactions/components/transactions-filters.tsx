@@ -214,12 +214,12 @@ export function TransactionsFilters({
 
         {/* El mes es texto (no botón): las flechas lo cambian y el toggle
             alterna entre un mes y todos */}
-        <div className="flex h-11 min-w-0 flex-1 items-center gap-0.5 rounded-3xl bg-default/60 p-0.5 md:flex-none">
+        <div className="flex min-h-11 min-w-0 flex-1 items-center gap-0.5 rounded-3xl bg-default/60 p-0.5 md:flex-none">
           <Button
             variant="ghost"
             size="sm"
             isIconOnly
-            className="size-10"
+            className="size-11 md:size-10"
             aria-label="Mes anterior"
             isDisabled={isAllMonths}
             onPress={() => navigate({ month: shiftMonth(month, -1) })}
@@ -236,7 +236,7 @@ export function TransactionsFilters({
             variant="ghost"
             size="sm"
             isIconOnly
-            className="size-10"
+            className="size-11 md:size-10"
             aria-label="Mes siguiente"
             isDisabled={isAllMonths}
             onPress={() => navigate({ month: shiftMonth(month, 1) })}

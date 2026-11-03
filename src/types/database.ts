@@ -68,6 +68,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["account_kind"]
           name: string
           opening_balance: number
+          opening_balance_on: string | null
           updated_at: string
           workspace_id: string
         }
@@ -80,6 +81,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["account_kind"]
           name: string
           opening_balance?: number
+          opening_balance_on?: string | null
           updated_at?: string
           workspace_id: string
         }
@@ -92,6 +94,7 @@ export type Database = {
           kind?: Database["public"]["Enums"]["account_kind"]
           name?: string
           opening_balance?: number
+          opening_balance_on?: string | null
           updated_at?: string
           workspace_id?: string
         }
@@ -919,6 +922,10 @@ export type Database = {
       }
     }
     Functions: {
+      account_balance_at: {
+        Args: { p_account_id: string; p_on: string }
+        Returns: number
+      }
       account_balances: {
         Args: { p_workspace_id: string }
         Returns: {
@@ -932,6 +939,7 @@ export type Database = {
           last_activity_on: string
           name: string
           opening_balance: number
+          opening_balance_on: string
           scheduled_balance: number
           updated_at: string
           workspace_id: string

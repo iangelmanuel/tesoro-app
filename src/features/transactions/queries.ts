@@ -25,6 +25,7 @@ export type EditableTransaction = Pick<
   | "type"
   | "amount"
   | "occurred_on"
+  | "occurred_time"
   | "category_id"
   | "description"
   | "note"
@@ -270,6 +271,7 @@ function toLedgerEntry(
       type,
       amount,
       occurred_on,
+      occurred_time: row.occurred_time,
       category_id: row.category_id as string,
       description: row.description as string,
       note: row.note,

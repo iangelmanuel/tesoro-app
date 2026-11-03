@@ -16,6 +16,7 @@ import {
   toast
 } from "@heroui/react"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import { TimePickerField } from "@/components/forms/time-picker-field"
 import {
   AccountSelect,
   selectableAccounts
@@ -206,6 +207,9 @@ function TransactionForm({
   const [date, setDate] = useState(
     () => transaction?.occurred_on ?? initialValues?.occurred_on ?? todayISO()
   )
+  const [time, setTime] = useState(
+    () => transaction?.occurred_time?.slice(0, 5) ?? ""
+  )
   const [accountId, setAccountId] = useState(transaction?.account_id ?? "")
   const [amountText, setAmountText] = useState(() =>
     transaction
@@ -357,23 +361,23 @@ function TransactionForm({
 
       {typeToggle}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
-          name="amount"
-          inputMode="decimal"
-          autoComplete="off"
-          value={amountText}
-          onChange={setAmountText}
-          isInvalid={Boolean(errors?.amount)}
-          isRequired
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <Label>Monto</Label>
-          <Input placeholder="0" />
-          <FieldError>{errors?.amount?.[0]}</FieldError>
-        </TextField>
+      <TextField
+        name="amount"
+        inputMode="decimal"
+        autoComplete="off"
+        value={amountText}
+        onChange={setAmountText}
+        isInvalid={Boolean(errors?.amount)}
+        isRequired
+        validationBehavior="aria"
+        className="flex flex-col gap-2"
+      >
+        <Label>Monto</Label>
+        <Input placeholder="0" />
+        <FieldError>{errors?.amount?.[0]}</FieldError>
+      </TextField>
 
+      <div className="grid gap-4 md:grid-cols-2">
         <DatePickerField
           name="occurred_on"
           label="Fecha"
@@ -381,6 +385,13 @@ function TransactionForm({
           onChange={setDate}
           error={errors?.occurred_on?.[0]}
           isRequired
+        />
+
+        <TimePickerField
+          name="occurred_time"
+          value={time}
+          onChange={setTime}
+          error={errors?.occurred_time?.[0]}
         />
       </div>
 

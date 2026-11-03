@@ -18,7 +18,7 @@ import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import type { WorkspaceType } from "@/features/workspaces/queries"
-import { formatCurrency, formatDate } from "@/libs/format"
+import { formatCurrency, formatDate, formatTime } from "@/libs/format"
 import { deleteTransaction } from "../actions"
 import {
   type AccountMovementKind,
@@ -172,13 +172,15 @@ export function TransactionsTable({
 
               return (
                 <Table.Row key={transaction.id}>
-                  <Table.Cell className={cn("text-muted", FROM_SM)}>
-                    {formatDate(transaction.occurred_on)}
-                  </Table.Cell>
+                  <DateCell
+                    date={transaction.occurred_on}
+                    time={row.occurred_time}
+                  />
                   <DescriptionCell
                     title={transaction.description}
                     note={transaction.note}
                     date={transaction.occurred_on}
+                    time={row.occurred_time}
                   />
                   <Table.Cell className={FROM_MD}>
                     {category && (
@@ -274,16 +276,28 @@ function CounterpartyCell({
   )
 }
 
+// Fecha y, debajo, la hora si el usuario la puso
+function DateCell({ date, time }: { date: string; time: string | null }) {
+  return (
+    <Table.Cell className={cn("text-muted", FROM_SM)}>
+      {formatDate(date)}
+      {time && <span className="block text-xs">{formatTime(time)}</span>}
+    </Table.Cell>
+  )
+}
+
 function DescriptionCell({
   title,
   note,
   date,
+  time,
   icon: Icon
 }: {
   title: string
   note: string | null
   /** Bajo el título solo en móvil, donde la columna Fecha se oculta */
   date: string
+  time: string | null
   icon?: React.ComponentType<{ className?: string }>
 }) {
   return (
@@ -294,6 +308,7 @@ function DescriptionCell({
       </p>
       <p className="truncate text-xs text-muted sm:hidden">
         {formatDate(date)}
+        {time && ` · ${formatTime(time)}`}
       </p>
       {note && <p className="truncate text-xs text-muted">{note}</p>}
     </Table.Cell>
@@ -318,13 +333,15 @@ function TransferRow({
 }) {
   return (
     <Table.Row>
-      <Table.Cell className={cn("text-muted", FROM_SM)}>
-        {formatDate(transfer.occurred_on)}
-      </Table.Cell>
+      <DateCell
+        date={transfer.occurred_on}
+        time={transfer.occurred_time}
+      />
       <DescriptionCell
         title={label}
         note={transfer.note}
         date={transfer.occurred_on}
+        time={transfer.occurred_time}
         icon={ArrowLeftRight}
       />
       <Table.Cell className={cn("text-muted", FROM_MD)}>Traspaso</Table.Cell>
@@ -388,13 +405,15 @@ function AccountMovementRow({
 
   return (
     <Table.Row>
-      <Table.Cell className={cn("text-muted", FROM_SM)}>
-        {formatDate(entry.occurred_on)}
-      </Table.Cell>
+      <DateCell
+        date={entry.occurred_on}
+        time={entry.occurred_time}
+      />
       <DescriptionCell
         title={title}
         note={entry.note}
         date={entry.occurred_on}
+        time={entry.occurred_time}
         icon={icon}
       />
       <Table.Cell className={cn("text-muted", FROM_MD)}>{type}</Table.Cell>
@@ -428,13 +447,15 @@ function AdjustmentRow({
 }) {
   return (
     <Table.Row>
-      <Table.Cell className={cn("text-muted", FROM_SM)}>
-        {formatDate(adjustment.occurred_on)}
-      </Table.Cell>
+      <DateCell
+        date={adjustment.occurred_on}
+        time={adjustment.occurred_time}
+      />
       <DescriptionCell
         title={label}
         note={adjustment.note}
         date={adjustment.occurred_on}
+        time={adjustment.occurred_time}
         icon={RefreshCw}
       />
       <Table.Cell className={cn("text-muted", FROM_MD)}>Ajuste</Table.Cell>

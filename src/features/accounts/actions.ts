@@ -40,6 +40,7 @@ const TRANSFER_FIELDS = [
   "to_account_id",
   "amount",
   "occurred_on",
+  "occurred_time",
   "note"
 ] as const
 

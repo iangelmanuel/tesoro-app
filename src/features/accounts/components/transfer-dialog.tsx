@@ -11,6 +11,7 @@ import {
   toast
 } from "@heroui/react"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import { TimePickerField } from "@/components/forms/time-picker-field"
 import { amountInput } from "@/features/debts/components/field"
 import { todayISO } from "@/libs/dates"
 import { createTransfer, updateTransfer } from "../actions"
@@ -27,6 +28,7 @@ export interface TransferValues {
   to_account_id: string
   amount: number
   occurred_on: string
+  occurred_time: string | null
   note: string | null
 }
 
@@ -113,6 +115,9 @@ export function TransferForm({
   const [occurredOn, setOccurredOn] = useState(
     () => transfer?.occurred_on ?? todayISO()
   )
+  const [time, setTime] = useState(
+    () => transfer?.occurred_time?.slice(0, 5) ?? ""
+  )
 
   const [state, formAction, pending] = useActionState<
     TransferFormState,
@@ -173,22 +178,22 @@ export function TransferForm({
         />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
-          name="amount"
-          inputMode="decimal"
-          autoComplete="off"
-          defaultValue={values?.amount ?? amountInput(transfer?.amount)}
-          isRequired
-          isInvalid={Boolean(errors?.amount)}
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <Label>Monto</Label>
-          <Input placeholder="0" />
-          <FieldError>{errors?.amount?.[0]}</FieldError>
-        </TextField>
+      <TextField
+        name="amount"
+        inputMode="decimal"
+        autoComplete="off"
+        defaultValue={values?.amount ?? amountInput(transfer?.amount)}
+        isRequired
+        isInvalid={Boolean(errors?.amount)}
+        validationBehavior="aria"
+        className="flex flex-col gap-2"
+      >
+        <Label>Monto</Label>
+        <Input placeholder="0" />
+        <FieldError>{errors?.amount?.[0]}</FieldError>
+      </TextField>
 
+      <div className="grid gap-4 md:grid-cols-2">
         <DatePickerField
           name="occurred_on"
           label="Fecha"
@@ -196,6 +201,13 @@ export function TransferForm({
           onChange={setOccurredOn}
           error={errors?.occurred_on?.[0]}
           isRequired
+        />
+
+        <TimePickerField
+          name="occurred_time"
+          value={time}
+          onChange={setTime}
+          error={errors?.occurred_time?.[0]}
         />
       </div>
 

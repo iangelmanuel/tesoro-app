@@ -106,6 +106,7 @@ export const transactionSchema = z.object({
   type: z.enum(TRANSACTION_TYPES, { error: "Elige ingreso o gasto" }),
   amount: amountSchema,
   occurred_on: z.iso.date({ error: "Elige una fecha válida" }),
+  occurred_time: timeSchema,
   category_id: z.uuid({ error: "Elige una categoría" }),
   description: z
     .string()

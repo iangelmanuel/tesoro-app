@@ -92,11 +92,11 @@ export function VerifyMovementsDialog({
     >
       <Button
         variant="secondary"
-        size="sm"
-        className="max-md:min-h-11"
+        className="min-h-11 shrink-0 max-sm:min-w-11 max-sm:px-0"
+        aria-label="Verificar movimientos"
       >
         <ListChecks />
-        Verificar
+        <span className="max-sm:sr-only">Verificar</span>
       </Button>
       <Modal.Backdrop>
         <Modal.Container

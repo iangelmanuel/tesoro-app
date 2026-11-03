@@ -110,7 +110,7 @@ async function TransactionsContent({
     <>
       {/* Una barra: búsqueda, mes y filtros pill; a la derecha, traspaso y
           categorías (importar está en "Más" del header) */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-start gap-2">
         <TransactionsFilters
           filters={filters}
           categories={categories}
@@ -122,12 +122,14 @@ async function TransactionsContent({
               categories={categories}
             />
           }
-        />
-        <VerifyMovementsDialog
-          workspaceId={workspace.id}
-          accounts={accounts}
-          currency={workspace.currency}
-          showAccountFilter
+          trailing={
+            <VerifyMovementsDialog
+              workspaceId={workspace.id}
+              accounts={accounts}
+              currency={workspace.currency}
+              showAccountFilter
+            />
+          }
         />
         <div className="hidden shrink-0 items-center gap-2 md:flex">
           <CategoriesSheet
@@ -173,16 +175,10 @@ function TransactionsSkeleton() {
     <>
       <div className="flex flex-wrap gap-2">
         {/* Mismo orden que los filtros: buscador; mes + Filtros en el teléfono */}
-        <Skeleton className="h-11 w-full rounded-3xl md:h-9 md:w-64" />
-        <div className="flex w-full items-center gap-2 md:contents">
-          <Skeleton className="h-11 flex-1 rounded-3xl md:h-9 md:w-52 md:flex-none" />
-          <Skeleton className="h-11 w-28 rounded-3xl md:hidden" />
-        </div>
-        <div className="hidden gap-2 md:contents">
-          <Skeleton className="h-8 w-28 rounded-3xl" />
-          <Skeleton className="h-8 w-32 rounded-3xl" />
-          <Skeleton className="h-8 w-28 rounded-3xl" />
-        </div>
+        <Skeleton className="h-11 w-full rounded-3xl md:min-w-72 md:flex-1 md:basis-72" />
+        <Skeleton className="h-11 flex-1 rounded-3xl md:w-52 md:flex-none" />
+        <Skeleton className="h-11 w-28 rounded-3xl md:hidden" />
+        <Skeleton className="h-11 w-11 rounded-3xl sm:w-28" />
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         <CardSkeleton className="h-24" />

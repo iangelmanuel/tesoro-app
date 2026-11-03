@@ -25,3 +25,24 @@ export const getAccountBalances = cache(
     }))
   }
 )
+
+// Saldo de una cuenta a una fecha (YYYY-MM-DD), con las mismas reglas que
+// account_balances. Devuelve null si la cuenta no existe o no es del usuario:
+// la función es security invoker y la RLS de accounts solo deja ver al dueño
+// del espacio, así que no hay forma de leer el saldo de una cuenta ajena.
+export async function getAccountBalanceAt(
+  accountId: string,
+  on: string
+): Promise<number | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("account_balance_at", {
+    p_account_id: accountId,
+    p_on: on
+  })
+
+  if (error) {
+    throw new Error("No se pudo calcular el saldo de la cuenta")
+  }
+
+  return data === null ? null : Number(data)
+}

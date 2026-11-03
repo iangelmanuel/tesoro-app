@@ -105,6 +105,7 @@ estos solo agregan lo que HeroUI no trae.
 | `empty-state.tsx`                                                          | `EmptyState` (página): ícono, qué falta, qué hacer y la acción. `CardEmpty` (dentro de una tarjeta)                                                                                                                                             |
 | `card-skeleton.tsx`                                                        | Placeholder con el mismo contenedor de `Card`; todo bloque que carga usa este, no un `Skeleton` suelto                                                                                                                                          |
 | `tone.ts`                                                                  | Clases de estado (chips, barras, texto) desde tokens                                                                                                                                                                                            |
+| `row-actions.tsx`, `delete-dialog.tsx`, `scroll-table.tsx`                 | Acciones de fila (menú en escritorio, botones en móvil), confirmación de borrado controlada y contenedor de tabla con scroll horizontal y columna de acciones fija (SPEC 20)                                                                    |
 | `surface.ts`                                                               | Clases de superficie sin borde: `SURFACE_LIST`/`SURFACE_ROW` (lista sobre el fondo), `CARD_LIST`/`CARD_ROW` (lista dentro de una `Card`), `SURFACE_ITEM` (tarjeta de una grilla) y `SURFACE_NOTE`. Nunca `rounded-xl border` ni `border-dashed` |
 
 ### Gráficas (`src/components/charts/`)
@@ -190,7 +191,8 @@ Piezas en `src/components/dashboard/mobile/`:
   de ocultar, en `sessionStorage` (`tesoro:quick-sheet:hidden-at:v1`). Si el
   almacenamiento falla, usa memoria y la hoja se abre como con el switch
   encendido.
-- **Barra inferior:** Personal: Resumen, Movimientos, [+], Presupuestos, Metas.
+- **Barra inferior:** Personal: Resumen, Movimientos, [+], Presupuestos, Cuentas
+  (Metas sigue en el aside, SPEC 20).
   Empresa: Resumen, Movimientos, [+], Flujo de caja, Reportes. Fuera
   de un espacio (cuenta, estado vacío de Empresa) muestra los destinos de
   Personal, sin [+]. Los destinos salen de `SITE.navigation.mobile`.
@@ -201,22 +203,37 @@ Piezas en `src/components/dashboard/mobile/`:
   `workspace-tabs.tsx`). En el teléfono el aside se abre desde el botón de
   menú del header (44 px). No hay tab sticky bajo el header (SPEC 18). El
   primario cambia solo por la ruta (`WorkspaceThemeRoot`).
-- **Tablas como tarjetas (`< 768 px`):** `DataRows` y `DataRow`
-  (`src/components/dashboard/data-rows.tsx`). Cada fila lleva título (hasta 2
-  líneas) y monto a la derecha en una línea, una línea secundaria (`meta`) y
-  `actions` opcionales de 44 px. `boxed` las pone sobre el fondo (lista suelta)
-  en vez de dentro de una tarjeta. La lista va con `md:hidden` y la tabla con
-  `hidden md:block`: la que no aplica queda en `display: none` para que los
-  lectores de pantalla no lean las dos. Usan `DataRows`: Últimos movimientos,
-  Flujo de caja y Gastos fijos. Resumen por categoría ya cabe en 360 px con
-  sus 3 columnas visibles y se dejó como tabla. La tabla de Movimientos y las
-  del asistente de importación no cambian.
+- **Tablas con scroll horizontal (`< 768 px`, SPEC 20):** las tablas se ven
+  completas y se deslizan en horizontal dentro de `ScrollTable`
+  (`src/components/dashboard/scroll-table.tsx`), que fija un ancho mínimo
+  (`minWidth`) y pinta un degradado en el borde izquierdo cuando ya se
+  deslizó. Fecha, monto, categoría y cuenta van en `whitespace-nowrap`; la
+  descripción envuelve (máximo 3 líneas con `line-clamp-3`, texto completo en
+  `title`). La columna de acciones queda fija a la derecha con
+  `STICKY_ACTIONS` (fondo opaco y sombra a su izquierda) y, en el encabezado,
+  `STICKY_ACTIONS_HEAD`. Usan este patrón Movimientos, Gastos fijos, Resumen
+  por categoría, Últimos movimientos y Flujo de caja. `DataRows` se eliminó
+  (SPEC 20): ya no hay tarjetas para tablas. Las tablas del asistente de
+  importación no cambian.
+- **Acciones por fila (SPEC 20):** `RowActions`
+  (`src/components/dashboard/row-actions.tsx`). Desde 768 px, un solo botón de
+  tres puntos (`aria-label="Acciones de <fila>"`) abre un `Dropdown` con las
+  opciones; las destructivas van al final con tono `danger`. En móvil las
+  mismas opciones son botones de ícono en línea de 44 px. Como el menú no
+  puede alojar el trigger de un diálogo, los diálogos de edición se controlan
+  con `open` / `onOpenChange` y la confirmación de borrado es `DeleteDialog`
+  (`src/components/dashboard/delete-dialog.tsx`). Las tarjetas de cuentas,
+  deudas y metas conservan sus botones.
 - **Filtros de Movimientos (`< 768 px`):** buscador a todo el ancho; debajo,
-  `‹ Mes ›` y el botón **Filtros** con el número de filtros activos (tipo,
-  categoría, cuenta y "Todos los meses"). La hoja inferior (`Drawer`) trae
+  `‹ Mes ›`, el botón **Filtros** con el número de filtros activos (tipo,
+  categoría, cuenta y "Todos los meses") y **Verificar** (solo ícono por
+  debajo de 640 px). La hoja inferior (`Drawer`) trae
   Tipo, Categoría, Cuenta, el alternador de meses y Categorías
   (`categoriesAction`), aplica al elegir (`router.replace`) y limpia con
-  "Limpiar filtros". Desde 768 px, la barra de siempre. Los elementos del
+  "Limpiar filtros". Desde 768 px, la fila principal es buscador (ocupa el
+  ancho libre, mínimo `18rem`) · mes · Verificar, todos de 44 px y centrados;
+  debajo van los filtros en pill. Verificar entra a la fila por la prop
+  `trailing` de `TransactionsFilters`. Los elementos del
   servidor que se pasan por props a un componente cliente (`categoriesAction`,
   `trigger`) van como hijo único (`<div>` o `<Fragment>`): dentro de un array de
   hijos React pide `key`.

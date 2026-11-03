@@ -1,6 +1,6 @@
 # SPEC 20 — Tablas legibles en móvil, menú de acciones por fila y barra inferior con Cuentas
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 15, SPEC 18, SPEC 19
 > **Fecha:** 2026-11-03
 > **Objetivo:** Que las tablas se lean completas en el teléfono (sin textos cortados, con scroll horizontal), que en computadora las acciones de cada fila vivan en un menú desplegable, que la barra de Movimientos quede alineada y que la barra inferior móvil enlace a Cuentas en lugar de Metas.
@@ -75,17 +75,17 @@ No introduce datos nuevos ni migraciones. Solo cambia la configuración de naveg
 
 ## Criterios de aceptación
 
-- [ ] En `< 768 px`, ninguna descripción de movimiento queda cortada con puntos suspensivos de una línea; el texto envuelve (máximo 3 líneas) y el texto completo se ve en el diálogo de edición.
+- [x] En `< 768 px`, ninguna descripción de movimiento queda cortada con puntos suspensivos de una línea; el texto envuelve (máximo 3 líneas) y el texto completo se ve en el diálogo de edición.
 - [ ] En `< 768 px`, la tabla de Movimientos se desliza en horizontal y la columna de acciones queda visible sin llegar al final.
-- [ ] En `≥ 768 px`, cada fila de Movimientos, Deudas, Gastos fijos y Presupuestos muestra un solo botón de tres puntos con Editar y Eliminar (Eliminar al final, con tono `danger`).
+- [x] En `≥ 768 px`, cada fila de Movimientos, Deudas, Gastos fijos y Presupuestos muestra un solo botón de tres puntos con Editar y Eliminar (Eliminar al final, con tono `danger`).
 - [ ] El menú se abre y se cierra con teclado (Enter, Escape), el foco vuelve al botón y tiene `aria-label`.
 - [ ] En la barra de Movimientos, buscador, mes, Filtros y Verificar comparten altura y línea base; el buscador ocupa todo el ancho libre.
 - [ ] En "Sin presupuesto" los montos quedan alineados en una columna y el botón "Presupuestar" no se parte ni empuja el monto.
-- [ ] La barra inferior en Personal muestra Resumen, Movimientos, Presupuestos y Cuentas; Metas no aparece y sigue en el aside.
-- [ ] La barra inferior en Empresa no cambia.
+- [x] La barra inferior en Personal muestra Resumen, Movimientos, Presupuestos y Cuentas; Metas no aparece y sigue en el aside.
+- [x] La barra inferior en Empresa no cambia.
 - [ ] Todos los controles nuevos miden 44 px o más en móvil y cumplen AA en claro y oscuro.
-- [ ] `pnpm next typegen`, `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
-- [ ] `docs/ui.md` y `[Unreleased]` del CHANGELOG (en inglés) documentan el cambio.
+- [x] `pnpm next typegen`, `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] `docs/ui.md` y `[Unreleased]` del CHANGELOG (en inglés) documentan el cambio.
 
 ## Decisiones
 

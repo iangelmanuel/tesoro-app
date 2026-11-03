@@ -124,7 +124,8 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   `DatePicker` con `Label` y `FieldError` dentro y
   `validationBehavior="aria"` (valida el servidor).
 - Fechas: `DatePickerField` (`src/components/forms/date-picker-field.tsx`),
-  que trabaja con `YYYY-MM-DD`. Toasts: `toast` de `@heroui/react`.
+  que trabaja con `YYYY-MM-DD`. Hora opcional de un evento: `TimePickerField`
+  (`HH:MM` o `""`) y `timeSchema`; se muestra con `formatTime`. Toasts: `toast` de `@heroui/react`.
 - Gráficas: Recharts con `src/components/charts/*`: `ChartCard` (cabecera
   con leyenda y cifra), `ChartContainer`, las props de `chart-style.ts` y los
   montos abreviados de `chart-format.ts`. Colores siempre desde tokens.

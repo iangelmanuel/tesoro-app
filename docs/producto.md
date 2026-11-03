@@ -172,7 +172,7 @@ usuario tiene RLS.
 | `workspaces`                | Espacios del usuario: `type` (`personal` / `business`), `name` y `deletion_requested_at` (solo Empresa)                                                                                                                                  | `select`; `insert` y `update (name)` de Empresa |
 | `business_profiles`         | Datos de una empresa, 1:1 con su espacio: `tax_id` (NIT opcional) y `sector`                                                                                                                                                             | `select`, `insert`, `update`                    |
 | `categories`                | Categorías de ingreso o gasto: del sistema (`workspace_id` null) o propias, con `scope` (`personal` / `business`)                                                                                                                        | `select`, `insert` y `update`                   |
-| `transactions`              | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note`, `account_id` opcional y, en Empresa, `counterparty` e `invoice_ref`                                                                                  | `select`, `insert`, `update`, `delete`          |
+| `transactions`              | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note`, `occurred_time` y `day_position` (SPEC 19), `account_id` opcional y, en Empresa, `counterparty` e `invoice_ref`                                      | `select`, `insert`, `update`, `delete`          |
 | `accounts`                  | Cuentas y métodos de pago: `name` (único por espacio), `kind` (`cash` / `bank` / `wallet` / `other`), `icon`, `color`, `opening_balance`, `archived_at`                                                                                  | `select`, `insert`, `update`                    |
 | `transfers`                 | Traspasos entre cuentas propias: `from_account_id`, `to_account_id` (distintas), `amount` > 0, `occurred_on`, `note`                                                                                                                     | `select`, `insert`, `update`, `delete`          |
 | `account_adjustments`       | Ajustes de saldo de "Actualizar saldo": `account_id`, `amount` ≠ 0 (> 0 sube el saldo), `occurred_on`, `note`                                                                                                                            | `select`, `insert`, `update`, `delete`          |
@@ -241,8 +241,9 @@ de gráficas, presupuestos, metas, deudas y score.
 - Montos en `numeric(14, 2)`, mayores que 0 y hasta 999.999.999.999,99. La UI
   de COP los muestra sin decimales con `Intl.NumberFormat("es-CO")`, y el
   formulario acepta el formato `1.500.000` o `1500000,50`.
-- Fechas `date` sin hora. Se permiten fechas futuras. "Hoy" y "mes actual" se
-  calculan siempre en `America/Bogota`.
+- Fechas `date`. Se permiten fechas futuras. "Hoy" y "mes actual" se
+  calculan siempre en `America/Bogota`. La hora es opcional (ver "Hora, orden
+  del día y Verificar").
 - Se crean y editan en un diálogo, y se eliminan con confirmación. Al editar se
   puede cambiar el tipo; eso limpia la categoría.
 - El botón "Nuevo movimiento" del header, visible solo en
@@ -268,10 +269,62 @@ de gráficas, presupuestos, metas, deudas y score.
 - El trigger `check_transaction_category` garantiza en la BD que la categoría
   tenga el mismo tipo que el movimiento y sea del sistema o del mismo espacio.
 
+### Hora, orden del día y Verificar
+
+Para que el historial de Tesoro se pueda cuadrar contra el extracto del banco
+(SPEC 19):
+
+- **Hora opcional (`occurred_time`, tipo `time`)** en movimientos, traspasos,
+  ajustes de cuenta, pagos y avances de deuda, ajustes de deuda y aportes o
+  retiros de meta.
+  - Es la hora local del usuario (`America/Bogota`), sin conversión de zona.
+  - Es informativa: no ordena, no filtra y no cambia ningún saldo. Sin hora, la
+    app se comporta igual que antes.
+  - Un gasto fijo pagado hereda la hora del movimiento que lo paga. Editar el
+    pago de un préstamo o una cuenta por cobrar copia la hora al movimiento
+    enlazado (trigger `sync_debt_entry_transaction`).
+  - No llevan hora los presupuestos, la plantilla del gasto fijo, las fechas
+    objetivo y de vencimiento, ni las filas del asistente de importación.
+  - Se muestra como `2:30 p. m.` donde se muestra la fecha del evento, solo si
+    existe.
+- **Orden manual dentro del día (`day_position`)**.
+  - Las filas de un mismo `occurred_on` se ordenan por `day_position`, luego
+    `created_at desc` e `id`. Una fila nueva entra con 0 y queda arriba de su
+    día.
+  - Cada fila lleva un asa de arrastre (⋮⋮) sutil, a la izquierda de la
+    fecha. Al arrastrar, una tarjeta con el texto de la fila sigue al puntero,
+    las filas se reordenan en vivo con animación, las del mismo día se resaltan
+    como zona de soltado y el resto se atenúa. Soltar sobre otro día no hace
+    nada y `Esc` cancela.
+  - Funciona con mouse, con el dedo (en el teléfono, manteniendo presionada el
+    asa un instante, así el scroll de la tabla sigue funcionando) y con teclado
+    (`Enter` o `Espacio` en el asa, flechas para mover, `Enter` para soltar,
+    `Esc` para cancelar). No hay botones de flechas.
+  - Mover nunca cambia la fecha y no existe la acción de mover a otro día. El
+    asa no aparece con la búsqueda de texto activa; con filtros de tipo,
+    categoría o cuenta sí.
+  - Se reordena toda la lista unificada: también traspasos, ajustes, pagos de
+    tarjeta, avances y aportes con cuenta.
+  - La RPC `move_ledger_entry` (`security invoker`) reasigna `1..n` a todo el
+    día del espacio en una sola transacción y rechaza filas de otro día. Cambiar
+    la fecha de una fila reinicia su `day_position` a 0 (trigger
+    `reset_day_position`).
+  - El arrastre usa [dnd-kit](https://dndkit.com) (`@dnd-kit/react`).
+- **Verificar movimientos.** El botón **Verificar** de la barra de Movimientos
+  abre una modal de solo lectura (hoja a pantalla completa en móvil) con todo el
+  historial, sin filtro mensual y con el mismo orden que la tabla.
+  - Carga de 50 en 50 con "Cargar más".
+  - En Personal tiene un selector de cuenta; con una cuenta elegida, un
+    traspaso muestra su signo respecto de esa cuenta.
+  - Cada fila lleva fecha y hora, cuenta, monto, descripción y nota. Flecha verde
+    ↑: ingreso, avance de tarjeta y retiro de meta. Flecha roja ↓: gasto, pago
+    de tarjeta y aporte a meta. Flecha gris ⇄: traspaso y ajuste.
+  - No marca filas como verificadas ni importa extractos.
+
 ### Tabla, filtros y totales
 
 - Tabla paginada por URL, 20 por página, ordenada por `occurred_on desc,
-created_at desc`.
+day_position asc, created_at desc, id`.
 - Totales (ingresos, gastos y balance) de todo el periodo filtrado, calculados
   en Postgres con la RPC `transaction_totals` (`security invoker`).
 - Filtros en la URL; cambiar uno vuelve a la página 1:

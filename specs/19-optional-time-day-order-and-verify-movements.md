@@ -42,9 +42,10 @@ Este spec es el primero de tres que salen del mismo pedido. Los otros dos quedan
   - **solo dentro del mismo día.** Mover nunca cambia `occurred_on`; no existe la acción de mover a otro día;
   - cambiar la fecha de una fila (`occurred_on`) reinicia su `day_position` a 0 en la base de datos (trigger), así llega arriba del día nuevo.
 - **UI de reordenar en `transactions-table.tsx` y en las tarjetas móviles**:
-  - botones **↑ / ↓** en cada fila (accesibles, 44 px táctiles en móvil); ↑ y ↓ intercambian con la fila vecina **del mismo día**;
-  - **arrastre en escritorio** (`>= 768 px`), solo dentro del mismo día; soltar fuera del día no hace nada;
-  - un día con una sola fila visible no muestra controles; la primera fila de un día no muestra ↑, la última no muestra ↓;
+  - un **asa de arrastre ⋮⋮** sutil, a la izquierda de la fila, en una columna angosta antes de Fecha. Es tenue hasta que se acerca el puntero y mide 44 px de alto táctil en móvil. No hay flechas ni otros botones de orden;
+  - **arrastrar y soltar** con [dnd-kit](https://dndkit.com) (`@dnd-kit/react`, `useSortable` y `DragOverlay`), desde el asa y solo dentro del mismo día. Mientras se arrastra, una tarjeta con el texto de la fila sigue al puntero (`DragOverlay`), las filas se reordenan en vivo con la animación de dnd-kit, las del mismo día se resaltan como zona de soltado y el resto se atenúa. Soltar fuera del día no hace nada;
+  - **móvil y teclado:** en táctil el arrastre empieza al mantener presionada el asa (unos 250 ms; así el scroll de la tabla sigue funcionando). Con teclado, `Enter` o `Espacio` en el asa recoge la fila, las flechas la mueven dentro del día, `Enter` o `Espacio` la suelta y `Esc` cancela. dnd-kit anuncia cada paso a los lectores de pantalla;
+  - un día con una sola fila visible no muestra asa;
   - `useOptimistic`: la fila se mueve al instante y se revierte con un toast si el servidor falla;
   - los controles aparecen solo con permiso de escritura (`requireWritableWorkspace`), y no mientras el orden sea ambiguo, es decir con la búsqueda de texto activa. Con filtros de tipo, categoría o cuenta sí funcionan: la fila se coloca en la posición de la fila vecina visible.
   - se reordenan todas las filas de la lista unificada, incluidos traspasos, ajustes, pagos de tarjeta, avances y aportes con cuenta (las filas grises de SPEC 16): el orden es de la lista, no de la tabla de origen.
@@ -152,8 +153,8 @@ Convenciones:
    - Ajuste de cuenta, `payment-dialog.tsx`, `adjust-balance-dialog.tsx` de deudas, `contribution-dialog.tsx` y sus RPC/actions; los historiales muestran la hora si existe.
 6. **Reordenar.**
    - Action `moveLedgerEntry` que llama a la RPC.
-   - Botones ↑/↓ en `transactions-table.tsx` y tarjetas móviles con `useOptimistic`.
-   - Arrastre en escritorio con `useDrag` / `useDrop` de `react-aria` (ya es dependencia, sin librería nueva), limitado al mismo día.
+   - Asa ⋮⋮ en una columna angosta a la izquierda de `transactions-table.tsx` y de las tarjetas móviles, con `useOptimistic`.
+   - Arrastrar y soltar con `@dnd-kit/react`: `DragDropProvider` alrededor de la tabla, `useSortable` por fila (con `group`, `type` y `accept` iguales al día, para que una fila nunca interactúe con las de otro día), el asa como `handleRef` y `DragOverlay` para la vista previa (el modo de retroalimentación por defecto de dnd-kit no sirve con un `<tr>`, que pierde su ancho en la capa superior). Al soltar, `onDragEnd` llama a `moveLedgerEntry`. Se agrega `@dnd-kit/react` (0.5.3, versión exacta) como dependencia.
 7. **Verificar movimientos.**
    - Query `getVerifyEntries(workspaceId, { accountId, offset })` y action para cargar más.
    - `verify-movements-dialog.tsx` y `verify-row.tsx` en `src/features/transactions/components/`, con el botón en la barra de Movimientos; hoja a pantalla completa en móvil.
@@ -170,11 +171,11 @@ Convenciones:
 - [ ] Editar un movimiento con hora y vaciar el campo hora lo deja sin hora.
 - [ ] El campo de hora existe en los diálogos de movimiento, traspaso, ajuste de cuenta, pago/avance de deuda, ajuste de deuda y aporte/retiro de meta, y no existe en presupuestos, gasto fijo ni meta (creación).
 - [ ] Pagar un gasto fijo con hora 09:15 deja el movimiento con esa hora y la ocurrencia como pagada.
-- [ ] Con 5 movimientos de hoy, ↑ en el tercero lo intercambia con el segundo y el cambio persiste al recargar.
+- [ ] Con 5 movimientos de hoy, arrastrar el tercero sobre el segundo los intercambia y el cambio persiste al recargar; con teclado (`Enter` en el asa, flecha arriba, `Enter`) se obtiene lo mismo.
 - [ ] Un movimiento nuevo del mismo día aparece arriba de los ya ordenados a mano.
 - [ ] No hay forma de mover un movimiento de hoy sobre uno de ayer: la RPC lo rechaza y la UI no lo ofrece; `occurred_on` no cambia nunca por reordenar.
-- [ ] La primera fila de un día no muestra ↑, la última no muestra ↓, y un día con una sola fila no muestra controles.
-- [ ] Arrastrar una fila sobre otra del mismo día la reordena en escritorio; soltarla sobre una fila de otro día no hace nada.
+- [ ] Un día con una sola fila visible no muestra asa, y el asa es discreta: no ocupa más que una columna angosta a la izquierda y no hay flechas.
+- [ ] Al arrastrar, una tarjeta con el texto de la fila sigue al puntero, las filas se reordenan en vivo con animación, las del mismo día se resaltan y el resto se atenúa; soltar sobre una fila de otro día no hace nada y `Esc` cancela. En un teléfono el arrastre funciona con el dedo (mantener presionado el asa) y el scroll de la tabla no se bloquea.
 - [ ] La fila se mueve al instante y, si la RPC falla, vuelve a su lugar y aparece un toast de error.
 - [ ] Con la búsqueda de texto activa no hay controles de reordenar; con filtro de tipo, categoría o cuenta sí, y el orden relativo resultante se conserva al quitar el filtro.
 - [ ] Los traspasos, ajustes, pagos de tarjeta, avances y aportes con cuenta se reordenan junto con los movimientos del mismo día.
@@ -189,7 +190,7 @@ Convenciones:
 - [ ] Verificar es de solo lectura: no hay botones de editar, borrar ni reordenar.
 - [ ] En 360 px la modal de Verificar ocupa la pantalla, no tiene scroll horizontal y cada fila cabe en dos líneas como máximo.
 - [ ] En Empresa, Verificar funciona sin selector de cuenta y la hora y el orden aplican a sus movimientos.
-- [ ] Los controles nuevos (↑/↓, campo de hora, botón Verificar) miden 44 px o más de alto táctil en móvil y los pares texto/fondo nuevos cumplen AA en claro y oscuro.
+- [ ] Los controles nuevos (asa, campo de hora, botón Verificar) miden 44 px o más de alto táctil en móvil y los pares texto/fondo nuevos cumplen AA en claro y oscuro.
 - [ ] `docs/producto.md`, `docs/ui.md` y `CHANGELOG.md` están actualizados.
 
 ## Decisiones
@@ -204,7 +205,8 @@ Convenciones:
 - **Sí:** la RPC recibe una fila objetivo y no un índice. La lista está paginada y filtrable; el cliente solo conoce a sus vecinos visibles, no el índice real dentro del día.
 - **Sí:** filas nuevas con `day_position = 0` quedan arriba de su día. Mantiene el comportamiento actual de "lo más reciente primero" sin renumerar el día en cada alta.
 - **Sí:** cambiar `occurred_on` reinicia `day_position` en un trigger y no en la action. Cubre ediciones desde cualquier pantalla, RPC o importación.
-- **Sí:** flechas ↑/↓ más arrastre en escritorio, con `useOptimistic`. Las flechas funcionan con teclado y dedo; el arrastre acelera en escritorio. Sin librería nueva: se usa `useDrag` / `useDrop` de `react-aria`, ya instalada (se confirma al implementar; si no resulta, se dejan solo las flechas).
+- **Sí:** solo un asa de arrastre ⋮⋮ sutil a la izquierda de la fila, con `useOptimistic`. Se descartaron las flechas visibles (primera versión): se veían genéricas y recargaban la fila.
+- **Sí:** arrastrar y soltar con dnd-kit (`@dnd-kit/react`), por pedido expreso: es más interactivo y tiene mejores animaciones que las alternativas. Da reordenamiento en vivo, `DragOverlay`, táctil con retardo, teclado y anuncios para lector de pantalla. Agrega la dependencia directa `@dnd-kit/react@0.5.3`, por lo que el spec original ("sin librería nueva", `useDrag`/`useDrop` de `react-aria`) queda enmendado. Se descartaron `react-aria-components` (no reordena filas de la tabla de HeroUI con una vista previa propia) y los eventos de puntero propios (sin teclado ni lector de pantalla).
 - **Sí:** el orden cubre también las filas grises de SPEC 16 (traspasos, ajustes, pagos, aportes). Si no, el orden del día en Movimientos y en el extracto quedaría incompleto.
 - **Sí:** Verificar es una modal de solo lectura con "Cargar más", sin filtro mensual y con selector opcional de cuenta. Pedido explícito: una lista larga y mínima para comparar con el banco.
 - **No:** casilla "Verificado" por fila. Añade esquema en cinco tablas y un flujo de conciliación que el usuario no pidió; si se quiere, va en otro spec.
@@ -217,16 +219,16 @@ Convenciones:
 
 ## Riesgos
 
-| Riesgo                                                                                       | Mitigación                                                                                                                    |
-| -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Un día se parte entre dos páginas de Movimientos (`PAGE_SIZE = 20`)                          | La RPC trabaja con el día completo en la base; en el borde de página la fila vecina no es visible y el control se deshabilita |
-| `create or replace view` falla si cambian columnas existentes                                | Las dos columnas nuevas van al final y el resto queda idéntico, como en SPEC 16                                               |
-| Dos pestañas reordenan el mismo día a la vez                                                 | Gana la última escritura; la RPC bloquea las filas del día y tras cada acción se revalida la lista                            |
-| Reordenar con filtros activos da un orden relativo que el usuario no espera                  | Se coloca la fila en la posición de su vecina visible y el resultado se ve al quitar el filtro; sin controles con búsqueda    |
-| Cambiar la firma de `record_*` rompe llamadores (acciones, hoja móvil, importación)          | Parámetros nuevos al final con `default null`; se actualizan `database.ts` y las llamadas en el mismo paso                    |
-| El trigger `reset_day_position` pisa un reorden cuando se edita la fecha y se mueve a la vez | Son dos acciones distintas; el trigger solo actúa si `occurred_on` cambia                                                     |
-| `cacheComponents` exige `Suspense` alrededor de lecturas dinámicas                           | La modal carga con una action al abrir y no con una lectura en el render de la página                                         |
-| Una hora puesta a mano contradice el orden de la lista y confunde                            | Documentado: la hora es dato; el orden es manual. La modal Verificar muestra ambos tal cual                                   |
+| Riesgo                                                                                       | Mitigación                                                                                                                 |
+| -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Un día se parte entre dos páginas de Movimientos (`PAGE_SIZE = 20`)                          | La RPC trabaja con el día completo en la base; en el borde de página la fila vecina no es visible y no se muestra el asa   |
+| `create or replace view` falla si cambian columnas existentes                                | Las dos columnas nuevas van al final y el resto queda idéntico, como en SPEC 16                                            |
+| Dos pestañas reordenan el mismo día a la vez                                                 | Gana la última escritura; la RPC bloquea las filas del día y tras cada acción se revalida la lista                         |
+| Reordenar con filtros activos da un orden relativo que el usuario no espera                  | Se coloca la fila en la posición de su vecina visible y el resultado se ve al quitar el filtro; sin controles con búsqueda |
+| Cambiar la firma de `record_*` rompe llamadores (acciones, hoja móvil, importación)          | Parámetros nuevos al final con `default null`; se actualizan `database.ts` y las llamadas en el mismo paso                 |
+| El trigger `reset_day_position` pisa un reorden cuando se edita la fecha y se mueve a la vez | Son dos acciones distintas; el trigger solo actúa si `occurred_on` cambia                                                  |
+| `cacheComponents` exige `Suspense` alrededor de lecturas dinámicas                           | La modal carga con una action al abrir y no con una lectura en el render de la página                                      |
+| Una hora puesta a mano contradice el orden de la lista y confunde                            | Documentado: la hora es dato; el orden es manual. La modal Verificar muestra ambos tal cual                                |
 
 ## Lo que **no** entra en este spec
 

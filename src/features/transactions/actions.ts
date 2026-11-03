@@ -337,3 +337,64 @@ export async function deleteTransaction(
   revalidateWorkspacePages(workspace)
   return {}
 }
+
+const LEDGER_KINDS = [
+  "income",
+  "expense",
+  "transfer",
+  "adjustment",
+  "debt_payment",
+  "debt_advance",
+  "goal_contribution"
+] as const
+
+const moveSchema = z.object({
+  kind: z.enum(LEDGER_KINDS),
+  id: z.uuid(),
+  targetKind: z.enum(LEDGER_KINDS),
+  targetId: z.uuid()
+})
+
+const MOVE_DEFAULT_ERROR = "No se pudo reordenar el movimiento"
+const MOVE_FORBIDDEN = "No tienes permiso para reordenar en este espacio"
+const MOVE_OTHER_DAY = "Solo se puede reordenar dentro del mismo día"
+
+// Mueve una fila a la posición de otra del mismo día. Cubre movimientos,
+// traspasos, ajustes, pagos de tarjeta, avances y aportes: el orden es el de
+// la lista unificada (SPEC 19).
+export async function moveLedgerEntry(
+  workspaceId: string,
+  kind: string,
+  id: string,
+  targetKind: string,
+  targetId: string
+): Promise<TransactionActionResult> {
+  const parsed = moveSchema.safeParse({ kind, id, targetKind, targetId })
+
+  if (!parsed.success) {
+    return { error: NOT_FOUND }
+  }
+
+  const workspace = await requireWritableWorkspace(workspaceId)
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("move_ledger_entry", {
+    p_workspace_id: workspace.id,
+    p_kind: parsed.data.kind,
+    p_id: parsed.data.id,
+    p_target_kind: parsed.data.targetKind,
+    p_target_id: parsed.data.targetId
+  })
+
+  if (error) {
+    if (error.code === "42501") {
+      return { error: MOVE_FORBIDDEN }
+    }
+    if (error.message.includes("mismo día")) {
+      return { error: MOVE_OTHER_DAY }
+    }
+    return { error: MOVE_DEFAULT_ERROR }
+  }
+
+  revalidateWorkspacePages(workspace)
+  return {}
+}

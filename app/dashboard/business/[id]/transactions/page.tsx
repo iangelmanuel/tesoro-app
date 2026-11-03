@@ -133,6 +133,7 @@ async function TransactionsContent({
               categories={categories}
               accounts={accounts}
               currency={workspace.currency}
+              canReorder={!workspace.deletionRequestedAt && !filters.q}
             />
           ) : (
             <NoFilteredTransactions

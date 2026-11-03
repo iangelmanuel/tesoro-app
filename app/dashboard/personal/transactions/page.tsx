@@ -148,6 +148,7 @@ async function TransactionsContent({
           categories={categories}
           accounts={accounts}
           currency={workspace.currency}
+          canReorder={!filters.q}
         />
       ) : (
         <NoFilteredTransactions filters={filters} />

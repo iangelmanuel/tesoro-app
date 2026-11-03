@@ -1,9 +1,11 @@
 "use client"
 
-import { useTransition } from "react"
+import { useOptimistic, useTransition } from "react"
 import { AlertDialog, Button, Table, cn, toast } from "@heroui/react"
 import {
+  ArrowDown,
   ArrowLeftRight,
+  ArrowUp,
   Banknote,
   CreditCard,
   Pencil,
@@ -19,7 +21,7 @@ import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import type { WorkspaceType } from "@/features/workspaces/queries"
 import { formatCurrency, formatDate, formatTime } from "@/libs/format"
-import { deleteTransaction } from "../actions"
+import { deleteTransaction, moveLedgerEntry } from "../actions"
 import {
   type AccountMovementKind,
   type EditableTransaction,
@@ -36,6 +38,8 @@ interface TransactionsTableProps {
   /** Cuentas del espacio, activas y archivadas */
   accounts: PaymentAccountOption[]
   currency: string
+  /** Muestra ↑/↓ para reordenar dentro del día: con permiso de escritura y sin búsqueda */
+  canReorder?: boolean
 }
 
 // A 375 px la tabla no se desborda: la fecha pasa bajo la descripción y
@@ -46,6 +50,43 @@ const FROM_LG = "hidden lg:table-cell"
 
 // Botones de fila: 32 px con mouse, 40 px en pantallas táctiles
 const ROW_ACTION = "pointer-coarse:size-10"
+
+/** Mover la fila una posición dentro de su día; falta el lado sin vecino */
+interface Reorder {
+  up?: () => void
+  down?: () => void
+}
+
+// El id de la fila en su tabla de origen (el mismo que usa move_ledger_entry)
+function entryId(row: LedgerEntry) {
+  return "transaction" in row ? row.transaction.id : row.id
+}
+
+function entryDate(row: LedgerEntry) {
+  return "transaction" in row ? row.transaction.occurred_on : row.occurred_on
+}
+
+function rowKey(row: LedgerEntry) {
+  return `${row.kind}:${entryId(row)}`
+}
+
+// La fila origen toma el lugar de la destino: sube antes de ella, baja después
+function reorderRows(
+  current: LedgerEntry[],
+  move: { sourceKey: string; targetKey: string }
+) {
+  const from = current.findIndex((row) => rowKey(row) === move.sourceKey)
+  const to = current.findIndex((row) => rowKey(row) === move.targetKey)
+
+  if (from === -1 || to === -1) {
+    return current
+  }
+
+  const next = [...current]
+  const [item] = next.splice(from, 1)
+  next.splice(to, 0, item)
+  return next
+}
 
 type TransferEntry = Extract<LedgerEntry, { kind: "transfer" }>
 type AdjustmentEntry = Extract<LedgerEntry, { kind: "adjustment" }>
@@ -94,14 +135,55 @@ export function TransactionsTable({
   rows,
   categories,
   accounts,
-  currency
+  currency,
+  canReorder = false
 }: TransactionsTableProps) {
+  // La fila se mueve al instante; si la action falla, vuelve a su lugar
+  const [orderedRows, moveOptimistic] = useOptimistic(rows, reorderRows)
+  const [, startTransition] = useTransition()
   const categoriesById = new Map(
     categories.map((category) => [category.id, category])
   )
   const accountsById = new Map(accounts.map((account) => [account.id, account]))
   const accountName = (id: string) => accountsById.get(id)?.name ?? "Cuenta"
   const isBusiness = workspaceType === "business"
+
+  function moveRow(source: LedgerEntry, target: LedgerEntry) {
+    startTransition(async () => {
+      moveOptimistic({ sourceKey: rowKey(source), targetKey: rowKey(target) })
+      const result = await moveLedgerEntry(
+        workspaceId,
+        source.kind,
+        entryId(source),
+        target.kind,
+        entryId(target)
+      )
+      if (result.error) {
+        toast.danger(result.error)
+      }
+    })
+  }
+
+  // Solo se intercambia con la fila vecina del mismo día que está a la vista
+  function reorderFor(index: number): Reorder | undefined {
+    if (!canReorder) {
+      return undefined
+    }
+    const row = orderedRows[index]
+    const previous = orderedRows[index - 1]
+    const next = orderedRows[index + 1]
+
+    return {
+      up:
+        previous && entryDate(previous) === entryDate(row)
+          ? () => moveRow(row, previous)
+          : undefined,
+      down:
+        next && entryDate(next) === entryDate(row)
+          ? () => moveRow(row, next)
+          : undefined
+    }
+  }
 
   return (
     <Table>
@@ -121,12 +203,17 @@ export function TransactionsTable({
             ) : null}
             <Table.Column className={FROM_LG}>Cuenta</Table.Column>
             <Table.Column className="text-end">Monto</Table.Column>
+            {canReorder ? (
+              <Table.Column className="w-24">
+                <span className="sr-only">Orden</span>
+              </Table.Column>
+            ) : null}
             <Table.Column className="w-20">
               <span className="sr-only">Acciones</span>
             </Table.Column>
           </Table.Header>
           <Table.Body>
-            {rows.map((row) => {
+            {orderedRows.map((row, index) => {
               if (row.kind === "transfer") {
                 return (
                   <TransferRow
@@ -134,6 +221,7 @@ export function TransactionsTable({
                     workspaceId={workspaceId}
                     showCounterparty={isBusiness}
                     transfer={row}
+                    reorder={reorderFor(index)}
                     label={`${accountName(row.from_account_id)} → ${accountName(row.to_account_id)}`}
                     accounts={accounts}
                     currency={currency}
@@ -146,6 +234,7 @@ export function TransactionsTable({
                     key={row.id}
                     showCounterparty={isBusiness}
                     entry={row}
+                    reorder={reorderFor(index)}
                     account={accountsById.get(row.account_id)}
                     currency={currency}
                   />
@@ -158,6 +247,7 @@ export function TransactionsTable({
                     workspaceId={workspaceId}
                     showCounterparty={isBusiness}
                     adjustment={row}
+                    reorder={reorderFor(index)}
                     label={`Ajuste de saldo · ${accountName(row.account_id)}`}
                     currency={currency}
                   />
@@ -215,6 +305,7 @@ export function TransactionsTable({
                     {transaction.type === "income" ? "+" : "−"}
                     {formatCurrency(transaction.amount, currency)}
                   </Table.Cell>
+                  <ReorderCell reorder={reorderFor(index)} />
                   <Table.Cell>
                     <div className="flex justify-end gap-1 pointer-coarse:gap-2">
                       <TransactionDialog
@@ -276,6 +367,44 @@ function CounterpartyCell({
   )
 }
 
+// ↑/↓ de una fila. Sin vecino de su día en un sentido, ese botón no se muestra
+function ReorderCell({ reorder }: { reorder: Reorder | undefined }) {
+  if (!reorder) {
+    return null
+  }
+
+  return (
+    <Table.Cell>
+      <div className="flex justify-end gap-1 pointer-coarse:gap-2">
+        {reorder.up ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            isIconOnly
+            className="pointer-coarse:size-11"
+            aria-label="Subir en el día"
+            onPress={reorder.up}
+          >
+            <ArrowUp />
+          </Button>
+        ) : null}
+        {reorder.down ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            isIconOnly
+            className="pointer-coarse:size-11"
+            aria-label="Bajar en el día"
+            onPress={reorder.down}
+          >
+            <ArrowDown />
+          </Button>
+        ) : null}
+      </div>
+    </Table.Cell>
+  )
+}
+
 // Fecha y, debajo, la hora si el usuario la puso
 function DateCell({ date, time }: { date: string; time: string | null }) {
   return (
@@ -322,7 +451,8 @@ function TransferRow({
   transfer,
   label,
   accounts,
-  currency
+  currency,
+  reorder
 }: {
   workspaceId: string
   showCounterparty: boolean
@@ -330,6 +460,7 @@ function TransferRow({
   label: string
   accounts: PaymentAccountOption[]
   currency: string
+  reorder: Reorder | undefined
 }) {
   return (
     <Table.Row>
@@ -350,6 +481,7 @@ function TransferRow({
       <Table.Cell className="text-end font-medium text-muted tabular-nums">
         {formatCurrency(transfer.amount, currency)}
       </Table.Cell>
+      <ReorderCell reorder={reorder} />
       <Table.Cell>
         <div className="flex justify-end gap-1 pointer-coarse:gap-2">
           <TransferDialog
@@ -394,12 +526,14 @@ function AccountMovementRow({
   showCounterparty,
   entry,
   account,
-  currency
+  currency,
+  reorder
 }: {
   showCounterparty: boolean
   entry: AccountMovementEntry
   account: PaymentAccountOption | undefined
   currency: string
+  reorder: Reorder | undefined
 }) {
   const { title, type, icon, increases } = describeAccountMovement(entry)
 
@@ -425,6 +559,7 @@ function AccountMovementRow({
         {increases ? "+" : "−"}
         {formatCurrency(Math.abs(entry.amount), currency)}
       </Table.Cell>
+      <ReorderCell reorder={reorder} />
       {/* Se edita desde la deuda o la meta */}
       <Table.Cell />
     </Table.Row>
@@ -437,13 +572,15 @@ function AdjustmentRow({
   showCounterparty,
   adjustment,
   label,
-  currency
+  currency,
+  reorder
 }: {
   workspaceId: string
   showCounterparty: boolean
   adjustment: AdjustmentEntry
   label: string
   currency: string
+  reorder: Reorder | undefined
 }) {
   return (
     <Table.Row>
@@ -465,6 +602,7 @@ function AdjustmentRow({
         {adjustment.amount > 0 ? "+" : "−"}
         {formatCurrency(Math.abs(adjustment.amount), currency)}
       </Table.Cell>
+      <ReorderCell reorder={reorder} />
       <Table.Cell>
         <div className="flex justify-end gap-1 pointer-coarse:gap-2">
           <DeleteEntryButton

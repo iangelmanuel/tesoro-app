@@ -34,45 +34,55 @@ export type EditableTransaction = Pick<
   | "recurring_expense_id"
 >
 
+/** Hora y posición manual dentro del día, comunes a toda fila de Movimientos */
+interface LedgerOrder {
+  /** "HH:MM:SS" desde Postgres; null si el usuario no la puso */
+  occurred_time: string | null
+  /** 0 = fila nueva (arriba del día); 1..n tras reordenar. No se edita */
+  day_position: number
+}
+
 /**
  * Fila de Movimientos: un ingreso o gasto, un traspaso o un ajuste de saldo.
  * La categoría y la cuenta se resuelven en la tabla con las listas que la
  * página ya carga.
  */
-export type LedgerEntry =
-  | {
-      kind: TransactionType
-      transaction: EditableTransaction
-    }
-  | {
-      kind: "transfer"
-      id: string
-      amount: number
-      occurred_on: string
-      note: string | null
-      from_account_id: string
-      to_account_id: string
-    }
-  | {
-      kind: "adjustment"
-      id: string
-      /** > 0 sube el saldo */
-      amount: number
-      occurred_on: string
-      note: string | null
-      account_id: string
-    }
-  | {
-      kind: AccountMovementKind
-      id: string
-      /** En un aporte de meta, < 0 es un retiro */
-      amount: number
-      occurred_on: string
-      note: string | null
-      account_id: string
-      /** Nombre de la deuda o la meta */
-      name: string
-    }
+export type LedgerEntry = LedgerOrder &
+  (
+    | {
+        kind: TransactionType
+        transaction: EditableTransaction
+      }
+    | {
+        kind: "transfer"
+        id: string
+        amount: number
+        occurred_on: string
+        note: string | null
+        from_account_id: string
+        to_account_id: string
+      }
+    | {
+        kind: "adjustment"
+        id: string
+        /** > 0 sube el saldo */
+        amount: number
+        occurred_on: string
+        note: string | null
+        account_id: string
+      }
+    | {
+        kind: AccountMovementKind
+        id: string
+        /** En un aporte de meta, < 0 es un retiro */
+        amount: number
+        occurred_on: string
+        note: string | null
+        account_id: string
+        /** Nombre de la deuda o la meta */
+        name: string
+      }
+  )
 
 /**
  * Pagos y avances de tarjeta y aportes de metas que llevan cuenta (SPEC 16).
@@ -102,7 +112,8 @@ function quotePostgrestValue(value: string) {
 const RANGE_NOT_SATISFIABLE = "PGRST103"
 
 // Lee la vista ledger_entries para paginar movimientos, traspasos, ajustes y
-// pagos con cuenta juntos, con el orden real. El enlace a un gasto fijo no está en la vista:
+// pagos con cuenta juntos, con el orden real (fecha, posición manual del día,
+// captura). El enlace a un gasto fijo no está en la vista:
 // se pide aparte solo para los movimientos de la página.
 export async function getTransactions(
   workspaceId: string,
@@ -159,7 +170,9 @@ export async function getTransactions(
 
   const { data, count, error } = await filtered(false)
     .order("occurred_on", { ascending: false })
+    .order("day_position", { ascending: true })
     .order("created_at", { ascending: false })
+    .order("id", { ascending: true })
     .range(from, from + PAGE_SIZE - 1)
 
   // Página fuera de rango: sin filas, pero con el total real para paginar
@@ -206,9 +219,14 @@ function toLedgerEntry(
   const id = row.id as string
   const amount = Number(row.amount)
   const occurred_on = row.occurred_on as string
+  const order: LedgerOrder = {
+    occurred_time: row.occurred_time,
+    day_position: row.day_position as number
+  }
 
   if (row.kind === "transfer") {
     return {
+      ...order,
       kind: "transfer",
       id,
       amount,
@@ -220,6 +238,7 @@ function toLedgerEntry(
   }
   if (row.kind === "adjustment") {
     return {
+      ...order,
       kind: "adjustment",
       id,
       amount,
@@ -231,6 +250,7 @@ function toLedgerEntry(
 
   if (isAccountMovementKind(row.kind)) {
     return {
+      ...order,
       kind: row.kind,
       id,
       amount,
@@ -243,6 +263,7 @@ function toLedgerEntry(
 
   const type = row.kind as TransactionType
   return {
+    ...order,
     kind: type,
     transaction: {
       id,

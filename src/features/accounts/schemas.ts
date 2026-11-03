@@ -106,3 +106,15 @@ export const adjustAccountSchema = z.object({
 })
 
 export type AdjustAccountInput = z.infer<typeof adjustAccountSchema>
+
+// Conciliar (SPEC 21): saldo real a una fecha que no puede ser futura
+export const reconcileAccountSchema = z.object({
+  balance: balanceField,
+  occurred_on: z.iso
+    .date({ error: "Elige una fecha válida" })
+    .refine((value) => value <= todayISO(), {
+      error: "La fecha no puede ser futura"
+    })
+})
+
+export type ReconcileAccountInput = z.infer<typeof reconcileAccountSchema>

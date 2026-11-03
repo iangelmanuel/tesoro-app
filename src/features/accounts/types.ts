@@ -27,6 +27,8 @@ export type TransferFormState = AccountFormState
 
 export type AdjustAccountFormState = AccountFormState
 
+export type ReconcileFormState = AccountFormState
+
 export interface AccountActionResult {
   error?: string
 }

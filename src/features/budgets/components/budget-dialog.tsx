@@ -34,8 +34,10 @@ interface BudgetDialogProps {
   budget?: BudgetProgress
   /** Categoría preseleccionada al crear (desde "Sin presupuesto") */
   defaultCategoryId?: string
-  /** Botón que abre el diálogo */
-  trigger: React.ReactNode
+  /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
+  trigger?: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export function BudgetDialog({
@@ -43,9 +45,13 @@ export function BudgetDialog({
   categories,
   budget,
   defaultCategoryId,
-  trigger
+  trigger,
+  open: controlledOpen,
+  onOpenChange
 }: BudgetDialogProps) {
-  const [open, setOpen] = useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const open = controlledOpen ?? uncontrolledOpen
+  const setOpen = onOpenChange ?? setUncontrolledOpen
   const isEditing = budget !== undefined
 
   return (
@@ -55,7 +61,7 @@ export function BudgetDialog({
     >
       {/* El trigger llega del servidor: dentro de un array con el
           Backdrop React le pide `key`. Un Fragment lo deja como hijo único */}
-      <Fragment>{trigger}</Fragment>
+      {trigger && <Fragment>{trigger}</Fragment>}
       <Modal.Backdrop>
         <Modal.Container scroll="outside">
           <Modal.Dialog className="sm:max-w-md">

@@ -59,9 +59,17 @@ alter table public.profiles
 account: {
   sections: [
     { name: "General", href: "/dashboard/account/general", icon: "User" },
-    { name: "Seguridad", href: "/dashboard/account/security", icon: "ShieldCheck" },
+    {
+      name: "Seguridad",
+      href: "/dashboard/account/security",
+      icon: "ShieldCheck"
+    },
     { name: "Privacidad", href: "/dashboard/account/privacy", icon: "Eye" },
-    { name: "Preferencias", href: "/dashboard/account/preferences", icon: "SlidersHorizontal" }
+    {
+      name: "Preferencias",
+      href: "/dashboard/account/preferences",
+      icon: "SlidersHorizontal"
+    }
   ]
 }
 ```

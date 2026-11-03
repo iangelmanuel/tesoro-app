@@ -9,6 +9,7 @@ import {
   parseAmount,
   timeSchema
 } from "@/features/transactions/schemas"
+import { todayISO } from "@/libs/dates"
 import { ACCOUNT_KINDS } from "./constants"
 
 // Cuenta y traspaso al pagar (SPEC 16). Se definen en transactions/schemas.ts
@@ -60,7 +61,18 @@ export const accountSchema = z.object({
   kind: z.enum(ACCOUNT_KINDS, { error: "Elige un tipo" }),
   icon: z.enum(CATEGORY_ICON_KEYS, { error: "Elige un icono" }),
   color: z.enum(CATEGORY_COLOR_KEYS, { error: "Elige un color" }),
-  opening_balance: balanceField
+  opening_balance: balanceField,
+  // Desde cuándo cuenta el saldo inicial. Vacío = antes de cualquier movimiento
+  opening_balance_on: z
+    .union([
+      z.literal("").transform(() => null),
+      z.iso
+        .date({ error: "Elige una fecha válida" })
+        .refine((value) => value <= todayISO(), {
+          error: "La fecha no puede ser futura"
+        })
+    ])
+    .nullable()
 })
 
 export type AccountInput = z.infer<typeof accountSchema>

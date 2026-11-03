@@ -32,7 +32,8 @@ const ACCOUNT_FIELDS = [
   "kind",
   "icon",
   "color",
-  "opening_balance"
+  "opening_balance",
+  "opening_balance_on"
 ] as const
 
 const TRANSFER_FIELDS = [

@@ -367,6 +367,36 @@ export async function adjustAccountBalance(
   return { ok: true }
 }
 
+// Saldo calculado a una fecha para el diálogo de conciliar. Solo lectura: la
+// diferencia que se guarda la recalcula reconcileAccountAction.
+export async function getReconcileBalanceAction(
+  workspaceId: string,
+  accountId: string,
+  on: string
+): Promise<{ balance?: number; error?: string }> {
+  const parsedId = idSchema.safeParse(accountId)
+  const parsedOn = z.iso
+    .date()
+    .refine((value) => value <= todayISO())
+    .safeParse(on)
+
+  if (!parsedId.success || !parsedOn.success) {
+    return { error: ACCOUNT_NOT_FOUND }
+  }
+
+  const workspace = await requireWritableWorkspace(workspaceId)
+  const account = (await getAccountBalances(workspace.id)).find(
+    (row) => row.id === parsedId.data
+  )
+
+  if (!account) {
+    return { error: ACCOUNT_NOT_FOUND }
+  }
+
+  const balance = await getAccountBalanceAt(account.id, parsedOn.data)
+  return balance === null ? { error: ACCOUNT_NOT_FOUND } : { balance }
+}
+
 // Conciliar (SPEC 21): crea un ajuste a la fecha elegida por la diferencia
 // entre el saldo real y el saldo calculado a esa fecha. La diferencia se
 // calcula aquí: el cliente solo la muestra.

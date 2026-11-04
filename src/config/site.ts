@@ -228,6 +228,11 @@ export const SITE = {
         icon: "Wallet"
       },
       {
+        name: "Gastos fijos",
+        href: "/dashboard/personal/recurring",
+        icon: "CalendarClock"
+      },
+      {
         name: "Presupuestos",
         href: "/dashboard/personal/budgets",
         icon: "PiggyBank"
@@ -266,7 +271,7 @@ export const SITE = {
       personal: [
         "/dashboard/personal",
         "/dashboard/personal/transactions",
-        "/dashboard/personal/budgets",
+        "/dashboard/personal/recurring",
         "/dashboard/personal/accounts"
       ],
       business: ["", "/transactions", "/cash-flow", "/reports"]

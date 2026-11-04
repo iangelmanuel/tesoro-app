@@ -12,7 +12,7 @@ import {
   type BudgetProgress,
   getBudgetProgress
 } from "@/features/budgets/queries"
-import { BUDGETS_PATH } from "@/features/budgets/tabs"
+import { BUDGETS_PATH, RECURRING_PATH } from "@/features/budgets/tabs"
 import {
   DEBTS_PATH,
   isActiveDebt,
@@ -321,7 +321,7 @@ function overduePaymentRule(inputs: RecommendationInputs): Recommendation[] {
           title: `Pago vencido de ${payment.name}`,
           evidence: `${payment.name} venció el ${formatDayMonth(payment.dueOn)} (${formatCurrency(payment.amount)})`,
           amount: payment.amount,
-          href: `${BUDGETS_PATH}?tab=recurring` as Route,
+          href: RECURRING_PATH as Route,
           linkLabel: "Ir a Gastos fijos"
         }
       ]

@@ -61,7 +61,7 @@ export const IMPORT_TARGETS: Record<ImportTarget, TargetDefinition> = {
       starts_on: ["inicio", "desde", "fecha"],
       ends_on: ["fin", "hasta"]
     },
-    href: `${PERSONAL}/budgets?tab=recurring`
+    href: `${PERSONAL}/recurring`
   },
   debt_entries: {
     label: "Deudas",

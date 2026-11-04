@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import type { Route } from "next"
 import { useRouter } from "next/navigation"
 import { Button, Drawer, Switch } from "@heroui/react"
 import {
@@ -13,7 +12,7 @@ import {
   TrendingDown,
   TrendingUp
 } from "lucide-react"
-import { BUDGETS_PATH } from "@/features/budgets/tabs"
+import { RECURRING_PATH } from "@/features/budgets/tabs"
 import { DEBTS_PATH } from "@/features/debts/calculations"
 import { PaymentDialog } from "@/features/debts/components/payment-dialog"
 import { ContributionDialog } from "@/features/goals/components/contribution-dialog"
@@ -23,8 +22,6 @@ import { TransactionDialog } from "@/features/transactions/components/transactio
 import type { TransactionType } from "@/features/transactions/filters"
 import { useQuickActions } from "../quick-actions-context"
 import { useActiveWorkspace } from "../use-active-workspace"
-
-const RECURRING_PATH = `${BUDGETS_PATH}?tab=recurring` as Route
 
 export type QuickSheetAction =
   | "expense"

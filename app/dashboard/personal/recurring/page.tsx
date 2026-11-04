@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { Skeleton } from "@heroui/react"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
+import { BudgetsAndRecurringTabs } from "@/features/budgets/components/budgets-and-recurring-tabs"
 import { RECURRING_PATH } from "@/features/budgets/tabs"
 import { RecurringView } from "@/features/recurring-expenses/components/recurring-view"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
@@ -28,7 +29,11 @@ export default function RecurringPage() {
 
 async function RecurringContent() {
   const workspace = await getPersonalWorkspace()
-  return <RecurringView workspace={workspace} />
+  return (
+    <BudgetsAndRecurringTabs tab="recurring">
+      <RecurringView workspace={workspace} />
+    </BudgetsAndRecurringTabs>
+  )
 }
 
 function RecurringSkeleton() {

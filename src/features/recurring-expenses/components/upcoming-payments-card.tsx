@@ -4,14 +4,14 @@ import { CircleCheck } from "lucide-react"
 import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import { getAccountBalances } from "@/features/accounts/queries"
-import { BUDGETS_PATH } from "@/features/budgets/tabs"
+import { RECURRING_PATH } from "@/features/budgets/tabs"
 import { getCategories } from "@/features/categories/queries"
 import { formatCurrency, formatDate } from "@/libs/format"
 import { getUpcomingPayments } from "../queries"
 import { OccurrenceStatusBadge, PayOccurrenceButton } from "./upcoming-payments"
 
 const MAX_PAYMENTS = 5
-const RECURRING_HREF = `${BUDGETS_PATH}?tab=recurring` as Route
+const RECURRING_HREF = RECURRING_PATH as Route
 
 interface UpcomingPaymentsCardProps {
   workspaceId: string

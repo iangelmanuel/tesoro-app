@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { Button, cn } from "@heroui/react"
 import { Plus } from "lucide-react"
 import { SITE } from "@/config/site"
+import { BUDGETS_PATH, RECURRING_PATH } from "@/features/budgets/tabs"
 import { workspaceBasePath } from "@/features/workspaces/paths"
 import { NAV_ICONS, type NavIcon, isActive } from "../nav"
 import { useActiveWorkspace } from "../use-active-workspace"
@@ -74,7 +75,7 @@ export function BottomNav({ onOpenQuickSheet }: BottomNavProps) {
           >
             <NavDestination
               item={item}
-              active={isActive(pathname, item.href, root)}
+              active={isDestinationActive(pathname, item.href, root)}
             />
           </li>
         ))}
@@ -98,13 +99,22 @@ export function BottomNav({ onOpenQuickSheet }: BottomNavProps) {
           >
             <NavDestination
               item={item}
-              active={isActive(pathname, item.href, root)}
+              active={isDestinationActive(pathname, item.href, root)}
             />
           </li>
         ))}
       </ul>
     </nav>
   )
+}
+
+// Gastos fijos y Presupuestos comparten la entrada de la barra: en el teléfono
+// son dos tabs de la misma pantalla
+function isDestinationActive(pathname: string, href: string, root: string) {
+  if (href === RECURRING_PATH && isActive(pathname, BUDGETS_PATH, root)) {
+    return true
+  }
+  return isActive(pathname, href, root)
 }
 
 function NavDestination({

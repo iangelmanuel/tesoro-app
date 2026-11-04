@@ -2,40 +2,37 @@
 
 import { useTransition } from "react"
 import type { Route } from "next"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Tabs, cn } from "@heroui/react"
-import { BUDGETS_PATH, type BudgetsTab } from "../tabs"
+import { BUDGETS_PATH, type BudgetsTab, RECURRING_PATH } from "../tabs"
 
-interface BudgetsTabsProps {
+interface BudgetsAndRecurringTabsProps {
   tab: BudgetsTab
-  /** Contenido de la tab activa, renderizado en el servidor */
+  /** Contenido de la pantalla activa, renderizado en el servidor */
   children: React.ReactNode
 }
 
-// Escribe `?tab` en la URL. `month` solo aplica a Presupuestos: se conserva
-// al volver a esa tab y se quita en Gastos fijos.
-export function BudgetsTabs({ tab, children }: BudgetsTabsProps) {
+const TAB_PATHS: Record<BudgetsTab, Route> = {
+  recurring: RECURRING_PATH as Route,
+  budgets: BUDGETS_PATH as Route
+}
+
+// Selector Gastos fijos | Presupuestos del teléfono (< 768 px). Cada tab es
+// su propia ruta: la barra inferior abre Gastos fijos y desde aquí se llega
+// a Presupuestos. Desde 768 px el selector se oculta: el aside ya separa las
+// dos pantallas.
+export function BudgetsAndRecurringTabs({
+  tab,
+  children
+}: BudgetsAndRecurringTabsProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [pending, startTransition] = useTransition()
 
   function changeTab(value: React.Key) {
     if (value === tab) return
 
-    const query = new URLSearchParams()
-    if (value === "recurring") {
-      query.set("tab", "recurring")
-    } else {
-      const month = searchParams.get("month")
-      if (month) query.set("month", month)
-    }
-    const search = query.toString()
-
     startTransition(() => {
-      router.replace(
-        (search ? `${BUDGETS_PATH}?${search}` : BUDGETS_PATH) as Route,
-        { scroll: false }
-      )
+      router.replace(TAB_PATHS[value as BudgetsTab], { scroll: false })
     })
   }
 
@@ -45,19 +42,25 @@ export function BudgetsTabs({ tab, children }: BudgetsTabsProps) {
       onSelectionChange={changeTab}
       className="gap-6"
     >
-      <Tabs.ListContainer>
-        <Tabs.List aria-label="Presupuestos y gastos fijos">
-          <Tabs.Tab id="budgets">
-            Presupuestos
+      <Tabs.ListContainer className="md:hidden">
+        <Tabs.List aria-label="Gastos fijos y presupuestos">
+          <Tabs.Tab
+            id="recurring"
+            className="max-md:min-h-11"
+          >
+            Gastos fijos
             <Tabs.Indicator />
           </Tabs.Tab>
-          <Tabs.Tab id="recurring">
-            Gastos fijos
+          <Tabs.Tab
+            id="budgets"
+            className="max-md:min-h-11"
+          >
+            Presupuestos
             <Tabs.Indicator />
           </Tabs.Tab>
         </Tabs.List>
       </Tabs.ListContainer>
-      {/* Solo se pinta la tab activa: su contenido llega del servidor */}
+      {/* Solo se pinta la pantalla activa: su contenido llega del servidor */}
       <Tabs.Panel
         id={tab}
         className={cn(

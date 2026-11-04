@@ -9,6 +9,7 @@ import { BudgetDialog } from "@/features/budgets/components/budget-dialog"
 import { BudgetMonthNav } from "@/features/budgets/components/budget-month-nav"
 import { BudgetProgressRow } from "@/features/budgets/components/budget-progress-row"
 import { BudgetTotals } from "@/features/budgets/components/budget-totals"
+import { BudgetsAndRecurringTabs } from "@/features/budgets/components/budgets-and-recurring-tabs"
 import { CopyPreviousMonthButton } from "@/features/budgets/components/copy-previous-month-button"
 import { UnbudgetedCategories } from "@/features/budgets/components/unbudgeted-categories"
 import { type BudgetMonth, parseBudgetMonth } from "@/features/budgets/month"
@@ -57,11 +58,13 @@ async function BudgetsContent({
   const workspace = await getPersonalWorkspace()
 
   return (
-    <BudgetsView
-      workspace={workspace}
-      // Se parsea tras leer la sesión: el mes por defecto usa new Date()
-      month={parseBudgetMonth(query.month)}
-    />
+    <BudgetsAndRecurringTabs tab="budgets">
+      <BudgetsView
+        workspace={workspace}
+        // Se parsea tras leer la sesión: el mes por defecto usa new Date()
+        month={parseBudgetMonth(query.month)}
+      />
+    </BudgetsAndRecurringTabs>
   )
 }
 

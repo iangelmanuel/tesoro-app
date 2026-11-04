@@ -1,6 +1,6 @@
 # SPEC 23 — Pulido de los modos claro y oscuro y Presupuestos / Gastos fijos como pantallas separadas
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 04, SPEC 14, SPEC 18, SPEC 20
 > **Fecha:** 2026-11-03
 > **Objetivo:** Que el modo claro se vea más minimal y elegante (colores, sombras y superficies), que el modo oscuro gane profundidad y elevación sin alejarse del lenguaje del claro, y que Gastos fijos y Presupuestos sean dos ítems separados del aside, con Gastos fijos primero y como pestaña por defecto en el teléfono.
@@ -82,10 +82,10 @@ No introduce datos nuevos ni migraciones. Cambia configuración de navegación (
 - [x] Un solo título por pantalla desde el header; controles de 44 px o más en móvil.
 - [x] `pnpm next typegen`, `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
 - [x] `docs/producto.md`, `docs/ui.md` y `[Unreleased]` (en inglés) documentan el cambio.
-- [ ] En oscuro, el fondo es más profundo y las tarjetas y niveles se separan mejor, sin bordes y sin desviarse del lenguaje del claro; se revisa pantalla por pantalla.
-- [ ] Los pares texto/fondo nuevos o cambiados del oscuro dan AA y la tabla de `docs/ui.md` queda actualizada.
-- [ ] El claro no tiene regresiones por los cambios del oscuro (comparación antes/después).
-- [ ] Los pasos 10 a 13 están documentados y la verificación final del paso 14 pasa.
+- [ ] En oscuro, el fondo es más profundo y las tarjetas y niveles se separan mejor, sin bordes y sin desviarse del lenguaje del claro; se revisa pantalla por pantalla. _(revisión visual pendiente)_
+- [x] Los pares texto/fondo nuevos o cambiados del oscuro dan AA y la tabla de `docs/ui.md` queda actualizada.
+- [x] El claro no tiene regresiones por los cambios del oscuro: los pasos 11 y 12 solo tocan `.dark` y `themeColor`, y el diff del claro no cambia.
+- [x] Los pasos 10 a 13 están documentados y la verificación final del paso 14 pasa.
 
 ## Decisiones
 

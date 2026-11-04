@@ -9,6 +9,7 @@ import {
 } from "react"
 import { toast } from "@heroui/react"
 import { setHideAmountsAction } from "@/features/account/actions"
+import { AMOUNT_MASK, formatCurrency } from "@/libs/format"
 
 interface HideAmountsValue {
   /** true: saldos y totales se muestran como `***` */
@@ -64,4 +65,19 @@ export function useHideAmounts() {
   }
 
   return context
+}
+
+/**
+ * Formateador de montos para código que no puede usar <Amount />: etiquetas
+ * de SVG, tooltips y tablas solo para lectores de pantalla. Con las cifras
+ * ocultas devuelve la máscara.
+ */
+export function useFormatAmount() {
+  const { hidden } = useHideAmounts()
+
+  return {
+    hidden,
+    money: (value: number, currency: string, fractionDigits?: number) =>
+      hidden ? AMOUNT_MASK : formatCurrency(value, currency, fractionDigits)
+  }
 }

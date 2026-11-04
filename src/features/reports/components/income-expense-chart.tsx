@@ -7,7 +7,7 @@ import {
   type ChartConfig,
   ChartContainer
 } from "@/components/charts/chart-container"
-import { formatCompactCurrency } from "@/components/charts/chart-format"
+import { formatChartAmount } from "@/components/charts/chart-format"
 import {
   ChartLegend,
   ChartLegendContent
@@ -20,7 +20,7 @@ import {
   LINE_PROPS
 } from "@/components/charts/chart-style"
 import { ChartTooltip } from "@/components/charts/chart-tooltip"
-import { formatCurrency } from "@/libs/format"
+import { useFormatAmount } from "@/components/dashboard/hide-amounts-context"
 import { REPORT_LABELS, type ReportLabels } from "../labels"
 import type { MonthlyTotal } from "../queries"
 import { ChartDataTable } from "./chart-data-table"
@@ -61,6 +61,7 @@ export function IncomeExpenseChart({
   legend = "inline",
   className
 }: IncomeExpenseChartProps) {
+  const { hidden, money } = useFormatAmount()
   const seriesLabels = {
     income: labels.income,
     expense: labels.expense,
@@ -109,7 +110,7 @@ export function IncomeExpenseChart({
             {...AXIS_PROPS}
             width={64}
             tickFormatter={(value: number) =>
-              formatCompactCurrency(value, currency)
+              formatChartAmount(value, currency, hidden)
             }
           />
           <ChartTooltip
@@ -159,9 +160,9 @@ export function IncomeExpenseChart({
         ]}
         rows={data.map((row) => [
           monthLabel(row.month),
-          formatCurrency(row.income, currency),
-          formatCurrency(row.expense, currency),
-          ...(showBalance ? [formatCurrency(row.balance, currency)] : [])
+          money(row.income, currency),
+          money(row.expense, currency),
+          ...(showBalance ? [money(row.balance, currency)] : [])
         ])}
       />
     </>

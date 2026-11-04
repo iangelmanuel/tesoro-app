@@ -7,7 +7,7 @@ import {
 } from "@/components/charts/chart-container"
 import { ANIMATION_PROPS } from "@/components/charts/chart-style"
 import { ChartTooltip } from "@/components/charts/chart-tooltip"
-import { formatCurrency } from "@/libs/format"
+import { useFormatAmount } from "@/components/dashboard/hide-amounts-context"
 import type { CategorySlice } from "../chart-data"
 import { ChartDataTable } from "./chart-data-table"
 import { CurrencyTooltipContent } from "./currency-tooltip"
@@ -31,6 +31,7 @@ export function CategoryDonutChart({
   title,
   className
 }: CategoryDonutChartProps) {
+  const { money } = useFormatAmount()
   const total = slices.reduce((sum, slice) => sum + slice.total, 0)
   const data = slices.map((slice) => ({ ...slice, fill: slice.color }))
   const labels = Object.fromEntries(
@@ -47,11 +48,11 @@ export function CategoryDonutChart({
         config={config}
         className={className ?? "mx-auto aspect-square max-h-64 w-full"}
         role="figure"
-        aria-label={`${title}. Total ${formatCurrency(total, currency)}`}
+        aria-label={`${title}. Total ${money(total, currency)}`}
       >
         <PieChart
           accessibilityLayer
-          title={`${title}. Total ${formatCurrency(total, currency)}`}
+          title={`${title}. Total ${money(total, currency)}`}
         >
           <ChartTooltip
             content={
@@ -91,7 +92,7 @@ export function CategoryDonutChart({
                       y={cy}
                       className="fill-foreground text-base font-semibold tabular-nums"
                     >
-                      {formatCurrency(total, currency)}
+                      {money(total, currency)}
                     </tspan>
                     <tspan
                       x={cx}
@@ -125,7 +126,7 @@ export function CategoryDonutChart({
               {share(slice.total)}
             </span>
             <span className="font-medium tabular-nums">
-              {formatCurrency(slice.total, currency)}
+              {money(slice.total, currency)}
             </span>
           </li>
         ))}
@@ -135,7 +136,7 @@ export function CategoryDonutChart({
         headers={["Categoría", "Total", "% del total"]}
         rows={slices.map((slice) => [
           slice.name,
-          formatCurrency(slice.total, currency),
+          money(slice.total, currency),
           share(slice.total)
         ])}
       />

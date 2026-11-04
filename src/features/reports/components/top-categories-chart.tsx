@@ -7,7 +7,7 @@ import {
 } from "@/components/charts/chart-container"
 import { HORIZONTAL_BAR_PROPS } from "@/components/charts/chart-style"
 import { ChartTooltip } from "@/components/charts/chart-tooltip"
-import { formatCurrency } from "@/libs/format"
+import { useFormatAmount } from "@/components/dashboard/hide-amounts-context"
 import type { CategorySlice } from "../chart-data"
 import { ChartDataTable } from "./chart-data-table"
 import { CurrencyTooltipContent } from "./currency-tooltip"
@@ -27,6 +27,7 @@ export function TopCategoriesChart({
   currency,
   title
 }: TopCategoriesChartProps) {
+  const { money } = useFormatAmount()
   const data = categories.map((category) => ({
     ...category,
     fill: category.color
@@ -96,7 +97,7 @@ export function TopCategoriesChart({
                   >
                     <tspan className="fill-foreground">{row.name}</tspan>
                     <tspan className="fill-muted tabular-nums">
-                      {` · ${formatCurrency(row.total, currency)}`}
+                      {` · ${money(row.total, currency)}`}
                     </tspan>
                   </text>
                 )
@@ -110,7 +111,7 @@ export function TopCategoriesChart({
         headers={["Categoría", "Total"]}
         rows={categories.map((category) => [
           category.name,
-          formatCurrency(category.total, currency)
+          money(category.total, currency)
         ])}
       />
     </>

@@ -2,7 +2,7 @@
 
 import type { ComponentProps } from "react"
 import { ChartTooltipContent } from "@/components/charts/chart-tooltip"
-import { formatCurrency } from "@/libs/format"
+import { useFormatAmount } from "@/components/dashboard/hide-amounts-context"
 
 type CurrencyTooltipProps = ComponentProps<typeof ChartTooltipContent> & {
   currency: string
@@ -17,6 +17,8 @@ export function CurrencyTooltipContent({
   labels,
   ...props
 }: CurrencyTooltipProps) {
+  const { money } = useFormatAmount()
+
   return (
     <ChartTooltipContent
       {...props}
@@ -37,7 +39,7 @@ export function CurrencyTooltipContent({
             <span className="flex flex-1 items-center justify-between gap-4 leading-none">
               <span className="text-muted">{labels[key] ?? key}</span>
               <span className="font-medium text-foreground tabular-nums">
-                {formatCurrency(Number(value), currency)}
+                {money(Number(value), currency)}
               </span>
             </span>
           </>

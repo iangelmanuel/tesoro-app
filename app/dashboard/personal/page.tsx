@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 import { ChartCard } from "@/components/charts/chart-card"
+import { Amount } from "@/components/dashboard/amount"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { SITE } from "@/config/site"
@@ -23,7 +24,6 @@ import { ScoreSummaryCard } from "@/features/score/components/score-summary-card
 import { NoTransactions } from "@/features/transactions/components/transactions-empty"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { currentMonth, monthRange, shiftMonth } from "@/libs/dates"
-import { formatCurrency } from "@/libs/format"
 import { buildMetadata } from "@/libs/seo"
 
 export const metadata = buildMetadata({
@@ -131,7 +131,12 @@ async function SummaryContent() {
       <div className="grid gap-4 lg:grid-cols-3">
         <ChartCard
           title="Ingresos vs. gastos"
-          figure={formatCurrency(trendBalance, currency)}
+          figure={
+            <Amount
+              value={trendBalance}
+              currency={currency}
+            />
+          }
           figureCaption={`de balance en los últimos ${TREND_MONTHS} meses`}
           legend={isEmptyTrend ? undefined : incomeExpenseLegend()}
           className="lg:col-span-2"

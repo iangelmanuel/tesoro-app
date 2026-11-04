@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 import { Button, Disclosure, buttonVariants } from "@heroui/react"
+import { Amount } from "@/components/dashboard/amount"
 import { GoalIcon } from "@/features/goals/components/goal-icon"
-import { formatCurrency } from "@/libs/format"
 import { ACCOUNT_KIND_META } from "../constants"
 import type { AccountWithBalance } from "../types"
 import { accountTransactionsHref } from "./account-card"
@@ -67,7 +67,10 @@ function ArchivedAccountRow({
         <span className="truncate font-medium">{account.name}</span>
         <span className="text-sm text-muted tabular-nums">
           {ACCOUNT_KIND_META[account.kind].label} ·{" "}
-          {formatCurrency(account.balance, currency)}
+          <Amount
+            value={account.balance}
+            currency={currency}
+          />
         </span>
       </span>
       <Link

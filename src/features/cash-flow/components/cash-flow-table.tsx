@@ -1,9 +1,9 @@
 import { Table, cn } from "@heroui/react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { Amount } from "@/components/dashboard/amount"
 import { ScrollTable } from "@/components/dashboard/scroll-table"
 import { NEGATIVE } from "@/features/reports/change"
-import { formatCurrency } from "@/libs/format"
 import type { CashFlowMonth } from "../queries"
 
 // `month` es una fecha de Postgres: se arma en local para que no se corra
@@ -46,10 +46,16 @@ export function CashFlowTable({ months, currency }: CashFlowTableProps) {
                     {monthLabel(row.month)}
                   </Table.Cell>
                   <Table.Cell className="text-end whitespace-nowrap tabular-nums">
-                    {formatCurrency(row.inflow, currency)}
+                    <Amount
+                      value={row.inflow}
+                      currency={currency}
+                    />
                   </Table.Cell>
                   <Table.Cell className="text-end whitespace-nowrap tabular-nums">
-                    {formatCurrency(row.outflow, currency)}
+                    <Amount
+                      value={row.outflow}
+                      currency={currency}
+                    />
                   </Table.Cell>
                   <Table.Cell
                     className={cn(
@@ -57,7 +63,10 @@ export function CashFlowTable({ months, currency }: CashFlowTableProps) {
                       row.net < 0 && NEGATIVE
                     )}
                   >
-                    {formatCurrency(row.net, currency)}
+                    <Amount
+                      value={row.net}
+                      currency={currency}
+                    />
                   </Table.Cell>
                   <Table.Cell
                     className={cn(
@@ -65,7 +74,10 @@ export function CashFlowTable({ months, currency }: CashFlowTableProps) {
                       row.closingBalance < 0 && NEGATIVE
                     )}
                   >
-                    {formatCurrency(row.closingBalance, currency)}
+                    <Amount
+                      value={row.closingBalance}
+                      currency={currency}
+                    />
                   </Table.Cell>
                 </Table.Row>
               ))}

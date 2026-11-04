@@ -1,5 +1,3 @@
-import { formatCurrency } from "@/libs/format"
-
 // Formato y color de la variación vs. el mes anterior en las tarjetas del
 // Resumen. Lo comparten Personal y Empresa.
 
@@ -21,10 +19,6 @@ const SIGNED_PERCENT = new Intl.NumberFormat("es-CO", {
 /** Variación % con signo, o "—" si no hay base para compararla */
 export function formatPercentChange(change: number | null) {
   return change === null ? EMPTY : SIGNED_PERCENT.format(change / 100)
-}
-
-export function formatSignedCurrency(amount: number, currency: string) {
-  return `${amount > 0 ? "+" : ""}${formatCurrency(amount, currency)}`
 }
 
 // Verde si el cambio es bueno y rojo si es malo. En gastos subir es malo.

@@ -6,14 +6,14 @@ import {
   CardTitle,
   cn
 } from "@heroui/react"
+import { Amount } from "@/components/dashboard/amount"
 import {
   EMPTY,
   NEGATIVE,
   PERCENT,
   POSITIVE,
   changeTone,
-  formatPercentChange,
-  formatSignedCurrency
+  formatPercentChange
 } from "@/features/reports/change"
 import {
   balanceDifference,
@@ -21,7 +21,6 @@ import {
   savingsRate
 } from "@/features/reports/metrics"
 import type { MonthlyTotal } from "@/features/reports/queries"
-import { formatCurrency } from "@/libs/format"
 
 interface BusinessSummaryCardsProps {
   /** Totales del mes actual: income = ventas, expense = costos y gastos */
@@ -55,21 +54,44 @@ export function BusinessSummaryCards({
   const main = [
     {
       title: "Ventas",
-      value: formatCurrency(current.income, currency),
+      value: (
+        <Amount
+          value={current.income}
+          currency={currency}
+        />
+      ),
       change: formatPercentChange(salesChange),
       changeClassName: changeTone(salesChange)
     },
     {
       title: "Costos y gastos",
-      value: formatCurrency(current.expense, currency),
+      value: (
+        <Amount
+          value={current.expense}
+          currency={currency}
+        />
+      ),
       change: formatPercentChange(costsChange),
       changeClassName: changeTone(costsChange, true)
     },
     {
       title: "Utilidad",
-      value: formatCurrency(current.balance, currency),
+      value: (
+        <Amount
+          value={current.balance}
+          currency={currency}
+        />
+      ),
       valueClassName: current.balance < 0 ? NEGATIVE : POSITIVE,
-      change: formatSignedCurrency(profitChange, currency),
+      change: (
+        <>
+          {profitChange > 0 ? "+" : ""}
+          <Amount
+            value={profitChange}
+            currency={currency}
+          />
+        </>
+      ),
       changeClassName: changeTone(profitChange)
     }
   ]
@@ -83,7 +105,12 @@ export function BusinessSummaryCards({
     },
     {
       title: "Saldo en cuentas",
-      value: formatCurrency(accountsBalance, currency),
+      value: (
+        <Amount
+          value={accountsBalance}
+          currency={currency}
+        />
+      ),
       valueClassName: accountsBalance < 0 ? NEGATIVE : undefined,
       hint: "Hoy, en las cuentas activas"
     }

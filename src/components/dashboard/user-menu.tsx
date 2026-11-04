@@ -56,7 +56,7 @@ export function UserMenu({ user }: { user: DashboardUser }) {
 
   function onAction(key: React.Key) {
     if (key === "account") {
-      router.push(SITE.routes.account)
+      router.push(SITE.account.sections[0].href)
     } else if (key === "sign-out") {
       startSignOut(() => signOut())
     }

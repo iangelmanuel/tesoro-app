@@ -37,8 +37,8 @@ Las rutas viven en `SITE.routes` y la navegación de los espacios en
 `SITE.navigation.personal` y `SITE.navigation.business` (este con `segment`,
 que se agrega a `/dashboard/business/[id]`). `robots.ts` bloquea `/dashboard/`, `/api/` y
 `/auth/`, y `proxy.ts` exige sesión en `/dashboard/*`. Los slugs van en inglés
-(`/transactions`, `/budgets`, `/goals`, `/debts`, `/reports`,
-`/recommendations`); la UI, en español. Cada empresa vive en
+(`/transactions`, `/recurring`, `/budgets`, `/goals`, `/debts`,
+`/reports`, `/recommendations`); la UI, en español. Cada empresa vive en
 `/dashboard/business/[id]/...`, para que la URL refleje el espacio activo.
 
 ## Landing
@@ -119,7 +119,9 @@ Secciones, en orden (`src/features/landing/components/`):
   - Los overlays de HeroUI (diálogos, menús, drawers) se montan dentro de ese
     contenedor (`UNSAFE_PortalProvider`), así también toman el primario.
 - **Neutros**: negros y grises azulados (fondo, superficie, bordes, texto y
-  texto atenuado), con AA en claro y oscuro.
+  texto atenuado), con AA en claro y oscuro. En claro, tarjetas blancas sin
+  borde sobre un gris suave, con sombra en dos capas (`--surface-shadow`,
+  `--overlay-shadow`); en oscuro no hay sombra.
 - **Componente** `Logo` (`src/components/brand/logo.tsx`): isotipo inline y
   wordmark, con variante solo isotipo (`variant="mark"`) y tamaños `default` y
   `lg`. Si cambia `mark.svg`, se actualiza también aquí.
@@ -471,14 +473,20 @@ Periodo y tipo viven en la URL, así un enlace se puede compartir y recargar:
 
 ## Gastos fijos y presupuestos
 
-Página `/dashboard/personal/budgets` con dos tabs: **Presupuestos** (por
-defecto) y **Gastos fijos**. Las dos son la planificación del mes: lo que se
-quiere gastar como máximo y lo que se debe pagar.
+Son dos pantallas separadas, las dos de la planificación del mes: lo que se
+debe pagar y lo que se quiere gastar como máximo.
 
-| Parámetro | Valores                | Por defecto                    |
-| --------- | ---------------------- | ------------------------------ |
-| `tab`     | `budgets`, `recurring` | `budgets`                      |
-| `month`   | `YYYY-MM`              | mes actual en `America/Bogota` |
+- **Gastos fijos:** `/dashboard/personal/recurring`. Va primero en el aside.
+- **Presupuestos:** `/dashboard/personal/budgets`, con el parámetro `month`.
+- `/dashboard/personal/budgets?tab=recurring` redirige a Gastos fijos
+  (compatibilidad con enlaces antiguos).
+- **En el teléfono (`< 768 px`)** las dos comparten la entrada de la barra
+  inferior, que abre Gastos fijos, y un selector **Gastos fijos |
+  Presupuestos** arriba cambia de ruta. Desde 768 px el selector se oculta.
+
+| Parámetro | Valores   | Por defecto                    |
+| --------- | --------- | ------------------------------ |
+| `month`   | `YYYY-MM` | mes actual en `America/Bogota` |
 
 - `month` solo aplica a Presupuestos. Un valor inválido cae a su valor por
   defecto. Todos los meses, pasados y futuros, se pueden ver y editar.

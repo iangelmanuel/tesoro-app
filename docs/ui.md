@@ -109,6 +109,12 @@ corrió por regex. Se resuelve en los pasos 2 y 3 del spec.
 | P2        | El primario de Personal/Empresa en claro (`accent`/`background` 3.41 y 3.34) solo cumple foco. Como texto o enlace no llega a 4.5:1; hay que confirmar que `accent-soft-foreground` (mezcla 70/30 con el foreground) lo cubre donde se usa texto. | `globals.css`, usos de `text-accent`                                                                                                                                                               |
 | P3        | Landing (`hero-visual`, `score-visual`) usa `border` y `shadow-xl shadow-black/5`. Fuera de alcance de este spec.                                                                                                                                 | `features/landing/components/`                                                                                                                                                                     |
 
+Resueltos en el SPEC 23: los dos P1 (fondo `#f1f2f5` y escala de sombras
+`--surface-shadow` / `--overlay-shadow`, aplicada a `SURFACE_NOTE`, estados
+vacíos, cuentas archivadas y el overlay de arrastre) y las series de
+gráficas. La grilla se mantiene decorativa (≈ 1.5:1). Pendientes: los colores
+crudos de Tailwind (P2) y la landing (P3).
+
 Sin P0. Lo que ya funciona y se conserva: tarjetas sin borde, tokens con
 nombres de HeroUI, `Amount` y `tabular-nums` en cifras, leyendas y tablas
 `sr-only` en gráficas, estados por `tone.ts` en `StatCard`.
@@ -219,6 +225,8 @@ Reglas:
 | Shell            | `app/dashboard/layout.tsx`                                     | Aside, header con título y accesos, `<main id="contenido">` y "Saltar al contenido"  |
 | Resumen Personal | `app/dashboard/personal/page.tsx`                              | 4 `StatCard` → gráfica + columna (score, cuentas) → últimos movimientos → 4 tarjetas |
 | Movimientos      | `app/dashboard/personal/transactions`                          | Barra de filtros pill, KPIs pequeñas, tabla compacta (`src/features/transactions/`)  |
+| Gastos fijos     | `app/dashboard/personal/recurring`                             | Próximos pagos y lista (`RecurringView`); selector móvil `BudgetsAndRecurringTabs`   |
+| Presupuestos     | `app/dashboard/personal/budgets`                               | Mes, totales y filas de progreso; `?tab=recurring` redirige a Gastos fijos           |
 | Reportes         | `src/features/reports/components/reports-view.tsx`             | Barra de periodo y tipo, 4 KPI, tendencia, top 5 + tabla de categorías               |
 | Cuenta           | `app/dashboard/account/{general,security,privacy,preferences}` | Aside interno (`AccountNav`) y una `AccountSection` por tema                         |
 
@@ -252,8 +260,11 @@ Piezas en `src/components/dashboard/mobile/`:
   de ocultar, en `sessionStorage` (`tesoro:quick-sheet:hidden-at:v1`). Si el
   almacenamiento falla, usa memoria y la hoja se abre como con el switch
   encendido.
-- **Barra inferior:** Personal: Resumen, Movimientos, [+], Presupuestos, Cuentas
-  (Metas sigue en el aside, SPEC 20).
+- **Barra inferior:** Personal: Resumen, Movimientos, [+], Gastos fijos, Cuentas
+  (Metas sigue en el aside, SPEC 20). La entrada de Gastos fijos también se
+  marca en Presupuestos: en el teléfono son dos tabs de la misma pantalla
+  (`BudgetsAndRecurringTabs`, SPEC 23), cada una su ruta, y el selector se
+  oculta desde 768 px.
   Empresa: Resumen, Movimientos, [+], Flujo de caja, Reportes. Fuera
   de un espacio (cuenta, estado vacío de Empresa) muestra los destinos de
   Personal, sin [+]. Los destinos salen de `SITE.navigation.mobile`.

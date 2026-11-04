@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Gastos fijos and Presupuestos as separate screens (SPEC 23): new `/dashboard/personal/recurring` route (upcoming payments and the recurring expenses list) and `/dashboard/personal/budgets` for budgets only. The Personal aside and drawer list **Gastos fijos** first, then **Presupuestos** (`SITE.navigation.personal`, `SITE.routes.personalRecurring`, `CalendarClock` icon). The old `/dashboard/personal/budgets?tab=recurring` URL redirects to the new route.
+- Phone selector **Gastos fijos | Presupuestos** (`BudgetsAndRecurringTabs`, hidden from 768 px): the bottom bar keeps a single entry pointing to Gastos fijos, which is also marked active on Presupuestos. Each tab is its own route.
+- Light theme elevation tokens `--surface-shadow` and `--overlay-shadow` (two layers, tinted with the foreground, never pure black); dark mode keeps no shadow. Light-mode audit findings are in `docs/ui.md`.
+
 - Hide amounts (SPEC 22): an eye button in the dashboard header (and a switch in Account → Privacy sharing the same state) replaces balances and totals with `***`. The preference is stored in `profiles.hide_amounts` (migration `profiles_hide_amounts`, one value per user for Personal, Business and every device) and read on the server, so the first render is already hidden. `setHideAmountsAction` validates with Zod and the UI updates optimistically (`useOptimistic`).
 - `Amount` component (single formatting point for balances and totals; the mask has `aria-label="Monto oculto"` and reserves the amount's width), `HideAmountsProvider` / `useHideAmounts`, `useFormatAmount` and `formatChartAmount` for SVG labels, chart axes, tooltips and screen-reader data tables. Applied to account, budget, goal, debt, cash flow and report balances and totals, KPIs (`StatCard`) and chart values. Movement rows, dialogs and forms keep showing real amounts.
 - Account section split into an inner aside (SPEC 22): `/dashboard/account` redirects to `/dashboard/account/general`, with `security` (password and delete account), `privacy` and `preferences` (currency) routes, all `noindex`. Sections are configured in `SITE.account.sections`; on phones the aside is a horizontal list with 44 px controls.
@@ -189,7 +193,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- The Business `negative_account` recommendation now only fires for active `wallet` and `bank` accounts with a negative balance; `cash` and `other` no longer trigger it (SPEC 21).
+- Light theme polish (SPEC 23): softer page background (`#f1f2f5`) so white cards stand out without borders, subtler accent-soft fills (12 %) with a stronger soft foreground, a graduated neutral chart series (lightest 3.36:1 on the surface) and a darker chart grid. Empty states, archived accounts, `SURFACE_NOTE` and the drag overlay use the shared shadow tokens. Contrast table in `docs/ui.md` updated; dark mode is unchanged.
+- Links to Gastos fijos (quick sheet, upcoming payments card, recommendations, import target) now point to `/dashboard/personal/recurring`.
+- The Business `negative_account' recommendation now only fires for active `wallet`and`bank`accounts with a negative balance;`cash`and`other` no longer trigger it (SPEC 21).
 - Movimientos bar (SPEC 20): search (fills the free width, min `18rem`), month, Filtros (phones) and Verificar share one 44 px row; on phones the search takes its own row. Verificar is icon-only below 640 px and reaches the bar through the new `trailing` prop of `TransactionsFilters`.
 - "Sin presupuesto" and the budget progress rows use a fixed grid (category, amount, action) so amounts line up; "Presupuestar" is a compact fixed-width button.
 - Toolbar controls (SPEC 20): the search field, month pill, Filtros, Verificar, Categorías, inactive filter pills, the reports period picker and the budget month navigation share the card and table gray (`bg-surface`) through `CONTROL_SURFACE` and `CONTROL_BUTTON` in `surface.ts`, with the same 44 px height in the Movimientos row. Buttons are `ghost` instead of `secondary` or bordered `outline` (budget month navigation and "Copiar del mes anterior").

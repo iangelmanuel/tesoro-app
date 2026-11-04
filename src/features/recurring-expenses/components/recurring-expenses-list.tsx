@@ -5,11 +5,7 @@ import { Chip, Table, cn, toast } from "@heroui/react"
 import { Pause, Pencil, Play, Trash2 } from "lucide-react"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { RowActions } from "@/components/dashboard/row-actions"
-import {
-  STICKY_ACTIONS,
-  STICKY_ACTIONS_HEAD,
-  ScrollTable
-} from "@/components/dashboard/scroll-table"
+import { ScrollTable } from "@/components/dashboard/scroll-table"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { formatCurrency, formatDate } from "@/libs/format"
@@ -54,7 +50,7 @@ export function RecurringExpensesList({
               <Table.Column className={NOWRAP}>Frecuencia</Table.Column>
               <Table.Column className={NOWRAP}>Vigencia</Table.Column>
               <Table.Column className={NOWRAP}>Estado</Table.Column>
-              <Table.Column className={cn("w-28 md:w-16", STICKY_ACTIONS_HEAD)}>
+              <Table.Column className="w-28 md:w-16">
                 <span className="sr-only">Acciones</span>
               </Table.Column>
             </Table.Header>
@@ -106,7 +102,7 @@ export function RecurringExpensesList({
                       </Chip>
                     )}
                   </Table.Cell>
-                  <Table.Cell className={STICKY_ACTIONS}>
+                  <Table.Cell>
                     <ExpenseActions
                       expense={expense}
                       categories={categories}

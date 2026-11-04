@@ -225,9 +225,8 @@ Piezas en `src/components/dashboard/mobile/`:
   (`minWidth`) y pinta un degradado en el borde izquierdo cuando ya se
   deslizó. Fecha, monto, categoría y cuenta van en `whitespace-nowrap`; la
   descripción envuelve (máximo 3 líneas con `line-clamp-3`, texto completo en
-  `title`). La columna de acciones queda fija a la derecha con
-  `STICKY_ACTIONS` (fondo opaco y sombra a su izquierda) y, en el encabezado,
-  `STICKY_ACTIONS_HEAD`. Usan este patrón Movimientos, Gastos fijos, Resumen
+  `title`). Nada queda fijo: la columna de acciones se
+  desliza con la tabla para no tapar información ni la barra inferior. Usan este patrón Movimientos, Gastos fijos, Resumen
   por categoría, Últimos movimientos y Flujo de caja. `DataRows` se eliminó
   (SPEC 20): ya no hay tarjetas para tablas. Las tablas del asistente de
   importación no cambian.

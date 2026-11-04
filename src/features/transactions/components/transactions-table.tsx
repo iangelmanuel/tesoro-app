@@ -20,11 +20,7 @@ import {
 } from "lucide-react"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { RowActions } from "@/components/dashboard/row-actions"
-import {
-  STICKY_ACTIONS,
-  STICKY_ACTIONS_HEAD,
-  ScrollTable
-} from "@/components/dashboard/scroll-table"
+import { ScrollTable } from "@/components/dashboard/scroll-table"
 import { deleteAdjustment, deleteTransfer } from "@/features/accounts/actions"
 import { AccountLabel } from "@/features/accounts/components/account-select"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
@@ -53,7 +49,7 @@ interface TransactionsTableProps {
 // En móvil la tabla se muestra completa y se desliza en horizontal: fecha,
 // categoría, cuenta y monto no se parten en varias líneas
 const NOWRAP = "whitespace-nowrap"
-const ACTIONS_COLUMN = cn("w-28 md:w-16", STICKY_ACTIONS_HEAD)
+const ACTIONS_COLUMN = "w-28 md:w-16"
 
 /** Reordenar una fila dentro de su día arrastrando su asa (⋮⋮) */
 interface Reorder {
@@ -392,7 +388,7 @@ export function TransactionsTable({
                         {transaction.type === "income" ? "+" : "−"}
                         {formatCurrency(transaction.amount, currency)}
                       </Table.Cell>
-                      <Table.Cell className={STICKY_ACTIONS}>
+                      <Table.Cell>
                         <EntryActions
                           label={transaction.description}
                           remove={{
@@ -597,7 +593,7 @@ function TransferRow({
       >
         {formatCurrency(transfer.amount, currency)}
       </Table.Cell>
-      <Table.Cell className={STICKY_ACTIONS}>
+      <Table.Cell>
         <EntryActions
           label={`Traspaso ${label}`}
           remove={{
@@ -668,7 +664,7 @@ function AccountMovementRow({
         {formatCurrency(Math.abs(entry.amount), currency)}
       </Table.Cell>
       {/* Se edita desde la deuda o la meta */}
-      <Table.Cell className={STICKY_ACTIONS} />
+      <Table.Cell />
     </SortableRow>
   )
 }
@@ -709,7 +705,7 @@ function AdjustmentRow({
         {adjustment.amount > 0 ? "+" : "−"}
         {formatCurrency(Math.abs(adjustment.amount), currency)}
       </Table.Cell>
-      <Table.Cell className={STICKY_ACTIONS}>
+      <Table.Cell>
         <EntryActions
           label={label}
           remove={{

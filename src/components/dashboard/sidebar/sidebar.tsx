@@ -9,6 +9,7 @@ import {
 } from "react"
 import type { Route } from "next"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Button, Drawer, cn } from "@heroui/react"
 import { PanelLeft } from "lucide-react"
 import { MOBILE_QUERY, useIsMobile } from "@/hooks/use-is-mobile"
@@ -96,6 +97,14 @@ export function SidebarProvider({
 /** Columna en escritorio y Drawer en móvil, con el mismo contenido */
 export function Sidebar({ children }: Readonly<{ children: React.ReactNode }>) {
   const { open, openMobile, setOpenMobile } = useSidebar()
+  const pathname = usePathname()
+
+  // Al navegar, el panel móvil se cierra y queda a la vista la pantalla nueva.
+  // Va aquí y no en el provider: usePathname suspende y el provider está fuera
+  // del Suspense del layout
+  useEffect(() => {
+    setOpenMobile(false)
+  }, [pathname, setOpenMobile])
 
   return (
     <>

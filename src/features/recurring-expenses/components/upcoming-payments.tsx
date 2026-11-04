@@ -73,7 +73,10 @@ export function PayOccurrenceButton({
         dueOn: payment.dueOn
       }}
       trigger={
+        // key: el Modal de HeroUI recorre sus hijos como lista y, con el
+        // botón creado en otro componente, React avisa de la falta de key
         <Button
+          key="pay-occurrence"
           size="sm"
           variant="outline"
           className={className}

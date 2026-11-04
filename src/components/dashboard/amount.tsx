@@ -16,7 +16,7 @@ interface AmountProps {
 /**
  * Único punto de formato de saldos y totales. Con las cifras ocultas muestra
  * `***` en lugar del número: el valor real no llega al DOM ni al lector de
- * pantalla. Reserva el ancho del monto para no mover el diseño.
+ * pantalla.
  */
 export function Amount({
   value,
@@ -35,8 +35,7 @@ export function Amount({
     <span
       role="img"
       aria-label="Monto oculto"
-      className={cn("inline-block tabular-nums", className)}
-      style={{ minWidth: `${text.length}ch` }}
+      className={cn("tabular-nums", className)}
     >
       {AMOUNT_MASK}
     </span>

@@ -15,7 +15,7 @@ El contexto de producto (usuarios, voz, principios) está en
 - **Un solo acento por espacio.** Neutro fuera de los espacios, emerald en
   Personal y naranja en Empresa. Negros y grises son los mismos en los dos.
 - **Tarjetas sin borde.** La separación la da el contraste entre fondo y
-  superficie (en claro, más la sombra suave de HeroUI). Radios grandes en
+  superficie (en claro, más la sombra en capas de `--surface-shadow`). Radios grandes en
   tarjetas y pill en botones, tabs, selects y filtros.
 - **Densidad media y un solo título por pantalla.** El título (o el saludo
   en el Resumen) lo pone el header; las páginas no repiten su `<h1>`.
@@ -31,13 +31,14 @@ Todo vive en `src/styles/globals.css`, con los nombres de HeroUI v3.
 
 | Token                                           | Qué es                                                                 |
 | ----------------------------------------------- | ---------------------------------------------------------------------- |
-| `--background`                                  | Fondo de la página. Oscuro ≈ `#0a0a0a`, claro `#f6f7f9`                |
+| `--background`                                  | Fondo de la página. Oscuro ≈ `#0a0a0a`, claro `#f1f2f5`                |
 | `--surface`                                     | Tarjetas. Oscuro ≈ `#18181b`, claro blanco                             |
 | `--surface-secondary`, `--surface-tertiary`     | Superficies escalonadas dentro de una tarjeta                          |
 | `--overlay`                                     | Diálogos, menús, popovers y tooltips                                   |
 | `--default`                                     | Ítem activo del aside, hover de filas, chips neutros                   |
 | `--muted`                                       | Texto atenuado, etiquetas, ticks de gráficas                           |
 | `--border`, `--separator`                       | Grilla de gráficas y divisores muy sutiles                             |
+| `--surface-shadow`, `--overlay-shadow`          | Elevación en claro (tarjeta y overlay); en oscuro no hay sombra        |
 | `--accent`, `--accent-foreground`               | Primario. Lo cambia el espacio (ver abajo)                             |
 | `--success`, `--warning`, `--danger` y `*-soft` | Estados. Los `*-soft` con su `*-soft-foreground` en chips              |
 | `--brand`                                       | Emerald del logo; igual en todos los temas                             |
@@ -61,23 +62,27 @@ Todo vive en `src/styles/globals.css`, con los nombres de HeroUI v3.
 Pares verificados con los tokens de `src/styles/globals.css` (WCAG 2.x,
 OKLCH → sRGB). Mínimos: 4.5:1 texto, 3:1 gráficos y foco.
 
-| Par                                     | Claro | Oscuro |
-| --------------------------------------- | ----- | ------ |
-| `foreground` / `background`             | 16.49 | 18.96  |
-| `muted` / `surface`                     | 6.00  | 6.74   |
-| `muted` / `default`                     | 4.96  | 5.66   |
-| `income` / `surface`                    | 5.56  | 5.03   |
-| `expense` / `surface`                   | 5.35  | 5.06   |
-| `balance` / `surface`                   | 8.16  | 5.89   |
-| `danger` / `background`                 | 5.07  | 6.84   |
-| `accent-foreground` / `accent` Personal | 4.84  | 7.19   |
-| `accent-foreground` / `accent` Empresa  | 4.94  | 6.13   |
-| `accent` / `background` Personal (foco) | 3.41  | 8.03   |
-| `accent` / `background` Empresa (foco)  | 3.34  | 6.84   |
-| `text-brand` / `background`             | 5.10  | 11.08  |
-| `muted` / `field-background`            | 5.22  | 5.19   |
-| `foreground` / `field-background`       | 15.41 | 13.07  |
-| `--chart-*` / `surface` (mínimo)        | 4.77  | 3.72   |
+| Par                                       | Claro | Oscuro |
+| ----------------------------------------- | ----- | ------ |
+| `foreground` / `background`               | 15.87 | 18.96  |
+| `muted` / `surface`                       | 6.00  | 6.74   |
+| `muted` / `default`                       | 4.88  | 5.66   |
+| `income` / `surface`                      | 5.56  | 5.03   |
+| `expense` / `surface`                     | 5.35  | 5.06   |
+| `balance` / `surface`                     | 8.16  | 5.89   |
+| `income` / `background`                   | 4.98  | —      |
+| `expense` / `background`                  | 4.79  | —      |
+| `danger` / `background`                   | 4.88  | 6.84   |
+| `accent-foreground` / `accent` Personal   | 4.84  | 7.19   |
+| `accent-foreground` / `accent` Empresa    | 4.94  | 6.13   |
+| `accent` / `background` Personal (foco)   | 3.28  | 8.03   |
+| `accent` / `background` Empresa (foco)    | 3.22  | 6.84   |
+| `text-brand` / `background`               | 5.06  | 11.08  |
+| `accent-soft-fg` / `accent-soft` Personal | 5.82  | —      |
+| `accent-soft-fg` / `accent-soft` Empresa  | 5.70  | —      |
+| `muted` / `field-background`              | 5.22  | 5.19   |
+| `foreground` / `field-background`         | 15.41 | 13.07  |
+| `--chart-*` / `surface` (mínimo)          | 3.36  | 3.72   |
 
 Las series de dinero (`--income`, `--expense`, `--balance`) también pasan el
 validador de paletas del skill `dataviz` en claro y oscuro: banda de

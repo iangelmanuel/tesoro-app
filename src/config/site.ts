@@ -115,6 +115,7 @@ export const SITE = {
     signUp: "/sign-up",
     dashboard: "/dashboard",
     dashboardPersonal: "/dashboard/personal",
+    personalRecurring: "/dashboard/personal/recurring",
     dashboardBusiness: "/dashboard/business",
     authCallback: "/auth/callback",
     account: "/dashboard/account",

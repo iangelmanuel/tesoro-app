@@ -1,11 +1,9 @@
 import { Suspense } from "react"
-import { Button, Card, CardContent, Skeleton } from "@heroui/react"
-import { CalendarClock, CircleCheck, PiggyBank, Plus } from "lucide-react"
-import { CardHeading } from "@/components/dashboard/card-heading"
+import { Button, Skeleton } from "@heroui/react"
+import { PiggyBank, Plus } from "lucide-react"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
-import { CardEmpty, EmptyState } from "@/components/dashboard/empty-state"
+import { EmptyState } from "@/components/dashboard/empty-state"
 import { SURFACE_LIST } from "@/components/dashboard/surface"
-import { getAccountBalances } from "@/features/accounts/queries"
 import { BudgetDialog } from "@/features/budgets/components/budget-dialog"
 import { BudgetMonthNav } from "@/features/budgets/components/budget-month-nav"
 import { BudgetProgressRow } from "@/features/budgets/components/budget-progress-row"
@@ -21,14 +19,7 @@ import {
 } from "@/features/budgets/queries"
 import { BUDGETS_PATH, parseBudgetsTab } from "@/features/budgets/tabs"
 import { getCategories } from "@/features/categories/queries"
-import { ImportButton } from "@/features/imports/components/import-button"
-import { RecurringExpenseDialog } from "@/features/recurring-expenses/components/recurring-expense-dialog"
-import { RecurringExpensesList } from "@/features/recurring-expenses/components/recurring-expenses-list"
-import { UpcomingPayments } from "@/features/recurring-expenses/components/upcoming-payments"
-import {
-  getRecurringExpenses,
-  getUpcomingPayments
-} from "@/features/recurring-expenses/queries"
+import { RecurringView } from "@/features/recurring-expenses/components/recurring-view"
 import {
   type PersonalWorkspace,
   getPersonalWorkspace
@@ -67,7 +58,7 @@ async function BudgetsContent({
   return (
     <BudgetsTabs tab={tab}>
       {tab === "recurring" ? (
-        <RecurringTab workspace={workspace} />
+        <RecurringView workspace={workspace} />
       ) : (
         <BudgetsTab
           workspace={workspace}
@@ -181,82 +172,6 @@ async function BudgetsTab({
           currency={workspace.currency}
         />
       )}
-    </>
-  )
-}
-
-async function RecurringTab({ workspace }: { workspace: PersonalWorkspace }) {
-  const [categories, expenses, payments, accounts] = await Promise.all([
-    getCategories(workspace.id),
-    getRecurringExpenses(workspace.id),
-    getUpcomingPayments(workspace.id),
-    getAccountBalances(workspace.id)
-  ])
-
-  const createButton = (
-    <RecurringExpenseDialog
-      categories={categories}
-      trigger={
-        <Button>
-          <Plus />
-          Nuevo gasto fijo
-        </Button>
-      }
-    />
-  )
-
-  if (expenses.length === 0) {
-    return (
-      <EmptyState
-        icon={CalendarClock}
-        title="Agrega tus gastos fijos"
-        description="Arriendo, servicios, suscripciones o seguros. Tesoro te muestra cuándo vencen y los tiene en cuenta en tus presupuestos."
-      >
-        {createButton}
-        <ImportButton target="recurring_expenses" />
-      </EmptyState>
-    )
-  }
-
-  const isUpToDate = payments.every((payment) => payment.transactionId !== null)
-
-  return (
-    <>
-      <div className="flex flex-wrap gap-2">
-        {createButton}
-        <ImportButton target="recurring_expenses" />
-      </div>
-
-      <Card>
-        <CardHeading title="Próximos pagos" />
-        <CardContent className="flex flex-col gap-3">
-          {isUpToDate && (
-            <CardEmpty
-              icon={CircleCheck}
-              message="Estás al día con tus pagos"
-            />
-          )}
-          {/* Los pagados del mes siguen en la lista con su monto */}
-          {payments.length > 0 && (
-            <UpcomingPayments
-              workspaceId={workspace.id}
-              payments={payments}
-              categories={categories}
-              accounts={accounts}
-              currency={workspace.currency}
-            />
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Gastos fijos</h2>
-        <RecurringExpensesList
-          expenses={expenses}
-          categories={categories}
-          currency={workspace.currency}
-        />
-      </div>
     </>
   )
 }

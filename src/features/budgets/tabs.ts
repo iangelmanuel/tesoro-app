@@ -2,6 +2,8 @@ import { SITE } from "@/config/site"
 
 export const BUDGETS_PATH = `${SITE.routes.dashboardPersonal}/budgets` as const
 
+export const RECURRING_PATH = SITE.routes.personalRecurring
+
 export const BUDGETS_TABS = ["budgets", "recurring"] as const
 
 export type BudgetsTab = (typeof BUDGETS_TABS)[number]

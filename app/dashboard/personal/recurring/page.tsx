@@ -1,0 +1,42 @@
+import { Suspense } from "react"
+import { Skeleton } from "@heroui/react"
+import { CardSkeleton } from "@/components/dashboard/card-skeleton"
+import { RECURRING_PATH } from "@/features/budgets/tabs"
+import { RecurringView } from "@/features/recurring-expenses/components/recurring-view"
+import { getPersonalWorkspace } from "@/features/workspaces/queries"
+import { buildMetadata } from "@/libs/seo"
+
+export const metadata = buildMetadata({
+  title: "Gastos fijos",
+  path: RECURRING_PATH,
+  noindex: true
+})
+
+export default function RecurringPage() {
+  return (
+    <section
+      aria-label="Gastos fijos"
+      className="flex flex-1 flex-col gap-6"
+    >
+      {/* La sesión es dinámica: va dentro de Suspense */}
+      <Suspense fallback={<RecurringSkeleton />}>
+        <RecurringContent />
+      </Suspense>
+    </section>
+  )
+}
+
+async function RecurringContent() {
+  const workspace = await getPersonalWorkspace()
+  return <RecurringView workspace={workspace} />
+}
+
+function RecurringSkeleton() {
+  return (
+    <>
+      <Skeleton className="h-10 w-48 rounded-3xl" />
+      <CardSkeleton className="h-48" />
+      <CardSkeleton className="h-96" />
+    </>
+  )
+}

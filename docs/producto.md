@@ -15,19 +15,23 @@ Visión y alcance de Tesoro. Este documento describe **qué** se construye; el
 
 ## Mapa de rutas
 
-| Ruta                           | Qué es                                      | Indexable |
-| ------------------------------ | ------------------------------------------- | --------- |
-| `/`                            | Landing                                     | Sí        |
-| `/legal/[slug]`                | Privacidad (`privacy`) y Términos (`terms`) | Sí        |
-| `/sign-in`                     | Inicio de sesión                            | Sí        |
-| `/sign-up`                     | Registro                                    | Sí        |
-| `/auth/callback`               | Callback de OAuth (Google, GitHub)          | No        |
-| `/account-deleted`             | Cuenta en periodo de gracia del borrado     | No        |
-| `/dashboard`                   | Redirige a `/dashboard/personal`            | No        |
-| `/dashboard/account`           | Cuenta y perfil                             | No        |
-| `/dashboard/personal/...`      | Espacio Personal (requiere sesión)          | No        |
-| `/dashboard/business`          | Redirige a la empresa o estado vacío        | No        |
-| `/dashboard/business/[id]/...` | Espacio de una empresa                      | No        |
+| Ruta                             | Qué es                                      | Indexable |
+| -------------------------------- | ------------------------------------------- | --------- |
+| `/`                              | Landing                                     | Sí        |
+| `/legal/[slug]`                  | Privacidad (`privacy`) y Términos (`terms`) | Sí        |
+| `/sign-in`                       | Inicio de sesión                            | Sí        |
+| `/sign-up`                       | Registro                                    | Sí        |
+| `/auth/callback`                 | Callback de OAuth (Google, GitHub)          | No        |
+| `/account-deleted`               | Cuenta en periodo de gracia del borrado     | No        |
+| `/dashboard`                     | Redirige a `/dashboard/personal`            | No        |
+| `/dashboard/account`             | Redirige a `/dashboard/account/general`     | No        |
+| `/dashboard/account/general`     | Perfil, avatar y email                      | No        |
+| `/dashboard/account/security`    | Contraseña y borrar cuenta                  | No        |
+| `/dashboard/account/privacy`     | Ocultar cifras                              | No        |
+| `/dashboard/account/preferences` | Moneda                                      | No        |
+| `/dashboard/personal/...`        | Espacio Personal (requiere sesión)          | No        |
+| `/dashboard/business`            | Redirige a la empresa o estado vacío        | No        |
+| `/dashboard/business/[id]/...`   | Espacio de una empresa                      | No        |
 
 Las rutas viven en `SITE.routes` y la navegación de los espacios en
 `SITE.navigation.personal` y `SITE.navigation.business` (este con `segment`,
@@ -168,7 +172,7 @@ usuario tiene RLS.
 
 | Tabla                       | Qué guarda                                                                                                                                                                                                                               | RLS (cliente)                                   |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| `profiles`                  | Un perfil por usuario: `full_name`, `avatar_url`, `currency` (COP por defecto)                                                                                                                                                           | `select` y `update` del propio perfil           |
+| `profiles`                  | Un perfil por usuario: `full_name`, `avatar_url`, `currency` (COP por defecto), `hide_amounts` (SPEC 22)                                                                                                                                 | `select` y `update` del propio perfil           |
 | `workspaces`                | Espacios del usuario: `type` (`personal` / `business`), `name` y `deletion_requested_at` (solo Empresa)                                                                                                                                  | `select`; `insert` y `update (name)` de Empresa |
 | `business_profiles`         | Datos de una empresa, 1:1 con su espacio: `tax_id` (NIT opcional) y `sector`                                                                                                                                                             | `select`, `insert`, `update`                    |
 | `categories`                | Categorías de ingreso o gasto: del sistema (`workspace_id` null) o propias, con `scope` (`personal` / `business`)                                                                                                                        | `select`, `insert` y `update`                   |
@@ -195,6 +199,37 @@ definer`) crea el perfil y el espacio Personal al insertar en
 - Las políticas de escritura de movimientos, categorías, cuentas, traspasos,
   ajustes y `business_profiles` usan `is_workspace_writable(workspace_id)`:
   dueño **y** sin marca de borrado. Ver [Espacio Empresa](#espacio-empresa-1).
+
+## Cuenta, privacidad y ocultar cifras (SPEC 22)
+
+`/dashboard/account` se divide en secciones con un aside interno
+(`SITE.account.sections`; añadir una es una línea ahí y su ruta):
+
+| Sección      | Ruta                             | Contenido                                    |
+| ------------ | -------------------------------- | -------------------------------------------- |
+| General      | `/dashboard/account/general`     | Perfil, avatar y email (solo lectura)        |
+| Seguridad    | `/dashboard/account/security`    | Contraseña y zona de peligro (borrar cuenta) |
+| Privacidad   | `/dashboard/account/privacy`     | Interruptor de ocultar cifras                |
+| Preferencias | `/dashboard/account/preferences` | Moneda                                       |
+
+**Ocultar cifras**: un botón de ojo en el header de todo el dashboard (y el
+interruptor de Privacidad, que comparte su estado) reemplaza saldos y totales
+por `***`, para mirar la app en público.
+
+- Se guarda en `profiles.hide_amounts` (un solo valor por usuario): aplica a
+  Personal, a Empresa y a todos sus dispositivos. Se lee en el servidor, así
+  que el primer render ya sale oculto.
+- **Se oculta**: saldos de cuentas, patrimonio, deuda total, KPIs, totales de
+  Resumen, Reportes, Flujo de caja, Presupuestos, Metas y Deudas, y los
+  valores de las gráficas (etiquetas, ejes, tooltips y su tabla para lectores
+  de pantalla).
+- **Se ve siempre**: el monto de cada fila de Movimientos, los diálogos y
+  formularios de edición, y los montos individuales de Gastos fijos, aportes,
+  entradas y pagos de deuda.
+- La máscara no deja pasar el número al DOM ni al lector de pantalla
+  (`aria-label="Monto oculto"`).
+- Las recomendaciones del score arman textos con montos en el servidor y aún
+  no respetan este ajuste.
 
 ## Dashboard
 

@@ -68,3 +68,7 @@ export function formatTime(time: string) {
     .format(value)
     .replace(WHITESPACE, " ")
 }
+
+// Lo que se muestra en lugar de saldos y totales cuando el usuario oculta las
+// cifras (ojo del header)
+export const AMOUNT_MASK = "***"

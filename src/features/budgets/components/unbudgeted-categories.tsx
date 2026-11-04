@@ -1,10 +1,10 @@
 import { Button, Card, CardContent } from "@heroui/react"
 import { Plus } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { CardHeading } from "@/components/dashboard/card-heading"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
-import { formatCurrency } from "@/libs/format"
 import type { BudgetMonth } from "../month"
 import type { BudgetProgress } from "../queries"
 import { BudgetDialog } from "./budget-dialog"
@@ -36,7 +36,11 @@ export function UnbudgetedCategories({
         title="Sin presupuesto"
         action={
           <p className="text-sm text-muted tabular-nums">
-            {formatCurrency(total, currency)} gastados
+            <Amount
+              value={total}
+              currency={currency}
+            />{" "}
+            gastados
           </p>
         }
       />
@@ -58,7 +62,10 @@ export function UnbudgetedCategories({
                 />
               </div>
               <p className="text-right font-medium whitespace-nowrap tabular-nums">
-                {formatCurrency(row.spent, currency)}
+                <Amount
+                  value={row.spent}
+                  currency={currency}
+                />
               </p>
               {/* Una categoría archivada no se puede presupuestar: la celda
                   queda vacía para no mover las demás columnas */}

@@ -1,9 +1,9 @@
 import { cn } from "@heroui/react"
+import { Amount } from "@/components/dashboard/amount"
 import { ACCOUNT_KIND_META } from "@/features/accounts/constants"
 import type { AccountWithBalance } from "@/features/accounts/types"
 import { GoalIcon } from "@/features/goals/components/goal-icon"
 import { NEGATIVE } from "@/features/reports/change"
-import { formatCurrency } from "@/libs/format"
 
 interface AccountBalancesListProps {
   /** Cuentas activas */
@@ -42,7 +42,10 @@ export function AccountBalancesList({
                 account.balance < 0 && NEGATIVE
               )}
             >
-              {formatCurrency(account.balance, currency)}
+              <Amount
+                value={account.balance}
+                currency={currency}
+              />
             </span>
           </li>
         ))}
@@ -55,7 +58,10 @@ export function AccountBalancesList({
             total < 0 && NEGATIVE
           )}
         >
-          {formatCurrency(total, currency)}
+          <Amount
+            value={total}
+            currency={currency}
+          />
         </span>
       </div>
     </div>

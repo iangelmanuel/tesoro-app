@@ -1,7 +1,7 @@
 import { Card, cn } from "@heroui/react"
 import { ArrowDownRight, ArrowUpRight } from "lucide-react"
 import type { HelpKey } from "@/config/help"
-import { formatCurrency } from "@/libs/format"
+import { Amount } from "./amount"
 import { HelpHint } from "./help-hint"
 import { TONE_BADGE_CLASSES } from "./tone"
 
@@ -32,8 +32,8 @@ const PERCENT = new Intl.NumberFormat("es-CO", {
 const NUMBER = new Intl.NumberFormat("es-CO")
 const CHANGE = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 1 })
 
-function formatValue(value: number, format: StatFormat, currency: string) {
-  if (format === "currency") return formatCurrency(value, currency)
+// Los montos (`currency`) los formatea <Amount />, que puede ocultarlos
+function formatValue(value: number, format: Exclude<StatFormat, "currency">) {
   if (format === "percent") return PERCENT.format(value / 100)
   return NUMBER.format(value)
 }
@@ -94,7 +94,16 @@ export function StatCard({
               size === "sm" ? "text-xl" : "text-2xl sm:text-3xl"
             )}
           >
-            {value === null ? "—" : formatValue(value, format, currency)}
+            {value === null ? (
+              "—"
+            ) : format === "currency" ? (
+              <Amount
+                value={value}
+                currency={currency}
+              />
+            ) : (
+              formatValue(value, format)
+            )}
           </span>
           {rounded !== null && rounded !== 0 && (
             <span

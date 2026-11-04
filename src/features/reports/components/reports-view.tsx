@@ -1,6 +1,7 @@
 import { Card, Skeleton } from "@heroui/react"
 import { TriangleAlert } from "lucide-react"
 import { ChartCard } from "@/components/charts/chart-card"
+import { Amount } from "@/components/dashboard/amount"
 import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { StatCard } from "@/components/dashboard/stat-card"
@@ -13,7 +14,6 @@ import {
 } from "@/features/workspaces/paths"
 import type { Workspace } from "@/features/workspaces/queries"
 import { monthRange, shiftMonth } from "@/libs/dates"
-import { formatCurrency } from "@/libs/format"
 import { TOP_CATEGORIES, buildTopCategories } from "../chart-data"
 import { getPeriodComparison } from "../comparison"
 import { REPORT_LABELS } from "../labels"
@@ -148,7 +148,12 @@ export async function ReportsView({
         <>
           <ChartCard
             title="Tendencia mensual"
-            figure={formatCurrency(trendBalance, currency)}
+            figure={
+              <Amount
+                value={trendBalance}
+                currency={currency}
+              />
+            }
             figureCaption={`de balance en ${trend.length} meses`}
             legend={incomeExpenseLegend(labels, true)}
           >
@@ -168,14 +173,16 @@ export async function ReportsView({
             <ChartCard
               title={`Top ${TOP_CATEGORIES} categorías de ${typeNoun}`}
               figure={
-                categoryTotals.length > 0
-                  ? formatCurrency(
+                categoryTotals.length > 0 ? (
+                  <Amount
+                    value={
                       params.type === "expense"
                         ? current.expense
-                        : current.income,
-                      currency
-                    )
-                  : undefined
+                        : current.income
+                    }
+                    currency={currency}
+                  />
+                ) : undefined
               }
               figureCaption={
                 categoryTotals.length > 0

@@ -19,10 +19,10 @@ import {
   RefreshCw,
   Scale
 } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
 import { GoalIcon } from "@/features/goals/components/goal-icon"
 import { TRANSACTIONS_PATH } from "@/features/transactions/filters"
-import { formatCurrency } from "@/libs/format"
 import { ACCOUNT_KIND_META } from "../constants"
 import { isNegativeAccount } from "../negative-balance"
 import type { AccountWithBalance } from "../types"
@@ -139,7 +139,10 @@ export function AccountCard({
             account.balance < 0 && "text-danger"
           )}
         >
-          {formatCurrency(account.balance, currency)}
+          <Amount
+            value={account.balance}
+            currency={currency}
+          />
         </span>
         {hasScheduled && (
           <span className="text-sm text-muted tabular-nums">
@@ -150,7 +153,10 @@ export function AccountCard({
                 account.scheduled_balance < 0 && "text-danger"
               )}
             >
-              {formatCurrency(account.scheduled_balance, currency)}
+              <Amount
+                value={account.scheduled_balance}
+                currency={currency}
+              />
             </span>
           </span>
         )}

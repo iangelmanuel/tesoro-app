@@ -1,13 +1,13 @@
 import type { Route } from "next"
 import Link from "next/link"
 import { Table } from "@heroui/react"
+import { Amount } from "@/components/dashboard/amount"
 import { ScrollTable } from "@/components/dashboard/scroll-table"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import {
   TRANSACTIONS_PATH,
   buildFiltersQuery
 } from "@/features/transactions/filters"
-import { formatCurrency } from "@/libs/format"
 import { percentShares } from "../metrics"
 import type { ReportParams } from "../period"
 import type { CategoryTotal } from "../queries"
@@ -92,7 +92,10 @@ export function CategorySummaryTable({
                       </Link>
                     </Table.Cell>
                     <Table.Cell className="text-end font-medium whitespace-nowrap tabular-nums">
-                      {formatCurrency(row.total, currency)}
+                      <Amount
+                        value={row.total}
+                        currency={currency}
+                      />
                     </Table.Cell>
                     <Table.Cell className="text-end text-muted tabular-nums">
                       {PERCENT.format(shares[index] / 100)}
@@ -101,7 +104,10 @@ export function CategorySummaryTable({
                       {row.txCount}
                     </Table.Cell>
                     <Table.Cell className="text-end text-muted tabular-nums">
-                      {formatCurrency(row.total / row.txCount, currency)}
+                      <Amount
+                        value={row.total / row.txCount}
+                        currency={currency}
+                      />
                     </Table.Cell>
                   </Table.Row>
                 )

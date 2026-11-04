@@ -7,13 +7,19 @@ import { greeting } from "@/libs/dates"
 // Rutas del dashboard que no están en la navegación de los espacios
 const EXTRA_TITLES: Record<string, string> = {
   [`${SITE.routes.dashboardPersonal}/import`]: "Importar",
-  [SITE.routes.account]: "Cuenta",
   [SITE.routes.dashboardBusiness]: "Empresa"
 }
 
 /** Título de la página según la ruta. La coincidencia más larga gana */
 export function getDashboardTitle(pathname: string) {
   if (EXTRA_TITLES[pathname]) return EXTRA_TITLES[pathname]
+  // /dashboard/account y sus secciones
+  if (
+    pathname === SITE.routes.account ||
+    pathname.startsWith(`${SITE.routes.account}/`)
+  ) {
+    return "Cuenta"
+  }
 
   const personal = SITE.navigation.personal
     .filter(

@@ -4,6 +4,8 @@ import { Skeleton } from "@heroui/react"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { AppSidebarSkeleton } from "@/components/dashboard/app-sidebar-skeleton"
 import { DashboardTitle } from "@/components/dashboard/dashboard-title"
+import { HideAmountsProvider } from "@/components/dashboard/hide-amounts-context"
+import { HideAmountsToggle } from "@/components/dashboard/hide-amounts-toggle"
 import { QuickActions } from "@/components/dashboard/quick-actions"
 import {
   SidebarInset,
@@ -29,14 +31,15 @@ const getDashboardUser = cache(async () => {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, avatar_url")
+    .select("full_name, avatar_url, hide_amounts")
     .eq("id", user.id)
     .single()
 
   return {
     name: profile?.full_name ?? user.email ?? "",
     email: user.email ?? "",
-    avatarUrl: profile?.avatar_url ?? null
+    avatarUrl: profile?.avatar_url ?? null,
+    hideAmounts: profile?.hide_amounts ?? false
   }
 })
 
@@ -59,6 +62,19 @@ async function DashboardHeaderTitle() {
   return <DashboardTitle userName={user.name} />
 }
 
+// Entrega al cliente si las cifras están ocultas: el primer render ya sale con
+// la máscara, sin parpadeo. Envuelve el header y el contenido
+async function HideAmountsBoundary({
+  children
+}: Readonly<{ children: React.ReactNode }>) {
+  const user = await getDashboardUser()
+  return (
+    <HideAmountsProvider initial={user.hideAmounts}>
+      {children}
+    </HideAmountsProvider>
+  )
+}
+
 export default function DashboardLayout({
   children
 }: Readonly<{ children: React.ReactNode }>) {
@@ -76,28 +92,51 @@ export default function DashboardLayout({
           <DashboardSidebar />
         </Suspense>
         <SidebarInset>
-          <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 bg-background px-4 md:px-6">
-            {/* En el teléfono abre el Drawer del aside (44 px de área táctil) */}
-            <SidebarTrigger className="-ml-1.5 max-md:size-11" />
-            <div className="min-w-0 flex-1">
-              {/* La ruta y la sesión son dinámicas: hasta resolverlas, un
-                  placeholder del tamaño del título */}
-              <Suspense fallback={<Skeleton className="h-6 w-44 rounded-lg" />}>
-                <DashboardHeaderTitle />
-              </Suspense>
-            </div>
-            {/* Accesos rápidos del espacio */}
-            <div className="flex shrink-0 items-center gap-2">
-              <QuickActions />
-            </div>
-          </header>
-          <main
-            id="contenido"
-            tabIndex={-1}
-            className="flex flex-1 flex-col px-4 pt-2 pb-[calc(5.5rem+env(safe-area-inset-bottom))] outline-none md:px-6 md:pb-6"
+          {/* Hasta leer el perfil: el header sin acciones y el contenido vacío
+              (sin números que luego haya que ocultar) */}
+          <Suspense
+            fallback={
+              <>
+                <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 bg-background px-4 md:px-6">
+                  <SidebarTrigger className="-ml-1.5 max-md:size-11" />
+                  <Skeleton className="h-6 w-44 rounded-lg" />
+                </header>
+                <main
+                  id="contenido"
+                  tabIndex={-1}
+                  className="flex flex-1 flex-col px-4 pt-2 outline-none md:px-6"
+                />
+              </>
+            }
           >
-            {children}
-          </main>
+            <HideAmountsBoundary>
+              <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 bg-background px-4 md:px-6">
+                {/* En el teléfono abre el Drawer del aside (44 px de área táctil) */}
+                <SidebarTrigger className="-ml-1.5 max-md:size-11" />
+                <div className="min-w-0 flex-1">
+                  {/* La ruta y la sesión son dinámicas: hasta resolverlas, un
+                      placeholder del tamaño del título */}
+                  <Suspense
+                    fallback={<Skeleton className="h-6 w-44 rounded-lg" />}
+                  >
+                    <DashboardHeaderTitle />
+                  </Suspense>
+                </div>
+                {/* Ojo y accesos rápidos del espacio */}
+                <div className="flex shrink-0 items-center gap-2">
+                  <HideAmountsToggle />
+                  <QuickActions />
+                </div>
+              </header>
+              <main
+                id="contenido"
+                tabIndex={-1}
+                className="flex flex-1 flex-col px-4 pt-2 pb-[calc(5.5rem+env(safe-area-inset-bottom))] outline-none md:px-6 md:pb-6"
+              >
+                {children}
+              </main>
+            </HideAmountsBoundary>
+          </Suspense>
         </SidebarInset>
       </SidebarProvider>
     </WorkspaceThemeRoot>

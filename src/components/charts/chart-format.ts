@@ -1,6 +1,7 @@
 // Formato de montos para ejes de gráficas: abreviados y en es-CO
 // ($ 1,2 M, $ 350 k). El tooltip y las tablas muestran el monto completo
 // con formatCurrency.
+import { AMOUNT_MASK } from "@/libs/format"
 
 const LOCALE = "es-CO"
 
@@ -43,4 +44,17 @@ export function formatCompactNumber(value: number) {
 export function formatCompactCurrency(value: number, currency = "COP") {
   const sign = value < 0 ? "-" : ""
   return `${sign}${currencySymbol(currency)} ${formatCompactNumber(Math.abs(value))}`
+}
+
+/**
+ * Valor de eje, etiqueta o tooltip con la opción de ocultar cifras: devuelve
+ * la máscara si `hidden`, o el monto abreviado. Las gráficas lo llaman en sus
+ * funciones de formato, que Recharts ejecuta fuera del árbol normal de React.
+ */
+export function formatChartAmount(
+  value: number,
+  currency = "COP",
+  hidden = false
+) {
+  return hidden ? AMOUNT_MASK : formatCompactCurrency(value, currency)
 }

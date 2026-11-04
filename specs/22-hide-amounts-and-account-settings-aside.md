@@ -1,6 +1,6 @@
 # SPEC 22 — Ocultar cifras con el ojo del header y aside interno de Cuenta
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 09, SPEC 20, SPEC 21
 > **Fecha:** 2026-11-03
 > **Objetivo:** Que el usuario pueda ocultar saldos y totales con un botón de ojo en el header de todas las páginas, con el estado guardado en la base de datos, y que la sección Cuenta se organice en un aside interno (General, Seguridad, Privacidad, Preferencias).
@@ -24,7 +24,7 @@ Es el tercero de cuatro specs que salen del mismo pedido (ver SPEC 20). Se agrup
   - KPIs (`StatCard`) y totales de Movimientos, Resumen, Reportes, Flujo de caja, Presupuestos, Metas y Deudas.
   - Valores de las gráficas: etiquetas, ejes en moneda y tooltips (las formas y proporciones se mantienen).
   - El monto de cada fila de Movimientos **sí se ve**: el usuario necesita registrar y verificar. Los formularios y diálogos de edición siempre muestran el valor real.
-- **Máscara:** `***` en lugar del número, con `aria-label="Monto oculto"` para lectores de pantalla y misma anchura reservada para no mover el diseño.
+- **Máscara:** `***` en lugar del número, con `aria-label="Monto oculto"` para lectores de pantalla. No reserva el ancho del monto real: `***` ocupa solo su ancho, para que los badges y textos vecinos no queden separados (ajuste tras la primera revisión).
 - **Componente `Amount`** (`src/components/dashboard/amount.tsx`): único punto de formato de montos mostrados; lee el estado desde un contexto (`HideAmountsProvider`) y respeta `tabular-nums`.
   - Variante para gráficas: función `formatChartAmount` que devuelve la máscara cuando está oculto (en `src/components/charts/chart-format.ts`).
 - **Estado en la base de datos:** columna `profiles.hide_amounts boolean not null default false` (migración versionada). RLS existente de `profiles` ya cubre lectura y actualización del propio perfil.
@@ -92,27 +92,29 @@ Regenerar `src/types/database.ts` y pasarle Prettier. Sin cambios en RLS (la pol
 
 ## Criterios de aceptación
 
-- [ ] El ojo aparece en el header de todas las páginas del dashboard y de Cuenta, abierto si se ven las cifras y cerrado si están ocultas.
-- [ ] Al pulsarlo, los saldos y totales pasan a `***` de inmediato (sin recargar) y el estado se guarda en `profiles.hide_amounts`.
-- [ ] Al recargar o abrir otra sesión, el estado persiste y el primer render ya sale oculto (sin parpadear mostrando números).
-- [ ] El estado aplica igual en Personal y en Empresa.
-- [ ] Con cifras ocultas: saldos de cuentas, patrimonio, KPIs, totales, presupuestos, metas, deudas y valores de gráficas (etiquetas, ejes, tooltips) muestran la máscara.
-- [ ] Con cifras ocultas, el monto de cada fila de Movimientos y los campos de los diálogos de edición siguen visibles.
-- [ ] La máscara tiene `aria-label="Monto oculto"` y no deja pasar el número al lector de pantalla.
-- [ ] El botón tiene `aria-pressed`, `aria-label` y mide 44 px o más en móvil; contraste AA en claro y oscuro.
-- [ ] Un usuario no puede leer ni cambiar `hide_amounts` de otro (RLS y action autenticada).
-- [ ] `/dashboard/account` redirige a `/dashboard/account/general`; las cuatro subrutas existen, tienen `noindex` y marcan el ítem activo con `aria-current="page"`.
-- [ ] Perfil, contraseña, moneda y borrar cuenta funcionan igual que antes en sus nuevas secciones.
-- [ ] En móvil el aside de Cuenta se ve como lista horizontal o selector, con controles de 44 px o más.
-- [ ] Añadir una sección nueva solo requiere una entrada en `SITE.account.sections` y su ruta.
-- [ ] `pnpm next typegen`, `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
-- [ ] `docs/producto.md`, `docs/ui.md` y `[Unreleased]` (en inglés) documentan el cambio.
+- [x] El ojo aparece en el header de todas las páginas del dashboard y de Cuenta, abierto si se ven las cifras y cerrado si están ocultas.
+- [x] Al pulsarlo, los saldos y totales pasan a `***` de inmediato (sin recargar) y el estado se guarda en `profiles.hide_amounts`.
+- [x] Al recargar o abrir otra sesión, el estado persiste y el primer render ya sale oculto (sin parpadear mostrando números).
+- [x] El estado aplica igual en Personal y en Empresa.
+- [x] Con cifras ocultas: saldos de cuentas, patrimonio, KPIs, totales, presupuestos, metas, deudas y valores de gráficas (etiquetas, ejes, tooltips) muestran la máscara.
+- [x] Con cifras ocultas, el monto de cada fila de Movimientos y los campos de los diálogos de edición siguen visibles.
+- [x] La máscara tiene `aria-label="Monto oculto"` y no deja pasar el número al lector de pantalla.
+- [x] El botón tiene `aria-pressed`, `aria-label` y mide 44 px o más en móvil; contraste AA en claro y oscuro.
+- [x] Un usuario no puede leer ni cambiar `hide_amounts` de otro (RLS y action autenticada).
+- [x] `/dashboard/account` redirige a `/dashboard/account/general`; las cuatro subrutas existen, tienen `noindex` y marcan el ítem activo con `aria-current="page"`.
+- [x] Perfil, contraseña, moneda y borrar cuenta funcionan igual que antes en sus nuevas secciones.
+- [x] En móvil el aside de Cuenta se ve como lista horizontal o selector, con controles de 44 px o más.
+- [x] Añadir una sección nueva solo requiere una entrada en `SITE.account.sections` y su ruta.
+- [x] `pnpm next typegen`, `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] `docs/producto.md`, `docs/ui.md` y `[Unreleased]` (en inglés) documentan el cambio.
 
 ## Decisiones
 
 - **Sí:** se ocultan saldos y totales, no el monto de cada movimiento (decisión del usuario). Motivo: se necesita ver y verificar al registrar.
 - **Sí:** un solo valor global en `profiles`, no por espacio (decisión del usuario). Motivo: simple y coherente en todas las pantallas.
 - **Sí:** `Amount` como único punto de formato, para que ocultar sea un solo cambio y no un `if` en cada componente.
+- **No:** reservar el ancho del monto real al ocultar. Se probó (`minWidth` en `ch`) y dejaba el porcentaje de los KPIs muy separado de la máscara; se quitó.
+- **Sí:** el cupo de una tarjeta de crédito (hoja de Deudas) también se oculta. El resto de términos de la deuda (pago mínimo, cuota, monto original y prestado, comisión) siguen visibles por ser datos del registro.
 - **Sí:** el estado se resuelve en el servidor y se pasa por contexto, para evitar mostrar números antes de ocultarlos.
 - **Sí:** subrutas para el aside de Cuenta (decisión del usuario): cada sección se puede enlazar y cargar por separado.
 - **Sí:** Borrar cuenta dentro de Seguridad como zona peligrosa; es el lugar esperado y evita una sección con un solo botón.

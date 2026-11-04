@@ -9,9 +9,10 @@ import {
   Pencil,
   RefreshCw
 } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { SURFACE_ITEM } from "@/components/dashboard/surface"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
-import { formatCurrency, formatDate } from "@/libs/format"
+import { formatDate } from "@/libs/format"
 import { hasZeroBalance, isReceivableOverdue } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
 import { AdjustBalanceDialog } from "./adjust-balance-dialog"
@@ -76,7 +77,10 @@ export function ReceivableCard({
             </span>
           )}
           <span className="text-2xl font-semibold tabular-nums">
-            {formatCurrency(receivable.balance, currency)}
+            <Amount
+              value={receivable.balance}
+              currency={currency}
+            />
           </span>
         </button>
 

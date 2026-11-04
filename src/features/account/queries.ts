@@ -19,7 +19,7 @@ export const getAccount = cache(async (): Promise<AccountData> => {
   const [profileResult, passwordResult] = await Promise.all([
     supabase
       .from("profiles")
-      .select("full_name, avatar_url, currency")
+      .select("full_name, avatar_url, currency, hide_amounts")
       .eq("id", user.id)
       .single(),
     supabase.rpc("has_password")
@@ -37,7 +37,8 @@ export const getAccount = cache(async (): Promise<AccountData> => {
     profile: {
       fullName: profileResult.data.full_name,
       avatarUrl: profileResult.data.avatar_url,
-      currency: profileResult.data.currency
+      currency: profileResult.data.currency,
+      hideAmounts: profileResult.data.hide_amounts
     },
     hasPassword: passwordResult.data
   }

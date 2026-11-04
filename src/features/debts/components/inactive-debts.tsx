@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { Button, Disclosure } from "@heroui/react"
+import { Amount } from "@/components/dashboard/amount"
 import { SURFACE_LIST, SURFACE_ROW } from "@/components/dashboard/surface"
-import { formatCurrency } from "@/libs/format"
 import { debtStatusLabel } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
 import { ToneBadge } from "./debt-indicators"
@@ -83,7 +83,11 @@ function InactiveDebtRow({
           {status && <ToneBadge tone={status.tone}>{status.label}</ToneBadge>}
         </span>
         <span className="text-sm text-muted tabular-nums">
-          Saldo {formatCurrency(debt.balance, currency)}
+          Saldo{" "}
+          <Amount
+            value={debt.balance}
+            currency={currency}
+          />
         </span>
       </button>
       <DebtSheet

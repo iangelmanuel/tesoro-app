@@ -44,7 +44,8 @@ export function AppSidebar({ user, businesses }: AppSidebarProps) {
   // /dashboard/account mantiene el menú Personal, sin ningún ítem activo
   const isPersonal =
     pathname.startsWith(SITE.routes.dashboardPersonal) ||
-    pathname === SITE.routes.account
+    pathname === SITE.routes.account ||
+    pathname.startsWith(`${SITE.routes.account}/`)
   // Solo en /dashboard/business/[id] de una empresa propia
   const business = pathname.startsWith(`${SITE.routes.dashboardBusiness}/`)
     ? businesses.find((option) => option.id === params.id)

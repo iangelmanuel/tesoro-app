@@ -20,6 +20,8 @@ export const currencySchema = z.object({
   currency: z.enum(CURRENCY_CODES, { error: "Elige una moneda de la lista" })
 })
 
+export const hideAmountsSchema = z.boolean()
+
 const newPasswordFields = {
   password: z
     .string()

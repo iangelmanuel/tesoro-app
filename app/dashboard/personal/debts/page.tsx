@@ -9,6 +9,7 @@ import {
   Skeleton
 } from "@heroui/react"
 import { CreditCard, HandCoins, Plus } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { EmptyState } from "@/components/dashboard/empty-state"
@@ -42,7 +43,6 @@ import {
   getPersonalWorkspace
 } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
-import { formatCurrency } from "@/libs/format"
 import { buildMetadata } from "@/libs/seo"
 
 export const metadata = buildMetadata({
@@ -180,7 +180,10 @@ function ReceivablesTab({
         <CardHeader>
           <CardDescription>Te deben</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums">
-            {formatCurrency(totalReceivable(receivables), workspace.currency)}
+            <Amount
+              value={totalReceivable(receivables)}
+              currency={workspace.currency}
+            />
           </CardTitle>
         </CardHeader>
       </Card>

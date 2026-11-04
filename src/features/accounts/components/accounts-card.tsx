@@ -1,7 +1,7 @@
 import { Card, CardContent, cn } from "@heroui/react"
+import { Amount } from "@/components/dashboard/amount"
 import { CardHeading } from "@/components/dashboard/card-heading"
 import { GoalIcon } from "@/features/goals/components/goal-icon"
-import { formatCurrency } from "@/libs/format"
 import { ACCOUNTS_PATH } from "../constants"
 import { getAccountBalances } from "../queries"
 
@@ -37,7 +37,10 @@ export async function AccountsCard({
               total < 0 && "text-danger"
             )}
           >
-            {formatCurrency(total, currency)}
+            <Amount
+              value={total}
+              currency={currency}
+            />
           </span>
           <span className="text-sm text-muted">
             {active.length === 1
@@ -69,7 +72,10 @@ export async function AccountsCard({
                       account.balance < 0 && "text-danger"
                     )}
                   >
-                    {formatCurrency(account.balance, currency)}
+                    <Amount
+                      value={account.balance}
+                      currency={currency}
+                    />
                   </span>
                 </li>
               ))}

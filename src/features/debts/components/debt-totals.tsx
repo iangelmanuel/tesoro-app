@@ -1,6 +1,6 @@
 import { Card, CardDescription, CardHeader, CardTitle } from "@heroui/react"
+import { Amount } from "@/components/dashboard/amount"
 import { formatPercent } from "@/features/budgets/progress"
-import { formatCurrency } from "@/libs/format"
 import {
   globalUtilization,
   totalDebt,
@@ -24,7 +24,10 @@ export function DebtTotals({ debts, currency }: DebtTotalsProps) {
         <CardHeader>
           <CardDescription>Deuda total</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums">
-            {formatCurrency(totalDebt(debts), currency)}
+            <Amount
+              value={totalDebt(debts)}
+              currency={currency}
+            />
           </CardTitle>
         </CardHeader>
       </Card>
@@ -47,7 +50,10 @@ export function DebtTotals({ debts, currency }: DebtTotalsProps) {
         <CardHeader>
           <CardDescription>Interés estimado del mes</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums">
-            {formatCurrency(totalMonthlyInterest(debts), currency)}
+            <Amount
+              value={totalMonthlyInterest(debts)}
+              currency={currency}
+            />
           </CardTitle>
         </CardHeader>
       </Card>

@@ -1,5 +1,5 @@
 import { Card, cn } from "@heroui/react"
-import { formatCurrency } from "@/libs/format"
+import { Amount } from "@/components/dashboard/amount"
 import type { AccountWithBalance } from "../types"
 import { AccountCard } from "./account-card"
 
@@ -29,7 +29,10 @@ export function AccountsGrid({
             total < 0 && "text-danger"
           )}
         >
-          {formatCurrency(total, currency)}
+          <Amount
+            value={total}
+            currency={currency}
+          />
         </span>
       </Card>
 

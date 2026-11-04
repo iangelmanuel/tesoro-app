@@ -122,6 +122,26 @@ export const SITE = {
     legal: "/legal"
   },
 
+  // Secciones del aside de /dashboard/account. `icon` es el nombre del ícono
+  // de lucide-react (ver account-nav.tsx). Añadir una sección = una línea
+  // aquí y su ruta en app/dashboard/account/<segmento>
+  account: {
+    sections: [
+      { name: "General", href: "/dashboard/account/general", icon: "User" },
+      {
+        name: "Seguridad",
+        href: "/dashboard/account/security",
+        icon: "ShieldCheck"
+      },
+      { name: "Privacidad", href: "/dashboard/account/privacy", icon: "Eye" },
+      {
+        name: "Preferencias",
+        href: "/dashboard/account/preferences",
+        icon: "SlidersHorizontal"
+      }
+    ]
+  },
+
   // Monedas que el usuario puede elegir. Solo cambian el formato de los
   // montos: los valores guardados no se convierten
   currencies: [

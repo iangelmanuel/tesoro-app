@@ -1,11 +1,11 @@
 import Link from "next/link"
 import { Card, CardContent, buttonVariants } from "@heroui/react"
 import { Target } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import { formatPercent } from "@/features/budgets/progress"
 import { todayISO } from "@/libs/dates"
-import { formatCurrency } from "@/libs/format"
 import {
   GOALS_PATH,
   compareByTargetDate,
@@ -83,8 +83,15 @@ export async function GoalsCard({ workspaceId, currency }: GoalsCardProps) {
                   label={`${goal.name}: ${formatPercent(percent)}`}
                 />
                 <p className="text-sm text-muted tabular-nums">
-                  {formatCurrency(goal.saved, currency)} de{" "}
-                  {formatCurrency(goal.target_amount, currency)}
+                  <Amount
+                    value={goal.saved}
+                    currency={currency}
+                  />{" "}
+                  de{" "}
+                  <Amount
+                    value={goal.target_amount}
+                    currency={currency}
+                  />
                 </p>
               </li>
             )

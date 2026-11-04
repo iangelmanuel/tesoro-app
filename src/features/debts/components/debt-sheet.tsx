@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Button, Drawer, Input, Label, TextField } from "@heroui/react"
 import { Plus, RefreshCw } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { parseAmount } from "@/features/transactions/schemas"
 import { formatCurrency, formatDate } from "@/libs/format"
@@ -80,7 +81,10 @@ export function DebtSheet({
               <p className="text-sm text-muted tabular-nums">
                 Saldo{" "}
                 <span className="font-medium text-foreground">
-                  {formatCurrency(debt.balance, currency)}
+                  <Amount
+                    value={debt.balance}
+                    currency={currency}
+                  />
                 </span>
               </p>
             </Drawer.Header>
@@ -212,15 +216,18 @@ function DebtDetails({ debt, currency }: { debt: Debt; currency: string }) {
       ? formatRate(debt.interest_rate, debt.rate_type)
       : null
 
-  const rows: [string, string | null][] =
+  const rows: [string, React.ReactNode | null][] =
     debt.kind === "credit_card"
       ? [
           ["Entidad", debt.counterparty],
           [
             "Cupo",
-            debt.credit_limit !== null
-              ? formatCurrency(debt.credit_limit, currency)
-              : null
+            debt.credit_limit !== null ? (
+              <Amount
+                value={debt.credit_limit}
+                currency={currency}
+              />
+            ) : null
           ],
           ["Tasa", rate ?? "Sin tasa"],
           [
@@ -272,7 +279,7 @@ function DebtDetails({ debt, currency }: { debt: Debt; currency: string }) {
   return (
     <dl className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
       {rows
-        .filter((row): row is [string, string] => row[1] !== null)
+        .filter((row): row is [string, React.ReactNode] => row[1] !== null)
         .map(([label, value]) => (
           <div
             key={label}
@@ -334,7 +341,10 @@ function ProjectionDetails({
             <div className="flex flex-col">
               <dt className="text-muted">Intereses</dt>
               <dd className="font-medium tabular-nums">
-                {formatCurrency(projection.totalInterest, currency)}
+                <Amount
+                  value={projection.totalInterest}
+                  currency={currency}
+                />
               </dd>
             </div>
           </dl>

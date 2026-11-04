@@ -9,9 +9,9 @@ import {
   PartyPopper,
   Pencil
 } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { SURFACE_ITEM } from "@/components/dashboard/surface"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
-import { formatCurrency } from "@/libs/format"
 import { goalStatus, isReached } from "../progress"
 import type { Goal, GoalContribution } from "../queries"
 import { GoalDialog } from "./goal-dialog"
@@ -61,9 +61,16 @@ export function GoalCard({
             </span>
             <span className="text-sm text-muted tabular-nums">
               <span className="font-medium text-foreground">
-                {formatCurrency(goal.saved, currency)}
+                <Amount
+                  value={goal.saved}
+                  currency={currency}
+                />
               </span>{" "}
-              de {formatCurrency(goal.target_amount, currency)}
+              de{" "}
+              <Amount
+                value={goal.target_amount}
+                currency={currency}
+              />
             </span>
           </span>
         </button>

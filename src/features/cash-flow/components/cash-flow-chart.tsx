@@ -12,9 +12,10 @@ import {
   ChartLegendContent
 } from "@/components/charts/chart-legend"
 import { ChartTooltip } from "@/components/charts/chart-tooltip"
+import { useFormatAmount } from "@/components/dashboard/hide-amounts-context"
 import { ChartDataTable } from "@/features/reports/components/chart-data-table"
 import { CurrencyTooltipContent } from "@/features/reports/components/currency-tooltip"
-import { formatCurrency } from "@/libs/format"
+import { AMOUNT_MASK } from "@/libs/format"
 import type { CashFlowMonth } from "../queries"
 
 const CHART_CONFIG = {
@@ -56,6 +57,7 @@ export function CashFlowChart({
   currency,
   className
 }: CashFlowChartProps) {
+  const { hidden, money } = useFormatAmount()
   const sameYear =
     data.length > 0 &&
     data[0].month.slice(0, 4) === data.at(-1)?.month.slice(0, 4)
@@ -93,7 +95,9 @@ export function CashFlowChart({
             tickLine={false}
             axisLine={false}
             width={48}
-            tickFormatter={(value: number) => COMPACT.format(value)}
+            tickFormatter={(value: number) =>
+              hidden ? AMOUNT_MASK : COMPACT.format(value)
+            }
           />
           <ChartTooltip
             content={
@@ -131,9 +135,9 @@ export function CashFlowChart({
         headers={["Mes", "Entradas", "Salidas", "Saldo en cuentas"]}
         rows={data.map((row) => [
           monthLabel(row.month),
-          formatCurrency(row.inflow, currency),
-          formatCurrency(row.outflow, currency),
-          formatCurrency(row.closingBalance, currency)
+          money(row.inflow, currency),
+          money(row.outflow, currency),
+          money(row.closingBalance, currency)
         ])}
       />
     </>

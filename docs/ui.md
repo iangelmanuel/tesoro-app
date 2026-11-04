@@ -119,6 +119,28 @@ Sin P0. Lo que ya funciona y se conserva: tarjetas sin borde, tokens con
 nombres de HeroUI, `Amount` y `tabular-nums` en cifras, leyendas y tablas
 `sr-only` en gráficas, estados por `tone.ts` en `StatCard`.
 
+### Auditoría del modo oscuro (SPEC 23, paso 10)
+
+Revisión de código y de los tokens de `.dark` en `globals.css` (sin navegador),
+con razones de contraste calculadas sobre los valores actuales. Todos los
+pares de texto pasan AA; los hallazgos son de profundidad y elevación. Se
+resuelven en los pasos 11 y 12 del spec.
+
+| Prioridad | Hallazgo                                                                                                                                                                                                                                                                          | Dónde                                                   |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| P1        | Sin elevación: `--surface-shadow` y `--overlay-shadow` oscuros son `transparent` / `1px #ffffff4d`. Menús, popovers y tooltips sobre una tarjeta quedan a 1.05:1 (`overlay` 0.23 vs `surface` 0.21) y solo los diálogos se apoyan en el fondo atenuado. El claro ya tiene sombra. | `globals.css` (`.dark`), `chart-tooltip.tsx`, `Popover` |
+| P1        | Poca separación fondo/tarjeta: 1.12:1 (`background` 0.145 vs `surface` 0.21), sin brillo ni sombra que ayude. Contra el claro, que lleva sombra en dos capas, el oscuro se ve plano.                                                                                              | `globals.css`, `Card`, `surface.ts`                     |
+| P2        | Matiz inconsistente: el fondo es neutro puro (croma 0) y las superficies llevan tinte violeta (croma 0.006, matiz 286). Un gris "sucio" entre ambos; para un aspecto más profundo (OLED) conviene unificarlos.                                                                    | `globals.css` (`--background` vs `--surface*`)          |
+| P2        | Niveles anidados débiles: `surface-secondary` 1.09:1 y `surface-tertiary` 1.19:1 sobre `surface`; filas con hover, chips y campos dentro de tarjetas casi no se distinguen. `--separator` da 1.11:1.                                                                              | `globals.css`, `CARD_ROW`, `Table`                      |
+| P2        | Primario muy vivo sobre negro: emerald-500 y orange-500 dan 8.03:1 y 6.84:1 contra el fondo; en botones y rellenos grandes vibran más que en el claro. Se puede bajar croma/luminosidad conservando AA con el texto oscuro (7.19 y 6.13).                                         | `globals.css` (`.dark :has(> [data-workspace])`)        |
+| P2        | 24 usos de `dark:` con paleta cruda de Tailwind (`dark:bg-emerald-950`, `dark:text-amber-300`…) en avisos y chips: no siguen los tokens nuevos. Es el mismo P2 de los colores crudos del claro.                                                                                   | `features/{debts,goals,categories}`, cash-flow          |
+| P3        | Campos: `--field-background` 0.30 sobre tarjeta da 1.30:1; funciona por relleno, pero más claro que el modal (0.23) por 1.24:1. Revisar tras cambiar superficies.                                                                                                                 | `globals.css`                                           |
+
+Sin P0. Lo que ya funciona y se conserva: AA en todo el texto (`foreground`
+18.96:1, `muted` 6.74:1 sobre la tarjeta, dinero ≥ 5.03:1), serie de gráficas
+con luminosidad escalonada (mínimo 3.72:1), primario con texto oscuro (≥ 6.13:1)
+y tarjetas sin borde.
+
 ## Componentes propios
 
 Todos en `src/components/`. HeroUI se importa directo de `@heroui/react`;

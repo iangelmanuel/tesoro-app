@@ -1,5 +1,6 @@
 import { Building2Icon, CheckIcon, UserIcon } from "lucide-react"
 import { SITE } from "@/config/site"
+import { RevealItem, RevealList } from "./reveal"
 import { SectionHeading } from "./section-heading"
 
 // Lo que trae cada espacio sale de su menú del dashboard, sin el resumen
@@ -33,12 +34,12 @@ export function WorkspacesSection() {
           title="Dos espacios separados en la misma cuenta"
           description="Cambia entre tus finanzas personales y las de tu negocio en un clic. Los datos de cada espacio nunca se mezclan."
         />
-        <ul className="grid gap-4 md:grid-cols-2">
+        <RevealList className="grid gap-4 md:grid-cols-2">
           {SITE.workspaces.types.map((workspace) => {
             const Icon = ICONS[workspace.id]
 
             return (
-              <li
+              <RevealItem
                 key={workspace.id}
                 className="flex flex-col gap-5 rounded-xl border bg-surface p-6"
               >
@@ -69,10 +70,10 @@ export function WorkspacesSection() {
                     </li>
                   ))}
                 </ul>
-              </li>
+              </RevealItem>
             )
           })}
-        </ul>
+        </RevealList>
       </div>
     </section>
   )

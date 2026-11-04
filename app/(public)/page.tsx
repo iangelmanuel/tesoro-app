@@ -5,6 +5,7 @@ import { Features } from "@/features/landing/components/features"
 import { FinalCta } from "@/features/landing/components/final-cta"
 import { Hero } from "@/features/landing/components/hero"
 import { HowItWorks } from "@/features/landing/components/how-it-works"
+import { MotionProvider } from "@/features/landing/components/motion-provider"
 import { OpenSource } from "@/features/landing/components/open-source"
 import { ScoreSection } from "@/features/landing/components/score-section"
 import { WorkspacesSection } from "@/features/landing/components/workspaces-section"
@@ -17,16 +18,18 @@ export const metadata = buildMetadata({
 
 export default function HomePage() {
   return (
-    <main>
-      <JsonLd schema={buildVideoSchema()} />
-      <Hero />
-      <DemoSection />
-      <Features />
-      <HowItWorks />
-      <ScoreSection />
-      <WorkspacesSection />
-      <OpenSource />
-      <FinalCta />
-    </main>
+    <MotionProvider>
+      <main>
+        <JsonLd schema={buildVideoSchema()} />
+        <Hero />
+        <DemoSection />
+        <Features />
+        <HowItWorks />
+        <ScoreSection />
+        <WorkspacesSection />
+        <OpenSource />
+        <FinalCta />
+      </main>
+    </MotionProvider>
   )
 }

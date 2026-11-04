@@ -1,4 +1,5 @@
 import { cn } from "@heroui/react"
+import { RevealItem, RevealList, ScrollFillBar } from "./reveal"
 import { LandingScoreVisual } from "./score-visual"
 import { SectionHeading } from "./section-heading"
 
@@ -89,9 +90,9 @@ export function ScoreSection() {
         <div className="grid gap-10 lg:grid-cols-2">
           <div className="flex flex-col gap-4">
             <h3 className="font-medium">Factores y pesos</h3>
-            <ul className="flex flex-col gap-4">
+            <RevealList className="flex flex-col gap-4">
               {FACTORS.map((factor) => (
-                <li
+                <RevealItem
                   key={factor.label}
                   className="flex flex-col gap-1.5"
                 >
@@ -105,17 +106,15 @@ export function ScoreSection() {
                     aria-hidden="true"
                     className="h-1.5 overflow-hidden rounded-full bg-default"
                   >
-                    <div
+                    <ScrollFillBar
+                      fraction={factor.weight / MAX_WEIGHT}
                       className="h-full rounded-full bg-(--income)"
-                      style={{
-                        width: `${(factor.weight / MAX_WEIGHT) * 100}%`
-                      }}
                     />
                   </div>
                   <p className="text-sm text-muted">{factor.description}</p>
-                </li>
+                </RevealItem>
               ))}
-            </ul>
+            </RevealList>
           </div>
 
           <div className="flex flex-col gap-8">

@@ -1,4 +1,5 @@
 import { ChartPieIcon, PenLineIcon, TrendingUpIcon } from "lucide-react"
+import { RevealItem, RevealList } from "./reveal"
 import { SectionHeading } from "./section-heading"
 
 const STEPS = [
@@ -35,9 +36,12 @@ export function HowItWorks() {
           eyebrow="Cómo funciona"
           title="Tres pasos, desde el primer registro"
         />
-        <ol className="grid gap-6 md:grid-cols-3">
+        <RevealList
+          as="ol"
+          className="grid gap-6 md:grid-cols-3"
+        >
           {STEPS.map((step, index) => (
-            <li
+            <RevealItem
               key={step.title}
               className="flex flex-col gap-3"
             >
@@ -52,9 +56,9 @@ export function HowItWorks() {
               </div>
               <h3 className="text-lg font-medium">{step.title}</h3>
               <p className="text-sm text-muted">{step.description}</p>
-            </li>
+            </RevealItem>
           ))}
-        </ol>
+        </RevealList>
       </div>
     </section>
   )

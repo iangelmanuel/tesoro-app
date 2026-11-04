@@ -1,4 +1,5 @@
 import { cn } from "@heroui/react"
+import { ScrollGaugeArc } from "./reveal"
 
 // Mockup interino con datos ficticios fijos. El spec de videos de la landing
 // lo reemplaza; no depende de nada fuera de este archivo
@@ -35,35 +36,33 @@ export function LandingScoreVisual() {
         className="flex flex-col gap-6 rounded-2xl border bg-surface p-4 shadow-xl shadow-black/5 sm:p-6 dark:shadow-black/40"
       >
         <div className="flex flex-col items-center gap-2">
-          <svg
-            viewBox="0 0 120 68"
-            className="w-48"
-          >
-            <path
-              d="M10 60a50 50 0 0 1 100 0"
-              fill="none"
-              stroke="var(--default)"
-              strokeWidth="10"
-              strokeLinecap="round"
-            />
-            <path
-              d="M10 60a50 50 0 0 1 100 0"
-              fill="none"
-              stroke="var(--balance)"
-              strokeWidth="10"
-              strokeLinecap="round"
-              pathLength={100}
-              strokeDasharray={`${SCORE} 100`}
-            />
-            <text
-              x="60"
-              y="56"
-              textAnchor="middle"
-              className="fill-foreground text-[22px] font-semibold"
+          <div className="relative w-48">
+            <svg
+              viewBox="0 0 120 68"
+              className="w-48"
             >
-              {SCORE}
-            </text>
-          </svg>
+              <path
+                d="M10 60a50 50 0 0 1 100 0"
+                fill="none"
+                stroke="var(--default)"
+                strokeWidth="10"
+                strokeLinecap="round"
+              />
+              <text
+                x="60"
+                y="56"
+                textAnchor="middle"
+                className="fill-foreground text-[22px] font-semibold"
+              >
+                {SCORE}
+              </text>
+            </svg>
+            {/* El arco se dibuja con el scroll, encima del riel */}
+            <ScrollGaugeArc
+              value={SCORE}
+              stroke="var(--balance)"
+            />
+          </div>
           <span className="rounded-md bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-800 dark:bg-sky-950 dark:text-sky-300">
             Bueno
           </span>

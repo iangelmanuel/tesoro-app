@@ -4,10 +4,11 @@ import { ThemeToggle } from "@/components/theme/theme-toggle"
 import { SITE } from "@/config/site"
 import { MobileNav } from "./mobile-nav"
 import { SiteHeaderSession } from "./site-header-session"
+import { SiteHeaderShell } from "./site-header-shell"
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60">
+    <SiteHeaderShell>
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4 sm:px-6">
         <Link
           href={SITE.routes.home}
@@ -46,6 +47,6 @@ export function SiteHeader() {
           </MobileNav>
         </div>
       </div>
-    </header>
+    </SiteHeaderShell>
   )
 }

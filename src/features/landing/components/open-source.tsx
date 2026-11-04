@@ -1,6 +1,7 @@
 import { buttonVariants } from "@heroui/react"
 import { BookOpenIcon, BugIcon, CodeIcon } from "lucide-react"
 import { SITE } from "@/config/site"
+import { Reveal } from "./reveal"
 import { SectionHeading } from "./section-heading"
 
 const LINKS = [
@@ -38,7 +39,7 @@ export function OpenSource() {
           title={`${SITE.info.name} es de todos`}
           description={`El código está bajo licencia ${SITE.info.license}: puedes leerlo, auditar cómo se tratan tus datos, desplegar tu propia copia o proponer mejoras.`}
         />
-        <div className="flex flex-wrap gap-3">
+        <Reveal className="flex flex-wrap gap-3">
           {LINKS.map((link) => (
             <a
               key={link.href}
@@ -51,7 +52,7 @@ export function OpenSource() {
               {link.label}
             </a>
           ))}
-        </div>
+        </Reveal>
       </div>
     </section>
   )

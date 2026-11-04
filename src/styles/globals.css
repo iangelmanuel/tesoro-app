@@ -264,3 +264,14 @@
     animation: card-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 }
+
+/* Landing (SPEC 24): con reduced motion, los elementos que Motion revela al
+   entrar en pantalla aparecen ya en su estado final. Gana a los estilos en
+   línea que el servidor pinta para el estado oculto */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}

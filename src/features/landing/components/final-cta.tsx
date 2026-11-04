@@ -2,6 +2,7 @@ import Link from "next/link"
 import { buttonVariants } from "@heroui/react"
 import { ArrowRightIcon } from "lucide-react"
 import { SITE } from "@/config/site"
+import { Pressable, Reveal } from "./reveal"
 
 export function FinalCta() {
   return (
@@ -10,7 +11,7 @@ export function FinalCta() {
       className="border-t"
     >
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
-        <div className="flex flex-col items-center gap-6 rounded-2xl border bg-surface px-6 py-14 text-center">
+        <Reveal className="flex flex-col items-center gap-6 rounded-2xl border bg-surface px-6 py-14 text-center">
           <h2
             id="cta-title"
             className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl"
@@ -22,13 +23,15 @@ export function FinalCta() {
             primer momento.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            <Link
-              href={SITE.navigation.cta.href}
-              className={buttonVariants({ size: "lg" })}
-            >
-              {SITE.navigation.cta.label}
-              <ArrowRightIcon className="size-4" />
-            </Link>
+            <Pressable>
+              <Link
+                href={SITE.navigation.cta.href}
+                className={buttonVariants({ size: "lg" })}
+              >
+                {SITE.navigation.cta.label}
+                <ArrowRightIcon className="size-4" />
+              </Link>
+            </Pressable>
             <Link
               href={SITE.navigation.secondary.href}
               className={buttonVariants({ size: "lg", variant: "ghost" })}
@@ -36,7 +39,7 @@ export function FinalCta() {
               Ya tengo cuenta
             </Link>
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   )

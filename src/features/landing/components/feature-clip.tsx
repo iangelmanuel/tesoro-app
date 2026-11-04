@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
+import { m } from "motion/react"
 
 type FeatureClipProps = {
   sources: { mp4: string; webm: string; poster: string }
@@ -10,9 +11,11 @@ type NetworkInformation = { saveData?: boolean }
 
 // Clip corto de una función (SPEC 24): loop silenciado que solo se reproduce
 // mientras la tarjeta está en pantalla. Con `prefers-reduced-motion` o ahorro
-// de datos se queda en el póster y no descarga el video.
+// de datos se queda en el póster y no descarga el video. Al arrancar, una
+// capa con el póster se desvanece para que el paso a video no salte.
 export function FeatureClip({ sources }: FeatureClipProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const [live, setLive] = useState(false)
 
   useEffect(() => {
     const video = videoRef.current
@@ -45,28 +48,39 @@ export function FeatureClip({ sources }: FeatureClipProps) {
   }, [])
 
   return (
-    <video
-      ref={videoRef}
-      className="aspect-video w-full rounded-2xl bg-[#dff5ea] object-cover"
-      poster={sources.poster}
-      width={1920}
-      height={1080}
-      preload="none"
-      muted
-      loop
-      playsInline
-      disablePictureInPicture
-      aria-hidden="true"
-      tabIndex={-1}
-    >
-      <source
-        src={sources.webm}
-        type="video/webm"
+    <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-[#dff5ea]">
+      <video
+        ref={videoRef}
+        className="absolute inset-0 size-full object-cover"
+        poster={sources.poster}
+        width={1920}
+        height={1080}
+        preload="none"
+        muted
+        loop
+        playsInline
+        disablePictureInPicture
+        aria-hidden="true"
+        tabIndex={-1}
+        onPlaying={() => setLive(true)}
+      >
+        <source
+          src={sources.webm}
+          type="video/webm"
+        />
+        <source
+          src={sources.mp4}
+          type="video/mp4"
+        />
+      </video>
+      <m.div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url(${sources.poster})` }}
+        initial={false}
+        animate={{ opacity: live ? 0 : 1 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       />
-      <source
-        src={sources.mp4}
-        type="video/mp4"
-      />
-    </video>
+    </div>
   )
 }

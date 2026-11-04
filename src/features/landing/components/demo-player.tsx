@@ -3,14 +3,21 @@
 import { useRef, useState } from "react"
 import { cn } from "@heroui/react"
 import { PauseIcon, PlayIcon } from "lucide-react"
+import { AnimatePresence, m } from "motion/react"
 import { SITE } from "@/config/site"
 
 const { demo } = SITE.landing
 
+const EASE_OUT = [0.16, 1, 0.3, 1] as const
+
+// Clases compartidas de los botones del reproductor. Colores fijos: el video
+// trae su escritorio claro y el contenedor es claro en los dos temas.
+const BUTTON =
+  "flex items-center justify-center rounded-full bg-white/90 text-[#0b1220] shadow-[0_10px_30px_-8px_rgba(2,20,15,0.45)] backdrop-blur outline-none hover:bg-white focus-visible:ring-2 focus-visible:ring-[#047857] focus-visible:ring-offset-2 focus-visible:ring-offset-[#dff5ea]"
+
 // Reproductor del video principal (SPEC 24). Muestra el póster hasta que el
 // usuario pulsa play: nunca hay autoplay y `preload="none"` evita descargar el
-// video antes. El video ya trae su escritorio claro, así que el contenedor es
-// claro en los dos temas (colores fijos, no tokens del tema).
+// video antes. Al empezar, la capa del póster se desvanece hacia el video.
 export function DemoPlayer() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [started, setStarted] = useState(false)
@@ -57,36 +64,60 @@ export function DemoPlayer() {
           />
         </video>
 
-        <button
-          type="button"
-          onClick={toggle}
-          aria-label={playing ? "Pausar el video" : "Reproducir el video"}
-          className={cn(
-            "absolute flex items-center justify-center rounded-full bg-white/90 text-[#0b1220] shadow-[0_10px_30px_-8px_rgba(2,20,15,0.45)] backdrop-blur transition-[opacity,transform] duration-200 outline-none hover:bg-white focus-visible:ring-2 focus-visible:ring-[#047857] focus-visible:ring-offset-2 focus-visible:ring-offset-[#dff5ea] motion-reduce:transition-none",
-            !started &&
-              "top-1/2 left-1/2 size-20 -translate-x-1/2 -translate-y-1/2 hover:scale-105 sm:size-24",
-            started && "bottom-4 left-4 size-12",
-            // En reproducción el botón se oculta hasta pasar el mouse o enfocar
-            started &&
-              playing &&
-              "opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-          )}
-        >
-          {playing ? (
-            <PauseIcon
-              aria-hidden="true"
-              className="size-5 fill-current"
-            />
+        <AnimatePresence initial={false}>
+          {!started ? (
+            // Capa del póster: un velo suave y el play grande al centro
+            <m.div
+              key="cover"
+              className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_center,rgba(2,44,34,0.18),transparent_70%)]"
+              exit={{ opacity: 0, scale: 1.03 }}
+              transition={{ duration: 0.45, ease: EASE_OUT }}
+            >
+              <m.button
+                type="button"
+                onClick={toggle}
+                aria-label="Reproducir el video"
+                className={cn(BUTTON, "size-20 sm:size-24")}
+                whileHover={{ scale: 1.06 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <PlayIcon
+                  aria-hidden="true"
+                  className="size-8 translate-x-0.5 fill-current sm:size-9"
+                />
+              </m.button>
+            </m.div>
           ) : (
-            <PlayIcon
-              aria-hidden="true"
+            <m.button
+              key="control"
+              type="button"
+              onClick={toggle}
+              aria-label={playing ? "Pausar el video" : "Reproducir el video"}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, ease: EASE_OUT }}
               className={cn(
-                "translate-x-0.5 fill-current",
-                started ? "size-5" : "size-8 sm:size-9"
+                BUTTON,
+                "absolute bottom-4 left-4 size-12 transition-opacity duration-200 motion-reduce:transition-none",
+                // En reproducción se oculta hasta pasar el mouse o enfocarlo
+                playing &&
+                  "opacity-0! group-hover:opacity-100! focus-visible:opacity-100!"
               )}
-            />
+            >
+              {playing ? (
+                <PauseIcon
+                  aria-hidden="true"
+                  className="size-5 fill-current"
+                />
+              ) : (
+                <PlayIcon
+                  aria-hidden="true"
+                  className="size-5 translate-x-0.5 fill-current"
+                />
+              )}
+            </m.button>
           )}
-        </button>
+        </AnimatePresence>
       </div>
       <figcaption
         id="demo-description"

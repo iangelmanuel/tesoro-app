@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 import { SITE } from "@/config/site"
 import { FeatureClip } from "./feature-clip"
+import { RevealItem, RevealList, ScrollSettle } from "./reveal"
 import { SectionHeading } from "./section-heading"
 
 type FeatureIcon = (typeof SITE.features)[number]["icon"]
@@ -36,7 +37,7 @@ export function Features() {
           title="Todo lo que necesitas para entender tu dinero"
           description="Tú registras, Tesoro ordena. Sin conectar bancos ni compartir contraseñas."
         />
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <RevealList className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {SITE.features.map((feature) => {
             const Icon = FEATURE_ICONS[feature.icon]
             // El clip se asocia a la tarjeta por el título (SITE.landing.clips)
@@ -45,11 +46,15 @@ export function Features() {
             )
 
             return (
-              <li
+              <RevealItem
                 key={feature.title}
                 className="flex flex-col gap-3 rounded-xl border bg-surface p-6"
               >
-                {clip && <FeatureClip sources={clip.sources} />}
+                {clip && (
+                  <ScrollSettle>
+                    <FeatureClip sources={clip.sources} />
+                  </ScrollSettle>
+                )}
                 <span className="flex size-10 items-center justify-center rounded-lg bg-(--income)/10 text-(--income)">
                   <Icon
                     aria-hidden="true"
@@ -58,10 +63,10 @@ export function Features() {
                 </span>
                 <h3 className="font-medium">{feature.title}</h3>
                 <p className="text-sm text-muted">{feature.description}</p>
-              </li>
+              </RevealItem>
             )
           })}
-        </ul>
+        </RevealList>
       </div>
     </section>
   )

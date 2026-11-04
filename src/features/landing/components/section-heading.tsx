@@ -1,4 +1,5 @@
 import { cn } from "@heroui/react"
+import { Reveal } from "./reveal"
 
 type SectionHeadingProps = {
   id: string
@@ -18,7 +19,7 @@ export function SectionHeading({
   className
 }: SectionHeadingProps) {
   return (
-    <div className={cn("flex max-w-2xl flex-col gap-3", className)}>
+    <Reveal className={cn("flex max-w-2xl flex-col gap-3", className)}>
       {eyebrow && <p className="text-sm font-medium text-brand">{eyebrow}</p>}
       <h2
         id={id}
@@ -31,6 +32,6 @@ export function SectionHeading({
           {description}
         </p>
       )}
-    </div>
+    </Reveal>
   )
 }

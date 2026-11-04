@@ -230,17 +230,17 @@ Variables de entorno de desarrollo (solo en `.env.local`, placeholders en `.env.
 
 ## Riesgos
 
-| Riesgo                                                                             | Mitigación                                                                                                                                           |
-| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Hyperframes cambia de CLI o estructura, o la skill queda en una ruta no reconocida | Paso 1 verifica la instalación y un render de prueba antes de invertir en las composiciones; la ubicación final se documenta en `CLAUDE.md`.         |
-| FFmpeg no está instalado en la máquina de Windows                                  | Paso 1 lo comprueba y documenta cómo instalarlo; los videos van commiteados, así que el CI no lo necesita.                                           |
-| Los videos superan el presupuesto de peso                                          | Se ajustan bitrate, resolución de salida (1280×720 si hace falta) y duración; el criterio de aceptación fija los máximos.                            |
-| Three.js y Motion bajan Lighthouse de rendimiento                                  | Carga diferida, activación condicionada, `LazyMotion`, frameloop bajo demanda y medición en el paso 11; si no llega a 90, se recorta la escena 3D.   |
+| Riesgo                                                                             | Mitigación                                                                                                                                                |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hyperframes cambia de CLI o estructura, o la skill queda en una ruta no reconocida | Paso 1 verifica la instalación y un render de prueba antes de invertir en las composiciones; la ubicación final se documenta en `CLAUDE.md`.              |
+| FFmpeg no está instalado en la máquina de Windows                                  | Paso 1 lo comprueba y documenta cómo instalarlo; los videos van commiteados, así que el CI no lo necesita.                                                |
+| Los videos superan el presupuesto de peso                                          | Se ajustan bitrate, resolución de salida (1280×720 si hace falta) y duración; el criterio de aceptación fija los máximos.                                 |
+| Three.js y Motion bajan Lighthouse de rendimiento                                  | Carga diferida, activación condicionada, `LazyMotion`, frameloop bajo demanda y medición en el paso 11; si no llega a 90, se recorta la escena 3D.        |
 | Las grabaciones quedan desfasadas cuando cambie la UI                              | `seed-demo` y `record-demo` son repetibles en la máquina que los tiene (no están en el repo); re-renderizar es correr los scripts y `hyperframes render`. |
-| El usuario demo expone credenciales o se corre el seed contra producción           | Credenciales solo en `.env.local`; guarda de URL local en el script; `service_role` nunca en el repo.                                                |
-| Autoplay de video y animaciones molestan o excluyen a usuarios                     | Respeto de `prefers-reduced-motion` y `saveData`, controles con teclado y sin audio.                                                                 |
-| El `critique` pide cambios que chocan con los tokens de SPEC 14                    | Los cambios se hacen dentro de los tokens existentes (`--brand`, `--income`...); cualquier token nuevo se documenta en `docs/ui.md` antes de usarse. |
-| Los datos demo se leen como cifras reales                                          | Nota "Datos de ejemplo" visible en el video y ningún dato de usuarios reales en el seed.                                                             |
+| El usuario demo expone credenciales o se corre el seed contra producción           | Credenciales solo en `.env.local`; guarda de URL local en el script; `service_role` nunca en el repo.                                                     |
+| Autoplay de video y animaciones molestan o excluyen a usuarios                     | Respeto de `prefers-reduced-motion` y `saveData`, controles con teclado y sin audio.                                                                      |
+| El `critique` pide cambios que chocan con los tokens de SPEC 14                    | Los cambios se hacen dentro de los tokens existentes (`--brand`, `--income`...); cualquier token nuevo se documenta en `docs/ui.md` antes de usarse.      |
+| Los datos demo se leen como cifras reales                                          | Nota "Datos de ejemplo" visible en el video y ningún dato de usuarios reales en el seed.                                                                  |
 
 ## Lo que **no** entra en este spec
 

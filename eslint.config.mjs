@@ -7,7 +7,15 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   prettier,
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"])
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+    // skills de terceros: se versionan tal como vienen del upstream
+    ".agents/skills/**",
+    ".claude/skills/**"
+  ])
 ])
 
 export default eslintConfig

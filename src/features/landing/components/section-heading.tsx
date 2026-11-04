@@ -2,7 +2,7 @@ import { cn } from "@heroui/react"
 
 type SectionHeadingProps = {
   id: string
-  eyebrow: string
+  eyebrow?: string
   title: string
   description?: string
   className?: string
@@ -19,7 +19,7 @@ export function SectionHeading({
 }: SectionHeadingProps) {
   return (
     <div className={cn("flex max-w-2xl flex-col gap-3", className)}>
-      <p className="text-sm font-medium text-brand">{eyebrow}</p>
+      {eyebrow && <p className="text-sm font-medium text-brand">{eyebrow}</p>}
       <h2
         id={id}
         className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl"

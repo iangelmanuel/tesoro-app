@@ -8,6 +8,7 @@ import {
   NotebookPenIcon
 } from "lucide-react"
 import { SITE } from "@/config/site"
+import { FeatureClip } from "./feature-clip"
 import { SectionHeading } from "./section-heading"
 
 type FeatureIcon = (typeof SITE.features)[number]["icon"]
@@ -38,12 +39,17 @@ export function Features() {
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {SITE.features.map((feature) => {
             const Icon = FEATURE_ICONS[feature.icon]
+            // El clip se asocia a la tarjeta por el título (SITE.landing.clips)
+            const clip = SITE.landing.clips.find(
+              (item) => item.feature === feature.title
+            )
 
             return (
               <li
                 key={feature.title}
                 className="flex flex-col gap-3 rounded-xl border bg-surface p-6"
               >
+                {clip && <FeatureClip sources={clip.sources} />}
                 <span className="flex size-10 items-center justify-center rounded-lg bg-(--income)/10 text-(--income)">
                   <Icon
                     aria-hidden="true"

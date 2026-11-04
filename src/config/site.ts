@@ -200,9 +200,78 @@ export const SITE = {
     }
   ],
 
+  // Videos de la landing (SPEC 24). Se renderizan con Hyperframes y viven en
+  // public/videos/. Los componentes leen las rutas de aquí, nunca a mano.
+  // `durationSeconds` es la duración real del render: se actualiza a mano al
+  // re-renderizar. `clips[].feature` coincide con un `title` de `features`.
+  landing: {
+    demo: {
+      title: "Tesoro en acción",
+      description:
+        "Un recorrido por el resumen, los presupuestos, las metas, las deudas, el score y el espacio Empresa.",
+      uploadDate: "2026-11-04",
+      durationSeconds: 56,
+      width: 1920,
+      height: 1080,
+      sources: {
+        mp4: "/videos/demo.mp4",
+        webm: "/videos/demo.webm",
+        poster: "/videos/demo-poster.webp"
+      }
+    },
+    clips: [
+      {
+        feature: "Registros como punto de partida",
+        slug: "registros",
+        sources: {
+          mp4: "/videos/registros.mp4",
+          webm: "/videos/registros.webm",
+          poster: "/videos/registros-poster.webp"
+        }
+      },
+      {
+        feature: "Gráficas claras",
+        slug: "graficas",
+        sources: {
+          mp4: "/videos/graficas.mp4",
+          webm: "/videos/graficas.webm",
+          poster: "/videos/graficas-poster.webp"
+        }
+      },
+      {
+        feature: "Recomendaciones",
+        slug: "recomendaciones",
+        sources: {
+          mp4: "/videos/recomendaciones.mp4",
+          webm: "/videos/recomendaciones.webm",
+          poster: "/videos/recomendaciones-poster.webp"
+        }
+      },
+      {
+        feature: "Score financiero",
+        slug: "score",
+        sources: {
+          mp4: "/videos/score.mp4",
+          webm: "/videos/score.webm",
+          poster: "/videos/score-poster.webp"
+        }
+      },
+      {
+        feature: "Personal y Empresa",
+        slug: "espacios",
+        sources: {
+          mp4: "/videos/espacios.mp4",
+          webm: "/videos/espacios.webm",
+          poster: "/videos/espacios-poster.webp"
+        }
+      }
+    ]
+  },
+
   navigation: {
     main: [
       { name: "Inicio", href: "/" },
+      { name: "Demo", href: "/#demo" },
       { name: "Funciones", href: "/#funciones" },
       { name: "Cómo funciona", href: "/#como-funciona" },
       { name: "Score", href: "/#score" },

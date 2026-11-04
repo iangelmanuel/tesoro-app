@@ -108,10 +108,10 @@ Secciones, en orden (`src/features/landing/components/`):
 - **Primario de la UI** (`--accent` de HeroUI), según dónde estés:
   - **Neutro** fuera de los espacios (landing, auth, legales, cuenta y el
     estado vacío de Empresa): casi negro en claro, casi blanco en oscuro.
-  - **Emerald** en `/dashboard/personal/**` (emerald-600 en claro, 500 en
-    oscuro).
-  - **Naranja** en `/dashboard/business/[id]/**` (orange-600 en claro, 500 en
-    oscuro).
+  - **Emerald** en `/dashboard/personal/**` (emerald-600 en claro, un emerald
+    menos saturado en oscuro, `oklch(70% .15 162.5)`).
+  - **Naranja** en `/dashboard/business/[id]/**` (orange-600 en claro, un naranja
+    menos saturado en oscuro, `oklch(72% .18 48)`).
   - Sobre emerald y naranja el texto es oscuro: el blanco no da AA.
   - Lo decide la ruta: `WorkspaceThemeRoot` (layout del dashboard) pinta un
     marcador `data-workspace` y `globals.css` cambia el primario con
@@ -121,7 +121,10 @@ Secciones, en orden (`src/features/landing/components/`):
 - **Neutros**: negros y grises azulados (fondo, superficie, bordes, texto y
   texto atenuado), con AA en claro y oscuro. En claro, tarjetas blancas sin
   borde sobre un gris suave, con sombra en dos capas (`--surface-shadow`,
-  `--overlay-shadow`); en oscuro no hay sombra.
+  `--overlay-shadow`). En oscuro, fondo más profundo y neutro (≈ `#07080a`,
+  mismo matiz que el claro), niveles de superficie más separados y la
+  elevación sale de un brillo superior de 1 px más una sombra difusa, sin
+  bordes.
 - **Componente** `Logo` (`src/components/brand/logo.tsx`): isotipo inline y
   wordmark, con variante solo isotipo (`variant="mark"`) y tamaños `default` y
   `lg`. Si cambia `mark.svg`, se actualiza también aquí.

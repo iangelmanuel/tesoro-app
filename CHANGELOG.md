@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Gastos fijos and Presupuestos as separate screens (SPEC 23): new `/dashboard/personal/recurring` route (upcoming payments and the recurring expenses list) and `/dashboard/personal/budgets` for budgets only. The Personal aside and drawer list **Gastos fijos** first, then **Presupuestos** (`SITE.navigation.personal`, `SITE.routes.personalRecurring`, `CalendarClock` icon). The old `/dashboard/personal/budgets?tab=recurring` URL redirects to the new route.
 - Phone selector **Gastos fijos | Presupuestos** (`BudgetsAndRecurringTabs`, hidden from 768 px): the bottom bar keeps a single entry pointing to Gastos fijos, which is also marked active on Presupuestos. Each tab is its own route.
+- Dark theme polish (SPEC 23): deeper, neutral backgrounds with the same hue as the light theme (background ≈ `#07080a`, card ≈ `#16171a`), more separated surface levels (secondary, tertiary, overlay, fields, separators) and elevation made of a 1 px top highlight plus a soft deep shadow, with no borders (`--surface-shadow` / `--overlay-shadow` in `.dark`). Dark audit findings are in `docs/ui.md`.
 - Light theme elevation tokens `--surface-shadow` and `--overlay-shadow` (two layers, tinted with the foreground, never pure black); dark mode keeps no shadow. Light-mode audit findings are in `docs/ui.md`.
 
 - Hide amounts (SPEC 22): an eye button in the dashboard header (and a switch in Account → Privacy sharing the same state) replaces balances and totals with `***`. The preference is stored in `profiles.hide_amounts` (migration `profiles_hide_amounts`, one value per user for Personal, Business and every device) and read on the server, so the first render is already hidden. `setHideAmountsAction` validates with Zod and the UI updates optimistically (`useOptimistic`).
@@ -193,6 +194,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Dark theme tokens (SPEC 23): less saturated primary in dark (emerald `oklch(70% .15 162.5)`, orange `oklch(72% .18 48)`), darker `*-foreground` text on accent and status colors, slightly brighter `--muted`, and updated dark contrast table (all pairs AA). `SITE.seo.themeColor` now matches the new backgrounds (`#F1F2F5` light, `#07080A` dark), which also updates the PWA manifest colors.
 - Light theme polish (SPEC 23): softer page background (`#f1f2f5`) so white cards stand out without borders, subtler accent-soft fills (12 %) with a stronger soft foreground, a graduated neutral chart series (lightest 3.36:1 on the surface) and a darker chart grid. Empty states, archived accounts, `SURFACE_NOTE` and the drag overlay use the shared shadow tokens. Contrast table in `docs/ui.md` updated; dark mode is unchanged.
 - Links to Gastos fijos (quick sheet, upcoming payments card, recommendations, import target) now point to `/dashboard/personal/recurring`.
 - The Business `negative_account' recommendation now only fires for active `wallet`and`bank`accounts with a negative balance;`cash`and`other` no longer trigger it (SPEC 21).

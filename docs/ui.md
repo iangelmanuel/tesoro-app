@@ -11,7 +11,10 @@ El contexto de producto (usuarios, voz, principios) está en
 ## Principios
 
 - **Oscuro por defecto, claro disponible.** El diseño se piensa sobre negro;
-  el toggle del aside cambia a claro y lo recuerda (`next-themes`).
+  el toggle del aside cambia a claro y lo recuerda (`next-themes`). Los dos
+  temas comparten lenguaje: tarjetas sin borde, mismo matiz neutro (264),
+  niveles escalonados y elevación sutil (sombra en claro, brillo superior en
+  oscuro).
 - **Un solo acento por espacio.** Neutro fuera de los espacios, emerald en
   Personal y naranja en Empresa. Negros y grises son los mismos en los dos.
 - **Tarjetas sin borde.** La separación la da el contraste entre fondo y
@@ -31,14 +34,14 @@ Todo vive en `src/styles/globals.css`, con los nombres de HeroUI v3.
 
 | Token                                           | Qué es                                                                 |
 | ----------------------------------------------- | ---------------------------------------------------------------------- |
-| `--background`                                  | Fondo de la página. Oscuro ≈ `#0a0a0a`, claro `#f1f2f5`                |
-| `--surface`                                     | Tarjetas. Oscuro ≈ `#18181b`, claro blanco                             |
+| `--background`                                  | Fondo de la página. Oscuro ≈ `#07080a`, claro `#f1f2f5`                |
+| `--surface`                                     | Tarjetas. Oscuro ≈ `#16171a`, claro blanco                             |
 | `--surface-secondary`, `--surface-tertiary`     | Superficies escalonadas dentro de una tarjeta                          |
 | `--overlay`                                     | Diálogos, menús, popovers y tooltips                                   |
 | `--default`                                     | Ítem activo del aside, hover de filas, chips neutros                   |
 | `--muted`                                       | Texto atenuado, etiquetas, ticks de gráficas                           |
 | `--border`, `--separator`                       | Grilla de gráficas y divisores muy sutiles                             |
-| `--surface-shadow`, `--overlay-shadow`          | Elevación en claro (tarjeta y overlay); en oscuro no hay sombra        |
+| `--surface-shadow`, `--overlay-shadow`          | Elevación: sombra en claro; brillo superior de 1 px y sombra en oscuro |
 | `--accent`, `--accent-foreground`               | Primario. Lo cambia el espacio (ver abajo)                             |
 | `--success`, `--warning`, `--danger` y `*-soft` | Estados. Los `*-soft` con su `*-soft-foreground` en chips              |
 | `--brand`                                       | Emerald del logo; igual en todos los temas                             |
@@ -64,25 +67,25 @@ OKLCH → sRGB). Mínimos: 4.5:1 texto, 3:1 gráficos y foco.
 
 | Par                                       | Claro | Oscuro |
 | ----------------------------------------- | ----- | ------ |
-| `foreground` / `background`               | 15.87 | 18.96  |
-| `muted` / `surface`                       | 6.00  | 6.74   |
-| `muted` / `default`                       | 4.88  | 5.66   |
-| `income` / `surface`                      | 5.56  | 5.03   |
-| `expense` / `surface`                     | 5.35  | 5.06   |
-| `balance` / `surface`                     | 8.16  | 5.89   |
-| `income` / `background`                   | 4.98  | —      |
-| `expense` / `background`                  | 4.79  | —      |
-| `danger` / `background`                   | 4.88  | 6.84   |
-| `accent-foreground` / `accent` Personal   | 4.84  | 7.19   |
-| `accent-foreground` / `accent` Empresa    | 4.94  | 6.13   |
-| `accent` / `background` Personal (foco)   | 3.28  | 8.03   |
-| `accent` / `background` Empresa (foco)    | 3.22  | 6.84   |
-| `text-brand` / `background`               | 5.06  | 11.08  |
-| `accent-soft-fg` / `accent-soft` Personal | 5.82  | —      |
-| `accent-soft-fg` / `accent-soft` Empresa  | 5.70  | —      |
-| `muted` / `field-background`              | 5.22  | 5.19   |
-| `foreground` / `field-background`         | 15.41 | 13.07  |
-| `--chart-*` / `surface` (mínimo)          | 3.36  | 3.72   |
+| `foreground` / `background`               | 15.87 | 19.36  |
+| `muted` / `surface`                       | 6.00  | 7.06   |
+| `muted` / `default`                       | 4.88  | 5.69   |
+| `income` / `surface`                      | 5.56  | 4.97   |
+| `expense` / `surface`                     | 5.35  | 5.00   |
+| `balance` / `surface`                     | 8.16  | 5.82   |
+| `income` / `background`                   | 4.98  | 5.74   |
+| `expense` / `background`                  | 4.79  | 5.77   |
+| `danger` / `background`                   | 4.88  | 6.99   |
+| `accent-foreground` / `accent` Personal   | 4.84  | 7.53   |
+| `accent-foreground` / `accent` Empresa    | 4.94  | 7.13   |
+| `accent` / `background` Personal (foco)   | 3.28  | 8.09   |
+| `accent` / `background` Empresa (foco)    | 3.22  | 7.66   |
+| `text-brand` / `background`               | 5.06  | 11.74  |
+| `accent-soft-fg` / `accent-soft` Personal | 5.82  | 7.19   |
+| `accent-soft-fg` / `accent-soft` Empresa  | 5.70  | 7.13   |
+| `muted` / `field-background`              | 5.22  | 5.11   |
+| `foreground` / `field-background`         | 15.41 | 12.15  |
+| `--chart-*` / `surface` (mínimo)          | 3.36  | 3.68   |
 
 Las series de dinero (`--income`, `--expense`, `--balance`) también pasan el
 validador de paletas del skill `dataviz` en claro y oscuro: banda de
@@ -135,6 +138,14 @@ resuelven en los pasos 11 y 12 del spec.
 | P2        | Primario muy vivo sobre negro: emerald-500 y orange-500 dan 8.03:1 y 6.84:1 contra el fondo; en botones y rellenos grandes vibran más que en el claro. Se puede bajar croma/luminosidad conservando AA con el texto oscuro (7.19 y 6.13).                                         | `globals.css` (`.dark :has(> [data-workspace])`)        |
 | P2        | 24 usos de `dark:` con paleta cruda de Tailwind (`dark:bg-emerald-950`, `dark:text-amber-300`…) en avisos y chips: no siguen los tokens nuevos. Es el mismo P2 de los colores crudos del claro.                                                                                   | `features/{debts,goals,categories}`, cash-flow          |
 | P3        | Campos: `--field-background` 0.30 sobre tarjeta da 1.30:1; funciona por relleno, pero más claro que el modal (0.23) por 1.24:1. Revisar tras cambiar superficies.                                                                                                                 | `globals.css`                                           |
+
+Resueltos en el SPEC 23 (pasos 11 y 12): los dos P1 (fondo `#07080a`,
+superficies de un solo matiz y niveles más separados, `--surface-shadow` y
+`--overlay-shadow` con brillo superior de 1 px y sombra difusa), el matiz
+inconsistente, los niveles anidados, el primario menos saturado
+(emerald `oklch(70% .15 162.5)`, naranja `oklch(72% .18 48)`) y los campos
+(0.32). Pendiente: los `dark:` con paleta cruda (P2), compartido con el claro.
+`SITE.seo.themeColor` se alineó con los fondos nuevos.
 
 Sin P0. Lo que ya funciona y se conserva: AA en todo el texto (`foreground`
 18.96:1, `muted` 6.74:1 sobre la tarjeta, dinero ≥ 5.03:1), serie de gráficas

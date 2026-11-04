@@ -553,6 +553,7 @@ export type Database = {
           created_at: string
           currency: string
           full_name: string
+          hide_amounts: boolean
           id: string
           updated_at: string
         }
@@ -561,6 +562,7 @@ export type Database = {
           created_at?: string
           currency?: string
           full_name: string
+          hide_amounts?: boolean
           id: string
           updated_at?: string
         }
@@ -569,6 +571,7 @@ export type Database = {
           created_at?: string
           currency?: string
           full_name?: string
+          hide_amounts?: boolean
           id?: string
           updated_at?: string
         }

@@ -1,4 +1,5 @@
 import { Suspense } from "react"
+import { redirect } from "next/navigation"
 import { Button, Skeleton } from "@heroui/react"
 import { PiggyBank, Plus } from "lucide-react"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
@@ -8,7 +9,6 @@ import { BudgetDialog } from "@/features/budgets/components/budget-dialog"
 import { BudgetMonthNav } from "@/features/budgets/components/budget-month-nav"
 import { BudgetProgressRow } from "@/features/budgets/components/budget-progress-row"
 import { BudgetTotals } from "@/features/budgets/components/budget-totals"
-import { BudgetsTabs } from "@/features/budgets/components/budgets-tabs"
 import { CopyPreviousMonthButton } from "@/features/budgets/components/copy-previous-month-button"
 import { UnbudgetedCategories } from "@/features/budgets/components/unbudgeted-categories"
 import { type BudgetMonth, parseBudgetMonth } from "@/features/budgets/month"
@@ -17,9 +17,8 @@ import {
   getBudgetProgress,
   hasBudgets
 } from "@/features/budgets/queries"
-import { BUDGETS_PATH, parseBudgetsTab } from "@/features/budgets/tabs"
+import { BUDGETS_PATH, RECURRING_PATH } from "@/features/budgets/tabs"
 import { getCategories } from "@/features/categories/queries"
-import { RecurringView } from "@/features/recurring-expenses/components/recurring-view"
 import {
   type PersonalWorkspace,
   getPersonalWorkspace
@@ -52,21 +51,17 @@ async function BudgetsContent({
   searchParams
 }: Pick<BudgetsPageProps, "searchParams">) {
   const query = await searchParams
+  // Enlaces antiguos (recomendaciones, notificaciones, marcadores)
+  if (query.tab === "recurring") redirect(RECURRING_PATH)
+
   const workspace = await getPersonalWorkspace()
-  const tab = parseBudgetsTab(query.tab)
 
   return (
-    <BudgetsTabs tab={tab}>
-      {tab === "recurring" ? (
-        <RecurringView workspace={workspace} />
-      ) : (
-        <BudgetsTab
-          workspace={workspace}
-          // Se parsea tras leer la sesión: el mes por defecto usa new Date()
-          month={parseBudgetMonth(query.month)}
-        />
-      )}
-    </BudgetsTabs>
+    <BudgetsView
+      workspace={workspace}
+      // Se parsea tras leer la sesión: el mes por defecto usa new Date()
+      month={parseBudgetMonth(query.month)}
+    />
   )
 }
 
@@ -76,7 +71,7 @@ function isBudgeted(row: BudgetProgress): row is BudgetedRow {
   return row.budgetId !== null && row.budgetAmount !== null
 }
 
-async function BudgetsTab({
+async function BudgetsView({
   workspace,
   month
 }: {

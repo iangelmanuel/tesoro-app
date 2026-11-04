@@ -1,6 +1,7 @@
 import { TriangleAlert } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { formatPercent } from "@/features/budgets/progress"
-import { formatCurrency, formatDate } from "@/libs/format"
+import { formatDate } from "@/libs/format"
 import {
   goalPercent,
   goalRemaining,
@@ -45,7 +46,10 @@ export function GoalSummary({ goal, today, currency }: GoalSummaryProps) {
         <div className="flex items-baseline justify-between gap-2 sm:flex-col sm:items-start sm:justify-start">
           <dt className="text-muted">Faltan</dt>
           <dd className="text-right font-medium whitespace-nowrap tabular-nums sm:text-left">
-            {formatCurrency(remaining, currency)}
+            <Amount
+              value={remaining}
+              currency={currency}
+            />
           </dd>
         </div>
         <div className="flex items-baseline justify-between gap-2 sm:flex-col sm:items-start sm:justify-start">
@@ -62,7 +66,10 @@ export function GoalSummary({ goal, today, currency }: GoalSummaryProps) {
           <div className="flex items-baseline justify-between gap-2 sm:col-span-2 sm:flex-col sm:items-start sm:justify-start">
             <dt className="min-w-0 text-muted">Aporte mensual sugerido</dt>
             <dd className="text-right font-medium whitespace-nowrap tabular-nums sm:text-left">
-              {formatCurrency(suggested, currency)}
+              <Amount
+                value={suggested}
+                currency={currency}
+              />
             </dd>
           </div>
         )}

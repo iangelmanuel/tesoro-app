@@ -2,8 +2,8 @@
 
 import { Button, Drawer } from "@heroui/react"
 import { Minus, Plus } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
-import { formatCurrency } from "@/libs/format"
 import { goalStatus } from "../progress"
 import type { Goal, GoalContribution } from "../queries"
 import { ContributionDialog } from "./contribution-dialog"
@@ -64,8 +64,15 @@ export function GoalSheet({
                     <GoalStatusBadge status={goalStatus(goal, today)} />
                   </div>
                   <p className="text-sm text-muted tabular-nums">
-                    {formatCurrency(goal.saved, currency)} de{" "}
-                    {formatCurrency(goal.target_amount, currency)}
+                    <Amount
+                      value={goal.saved}
+                      currency={currency}
+                    />{" "}
+                    de{" "}
+                    <Amount
+                      value={goal.target_amount}
+                      currency={currency}
+                    />
                   </p>
                 </div>
               </div>

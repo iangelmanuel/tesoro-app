@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { Button, Disclosure } from "@heroui/react"
+import { Amount } from "@/components/dashboard/amount"
 import { SURFACE_LIST, SURFACE_ROW } from "@/components/dashboard/surface"
-import { formatCurrency } from "@/libs/format"
 import type { Goal, GoalContribution } from "../queries"
 import { GoalIcon } from "./goal-icon"
 import { GoalStatusBadge } from "./goal-progress-bar"
@@ -86,8 +86,15 @@ function InactiveGoalRow({
             />
           </span>
           <span className="text-sm text-muted tabular-nums">
-            {formatCurrency(goal.saved, currency)} de{" "}
-            {formatCurrency(goal.target_amount, currency)}
+            <Amount
+              value={goal.saved}
+              currency={currency}
+            />{" "}
+            de{" "}
+            <Amount
+              value={goal.target_amount}
+              currency={currency}
+            />
           </span>
         </span>
       </button>

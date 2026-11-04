@@ -9,6 +9,7 @@ import {
   Pencil,
   RefreshCw
 } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { SURFACE_ITEM } from "@/components/dashboard/surface"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { formatCurrency, formatDate } from "@/libs/format"
@@ -82,7 +83,10 @@ export function DebtCard({
             </span>
           </span>
           <span className="text-2xl font-semibold tabular-nums">
-            {formatCurrency(debt.balance, currency)}
+            <Amount
+              value={debt.balance}
+              currency={currency}
+            />
           </span>
           <span className="text-sm text-muted">
             {debt.interest_rate !== null && debt.rate_type !== null

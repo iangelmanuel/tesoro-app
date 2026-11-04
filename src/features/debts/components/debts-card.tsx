@@ -1,12 +1,12 @@
 import Link from "next/link"
 import { Card, CardContent, buttonVariants } from "@heroui/react"
 import { CreditCard } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import { HelpHint } from "@/components/dashboard/help-hint"
 import { formatPercent } from "@/features/budgets/progress"
 import { todayISO } from "@/libs/dates"
-import { formatCurrency } from "@/libs/format"
 import {
   DEBTS_PATH,
   globalUtilization,
@@ -61,7 +61,10 @@ export async function DebtsCard({ workspaceId, currency }: DebtsCardProps) {
               <div className="flex flex-col gap-1">
                 <dt className="text-sm text-muted">Deuda total</dt>
                 <dd className="text-xl font-semibold tracking-tight tabular-nums">
-                  {formatCurrency(totalDebt(debts), currency)}
+                  <Amount
+                    value={totalDebt(debts)}
+                    currency={currency}
+                  />
                 </dd>
               </div>
               {utilization !== null && (

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Button, Drawer, Input, Label, TextField } from "@heroui/react"
 import { Plus, RefreshCw } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { parseAmount } from "@/features/transactions/schemas"
 import { formatCurrency, formatDate } from "@/libs/format"
@@ -80,7 +81,10 @@ export function DebtSheet({
               <p className="text-sm text-muted tabular-nums">
                 Saldo{" "}
                 <span className="font-medium text-foreground">
-                  {formatCurrency(debt.balance, currency)}
+                  <Amount
+                    value={debt.balance}
+                    currency={currency}
+                  />
                 </span>
               </p>
             </Drawer.Header>
@@ -334,7 +338,10 @@ function ProjectionDetails({
             <div className="flex flex-col">
               <dt className="text-muted">Intereses</dt>
               <dd className="font-medium tabular-nums">
-                {formatCurrency(projection.totalInterest, currency)}
+                <Amount
+                  value={projection.totalInterest}
+                  currency={currency}
+                />
               </dd>
             </div>
           </dl>

@@ -115,6 +115,7 @@ export const SITE = {
     signUp: "/sign-up",
     dashboard: "/dashboard",
     dashboardPersonal: "/dashboard/personal",
+    personalRecurring: "/dashboard/personal/recurring",
     dashboardBusiness: "/dashboard/business",
     authCallback: "/auth/callback",
     account: "/dashboard/account",
@@ -227,6 +228,11 @@ export const SITE = {
         icon: "Wallet"
       },
       {
+        name: "Gastos fijos",
+        href: "/dashboard/personal/recurring",
+        icon: "CalendarClock"
+      },
+      {
         name: "Presupuestos",
         href: "/dashboard/personal/budgets",
         icon: "PiggyBank"
@@ -265,7 +271,7 @@ export const SITE = {
       personal: [
         "/dashboard/personal",
         "/dashboard/personal/transactions",
-        "/dashboard/personal/budgets",
+        "/dashboard/personal/recurring",
         "/dashboard/personal/accounts"
       ],
       business: ["", "/transactions", "/cash-flow", "/reports"]
@@ -325,7 +331,7 @@ export const SITE = {
     operatingSystem: "Web",
     price: "0",
 
-    themeColor: { light: "#F6F7F9", dark: "#0A0A0A" },
+    themeColor: { light: "#F1F2F5", dark: "#07080A" },
     manifestCategories: ["finance", "business", "productivity"]
   }
 } as const

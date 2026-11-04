@@ -11,11 +11,14 @@ El contexto de producto (usuarios, voz, principios) está en
 ## Principios
 
 - **Oscuro por defecto, claro disponible.** El diseño se piensa sobre negro;
-  el toggle del aside cambia a claro y lo recuerda (`next-themes`).
+  el toggle del aside cambia a claro y lo recuerda (`next-themes`). Los dos
+  temas comparten lenguaje: tarjetas sin borde, mismo matiz neutro (264),
+  niveles escalonados y elevación sutil (sombra en claro, brillo superior en
+  oscuro).
 - **Un solo acento por espacio.** Neutro fuera de los espacios, emerald en
   Personal y naranja en Empresa. Negros y grises son los mismos en los dos.
 - **Tarjetas sin borde.** La separación la da el contraste entre fondo y
-  superficie (en claro, más la sombra suave de HeroUI). Radios grandes en
+  superficie (en claro, más la sombra en capas de `--surface-shadow`). Radios grandes en
   tarjetas y pill en botones, tabs, selects y filtros.
 - **Densidad media y un solo título por pantalla.** El título (o el saludo
   en el Resumen) lo pone el header; las páginas no repiten su `<h1>`.
@@ -31,13 +34,14 @@ Todo vive en `src/styles/globals.css`, con los nombres de HeroUI v3.
 
 | Token                                           | Qué es                                                                 |
 | ----------------------------------------------- | ---------------------------------------------------------------------- |
-| `--background`                                  | Fondo de la página. Oscuro ≈ `#0a0a0a`, claro `#f6f7f9`                |
-| `--surface`                                     | Tarjetas. Oscuro ≈ `#18181b`, claro blanco                             |
+| `--background`                                  | Fondo de la página. Oscuro ≈ `#07080a`, claro `#f1f2f5`                |
+| `--surface`                                     | Tarjetas. Oscuro ≈ `#16171a`, claro blanco                             |
 | `--surface-secondary`, `--surface-tertiary`     | Superficies escalonadas dentro de una tarjeta                          |
 | `--overlay`                                     | Diálogos, menús, popovers y tooltips                                   |
 | `--default`                                     | Ítem activo del aside, hover de filas, chips neutros                   |
 | `--muted`                                       | Texto atenuado, etiquetas, ticks de gráficas                           |
 | `--border`, `--separator`                       | Grilla de gráficas y divisores muy sutiles                             |
+| `--surface-shadow`, `--overlay-shadow`          | Elevación: sombra en claro; brillo superior de 1 px y sombra en oscuro |
 | `--accent`, `--accent-foreground`               | Primario. Lo cambia el espacio (ver abajo)                             |
 | `--success`, `--warning`, `--danger` y `*-soft` | Estados. Los `*-soft` con su `*-soft-foreground` en chips              |
 | `--brand`                                       | Emerald del logo; igual en todos los temas                             |
@@ -61,23 +65,27 @@ Todo vive en `src/styles/globals.css`, con los nombres de HeroUI v3.
 Pares verificados con los tokens de `src/styles/globals.css` (WCAG 2.x,
 OKLCH → sRGB). Mínimos: 4.5:1 texto, 3:1 gráficos y foco.
 
-| Par                                     | Claro | Oscuro |
-| --------------------------------------- | ----- | ------ |
-| `foreground` / `background`             | 16.49 | 18.96  |
-| `muted` / `surface`                     | 6.00  | 6.74   |
-| `muted` / `default`                     | 4.96  | 5.66   |
-| `income` / `surface`                    | 5.56  | 5.03   |
-| `expense` / `surface`                   | 5.35  | 5.06   |
-| `balance` / `surface`                   | 8.16  | 5.89   |
-| `danger` / `background`                 | 5.07  | 6.84   |
-| `accent-foreground` / `accent` Personal | 4.84  | 7.19   |
-| `accent-foreground` / `accent` Empresa  | 4.94  | 6.13   |
-| `accent` / `background` Personal (foco) | 3.41  | 8.03   |
-| `accent` / `background` Empresa (foco)  | 3.34  | 6.84   |
-| `text-brand` / `background`             | 5.10  | 11.08  |
-| `muted` / `field-background`            | 5.22  | 5.19   |
-| `foreground` / `field-background`       | 15.41 | 13.07  |
-| `--chart-*` / `surface` (mínimo)        | 4.77  | 3.72   |
+| Par                                       | Claro | Oscuro |
+| ----------------------------------------- | ----- | ------ |
+| `foreground` / `background`               | 15.87 | 19.36  |
+| `muted` / `surface`                       | 6.00  | 7.06   |
+| `muted` / `default`                       | 4.88  | 5.69   |
+| `income` / `surface`                      | 5.56  | 4.97   |
+| `expense` / `surface`                     | 5.35  | 5.00   |
+| `balance` / `surface`                     | 8.16  | 5.82   |
+| `income` / `background`                   | 4.98  | 5.74   |
+| `expense` / `background`                  | 4.79  | 5.77   |
+| `danger` / `background`                   | 4.88  | 6.99   |
+| `accent-foreground` / `accent` Personal   | 4.84  | 7.53   |
+| `accent-foreground` / `accent` Empresa    | 4.94  | 7.13   |
+| `accent` / `background` Personal (foco)   | 3.28  | 8.09   |
+| `accent` / `background` Empresa (foco)    | 3.22  | 7.66   |
+| `text-brand` / `background`               | 5.06  | 11.74  |
+| `accent-soft-fg` / `accent-soft` Personal | 5.82  | 7.19   |
+| `accent-soft-fg` / `accent-soft` Empresa  | 5.70  | 7.13   |
+| `muted` / `field-background`              | 5.22  | 5.11   |
+| `foreground` / `field-background`         | 15.41 | 12.15  |
+| `--chart-*` / `surface` (mínimo)          | 3.36  | 3.68   |
 
 Las series de dinero (`--income`, `--expense`, `--balance`) también pasan el
 validador de paletas del skill `dataviz` en claro y oscuro: banda de
@@ -86,6 +94,63 @@ deuteranopía, y ΔE ≥ 21 con visión normal. Entre sí casi no difieren en
 luminancia, así que las gráficas nunca dependen solo del color: llevan
 leyenda, orden fijo de series y el monto en el tooltip y en la tabla
 `sr-only`.
+
+### Auditoría del modo claro (SPEC 23, paso 1)
+
+Revisión de código (sin navegador) de `globals.css`, `surface.ts`,
+`StatCard`, `ChartCard` y su uso en Resumen, Movimientos, Cuentas y
+Presupuestos. El detector de Impeccable no halló reglas rotas, pero solo
+corrió por regex. Se resuelve en los pasos 2 y 3 del spec.
+
+| Prioridad | Hallazgo                                                                                                                                                                                                                                          | Dónde                                                                                                                                                                                              |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1        | La separación tarjeta/fondo es débil: `--background` 0.975 vs `--surface` 1 (ΔL 0.025). La sombra viene de HeroUI (`#0000000a/0f`, negro puro, 3 capas finas) y no da elevación ambiental; el claro se ve plano.                                  | `globals.css` (`--surface-shadow` sin definir), `surface.ts`, `Card`                                                                                                                               |
+| P1        | Cada superficie define su propia sombra (`shadow-(--surface-shadow)`, `shadow-lg`, `shadow-xl shadow-black/5`, `shadow-overlay`). Sin una escala de elevación, las sombras se acumulan en tarjetas anidadas.                                      | `surface.ts`, `transactions-table.tsx` (overlay de arrastre), `chart-tooltip.tsx`                                                                                                                  |
+| P2        | Paleta cruda de Tailwind (`emerald-50`, `amber-100`, `rose-100`…) en avisos y chips, contra la regla "estados con `tone.ts`". Son bloques de color de relleno que ensucian el claro y no cambian con el espacio.                                  | `features/debts/components/{debt-card,receivable-card}.tsx`, `features/goals/components/{goal-card,goal-summary}.tsx`, `categories/constants.ts`, `app/dashboard/business/[id]/cash-flow/page.tsx` |
+| P2        | `--chart-1…5` en claro son slate-600…900: casi sin diferencia de luminosidad entre 3, 4 y 5; las series neutras no se distinguen.                                                                                                                 | `globals.css`                                                                                                                                                                                      |
+| P2        | Grilla y divisores: `--border` 0.912 y `--separator` 0.93 sobre blanco dan ≈ 1.2:1. Es decorativo, pero la grilla se pierde; el spec pide 3:1 para marcas gráficas.                                                                               | `globals.css`, `chart-style.ts`                                                                                                                                                                    |
+| P2        | El primario de Personal/Empresa en claro (`accent`/`background` 3.41 y 3.34) solo cumple foco. Como texto o enlace no llega a 4.5:1; hay que confirmar que `accent-soft-foreground` (mezcla 70/30 con el foreground) lo cubre donde se usa texto. | `globals.css`, usos de `text-accent`                                                                                                                                                               |
+| P3        | Landing (`hero-visual`, `score-visual`) usa `border` y `shadow-xl shadow-black/5`. Fuera de alcance de este spec.                                                                                                                                 | `features/landing/components/`                                                                                                                                                                     |
+
+Resueltos en el SPEC 23: los dos P1 (fondo `#f1f2f5` y escala de sombras
+`--surface-shadow` / `--overlay-shadow`, aplicada a `SURFACE_NOTE`, estados
+vacíos, cuentas archivadas y el overlay de arrastre) y las series de
+gráficas. La grilla se mantiene decorativa (≈ 1.5:1). Pendientes: los colores
+crudos de Tailwind (P2) y la landing (P3).
+
+Sin P0. Lo que ya funciona y se conserva: tarjetas sin borde, tokens con
+nombres de HeroUI, `Amount` y `tabular-nums` en cifras, leyendas y tablas
+`sr-only` en gráficas, estados por `tone.ts` en `StatCard`.
+
+### Auditoría del modo oscuro (SPEC 23, paso 10)
+
+Revisión de código y de los tokens de `.dark` en `globals.css` (sin navegador),
+con razones de contraste calculadas sobre los valores actuales. Todos los
+pares de texto pasan AA; los hallazgos son de profundidad y elevación. Se
+resuelven en los pasos 11 y 12 del spec.
+
+| Prioridad | Hallazgo                                                                                                                                                                                                                                                                          | Dónde                                                   |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| P1        | Sin elevación: `--surface-shadow` y `--overlay-shadow` oscuros son `transparent` / `1px #ffffff4d`. Menús, popovers y tooltips sobre una tarjeta quedan a 1.05:1 (`overlay` 0.23 vs `surface` 0.21) y solo los diálogos se apoyan en el fondo atenuado. El claro ya tiene sombra. | `globals.css` (`.dark`), `chart-tooltip.tsx`, `Popover` |
+| P1        | Poca separación fondo/tarjeta: 1.12:1 (`background` 0.145 vs `surface` 0.21), sin brillo ni sombra que ayude. Contra el claro, que lleva sombra en dos capas, el oscuro se ve plano.                                                                                              | `globals.css`, `Card`, `surface.ts`                     |
+| P2        | Matiz inconsistente: el fondo es neutro puro (croma 0) y las superficies llevan tinte violeta (croma 0.006, matiz 286). Un gris "sucio" entre ambos; para un aspecto más profundo (OLED) conviene unificarlos.                                                                    | `globals.css` (`--background` vs `--surface*`)          |
+| P2        | Niveles anidados débiles: `surface-secondary` 1.09:1 y `surface-tertiary` 1.19:1 sobre `surface`; filas con hover, chips y campos dentro de tarjetas casi no se distinguen. `--separator` da 1.11:1.                                                                              | `globals.css`, `CARD_ROW`, `Table`                      |
+| P2        | Primario muy vivo sobre negro: emerald-500 y orange-500 dan 8.03:1 y 6.84:1 contra el fondo; en botones y rellenos grandes vibran más que en el claro. Se puede bajar croma/luminosidad conservando AA con el texto oscuro (7.19 y 6.13).                                         | `globals.css` (`.dark :has(> [data-workspace])`)        |
+| P2        | 24 usos de `dark:` con paleta cruda de Tailwind (`dark:bg-emerald-950`, `dark:text-amber-300`…) en avisos y chips: no siguen los tokens nuevos. Es el mismo P2 de los colores crudos del claro.                                                                                   | `features/{debts,goals,categories}`, cash-flow          |
+| P3        | Campos: `--field-background` 0.30 sobre tarjeta da 1.30:1; funciona por relleno, pero más claro que el modal (0.23) por 1.24:1. Revisar tras cambiar superficies.                                                                                                                 | `globals.css`                                           |
+
+Resueltos en el SPEC 23 (pasos 11 y 12): los dos P1 (fondo `#07080a`,
+superficies de un solo matiz y niveles más separados, `--surface-shadow` y
+`--overlay-shadow` con brillo superior de 1 px y sombra difusa), el matiz
+inconsistente, los niveles anidados, el primario menos saturado
+(emerald `oklch(70% .15 162.5)`, naranja `oklch(72% .18 48)`) y los campos
+(0.32). Pendiente: los `dark:` con paleta cruda (P2), compartido con el claro.
+`SITE.seo.themeColor` se alineó con los fondos nuevos.
+
+Sin P0. Lo que ya funciona y se conserva: AA en todo el texto (`foreground`
+18.96:1, `muted` 6.74:1 sobre la tarjeta, dinero ≥ 5.03:1), serie de gráficas
+con luminosidad escalonada (mínimo 3.72:1), primario con texto oscuro (≥ 6.13:1)
+y tarjetas sin borde.
 
 ## Componentes propios
 
@@ -193,6 +258,8 @@ Reglas:
 | Shell            | `app/dashboard/layout.tsx`                                     | Aside, header con título y accesos, `<main id="contenido">` y "Saltar al contenido"  |
 | Resumen Personal | `app/dashboard/personal/page.tsx`                              | 4 `StatCard` → gráfica + columna (score, cuentas) → últimos movimientos → 4 tarjetas |
 | Movimientos      | `app/dashboard/personal/transactions`                          | Barra de filtros pill, KPIs pequeñas, tabla compacta (`src/features/transactions/`)  |
+| Gastos fijos     | `app/dashboard/personal/recurring`                             | Próximos pagos y lista (`RecurringView`); selector móvil `BudgetsAndRecurringTabs`   |
+| Presupuestos     | `app/dashboard/personal/budgets`                               | Mes, totales y filas de progreso; `?tab=recurring` redirige a Gastos fijos           |
 | Reportes         | `src/features/reports/components/reports-view.tsx`             | Barra de periodo y tipo, 4 KPI, tendencia, top 5 + tabla de categorías               |
 | Cuenta           | `app/dashboard/account/{general,security,privacy,preferences}` | Aside interno (`AccountNav`) y una `AccountSection` por tema                         |
 
@@ -226,8 +293,11 @@ Piezas en `src/components/dashboard/mobile/`:
   de ocultar, en `sessionStorage` (`tesoro:quick-sheet:hidden-at:v1`). Si el
   almacenamiento falla, usa memoria y la hoja se abre como con el switch
   encendido.
-- **Barra inferior:** Personal: Resumen, Movimientos, [+], Presupuestos, Cuentas
-  (Metas sigue en el aside, SPEC 20).
+- **Barra inferior:** Personal: Resumen, Movimientos, [+], Gastos fijos, Cuentas
+  (Metas sigue en el aside, SPEC 20). La entrada de Gastos fijos también se
+  marca en Presupuestos: en el teléfono son dos tabs de la misma pantalla
+  (`BudgetsAndRecurringTabs`, SPEC 23), cada una su ruta, y el selector se
+  oculta desde 768 px.
   Empresa: Resumen, Movimientos, [+], Flujo de caja, Reportes. Fuera
   de un espacio (cuenta, estado vacío de Empresa) muestra los destinos de
   Personal, sin [+]. Los destinos salen de `SITE.navigation.mobile`.

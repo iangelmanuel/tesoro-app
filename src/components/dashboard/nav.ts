@@ -1,6 +1,7 @@
 import {
   Activity,
   ArrowLeftRight,
+  CalendarClock,
   ChartColumn,
   CreditCard,
   LayoutDashboard,
@@ -21,6 +22,7 @@ export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   LayoutDashboard,
   ArrowLeftRight,
   Wallet,
+  CalendarClock,
   PiggyBank,
   Target,
   CreditCard,

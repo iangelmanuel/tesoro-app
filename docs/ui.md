@@ -257,6 +257,30 @@ Reglas:
 - El layout lee `profiles.hide_amounts` dentro de un `Suspense`; mientras
   carga muestra el header y un `<main>` vacío, sin números.
 
+### Landing (SPEC 24)
+
+- **Sin eyebrows ni íconos en cuadros:** `SectionHeading` solo lleva título y
+  descripción. Nada de grillas de tarjetas iguales, halos ni degradados de
+  relleno (`DESIGN.md`, reglas "Título Solo" y "Sin Halo").
+- **Videos** (`demo-player.tsx`, `feature-clip.tsx`): contenedor claro en los
+  dos temas (el video trae su escritorio claro), `preload="none"` y póster. El
+  demo nunca hace autoplay; los clips se reproducen en loop silenciado solo
+  mientras están en pantalla (`IntersectionObserver`) y con reduced motion o
+  ahorro de datos se quedan en el póster sin descargar el video.
+- **Recorrido de funciones** (`feature-tour.tsx`): pestañas con
+  `role="tab"`, flechas, Inicio y Fin, y un clip grande de al menos 560 px.
+- **Score** (`score-section.tsx`, `score-visual.tsx`, `score-bands.ts`):
+  colores de estado desde `tone.ts`; la barra de factores usa un solo tono de
+  `--income` con mezclas de opacidad.
+- **Escena 3D** (`hero-scene.tsx`): React Three Fiber sin `drei`, un
+  `InstancedMesh` con los bloques del cofre, colores leídos de `--brand` e
+  `--income` (oklch → sRGB con un canvas 2D) y releídos al cambiar el tema.
+  `dpr` máximo 2, sin sombras, `frameloop` en "never" fuera de pantalla. El
+  lienzo es más grande que su columna y se difumina con `mask-image`.
+- **Header** (`site-header.tsx`, `site-header-shell.tsx`,
+  `github-stars.tsx`): navegación en pastilla, GitHub con estrellas (servidor,
+  cacheado), toggle de tema de 44 px y botones de sesión con flecha.
+
 ## Dónde vive cada pantalla
 
 | Pantalla         | Ruta                                                           | Piezas                                                                               |
@@ -381,6 +405,17 @@ Piezas en `src/components/dashboard/mobile/`:
 - Tabs y diálogos: las transiciones propias de HeroUI.
 - Todo con `motion-reduce:transition-none` o dentro de
   `@media (prefers-reduced-motion: no-preference)`.
+- **Landing (Motion, SPEC 24):** `motion-provider.tsx` envuelve la página con
+  `LazyMotion` + `domAnimation` (`strict`: solo componentes `m`) y
+  `MotionConfig reducedMotion="user"`. Todo el movimiento sale de
+  `reveal.tsx`: una sola curva (expo.out `[0.16, 1, 0.3, 1]`), revelado de
+  0,7 s con subida de 24 px y desenfoque, escalonado de 80 ms, una vez por
+  elemento. `ScrollWipe` (barra de factores) y `ScrollSettle` (clips) van
+  ligados al scroll; el medidor del score se anima una sola vez al verse.
+- **Reduced motion en la landing:** el HTML del servidor no conoce la
+  preferencia, así que `globals.css` muestra `[data-reveal]` en su estado
+  final con `!important`; los hooks de scroll quedan fijos en 1 y no se carga
+  la escena 3D.
 
 ## Accesibilidad
 

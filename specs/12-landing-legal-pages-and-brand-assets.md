@@ -11,7 +11,7 @@
 `SITE` y la metadata apuntan a cinco assets que no existen (`/opengraph-image.png`, `/brand/logo.png`, `/apple-touch-icon.png`, `/icons/icon-192.png`, `/icons/icon-512.png`).
 `SITE.legal` declara Privacidad y Términos, pero no hay páginas.
 No hay identidad visual definida: este spec la crea (isotipo SVG + wordmark en Geist, acento emerald de `--income`).
-Los visuales de la landing son **mockups JSX interinos**. Un spec futuro los reemplaza por videos (skill HyperFrame).
+Los visuales de la landing son **mockups JSX interinos**. Un spec futuro los reemplaza por videos (skill HyperFrame). _Actualización: los videos, la escena 3D del hero y el rediseño de la landing se hicieron en [SPEC 24](24-landing-redesign-with-video-demo-three-and-motion.md)._
 
 ## Alcance
 
@@ -61,7 +61,7 @@ Los visuales de la landing son **mockups JSX interinos**. Un spec futuro los ree
 
 **Fuera de alcance (para specs futuros):**
 
-- Videos de la landing (HyperFrame); reemplazan los mockups JSX.
+- Videos de la landing (HyperFrame); reemplazan los mockups JSX. Hecho en SPEC 24.
 - Capturas reales del dashboard.
 - Blog, precios o planes.
 - Multidioma.
@@ -272,7 +272,7 @@ Los textos se escriben en lenguaje claro, en segunda persona ("tú"), como el re
 
 ## Lo que **no** entra en este spec
 
-- Videos de la landing con HyperFrame.
+- Videos de la landing con HyperFrame (hecho en SPEC 24).
 - Capturas reales del dashboard.
 - Blog, precios, planes o multidioma.
 - Checkbox de aceptación o versión aceptada en BD.

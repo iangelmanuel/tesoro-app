@@ -13,6 +13,7 @@ import {
   changePasswordSchema,
   createPasswordSchema,
   currencySchema,
+  hideAmountsSchema,
   profileSchema
 } from "./schemas"
 import type { AccountActionResult, ProfileFormState } from "./types"
@@ -37,7 +38,10 @@ function revalidateDashboard() {
 
 async function updateOwnProfile(
   changes:
-    { full_name: string } | { currency: string } | { avatar_url: string | null }
+    | { full_name: string }
+    | { currency: string }
+    | { avatar_url: string | null }
+    | { hide_amounts: boolean }
 ) {
   const supabase = await createClient()
   const {
@@ -98,6 +102,26 @@ export async function updateCurrency(
 
   revalidateDashboard()
   return { ok: true }
+}
+
+// Preferencia global del usuario (Personal, Empresa y todos sus dispositivos)
+export async function setHideAmountsAction(
+  hidden: unknown
+): Promise<AccountActionResult> {
+  const parsed = hideAmountsSchema.safeParse(hidden)
+
+  if (!parsed.success) {
+    return { error: DEFAULT_ERROR }
+  }
+
+  const { error } = await updateOwnProfile({ hide_amounts: parsed.data })
+
+  if (error) {
+    return { error }
+  }
+
+  revalidateDashboard()
+  return {}
 }
 
 export async function setAvatar(path: unknown): Promise<AccountActionResult> {

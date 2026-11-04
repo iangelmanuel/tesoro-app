@@ -7,6 +7,8 @@ export interface AccountData {
     fullName: string
     avatarUrl: string | null
     currency: string
+    /** Muestra `***` en lugar de saldos y totales */
+    hideAmounts: boolean
   }
   /** false si el usuario solo entra con OAuth */
   hasPassword: boolean

@@ -420,7 +420,7 @@ export function TransactionsTable({
       </ScrollTable>
       <DragOverlay>
         {(source) => (
-          <div className="flex w-fit max-w-full items-center gap-2 rounded-2xl bg-surface px-4 py-2.5 text-sm font-medium shadow-lg ring-1 ring-accent">
+          <div className="flex w-fit max-w-full items-center gap-2 rounded-2xl bg-surface px-4 py-2.5 text-sm font-medium shadow-overlay ring-1 ring-accent">
             <GripVertical
               aria-hidden="true"
               className="size-4 text-muted"

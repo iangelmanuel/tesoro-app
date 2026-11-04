@@ -20,7 +20,7 @@ export const SURFACE_ITEM =
 
 /** Aviso corto sobre el fondo ("Estás al día con tus pagos") */
 export const SURFACE_NOTE =
-  "rounded-3xl bg-surface p-4 text-center text-sm text-muted"
+  "rounded-3xl bg-surface p-4 text-center text-sm text-muted shadow-(--surface-shadow)"
 
 /** Pill de control sobre el fondo (selector de mes, grupo de flechas): el
  *  mismo gris que las tarjetas y las tablas */

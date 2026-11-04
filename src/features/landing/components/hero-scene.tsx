@@ -72,13 +72,14 @@ function buildVoxels(): Voxel[] {
           (32 - y) * UNIT,
           (layer - (LAYERS - 1) / 2) * SIZE + (front ? SIZE * 0.6 : 0)
         )
-        // Nube inicial: una corona amplia alrededor del cofre
+        // Nube inicial: una corona alrededor del cofre que cabe entera en
+        // el lienzo, sin tocar los bordes difuminados
         const angle = rand() * Math.PI * 2
-        const radius = 3.2 + rand() * 3
+        const radius = 1.9 + rand() * 1.5
         const start = new THREE.Vector3(
-          Math.cos(angle) * radius * 1.4,
-          Math.sin(angle) * radius * 0.7 + (rand() - 0.5) * 1.2,
-          (rand() - 0.5) * 4
+          Math.cos(angle) * radius * 1.25,
+          Math.sin(angle) * radius * 0.85,
+          (rand() - 0.5) * 3
         )
         // Se ordenan de abajo hacia arriba, con un poco de azar
         const delay = ((50 - y) / 36) * 0.9 + rand() * 0.45
@@ -218,8 +219,8 @@ function Chest({ palette }: { palette: Palette }) {
       const dx = voxel.target.x - hit.x
       const dy = voxel.target.y - hit.y
       const d = Math.hypot(dx, dy) || 1
-      const force = k >= 1 && d < 0.9 ? (1 - d / 0.9) * 0.28 : 0
-      push.set((dx / d) * force, (dy / d) * force, force * 1.4)
+      const force = k >= 1 && d < 0.6 ? (1 - d / 0.6) * 0.16 : 0
+      push.set((dx / d) * force, (dy / d) * force, force * 0.9)
       offset.lerp(push, 0.12)
       dummy.position.lerpVectors(voxel.start, voxel.target, k).add(offset)
       const spin = (1 - k) * 2.4

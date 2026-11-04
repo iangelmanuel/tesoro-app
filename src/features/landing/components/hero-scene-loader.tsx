@@ -66,16 +66,18 @@ export function HeroSceneLoader({ children }: { children: React.ReactNode }) {
     >
       <div
         className={cn(
-          "transition-opacity duration-700",
+          "transition-opacity duration-300",
           ready && "pointer-events-none opacity-0"
         )}
       >
         {children}
       </div>
       {enabled && (
+        // El lienzo es más grande que la columna y se difumina hacia los
+        // bordes: la escena no se ve encerrada en un cuadro
         <div
           className={cn(
-            "absolute -inset-6 transition-opacity duration-700",
+            "pointer-events-none absolute -inset-x-20 -inset-y-24 [mask-image:radial-gradient(ellipse_at_center,black_45%,transparent_72%)] transition-opacity duration-700",
             ready ? "opacity-100" : "opacity-0"
           )}
         >

@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-04T20:00:00Z",
+  "title": "Design System: Tesoro",
+  "extensions": {
+    "colorMeta": {
+      "brand": {
+        "role": "secondary",
+        "displayName": "Emerald de marca",
+        "canonical": "oklch(69.6% 0.17 162.48)",
+        "tonalRamp": ["oklch(26% 0.05 162.5)", "oklch(36% 0.08 162.5)", "oklch(46% 0.11 162.5)", "oklch(56% 0.14 162.5)", "oklch(69.6% 0.17 162.48)", "oklch(78% 0.13 162.5)", "oklch(87% 0.08 162.5)", "oklch(95% 0.03 162.5)"]
+      },
+      "accent-personal": {
+        "role": "primary",
+        "displayName": "Emerald de Personal",
+        "canonical": "oklch(50.8% 0.118 165.612)",
+        "tonalRamp": ["oklch(26.2% 0.051 172.552)", "oklch(37.8% 0.077 168.94)", "oklch(43.2% 0.095 166.913)", "oklch(50.8% 0.118 165.612)", "oklch(59.6% 0.145 163.225)", "oklch(69.6% 0.17 162.48)", "oklch(84.5% 0.143 164.978)", "oklch(97.9% 0.021 166.113)"]
+      },
+      "accent-personal-bright": {
+        "role": "primary",
+        "displayName": "Emerald brillante",
+        "canonical": "oklch(72% 0.15 162.5)"
+      },
+      "accent-business": {
+        "role": "primary",
+        "displayName": "Naranja de Empresa",
+        "canonical": "oklch(55.3% 0.195 38.402)",
+        "tonalRamp": ["oklch(26.6% 0.079 36.259)", "oklch(40.8% 0.123 38.172)", "oklch(47% 0.157 37.304)", "oklch(55.3% 0.195 38.402)", "oklch(64.6% 0.222 41.116)", "oklch(70.5% 0.213 47.604)", "oklch(83.7% 0.128 66.29)", "oklch(98% 0.016 73.684)"]
+      },
+      "accent-business-bright": {
+        "role": "primary",
+        "displayName": "Naranja brillante",
+        "canonical": "oklch(74% 0.17 48)"
+      },
+      "night-background": {
+        "role": "neutral",
+        "displayName": "Noche profunda",
+        "canonical": "oklch(0.125 0.003 264)",
+        "tonalRamp": ["oklch(0.125 0.003 264)", "oklch(0.215 0.005 264)", "oklch(0.255 0.005 264)", "oklch(0.29 0.005 264)", "oklch(0.32 0.005 264)", "oklch(0.37 0.005 264)", "oklch(0.72 0.012 264)", "oklch(0.985 0 0)"]
+      },
+      "night-surface": { "role": "neutral", "displayName": "Tarjeta grafito", "canonical": "oklch(0.215 0.005 264)" },
+      "night-foreground": { "role": "neutral", "displayName": "Texto nocturno", "canonical": "oklch(0.985 0 0)" },
+      "night-muted": { "role": "neutral", "displayName": "Texto atenuado nocturno", "canonical": "oklch(0.72 0.012 264)" },
+      "day-background": {
+        "role": "neutral",
+        "displayName": "Papel gris",
+        "canonical": "oklch(0.962 0.004 264)",
+        "tonalRamp": ["oklch(0.21 0.016 265)", "oklch(0.5 0.02 262)", "oklch(0.87 0.008 264)", "oklch(0.93 0.006 264)", "oklch(0.948 0.006 264)", "oklch(0.962 0.004 264)", "oklch(0.967 0.004 264)", "oklch(1 0 0)"]
+      },
+      "day-surface": { "role": "neutral", "displayName": "Tarjeta blanca", "canonical": "oklch(1 0 0)" },
+      "income-day": { "role": "tertiary", "displayName": "Verde ingreso", "canonical": "oklch(50% 0.12 163)" },
+      "expense-day": { "role": "tertiary", "displayName": "Rojo gasto", "canonical": "oklch(55% 0.23 25)" },
+      "balance-day": { "role": "tertiary", "displayName": "Azul balance", "canonical": "oklch(43% 0.16 255)" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "H1 del hero y título del cierre de la landing (el slogan)." },
+      "headline": { "displayName": "Headline", "purpose": "<h2> de cada sección de la landing (SectionHeading), sin eyebrow." },
+      "title": { "displayName": "Title", "purpose": "Títulos de tarjeta; <h1> del header y <h2> de CardHeading en el dashboard." },
+      "body-lead": { "displayName": "Body lead", "purpose": "Bajada del hero y descripción de sección, atenuada." },
+      "body": { "displayName": "Body", "purpose": "Texto corrido." },
+      "label": { "displayName": "Label", "purpose": "Etiquetas, chips, pestañas y nombres de factores." },
+      "figure": { "displayName": "Figure", "purpose": "Montos, KPIs, tablas y ejes con cifras tabulares." }
+    },
+    "shadows": [
+      { "name": "surface-light", "value": "0 1px 2px 0 oklch(0.21 0.016 265 / 0.05), 0 6px 20px -4px oklch(0.21 0.016 265 / 0.07)", "purpose": "Tarjetas y listas sobre el fondo en claro (--surface-shadow)." },
+      { "name": "surface-dark", "value": "inset 0 1px 0 0 oklch(1 0 0 / 0.055), 0 8px 24px -10px oklch(0 0 0 / 0.5)", "purpose": "Tarjetas en oscuro: brillo superior de 1 px y sombra profunda (--surface-shadow)." },
+      { "name": "overlay-light", "value": "0 2px 6px 0 oklch(0.21 0.016 265 / 0.06), 0 18px 44px -10px oklch(0.21 0.016 265 / 0.16)", "purpose": "Menús, diálogos, popovers y tooltips en claro (--overlay-shadow)." },
+      { "name": "overlay-dark", "value": "inset 0 1px 0 0 oklch(1 0 0 / 0.08), 0 18px 44px -10px oklch(0 0 0 / 0.7)", "purpose": "Menús, diálogos, popovers y tooltips en oscuro (--overlay-shadow)." }
+    ],
+    "motion": [
+      { "name": "ease-out-expo", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Única curva de la landing (reveal.tsx) y de la entrada de tarjetas del dashboard." },
+      { "name": "reveal", "value": "0.7s; desde y 24px, opacity 0, blur 6px; una vez, 12 % visible", "purpose": "Revelado de bloques de la landing (Reveal, RevealItem)." },
+      { "name": "reveal-stagger", "value": "80ms", "purpose": "Escalonado de listas en la landing (RevealList)." },
+      { "name": "press", "value": "spring stiffness 420, damping 30; hover y -2px, tap scale 0.97", "purpose": "CTA de la landing (Pressable)." },
+      { "name": "card-in", "value": "180ms ease-out-expo, desde opacity 0.4 y 4px", "purpose": "Aparición de tarjetas del dashboard." },
+      { "name": "ui-hover", "value": "150ms", "purpose": "Hover de filas, ítems del aside y enlaces." },
+      { "name": "chart-enter", "value": "400ms", "purpose": "Entrada de gráficas (Recharts, isAnimationActive auto)." },
+      { "name": "header-scroll", "value": "300ms", "purpose": "Header público de transparente a fondo con blur." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón primario (Personal)",
+      "kind": "button",
+      "refersTo": "button-primary-personal",
+      "description": "Acción principal dentro del espacio Personal: emerald-700 con texto blanco, pill.",
+      "html": "<button class=\"ds-btn-primary\">Registrar movimiento</button>",
+      "css": ".ds-btn-primary { background: oklch(50.8% 0.118 165.612); color: oklch(0.99 0 0); font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; height: 40px; padding: 0 16px; border: none; border-radius: 9999px; cursor: pointer; transition: background 150ms; } .ds-btn-primary:hover { background: color-mix(in oklab, oklch(50.8% 0.118 165.612) 88%, black 12%); } .ds-btn-primary:focus-visible { outline: 2px solid oklch(72% 0.15 162.5); outline-offset: 2px; }"
+    },
+    {
+      "name": "Botón primario (Empresa)",
+      "kind": "button",
+      "refersTo": "button-primary-business",
+      "description": "Acción principal dentro del espacio Empresa: orange-700 con texto blanco, pill.",
+      "html": "<button class=\"ds-btn-business\">Registrar operación</button>",
+      "css": ".ds-btn-business { background: oklch(55.3% 0.195 38.402); color: oklch(0.99 0 0); font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; height: 40px; padding: 0 16px; border: none; border-radius: 9999px; cursor: pointer; transition: background 150ms; } .ds-btn-business:hover { background: color-mix(in oklab, oklch(55.3% 0.195 38.402) 88%, black 12%); } .ds-btn-business:focus-visible { outline: 2px solid oklch(74% 0.17 48); outline-offset: 2px; }"
+    },
+    {
+      "name": "CTA de la landing",
+      "kind": "button",
+      "refersTo": "button-primary-public-night",
+      "description": "Primario neutro fuera de los espacios: casi blanco sobre la noche, con flecha; se levanta 2 px al pasar.",
+      "html": "<a class=\"ds-btn-cta\" href=\"#\">Crear cuenta <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></a>",
+      "css": ".ds-btn-cta { display: inline-flex; align-items: center; gap: 8px; background: oklch(0.985 0 0); color: oklch(0.18 0.005 264); font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 1rem; font-weight: 500; height: 48px; padding: 0 20px; border-radius: 9999px; text-decoration: none; transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1), background 150ms; } .ds-btn-cta:hover { transform: translateY(-2px); background: oklch(0.92 0 0); } .ds-btn-cta:active { transform: scale(0.97); } .ds-btn-cta:focus-visible { outline: 2px solid oklch(0.985 0 0); outline-offset: 3px; }"
+    },
+    {
+      "name": "Campo de texto",
+      "kind": "input",
+      "refersTo": "field-night",
+      "description": "Relleno suave sin trazo, radio de 20 px; el foco pone el anillo.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Monto</span><input class=\"ds-field-input\" inputmode=\"decimal\" placeholder=\"$ 0\"></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; font-family: Inter, ui-sans-serif, system-ui, sans-serif; } .ds-field-label { font-size: 0.875rem; font-weight: 500; color: oklch(0.985 0 0); } .ds-field-input { background: oklch(0.32 0.005 264); color: oklch(0.985 0 0); border: none; border-radius: 20px; height: 40px; padding: 0 14px; font-size: 0.875rem; font-variant-numeric: tabular-nums; transition: background 150ms; } .ds-field-input::placeholder { color: oklch(0.72 0.012 264); } .ds-field-input:hover { background: oklch(0.35 0.005 264); } .ds-field-input:focus-visible { outline: 2px solid oklch(72% 0.15 162.5); outline-offset: 2px; }"
+    },
+    {
+      "name": "Tarjeta KPI",
+      "kind": "card",
+      "refersTo": "card-night",
+      "description": "Superficie sin borde con brillo superior; etiqueta atenuada, cifra tabular y chip de estado.",
+      "html": "<div class=\"ds-card\"><dl><dt class=\"ds-card-label\">Ingresos del mes</dt><dd class=\"ds-card-value\">$ 4.250.000</dd></dl><span class=\"ds-chip-success\">+12 %</span></div>",
+      "css": ".ds-card { background: oklch(0.215 0.005 264); color: oklch(0.985 0 0); border-radius: 24px; padding: 20px; box-shadow: inset 0 1px 0 0 oklch(1 0 0 / 0.055), 0 8px 24px -10px oklch(0 0 0 / 0.5); font-family: Inter, ui-sans-serif, system-ui, sans-serif; display: flex; flex-direction: column; gap: 12px; max-width: 280px; } .ds-card dl { margin: 0; display: flex; flex-direction: column; gap: 4px; } .ds-card-label { font-size: 0.875rem; color: oklch(0.72 0.012 264); } .ds-card-value { margin: 0; font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.025em; } .ds-chip-success { align-self: flex-start; font-size: 0.75rem; font-weight: 500; padding: 2px 8px; border-radius: 9999px; background: color-mix(in oklab, oklch(79.2% 0.209 151.711) 15%, transparent); color: oklch(79.2% 0.209 151.711); }"
+    },
+    {
+      "name": "Chips de bandas del score",
+      "kind": "chip",
+      "refersTo": "chip-neutral-night",
+      "description": "Pills sin borde con tonos de estado: Débil, Regular, Bueno, Excelente.",
+      "html": "<ul class=\"ds-chips\"><li class=\"ds-chip ds-chip-danger\"><b>Débil</b> 0–39</li><li class=\"ds-chip ds-chip-warning\"><b>Regular</b> 40–59</li><li class=\"ds-chip ds-chip-info\"><b>Bueno</b> 60–79</li><li class=\"ds-chip ds-chip-ok\"><b>Excelente</b> 80–100</li></ul>",
+      "css": ".ds-chips { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0; font-family: Inter, ui-sans-serif, system-ui, sans-serif; } .ds-chip { font-size: 0.875rem; padding: 4px 12px; border-radius: 9999px; font-variant-numeric: tabular-nums; } .ds-chip b { font-weight: 500; } .ds-chip-danger { background: color-mix(in oklab, oklch(70.4% 0.191 22.216) 15%, transparent); color: oklch(70.4% 0.191 22.216); } .ds-chip-warning { background: color-mix(in oklab, oklch(82.8% 0.189 84.429) 15%, transparent); color: oklch(82.8% 0.189 84.429); } .ds-chip-info { background: color-mix(in oklab, oklch(67% 0.16 255) 15%, transparent); color: oklch(0.985 0 0); } .ds-chip-ok { background: color-mix(in oklab, oklch(79.2% 0.209 151.711) 15%, transparent); color: oklch(79.2% 0.209 151.711); }"
+    },
+    {
+      "name": "Pestañas del recorrido",
+      "kind": "nav",
+      "refersTo": "tour-tab-selected-night",
+      "description": "Lista vertical de funciones: la activa se vuelve tarjeta y muestra su descripción; las demás son texto atenuado.",
+      "html": "<div class=\"ds-tour\" role=\"tablist\"><button class=\"ds-tour-tab is-active\" role=\"tab\" aria-selected=\"true\"><span class=\"ds-tour-title\">Score de salud financiera</span><span class=\"ds-tour-desc\">Un número de 0 a 100 calculado con tus registros.</span></button><button class=\"ds-tour-tab\" role=\"tab\" aria-selected=\"false\"><span class=\"ds-tour-title\">Presupuestos</span></button><button class=\"ds-tour-tab\" role=\"tab\" aria-selected=\"false\"><span class=\"ds-tour-title\">Metas y deudas</span></button></div>",
+      "css": ".ds-tour { display: flex; flex-direction: column; gap: 4px; max-width: 336px; font-family: Inter, ui-sans-serif, system-ui, sans-serif; } .ds-tour-tab { display: flex; flex-direction: column; gap: 4px; min-height: 44px; padding: 16px 20px; text-align: left; border: none; border-radius: 24px; background: transparent; cursor: pointer; transition: background-color 200ms; } .ds-tour-tab:hover { background: color-mix(in oklab, oklch(0.29 0.005 264) 60%, transparent); } .ds-tour-tab:focus-visible { outline: 2px solid oklch(0.985 0 0); outline-offset: 2px; } .ds-tour-tab.is-active { background: oklch(0.215 0.005 264); box-shadow: inset 0 1px 0 0 oklch(1 0 0 / 0.055), 0 8px 24px -10px oklch(0 0 0 / 0.5); } .ds-tour-title { font-weight: 500; color: oklch(0.72 0.012 264); } .ds-tour-tab.is-active .ds-tour-title { color: oklch(0.985 0 0); } .ds-tour-desc { font-size: 0.875rem; color: oklch(0.72 0.012 264); }"
+    },
+    {
+      "name": "Barra de factores del score",
+      "kind": "custom",
+      "description": "Barra única en pill que suma 100: siete tramos de --income en opacidad decreciente según el peso.",
+      "html": "<div class=\"ds-factors\" aria-hidden=\"true\"><i style=\"width:25%;--s:100%\"></i><i style=\"width:20%;--s:82%\"></i><i style=\"width:15%;--s:66%\"></i><i style=\"width:15%;--s:54%\"></i><i style=\"width:10%;--s:42%\"></i><i style=\"width:10%;--s:32%\"></i><i style=\"width:5%;--s:22%\"></i></div>",
+      "css": ".ds-factors { display: flex; gap: 2px; height: 12px; width: 100%; max-width: 480px; overflow: hidden; border-radius: 9999px; } .ds-factors i { display: block; height: 100%; background: color-mix(in oklab, oklch(60% 0.15 170) var(--s), transparent); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El cofre en orden",
+    "overview": "Tesoro se ve como lo que promete: registros sueltos que, uno a uno, quedan ordenados. Es un sistema oscuro por defecto, sobre una base casi negra, donde las cifras son las protagonistas y todo lo demás se retira. Las superficies no llevan borde; se separan por el contraste entre fondo y tarjeta y por una elevación muy contenida (una sombra difusa en claro, un brillo superior de 1 px en oscuro). La densidad es media: pocas métricas, bien explicadas, con aire entre bloques.\n\nEl color es escaso y significa algo. Fuera de los espacios el primario es neutro; dentro, un solo acento por espacio (emerald en Personal, naranja en Empresa) que cambia por ruta y nunca por props. Ingresos, gastos y balance tienen tokens propios que sirven a la vez de texto y de serie de gráfica. La landing lleva el mismo mundo a una escala mayor: titulares grandes y apretados en Inter, el cofre del isotipo armándose con bloques en 3D (\"cada registro suma\"), y videos reales de la app en marcos claros.\n\nEl movimiento llega lento y sin rebote. Una sola curva (expo.out) gobierna la landing; el dashboard se mueve poco y rápido. Todo respeta `prefers-reduced-motion`.",
+    "keyCharacteristics": [
+      "Oscuro por defecto, claro disponible, con el mismo lenguaje en los dos temas.",
+      "Tarjetas sin borde, radios grandes (24 px) y controles en pill.",
+      "Un solo acento por espacio; el resto es neutro de matiz 264.",
+      "Color por significado: dinero y estados desde tokens, nunca desde la paleta cruda de Tailwind.",
+      "Inter en todo, con cifras tabulares.",
+      "Movimiento corto en la app, revelados de 0.7 s en la landing, una sola curva."
+    ],
+    "rules": [
+      { "name": "La Regla de Un Acento", "body": "Cada pantalla tiene un solo primario, y lo decide la ruta: `WorkspaceThemeRoot` pinta `data-workspace` y `globals.css` lo aplica con `:has()`. Un color de espacio nunca se pasa por props ni se escribe en un componente.", "section": "colors" },
+      { "name": "La Regla del Texto Blanco", "body": "Todo botón de color lleva texto blanco sobre un tono 700 (o red-600 en peligro oscuro). Si un relleno nuevo no da 4.5:1 con blanco, se oscurece el relleno; no se cambia el texto.", "section": "colors" },
+      { "name": "La Regla del Significado", "body": "Ingresos, gastos, balance y estados salen de sus tokens (`tone.ts` para chips, barras y cifras). La paleta cruda de Tailwind (`emerald-*`, `amber-*`, `rose-*`…) no se usa para color de interfaz. Un aumento de gastos se pinta como malo aunque el número suba.", "section": "colors" },
+      { "name": "La Regla del Título Solo", "body": "Un título se sostiene sin etiqueta encima: ni eyebrow, ni kicker, ni texto en versalitas sobre el `<h2>`. Una sola `<h1>` por pantalla; en el dashboard la pone el header.", "section": "typography" },
+      { "name": "La Regla de la Cifra Quieta", "body": "Todo número que se compara lleva `tabular-nums`. Los saldos y totales pasan por `<Amount />` para poder ocultarse.", "section": "typography" },
+      { "name": "La Regla del Pulgar", "body": "Por debajo de 768 px ningún control táctil mide menos de 44 × 44 px.", "section": "layout" },
+      { "name": "La Regla de Un Nivel", "body": "Cada pila de tarjetas lleva una sola sombra: lo anidado dentro de una tarjeta se separa por tono (`surface-secondary`, `surface-tertiary`, `default`), no con otra sombra.", "section": "elevation" },
+      { "name": "La Regla Sin Halo", "body": "La luz no se pinta con degradados: nada de resplandores radiales, focos ni manchas de color detrás del contenido.", "section": "elevation" }
+    ],
+    "dos": [
+      "**Do** separar las superficies por tono y por `--surface-shadow`, con radio de 24 px y sin borde.",
+      "**Do** tomar el primario de la ruta (`data-workspace` + `:has()`), con texto blanco sobre el tono 700 y `--accent-bright` para foco y texto suave en oscuro.",
+      "**Do** pintar dinero y estados con `--income`, `--expense`, `--balance` y `tone.ts`, en ese orden fijo en las gráficas.",
+      "**Do** verificar AA (4.5:1 texto, 3:1 gráficos y foco) en claro y oscuro para todo par nuevo.",
+      "**Do** usar la curva expo.out y los tiempos de `reveal.tsx` en la landing, sin duplicarlos.",
+      "**Do** llevar `tabular-nums` en toda cifra comparable.",
+      "**Do** dar a cada control táctil 44 px o más por debajo de 768 px."
+    ],
+    "donts": [
+      "**Don't** poner eyebrows ni kickers sobre los títulos de sección.",
+      "**Don't** meter íconos en cuadros o círculos de color como decoración de una función.",
+      "**Don't** vender funciones con una grilla de tarjetas iguales; en la landing se muestran con el recorrido de pestañas y un clip grande. Las grillas de datos del dashboard (deudas, metas, cuentas) sí son nativas.",
+      "**Don't** usar degradados radiales, halos ni focos de luz detrás del contenido.",
+      "**Don't** escribir titulares en fórmula (\"No es X, es Y\", tríadas de frases cortas).",
+      "**Don't** usar la paleta cruda de Tailwind para color de interfaz ni pasar colores de espacio por props.",
+      "**Don't** usar `rounded-xl border`, `border-dashed` ni `variant=\"outline\"` en superficies y barras de herramientas del dashboard.",
+      "**Don't** reproducir video con sonido ni en automático el demo principal; los clips se detienen fuera de pantalla."
+    ]
+  }
+}

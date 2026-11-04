@@ -2,6 +2,7 @@ import Link from "next/link"
 import { buttonVariants } from "@heroui/react"
 import { ArrowRightIcon } from "lucide-react"
 import { SITE } from "@/config/site"
+import { HeroSceneLoader } from "./hero-scene-loader"
 import { LandingHeroVisual } from "./hero-visual"
 import { Pressable, Reveal } from "./reveal"
 
@@ -69,7 +70,9 @@ export function Hero() {
             </Pressable>
           </Reveal>
         </div>
-        <LandingHeroVisual />
+        <HeroSceneLoader>
+          <LandingHeroVisual />
+        </HeroSceneLoader>
       </div>
     </section>
   )

@@ -94,17 +94,21 @@ export function SidebarProvider({
   )
 }
 
-/** Columna en escritorio y Drawer en móvil, con el mismo contenido */
-export function Sidebar({ children }: Readonly<{ children: React.ReactNode }>) {
-  const { open, openMobile, setOpenMobile } = useSidebar()
+/** Al navegar, el panel móvil se cierra y queda a la vista la pantalla nueva.
+ *  Va aparte de <Sidebar />: usePathname suspende al prerenderizar y el
+ *  skeleton (fallback del Suspense) no puede suspender */
+export function useCloseSidebarOnNavigate() {
+  const { setOpenMobile } = useSidebar()
   const pathname = usePathname()
 
-  // Al navegar, el panel móvil se cierra y queda a la vista la pantalla nueva.
-  // Va aquí y no en el provider: usePathname suspende y el provider está fuera
-  // del Suspense del layout
   useEffect(() => {
     setOpenMobile(false)
   }, [pathname, setOpenMobile])
+}
+
+/** Columna en escritorio y Drawer en móvil, con el mismo contenido */
+export function Sidebar({ children }: Readonly<{ children: React.ReactNode }>) {
+  const { open, openMobile, setOpenMobile } = useSidebar()
 
   return (
     <>

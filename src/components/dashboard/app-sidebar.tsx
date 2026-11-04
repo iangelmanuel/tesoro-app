@@ -11,7 +11,8 @@ import {
   SidebarFooter,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarNavLink
+  SidebarNavLink,
+  useCloseSidebarOnNavigate
 } from "@/components/dashboard/sidebar"
 import { ThemeToggle } from "@/components/theme/theme-toggle"
 import { SITE } from "@/config/site"
@@ -39,6 +40,7 @@ interface AppSidebarProps {
 export function AppSidebar({ user, businesses }: AppSidebarProps) {
   const pathname = usePathname()
   const params = useParams<{ id?: string }>()
+  useCloseSidebarOnNavigate()
   // /dashboard/account mantiene el menú Personal, sin ningún ítem activo
   const isPersonal =
     pathname.startsWith(SITE.routes.dashboardPersonal) ||

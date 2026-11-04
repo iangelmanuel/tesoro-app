@@ -8,5 +8,6 @@ export {
   SidebarNavLink,
   SidebarProvider,
   SidebarTrigger,
+  useCloseSidebarOnNavigate,
   useSidebar
 } from "./sidebar"

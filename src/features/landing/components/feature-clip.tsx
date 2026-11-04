@@ -48,7 +48,7 @@ export function FeatureClip({ sources }: FeatureClipProps) {
   }, [])
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-[#dff5ea]">
+    <div className="relative aspect-video w-full overflow-hidden rounded-3xl bg-[#dff5ea] shadow-[0_30px_60px_-30px_rgba(2,44,34,0.5),0_10px_20px_-10px_rgba(2,44,34,0.2)]">
       <video
         ref={videoRef}
         className="absolute inset-0 size-full object-cover"

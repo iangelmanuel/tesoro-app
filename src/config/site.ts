@@ -270,10 +270,8 @@ export const SITE = {
 
   navigation: {
     main: [
-      { name: "Inicio", href: "/" },
       { name: "Demo", href: "/#demo" },
       { name: "Funciones", href: "/#funciones" },
-      { name: "Cómo funciona", href: "/#como-funciona" },
       { name: "Score", href: "/#score" },
       { name: "Código abierto", href: "/#open-source" }
     ],

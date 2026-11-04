@@ -69,7 +69,7 @@ export function DemoPlayer() {
             // Capa del póster: un velo suave y el play grande al centro
             <m.div
               key="cover"
-              className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_center,rgba(2,44,34,0.18),transparent_70%)]"
+              className="absolute inset-0 flex items-center justify-center bg-[rgba(2,44,34,0.1)]"
               exit={{ opacity: 0, scale: 1.03 }}
               transition={{ duration: 0.45, ease: EASE_OUT }}
             >

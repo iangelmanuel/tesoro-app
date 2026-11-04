@@ -2,7 +2,6 @@
 
 import { useRef } from "react"
 import {
-  type MotionValue,
   type Variants,
   m,
   useReducedMotion,
@@ -37,7 +36,7 @@ const GROUP: Variants = {
 }
 
 // Revela una vez al entrar en pantalla (o al montar, con `immediate`)
-const viewport = { once: true, amount: 0.25 } as const
+const viewport = { once: true, amount: 0.12 } as const
 
 type RevealProps = {
   children: React.ReactNode
@@ -146,81 +145,29 @@ export function useScrollProgress<T extends HTMLElement>() {
   return { ref, progress }
 }
 
-// Barra que se llena con el scroll hasta `fraction` (0–1)
-export function ScrollBar({
-  progress,
-  fraction,
+// Cortina ligada al scroll: descubre su contenido de izquierda a derecha sin
+// deformarlo, así las proporciones nunca mienten a mitad de camino
+export function ScrollWipe({
+  children,
   className
 }: {
-  progress: MotionValue<number>
-  fraction: number
+  children: React.ReactNode
   className?: string
 }) {
-  const scaleX = useTransform(progress, (v) => v * fraction)
+  const { ref, progress } = useScrollProgress<HTMLDivElement>()
+  const clipPath = useTransform(
+    progress,
+    (v) => `inset(0 ${((1 - v) * 100).toFixed(2)}% 0 0)`
+  )
 
   return (
     <m.div
+      ref={ref}
       className={className}
-      style={{ scaleX, transformOrigin: "0% 50%" }}
-    />
-  )
-}
-
-// Barra de factor que se llena con el scroll (mide su propio progreso)
-export function ScrollFillBar({
-  fraction,
-  className
-}: {
-  fraction: number
-  className?: string
-}) {
-  const { ref, progress } = useScrollProgress<HTMLDivElement>()
-
-  return (
-    <div
-      ref={ref}
-      className="h-full"
+      style={{ clipPath }}
     >
-      <ScrollBar
-        progress={progress}
-        fraction={fraction}
-        className={className}
-      />
-    </div>
-  )
-}
-
-// Arco del medidor de score que se dibuja con el scroll hasta `value` (0–100)
-export function ScrollGaugeArc({
-  value,
-  stroke
-}: {
-  value: number
-  stroke: string
-}) {
-  const { ref, progress } = useScrollProgress<HTMLDivElement>()
-  const dash = useTransform(progress, (v) => `${v * value} 100`)
-
-  return (
-    <div
-      ref={ref}
-      className="absolute inset-0"
-    >
-      <svg
-        viewBox="0 0 120 68"
-        className="size-full"
-      >
-        <m.path
-          d="M10 60a50 50 0 0 1 100 0"
-          fill="none"
-          stroke={stroke}
-          strokeWidth="10"
-          strokeLinecap="round"
-          pathLength={100}
-          style={{ strokeDasharray: dash }}
-        />
-      </svg>
-    </div>
+      {children}
+    </m.div>
   )
 }
 

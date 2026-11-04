@@ -4,7 +4,6 @@ import { DemoSection } from "@/features/landing/components/demo-section"
 import { Features } from "@/features/landing/components/features"
 import { FinalCta } from "@/features/landing/components/final-cta"
 import { Hero } from "@/features/landing/components/hero"
-import { HowItWorks } from "@/features/landing/components/how-it-works"
 import { MotionProvider } from "@/features/landing/components/motion-provider"
 import { OpenSource } from "@/features/landing/components/open-source"
 import { ScoreSection } from "@/features/landing/components/score-section"
@@ -24,7 +23,6 @@ export default function HomePage() {
         <Hero />
         <DemoSection />
         <Features />
-        <HowItWorks />
         <ScoreSection />
         <WorkspacesSection />
         <OpenSource />

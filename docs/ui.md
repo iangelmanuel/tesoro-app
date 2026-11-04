@@ -87,6 +87,27 @@ luminancia, así que las gráficas nunca dependen solo del color: llevan
 leyenda, orden fijo de series y el monto en el tooltip y en la tabla
 `sr-only`.
 
+### Auditoría del modo claro (SPEC 23, paso 1)
+
+Revisión de código (sin navegador) de `globals.css`, `surface.ts`,
+`StatCard`, `ChartCard` y su uso en Resumen, Movimientos, Cuentas y
+Presupuestos. El detector de Impeccable no halló reglas rotas, pero solo
+corrió por regex. Se resuelve en los pasos 2 y 3 del spec.
+
+| Prioridad | Hallazgo                                                                                                                                                                                                                                          | Dónde                                                                                                                                                                                              |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1        | La separación tarjeta/fondo es débil: `--background` 0.975 vs `--surface` 1 (ΔL 0.025). La sombra viene de HeroUI (`#0000000a/0f`, negro puro, 3 capas finas) y no da elevación ambiental; el claro se ve plano.                                  | `globals.css` (`--surface-shadow` sin definir), `surface.ts`, `Card`                                                                                                                               |
+| P1        | Cada superficie define su propia sombra (`shadow-(--surface-shadow)`, `shadow-lg`, `shadow-xl shadow-black/5`, `shadow-overlay`). Sin una escala de elevación, las sombras se acumulan en tarjetas anidadas.                                      | `surface.ts`, `transactions-table.tsx` (overlay de arrastre), `chart-tooltip.tsx`                                                                                                                  |
+| P2        | Paleta cruda de Tailwind (`emerald-50`, `amber-100`, `rose-100`…) en avisos y chips, contra la regla "estados con `tone.ts`". Son bloques de color de relleno que ensucian el claro y no cambian con el espacio.                                  | `features/debts/components/{debt-card,receivable-card}.tsx`, `features/goals/components/{goal-card,goal-summary}.tsx`, `categories/constants.ts`, `app/dashboard/business/[id]/cash-flow/page.tsx` |
+| P2        | `--chart-1…5` en claro son slate-600…900: casi sin diferencia de luminosidad entre 3, 4 y 5; las series neutras no se distinguen.                                                                                                                 | `globals.css`                                                                                                                                                                                      |
+| P2        | Grilla y divisores: `--border` 0.912 y `--separator` 0.93 sobre blanco dan ≈ 1.2:1. Es decorativo, pero la grilla se pierde; el spec pide 3:1 para marcas gráficas.                                                                               | `globals.css`, `chart-style.ts`                                                                                                                                                                    |
+| P2        | El primario de Personal/Empresa en claro (`accent`/`background` 3.41 y 3.34) solo cumple foco. Como texto o enlace no llega a 4.5:1; hay que confirmar que `accent-soft-foreground` (mezcla 70/30 con el foreground) lo cubre donde se usa texto. | `globals.css`, usos de `text-accent`                                                                                                                                                               |
+| P3        | Landing (`hero-visual`, `score-visual`) usa `border` y `shadow-xl shadow-black/5`. Fuera de alcance de este spec.                                                                                                                                 | `features/landing/components/`                                                                                                                                                                     |
+
+Sin P0. Lo que ya funciona y se conserva: tarjetas sin borde, tokens con
+nombres de HeroUI, `Amount` y `tabular-nums` en cifras, leyendas y tablas
+`sr-only` en gráficas, estados por `tone.ts` en `StatCard`.
+
 ## Componentes propios
 
 Todos en `src/components/`. HeroUI se importa directo de `@heroui/react`;

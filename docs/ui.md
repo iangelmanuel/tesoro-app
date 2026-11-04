@@ -168,14 +168,33 @@ Reglas:
   `aria-live="polite"`.
 - Botones del diálogo y del aviso de 44 px en móvil (`max-md:h-11`).
 
+### Ocultar cifras y aside de Cuenta (SPEC 22)
+
+| Pieza                                          | Qué hace                                                                                                                                                                       |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `dashboard/hide-amounts-context.tsx`           | `HideAmountsProvider` (estado inicial del servidor + `useOptimistic`), `useHideAmounts()` → `{ hidden, toggle }` y `useFormatAmount()` → `money()` para SVG, tooltips y tablas |
+| `dashboard/amount.tsx`                         | `<Amount value currency />`: único punto de formato de saldos y totales. Oculto: `***` con `role="img"`, `aria-label="Monto oculto"` y el ancho del monto reservado            |
+| `dashboard/hide-amounts-toggle.tsx`            | Ojo del header (`Eye` / `EyeOff`, `aria-pressed`, 44 px en móvil)                                                                                                              |
+| `charts/chart-format.ts` → `formatChartAmount` | Eje abreviado o máscara                                                                                                                                                        |
+| `account/components/account-nav.tsx`           | Aside interno de Cuenta: lista vertical en escritorio, horizontal con scroll en móvil, `aria-current="page"`, 44 px                                                            |
+
+Reglas:
+
+- Todo saldo o total nuevo se muestra con `<Amount />` (o `money()` si es
+  texto de SVG o `sr-only`), nunca con `formatCurrency` directo. Las filas de
+  Movimientos y los formularios sí usan el valor real.
+- El layout lee `profiles.hide_amounts` dentro de un `Suspense`; mientras
+  carga muestra el header y un `<main>` vacío, sin números.
+
 ## Dónde vive cada pantalla
 
-| Pantalla         | Ruta                                               | Piezas                                                                               |
-| ---------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Shell            | `app/dashboard/layout.tsx`                         | Aside, header con título y accesos, `<main id="contenido">` y "Saltar al contenido"  |
-| Resumen Personal | `app/dashboard/personal/page.tsx`                  | 4 `StatCard` → gráfica + columna (score, cuentas) → últimos movimientos → 4 tarjetas |
-| Movimientos      | `app/dashboard/personal/transactions`              | Barra de filtros pill, KPIs pequeñas, tabla compacta (`src/features/transactions/`)  |
-| Reportes         | `src/features/reports/components/reports-view.tsx` | Barra de periodo y tipo, 4 KPI, tendencia, top 5 + tabla de categorías               |
+| Pantalla         | Ruta                                                           | Piezas                                                                               |
+| ---------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Shell            | `app/dashboard/layout.tsx`                                     | Aside, header con título y accesos, `<main id="contenido">` y "Saltar al contenido"  |
+| Resumen Personal | `app/dashboard/personal/page.tsx`                              | 4 `StatCard` → gráfica + columna (score, cuentas) → últimos movimientos → 4 tarjetas |
+| Movimientos      | `app/dashboard/personal/transactions`                          | Barra de filtros pill, KPIs pequeñas, tabla compacta (`src/features/transactions/`)  |
+| Reportes         | `src/features/reports/components/reports-view.tsx`             | Barra de periodo y tipo, 4 KPI, tendencia, top 5 + tabla de categorías               |
+| Cuenta           | `app/dashboard/account/{general,security,privacy,preferences}` | Aside interno (`AccountNav`) y una `AccountSection` por tema                         |
 
 ## Móvil
 

@@ -50,3 +50,6 @@ next-env.d.ts
 
 # motor de Impeccable: binario por plataforma, el launcher lo descarga y verifica
 .claude/skills/impeccable/scripts/bin/
+
+# grabaciones crudas del demo (SPEC 24)
+/video/raw/

@@ -1,10 +1,10 @@
 import { Card, CardContent, Chip } from "@heroui/react"
 import { ShieldCheck } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import { currentMonth } from "@/libs/dates"
-import { formatCurrency } from "@/libs/format"
 import {
   BUDGET_STATUS_LABELS,
   WARNING_RATIO,
@@ -88,8 +88,15 @@ export async function BudgetsAtRiskCard({
                   label={`${row.name}: ${formatPercent(budgetPercent(row.spent, row.budgetAmount))}`}
                 />
                 <p className="text-sm text-muted tabular-nums">
-                  {formatCurrency(row.spent, currency)} de{" "}
-                  {formatCurrency(row.budgetAmount, currency)}
+                  <Amount
+                    value={row.spent}
+                    currency={currency}
+                  />{" "}
+                  de{" "}
+                  <Amount
+                    value={row.budgetAmount}
+                    currency={currency}
+                  />
                 </p>
               </li>
             )

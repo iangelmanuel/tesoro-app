@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react"
 import { Chip, cn, toast } from "@heroui/react"
 import { Pencil, Trash2 } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { RowActions } from "@/components/dashboard/row-actions"
 import { SURFACE_ROW } from "@/components/dashboard/surface"
@@ -12,7 +13,6 @@ import {
   TONE_TEXT_CLASSES as TONE_TEXT
 } from "@/components/dashboard/tone"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
-import { formatCurrency } from "@/libs/format"
 import { deleteBudget } from "../actions"
 import type { BudgetMonth } from "../month"
 import {
@@ -132,9 +132,16 @@ export function BudgetProgressRow({
         </div>
         <p className="col-span-2 row-start-2 text-sm whitespace-nowrap text-muted tabular-nums md:col-span-1 md:col-start-2 md:row-start-1 md:text-right">
           <span className="font-medium text-foreground">
-            {formatCurrency(budget.spent, currency)}
+            <Amount
+              value={budget.spent}
+              currency={currency}
+            />
           </span>{" "}
-          de {formatCurrency(budget.budgetAmount, currency)}
+          de{" "}
+          <Amount
+            value={budget.budgetAmount}
+            currency={currency}
+          />
         </p>
         <div className="col-start-2 row-start-1 md:col-start-3">
           <BudgetActions

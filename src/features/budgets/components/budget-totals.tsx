@@ -1,5 +1,5 @@
 import { Card, CardDescription, CardHeader, CardTitle, cn } from "@heroui/react"
-import { formatCurrency } from "@/libs/format"
+import { Amount } from "@/components/dashboard/amount"
 import type { BudgetProgress } from "../queries"
 
 interface BudgetTotalsProps {
@@ -38,7 +38,10 @@ export function BudgetTotals({ budgets, currency }: BudgetTotalsProps) {
                 item.className
               )}
             >
-              {formatCurrency(item.value, currency)}
+              <Amount
+                value={item.value}
+                currency={currency}
+              />
             </CardTitle>
           </CardHeader>
         </Card>

@@ -194,6 +194,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Colored buttons now use white text (SPEC 24): the Personal and Business primary fill moves to the 700 tone (emerald-700, orange-700) in light and dark, the first that reaches AA with white (5.22:1 and 5.08:1); hover darkens instead of lightening. In dark mode, focus rings and soft accent text use the new `--accent-bright`, and the `danger` button uses a red-600 fill with white text.
 - Dark theme tokens (SPEC 23): less saturated primary in dark (emerald `oklch(70% .15 162.5)`, orange `oklch(72% .18 48)`), darker `*-foreground` text on accent and status colors, slightly brighter `--muted`, and updated dark contrast table (all pairs AA). `SITE.seo.themeColor` now matches the new backgrounds (`#F1F2F5` light, `#07080A` dark), which also updates the PWA manifest colors.
 - Light theme polish (SPEC 23): softer page background (`#f1f2f5`) so white cards stand out without borders, subtler accent-soft fills (12 %) with a stronger soft foreground, a graduated neutral chart series (lightest 3.36:1 on the surface) and a darker chart grid. Empty states, archived accounts, `SURFACE_NOTE` and the drag overlay use the shared shadow tokens. Contrast table in `docs/ui.md` updated; dark mode is unchanged.
 - Links to Gastos fijos (quick sheet, upcoming payments card, recommendations, import target) now point to `/dashboard/personal/recurring`.

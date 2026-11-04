@@ -54,6 +54,11 @@ Todo vive en `src/styles/globals.css`, con los nombres de HeroUI v3.
 - **Primario por espacio:** `WorkspaceThemeRoot` + `getWorkspaceTheme()`
   ponen `data-workspace` en el contenedor del dashboard y `globals.css`
   cambia `--accent` con `:has()`. Nunca se pasa un color por props.
+- **Botones de color con texto blanco:** el relleno de `--accent` es el tono
+  700 (emerald-700 en Personal, orange-700 en Empresa) en claro y oscuro, el
+  primero que da AA con blanco. En oscuro, el foco y el texto suave usan
+  `--accent-bright` (más claro), porque el 700 no contrasta con el fondo. El
+  botón `danger` en oscuro usa red-600 con texto blanco.
 - **Estados en chips y barras:** `src/components/dashboard/tone.ts`
   (`TONE_BADGE_CLASSES`, `TONE_BAR_CLASSES`, `TONE_TEXT_CLASSES`). No se usa
   la paleta cruda de Tailwind (`amber-*`, `rose-*`…).
@@ -76,13 +81,14 @@ OKLCH → sRGB). Mínimos: 4.5:1 texto, 3:1 gráficos y foco.
 | `income` / `background`                   | 4.98  | 5.74   |
 | `expense` / `background`                  | 4.79  | 5.77   |
 | `danger` / `background`                   | 4.88  | 6.99   |
-| `accent-foreground` / `accent` Personal   | 4.84  | 7.53   |
-| `accent-foreground` / `accent` Empresa    | 4.94  | 7.13   |
-| `accent` / `background` Personal (foco)   | 3.28  | 8.09   |
-| `accent` / `background` Empresa (foco)    | 3.22  | 7.66   |
+| `accent-foreground` / `accent` Personal   | 5.22  | 5.22   |
+| `accent-foreground` / `accent` Empresa    | 5.08  | 5.08   |
+| `focus` / `background` Personal           | 4.81  | 8.71   |
+| `focus` / `background` Empresa            | 4.68  | 8.28   |
+| botón `danger` (blanco / relleno)         | 4.88  | 4.83   |
 | `text-brand` / `background`               | 5.06  | 11.74  |
-| `accent-soft-fg` / `accent-soft` Personal | 5.82  | 7.19   |
-| `accent-soft-fg` / `accent-soft` Empresa  | 5.70  | 7.13   |
+| `accent-soft-fg` / `accent-soft` Personal | 7.11  | 9.31   |
+| `accent-soft-fg` / `accent-soft` Empresa  | 6.96  | 8.96   |
 | `muted` / `field-background`              | 5.22  | 5.11   |
 | `foreground` / `field-background`         | 15.41 | 12.15  |
 | `--chart-*` / `surface` (mínimo)          | 3.36  | 3.68   |
@@ -149,7 +155,7 @@ inconsistente, los niveles anidados, el primario menos saturado
 
 Sin P0. Lo que ya funciona y se conserva: AA en todo el texto (`foreground`
 18.96:1, `muted` 6.74:1 sobre la tarjeta, dinero ≥ 5.03:1), serie de gráficas
-con luminosidad escalonada (mínimo 3.72:1), primario con texto oscuro (≥ 6.13:1)
+con luminosidad escalonada (mínimo 3.72:1), primario con texto blanco sobre el tono 700 (≥ 5.08:1)
 y tarjetas sin borde.
 
 ## Componentes propios

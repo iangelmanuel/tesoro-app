@@ -51,5 +51,12 @@ next-env.d.ts
 # motor de Impeccable: binario por plataforma, el launcher lo descarga y verifica
 .claude/skills/impeccable/scripts/bin/
 
-# grabaciones crudas del demo (SPEC 24)
-/video/raw/
+# scripts de desarrollo del video demo: viven solo en local (SPEC 24)
+/scripts/seed-demo.mjs
+/scripts/record-demo.mjs
+/scripts/prepare-demo-video.mjs
+/scripts/demo/
+
+# proyecto Hyperframes del video demo: vive solo en local; en el repo va el
+# resultado renderizado en public/videos/ (SPEC 24)
+/video/

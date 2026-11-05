@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
 import { type TutorialSection, getTutorialSection } from "@/config/tutorials"
 import { useTutorial } from "../use-tutorial"
+import { useTutorialProgress } from "./tutorial-provider"
 
 // Después de la hoja de acciones rápidas, que se autoabre a los 400 ms en
 // móvil (SPEC 15): si se abre, el tutorial espera a que se cierre
@@ -51,10 +52,13 @@ export function TutorialAutoStart() {
 
 function SectionAutoStart({ section }: Readonly<{ section: TutorialSection }>) {
   const { completed, start } = useTutorial(section)
+  const { pendingStart, clearPendingStart } = useTutorialProgress()
   const started = useRef(false)
+  // "Ver de nuevo" (Cuenta › Preferencias) arranca aunque esté completado
+  const forced = pendingStart === section
 
   useEffect(() => {
-    if (completed || started.current) {
+    if ((completed && !forced) || started.current) {
       return
     }
 
@@ -81,6 +85,9 @@ function SectionAutoStart({ section }: Readonly<{ section: TutorialSection }>) {
 
       started.current = true
       observer.disconnect()
+      if (forced) {
+        clearPendingStart()
+      }
       start().catch(() => {
         // driver.js no se pudo descargar: se intenta en la próxima visita
         started.current = false
@@ -109,7 +116,7 @@ function SectionAutoStart({ section }: Readonly<{ section: TutorialSection }>) {
       window.clearTimeout(timer)
       window.clearTimeout(fallback)
     }
-  }, [completed, start])
+  }, [completed, forced, start, clearPendingStart])
 
   return null
 }

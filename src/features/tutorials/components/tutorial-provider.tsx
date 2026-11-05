@@ -2,9 +2,11 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useMemo,
   useOptimistic,
+  useState,
   useTransition
 } from "react"
 import { toast } from "@heroui/react"
@@ -19,13 +21,23 @@ interface TutorialValue {
   markCompleted: (section: TutorialSection) => void
   /** Borra todo el progreso: los tutoriales vuelven a arrancar solos */
   reset: () => void
+  /** Hay un reinicio en curso */
+  isResetting: boolean
+  /**
+   * Sección cuyo tutorial debe arrancar al entrar aunque esté completado
+   * ("Ver de nuevo" en Cuenta › Preferencias)
+   */
+  pendingStart: TutorialSection | null
+  requestStart: (section: TutorialSection) => void
+  clearPendingStart: () => void
 }
 
 const TutorialContext = createContext<TutorialValue | null>(null)
 
 // `initial` viene del servidor (layout del dashboard): el arranque automático
 // decide sin parpadeo ni consulta extra por página. El estado optimista da
-// respuesta inmediata; si guardar falla, vuelve atrás.
+// respuesta inmediata; si guardar falla, vuelve atrás. El provider vive en el
+// layout, así que `pendingStart` sobrevive a la navegación entre páginas.
 export function TutorialProvider({
   initial,
   children
@@ -39,6 +51,10 @@ export function TutorialProvider({
   )
   const [completed, setOptimistic] = useOptimistic(base)
   const [, startTransition] = useTransition()
+  const [isResetting, startReset] = useTransition()
+  const [pendingStart, setPendingStart] = useState<TutorialSection | null>(null)
+  // Estable: el arranque automático la usa como dependencia de su efecto
+  const clearPendingStart = useCallback(() => setPendingStart(null), [])
 
   const value = useMemo<TutorialValue>(
     () => ({
@@ -59,17 +75,23 @@ export function TutorialProvider({
         })
       },
       reset: () => {
-        startTransition(async () => {
+        startReset(async () => {
           setOptimistic(new Set())
           const { error } = await resetTutorialsAction()
 
           if (error) {
             toast.danger(error)
+          } else {
+            toast.success("Los tutoriales volverán a arrancar solos")
           }
         })
-      }
+      },
+      isResetting,
+      pendingStart,
+      requestStart: setPendingStart,
+      clearPendingStart
     }),
-    [completed, setOptimistic]
+    [completed, setOptimistic, isResetting, pendingStart, clearPendingStart]
   )
 
   return (

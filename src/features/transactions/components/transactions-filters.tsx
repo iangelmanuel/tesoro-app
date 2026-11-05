@@ -44,19 +44,13 @@ interface TransactionsFiltersProps {
   categories: Category[]
   /** Cuentas del espacio, activas y archivadas */
   accounts: AccountOption[]
-  /** Acceso a Categorías que se muestra dentro de la hoja del teléfono */
-  categoriesAction?: React.ReactNode
-  /** Controles al final de la fila principal (Verificar), con su misma altura */
-  trailing?: React.ReactNode
 }
 
 export function TransactionsFilters({
   path = TRANSACTIONS_PATH,
   filters,
   categories,
-  accounts,
-  categoriesAction,
-  trailing
+  accounts
 }: TransactionsFiltersProps) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -268,7 +262,6 @@ export function TransactionsFilters({
             </span>
           )}
         </Button>
-        {trailing}
       </div>
 
       {/* >= 768 px: el resto de filtros en la barra */}
@@ -334,9 +327,6 @@ export function TransactionsFilters({
                 >
                   {isAllMonths ? "Ver por mes" : "Todos los meses"}
                 </Button>
-                {/* Elemento del servidor: en un div propio para que React
-                    no le pida `key` dentro del array de hijos */}
-                {categoriesAction && <div>{categoriesAction}</div>}
               </Drawer.Body>
               <Drawer.Footer className="items-center justify-between gap-3">
                 {sheetFilterCount > 0 ? (

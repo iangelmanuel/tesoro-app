@@ -4,7 +4,6 @@ import { Plus } from "lucide-react"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { SITE } from "@/config/site"
 import { getAccountBalances } from "@/features/accounts/queries"
-import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
 import { getCategories } from "@/features/categories/queries"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
 import {
@@ -15,7 +14,6 @@ import { TransactionsFilters } from "@/features/transactions/components/transact
 import { TransactionsPagination } from "@/features/transactions/components/transactions-pagination"
 import { TransactionsTable } from "@/features/transactions/components/transactions-table"
 import { TransactionsTotals } from "@/features/transactions/components/transactions-totals"
-import { VerifyMovementsDialog } from "@/features/transactions/components/verify-movements-dialog"
 import { parseTransactionFilters } from "@/features/transactions/filters"
 import {
   getTransactionTotals,
@@ -91,13 +89,6 @@ async function TransactionsContent({
             </Button>
           }
         />
-        {/* En el teléfono las categorías van dentro de la hoja de filtros */}
-        <div className="hidden md:block">
-          <CategoriesSheet
-            workspaceId={workspace.id}
-            categories={categories}
-          />
-        </div>
       </div>
 
       {isEmptyWorkspace ? (
@@ -114,20 +105,6 @@ async function TransactionsContent({
             filters={filters}
             categories={categories}
             accounts={accounts}
-            categoriesAction={
-              <CategoriesSheet
-                fullWidthTrigger
-                workspaceId={workspace.id}
-                categories={categories}
-              />
-            }
-            trailing={
-              <VerifyMovementsDialog
-                workspaceId={workspace.id}
-                accounts={accounts}
-                currency={workspace.currency}
-              />
-            }
           />
           <TransactionsTotals
             totals={totals}

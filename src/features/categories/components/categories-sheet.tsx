@@ -2,8 +2,7 @@
 
 import { useActionState, useState, useTransition } from "react"
 import { Button, Drawer, Tabs, cn, toast } from "@heroui/react"
-import { Archive, ArchiveRestore, Pencil, Tags } from "lucide-react"
-import { CONTROL_BUTTON } from "@/components/dashboard/surface"
+import { Archive, ArchiveRestore, Pencil } from "lucide-react"
 import { FormField } from "@/features/auth/components/form-field"
 import {
   archiveCategory,
@@ -27,21 +26,17 @@ interface CategoriesSheetProps {
   /** Espacio dueño de las categorías propias */
   workspaceId: string
   categories: Category[]
-  /** Botón de 44 px a todo el ancho (dentro de la hoja de filtros) */
-  fullWidthTrigger?: boolean
-  /** Con open, la hoja se controla desde fuera (menú Más) y no pinta botón */
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
+  /** Se abre desde el menú Más y la hoja de acciones rápidas */
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
 export function CategoriesSheet({
   workspaceId,
   categories,
-  fullWidthTrigger = false,
   open,
   onOpenChange
 }: CategoriesSheetProps) {
-  const isControlled = open !== undefined
   const [type, setType] = useState<TransactionType>("expense")
   const [editing, setEditing] = useState<Category | null>(null)
   // Cambia tras cada guardado para remontar el formulario vacío
@@ -62,22 +57,6 @@ export function CategoriesSheet({
       isOpen={open}
       onOpenChange={onOpenChange}
     >
-      {!isControlled && (
-        <Button
-          variant={fullWidthTrigger ? "secondary" : "ghost"}
-          size={fullWidthTrigger ? "sm" : undefined}
-          fullWidth={fullWidthTrigger}
-          className={cn(
-            "min-h-11",
-            // En la barra: igual que Verificar y el mes. En la hoja, el
-            // botón secundario de siempre
-            !fullWidthTrigger && CONTROL_BUTTON
-          )}
-        >
-          <Tags />
-          Categorías
-        </Button>
-      )}
       <Drawer.Backdrop>
         <Drawer.Content placement="right">
           <Drawer.Dialog className="w-full sm:max-w-md">

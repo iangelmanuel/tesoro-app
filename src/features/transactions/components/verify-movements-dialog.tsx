@@ -1,9 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Button, Label, ListBox, Modal, Select, cn } from "@heroui/react"
-import { ListChecks } from "lucide-react"
-import { CONTROL_BUTTON } from "@/components/dashboard/surface"
+import { Button, Label, ListBox, Modal, Select } from "@heroui/react"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { loadVerifyEntries } from "../actions"
 import type { VerifyEntry } from "../queries"
@@ -20,9 +18,9 @@ interface VerifyMovementsDialogProps {
   currency: string
   /** Solo Personal ofrece el selector de cuenta */
   showAccountFilter?: boolean
-  /** Con open, el diálogo se controla desde fuera (menú Más) y no pinta botón */
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
+  /** Se abre desde el menú Más y la hoja de acciones rápidas */
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
 /**
@@ -34,32 +32,14 @@ export function VerifyMovementsDialog({
   accounts,
   currency,
   showAccountFilter = false,
-  open: controlledOpen,
+  open,
   onOpenChange
 }: VerifyMovementsDialogProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
-  const isControlled = controlledOpen !== undefined
-  const open = controlledOpen ?? uncontrolledOpen
-  const setOpen = onOpenChange ?? setUncontrolledOpen
-
   return (
     <Modal
       isOpen={open}
-      onOpenChange={setOpen}
+      onOpenChange={onOpenChange}
     >
-      {!isControlled && (
-        <Button
-          variant="ghost"
-          className={cn(
-            "min-h-11 shrink-0 max-sm:min-w-11 max-sm:px-0",
-            CONTROL_BUTTON
-          )}
-          aria-label="Verificar movimientos"
-        >
-          <ListChecks />
-          <span className="max-sm:sr-only">Verificar</span>
-        </Button>
-      )}
       <Modal.Backdrop>
         <Modal.Container
           scroll="inside"

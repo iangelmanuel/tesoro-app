@@ -51,12 +51,14 @@ export function GoalCard({
   return (
     <li
       className={`flex flex-col gap-4 ${SURFACE_ITEM} ${SURFACE_ITEM_CLICKABLE}`}
+      data-tour="goals-card"
     >
       <div className="flex items-start gap-3">
         {/* Abre el Sheet con el detalle y los aportes */}
         <button
           type="button"
           data-card-link
+          data-tour="goals-detail"
           className={`-m-1 flex min-w-0 flex-1 items-start gap-3 rounded-lg p-1 ${CARD_LINK}`}
           onClick={() => setDetailOpen(true)}
         >
@@ -93,6 +95,7 @@ export function GoalCard({
             className={`shrink-0 max-md:size-11 ${CARD_OVER_LINK}`}
             aria-label={`Acciones de ${goal.name}`}
             isDisabled={pending}
+            data-tour="goals-menu"
           >
             <EllipsisVertical />
           </Button>

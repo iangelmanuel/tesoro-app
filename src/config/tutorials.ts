@@ -406,7 +406,53 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
         "Categorías donde gastaste este mes sin un límite. Presupuéstalas desde aquí."
     }
   ],
-  goals: [],
+  goals: [
+    {
+      title: "Tus metas de ahorro",
+      description:
+        "Un viaje, un fondo de emergencia o lo que quieras. Registra tus aportes y Tesoro te dice cuánto ahorrar cada mes."
+    },
+    {
+      target: "goals-create",
+      title: "Crea una meta",
+      description:
+        "Ponle nombre, el monto que quieres juntar y, si quieres, una fecha."
+    },
+    {
+      target: "import-button",
+      title: "Importa tus aportes",
+      description: "Si llevas tus ahorros en Excel o CSV, súbelos de una vez."
+    },
+    {
+      target: "goals-card",
+      title: "Cada meta",
+      description:
+        "Lo ahorrado frente al objetivo, cuánto te falta y el aporte mensual sugerido para llegar a la fecha."
+    },
+    {
+      target: "goals-detail",
+      title: "Aporta o retira",
+      description:
+        "Toca la meta para abrir su detalle: ahí aportas, retiras y ves el historial de aportes."
+    },
+    {
+      target: "goals-menu",
+      title: "Edita, cumple o archiva",
+      description:
+        "Cambia los datos de la meta, márcala como cumplida o archívala."
+    },
+    {
+      target: "header-more",
+      title: "Aporta desde cualquier sección",
+      description: "En Más tienes Aporte a meta, sin entrar a esta página."
+    },
+    {
+      target: "goals-inactive",
+      title: "Cumplidas y archivadas",
+      description:
+        "Aquí quedan las metas que terminaste o guardaste. Puedes reactivarlas."
+    }
+  ],
   debts: [],
   reports: [],
   recommendations: []

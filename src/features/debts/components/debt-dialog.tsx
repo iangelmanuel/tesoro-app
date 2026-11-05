@@ -232,8 +232,11 @@ function DebtForm({ debt, onSaved, onCancel }: DebtFormProps) {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-end gap-2">
+        {/* min-w-0 en la celda, el campo y el input: sin él, el ancho
+            intrínseco del input más el toggle desbordan la celda y el toggle
+            se monta sobre Día de pago */}
+        <div className="flex min-w-0 flex-col gap-2">
+          <div className="flex min-w-0 items-end gap-2">
             <TextField
               name="interest_rate"
               inputMode="decimal"
@@ -244,14 +247,18 @@ function DebtForm({ debt, onSaved, onCancel }: DebtFormProps) {
               isRequired={!isCard}
               isInvalid={Boolean(errors?.interest_rate ?? errors?.rate_type)}
               validationBehavior="aria"
-              className="flex flex-1 flex-col gap-2"
+              className="flex min-w-0 flex-1 flex-col gap-2"
             >
               <Label>
                 {isCard ? "Tasa de interés (opcional)" : "Tasa de interés"}
               </Label>
-              <Input placeholder={isCard ? "28,5" : "0 si no tiene"} />
+              <Input
+                className="w-full min-w-0"
+                placeholder={isCard ? "28,5" : "0 si no tiene"}
+              />
             </TextField>
             <ToggleButtonGroup
+              className="shrink-0"
               aria-label="Tipo de tasa"
               selectionMode="single"
               disallowEmptySelection

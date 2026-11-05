@@ -10,17 +10,14 @@ import {
   TextField,
   toast
 } from "@heroui/react"
+import { AccountSelectField } from "@/components/forms/account-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { TimePickerField } from "@/components/forms/time-picker-field"
 import { amountInput } from "@/features/debts/components/field"
 import { todayISO } from "@/libs/dates"
 import { createTransfer, updateTransfer } from "../actions"
 import type { TransferFormState } from "../types"
-import {
-  type AccountOption,
-  AccountSelect,
-  selectableAccounts
-} from "./account-select"
+import { type AccountOption, selectableAccounts } from "./account-select"
 
 export interface TransferValues {
   id: string
@@ -157,7 +154,8 @@ export function TransferForm({
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <AccountSelect
+        <AccountSelectField
+          workspaceId={workspaceId}
           name="from_account_id"
           label="Desde"
           value={fromId}
@@ -167,7 +165,8 @@ export function TransferForm({
           error={errors?.from_account_id?.[0]}
         />
 
-        <AccountSelect
+        <AccountSelectField
+          workspaceId={workspaceId}
           name="to_account_id"
           label="Hacia"
           value={toId}

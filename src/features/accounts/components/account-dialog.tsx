@@ -21,6 +21,7 @@ import { ACCOUNT_KINDS, ACCOUNT_KIND_META } from "../constants"
 import type {
   AccountFormState,
   AccountKind,
+  AccountRow,
   AccountWithBalance
 } from "../types"
 
@@ -33,6 +34,8 @@ interface AccountDialogProps {
   trigger?: React.ReactNode
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  /** Recibe la cuenta creada (selects con creación la dejan seleccionada) */
+  onCreated?: (account: AccountRow) => void
 }
 
 export function AccountDialog({
@@ -40,7 +43,8 @@ export function AccountDialog({
   account,
   trigger,
   open: controlledOpen,
-  onOpenChange
+  onOpenChange,
+  onCreated
 }: AccountDialogProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
   const open = controlledOpen ?? uncontrolledOpen
@@ -72,7 +76,10 @@ export function AccountDialog({
               <AccountForm
                 workspaceId={workspaceId}
                 account={account}
-                onSaved={() => setOpen(false)}
+                onSaved={(created) => {
+                  if (created) onCreated?.(created)
+                  setOpen(false)
+                }}
                 onCancel={() => setOpen(false)}
               />
             </Modal.Body>
@@ -86,7 +93,8 @@ export function AccountDialog({
 interface AccountFormProps {
   workspaceId: string
   account?: AccountWithBalance
-  onSaved: () => void
+  /** Recibe la cuenta creada (al editar no llega) */
+  onSaved: (created?: AccountRow) => void
   onCancel: () => void
 }
 
@@ -108,7 +116,7 @@ function AccountForm({
 
     if (result.ok) {
       toast.success(isEditing ? "Cuenta actualizada" : "Cuenta creada")
-      onSaved()
+      onSaved(result.account)
     }
     return result
   }, {})
@@ -126,6 +134,9 @@ function AccountForm({
     <form
       action={formAction}
       className="flex flex-col gap-4"
+      // Puede abrirse encima de otro formulario (selects con creación): el
+      // submit no debe propagarse por el árbol de React hasta el de abajo
+      onSubmit={(event) => event.stopPropagation()}
       noValidate
     >
       <input

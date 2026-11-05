@@ -110,6 +110,7 @@ async function GoalsContent() {
           {active.map((goal) => (
             <GoalCard
               key={goal.id}
+              workspaceId={workspace.id}
               goal={goal}
               contributions={contributions[goal.id]}
               today={today}
@@ -122,6 +123,7 @@ async function GoalsContent() {
 
       {inactive.length > 0 && (
         <InactiveGoals
+          workspaceId={workspace.id}
           goals={inactive}
           contributions={contributions}
           today={today}

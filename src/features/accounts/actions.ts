@@ -119,16 +119,18 @@ export async function createAccount(
 
   const workspace = await requireWritableWorkspace(formData.get("workspace_id"))
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data: account, error } = await supabase
     .from("accounts")
     .insert({ ...parsed.data, workspace_id: workspace.id })
+    .select("*")
+    .single()
 
   if (error) {
     return { ...accountPgError(error), values }
   }
 
   revalidateWorkspacePages(workspace)
-  return { ok: true }
+  return { ok: true, account }
 }
 
 export async function updateAccount(

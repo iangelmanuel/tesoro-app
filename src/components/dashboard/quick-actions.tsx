@@ -28,10 +28,18 @@ async function QuickActionsLoader() {
     getBusinessWorkspaces()
   ])
   const targets = [
-    { id: personal.id, type: "personal" as const },
+    {
+      id: personal.id,
+      type: "personal" as const,
+      currency: personal.currency
+    },
     ...businesses
       .filter((business) => business.deletionRequestedAt === null)
-      .map((business) => ({ id: business.id, type: business.type }))
+      .map((business) => ({
+        id: business.id,
+        type: business.type,
+        currency: business.currency
+      }))
   ]
 
   const [workspaces, goals, debts, payments] = await Promise.all([
@@ -71,7 +79,7 @@ async function QuickActionsLoader() {
   )
 }
 
-/** Accesos rápidos del header: el primario del espacio y, en Personal, "Más" */
+/** Accesos rápidos del header: el primario del espacio y el menú "Más" */
 export function QuickActions() {
   return (
     // La ruta no se conoce en el shell estático: el placeholder tiene el

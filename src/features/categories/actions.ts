@@ -51,16 +51,18 @@ export async function createCategory(
     readString(formData, "workspace_id")
   )
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data: category, error } = await supabase
     .from("categories")
     .insert({ ...parsed.data, workspace_id: workspace.id })
+    .select("*")
+    .single()
 
   if (error) {
     return toFormError(error, values)
   }
 
   refresh()
-  return { ok: true }
+  return { ok: true, category }
 }
 
 // El tipo no se cambia: los movimientos de la categoría dependen de él

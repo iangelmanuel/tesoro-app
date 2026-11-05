@@ -14,6 +14,7 @@ const UNBUDGETED_GRID =
   "grid-cols-[minmax(0,1fr)_6.5rem_2.75rem] sm:grid-cols-[minmax(0,1fr)_8rem_8.5rem]"
 
 interface UnbudgetedCategoriesProps {
+  workspaceId: string
   /** Categorías de gasto con movimientos en el mes y sin presupuesto */
   rows: BudgetProgress[]
   month: BudgetMonth
@@ -23,6 +24,7 @@ interface UnbudgetedCategoriesProps {
 }
 
 export function UnbudgetedCategories({
+  workspaceId,
   rows,
   month,
   categories,
@@ -73,6 +75,7 @@ export function UnbudgetedCategories({
                 <span aria-hidden="true" />
               ) : (
                 <BudgetDialog
+                  workspaceId={workspaceId}
                   month={month}
                   categories={categories}
                   defaultCategoryId={row.categoryId}

@@ -14,6 +14,8 @@ import { GoalSummary } from "./goal-summary"
 import { useGoalAction } from "./use-goal-action"
 
 interface GoalSheetProps {
+  /** Espacio de la meta (para crear una cuenta desde el aporte) */
+  workspaceId: string
   goal: Goal
   contributions: GoalContribution[]
   /** Hoy en America/Bogota, calculado en el servidor */
@@ -30,6 +32,7 @@ interface GoalSheetProps {
  * cumplidas o archivadas son de solo lectura, con "Reactivar".
  */
 export function GoalSheet({
+  workspaceId,
   goal,
   contributions,
   today,
@@ -90,6 +93,7 @@ export function GoalSheet({
                 {isActive ? (
                   <div className="grid grid-cols-2 gap-2">
                     <ContributionDialog
+                      workspaceId={workspaceId}
                       goalId={goal.id}
                       kind="deposit"
                       accounts={accounts}
@@ -101,6 +105,7 @@ export function GoalSheet({
                       }
                     />
                     <ContributionDialog
+                      workspaceId={workspaceId}
                       goalId={goal.id}
                       kind="withdrawal"
                       accounts={accounts}

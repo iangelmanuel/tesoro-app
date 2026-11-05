@@ -70,6 +70,7 @@ async function ImportContent({
   return (
     <>
       <ImportWizard
+        workspaceId={workspace.id}
         initialTarget={parseImportTarget(query.target)}
         debts={debts}
         goals={goals}

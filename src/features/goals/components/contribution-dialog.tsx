@@ -43,6 +43,8 @@ export interface GoalOption {
 }
 
 interface ContributionDialogProps {
+  /** Espacio de la meta (para crear una cuenta desde el select) */
+  workspaceId: string
   /** Meta fija. Sin ella, el diálogo deja elegir entre `goals` */
   goalId?: string
   /** Metas activas para elegir; se usa cuando no llega `goalId` */
@@ -60,6 +62,7 @@ interface ContributionDialogProps {
 }
 
 export function ContributionDialog({
+  workspaceId,
   goalId,
   goals,
   kind = "deposit",
@@ -104,6 +107,7 @@ export function ContributionDialog({
             <Modal.Body>
               {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
               <ContributionForm
+                workspaceId={workspaceId}
                 goalId={goalId}
                 goals={goals}
                 initialKind={initialKind}
@@ -121,6 +125,7 @@ export function ContributionDialog({
 }
 
 interface ContributionFormProps {
+  workspaceId: string
   goalId?: string
   goals?: GoalOption[]
   initialKind: ContributionKind
@@ -131,6 +136,7 @@ interface ContributionFormProps {
 }
 
 function ContributionForm({
+  workspaceId,
   goalId,
   goals,
   initialKind,
@@ -317,6 +323,7 @@ function ContributionForm({
           nota. Un retiro entra a la cuenta y no lleva traspaso */}
       {!isEditing && accounts.length > 0 && (
         <PaymentAccountSection
+          workspaceId={workspaceId}
           accounts={accounts}
           amount={parsePaymentAmount(amountText)}
           errors={{

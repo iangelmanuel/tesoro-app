@@ -83,6 +83,8 @@ OKLCH → sRGB). Mínimos: 4.5:1 texto, 3:1 gráficos y foco.
 | `danger` / `background`                   | 4.88  | 6.99   |
 | `accent-foreground` / `accent` Personal   | 5.22  | 5.22   |
 | `accent-foreground` / `accent` Empresa    | 5.08  | 5.08   |
+| `accent-foreground` / `accent-hover` P.   | 6.84  | 6.84   |
+| `accent-foreground` / `accent-hover` E.   | 6.68  | 6.68   |
 | `focus` / `background` Personal           | 4.81  | 8.71   |
 | `focus` / `background` Empresa            | 4.68  | 8.28   |
 | botón `danger` (blanco / relleno)         | 4.88  | 4.83   |
@@ -165,19 +167,19 @@ estos solo agregan lo que HeroUI no trae.
 
 ### Shell del dashboard (`src/components/dashboard/`)
 
-| Pieza                                                                      | Qué hace                                                                                                                                                                                                                                                                                                                      |
-| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app-sidebar.tsx`, `sidebar/`                                              | Aside: logo → tabs Personal/Empresa → navegación; abajo Ayuda (issues de GitHub), tema y usuario                                                                                                                                                                                                                              |
-| `dashboard-title.tsx`                                                      | Único `<h1>` de la página, en el header. Saludo según la hora de Bogotá en el Resumen de Personal                                                                                                                                                                                                                             |
-| `quick-actions.tsx`, `quick-actions-menu.tsx`, `quick-actions-context.tsx` | Accesos del header: "Registrar movimiento" + "Más" (aporte, pago, importar) en Personal; "Registrar operación" en Empresa                                                                                                                                                                                                     |
-| `stat-card.tsx`                                                            | KPI: etiqueta, valor y badge de variación con color por significado (`trend`); `<dl>` accesible                                                                                                                                                                                                                               |
-| `card-heading.tsx`                                                         | Cabecera de tarjeta: `<h2>`, ayuda (i) opcional y enlace discreto con chevron                                                                                                                                                                                                                                                 |
-| `help-hint.tsx`                                                            | Ícono (i) con `Popover`; los textos viven en `src/config/help.ts` (`HELP`)                                                                                                                                                                                                                                                    |
-| `empty-state.tsx`                                                          | `EmptyState` (página): ícono, qué falta, qué hacer y la acción. `CardEmpty` (dentro de una tarjeta)                                                                                                                                                                                                                           |
-| `card-skeleton.tsx`                                                        | Placeholder con el mismo contenedor de `Card`; todo bloque que carga usa este, no un `Skeleton` suelto                                                                                                                                                                                                                        |
-| `tone.ts`                                                                  | Clases de estado (chips, barras, texto) desde tokens                                                                                                                                                                                                                                                                          |
-| `row-actions.tsx`, `delete-dialog.tsx`, `scroll-table.tsx`                 | Acciones de fila (menú en escritorio, botones en móvil), confirmación de borrado controlada y contenedor de tabla con scroll horizontal y columna de acciones fija (SPEC 20)                                                                                                                                                  |
-| `surface.ts`                                                               | Clases de superficie sin borde: `SURFACE_LIST`/`SURFACE_ROW` (lista sobre el fondo), `CARD_LIST`/`CARD_ROW` (lista dentro de una `Card`), `SURFACE_ITEM` (tarjeta de una grilla) y `SURFACE_NOTE`. Nunca `rounded-xl border` ni `border-dashed`. También `CONTROL_SURFACE` y `CONTROL_BUTTON` (controles de barra, ver Móvil) |
+| Pieza                                                                      | Qué hace                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app-sidebar.tsx`, `sidebar/`                                              | Aside: logo → tabs Personal/Empresa → navegación; abajo Ayuda (issues de GitHub), tema y usuario                                                                                                                                                                                                                                                                                                                             |
+| `dashboard-title.tsx`                                                      | Único `<h1>` de la página, en el header. Saludo según la hora de Bogotá en el Resumen de Personal                                                                                                                                                                                                                                                                                                                            |
+| `quick-actions.tsx`, `quick-actions-menu.tsx`, `quick-actions-context.tsx` | Accesos del header: "Registrar movimiento" (con tabs de pago, SPEC 25) + "Más" (aporte, pago, importar, Categorías y Verificar) en Personal; "Registrar operación" + "Más" (Categorías y Verificar) en Empresa                                                                                                                                                                                                               |
+| `stat-card.tsx`                                                            | KPI: etiqueta, valor y badge de variación con color por significado (`trend`); `<dl>` accesible                                                                                                                                                                                                                                                                                                                              |
+| `card-heading.tsx`                                                         | Cabecera de tarjeta: `<h2>`, ayuda (i) opcional y enlace discreto con chevron                                                                                                                                                                                                                                                                                                                                                |
+| `help-hint.tsx`                                                            | Ícono (i) con `Popover`; los textos viven en `src/config/help.ts` (`HELP`)                                                                                                                                                                                                                                                                                                                                                   |
+| `empty-state.tsx`                                                          | `EmptyState` (página): ícono, qué falta, qué hacer y la acción. `CardEmpty` (dentro de una tarjeta)                                                                                                                                                                                                                                                                                                                          |
+| `card-skeleton.tsx`                                                        | Placeholder con el mismo contenedor de `Card`; todo bloque que carga usa este, no un `Skeleton` suelto                                                                                                                                                                                                                                                                                                                       |
+| `tone.ts`                                                                  | Clases de estado (chips, barras, texto) desde tokens                                                                                                                                                                                                                                                                                                                                                                         |
+| `row-actions.tsx`, `delete-dialog.tsx`, `scroll-table.tsx`                 | Acciones de fila (menú en escritorio, botones en móvil), confirmación de borrado controlada y contenedor de tabla con scroll horizontal y columna de acciones fija (SPEC 20)                                                                                                                                                                                                                                                 |
+| `surface.ts`                                                               | Clases de superficie sin borde: `SURFACE_LIST`/`SURFACE_ROW` (lista sobre el fondo), `CARD_LIST`/`CARD_ROW` (lista dentro de una `Card`), `SURFACE_ITEM` (tarjeta de una grilla) y `SURFACE_NOTE`. Nunca `rounded-xl border` ni `border-dashed`. También `CONTROL_SURFACE` y `CONTROL_BUTTON` (controles de barra, ver Móvil). `SURFACE_ITEM_CLICKABLE`, `CARD_LINK` y `CARD_OVER_LINK`: tarjeta clicable completa (SPEC 25) |
 
 ### Gráficas (`src/components/charts/`)
 
@@ -281,6 +283,47 @@ Reglas:
   `github-stars.tsx`): navegación en pastilla, GitHub con estrellas (servidor,
   cacheado), toggle de tema de 44 px y botones de sesión con flecha.
 
+### Menú Más, selects con creación y tarjetas clicables (SPEC 25)
+
+- **Menú Más** (`quick-actions-menu.tsx`): en todas las páginas de un
+  espacio. Personal: Aporte a meta, Pago de deuda, Importar, **Categorías** y
+  **Verificar movimientos**. Empresa: solo Categorías y Verificar. Los dos
+  abren `CategoriesSheet` y `VerifyMovementsDialog` sobre la página actual,
+  sin navegar, y no dependen de que haya movimientos. En el teléfono están al
+  final de la hoja de acciones rápidas (`quick-sheet.tsx`), tras un
+  separador. Ambos componentes son solo controlados (`open` /
+  `onOpenChange`); no pintan botón propio.
+- **Tabs de pago** (`transaction-dialog.tsx`): el diálogo que abre
+  "Registrar movimiento" en Personal tiene **Gasto · Ingreso · Traspaso ·
+  Deuda · Gasto fijo** (prop `paymentTabs`). Deuda (pagos y avances) usa
+  `DebtPaymentPanel` (el formulario de `PaymentDialog`) y Gasto fijo elige la
+  ocurrencia (`OccurrenceSelect`) y muestra el formulario de movimiento
+  enlazado. No aparecen en Empresa, al editar ni al pagar una ocurrencia
+  concreta. Con los tabs, el diálogo sube a `max-w-lg` y el selector se
+  desplaza en horizontal en anchos chicos, sin barra visible. Aporte a meta
+  sigue en Más.
+- **Modales anidados:** la entrada de HeroUI escala el contenedor desde
+  1.05; `globals.css` pone `overflow-x: hidden` en `.modal__backdrop` para
+  que esa animación no abra un scroll horizontal ni haga saltar el diálogo.
+- **Selects con creación** (`src/components/forms/`): `CategorySelectField`
+  y `AccountSelectField` terminan con **+ Crear categoría** / **+ Crear
+  cuenta** (`CreateOption`). La opción abre `CategoryDialog` o `AccountDialog`
+  encima del formulario (Modal anidado: Escape cierra solo el de arriba y el
+  foco vuelve al select). Al guardar, la nueva queda elegida y el resto del
+  formulario no se toca; mientras llega la lista refrescada, vive en el
+  estado local del campo. La categoría hereda el tipo del formulario. Los
+  formularios de categoría y cuenta detienen la propagación del `submit` para
+  no disparar el formulario de abajo. Todo select de Categoría o Cuenta de un
+  formulario usa estos campos; la importación suma la misma opción a sus
+  selects de destino (además de "Crear «valor»", que crea al importar).
+- **Tarjetas clicables** (deudas, Me deben y metas): patrón de enlace
+  estirado. El `<li>` lleva `SURFACE_ITEM_CLICKABLE` (`relative`, hover
+  `bg-surface-secondary` y anillo de foco cuando el botón está enfocado);
+  el botón de detalle lleva `CARD_LINK` y `data-card-link`, y su `::after`
+  cubre la tarjeta. El ⋮ y las acciones internas llevan `CARD_OVER_LINK`
+  (`relative z-10`) para quedar encima. Un solo elemento abre el Sheet; Tab
+  llega a la tarjeta y luego al ⋮. Sin cambio visual salvo hover y cursor.
+
 ## Dónde vive cada pantalla
 
 | Pantalla         | Ruta                                                           | Piezas                                                                               |
@@ -359,7 +402,7 @@ Piezas en `src/components/dashboard/mobile/`:
   (`src/components/dashboard/delete-dialog.tsx`). Las tarjetas de cuentas,
   deudas y metas conservan sus botones.
 - **Controles de barra (SPEC 20):** el buscador, la pill del mes, Filtros,
-  Verificar, Categorías, los filtros en pill sin activar, el selector de
+  los filtros en pill sin activar, el selector de
   periodo y las flechas de Reportes y Presupuestos usan el mismo gris que las
   tarjetas y las tablas (`bg-surface`, hover `bg-surface-secondary`). Los
   botones son `variant="ghost"` más `CONTROL_BUTTON`, y las pills llevan
@@ -369,18 +412,16 @@ Piezas en `src/components/dashboard/mobile/`:
   Altura de 44 px en la fila de Movimientos. El filtro activo sigue en
   `accent-soft`.
 - **Filtros de Movimientos (`< 768 px`):** buscador a todo el ancho; debajo,
-  `‹ Mes ›`, el botón **Filtros** con el número de filtros activos (tipo,
-  categoría, cuenta y "Todos los meses") y **Verificar** (solo ícono por
-  debajo de 640 px). La hoja inferior (`Drawer`) trae
-  Tipo, Categoría, Cuenta, el alternador de meses y Categorías
-  (`categoriesAction`), aplica al elegir (`router.replace`) y limpia con
-  "Limpiar filtros". Desde 768 px, la fila principal es buscador (ocupa el
-  ancho libre, mínimo `18rem`) · mes · Verificar, todos de 44 px y centrados;
-  debajo van los filtros en pill. Verificar entra a la fila por la prop
-  `trailing` de `TransactionsFilters`. Los elementos del
-  servidor que se pasan por props a un componente cliente (`categoriesAction`,
-  `trigger`) van como hijo único (`<div>` o `<Fragment>`): dentro de un array de
-  hijos React pide `key`.
+  `‹ Mes ›` y el botón **Filtros** con el número de filtros activos (tipo,
+  categoría, cuenta y "Todos los meses"). La hoja inferior (`Drawer`) trae
+  Tipo, Categoría, Cuenta y el alternador de meses, aplica al elegir
+  (`router.replace`) y limpia con "Limpiar filtros". Desde 768 px, la fila
+  principal es buscador (ocupa el ancho libre, mínimo `18rem`) · mes, de 44 px
+  y centrados; debajo van los filtros en pill. **Categorías** y **Verificar**
+  ya no están en la barra (SPEC 25): viven en el menú Más del header y en la
+  hoja de acciones rápidas. Los elementos del servidor que se pasan por props
+  a un componente cliente (`trigger`) van como hijo único (`<div>` o
+  `<Fragment>`): dentro de un array de hijos React pide `key`.
 - **Números sin partirse:** `formatDate`, `formatShortDate` y
   `formatPercent` usan espacio duro (`\u00A0`), así que ninguna fecha ni
   porcentaje ocupa dos líneas. Los montos ya lo traían de `Intl`.

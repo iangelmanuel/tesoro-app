@@ -1,7 +1,11 @@
 "use client"
 
+import { useState } from "react"
 import { Button, Chip, Header, ListBox, Select, Separator } from "@heroui/react"
 import { LoaderCircle } from "lucide-react"
+import { CREATE_OPTION, CreateOption } from "@/components/forms/create-option"
+import { AccountDialog } from "@/features/accounts/components/account-dialog"
+import { CategoryDialog } from "@/features/categories/components/category-dialog"
 import { MAX_ACCOUNT_NAME_LENGTH, MAX_CATEGORY_NAME_LENGTH } from "../constants"
 import { EMPTY_LINK_LABEL } from "../normalize"
 import type {
@@ -41,7 +45,24 @@ function newAccountName(value: AccountValue) {
   return value.label.slice(0, MAX_ACCOUNT_NAME_LENGTH).trim()
 }
 
+/** Fila que pidió crear una categoría o cuenta con el diálogo */
+type CreateRequest =
+  | { kind: "category"; pair: CategoryPair }
+  | { kind: "account"; value: AccountValue }
+
+/** Suma las creadas en este paso mientras llega la lista del servidor */
+function withCreated<T extends { id: string }>(options: T[], created: T[]) {
+  return [
+    ...options,
+    ...created.filter(
+      (item) => !options.some((option) => option.id === item.id)
+    )
+  ]
+}
+
 interface CategoriesStepProps {
+  /** Espacio donde se crean categorías y cuentas desde los selects */
+  workspaceId: string
   /** Gastos fijos: solo categorías de gasto, sin la etiqueta de tipo */
   expenseOnly?: boolean
   pairs: CategoryPair[]
@@ -64,6 +85,7 @@ interface CategoriesStepProps {
 // Paso 4: cada par (tipo, valor de origen) con su número de filas y su
 // destino: una categoría existente, una nueva o "No importar"
 export function CategoriesStep({
+  workspaceId,
   expenseOnly = false,
   pairs,
   targets,
@@ -78,6 +100,17 @@ export function CategoriesStep({
   onBack,
   onNext
 }: CategoriesStepProps) {
+  // "Crear «valor»" crea al importar con el nombre del archivo. "+ Crear …"
+  // abre el diálogo para elegir nombre, icono o saldo; la nueva queda
+  // elegida en la fila que la pidió
+  const [createRequest, setCreateRequest] = useState<CreateRequest | null>(null)
+  const [createdCategories, setCreatedCategories] = useState<CategoryOption[]>(
+    []
+  )
+  const [createdAccounts, setCreatedAccounts] = useState<AccountOption[]>([])
+  const categoryOptions = withCreated(categories, createdCategories)
+  const accountOptions = withCreated(accounts, createdAccounts)
+
   const importable = pairs.filter((pair) => targets[pair.key]?.kind !== "skip")
   const rowCount = importable.reduce((total, pair) => total + pair.count, 0)
 
@@ -129,7 +162,7 @@ export function CategoriesStep({
       ) : (
         <ul className="flex flex-col divide-y rounded-lg border">
           {pairs.map((pair) => {
-            const options = categories.filter(
+            const options = categoryOptions.filter(
               (category) =>
                 category.type === pair.type &&
                 (!expenseOnly || category.type === "expense")
@@ -158,10 +191,13 @@ export function CategoriesStep({
                 </span>
                 <Select
                   value={targetValue(targets[pair.key]) || null}
-                  onChange={(key) =>
-                    key != null &&
-                    ((value) => handleChange(pair, value))(String(key))
-                  }
+                  onChange={(key) => {
+                    if (key === CREATE_OPTION) {
+                      setCreateRequest({ kind: "category", pair })
+                    } else if (key != null) {
+                      handleChange(pair, String(key))
+                    }
+                  }}
                   fullWidth
                   className="sm:w-56"
                   aria-label={`Categoría para ${pair.label}`}
@@ -199,6 +235,7 @@ export function CategoriesStep({
                         No importar
                         <ListBox.ItemIndicator />
                       </ListBox.Item>
+                      <CreateOption label="Crear categoría" />
                     </ListBox>
                   </Select.Popover>
                 </Select>
@@ -238,12 +275,13 @@ export function CategoriesStep({
                     value={
                       accountTargetValue(accountTargets[value.key]) || null
                     }
-                    onChange={(key) =>
-                      key != null &&
-                      ((selected) => handleAccountChange(value, selected))(
-                        String(key)
-                      )
-                    }
+                    onChange={(key) => {
+                      if (key === CREATE_OPTION) {
+                        setCreateRequest({ kind: "account", value })
+                      } else if (key != null) {
+                        handleAccountChange(value, String(key))
+                      }
+                    }}
                     fullWidth
                     className="sm:w-56"
                     aria-label={`Cuenta para ${label}`}
@@ -254,11 +292,11 @@ export function CategoriesStep({
                     </Select.Trigger>
                     <Select.Popover>
                       <ListBox>
-                        {accounts.length > 0 && (
+                        {accountOptions.length > 0 && (
                           <>
                             <ListBox.Section>
                               <Header>Tus cuentas</Header>
-                              {accounts.map((account) => (
+                              {accountOptions.map((account) => (
                                 <ListBox.Item
                                   key={account.id}
                                   id={`${EXISTING_PREFIX}${account.id}`}
@@ -287,6 +325,7 @@ export function CategoriesStep({
                           Sin cuenta
                           <ListBox.ItemIndicator />
                         </ListBox.Item>
+                        <CreateOption label="Crear cuenta" />
                       </ListBox>
                     </Select.Popover>
                   </Select>
@@ -322,6 +361,45 @@ export function CategoriesStep({
           Ver vista previa
         </Button>
       </div>
+
+      <CategoryDialog
+        workspaceId={workspaceId}
+        type={
+          createRequest?.kind === "category"
+            ? createRequest.pair.type
+            : "expense"
+        }
+        open={createRequest?.kind === "category"}
+        onOpenChange={(open) => {
+          if (!open) setCreateRequest(null)
+        }}
+        onCreated={(category) => {
+          if (createRequest?.kind !== "category") return
+          setCreatedCategories((current) => [
+            ...current,
+            { id: category.id, type: category.type, name: category.name }
+          ])
+          handleChange(createRequest.pair, `${EXISTING_PREFIX}${category.id}`)
+        }}
+      />
+      <AccountDialog
+        workspaceId={workspaceId}
+        open={createRequest?.kind === "account"}
+        onOpenChange={(open) => {
+          if (!open) setCreateRequest(null)
+        }}
+        onCreated={(account) => {
+          if (createRequest?.kind !== "account") return
+          setCreatedAccounts((current) => [
+            ...current,
+            { id: account.id, name: account.name }
+          ])
+          handleAccountChange(
+            createRequest.value,
+            `${EXISTING_PREFIX}${account.id}`
+          )
+        }}
+      />
     </div>
   )
 }

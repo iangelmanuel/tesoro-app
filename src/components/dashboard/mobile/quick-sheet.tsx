@@ -2,23 +2,27 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Button, Drawer, Switch } from "@heroui/react"
+import { Button, Drawer, Separator, Switch } from "@heroui/react"
 import {
   CalendarCheck,
   CreditCard,
+  ListChecks,
   Receipt,
   ShoppingBag,
+  Tags,
   Target,
   TrendingDown,
   TrendingUp
 } from "lucide-react"
 import { RECURRING_PATH } from "@/features/budgets/tabs"
+import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
 import { DEBTS_PATH } from "@/features/debts/calculations"
 import { PaymentDialog } from "@/features/debts/components/payment-dialog"
 import { ContributionDialog } from "@/features/goals/components/contribution-dialog"
 import { GOALS_PATH } from "@/features/goals/progress"
 import { PayOccurrenceDialog } from "@/features/recurring-expenses/components/pay-occurrence-dialog"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
+import { VerifyMovementsDialog } from "@/features/transactions/components/verify-movements-dialog"
 import type { TransactionType } from "@/features/transactions/filters"
 import { useQuickActions } from "../quick-actions-context"
 import { useActiveWorkspace } from "../use-active-workspace"
@@ -31,6 +35,8 @@ export type QuickSheetAction =
   | "recurring" // Personal
   | "sale"
   | "cost" // Empresa
+  | "categories"
+  | "verify" // Ambos
 
 interface ActionItem {
   id: QuickSheetAction
@@ -49,6 +55,13 @@ const PERSONAL_ACTIONS: ActionItem[] = [
 const BUSINESS_ACTIONS: ActionItem[] = [
   { id: "sale", label: "Venta", icon: ShoppingBag },
   { id: "cost", label: "Costo o gasto", icon: Receipt }
+]
+
+// Herramientas del espacio (las mismas del menú Más): van aparte, bajo las
+// acciones de registro
+const TOOL_ACTIONS: ActionItem[] = [
+  { id: "categories", label: "Categorías", icon: Tags },
+  { id: "verify", label: "Verificar movimientos", icon: ListChecks }
 ]
 
 // Tipo de movimiento que preselecciona cada acción de la hoja
@@ -115,6 +128,21 @@ export function QuickSheet({
     if (!isOpen) setDialog(null)
   }
 
+  function renderAction({ id, label, icon: Icon }: ActionItem) {
+    return (
+      <Button
+        key={id}
+        variant="secondary"
+        fullWidth
+        className="min-h-14 justify-start gap-3 text-base"
+        onPress={() => onAction(id)}
+      >
+        <Icon className="size-5" />
+        {label}
+      </Button>
+    )
+  }
+
   return (
     <>
       <Drawer
@@ -134,18 +162,9 @@ export function QuickSheet({
                 </Drawer.Heading>
               </Drawer.Header>
               <Drawer.Body className="flex flex-col gap-2">
-                {actions.map(({ id, label, icon: Icon }) => (
-                  <Button
-                    key={id}
-                    variant="secondary"
-                    fullWidth
-                    className="min-h-14 justify-start gap-3 text-base"
-                    onPress={() => onAction(id)}
-                  >
-                    <Icon className="size-5" />
-                    {label}
-                  </Button>
-                ))}
+                {actions.map(renderAction)}
+                <Separator className="my-1" />
+                {TOOL_ACTIONS.map(renderAction)}
               </Drawer.Body>
               <Drawer.Footer className="items-center justify-between gap-3">
                 <Switch
@@ -185,15 +204,31 @@ export function QuickSheet({
           onOpenChange={closeDialog}
         />
       )}
+      <CategoriesSheet
+        workspaceId={workspace.id}
+        categories={workspace.categories}
+        open={dialog === "categories"}
+        onOpenChange={closeDialog}
+      />
+      <VerifyMovementsDialog
+        workspaceId={workspace.id}
+        accounts={workspace.accounts}
+        currency={workspace.currency}
+        showAccountFilter={isPersonal}
+        open={dialog === "verify"}
+        onOpenChange={closeDialog}
+      />
       {isPersonal && (
         <>
           <ContributionDialog
+            workspaceId={workspace.id}
             goals={goals}
             accounts={workspace.accounts}
             open={dialog === "contribution"}
             onOpenChange={closeDialog}
           />
           <PaymentDialog
+            workspaceId={workspace.id}
             debts={debts}
             accounts={workspace.accounts}
             open={dialog === "payment"}

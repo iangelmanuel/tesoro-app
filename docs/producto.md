@@ -303,8 +303,17 @@ de gráficas, presupuestos, metas, deudas y score.
   del día y Verificar").
 - Se crean y editan en un diálogo, y se eliminan con confirmación. Al editar se
   puede cambiar el tipo; eso limpia la categoría.
-- El botón "Nuevo movimiento" del header, visible solo en
-  `/dashboard/personal/*`, abre el mismo diálogo desde cualquier página.
+- El botón "Registrar movimiento" del header abre el mismo diálogo desde
+  cualquier página del espacio. En Personal, al registrar, el diálogo tiene
+  además los tabs **Deuda** (pagos y avances) y **Gasto fijo** (SPEC 25): registran lo
+  mismo que la hoja de acciones rápidas del teléfono. Aporte a meta sigue en
+  el menú Más.
+- El menú **Más** del header, en Personal y Empresa, abre **Categorías** y
+  **Verificar movimientos** desde cualquier página, aunque el espacio aún no
+  tenga movimientos.
+- Todo select de Categoría o Cuenta termina con **+ Crear categoría** /
+  **+ Crear cuenta**: crea sin salir del formulario y deja la nueva elegida.
+  La categoría nueva toma el tipo del formulario.
 
 ### Categorías
 
@@ -313,8 +322,9 @@ de gráficas, presupuestos, metas, deudas y score.
   - Gastos: Vivienda, Comida, Transporte, Salud, Educación, Ocio, Servicios,
     Compras, Otros gastos.
 - **Propias** por espacio: crear, renombrar, cambiar icono y color, archivar y
-  restaurar, desde el Sheet "Categorías" de Movimientos. El tipo no cambia
-  después de crearlas.
+  restaurar, desde el Sheet "Categorías" del menú Más (o la hoja de acciones
+  rápidas en el teléfono). También se crean desde cualquier select de
+  Categoría. El tipo no cambia después de crearlas.
 - No se borran (FK `on delete restrict`, sin política `delete`): los
   movimientos históricos nunca pierden su categoría.
 - Nombre único por espacio y tipo, sin distinguir mayúsculas.

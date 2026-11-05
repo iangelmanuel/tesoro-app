@@ -10,7 +10,12 @@ import {
   Pencil
 } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
-import { SURFACE_ITEM } from "@/components/dashboard/surface"
+import {
+  CARD_LINK,
+  CARD_OVER_LINK,
+  SURFACE_ITEM,
+  SURFACE_ITEM_CLICKABLE
+} from "@/components/dashboard/surface"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { goalStatus, isReached } from "../progress"
 import type { Goal, GoalContribution } from "../queries"
@@ -22,6 +27,7 @@ import { GoalSummary } from "./goal-summary"
 import { useGoalAction } from "./use-goal-action"
 
 interface GoalCardProps {
+  workspaceId: string
   goal: Goal
   contributions: GoalContribution[]
   /** Hoy en America/Bogota, calculado en el servidor */
@@ -31,6 +37,7 @@ interface GoalCardProps {
 }
 
 export function GoalCard({
+  workspaceId,
   goal,
   contributions,
   today,
@@ -42,12 +49,15 @@ export function GoalCard({
   const { pending, run } = useGoalAction(goal)
 
   return (
-    <li className={`flex flex-col gap-4 ${SURFACE_ITEM}`}>
+    <li
+      className={`flex flex-col gap-4 ${SURFACE_ITEM} ${SURFACE_ITEM_CLICKABLE}`}
+    >
       <div className="flex items-start gap-3">
         {/* Abre el Sheet con el detalle y los aportes */}
         <button
           type="button"
-          className="-m-1 flex min-w-0 flex-1 items-start gap-3 rounded-lg p-1 text-left transition-colors hover:bg-default/50 focus-visible:ring-[3px] focus-visible:ring-focus/50 focus-visible:outline-none"
+          data-card-link
+          className={`-m-1 flex min-w-0 flex-1 items-start gap-3 rounded-lg p-1 ${CARD_LINK}`}
           onClick={() => setDetailOpen(true)}
         >
           <GoalIcon
@@ -80,7 +90,7 @@ export function GoalCard({
             variant="ghost"
             isIconOnly
             size="sm"
-            className="shrink-0 max-md:size-11"
+            className={`shrink-0 max-md:size-11 ${CARD_OVER_LINK}`}
             aria-label={`Acciones de ${goal.name}`}
             isDisabled={pending}
           >
@@ -118,6 +128,7 @@ export function GoalCard({
           onOpenChange={setEditing}
         />
         <GoalSheet
+          workspaceId={workspaceId}
           goal={goal}
           contributions={contributions}
           today={today}
@@ -142,6 +153,7 @@ export function GoalCard({
           </p>
           <Button
             size="sm"
+            className={CARD_OVER_LINK}
             isDisabled={pending}
             onPress={() => run("complete")}
           >

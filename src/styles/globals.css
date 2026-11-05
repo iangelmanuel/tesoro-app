@@ -176,6 +176,14 @@
   --accent-bright: oklch(74% 0.17 48);
 }
 
+/* La entrada de los modales de HeroUI escala el contenedor desde 1.05. Con
+   scroll="outside" el backdrop es overflow-y: auto, y eso deja el eje x
+   también en auto: durante los 250 ms de la animación aparecía un scroll
+   horizontal (y un salto), muy visible al abrir un diálogo encima de otro */
+.modal__backdrop {
+  overflow-x: hidden;
+}
+
 /* Botón de peligro en oscuro: relleno red-600 con texto blanco (≥ 4.5:1),
    igual que el resto de botones de color. --danger sigue en red-400 para
    textos y errores sobre el fondo oscuro */

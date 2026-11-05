@@ -4,7 +4,6 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { getAccountBalances } from "@/features/accounts/queries"
-import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
 import { getCategories } from "@/features/categories/queries"
 import {
   NoFilteredTransactions,
@@ -14,7 +13,6 @@ import { TransactionsFilters } from "@/features/transactions/components/transact
 import { TransactionsPagination } from "@/features/transactions/components/transactions-pagination"
 import { TransactionsTable } from "@/features/transactions/components/transactions-table"
 import { TransactionsTotals } from "@/features/transactions/components/transactions-totals"
-import { VerifyMovementsDialog } from "@/features/transactions/components/verify-movements-dialog"
 import {
   TRANSACTIONS_PATH,
   parseTransactionFilters
@@ -108,35 +106,14 @@ async function TransactionsContent({
 
   return (
     <>
-      {/* Una barra: búsqueda, mes y filtros pill; a la derecha, traspaso y
-          categorías (importar está en "Más" del header) */}
+      {/* Una barra: búsqueda, mes y filtros pill. Importar, Categorías y
+          Verificar están en "Más" del header */}
       <div className="flex flex-wrap items-start gap-2">
         <TransactionsFilters
           filters={filters}
           categories={categories}
           accounts={accounts}
-          categoriesAction={
-            <CategoriesSheet
-              fullWidthTrigger
-              workspaceId={workspace.id}
-              categories={categories}
-            />
-          }
-          trailing={
-            <VerifyMovementsDialog
-              workspaceId={workspace.id}
-              accounts={accounts}
-              currency={workspace.currency}
-              showAccountFilter
-            />
-          }
         />
-        <div className="hidden shrink-0 items-center gap-2 md:flex">
-          <CategoriesSheet
-            workspaceId={workspace.id}
-            categories={categories}
-          />
-        </div>
       </div>
       <TransactionsTotals
         totals={totals}

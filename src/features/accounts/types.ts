@@ -2,7 +2,7 @@ import type { Database } from "@/types/database"
 
 export type AccountKind = Database["public"]["Enums"]["account_kind"]
 
-type AccountRow = Database["public"]["Tables"]["accounts"]["Row"]
+export type AccountRow = Database["public"]["Tables"]["accounts"]["Row"]
 
 export type AccountWithBalance = AccountRow & {
   balance: number
@@ -21,6 +21,8 @@ export interface AccountFormState {
   fieldErrors?: Partial<Record<string, string[]>>
   /** Valores enviados, para no vaciar el formulario si hay error */
   values?: Record<string, string>
+  /** Cuenta creada: los selects con creación la dejan seleccionada */
+  account?: AccountRow
 }
 
 export type TransferFormState = AccountFormState

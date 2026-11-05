@@ -35,6 +35,8 @@ type PaymentMode = "payment" | "advance"
 export type DebtOption = Pick<Debt, "id" | "kind" | "name">
 
 interface PaymentDialogProps {
+  /** Espacio de la deuda (para crear una cuenta desde el select) */
+  workspaceId: string
   /** Deuda fija. Sin ella, el diálogo deja elegir entre `debts` */
   debt?: PaymentDebt
   /** Deudas activas para elegir; se usa cuando no llega `debt` */
@@ -54,6 +56,7 @@ interface PaymentDialogProps {
  * tarjeta
  */
 export function PaymentDialog({
+  workspaceId,
   debt: fixedDebt,
   debts,
   entry,
@@ -120,6 +123,7 @@ export function PaymentDialog({
                 <PaymentForm
                   // Cambiar de deuda reinicia el formulario (tipo y textos)
                   key={debt.id}
+                  workspaceId={workspaceId}
                   debt={debt}
                   entry={entry}
                   accounts={accounts}
@@ -132,6 +136,52 @@ export function PaymentDialog({
         </Modal.Container>
       </Modal.Backdrop>
     </Modal>
+  )
+}
+
+interface DebtPaymentPanelProps {
+  workspaceId: string
+  /** Deudas activas para elegir (tarjetas y préstamos) */
+  debts: DebtOption[]
+  accounts: PaymentAccountOption[]
+  onSaved: () => void
+  onCancel: () => void
+}
+
+/**
+ * Elegir deuda + formulario de pago, sin el Modal: tab "Pago de deuda" del
+ * diálogo de movimiento. Mismo resultado que PaymentDialog desde "Más"
+ */
+export function DebtPaymentPanel({
+  workspaceId,
+  debts,
+  accounts,
+  onSaved,
+  onCancel
+}: DebtPaymentPanelProps) {
+  // Arranca con la primera de la lista
+  const [selectedDebtId, setSelectedDebtId] = useState(() => debts[0]?.id ?? "")
+  const debt = debts.find((option) => option.id === selectedDebtId)
+
+  return (
+    <div>
+      <DebtSelect
+        debts={debts}
+        value={selectedDebtId}
+        onChange={setSelectedDebtId}
+      />
+      {debt && (
+        <PaymentForm
+          // Cambiar de deuda reinicia el formulario (tipo y textos)
+          key={debt.id}
+          workspaceId={workspaceId}
+          debt={debt}
+          accounts={accounts}
+          onSaved={onSaved}
+          onCancel={onCancel}
+        />
+      )}
+    </div>
   )
 }
 
@@ -176,6 +226,7 @@ function DebtSelect({
 }
 
 interface PaymentFormProps {
+  workspaceId: string
   debt: PaymentDebt
   entry?: DebtEntry
   accounts: PaymentAccountOption[]
@@ -196,6 +247,7 @@ function cardEffect(mode: PaymentMode, accountName: string | null) {
 }
 
 function PaymentForm({
+  workspaceId,
   debt,
   entry,
   accounts,
@@ -374,6 +426,7 @@ function PaymentForm({
           él no aplica. El avance no lleva traspaso y un abono es un ingreso */}
       {showAccount && (
         <PaymentAccountSection
+          workspaceId={workspaceId}
           accounts={accounts}
           amount={parsePaymentAmount(amountText)}
           errors={{

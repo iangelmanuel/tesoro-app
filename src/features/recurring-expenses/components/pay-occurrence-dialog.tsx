@@ -1,13 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { Button, Label, ListBox, Modal, Select } from "@heroui/react"
+import { Button, Modal } from "@heroui/react"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
-import { formatCurrency, formatDate } from "@/libs/format"
-import { OCCURRENCE_STATUS } from "../occurrences"
 import type { UpcomingPayment } from "../queries"
+import {
+  OccurrenceSelect,
+  paymentKey,
+  selectedPayment
+} from "./occurrence-select"
 
 interface PayOccurrenceDialogProps {
   workspaceId: string
@@ -19,10 +22,6 @@ interface PayOccurrenceDialogProps {
   trigger?: React.ReactNode
   open?: boolean
   onOpenChange?: (open: boolean) => void
-}
-
-function paymentKey(payment: UpcomingPayment) {
-  return `${payment.recurringExpenseId}|${payment.dueOn}`
 }
 
 // Elige una ocurrencia pendiente y abre TransactionDialog prellenado y
@@ -42,10 +41,7 @@ export function PayOccurrenceDialog({
   const [selectedKey, setSelectedKey] = useState("")
   const [transactionOpen, setTransactionOpen] = useState(false)
 
-  // Sin elección explícita arranca con la primera (la más vencida)
-  const selected =
-    payments.find((payment) => paymentKey(payment) === selectedKey) ??
-    payments[0]
+  const selected = selectedPayment(payments, selectedKey)
 
   function onContinue() {
     setOpen(false)
@@ -71,45 +67,11 @@ export function PayOccurrenceDialog({
               </Modal.Header>
               <Modal.Body>
                 <div className="flex flex-col gap-4">
-                  <Select
-                    fullWidth
-                    placeholder="Elige un pago"
-                    value={selected ? paymentKey(selected) : null}
-                    onChange={(key) =>
-                      setSelectedKey(key == null ? "" : String(key))
-                    }
-                    className="flex flex-col gap-2"
-                  >
-                    <Label>Gasto fijo</Label>
-                    <Select.Trigger>
-                      <Select.Value />
-                      <Select.Indicator />
-                    </Select.Trigger>
-                    <Select.Popover>
-                      <ListBox>
-                        {payments.map((payment) => {
-                          const key = paymentKey(payment)
-                          const text = `${payment.name} · ${formatDate(payment.dueOn)}`
-                          return (
-                            <ListBox.Item
-                              key={key}
-                              id={key}
-                              textValue={text}
-                            >
-                              <div className="flex flex-col">
-                                <span>{text}</span>
-                                <span className="text-xs text-muted tabular-nums">
-                                  {formatCurrency(payment.amount)} ·{" "}
-                                  {OCCURRENCE_STATUS[payment.status].label}
-                                </span>
-                              </div>
-                              <ListBox.ItemIndicator />
-                            </ListBox.Item>
-                          )
-                        })}
-                      </ListBox>
-                    </Select.Popover>
-                  </Select>
+                  <OccurrenceSelect
+                    payments={payments}
+                    selected={selected}
+                    onChange={setSelectedKey}
+                  />
                   <div className="flex justify-end gap-2">
                     <Button
                       variant="ghost"

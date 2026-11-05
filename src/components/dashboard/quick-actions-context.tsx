@@ -12,6 +12,8 @@ import type { WorkspaceType } from "@/features/workspaces/queries"
 export interface QuickActionsWorkspace {
   id: string
   type: WorkspaceType
+  /** Moneda del espacio (Verificar movimientos) */
+  currency: string
   categories: Category[]
   accounts: PaymentAccountOption[]
 }

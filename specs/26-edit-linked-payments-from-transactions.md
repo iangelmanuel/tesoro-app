@@ -16,6 +16,26 @@ Los usuarios reportan movimientos que no se pueden modificar, casi siempre de me
 
 Es el segundo de cuatro specs que salen del mismo pedido (ver SPEC 25).
 
+### Causa del bug (paso 1, reproducido en local)
+
+No es del gasto fijo ni del servidor: el `update` pasa en Postgres con RLS y
+triggers, y la action guarda bien ("Movimiento actualizado", la ocurrencia
+sigue pagada). El problema es que **el menú de la fila no abre**:
+
+- `SortableRow` llama a `useSortable({ disabled: !reorder?.canDrag })`.
+- Con `disabled`, dnd-kit pone `aria-disabled="true"` en el `<tr>`.
+- HeroUI estiliza `.table__row[aria-disabled="true"]` con `status-disabled`:
+  opacidad atenuada y **`pointer-events: none`**. El botón ⋮ queda
+  inalcanzable con mouse o dedo.
+- `canDrag` es falso cuando la fila es **la única de su día** a la vista, y
+  `reorder` no existe con búsqueda activa. En meses pasados casi todos los
+  días tienen un solo movimiento, por eso el reporte "casi siempre de meses
+  pasados". Afecta a cualquier fila (ingreso, gasto, traspaso, ajuste), no
+  solo a gastos fijos.
+
+Arreglo (paso 2): que la fila no reciba `aria-disabled` cuando no se puede
+arrastrar; el asa ya se oculta en ese caso.
+
 ## Alcance
 
 **Entra:**

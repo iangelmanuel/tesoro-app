@@ -450,6 +450,10 @@ export async function markDebtPaid(id: string): Promise<DebtActionResult> {
   if (debt.balance > 0) {
     return { error: HAS_BALANCE }
   }
+  // Mensual indefinida: sin saldo total, sigue activa hasta archivarla
+  if (debt.openEnded) {
+    return { error: "Un cobro mensual sin número de cuotas se archiva" }
+  }
 
   return transitionDebt(debt.id, ["active"], "paid")
 }

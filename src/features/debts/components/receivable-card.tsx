@@ -59,7 +59,7 @@ export function ReceivableCard({
   // Cobro mes a mes (SPEC 28): cuota fija; indefinida = sin saldo total
   const isMonthly = receivable.schedule === "monthly"
   const isOpenEnded = isMonthly && receivable.term_months === null
-  const zeroBalance = !isOpenEnded && hasZeroBalance(receivable)
+  const zeroBalance = hasZeroBalance(receivable)
   const monthly = isMonthly ? monthlySummary(receivable, entries, today) : null
 
   function archive() {

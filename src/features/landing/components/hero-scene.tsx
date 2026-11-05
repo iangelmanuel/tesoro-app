@@ -145,7 +145,10 @@ function Chest({ palette }: { palette: Palette }) {
   const mesh = useRef<THREE.InstancedMesh>(null)
   const group = useRef<THREE.Group>(null)
   const voxels = useMemo(() => buildVoxels(), [])
-  const start = useRef<number | null>(null)
+  // Tiempo propio: R3F reinicia `clock` al pasar `frameloop` de "never" a
+  // "always", y el cofre se volvería a armar cada vez que el hero vuelve a
+  // pantalla. Acumulando `delta` el armado ocurre una sola vez.
+  const elapsed = useRef(0)
   const pointer = useRef(new THREE.Vector2(FAR, FAR))
   const hit = useMemo(() => new THREE.Vector3(FAR, FAR, 0), [])
   const push = useMemo(() => new THREE.Vector3(), [])
@@ -193,13 +196,13 @@ function Chest({ palette }: { palette: Palette }) {
     return () => window.removeEventListener("pointermove", onMove)
   }, [gl])
 
-  useFrame(({ clock }) => {
+  useFrame((_, delta) => {
     const m = mesh.current
     const g = group.current
     if (!m || !g) return
-    const t = clock.getElapsedTime()
-    if (start.current === null) start.current = t
-    const since = t - start.current
+    // Tope al delta: tras una pausa larga no hay saltos
+    elapsed.current += Math.min(delta, 0.1)
+    const t = elapsed.current
     const inside =
       Math.abs(pointer.current.x) <= 1 && Math.abs(pointer.current.y) <= 1
 
@@ -212,7 +215,7 @@ function Chest({ palette }: { palette: Palette }) {
     }
 
     voxels.forEach((voxel, i) => {
-      const k = easeOut((since - 0.25 - voxel.delay) / ASSEMBLE)
+      const k = easeOut((t - 0.25 - voxel.delay) / ASSEMBLE)
       const offset = offsets[i]
       if (!offset) return
       // Repulsión suave alrededor del puntero, solo con el cofre armado

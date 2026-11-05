@@ -262,19 +262,25 @@ export type CreditCardInput = z.infer<typeof creditCardSchema>
 export type LoanInput = z.infer<typeof loanSchema>
 export type ReceivableInput = z.infer<typeof receivableSchema>
 
+// Casilla o campo oculto: "on" o "true" = marcado
+const checkboxField = z.preprocess(
+  (value) => value === "on" || value === "true" || value === true,
+  z.boolean()
+)
+
 // Pago de deuda o abono. La casilla de movimiento llega como "on" si está
 // marcada; en tarjetas no existe. account_id es la cuenta del movimiento
 // creado o, en una tarjeta, la del pago; vacío = fuera de las cuentas.
+// is_extra_payment marca un abono extra de tarjeta o préstamo: baja el saldo
+// pero no cubre el pago mínimo o la cuota del ciclo.
 export const paymentSchema = z
   .object({
     amount: amountField,
     occurred_on: pastDateField,
     occurred_time: timeSchema,
     note: noteField,
-    create_transaction: z.preprocess(
-      (value) => value === "on" || value === "true" || value === true,
-      z.boolean()
-    ),
+    create_transaction: checkboxField,
+    is_extra_payment: checkboxField,
     ...paymentAccountSchema.shape
   })
   .superRefine(refinePaymentAccount)

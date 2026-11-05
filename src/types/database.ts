@@ -242,6 +242,7 @@ export type Database = {
           generated: boolean
           id: string
           import_id: string | null
+          is_extra_payment: boolean
           kind: Database["public"]["Enums"]["debt_entry_kind"]
           note: string | null
           occurred_on: string
@@ -259,6 +260,7 @@ export type Database = {
           generated?: boolean
           id?: string
           import_id?: string | null
+          is_extra_payment?: boolean
           kind: Database["public"]["Enums"]["debt_entry_kind"]
           note?: string | null
           occurred_on: string
@@ -276,6 +278,7 @@ export type Database = {
           generated?: boolean
           id?: string
           import_id?: string | null
+          is_extra_payment?: boolean
           kind?: Database["public"]["Enums"]["debt_entry_kind"]
           note?: string | null
           occurred_on?: string
@@ -1172,6 +1175,7 @@ export type Database = {
           p_amount: number
           p_create_transaction: boolean
           p_debt_id: string
+          p_is_extra_payment?: boolean
           p_note: string
           p_occurred_on: string
           p_occurred_time?: string

@@ -72,7 +72,7 @@ function EntryRow({
     : isAdvance
       ? "Avance"
       : isPayment
-        ? debt.kind === "receivable"
+        ? debt.kind === "receivable" || entry.is_extra_payment
           ? "Abono"
           : "Pago"
         : "Ajuste"

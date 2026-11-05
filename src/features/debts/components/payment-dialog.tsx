@@ -42,9 +42,11 @@ export type EditableDebtEntry = Pick<
   | "occurred_time"
   | "note"
   | "transaction_id"
+  | "is_extra_payment"
 >
 
-type PaymentMode = "payment" | "advance"
+/** Pago del ciclo, abono extra o avance (solo tarjeta) */
+type PaymentMode = "payment" | "extra" | "advance"
 
 /** Deuda que se puede elegir en el diálogo (acceso rápido del header) */
 export type DebtOption = Pick<Debt, "id" | "kind" | "name">
@@ -97,7 +99,7 @@ export function PaymentDialog({
     ? "cuota de manejo"
     : isAdvanceEntry
       ? "avance"
-      : kind === "receivable"
+      : kind === "receivable" || entry?.is_extra_payment
         ? "abono"
         : "pago"
 
@@ -249,16 +251,26 @@ interface PaymentFormProps {
   onCancel: () => void
 }
 
-// Efecto real del pago o avance de una tarjeta según la cuenta elegida
+// Un abono baja el saldo, pero el mínimo o la cuota del mes sigue pendiente
+const EXTRA_EFFECT =
+  "No cubre el pago del mes: el próximo pago sigue pendiente."
+
+// Efecto real del pago, abono o avance de una tarjeta según la cuenta elegida
 function cardEffect(mode: PaymentMode, accountName: string | null) {
   if (mode === "advance") {
     return accountName
       ? `Entra dinero a ${accountName} y sube la deuda de la tarjeta. No cuenta como ingreso.`
       : "El avance no toca tus cuentas: solo sube el saldo de la tarjeta."
   }
-  return accountName
+  const effect = accountName
     ? `Mueve dinero de ${accountName} a la tarjeta. No cuenta como gasto.`
-    : "Este pago no toca tus cuentas: solo baja el saldo de la tarjeta. Las compras ya son gasto."
+    : `Este ${mode === "extra" ? "abono" : "pago"} no toca tus cuentas: solo baja el saldo de la tarjeta. Las compras ya son gasto.`
+  return mode === "extra" ? `${effect} ${EXTRA_EFFECT}` : effect
+}
+
+function initialMode(entry: EditableDebtEntry | undefined): PaymentMode {
+  if (entry?.kind === "advance") return "advance"
+  return entry?.is_extra_payment ? "extra" : "payment"
 }
 
 function PaymentForm({
@@ -272,11 +284,14 @@ function PaymentForm({
   const isEditing = entry !== undefined
   const isReceivable = debt.kind === "receivable"
   const isCard = debt.kind === "credit_card"
-  const [mode, setMode] = useState<PaymentMode>(
-    entry?.kind === "advance" ? "advance" : "payment"
-  )
+  const [mode, setMode] = useState<PaymentMode>(() => initialMode(entry))
   const isAdvance = mode === "advance"
+  const isExtra = mode === "extra"
   const isFee = entry?.kind === "fee"
+  // Pago / Abono en tarjetas y préstamos, también al editar un pago; el
+  // avance solo se elige al registrar en una tarjeta
+  const canBeExtra = !isReceivable && (!isEditing || entry?.kind === "payment")
+  const canAdvance = isCard && !isEditing
   const [occurredOn, setOccurredOn] = useState(
     () => entry?.occurred_on ?? todayISO()
   )
@@ -295,7 +310,11 @@ function PaymentForm({
         : await recordPayment(prevState, formData)
 
     if (result.ok) {
-      const noun = isAdvance ? "Avance" : isReceivable ? "Abono" : "Pago"
+      const noun = isAdvance
+        ? "Avance"
+        : isReceivable || isExtra
+          ? "Abono"
+          : "Pago"
       toast.success(
         isFee
           ? "Cuota actualizada"
@@ -343,24 +362,42 @@ function PaymentForm({
         />
       )}
 
-      {isCard && !isEditing && (
+      {canBeExtra && (
         <Tabs
           selectedKey={mode}
           onSelectionChange={(key) => setMode(key as PaymentMode)}
         >
           <Tabs.ListContainer>
-            <Tabs.List aria-label="Tipo de movimiento de la tarjeta">
+            <Tabs.List
+              aria-label={
+                isCard ? "Tipo de movimiento de la tarjeta" : "Tipo de pago"
+              }
+            >
               <Tabs.Tab id="payment">
                 Pago
                 <Tabs.Indicator />
               </Tabs.Tab>
-              <Tabs.Tab id="advance">
-                Avance
+              <Tabs.Tab id="extra">
+                Abono
                 <Tabs.Indicator />
               </Tabs.Tab>
+              {canAdvance && (
+                <Tabs.Tab id="advance">
+                  Avance
+                  <Tabs.Indicator />
+                </Tabs.Tab>
+              )}
             </Tabs.List>
           </Tabs.ListContainer>
         </Tabs>
+      )}
+
+      {canBeExtra && (
+        <input
+          type="hidden"
+          name="is_extra_payment"
+          value={isExtra ? "true" : "false"}
+        />
       )}
 
       <TextField
@@ -413,7 +450,9 @@ function PaymentForm({
               ? "Avance en cajero"
               : isReceivable
                 ? "Primer abono"
-                : "Cuota de noviembre"
+                : isExtra
+                  ? "Abono a capital"
+                  : "Cuota de noviembre"
           }
         />
         <FieldError>{errors?.note?.[0]}</FieldError>
@@ -460,6 +499,12 @@ function PaymentForm({
       {!isEditing && isCard && (
         <p className="rounded-lg bg-default p-3 text-sm text-muted">
           {cardEffect(mode, accountName)}
+        </p>
+      )}
+
+      {(isEditing || !isCard) && isExtra && (
+        <p className="rounded-lg bg-default p-3 text-sm text-muted">
+          Baja el saldo de la deuda. {EXTRA_EFFECT}
         </p>
       )}
 

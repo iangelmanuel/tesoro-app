@@ -36,6 +36,7 @@ const ARCHIVED_ACCOUNT = "La cuenta está archivada"
 const ADVANCE_ONLY_CARD = "Solo una tarjeta admite avances"
 const SAME_TRANSFER_ACCOUNT = "Elige una cuenta distinta a la que paga"
 const RECEIVABLE_TRANSFER = "Un abono no admite traspaso"
+const RECEIVABLE_EXTRA = "Una cuenta por cobrar no tiene abonos extra"
 
 const DEBT_FIELDS: Record<DebtKind, readonly string[]> = {
   credit_card: [
@@ -71,6 +72,7 @@ const PAYMENT_FIELDS = [
   "occurred_time",
   "note",
   "create_transaction",
+  "is_extra_payment",
   "account_id",
   "transfer_from",
   "transfer_amount"
@@ -188,7 +190,7 @@ async function findEntry(entryId: string) {
   const supabase = await createClient()
   const { data } = await supabase
     .from("debt_entries")
-    .select("id, debt_id, kind, amount")
+    .select("id, debt_id, kind, amount, is_extra_payment")
     .eq("id", entryId)
     .eq("workspace_id", workspace.id)
     .maybeSingle()
@@ -420,6 +422,9 @@ export async function recordPayment(
   if (debt.kind === "receivable" && parsed.data.transfer_from) {
     return { fieldErrors: { transfer_from: [RECEIVABLE_TRANSFER] }, values }
   }
+  if (debt.kind === "receivable" && parsed.data.is_extra_payment) {
+    return { error: RECEIVABLE_EXTRA, values }
+  }
 
   // Cuenta del pago: la de la entrada en una tarjeta y la del movimiento en
   // un préstamo o una cuenta por cobrar. Sin movimiento no aplica.
@@ -444,7 +449,8 @@ export async function recordPayment(
       : undefined,
     p_transfer_amount: hasTransfer
       ? (parsed.data.transfer_amount ?? undefined)
-      : undefined
+      : undefined,
+    p_is_extra_payment: parsed.data.is_extra_payment
   })
 
   if (error) {
@@ -508,8 +514,9 @@ export async function recordAdvance(
   return { ok: true }
 }
 
-// Edita un pago, un avance, una cuota de manejo o un ajuste. En un pago se cambian monto, fecha y nota (el
-// trigger copia monto y fecha a su movimiento). En un ajuste, el formulario
+// Edita un pago, un avance, una cuota de manejo o un ajuste. En un pago se
+// cambian monto, fecha, nota y si es un abono extra (el trigger copia monto y
+// fecha a su movimiento). En un ajuste, el formulario
 // pide el saldo real como en "Actualizar saldo" y el ajuste se recalcula
 // sobre el saldo sin él.
 export async function updateEntry(
@@ -535,6 +542,7 @@ export async function updateEntry(
     occurred_on: string
     occurred_time: string | null
     note: string | null
+    is_extra_payment?: boolean
   }
   let values: Record<string, string>
 
@@ -569,8 +577,12 @@ export async function updateEntry(
       return { fieldErrors: { amount: [OVER_PAYMENT] }, values }
     }
 
-    const { amount, occurred_on, occurred_time, note } = payment.parsed.data
-    update = { amount, occurred_on, occurred_time, note }
+    const { amount, occurred_on, occurred_time, note, is_extra_payment } =
+      payment.parsed.data
+    if (entry.debt.kind === "receivable" && is_extra_payment) {
+      return { error: RECEIVABLE_EXTRA, values }
+    }
+    update = { amount, occurred_on, occurred_time, note, is_extra_payment }
   } else {
     values = readValues(formData, ADJUST_FIELDS)
     const parsed = adjustBalanceSchema.safeParse(values)

@@ -3,7 +3,7 @@
 > **Estado:** Implementado
 > **Depende de:** SPEC 02, SPEC 04, SPEC 05, SPEC 06, SPEC 16, SPEC 19
 > **Fecha:** 2026-11-04
-> **Objetivo:** Que todo movimiento vinculado (pago o avance de tarjeta, pago de préstamo o cobro de Me deben, aporte o retiro de meta y pago de gasto fijo) se pueda editar y eliminar desde Movimientos y que el cambio se refleje en la deuda, la meta o el gasto fijo de origen.
+> **Objetivo:** Que todo movimiento vinculado (pago o avance de tarjeta, pago de préstamo o cobro de Me deben, aporte o retiro de meta y pago de gasto fijo) se pueda editar y eliminar desde Movimientos y que el cambio se refleje en la deuda, la meta o el gasto fijo de origen. Ampliación (2026-11-05): registrar **abonos extra** a tarjetas y préstamos que bajan el saldo sin cubrir el pago del mes.
 
 ## Por qué existe este spec
 
@@ -36,6 +36,18 @@ sigue pagada). El problema es que **el menú de la fila no abre**:
 Arreglo (paso 2): que la fila no reciba `aria-disabled` cuando no se puede
 arrastrar; el asa ya se oculta en ese caso.
 
+### Ampliación: abono extra (2026-11-05)
+
+Un usuario registró un abono de $ 140.000 a su tarjeta un día después del
+vencimiento y el próximo pago salió "Pagado". Tesoro no distinguía un abono
+de un pago: `debt_overview` suma en `paid_current_cycle` todo pago entre el
+vencimiento anterior y hoy, y si llega al mínimo marca el ciclo como pagado.
+En el banco, un abono baja la deuda pero el siguiente extracto igual trae su
+pago mínimo.
+
+Se descartó usar la fecha de corte para separar abonos de pagos: el usuario
+prefirió decirlo explícitamente con un tab **Abono** al registrar.
+
 ## Alcance
 
 **Entra:**
@@ -57,6 +69,12 @@ arrastrar; el asa ya se oculta en ese caso.
 - **Revalidación:** al guardar o eliminar se revalidan Movimientos, Cuentas, Resumen y la página de origen (Deudas, Metas o Gastos fijos).
 - **Corrección de datos existentes:** migración que detecta abonos cuyo `amount`, `occurred_on` u `occurred_time` no coincidan con su movimiento enlazado y los alinea con el **movimiento** (lo que el usuario editó por última vez). Abonos con `transaction_id` nulo que antes tenían movimiento no se pueden detectar y quedan como están.
 - Documentar en `docs/producto.md` (qué se edita desde dónde); anotar en `[Unreleased]` del `CHANGELOG.md` (en inglés).
+- **Abono extra (ampliación):**
+  - Columna `debt_entries.is_extra_payment` (solo en `kind = 'payment'`). Baja el saldo como cualquier pago, pero `debt_overview` lo excluye de `paid_current_cycle` y `paid_previous_cycle`: no marca el ciclo como pagado ni quita el "Vencido".
+  - Tab **Abono** en `PaymentForm`: Pago · Abono · Avance en tarjetas y Pago · Abono en préstamos. Como todos los accesos usan `PaymentForm`, aparece en el botón de la deuda, **Más → Pago de deuda**, la hoja de acciones del móvil y el tab **Deuda** del diálogo de movimiento.
+  - Al editar un pago (desde Deudas o Movimientos) se puede pasar de Pago a Abono y al revés.
+  - Cuentas por cobrar sin abono extra (no tienen ciclo): lo rechazan `record_debt_payment` y las actions.
+  - Etiquetas "Abono" en el historial, el toast y Movimientos ("Abono a tarjeta" en la fila gris).
 
 **Fuera de alcance (para otros specs):**
 
@@ -67,7 +85,7 @@ arrastrar; el asa ya se oculta en ese caso.
 
 ## Modelo de datos
 
-No hay tablas ni columnas nuevas. Cambian la consulta y una migración de corrección:
+Sin tablas nuevas. Cambian la consulta, una migración de corrección y, con la ampliación, una columna:
 
 ```ts
 // src/features/transactions/queries.ts — fila de movimiento
@@ -90,6 +108,17 @@ where e.transaction_id = t.id
       is distinct from (t.amount, t.occurred_on, t.occurred_time);
 ```
 
+```sql
+-- supabase/migrations/20261105120000_debt_extra_payments.sql (ampliación)
+alter table public.debt_entries
+  add column is_extra_payment boolean not null default false;
+alter table public.debt_entries
+  add constraint debt_entries_extra_payment_check
+  check (not is_extra_payment or kind = 'payment');
+-- record_debt_payment(..., p_is_extra_payment boolean default false)
+-- debt_overview: cycle_paid une solo pagos con not e.is_extra_payment
+```
+
 La migración se revisa contra los triggers de `debt_entries` (saldo no negativo, cuenta activa): si alguna fila los viola, se reporta y se deja sin tocar en lugar de fallar toda la migración.
 
 ## Plan de implementación
@@ -104,7 +133,8 @@ La migración se revisa contra los triggers de `debt_entries` (saldo no negativo
 8. **Revalidación.** Revisar que `updateEntry`, `deleteEntry`, `updateContribution` y `deleteContribution` revaliden Movimientos además de su página.
 9. **Migración de corrección.** Crear, probar en local (`supabase db reset`) y regenerar `src/types/database.ts` si cambia algo.
 10. **Docs y CHANGELOG.**
-11. **Verificación.** `pnpm next typegen`, `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm build`.
+11. **Abono extra (ampliación).** Migración `debt_extra_payments`, tipos en `src/types/database.ts`, `paymentSchema` con `is_extra_payment`, `recordPayment` y `updateEntry` lo guardan, tab **Abono** en `PaymentForm`, `is_extra_payment` en `LinkedDebtEntry` y en las filas grises de Movimientos, etiquetas "Abono".
+12. **Verificación.** `pnpm next typegen`, `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm build`.
 
 ## Criterios de aceptación
 
@@ -119,6 +149,10 @@ La migración se revisa contra los triggers de `debt_entries` (saldo no negativo
 - [x] Llamar a `updateTransaction` o `deleteTransaction` con un movimiento enlazado a un abono devuelve error y no cambia nada.
 - [x] Las filas grises siguen fuera de los totales de Movimientos.
 - [x] Tras la migración, ningún abono con `transaction_id` difiere de su movimiento en monto, fecha u hora (salvo los reportados por violar un trigger).
+- [x] Un abono a una tarjeta baja el saldo y el próximo pago sigue "Pendiente" aunque el abono supere el mínimo.
+- [x] El tab **Abono** aparece en tarjetas y préstamos desde el botón de la deuda, **Más**, la hoja móvil y el tab **Deuda** del diálogo de movimiento; no aparece en cuentas por cobrar.
+- [x] Editar un pago y cambiarlo a Abono pasa el próximo pago de "Pagado" a "Pendiente" (y al revés).
+- [x] El historial y Movimientos muestran "Abono" para los abonos extra.
 
 Verificado con Playwright y SQL contra Supabase local (usuario demo, meses
 pasados). Dos casos se cubrieron por la ruta compartida y no de punta a punta:
@@ -133,6 +167,8 @@ probado) y eliminar un aporte (misma `deleteContribution` que usa Metas).
 - **Sí:** rechazar con error si la edición viola las reglas de la deuda (decisión del usuario). Mismas reglas que al registrar.
 - **Sí:** alinear el desfase histórico con el movimiento. Motivo: es lo último que el usuario editó y lo que ve en Movimientos.
 - **No:** alinear `account_id` en la migración (decisión del usuario, paso 9). En préstamos y cuentas por cobrar la cuenta vive solo en el movimiento: `check_debt_entry` exige `account_id` nulo en el abono, así que no hay desfase posible. **Sí** se alinea `occurred_time`, que el trigger sincroniza desde SPEC 19.
+- **Sí:** abono extra como un pago con `is_extra_payment` en vez de un `debt_entry_kind` nuevo. Motivo: saldo, cuentas, traspasos, sincronización con el movimiento, Movimientos y score ya tratan `payment`; solo el ciclo cambia.
+- **No:** usar la fecha de corte para separar abonos de pagos (decisión del usuario): el tipo se elige al registrar.
 - **No:** permitir cambiar la deuda o meta de destino al editar. Complica saldos y validaciones; se elimina y se registra de nuevo.
 
 ## Riesgos

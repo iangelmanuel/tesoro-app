@@ -130,8 +130,8 @@ function describeAccountMovement(entry: AccountMovementEntry) {
   switch (entry.kind) {
     case "debt_payment":
       return {
-        title: `Pago · ${entry.name}`,
-        type: "Pago de tarjeta",
+        title: `${entry.is_extra_payment ? "Abono" : "Pago"} · ${entry.name}`,
+        type: entry.is_extra_payment ? "Abono a tarjeta" : "Pago de tarjeta",
         icon: CreditCard,
         increases: false
       }
@@ -716,7 +716,7 @@ function AccountMovementRow({
             label={title}
             remove={{
               title: `¿Eliminar este ${type.toLowerCase()}?`,
-              success: `${entry.kind === "debt_advance" ? "Avance" : "Pago"} eliminado`,
+              success: `${entry.kind === "debt_advance" ? "Avance" : entry.is_extra_payment ? "Abono" : "Pago"} eliminado`,
               onDelete: () => deleteEntry(entry.id)
             }}
             renderEdit={(dialog) => (
@@ -731,7 +731,8 @@ function AccountMovementRow({
                   occurred_on: entry.occurred_on,
                   occurred_time: entry.occurred_time,
                   note: entry.note,
-                  transaction_id: null
+                  transaction_id: null,
+                  is_extra_payment: entry.is_extra_payment
                 }}
                 open={dialog.open}
                 onOpenChange={dialog.onOpenChange}

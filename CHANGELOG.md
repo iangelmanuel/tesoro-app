@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Extra payments ("Abono") on credit cards and loans (SPEC 26): new **Abono** tab in the payment dialog (Pago · Abono · Avance on cards, Pago · Abono on loans), in every entry point (debt sheet, **Más → Pago de deuda**, phone quick-actions sheet and the **Deuda** tab of the movement dialog). An extra payment lowers the balance like any payment but does not cover the cycle's minimum payment or installment, so the next payment stays "Pendiente". Editing a payment can switch it between Pago and Abono. Migration `debt_extra_payments` adds `debt_entries.is_extra_payment`, a `p_is_extra_payment` parameter to `record_debt_payment` and excludes extra payments from the cycle sums in `debt_overview`. History, Movimientos and toasts label them "Abono".
 - Edit linked payments from Movimientos (SPEC 26):
   - Gray rows (card payments and advances, goal contributions and withdrawals) now have Edit and Delete, on desktop and phone. They open the debt's `PaymentDialog` or the goal's `ContributionDialog` in edit mode and delete with `deleteEntry` / `deleteContribution`, so the card balance and goal progress follow. They still stay out of the totals.
   - A loan payment or receivable collection movement opens its debt entry's `PaymentDialog` (the entry is the source of truth; the existing trigger syncs the movement) and deleting it removes entry and movement together. `getTransactions` now returns the linked `debt_entry` and the parent `debt_id` / `goal_id` of gray rows.

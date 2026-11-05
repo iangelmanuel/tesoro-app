@@ -54,6 +54,7 @@ export type LinkedDebtEntry = Pick<
   | "occurred_time"
   | "note"
   | "transaction_id"
+  | "is_extra_payment"
 > & {
   debt_kind: DebtKind
 }
@@ -109,6 +110,8 @@ export type LedgerEntry = LedgerOrder &
         name: string
         /** Deuda o meta de origen; el diálogo de edición la necesita */
         parent_id: string
+        /** Pago de tarjeta que es un abono extra (no cubre el mínimo) */
+        is_extra_payment: boolean
       }
   )
 
@@ -219,15 +222,15 @@ export async function getTransactions(
       .filter((row) => kinds.includes(row.kind as string))
       .map((row) => row.id as string)
 
-  const [links, debtIds, goalIds] = await Promise.all([
+  const [links, debtParents, goalParents] = await Promise.all([
     getTransactionLinks(idsOf(TRANSACTION_TYPES)),
     getParentIds("debt_entries", idsOf(["debt_payment", "debt_advance"])),
     getParentIds("goal_contributions", idsOf(["goal_contribution"]))
   ])
-  const parentIds = new Map([...debtIds, ...goalIds])
+  const parents = new Map([...debtParents, ...goalParents])
 
   return {
-    rows: data.map((row) => toLedgerEntry(row, links, parentIds)),
+    rows: data.map((row) => toLedgerEntry(row, links, parents)),
     count: count ?? 0
   }
 }
@@ -249,7 +252,7 @@ async function getTransactionLinks(ids: string[]) {
   const { data, error } = await supabase
     .from("transactions")
     .select(
-      "id, recurring_expense_id, debt_entries(id, debt_id, workspace_id, kind, amount, occurred_on, occurred_time, note, transaction_id, debts(kind))"
+      "id, recurring_expense_id, debt_entries(id, debt_id, workspace_id, kind, amount, occurred_on, occurred_time, note, transaction_id, is_extra_payment, debts(kind))"
     )
     .in("id", ids)
 
@@ -272,6 +275,7 @@ async function getTransactionLinks(ids: string[]) {
             occurred_time: entry.occurred_time,
             note: entry.note,
             transaction_id: entry.transaction_id,
+            is_extra_payment: entry.is_extra_payment,
             debt_kind: entry.debts.kind
           }
         : null
@@ -280,33 +284,51 @@ async function getTransactionLinks(ids: string[]) {
   return links
 }
 
+/** Deuda o meta de un pago, avance o aporte, y si el pago es un abono extra */
+interface ParentLink {
+  parentId: string
+  isExtraPayment: boolean
+}
+
 // Deuda o meta de los pagos, avances y aportes de la página: id → padre
 async function getParentIds(
   table: "debt_entries" | "goal_contributions",
   ids: string[]
 ) {
-  const parents = new Map<string, string>()
+  const parents = new Map<string, ParentLink>()
   if (ids.length === 0) {
     return parents
   }
 
   const supabase = await createClient()
-  const { data, error } =
-    table === "debt_entries"
-      ? await supabase
-          .from("debt_entries")
-          .select("id, parent_id:debt_id")
-          .in("id", ids)
-      : await supabase
-          .from("goal_contributions")
-          .select("id, parent_id:goal_id")
-          .in("id", ids)
+  if (table === "debt_entries") {
+    const { data, error } = await supabase
+      .from("debt_entries")
+      .select("id, parent_id:debt_id, is_extra_payment")
+      .in("id", ids)
+
+    if (error) {
+      throw new Error("No se pudieron cargar los movimientos")
+    }
+    for (const row of data) {
+      parents.set(row.id, {
+        parentId: row.parent_id,
+        isExtraPayment: row.is_extra_payment
+      })
+    }
+    return parents
+  }
+
+  const { data, error } = await supabase
+    .from("goal_contributions")
+    .select("id, parent_id:goal_id")
+    .in("id", ids)
 
   if (error) {
     throw new Error("No se pudieron cargar los movimientos")
   }
   for (const row of data) {
-    parents.set(row.id, row.parent_id)
+    parents.set(row.id, { parentId: row.parent_id, isExtraPayment: false })
   }
   return parents
 }
@@ -315,7 +337,7 @@ async function getParentIds(
 function toLedgerEntry(
   row: LedgerEntryRow,
   links: Map<string, TransactionLinks>,
-  parentIds: Map<string, string>
+  parents: Map<string, ParentLink>
 ): LedgerEntry {
   const id = row.id as string
   const amount = Number(row.amount)
@@ -359,7 +381,8 @@ function toLedgerEntry(
       note: row.note,
       account_id: row.account_id as string,
       name: row.description ?? "",
-      parent_id: parentIds.get(id) ?? ""
+      parent_id: parents.get(id)?.parentId ?? "",
+      is_extra_payment: parents.get(id)?.isExtraPayment ?? false
     }
   }
 

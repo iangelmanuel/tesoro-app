@@ -323,7 +323,7 @@ su origen, que valida igual que al registrar y recalcula el saldo:
 
 | Fila en Movimientos                  | Editar abre                        | Eliminar                                              |
 | ------------------------------------ | ---------------------------------- | ----------------------------------------------------- |
-| Pago o avance de tarjeta (gris)      | Diálogo del pago o avance          | `deleteEntry`                                         |
+| Pago, abono o avance de tarjeta      | Diálogo del pago o avance          | `deleteEntry`                                         |
 | Aporte o retiro de meta (gris)       | Diálogo del aporte                 | `deleteContribution`                                  |
 | Pago de préstamo o cobro de Me deben | Diálogo del pago (el abono manda)  | `deleteEntry`: borra abono y movimiento               |
 | Pago de gasto fijo                   | Diálogo del movimiento (tipo fijo) | `deleteTransaction`: la ocurrencia vuelve a pendiente |
@@ -860,6 +860,9 @@ requerido), evaluado en este orden:
 - Un pago tardío (después de `D_b`) quita el "Vencido" y cuenta para el ciclo
   actual, así que puede marcarlo "Pagado". La app no reparte pagos entre
   ciclos.
+- Los **abonos extra** (`debt_entries.is_extra_payment`) no cuentan para el
+  ciclo: bajan el saldo, pero el próximo pago sigue "Pendiente" hasta que se
+  registra un **Pago**. Ver "Abono extra".
 - Una tarjeta sin pago mínimo muestra solo la fecha, sin estado.
 
 Utilización de una tarjeta (los umbrales siguen la referencia usual de las
@@ -1129,10 +1132,29 @@ orígenes nuevos.
 **Avance de tarjeta**
 
 - Solo en tarjetas (la BD lo rechaza en préstamos y cuentas por cobrar). El
-  diálogo de pago tiene los tabs **Pago** y **Avance**.
+  diálogo de pago tiene los tabs **Pago**, **Abono** y **Avance**.
 - Sube el saldo de la tarjeta y, con cuenta, el de la cuenta. No lleva
   traspaso. Una comisión o interés propio del avance se corrige con
   "Actualizar saldo".
+
+**Abono extra** (SPEC 26)
+
+- Un abono es plata que el usuario mete a la tarjeta o al préstamo fuera de
+  la cuota del mes. Es un pago (`kind = 'payment'`) con
+  `is_extra_payment = true`: baja el saldo, cuenta en `paid_total` y lleva
+  cuenta y traspaso igual que un pago.
+- **No cubre el pago del ciclo:** `debt_overview` lo excluye de
+  `paid_current_cycle` y `paid_previous_cycle`. El estado del próximo pago no
+  pasa a "Pagado" por un abono.
+- Tab **Abono** en el diálogo de pago de tarjetas (Pago · Abono · Avance) y
+  préstamos (Pago · Abono), en todos los accesos: botón de la deuda, **Más →
+  Pago de deuda**, hoja de acciones del móvil y tab **Deuda** del diálogo de
+  movimiento. Al editar un pago se puede pasar de Pago a Abono y al revés.
+- En una cuenta por cobrar no aplica: todo lo que entra ya es un abono y no
+  hay ciclo. La BD (`record_debt_payment`) y las actions lo rechazan.
+- El historial, Movimientos y el toast lo llaman "Abono" ("Abono a tarjeta" en
+  la fila gris). El movimiento de un abono a préstamo se describe "Abono
+  <deuda>".
 
 **Sección de cuenta** (`PaymentAccountSection`)
 

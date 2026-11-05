@@ -29,13 +29,19 @@ interface CategoriesSheetProps {
   categories: Category[]
   /** Botón de 44 px a todo el ancho (dentro de la hoja de filtros) */
   fullWidthTrigger?: boolean
+  /** Con open, la hoja se controla desde fuera (menú Más) y no pinta botón */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export function CategoriesSheet({
   workspaceId,
   categories,
-  fullWidthTrigger = false
+  fullWidthTrigger = false,
+  open,
+  onOpenChange
 }: CategoriesSheetProps) {
+  const isControlled = open !== undefined
   const [type, setType] = useState<TransactionType>("expense")
   const [editing, setEditing] = useState<Category | null>(null)
   // Cambia tras cada guardado para remontar el formulario vacío
@@ -52,21 +58,26 @@ export function CategoriesSheet({
   }
 
   return (
-    <Drawer>
-      <Button
-        variant={fullWidthTrigger ? "secondary" : "ghost"}
-        size={fullWidthTrigger ? "sm" : undefined}
-        fullWidth={fullWidthTrigger}
-        className={cn(
-          "min-h-11",
-          // En la barra: igual que Verificar y el mes. En la hoja, el
-          // botón secundario de siempre
-          !fullWidthTrigger && CONTROL_BUTTON
-        )}
-      >
-        <Tags />
-        Categorías
-      </Button>
+    <Drawer
+      isOpen={open}
+      onOpenChange={onOpenChange}
+    >
+      {!isControlled && (
+        <Button
+          variant={fullWidthTrigger ? "secondary" : "ghost"}
+          size={fullWidthTrigger ? "sm" : undefined}
+          fullWidth={fullWidthTrigger}
+          className={cn(
+            "min-h-11",
+            // En la barra: igual que Verificar y el mes. En la hoja, el
+            // botón secundario de siempre
+            !fullWidthTrigger && CONTROL_BUTTON
+          )}
+        >
+          <Tags />
+          Categorías
+        </Button>
+      )}
       <Drawer.Backdrop>
         <Drawer.Content placement="right">
           <Drawer.Dialog className="w-full sm:max-w-md">

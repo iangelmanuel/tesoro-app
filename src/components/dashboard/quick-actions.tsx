@@ -28,10 +28,18 @@ async function QuickActionsLoader() {
     getBusinessWorkspaces()
   ])
   const targets = [
-    { id: personal.id, type: "personal" as const },
+    {
+      id: personal.id,
+      type: "personal" as const,
+      currency: personal.currency
+    },
     ...businesses
       .filter((business) => business.deletionRequestedAt === null)
-      .map((business) => ({ id: business.id, type: business.type }))
+      .map((business) => ({
+        id: business.id,
+        type: business.type,
+        currency: business.currency
+      }))
   ]
 
   const [workspaces, goals, debts, payments] = await Promise.all([

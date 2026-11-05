@@ -3,8 +3,16 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button, Dropdown, Label } from "@heroui/react"
-import { ChevronDown, CreditCard, FileUp, Plus, Target } from "lucide-react"
-import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
+import {
+  ChevronDown,
+  CreditCard,
+  FileUp,
+  ListChecks,
+  Plus,
+  Tags,
+  Target
+} from "lucide-react"
+import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
 import { DEBTS_PATH } from "@/features/debts/calculations"
 import {
   type DebtOption,
@@ -17,10 +25,15 @@ import {
 import { GOALS_PATH } from "@/features/goals/progress"
 import { IMPORT_PATH } from "@/features/imports/constants"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
-import { useQuickActions } from "./quick-actions-context"
+import { VerifyMovementsDialog } from "@/features/transactions/components/verify-movements-dialog"
+import {
+  type QuickActionsWorkspace,
+  useQuickActions
+} from "./quick-actions-context"
 import { useActiveWorkspace } from "./use-active-workspace"
 
-type MoreAction = "contribution" | "payment" | "import"
+type MoreAction =
+  "contribution" | "payment" | "import" | "categories" | "verify"
 
 // En /dashboard/personal/* registra en Personal y en
 // /dashboard/business/[id]/* en esa empresa. En otras rutas (cuenta, estado
@@ -58,9 +71,9 @@ export function QuickActionsMenu() {
       />
       {isPersonal && (
         <PersonalMoreMenu
+          workspace={workspace}
           goals={goals}
           debts={debts}
-          accounts={workspace.accounts}
         />
       )}
     </>
@@ -68,17 +81,20 @@ export function QuickActionsMenu() {
 }
 
 function PersonalMoreMenu({
+  workspace,
   goals,
-  debts,
-  accounts
+  debts
 }: {
+  workspace: QuickActionsWorkspace
   goals: GoalOption[]
   debts: DebtOption[]
-  accounts: PaymentAccountOption[]
 }) {
   const router = useRouter()
   const [contributionOpen, setContributionOpen] = useState(false)
   const [paymentOpen, setPaymentOpen] = useState(false)
+  const [categoriesOpen, setCategoriesOpen] = useState(false)
+  const [verifyOpen, setVerifyOpen] = useState(false)
+  const { accounts } = workspace
 
   // Sin metas (o sin deudas) el ítem lleva a su página para crear una
   function onAction(key: React.Key) {
@@ -93,6 +109,13 @@ function PersonalMoreMenu({
         break
       case "import":
         router.push(IMPORT_PATH)
+        break
+      // Se abren sobre la página actual: no dependen de que haya movimientos
+      case "categories":
+        setCategoriesOpen(true)
+        break
+      case "verify":
+        setVerifyOpen(true)
         break
     }
   }
@@ -140,6 +163,20 @@ function PersonalMoreMenu({
               <FileUp className="size-4" />
               <Label>Importar</Label>
             </Dropdown.Item>
+            <Dropdown.Item
+              id="categories"
+              textValue="Categorías"
+            >
+              <Tags className="size-4" />
+              <Label>Categorías</Label>
+            </Dropdown.Item>
+            <Dropdown.Item
+              id="verify"
+              textValue="Verificar movimientos"
+            >
+              <ListChecks className="size-4" />
+              <Label>Verificar movimientos</Label>
+            </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown.Popover>
       </Dropdown>
@@ -155,6 +192,20 @@ function PersonalMoreMenu({
         accounts={accounts}
         open={paymentOpen}
         onOpenChange={setPaymentOpen}
+      />
+      <CategoriesSheet
+        workspaceId={workspace.id}
+        categories={workspace.categories}
+        open={categoriesOpen}
+        onOpenChange={setCategoriesOpen}
+      />
+      <VerifyMovementsDialog
+        workspaceId={workspace.id}
+        accounts={accounts}
+        currency={workspace.currency}
+        showAccountFilter
+        open={verifyOpen}
+        onOpenChange={setVerifyOpen}
       />
     </>
   )

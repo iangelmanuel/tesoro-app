@@ -1,6 +1,6 @@
 # SPEC 27 — Tutoriales guiados por sección con Driver.js
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 01, SPEC 15, SPEC 20, SPEC 22, SPEC 23
 > **Fecha:** 2026-11-04
 > **Objetivo:** Que cada una de las 9 secciones de Personal tenga un tutorial paso a paso con Driver.js que arranca solo hasta que el usuario lo termina, guardado en la base de datos, y que se pueda repetir desde el header o desde Cuenta.
@@ -132,22 +132,22 @@ Al agregar Empresa, se amplía el `check` con una migración nueva.
 
 ## Criterios de aceptación
 
-- [ ] `driver.js` figura en `package.json` con versión exacta y el lockfile está sincronizado.
-- [ ] `driver.js` no aparece en el bundle inicial del dashboard; se descarga solo al arrancar un tutorial.
+- [x] `driver.js` figura en `package.json` con versión exacta y el lockfile está sincronizado.
+- [x] `driver.js` no aparece en el bundle inicial del dashboard; se descarga solo al arrancar un tutorial.
 - [ ] Un usuario nuevo que entra a cada una de las 9 secciones ve arrancar su tutorial automáticamente.
 - [ ] Terminar el último paso crea la fila en `tutorial_progress` y el tutorial no vuelve a arrancar solo en esa sección.
 - [ ] Cerrar el tutorial a medias no crea fila y el tutorial vuelve a arrancar en la próxima visita.
 - [ ] El botón `?` del header arranca el tutorial de la sección actual aunque esté completado.
-- [ ] El botón `?` no aparece fuera de las 9 secciones (Empresa, Cuenta, Importar).
+- [x] El botón `?` no aparece fuera de las 9 secciones (Empresa, Cuenta, Importar).
 - [ ] Cuenta › Preferencias lista las 9 secciones con su estado correcto.
 - [ ] **Reiniciar todos** borra el progreso y los tutoriales vuelven a arrancar solos.
 - [ ] En móvil (`< 768 px`) el tutorial resalta los elementos móviles (barra inferior, hoja de acciones) y no los del aside.
 - [ ] Un paso cuyo elemento no está en pantalla se omite sin error.
 - [ ] El tutorial no arranca encima de la hoja de acciones rápidas autoabierta en móvil.
-- [ ] Con teclado se recorre el tutorial completo y Escape lo cierra.
-- [ ] Con `prefers-reduced-motion` el tutorial no anima.
-- [ ] Un usuario no puede leer ni escribir el progreso de otro (RLS probada con dos usuarios).
-- [ ] El popover cumple AA en claro y oscuro.
+- [x] Con teclado se recorre el tutorial completo y Escape lo cierra.
+- [x] Con `prefers-reduced-motion` el tutorial no anima.
+- [x] Un usuario no puede leer ni escribir el progreso de otro (RLS probada con dos usuarios).
+- [x] El popover cumple AA en claro y oscuro.
 
 ## Decisiones
 

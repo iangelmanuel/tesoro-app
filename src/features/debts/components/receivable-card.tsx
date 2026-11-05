@@ -16,13 +16,15 @@ import {
   SURFACE_ITEM,
   SURFACE_ITEM_CLICKABLE
 } from "@/components/dashboard/surface"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { formatDate, formatShortDate } from "@/libs/format"
 import { hasZeroBalance, isReceivableOverdue } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
 import {
-  buildInstallments,
   collectedInYear,
+  periodPayments,
+  receivableInstallments,
   summarizeInstallments
 } from "../receivable-schedule"
 import { AdjustBalanceDialog } from "./adjust-balance-dialog"
@@ -218,6 +220,19 @@ export function ReceivableCard({
               </dd>
             </div>
           )}
+          {monthly.owed > 0 && (
+            <div className="flex justify-between gap-2">
+              <dt className="text-muted">Por cobrar a la fecha</dt>
+              <dd
+                className={`font-medium ${monthly.overdueCount > 0 ? TONE_TEXT_CLASSES.danger : ""}`}
+              >
+                <Amount
+                  value={monthly.owed}
+                  currency={currency}
+                />
+              </dd>
+            </div>
+          )}
           <div className="flex justify-between gap-2">
             <dt className="text-muted">Próxima cuota</dt>
             <dd className="font-medium tabular-nums">
@@ -259,32 +274,16 @@ export function ReceivableCard({
   )
 }
 
-/** Atrasadas, próxima cuota y cobrado en el año de una mensual (SPEC 28) */
+/**
+ * Atrasadas, por cobrar, próxima cuota y cobrado en el año de una mensual
+ * (SPEC 28 y 29)
+ */
 function monthlySummary(receivable: Debt, entries: DebtEntry[], today: string) {
-  const payments = entries
-    .filter((entry) => entry.kind === "payment")
-    .map((entry) => ({
-      id: entry.id,
-      amount: entry.amount,
-      occurred_on: entry.occurred_on,
-      period_on: entry.period_on
-    }))
-
-  const installments =
-    receivable.starts_on !== null && receivable.due_day !== null
-      ? buildInstallments(
-          {
-            starts_on: receivable.starts_on,
-            due_day: receivable.due_day,
-            term_months: receivable.term_months
-          },
-          payments,
-          today
-        )
-      : []
-
   return {
-    ...summarizeInstallments(installments),
-    collectedThisYear: collectedInYear(payments, today)
+    ...summarizeInstallments(
+      receivableInstallments(receivable, entries, today),
+      today
+    ),
+    collectedThisYear: collectedInYear(periodPayments(entries), today)
   }
 }

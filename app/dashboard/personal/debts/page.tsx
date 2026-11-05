@@ -36,6 +36,7 @@ import {
   getDebtEntries,
   getDebts
 } from "@/features/debts/queries"
+import { owedOnOpenEnded } from "@/features/debts/receivable-schedule"
 import { parseDebtsTab } from "@/features/debts/tabs"
 import { ImportButton } from "@/features/imports/components/import-button"
 import {
@@ -184,7 +185,10 @@ function ReceivablesTab({
           <CardDescription>Te deben</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums">
             <Amount
-              value={totalReceivable(receivables)}
+              value={
+                totalReceivable(receivables) +
+                owedOnOpenEnded(active, entries, today)
+              }
               currency={workspace.currency}
             />
           </CardTitle>

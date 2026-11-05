@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Partial payments and installment history for monthly receivables (SPEC 29).
+  - An installment accepts several collections. It is **Pagada** once they add up to its value; with less it shows **Abonada**, how much was collected, what is missing and an **Abonar** button prefilled with the remainder. Past-due partial installments count in the overdue badge.
+  - Open-ended monthly receivables keep the installment value over time in `receivable_installment_history` ("until this month it was worth X"). Editing the monthly amount stores the previous value through last month, so past months are not left short.
+  - The card shows **Por cobrar a la fecha** (what is missing up to the current month) and "Te deben" now adds it for open-ended receivables.
+  - Migration `receivable_partial_payments`: replaces the unique `debt_entries_one_payment_per_period` index with the non-unique `debt_entries_period` and creates `receivable_installment_history` with RLS, grants and the `check_receivable_installment_history` trigger.
 - Monthly receivables (SPEC 28): **Me deben** can now track someone who pays a fixed amount every month, besides the one-off receivable.
   - The receivable dialog has **Una vez | Mes a mes** tabs when creating (`schedule`, fixed after creation). Monthly asks for the monthly amount, payment day (1–31), start date and an optional number of installments (empty = open-ended). With installments, the opening balance is amount × installments; open-ended receivables have no total balance and stay out of "Te deben".
   - The receivable sheet lists one installment per month, from the start month to next month or the last installment (extended to any installment collected in advance), with **Pagada**, **Pendiente** or **Atrasada** status computed on the fly (`receivable-schedule.ts`), the due date (clamped to the month's last day) and the collection date and amount. Shows the last 12 with **Ver más**.

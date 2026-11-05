@@ -3,6 +3,7 @@
 import type { PostgrestError } from "@supabase/supabase-js"
 import { z } from "zod"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
+import { shiftMonth, todayISO } from "@/libs/dates"
 import { revalidatePersonalPages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import type { DebtStatus } from "./calculations"
@@ -42,7 +43,6 @@ const SAME_TRANSFER_ACCOUNT = "Elige una cuenta distinta a la que paga"
 const RECEIVABLE_TRANSFER = "Un abono no admite traspaso"
 const RECEIVABLE_EXTRA = "Una cuenta por cobrar no tiene abonos extra"
 const INSTALLMENT_REQUIRED = "Elige la cuota que se cobra"
-const INSTALLMENT_PAID = "Esta cuota ya tiene un cobro"
 const INSTALLMENT_OUT_OF_RANGE = "La cuota está fuera del cobro mensual"
 const ENTRIES_OUT_OF_RANGE =
   "Hay cobros de cuotas fuera de estas fechas. Elimínalos primero"
@@ -143,13 +143,7 @@ function debtPgError(
   if (error.message.includes(ADVANCE_ONLY_CARD)) {
     return { error: ADVANCE_ONLY_CARD }
   }
-  // Cuotas del cobro mensual: índice único y reglas de check_debt_entry
-  if (
-    error.code === "23505" &&
-    error.message.includes("debt_entries_one_payment_per_period")
-  ) {
-    return { fieldErrors: { period_on: [INSTALLMENT_PAID] } }
-  }
+  // Cuotas del cobro mensual: reglas de check_debt_entry
   if (error.message.includes("La cuota es")) {
     return { fieldErrors: { period_on: [INSTALLMENT_OUT_OF_RANGE] } }
   }
@@ -195,7 +189,7 @@ async function findDebt(debtId: string) {
   const { data } = await supabase
     .from("debts")
     .select(
-      "id, workspace_id, kind, status, opening_balance, schedule, term_months, entries:debt_entries (kind, amount, period_on)"
+      "id, workspace_id, kind, status, opening_balance, installment, schedule, starts_on, term_months, entries:debt_entries (kind, amount, period_on)"
     )
     .eq("id", debtId)
     .eq("workspace_id", workspace.id)
@@ -380,6 +374,23 @@ export async function updateDebt(
   }
 
   const supabase = await createClient()
+
+  // Mensual indefinida con un valor nuevo (SPEC 29): los meses ya corridos
+  // conservan el valor anterior, así sus abonos no quedan cortos
+  if (monthlyForm && debt.openEnded && debt.installment !== null) {
+    const previousValue = Number(debt.installment)
+    const historyError = await keepPreviousInstallment(
+      debt.id,
+      debt.workspace_id,
+      parsed.data.starts_on,
+      previousValue,
+      parsed.data.installment
+    )
+    if (historyError) {
+      return { error: DEBT_DEFAULT_ERROR, values }
+    }
+  }
+
   const { data, error } = await supabase
     .from("debts")
     .update(parsed.data)
@@ -404,6 +415,50 @@ export async function updateDebt(
 
   revalidatePersonalPages()
   return { ok: true }
+}
+
+/**
+ * Al cambiar el valor de una mensual indefinida, guarda el anterior hasta el
+ * mes pasado (SPEC 29). No hace nada si el valor no cambia, si el cobro
+ * empieza este mes o después, o si el historial ya cubre el mes pasado.
+ * Devuelve true si falló.
+ */
+async function keepPreviousInstallment(
+  debtId: string,
+  workspaceId: string,
+  startsOn: string,
+  previousValue: number,
+  newValue: number
+) {
+  const lastMonth = `${shiftMonth(todayISO().slice(0, 7), -1)}-01`
+  if (previousValue === newValue || periodOf(startsOn) > lastMonth) {
+    return false
+  }
+
+  const supabase = await createClient()
+  const { data: covered, error: readError } = await supabase
+    .from("receivable_installment_history")
+    .select("id")
+    .eq("debt_id", debtId)
+    .gte("through_period", lastMonth)
+    .limit(1)
+
+  if (readError) {
+    return true
+  }
+  if (covered.length > 0) {
+    return false
+  }
+
+  const { error } = await supabase
+    .from("receivable_installment_history")
+    .insert({
+      workspace_id: workspaceId,
+      debt_id: debtId,
+      through_period: lastMonth,
+      amount: previousValue
+    })
+  return error !== null
 }
 
 // Cambia el estado solo si la deuda está en uno de los estados `from`
@@ -512,18 +567,12 @@ export async function recordPayment(
     return { fieldErrors: { amount: [OVER_PAYMENT] }, values }
   }
 
-  // Cuota del cobro mensual (SPEC 28): obligatoria y con un solo cobro. En
-  // otras deudas no aplica.
+  // Cuota del cobro mensual (SPEC 28): obligatoria. Admite varios abonos
+  // hasta cubrir su valor (SPEC 29). En otras deudas no aplica.
   const monthly = debt.kind === "receivable" && debt.schedule === "monthly"
   const periodOn = monthly ? parsed.data.period_on : null
   if (monthly && periodOn === null) {
     return { fieldErrors: { period_on: [INSTALLMENT_REQUIRED] }, values }
-  }
-  if (
-    periodOn !== null &&
-    debt.entries.some((entry) => entry.period_on === periodOn)
-  ) {
-    return { fieldErrors: { period_on: [INSTALLMENT_PAID] }, values }
   }
   if (debt.kind === "receivable" && parsed.data.transfer_from) {
     return { fieldErrors: { transfer_from: [RECEIVABLE_TRANSFER] }, values }

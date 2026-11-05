@@ -2,17 +2,17 @@
 
 import { useState } from "react"
 import { Button, cn } from "@heroui/react"
-import { Check } from "lucide-react"
+import { Check, Plus } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
-import { formatShortDate } from "@/libs/format"
+import { formatCurrency, formatShortDate } from "@/libs/format"
 import { formatMonthYear } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
 import {
   INSTALLMENT_STATUS,
   type Installment,
-  buildInstallments
+  receivableInstallments
 } from "../receivable-schedule"
 import { ToneBadge } from "./debt-indicators"
 
@@ -20,21 +20,28 @@ import { ToneBadge } from "./debt-indicators"
 const VISIBLE_INSTALLMENTS = 12
 
 interface ReceivableInstallmentsProps {
-  debt: Pick<Debt, "starts_on" | "due_day" | "term_months" | "installment">
+  debt: Pick<
+    Debt,
+    | "starts_on"
+    | "due_day"
+    | "term_months"
+    | "installment"
+    | "installment_history"
+  >
   entries: DebtEntry[]
   /** Hoy en America/Bogota, calculado en el servidor */
   today: string
   currency: string
-  /** Cobradas o archivadas: sin "Marcar pagada" */
+  /** Cobradas o archivadas: sin "Marcar pagada" ni "Abonar" */
   readOnly?: boolean
-  /** Abre el cobro de una cuota pendiente o atrasada */
+  /** Abre el cobro de una cuota sin cubrir */
   onCollect: (installment: Installment) => void
 }
 
 /**
- * Cuotas de una cuenta por cobrar mensual (SPEC 28), la más reciente
- * primero: mes, fecha de pago, estado y, si se cobró, fecha y monto. Muestra
- * las últimas 12 y un "Ver más".
+ * Cuotas de una cuenta por cobrar mensual (SPEC 28 y 29), la más reciente
+ * primero: mes, fecha de pago, estado y lo cobrado. Una cuota abonada en
+ * parte muestra cuánto falta. Muestra las últimas 12 y un "Ver más".
  */
 export function ReceivableInstallments({
   debt,
@@ -45,27 +52,11 @@ export function ReceivableInstallments({
   onCollect
 }: ReceivableInstallmentsProps) {
   const [showAll, setShowAll] = useState(false)
+  const installments = receivableInstallments(debt, entries, today).reverse()
 
-  if (debt.starts_on === null || debt.due_day === null) {
+  if (installments.length === 0) {
     return null
   }
-
-  const installments = buildInstallments(
-    {
-      starts_on: debt.starts_on,
-      due_day: debt.due_day,
-      term_months: debt.term_months
-    },
-    entries
-      .filter((entry) => entry.kind === "payment")
-      .map((entry) => ({
-        id: entry.id,
-        amount: entry.amount,
-        occurred_on: entry.occurred_on,
-        period_on: entry.period_on
-      })),
-    today
-  ).reverse()
 
   const visible = showAll
     ? installments
@@ -79,7 +70,6 @@ export function ReceivableInstallments({
           <InstallmentRow
             key={installment.period_on}
             installment={installment}
-            monthlyAmount={debt.installment}
             currency={currency}
             readOnly={readOnly}
             onCollect={onCollect}
@@ -100,22 +90,36 @@ export function ReceivableInstallments({
   )
 }
 
+/** Detalle bajo el mes: fecha del cobro, lo abonado o la fecha de pago */
+function installmentDetail(installment: Installment, currency: string) {
+  const lastEntry = installment.entries.at(-1)
+
+  if (installment.status === "paid" && lastEntry) {
+    return installment.entries.length === 1
+      ? `Pagada el ${formatShortDate(lastEntry.occurred_on)}`
+      : `${installment.entries.length} abonos · último el ${formatShortDate(lastEntry.occurred_on)}`
+  }
+  if (installment.status === "partial") {
+    return `Abonó ${formatCurrency(installment.paid, currency)} de ${formatCurrency(installment.expected, currency)} · vence el ${formatShortDate(installment.due_on)}`
+  }
+  return `Vence el ${formatShortDate(installment.due_on)}`
+}
+
 function InstallmentRow({
   installment,
-  monthlyAmount,
   currency,
   readOnly,
   onCollect
 }: {
   installment: Installment
-  monthlyAmount: number | null
   currency: string
   readOnly?: boolean
   onCollect: (installment: Installment) => void
 }) {
   const { label, tone } = INSTALLMENT_STATUS[installment.status]
-  const { entry } = installment
   const month = formatMonthYear(installment.period_on.slice(0, 7))
+  const isPaid = installment.status === "paid"
+  const isPartial = installment.status === "partial"
 
   return (
     <li className={cn(CARD_ROW, "flex items-center justify-between gap-3")}>
@@ -127,39 +131,47 @@ function InstallmentRow({
           <ToneBadge tone={tone}>{label}</ToneBadge>
         </div>
         <p className="text-xs text-muted tabular-nums">
-          {entry
-            ? `Pagada el ${formatShortDate(entry.occurred_on)}`
-            : `Vence el ${formatShortDate(installment.due_on)}`}
+          {installmentDetail(installment, currency)}
         </p>
       </div>
 
-      {entry ? (
-        // Monto cobrado: puede ser distinto al mensual
-        <span
-          className={cn(
-            "shrink-0 text-sm font-medium",
-            entry.amount !== monthlyAmount && TONE_TEXT_CLASSES.warning
-          )}
-        >
-          <Amount
-            value={entry.amount}
-            currency={currency}
-          />
-        </span>
-      ) : (
-        !readOnly && (
+      <div className="flex shrink-0 items-center gap-2">
+        {(isPaid || isPartial) && (
+          // Cobrado si está pagada (puede pasar del valor); lo que falta si
+          // está abonada
+          <span
+            className={cn(
+              "text-sm font-medium",
+              isPartial && TONE_TEXT_CLASSES.danger,
+              isPaid &&
+                installment.paid !== installment.expected &&
+                TONE_TEXT_CLASSES.warning
+            )}
+          >
+            {isPartial && "Falta "}
+            <Amount
+              value={isPartial ? installment.remaining : installment.paid}
+              currency={currency}
+            />
+          </span>
+        )}
+        {!isPaid && !readOnly && (
           <Button
             variant="outline"
             size="sm"
-            className="shrink-0 max-md:min-h-11"
-            aria-label={`Marcar pagada la cuota de ${month}`}
+            className="max-md:min-h-11"
+            aria-label={
+              isPartial
+                ? `Abonar a la cuota de ${month}`
+                : `Marcar pagada la cuota de ${month}`
+            }
             onPress={() => onCollect(installment)}
           >
-            <Check />
-            Marcar pagada
+            {isPartial ? <Plus /> : <Check />}
+            {isPartial ? "Abonar" : "Marcar pagada"}
           </Button>
-        )
-      )}
+        )}
+      </div>
     </li>
   )
 }

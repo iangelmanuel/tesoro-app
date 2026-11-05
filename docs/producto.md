@@ -991,11 +991,26 @@ cuotas` y el saldo baja con cada cobro. Indefinida: `opening_balance = 0`,
 - **Estados** (calculados en `receivable-schedule.ts`, no guardados; fechas en
   `America/Bogota`):
 
-  | Estado    | Condición                                    | Color  |
-  | --------- | -------------------------------------------- | ------ |
-  | Pagada    | la cuota tiene cobro                         | verde  |
-  | Atrasada  | sin cobro y la fecha de pago ya pasó         | rojo   |
-  | Pendiente | sin cobro y la fecha de pago es hoy o futura | neutro |
+  | Estado    | Condición                                     | Color    |
+  | --------- | --------------------------------------------- | -------- |
+  | Pagada    | sus abonos suman el valor de la cuota o más   | verde    |
+  | Abonada   | tiene abonos, pero suman menos que el valor   | amarillo |
+  | Atrasada  | sin abonos y la fecha de pago ya pasó         | rojo     |
+  | Pendiente | sin abonos y la fecha de pago es hoy o futura | neutro   |
+
+- **Abonos parciales (SPEC 29):** una cuota admite varios abonos. Una
+  abonada muestra lo abonado, lo que falta y **Abonar** (prellenado con lo
+  que falta). Una abonada con la fecha de pago ya pasada cuenta como
+  atrasada en el badge de la tarjeta.
+- **Valor de la cuota en el tiempo (SPEC 29):** en una indefinida, el valor
+  puede cambiar (sube una suscripción). `receivable_installment_history`
+  guarda los valores anteriores: cada fila dice "hasta `through_period` la
+  cuota valía `amount`". El valor de un mes es el de la fila con el menor
+  `through_period` ≥ mes; sin fila, `installment`. Al editar el monto de una
+  indefinida que empezó antes de este mes, el valor anterior se guarda hasta
+  el mes pasado, así los meses ya corridos no quedan cortos.
+- **Por cobrar a la fecha:** la tarjeta de una indefinida muestra lo que
+  falta de las cuotas hasta el mes actual, y "Te deben" lo suma.
 
 - **Cobrar:** **Marcar pagada** en una cuota pendiente o atrasada abre el
   diálogo de abono con el monto mensual prellenado (editable), la fecha (hoy)
@@ -1069,7 +1084,12 @@ workspace_id)`: una entrada siempre es del mismo espacio que su deuda.
 - Cobro mensual (SPEC 28): `check_debt_entry` exige `period_on` en los abonos
   de una cuenta mensual y lo prohíbe en el resto; debe ser día 1, no anterior
   al mes de inicio ni posterior a la última cuota. `check_debt_balance` no
-  valida saldo en las indefinidas.
+  valida saldo en las indefinidas. Desde SPEC 29 una cuota admite varios
+  abonos (índice `debt_entries_period`, no único).
+- `receivable_installment_history` (SPEC 29): valores anteriores de la cuota,
+  solo en mensuales indefinidas (trigger
+  `check_receivable_installment_history`), un valor por mes de corte, RLS con
+  `is_workspace_owner` / `is_workspace_writable`.
 - Trigger `check_debt_entry` (`before`): la deuda debe estar activa (en
   `delete`, la fila vieja), la entrada no cambia de deuda ni de tipo, la fecha
   es ≤ hoy, y un movimiento enlazado es un gasto de un préstamo o un ingreso

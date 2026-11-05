@@ -589,6 +589,44 @@ export type Database = {
         }
         Relationships: []
       }
+      receivable_installment_history: {
+        Row: {
+          amount: number
+          created_at: string
+          debt_id: string
+          id: string
+          through_period: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          debt_id: string
+          id?: string
+          through_period: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          debt_id?: string
+          id?: string
+          through_period?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receivable_installment_history_debt_id_workspace_id_fkey"
+            columns: ["debt_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "debts"
+            referencedColumns: ["id", "workspace_id"]
+          }
+        ]
+      }
       recurring_expenses: {
         Row: {
           amount: number

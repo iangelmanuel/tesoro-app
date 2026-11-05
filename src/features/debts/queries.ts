@@ -1,5 +1,6 @@
 import { createClient } from "@/libs/supabase/server"
 import type { Database } from "@/types/database"
+import type { InstallmentRate } from "./receivable-schedule"
 
 type DebtRow = Database["public"]["Tables"]["debts"]["Row"]
 type DebtEntryRow = Database["public"]["Tables"]["debt_entries"]["Row"]
@@ -31,6 +32,8 @@ export type Debt = Omit<
   prev_due_on: string | null
   paid_current_cycle: number | null
   paid_previous_cycle: number | null
+  /** Valores anteriores de la cuota de una mensual indefinida (SPEC 29) */
+  installment_history: InstallmentRate[]
 }
 
 export type DebtEntry = Omit<DebtEntryRow, "amount"> & {
@@ -49,15 +52,30 @@ const toNumber = (value: number | string | null) =>
 // con su saldo y ciclo de pago
 export async function getDebts(workspaceId: string): Promise<Debt[]> {
   const supabase = await createClient()
-  const { data, error } = await supabase.rpc("debt_overview", {
-    p_workspace_id: workspaceId
-  })
+  const [{ data, error }, history] = await Promise.all([
+    supabase.rpc("debt_overview", { p_workspace_id: workspaceId }),
+    supabase
+      .from("receivable_installment_history")
+      .select("debt_id, through_period, amount")
+      .eq("workspace_id", workspaceId)
+  ])
 
-  if (error) {
+  if (error || history.error) {
     throw new Error("No se pudieron cargar las deudas")
   }
 
+  const historyByDebt = new Map<string, InstallmentRate[]>()
+  for (const row of history.data) {
+    const list = historyByDebt.get(row.debt_id) ?? []
+    list.push({
+      through_period: row.through_period,
+      amount: Number(row.amount)
+    })
+    historyByDebt.set(row.debt_id, list)
+  }
+
   return data.map((row) => ({
+    installment_history: historyByDebt.get(row.id) ?? [],
     ...row,
     counterparty: row.counterparty ?? null,
     closing_day: row.closing_day ?? null,

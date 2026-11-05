@@ -19,7 +19,11 @@ import {
   nextFeeDate
 } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
-import { type Installment, collectedInYear } from "../receivable-schedule"
+import {
+  type Installment,
+  collectedInYear,
+  receivableInstallments
+} from "../receivable-schedule"
 import { AdjustBalanceDialog } from "./adjust-balance-dialog"
 import { DebtEntriesList } from "./debt-entries-list"
 import { ToneBadge } from "./debt-indicators"
@@ -113,8 +117,9 @@ export function DebtSheet({
                   {isMonthly && debt.term_months !== null && (
                     <p className="text-sm text-muted tabular-nums">
                       {
-                        entries.filter((entry) => entry.period_on !== null)
-                          .length
+                        receivableInstallments(debt, entries, today).filter(
+                          (installment) => installment.status === "paid"
+                        ).length
                       }{" "}
                       de {debt.term_months} cuotas cobradas
                     </p>
@@ -213,7 +218,10 @@ export function DebtSheet({
                     accounts={accounts}
                     installment={{
                       period_on: collecting.period_on,
-                      amount: debt.installment
+                      // Lo que falta: la cuota completa o el resto si ya
+                      // tiene abonos (SPEC 29)
+                      amount: collecting.remaining,
+                      partial: collecting.status === "partial"
                     }}
                     open
                     onOpenChange={(open) => {

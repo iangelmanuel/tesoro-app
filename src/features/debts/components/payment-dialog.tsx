@@ -50,12 +50,14 @@ export type EditableDebtEntry = Pick<
 type PaymentMode = "payment" | "extra" | "advance"
 
 /**
- * Cuota de una cuenta por cobrar mensual que se cobra con "Marcar pagada"
- * (SPEC 28): el mes (YYYY-MM-01) y el monto mensual para prellenar
+ * Cuota de una cuenta por cobrar mensual que se cobra con "Marcar pagada" o
+ * "Abonar" (SPEC 28 y 29): el mes (YYYY-MM-01) y lo que falta para prellenar
  */
 export interface CollectedInstallment {
   period_on: string
   amount: number | null
+  /** Ya tiene abonos: el cobro es otro abono */
+  partial?: boolean
 }
 
 /** Deuda que se puede elegir en el diálogo (acceso rápido del header) */
@@ -129,14 +131,16 @@ export function PaymentDialog({
             <Modal.Header>
               <Modal.Heading>
                 {installment
-                  ? "Marcar cuota pagada"
+                  ? installment.partial
+                    ? "Abonar a la cuota"
+                    : "Marcar cuota pagada"
                   : isEditing
                     ? `Editar ${noun}`
                     : `Registrar ${noun}`}
               </Modal.Heading>
               <p className="text-sm text-muted">
                 {installment
-                  ? `Cuota de ${formatMonthYear(installment.period_on.slice(0, 7))}. Ajusta el monto si te pagaron otro valor.`
+                  ? `Cuota de ${formatMonthYear(installment.period_on.slice(0, 7))}. Si te pagaron menos, queda abonada y sigue debiendo la diferencia.`
                   : isFeeEntry
                     ? "Lo que el banco cobró a la tarjeta. No toca tus cuentas."
                     : isEditing && entry.transaction_id
@@ -339,7 +343,7 @@ function PaymentForm({
           : "Pago"
       toast.success(
         installment
-          ? "Cuota marcada como pagada"
+          ? "Cobro de la cuota registrado"
           : isFee
             ? "Cuota actualizada"
             : isEditing

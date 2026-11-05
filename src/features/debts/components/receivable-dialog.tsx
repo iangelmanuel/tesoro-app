@@ -492,7 +492,7 @@ function MonthlySummary({
   const last =
     months === null
       ? null
-      : lastPeriodOn({ starts_on: startsOn, due_day: day, term_months: months })
+      : lastPeriodOn({ starts_on: startsOn, term_months: months })
 
   return (
     <div

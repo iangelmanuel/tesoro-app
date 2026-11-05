@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useState } from "react"
+import Link from "next/link"
 import {
   Button,
   FieldError,
@@ -11,6 +12,8 @@ import {
   TextField,
   ToggleButton,
   ToggleButtonGroup,
+  buttonVariants,
+  cn,
   toast
 } from "@heroui/react"
 import { AccountSelectField } from "@/components/forms/account-select-field"
@@ -24,7 +27,19 @@ import {
   parsePaymentAmount
 } from "@/features/accounts/components/payment-account-section"
 import { TransferForm } from "@/features/accounts/components/transfer-dialog"
+import { RECURRING_PATH } from "@/features/budgets/tabs"
 import type { Category } from "@/features/categories/queries"
+import { DEBTS_PATH } from "@/features/debts/calculations"
+import {
+  type DebtOption,
+  DebtPaymentPanel
+} from "@/features/debts/components/payment-dialog"
+import {
+  OccurrenceSelect,
+  paymentKey,
+  selectedPayment
+} from "@/features/recurring-expenses/components/occurrence-select"
+import type { UpcomingPayment } from "@/features/recurring-expenses/queries"
 import type { WorkspaceType } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
 import { createTransaction, updateTransaction } from "../actions"
@@ -83,6 +98,11 @@ interface TransactionDialogProps {
   initialValues?: TransactionInitialValues
   /** Si llega, el movimiento nuevo es el pago de esta ocurrencia */
   recurring?: RecurringOccurrenceLink
+  /**
+   * Tabs "Pago de deuda" y "Gasto fijo" (solo Personal y al registrar):
+   * deudas activas y ocurrencias sin pagar. Los pasa el botón del header
+   */
+  paymentTabs?: PaymentTabsData
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
   trigger?: React.ReactNode
   open?: boolean
@@ -97,6 +117,7 @@ export function TransactionDialog({
   transaction,
   initialValues,
   recurring,
+  paymentTabs,
   trigger,
   open: controlledOpen,
   onOpenChange
@@ -106,6 +127,13 @@ export function TransactionDialog({
   const setOpen = onOpenChange ?? setUncontrolledOpen
   const isEditing = transaction !== undefined
   const isPayment = !isEditing && recurring !== undefined
+  // Empresa no tiene deudas ni gastos fijos; al editar o pagar una
+  // ocurrencia concreta tampoco aplican
+  const showPaymentTabs =
+    paymentTabs !== undefined &&
+    workspaceType === "personal" &&
+    !isEditing &&
+    !isPayment
 
   // `trigger` debe ser un Button de HeroUI: el Modal lo conecta por React Aria
   return (
@@ -116,7 +144,10 @@ export function TransactionDialog({
       {trigger}
       <Modal.Backdrop>
         <Modal.Container scroll="outside">
-          <Modal.Dialog className="sm:max-w-md">
+          <Modal.Dialog
+            // Con 5 tabs el diálogo se ensancha un poco para que quepan
+            className={showPaymentTabs ? "sm:max-w-lg" : "sm:max-w-md"}
+          >
             <Modal.CloseTrigger />
             <Modal.Header>
               <Modal.Heading>
@@ -144,6 +175,7 @@ export function TransactionDialog({
                 transaction={transaction}
                 initialValues={isEditing ? undefined : initialValues}
                 recurring={isEditing ? undefined : recurring}
+                paymentTabs={showPaymentTabs ? paymentTabs : undefined}
                 onSaved={() => setOpen(false)}
                 onCancel={() => setOpen(false)}
               />
@@ -155,6 +187,17 @@ export function TransactionDialog({
   )
 }
 
+/** Datos de los tabs de pago del diálogo (acceso rápido del header) */
+export interface PaymentTabsData {
+  /** Deudas activas: tarjetas y préstamos */
+  debts: DebtOption[]
+  /** Ocurrencias de gastos fijos sin pagar, vencidas primero */
+  pendingPayments: UpcomingPayment[]
+}
+
+/** Opciones del selector que no son un tipo de movimiento */
+type FormPanel = "transfer" | "debt_payment" | "recurring"
+
 interface TransactionFormProps {
   workspaceId: string
   workspaceType: WorkspaceType
@@ -163,6 +206,9 @@ interface TransactionFormProps {
   transaction?: EditableTransaction
   initialValues?: TransactionInitialValues
   recurring?: RecurringOccurrenceLink
+  paymentTabs?: PaymentTabsData
+  /** Sin selector de tipo (el pago de gasto fijo dentro de su tab) */
+  hideTypeToggle?: boolean
   onSaved: () => void
   onCancel: () => void
 }
@@ -175,6 +221,8 @@ function TransactionForm({
   transaction,
   initialValues,
   recurring,
+  paymentTabs,
+  hideTypeToggle = false,
   onSaved,
   onCancel
 }: TransactionFormProps) {
@@ -215,8 +263,9 @@ function TransactionForm({
         : ""
   )
   // Un movimiento nuevo y suelto también puede ser un traspaso entre dos
-  // cuentas propias: se guarda en transfers y no cuenta como ingreso ni gasto
-  const [isTransfer, setIsTransfer] = useState(false)
+  // cuentas propias (se guarda en transfers y no cuenta como ingreso ni
+  // gasto), un pago de deuda o el pago de un gasto fijo
+  const [panel, setPanel] = useState<FormPanel | null>(null)
   const canTransfer =
     !isEditing && !isLinked && selectableAccounts(accounts).length >= 2
 
@@ -253,11 +302,15 @@ function TransactionForm({
   function handleTypeChange(keys: Set<React.Key>) {
     const [value] = [...keys]
     if (!value) return
-    if (value === "transfer") {
-      setIsTransfer(true)
+    if (
+      value === "transfer" ||
+      value === "debt_payment" ||
+      value === "recurring"
+    ) {
+      setPanel(value)
       return
     }
-    setIsTransfer(false)
+    setPanel(null)
     if (value === type) return
     setType(value as TransactionType)
     setCategoryId("")
@@ -267,40 +320,61 @@ function TransactionForm({
   const values = state.values
   const showTransfer = !isEditing && type === "expense" && !isBusiness
 
-  const typeToggle = (
-    <ToggleButtonGroup
-      selectionMode="single"
-      disallowEmptySelection
-      selectedKeys={[isTransfer ? "transfer" : type]}
-      onSelectionChange={handleTypeChange}
-      isDisabled={isLinked}
-      fullWidth
-      aria-label="Tipo de movimiento"
-    >
-      <ToggleButton
-        id="expense"
-        className="flex-1"
+  const typeToggle = hideTypeToggle ? null : (
+    // Con los tabs de pago son 5 opciones: en anchos chicos se desplaza en
+    // horizontal en vez de apretar los textos
+    <div className={cn(paymentTabs && "-mx-1 overflow-x-auto px-1")}>
+      <ToggleButtonGroup
+        selectionMode="single"
+        disallowEmptySelection
+        selectedKeys={[panel ?? type]}
+        onSelectionChange={handleTypeChange}
+        isDisabled={isLinked}
+        fullWidth
+        aria-label="Tipo de movimiento"
+        className={cn(paymentTabs && "w-max min-w-full")}
       >
-        {copy.expense}
-      </ToggleButton>
-      <ToggleButton
-        id="income"
-        className="flex-1"
-      >
-        {copy.income}
-      </ToggleButton>
-      {canTransfer && (
         <ToggleButton
-          id="transfer"
-          className="flex-1"
+          id="expense"
+          className="flex-1 whitespace-nowrap"
         >
-          Traspaso
+          {copy.expense}
         </ToggleButton>
-      )}
-    </ToggleButtonGroup>
+        <ToggleButton
+          id="income"
+          className="flex-1 whitespace-nowrap"
+        >
+          {copy.income}
+        </ToggleButton>
+        {canTransfer && (
+          <ToggleButton
+            id="transfer"
+            className="flex-1 whitespace-nowrap"
+          >
+            Traspaso
+          </ToggleButton>
+        )}
+        {paymentTabs && (
+          <ToggleButton
+            id="debt_payment"
+            className="flex-1 whitespace-nowrap"
+          >
+            Pago de deuda
+          </ToggleButton>
+        )}
+        {paymentTabs && (
+          <ToggleButton
+            id="recurring"
+            className="flex-1 whitespace-nowrap"
+          >
+            Gasto fijo
+          </ToggleButton>
+        )}
+      </ToggleButtonGroup>
+    </div>
   )
 
-  if (isTransfer) {
+  if (panel === "transfer") {
     return (
       <div className="flex flex-col gap-4">
         {typeToggle}
@@ -313,6 +387,55 @@ function TransactionForm({
           onSaved={onSaved}
           onCancel={onCancel}
         />
+      </div>
+    )
+  }
+
+  if (panel === "debt_payment" && paymentTabs) {
+    return (
+      <div className="flex flex-col gap-4">
+        {typeToggle}
+        {paymentTabs.debts.length > 0 ? (
+          <DebtPaymentPanel
+            workspaceId={workspaceId}
+            debts={paymentTabs.debts}
+            accounts={accounts}
+            onSaved={onSaved}
+            onCancel={onCancel}
+          />
+        ) : (
+          <PanelEmpty
+            text="No tienes tarjetas ni préstamos activos."
+            href={DEBTS_PATH}
+            action="Ir a Deudas"
+            onNavigate={onCancel}
+          />
+        )}
+      </div>
+    )
+  }
+
+  if (panel === "recurring" && paymentTabs) {
+    return (
+      <div className="flex flex-col gap-4">
+        {typeToggle}
+        {paymentTabs.pendingPayments.length > 0 ? (
+          <RecurringPaymentPanel
+            workspaceId={workspaceId}
+            payments={paymentTabs.pendingPayments}
+            categories={categories}
+            accounts={accounts}
+            onSaved={onSaved}
+            onCancel={onCancel}
+          />
+        ) : (
+          <PanelEmpty
+            text="No tienes gastos fijos pendientes de pago."
+            href={RECURRING_PATH}
+            action="Ir a Gastos fijos"
+            onNavigate={onCancel}
+          />
+        )}
       </div>
     )
   }
@@ -530,5 +653,91 @@ function TransactionForm({
         </Button>
       </div>
     </form>
+  )
+}
+
+interface RecurringPaymentPanelProps {
+  workspaceId: string
+  payments: UpcomingPayment[]
+  categories: Category[]
+  accounts: PaymentAccountOption[]
+  onSaved: () => void
+  onCancel: () => void
+}
+
+/**
+ * Tab "Gasto fijo": elegir la ocurrencia pendiente y confirmar su pago en el
+ * mismo formulario, prellenado y enlazado. Mismo resultado que "Marcar gasto
+ * fijo pagado" de la hoja móvil
+ */
+function RecurringPaymentPanel({
+  workspaceId,
+  payments,
+  categories,
+  accounts,
+  onSaved,
+  onCancel
+}: RecurringPaymentPanelProps) {
+  const [selectedKey, setSelectedKey] = useState("")
+  const selected = selectedPayment(payments, selectedKey)
+
+  return (
+    <>
+      <OccurrenceSelect
+        payments={payments}
+        selected={selected}
+        onChange={setSelectedKey}
+      />
+      {selected && (
+        <TransactionForm
+          // Cada ocurrencia monta el formulario con sus propios valores
+          key={paymentKey(selected)}
+          workspaceId={workspaceId}
+          workspaceType="personal"
+          categories={categories}
+          accounts={accounts}
+          initialValues={{
+            amount: selected.amount,
+            category_id: selected.category.id,
+            occurred_on: selected.dueOn,
+            description: selected.name
+          }}
+          recurring={{
+            recurringExpenseId: selected.recurringExpenseId,
+            dueOn: selected.dueOn
+          }}
+          hideTypeToggle
+          onSaved={onSaved}
+          onCancel={onCancel}
+        />
+      )}
+    </>
+  )
+}
+
+/** Tab de pago sin nada que pagar: lleva a la página donde se crean */
+function PanelEmpty({
+  text,
+  href,
+  action,
+  onNavigate
+}: {
+  text: string
+  href: typeof DEBTS_PATH | typeof RECURRING_PATH
+  action: string
+  /** Cierra el diálogo: el header no se desmonta al navegar */
+  onNavigate: () => void
+}) {
+  return (
+    <div className="flex flex-col items-start gap-3 py-2">
+      <p className="text-sm text-muted">{text}</p>
+      <Link
+        href={href}
+        className={buttonVariants({ variant: "secondary" })}
+        onClick={onNavigate}
+      >
+        {action}
+      </Link>
+    </div>
   )
 }

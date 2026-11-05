@@ -39,7 +39,7 @@ type MoreAction =
 // /dashboard/business/[id]/* en esa empresa. En otras rutas (cuenta, estado
 // vacío de Empresa) no hay accesos
 export function QuickActionsMenu() {
-  const { goals, debts } = useQuickActions()
+  const { goals, debts, pendingPayments } = useQuickActions()
   const workspace = useActiveWorkspace()
 
   if (!workspace) {
@@ -58,6 +58,8 @@ export function QuickActionsMenu() {
         workspaceType={workspace.type}
         categories={workspace.categories}
         accounts={workspace.accounts}
+        // Personal: tabs "Pago de deuda" y "Gasto fijo" (SPEC 25)
+        paymentTabs={isPersonal ? { debts, pendingPayments } : undefined}
         trigger={
           <Button
             size="sm"

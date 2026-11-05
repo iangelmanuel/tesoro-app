@@ -139,6 +139,52 @@ export function PaymentDialog({
   )
 }
 
+interface DebtPaymentPanelProps {
+  workspaceId: string
+  /** Deudas activas para elegir (tarjetas y préstamos) */
+  debts: DebtOption[]
+  accounts: PaymentAccountOption[]
+  onSaved: () => void
+  onCancel: () => void
+}
+
+/**
+ * Elegir deuda + formulario de pago, sin el Modal: tab "Pago de deuda" del
+ * diálogo de movimiento. Mismo resultado que PaymentDialog desde "Más"
+ */
+export function DebtPaymentPanel({
+  workspaceId,
+  debts,
+  accounts,
+  onSaved,
+  onCancel
+}: DebtPaymentPanelProps) {
+  // Arranca con la primera de la lista
+  const [selectedDebtId, setSelectedDebtId] = useState(() => debts[0]?.id ?? "")
+  const debt = debts.find((option) => option.id === selectedDebtId)
+
+  return (
+    <div>
+      <DebtSelect
+        debts={debts}
+        value={selectedDebtId}
+        onChange={setSelectedDebtId}
+      />
+      {debt && (
+        <PaymentForm
+          // Cambiar de deuda reinicia el formulario (tipo y textos)
+          key={debt.id}
+          workspaceId={workspaceId}
+          debt={debt}
+          accounts={accounts}
+          onSaved={onSaved}
+          onCancel={onCancel}
+        />
+      )}
+    </div>
+  )
+}
+
 function DebtSelect({
   debts,
   value,

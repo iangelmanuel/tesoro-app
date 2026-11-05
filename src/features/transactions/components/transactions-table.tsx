@@ -34,7 +34,11 @@ import { ContributionDialog } from "@/features/goals/components/contribution-dia
 import type { WorkspaceType } from "@/features/workspaces/queries"
 import { formatCurrency, formatDate, formatTime } from "@/libs/format"
 import { deleteTransaction, moveLedgerEntry } from "../actions"
-import { type AccountMovementKind, type LedgerEntry } from "../queries"
+import {
+  type AccountMovementKind,
+  type LedgerEntry,
+  type LinkedDebtEntry
+} from "../queries"
 import { TransactionDialog } from "./transaction-dialog"
 
 interface TransactionsTableProps {
@@ -394,26 +398,33 @@ export function TransactionsTable({
                         {formatCurrency(transaction.amount, currency)}
                       </Table.Cell>
                       <Table.Cell>
-                        <EntryActions
-                          label={transaction.description}
-                          remove={{
-                            title: "¿Eliminar este movimiento?",
-                            success: "Movimiento eliminado",
-                            onDelete: () =>
-                              deleteTransaction(workspaceId, transaction.id)
-                          }}
-                          renderEdit={(dialog) => (
-                            <TransactionDialog
-                              workspaceId={workspaceId}
-                              workspaceType={workspaceType}
-                              categories={categories}
-                              accounts={accounts}
-                              transaction={transaction}
-                              open={dialog.open}
-                              onOpenChange={dialog.onOpenChange}
-                            />
-                          )}
-                        />
+                        {row.debt_entry ? (
+                          <LinkedPaymentActions
+                            label={transaction.description}
+                            entry={row.debt_entry}
+                          />
+                        ) : (
+                          <EntryActions
+                            label={transaction.description}
+                            remove={{
+                              title: "¿Eliminar este movimiento?",
+                              success: "Movimiento eliminado",
+                              onDelete: () =>
+                                deleteTransaction(workspaceId, transaction.id)
+                            }}
+                            renderEdit={(dialog) => (
+                              <TransactionDialog
+                                workspaceId={workspaceId}
+                                workspaceType={workspaceType}
+                                categories={categories}
+                                accounts={accounts}
+                                transaction={transaction}
+                                open={dialog.open}
+                                onOpenChange={dialog.onOpenChange}
+                              />
+                            )}
+                          />
+                        )}
                       </Table.Cell>
                     </SortableRow>
                   )
@@ -730,6 +741,39 @@ function AccountMovementRow({
         )}
       </Table.Cell>
     </SortableRow>
+  )
+}
+
+// Movimiento de un pago de préstamo o un cobro de Me deben (SPEC 26). El
+// abono es la fuente de verdad: se edita con su diálogo y el trigger copia
+// monto, fecha y hora al movimiento; eliminarlo borra los dos juntos.
+function LinkedPaymentActions({
+  label,
+  entry
+}: {
+  label: string
+  entry: LinkedDebtEntry
+}) {
+  const noun = entry.debt_kind === "receivable" ? "cobro" : "pago"
+
+  return (
+    <EntryActions
+      label={label}
+      remove={{
+        title: `¿Eliminar este ${noun}?`,
+        success: `${noun === "cobro" ? "Cobro" : "Pago"} eliminado`,
+        onDelete: () => deleteEntry(entry.id)
+      }}
+      renderEdit={(dialog) => (
+        <PaymentDialog
+          workspaceId={entry.workspace_id}
+          debt={{ id: entry.debt_id, kind: entry.debt_kind }}
+          entry={entry}
+          open={dialog.open}
+          onOpenChange={dialog.onOpenChange}
+        />
+      )}
+    />
   )
 }
 

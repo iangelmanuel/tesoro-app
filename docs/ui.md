@@ -324,6 +324,51 @@ Reglas:
   (`relative z-10`) para quedar encima. Un solo elemento abre el Sheet; Tab
   llega a la tarjeta y luego al ⋮. Sin cambio visual salvo hover y cursor.
 
+### Tutoriales guiados (SPEC 27)
+
+| Pieza                                           | Qué hace                                                                                                                                          |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/config/tutorials.ts`                       | Claves (`TUTORIAL_SECTIONS`), nombre y ruta de cada sección, `getTutorialSection(pathname)` y los pasos (`TUTORIALS`)                             |
+| `tutorials/components/tutorial-provider.tsx`    | `TutorialProvider` (progreso del servidor + `useOptimistic`), `markCompleted`, `reset`, `requestStart` ("Ver de nuevo")                           |
+| `tutorials/use-tutorial.ts`                     | `useTutorial(section)` → `{ completed, start }`. Descarga el motor con `import()` una vez por sesión y cierra el recorrido al salir de la sección |
+| `tutorials/engine/run-tour.ts`                  | Motor: filtra pasos por viewport y elementos visibles, textos en español, reduced motion y primario del espacio                                   |
+| `tutorials/engine/tour-theme.css`               | Tema del popover con tokens (contraste medido en el archivo)                                                                                      |
+| `tutorials/components/tutorial-auto-start.tsx`  | Arranque automático en el layout: espera a overlays y esqueletos                                                                                  |
+| `tutorials/components/tutorial-help-button.tsx` | Botón `?` del header, junto al ojo                                                                                                                |
+| `tutorials/components/tutorials-settings.tsx`   | Tarjeta Tutoriales de Cuenta › Preferencias                                                                                                       |
+
+**Agregar un paso:**
+
+1. Pon `data-tour="<sección>-<elemento>"` en el elemento (nunca se apunta a
+   clases CSS). `Button`, `Card`, `Tabs.List` y `Disclosure.Trigger` de
+   HeroUI pasan el atributo al DOM. `ChartCard` y `ScrollTable` reciben la
+   prop `tour`.
+2. Agrega el paso en `TUTORIALS[sección]` con `target` (sin él va centrado),
+   `title` y `description` en la voz de `PRODUCT.md` (tuteo, frases cortas).
+3. Si solo aplica en escritorio o en móvil, `viewport: "desktop" | "mobile"`.
+
+Reglas:
+
+- El motor resalta el **primer elemento visible** con ese `data-tour`. Por
+  eso una misma ancla puede ir en la versión de escritorio y en la móvil de
+  un componente (las dos se pintan y CSS oculta una), o en cada fila de una
+  lista: se resalta la primera.
+- Un paso sin elemento visible se omite. No hace falta condicionar los pasos
+  a que haya datos.
+- Anclas compartidas, fuera del prefijo de sección: `header-quick-add`,
+  `header-more`, `header-amounts`, `header-help`, `header-menu`,
+  `aside-workspaces`, `aside-sections`, `mobile-nav`, `mobile-quick-add`,
+  `row-actions` (en `RowActions`), `import-button` (en `ImportButton`) y
+  `budgets-recurring-tabs` (Gastos fijos y Presupuestos).
+- Algunas anclas viven en componentes que Empresa también usa (Reportes,
+  score, últimos movimientos). Allí no hacen nada mientras Empresa no tenga
+  tutoriales.
+- Al quitar o renombrar un `data-tour`, búscalo en `tutorials.ts`: el paso no
+  falla, pero desaparece del recorrido.
+- El popover se monta en `<body>`, fuera del contenedor del espacio:
+  `run-tour.ts` le copia `--accent`, `--accent-foreground` y `--focus` desde
+  `#contenido`.
+
 ## Dónde vive cada pantalla
 
 | Pantalla         | Ruta                                                           | Piezas                                                                               |

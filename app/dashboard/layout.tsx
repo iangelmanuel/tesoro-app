@@ -14,6 +14,10 @@ import {
 } from "@/components/dashboard/sidebar"
 import { WorkspaceThemeRoot } from "@/components/dashboard/workspace-theme-root"
 import { SITE } from "@/config/site"
+import { TutorialAutoStart } from "@/features/tutorials/components/tutorial-auto-start"
+import { TutorialHelpButton } from "@/features/tutorials/components/tutorial-help-button"
+import { TutorialProvider } from "@/features/tutorials/components/tutorial-provider"
+import { getCompletedTutorials } from "@/features/tutorials/queries"
 import { getBusinessWorkspaces } from "@/features/workspaces/queries"
 import { createClient } from "@/libs/supabase/server"
 
@@ -62,15 +66,22 @@ async function DashboardHeaderTitle() {
   return <DashboardTitle userName={user.name} />
 }
 
-// Entrega al cliente si las cifras están ocultas: el primer render ya sale con
-// la máscara, sin parpadeo. Envuelve el header y el contenido
-async function HideAmountsBoundary({
+// Entrega al cliente si las cifras están ocultas y qué tutoriales terminó el
+// usuario: el primer render ya sale con la máscara y el arranque automático
+// decide sin parpadeo ni consulta por página. Envuelve el header y el contenido
+async function DashboardPreferencesBoundary({
   children
 }: Readonly<{ children: React.ReactNode }>) {
-  const user = await getDashboardUser()
+  const [user, completedTutorials] = await Promise.all([
+    getDashboardUser(),
+    getCompletedTutorials()
+  ])
   return (
     <HideAmountsProvider initial={user.hideAmounts}>
-      {children}
+      <TutorialProvider initial={completedTutorials}>
+        {children}
+        <TutorialAutoStart />
+      </TutorialProvider>
     </HideAmountsProvider>
   )
 }
@@ -112,7 +123,7 @@ export default function DashboardLayout({
               </>
             }
           >
-            <HideAmountsBoundary>
+            <DashboardPreferencesBoundary>
               <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 bg-background px-4 md:px-6">
                 {/* En el teléfono abre el Drawer del aside (44 px de área táctil) */}
                 <SidebarTrigger className="-ml-1.5 max-md:size-11" />
@@ -125,8 +136,9 @@ export default function DashboardLayout({
                     <DashboardHeaderTitle />
                   </Suspense>
                 </div>
-                {/* Ojo y accesos rápidos del espacio */}
+                {/* Tutorial, ojo y accesos rápidos del espacio */}
                 <div className="flex shrink-0 items-center gap-2">
+                  <TutorialHelpButton />
                   <HideAmountsToggle />
                   <QuickActions />
                 </div>
@@ -138,7 +150,7 @@ export default function DashboardLayout({
               >
                 {children}
               </main>
-            </HideAmountsBoundary>
+            </DashboardPreferencesBoundary>
           </Suspense>
         </SidebarInset>
       </SidebarProvider>

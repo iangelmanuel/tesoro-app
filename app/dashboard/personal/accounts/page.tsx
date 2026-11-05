@@ -42,7 +42,7 @@ async function AccountsContent() {
     <AccountDialog
       workspaceId={workspace.id}
       trigger={
-        <Button>
+        <Button data-tour="accounts-create">
           <Plus />
           Nueva cuenta
         </Button>

@@ -161,6 +161,7 @@ export function SidebarTrigger({ className }: { className?: string }) {
       // El Drawer móvil se monta solo al abrirse: no hay id que referenciar
       aria-controls={isMobile ? undefined : SIDEBAR_ID}
       className={className}
+      data-tour="header-menu"
       onPress={toggle}
     >
       <PanelLeft className="size-4" />

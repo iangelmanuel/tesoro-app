@@ -74,7 +74,7 @@ export function ScoreSummary<K extends string>({
   recommendations
 }: ScoreSummaryProps<K>) {
   return (
-    <Card>
+    <Card data-tour="summary-score">
       <CardHeading
         title={title}
         help="score"

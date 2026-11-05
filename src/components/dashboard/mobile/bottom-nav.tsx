@@ -67,7 +67,10 @@ export function BottomNav({ onOpenQuickSheet }: BottomNavProps) {
       aria-label="Navegación principal"
       className="fixed inset-x-0 bottom-0 z-20 overflow-x-clip bg-background pb-[env(safe-area-inset-bottom)] md:hidden [body:has([role='dialog'])_&]:hidden"
     >
-      <ul className="flex items-center px-2 py-1">
+      <ul
+        className="flex items-center px-2 py-1"
+        data-tour="mobile-nav"
+      >
         {[first, second].map((item) => (
           <li
             key={item.href}
@@ -86,6 +89,7 @@ export function BottomNav({ onOpenQuickSheet }: BottomNavProps) {
               size="lg"
               aria-label="Acciones rápidas"
               className="size-12 rounded-full"
+              data-tour="mobile-quick-add"
               onPress={onOpenQuickSheet}
             >
               <Plus className="size-6" />

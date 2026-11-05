@@ -107,7 +107,10 @@ export async function ReportsView({
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+        data-tour="reports-kpis"
+      >
         <StatCard
           label={labels.income}
           value={current.income}
@@ -156,6 +159,7 @@ export async function ReportsView({
             }
             figureCaption={`de balance en ${trend.length} meses`}
             legend={incomeExpenseLegend(labels, true)}
+            tour="reports-trend"
           >
             <IncomeExpenseChart
               data={trend}
@@ -190,6 +194,7 @@ export async function ReportsView({
                   : undefined
               }
               className="lg:col-span-2"
+              tour="reports-top"
             >
               {categoryTotals.length > 0 ? (
                 <TopCategoriesChart
@@ -201,7 +206,10 @@ export async function ReportsView({
                 <NoPeriodData message={noTypeData} />
               )}
             </ChartCard>
-            <Card className="gap-3 lg:col-span-3">
+            <Card
+              className="gap-3 lg:col-span-3"
+              data-tour="reports-categories"
+            >
               <CardHeading title={`${typeLabel} por categoría`} />
               {categoryTotals.length > 0 ? (
                 <CategorySummaryTable

@@ -193,7 +193,10 @@ export function TransactionsFilters({
       {/* Fila principal, todo a 44 px y centrado: buscador (ocupa el ancho
           libre) · mes · Filtros (< 768 px) · Verificar. En el teléfono el
           buscador ocupa una fila y los controles van debajo */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div
+        className="flex flex-wrap items-center gap-2"
+        data-tour="transactions-search"
+      >
         <SearchField
           aria-label="Buscar en descripción o nota"
           value={q}
@@ -249,6 +252,7 @@ export function TransactionsFilters({
         <Button
           variant="ghost"
           className={cn("min-h-11 shrink-0 md:hidden", CONTROL_BUTTON)}
+          data-tour="transactions-filters-sheet"
           onPress={() => setSheetOpen(true)}
         >
           <SlidersHorizontal />
@@ -265,7 +269,10 @@ export function TransactionsFilters({
       </div>
 
       {/* >= 768 px: el resto de filtros en la barra */}
-      <div className="hidden flex-wrap items-center gap-2 md:flex">
+      <div
+        className="hidden flex-wrap items-center gap-2 md:flex"
+        data-tour="transactions-filters"
+      >
         <Button
           variant="ghost"
           size="sm"

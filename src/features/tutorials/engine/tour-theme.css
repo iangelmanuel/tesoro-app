@@ -1,0 +1,148 @@
+/* Tema del popover de los tutoriales (SPEC 27). Se carga con run-tour.ts:
+   solo lo descarga quien ve un tutorial. Los selectores empiezan con
+   `.driver-popover.tesoro-tour` para ganarle a driver.css por
+   especificidad, sin depender del orden de los imports (Prettier los
+   ordena).
+
+   Todo sale de los tokens de globals.css, así que sigue el tema claro u
+   oscuro de <html>. El primario del espacio vive en el contenedor del
+   dashboard y el popover se monta en <body>: run-tour.ts copia --accent,
+   --accent-foreground y --focus del contenido al popover.
+
+   Contraste medido (claro / oscuro), todo AA:
+   - título y descripción, --overlay-foreground sobre --overlay: 17.7 / 14.7;
+   - "Paso X de Y" y la X, --muted sobre --overlay: 6.0 / 6.2;
+   - Siguiente / Terminar en Personal, blanco sobre emerald-700: 5.2 / 5.2
+     (fuera de un espacio, el primario neutro: 17.0);
+   - Anterior, --default-foreground sobre --default: 14.4 / 13.5;
+   - foco, anillo de 2 px en --focus sobre --overlay: 5.4 / 6.6. */
+
+.driver-popover.tesoro-tour {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  color: var(--overlay-foreground);
+  background-color: var(--overlay);
+  border-radius: 1.5rem;
+  box-shadow: var(--overlay-shadow);
+  min-width: 17rem;
+  max-width: min(22rem, calc(100vw - 2rem));
+  padding: 1.25rem;
+}
+
+.driver-popover.tesoro-tour .driver-popover-title {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  padding-right: 2rem;
+}
+
+.driver-popover.tesoro-tour .driver-popover-description {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--overlay-foreground);
+}
+
+.driver-popover.tesoro-tour
+  .driver-popover-title[style*="block"]
+  + .driver-popover-description {
+  margin-top: 0.375rem;
+}
+
+.driver-popover.tesoro-tour .driver-popover-footer {
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.driver-popover.tesoro-tour .driver-popover-progress-text {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.driver-popover.tesoro-tour .driver-popover-navigation-btns {
+  gap: 0.5rem;
+}
+
+.driver-popover.tesoro-tour .driver-popover-navigation-btns button + button {
+  margin-left: 0;
+}
+
+/* Botones pill, como los de HeroUI. 36 px; 44 px en pantallas táctiles */
+.driver-popover.tesoro-tour .driver-popover-footer-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  text-shadow: none;
+  color: var(--default-foreground);
+  background-color: var(--default);
+}
+
+.driver-popover.tesoro-tour .driver-popover-footer-btn:hover {
+  background-color: color-mix(in oklab, var(--default) 85%, var(--foreground));
+}
+
+.driver-popover.tesoro-tour .driver-popover-next-btn {
+  color: var(--accent-foreground);
+  background-color: var(--accent);
+}
+
+.driver-popover.tesoro-tour .driver-popover-next-btn:hover {
+  background-color: color-mix(in oklab, var(--accent) 88%, black);
+}
+
+.driver-popover.tesoro-tour .driver-popover-footer-btn:focus-visible,
+.driver-popover.tesoro-tour .driver-popover-close-btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.driver-popover.tesoro-tour .driver-popover-close-btn {
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  color: var(--muted);
+}
+
+.driver-popover.tesoro-tour .driver-popover-close-btn:hover,
+.driver-popover.tesoro-tour .driver-popover-close-btn:focus-visible {
+  color: var(--overlay-foreground);
+  background-color: var(--default);
+}
+
+@media (pointer: coarse) {
+  .driver-popover.tesoro-tour .driver-popover-footer-btn {
+    min-height: 2.75rem;
+  }
+
+  .driver-popover.tesoro-tour .driver-popover-close-btn {
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}
+
+/* Flecha del color del popover: cada lado pinta solo su borde visible */
+.driver-popover.tesoro-tour .driver-popover-arrow-side-left {
+  border-left-color: var(--overlay);
+}
+
+.driver-popover.tesoro-tour .driver-popover-arrow-side-right {
+  border-right-color: var(--overlay);
+}
+
+.driver-popover.tesoro-tour .driver-popover-arrow-side-top {
+  border-top-color: var(--overlay);
+}
+
+.driver-popover.tesoro-tour .driver-popover-arrow-side-bottom {
+  border-bottom-color: var(--overlay);
+}

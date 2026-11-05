@@ -12,6 +12,7 @@ export function ImportButton({ target }: { target: ImportTarget }) {
     <Link
       href={`${IMPORT_PATH}?target=${target}` as Route}
       className={buttonVariants({ variant: "outline" })}
+      data-tour="import-button"
     >
       <FileUp className="size-4" />
       Importar

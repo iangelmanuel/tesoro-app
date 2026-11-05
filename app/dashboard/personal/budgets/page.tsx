@@ -114,7 +114,7 @@ async function BudgetsView({
               month={month}
               categories={available}
               trigger={
-                <Button>
+                <Button data-tour="budgets-create">
                   <Plus />
                   Nuevo presupuesto
                 </Button>
@@ -136,7 +136,7 @@ async function BudgetsView({
               month={month}
               categories={available}
               trigger={
-                <Button>
+                <Button data-tour="budgets-create">
                   <Plus />
                   Crear presupuesto
                 </Button>
@@ -151,7 +151,10 @@ async function BudgetsView({
             budgets={budgets}
             currency={workspace.currency}
           />
-          <ul className={SURFACE_LIST}>
+          <ul
+            className={SURFACE_LIST}
+            data-tour="budgets-list"
+          >
             {budgets.map((budget) => (
               <BudgetProgressRow
                 key={budget.budgetId}

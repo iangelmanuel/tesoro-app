@@ -33,7 +33,7 @@ export function UnbudgetedCategories({
   const total = rows.reduce((sum, row) => sum + row.spent, 0)
 
   return (
-    <Card>
+    <Card data-tour="budgets-unbudgeted">
       <CardHeading
         title="Sin presupuesto"
         action={

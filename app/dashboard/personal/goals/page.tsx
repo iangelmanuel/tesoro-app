@@ -67,7 +67,7 @@ async function GoalsContent() {
   const createButton = (
     <GoalDialog
       trigger={
-        <Button>
+        <Button data-tour="goals-create">
           <Plus />
           Nueva meta
         </Button>

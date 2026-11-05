@@ -53,6 +53,8 @@ interface ChartCardProps {
   legend?: LegendItem[]
   children: React.ReactNode
   className?: string
+  /** Ancla `data-tour` de los tutoriales guiados (SPEC 27) */
+  tour?: string
 }
 
 /**
@@ -67,10 +69,14 @@ export function ChartCard({
   figureCaption,
   legend,
   children,
-  className
+  className,
+  tour
 }: ChartCardProps) {
   return (
-    <Card className={cn("gap-4", className)}>
+    <Card
+      className={cn("gap-4", className)}
+      data-tour={tour}
+    >
       <div className="flex flex-col gap-1">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <h2 className="text-sm font-medium text-muted">{title}</h2>

@@ -54,7 +54,7 @@ export function ScoreRecommendationsView<K extends string>({
   return (
     <>
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card>
+        <Card data-tour="recommendations-score">
           <CardHeader>
             <CardTitle>{title}</CardTitle>
             <CardDescription>Score del mes actual</CardDescription>
@@ -73,7 +73,10 @@ export function ScoreRecommendationsView<K extends string>({
           </CardContent>
         </Card>
         {hasScore(current) && (
-          <Card className="lg:col-span-2">
+          <Card
+            className="lg:col-span-2"
+            data-tour="recommendations-factors"
+          >
             <CardHeader>
               <CardTitle>Desglose</CardTitle>
               <CardDescription>
@@ -92,7 +95,7 @@ export function ScoreRecommendationsView<K extends string>({
         )}
       </div>
 
-      <Card>
+      <Card data-tour="recommendations-history">
         <CardHeader>
           <CardTitle>Evolución</CardTitle>
           <CardDescription>Últimos 12 meses</CardDescription>
@@ -109,7 +112,7 @@ export function ScoreRecommendationsView<K extends string>({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-tour="recommendations-list">
         <CardHeader>
           <CardTitle>Recomendaciones</CardTitle>
           <CardDescription>

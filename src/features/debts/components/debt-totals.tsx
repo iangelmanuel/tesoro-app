@@ -19,7 +19,10 @@ export function DebtTotals({ debts, currency }: DebtTotalsProps) {
   const utilization = globalUtilization(debts)
 
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
+    <div
+      className="grid gap-4 sm:grid-cols-3"
+      data-tour="debts-totals"
+    >
       <Card>
         <CardHeader>
           <CardDescription>Deuda total</CardDescription>

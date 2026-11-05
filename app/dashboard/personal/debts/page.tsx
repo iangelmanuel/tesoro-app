@@ -144,7 +144,7 @@ function ReceivablesTab({
   const createButton = (
     <ReceivableDialog
       trigger={
-        <Button>
+        <Button data-tour="debts-create">
           <Plus />
           Nueva cuenta por cobrar
         </Button>
@@ -176,7 +176,10 @@ function ReceivablesTab({
 
   return (
     <>
-      <Card className="sm:max-w-xs">
+      <Card
+        className="sm:max-w-xs"
+        data-tour="debts-totals"
+      >
         <CardHeader>
           <CardDescription>Te deben</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums">
@@ -246,7 +249,7 @@ function PayablesTab({
   const createButton = (
     <DebtDialog
       trigger={
-        <Button>
+        <Button data-tour="debts-create">
           <Plus />
           Nueva deuda
         </Button>
@@ -284,7 +287,7 @@ function PayablesTab({
             currency={workspace.currency}
           />
 
-          <Card>
+          <Card data-tour="debts-upcoming">
             <CardHeading title="Próximos pagos" />
             <CardContent>
               <UpcomingDebtPayments

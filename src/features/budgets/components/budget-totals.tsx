@@ -27,7 +27,10 @@ export function BudgetTotals({ budgets, currency }: BudgetTotalsProps) {
   ]
 
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
+    <div
+      className="grid gap-4 sm:grid-cols-3"
+      data-tour="budgets-totals"
+    >
       {items.map((item) => (
         <Card key={item.label}>
           <CardHeader>

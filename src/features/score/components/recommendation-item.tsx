@@ -65,6 +65,7 @@ export function RecommendationItem({
         <Link
           href={recommendation.href}
           className={buttonVariants({ variant: "outline", size: "sm" })}
+          data-tour="recommendations-go"
         >
           {recommendation.linkLabel}
         </Link>
@@ -73,6 +74,7 @@ export function RecommendationItem({
             variant="ghost"
             size="sm"
             isDisabled={pending}
+            data-tour="recommendations-dismiss"
             onPress={dismiss}
           >
             Ocultar este mes

@@ -96,7 +96,10 @@ async function SummaryContent() {
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+        data-tour="summary-kpis"
+      >
         <StatCard
           label="Ingresos del mes"
           value={current.income}
@@ -140,6 +143,7 @@ async function SummaryContent() {
           figureCaption={`de balance en los últimos ${TREND_MONTHS} meses`}
           legend={isEmptyTrend ? undefined : incomeExpenseLegend()}
           className="lg:col-span-2"
+          tour="summary-trend"
         >
           {isEmptyTrend ? (
             <NoPeriodData
@@ -174,7 +178,10 @@ async function SummaryContent() {
       />
 
       {/* Tarjetas secundarias: dos por fila, sin huérfanas */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div
+        className="grid gap-4 md:grid-cols-2"
+        data-tour="summary-cards"
+      >
         <Suspense fallback={<CardSkeleton className="h-64" />}>
           <UpcomingPaymentsCard
             workspaceId={workspace.id}

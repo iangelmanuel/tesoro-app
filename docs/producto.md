@@ -192,22 +192,23 @@ Queda para un spec futuro recuperar contraseña, confirmar email, cambiar email 
 Las migraciones viven en `supabase/migrations/`. Toda tabla con datos de
 usuario tiene RLS.
 
-| Tabla                       | Qué guarda                                                                                                                                                                                                                               | RLS (cliente)                                   |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| `profiles`                  | Un perfil por usuario: `full_name`, `avatar_url`, `currency` (COP por defecto), `hide_amounts` (SPEC 22)                                                                                                                                 | `select` y `update` del propio perfil           |
-| `workspaces`                | Espacios del usuario: `type` (`personal` / `business`), `name` y `deletion_requested_at` (solo Empresa)                                                                                                                                  | `select`; `insert` y `update (name)` de Empresa |
-| `business_profiles`         | Datos de una empresa, 1:1 con su espacio: `tax_id` (NIT opcional) y `sector`                                                                                                                                                             | `select`, `insert`, `update`                    |
-| `categories`                | Categorías de ingreso o gasto: del sistema (`workspace_id` null) o propias, con `scope` (`personal` / `business`)                                                                                                                        | `select`, `insert` y `update`                   |
-| `transactions`              | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note`, `occurred_time` y `day_position` (SPEC 19), `account_id` opcional y, en Empresa, `counterparty` e `invoice_ref`                                      | `select`, `insert`, `update`, `delete`          |
-| `accounts`                  | Cuentas y métodos de pago: `name` (único por espacio), `kind` (`cash` / `bank` / `wallet` / `other`), `icon`, `color`, `opening_balance`, `opening_balance_on`, `archived_at`                                                            | `select`, `insert`, `update`                    |
-| `transfers`                 | Traspasos entre cuentas propias: `from_account_id`, `to_account_id` (distintas), `amount` > 0, `occurred_on`, `note`                                                                                                                     | `select`, `insert`, `update`, `delete`          |
-| `account_adjustments`       | Ajustes de saldo de "Actualizar saldo": `account_id`, `amount` ≠ 0 (> 0 sube el saldo), `occurred_on`, `note`                                                                                                                            | `select`, `insert`, `update`, `delete`          |
-| `recurring_expenses`        | Gastos fijos: `name`, `amount`, `category_id`, `frequency`, día y mes de pago, vigencia, `is_active`                                                                                                                                     | `select`, `insert`, `update`, `delete`          |
-| `budgets`                   | Presupuesto por categoría de gasto y mes (`month` = primer día), único por categoría y mes                                                                                                                                               | `select`, `insert`, `update`, `delete`          |
-| `savings_goals`             | Metas de ahorro: `name`, `target_amount`, `target_date` opcional, `icon`, `color`, `status`                                                                                                                                              | `select`, `insert`, `update`                    |
-| `goal_contributions`        | Aportes (`amount` > 0) y retiros (`amount` < 0) de una meta, con `occurred_on` y `note`                                                                                                                                                  | `select`, `insert`, `update`, `delete`          |
-| `dismissed_recommendations` | Recomendaciones ocultas: `rule`, `entity_key` y `month` en que se ocultaron, únicas por los tres                                                                                                                                         | `select`, `insert`, `delete`                    |
-| `imports`                   | Importaciones: `target` (destino), `filename`, `sheets`, `status` (`completed` / `undone`), `stats`, `undone_at`. Las filas importadas llevan `import_id` en `transactions`, `recurring_expenses`, `debt_entries` o `goal_contributions` | `select` (solo escriben las RPC)                |
+| Tabla                       | Qué guarda                                                                                                                                                                                                                               | RLS (cliente)                                             |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `profiles`                  | Un perfil por usuario: `full_name`, `avatar_url`, `currency` (COP por defecto), `hide_amounts` (SPEC 22)                                                                                                                                 | `select` y `update` del propio perfil                     |
+| `workspaces`                | Espacios del usuario: `type` (`personal` / `business`), `name` y `deletion_requested_at` (solo Empresa)                                                                                                                                  | `select`; `insert` y `update (name)` de Empresa           |
+| `business_profiles`         | Datos de una empresa, 1:1 con su espacio: `tax_id` (NIT opcional) y `sector`                                                                                                                                                             | `select`, `insert`, `update`                              |
+| `categories`                | Categorías de ingreso o gasto: del sistema (`workspace_id` null) o propias, con `scope` (`personal` / `business`)                                                                                                                        | `select`, `insert` y `update`                             |
+| `transactions`              | Movimientos: `type`, `amount`, `occurred_on`, `category_id`, `description`, `note`, `occurred_time` y `day_position` (SPEC 19), `account_id` opcional y, en Empresa, `counterparty` e `invoice_ref`                                      | `select`, `insert`, `update`, `delete`                    |
+| `accounts`                  | Cuentas y métodos de pago: `name` (único por espacio), `kind` (`cash` / `bank` / `wallet` / `other`), `icon`, `color`, `opening_balance`, `opening_balance_on`, `archived_at`                                                            | `select`, `insert`, `update`                              |
+| `transfers`                 | Traspasos entre cuentas propias: `from_account_id`, `to_account_id` (distintas), `amount` > 0, `occurred_on`, `note`                                                                                                                     | `select`, `insert`, `update`, `delete`                    |
+| `account_adjustments`       | Ajustes de saldo de "Actualizar saldo": `account_id`, `amount` ≠ 0 (> 0 sube el saldo), `occurred_on`, `note`                                                                                                                            | `select`, `insert`, `update`, `delete`                    |
+| `recurring_expenses`        | Gastos fijos: `name`, `amount`, `category_id`, `frequency`, día y mes de pago, vigencia, `is_active`                                                                                                                                     | `select`, `insert`, `update`, `delete`                    |
+| `budgets`                   | Presupuesto por categoría de gasto y mes (`month` = primer día), único por categoría y mes                                                                                                                                               | `select`, `insert`, `update`, `delete`                    |
+| `savings_goals`             | Metas de ahorro: `name`, `target_amount`, `target_date` opcional, `icon`, `color`, `status`                                                                                                                                              | `select`, `insert`, `update`                              |
+| `goal_contributions`        | Aportes (`amount` > 0) y retiros (`amount` < 0) de una meta, con `occurred_on` y `note`                                                                                                                                                  | `select`, `insert`, `update`, `delete`                    |
+| `dismissed_recommendations` | Recomendaciones ocultas: `rule`, `entity_key` y `month` en que se ocultaron, únicas por los tres                                                                                                                                         | `select`, `insert`, `delete`                              |
+| `tutorial_progress`         | Tutoriales guiados completados (SPEC 27): una fila por `user_id` y `section`, con `completed_at`. Sin fila = pendiente                                                                                                                   | `select`, `insert`, `update`, `delete` del propio usuario |
+| `imports`                   | Importaciones: `target` (destino), `filename`, `sheets`, `status` (`completed` / `undone`), `stats`, `undone_at`. Las filas importadas llevan `import_id` en `transactions`, `recurring_expenses`, `debt_entries` o `goal_contributions` | `select` (solo escriben las RPC)                          |
 
 - Cada usuario tiene **un solo** espacio Personal (índice único parcial) y
   hasta `business_workspace_limit()` empresas (hoy 1).
@@ -232,7 +233,7 @@ definer`) crea el perfil y el espacio Personal al insertar en
 | General      | `/dashboard/account/general`     | Perfil, avatar y email (solo lectura)        |
 | Seguridad    | `/dashboard/account/security`    | Contraseña y zona de peligro (borrar cuenta) |
 | Privacidad   | `/dashboard/account/privacy`     | Interruptor de ocultar cifras                |
-| Preferencias | `/dashboard/account/preferences` | Moneda                                       |
+| Preferencias | `/dashboard/account/preferences` | Moneda y tutoriales (SPEC 27)                |
 
 **Ocultar cifras**: un botón de ojo en el header de todo el dashboard (y el
 interruptor de Privacidad, que comparte su estado) reemplaza saldos y totales
@@ -252,6 +253,50 @@ por `***`, para mirar la app en público.
   (`aria-label="Monto oculto"`).
 - Las recomendaciones del score arman textos con montos en el servidor y aún
   no respetan este ajuste.
+
+## Tutoriales guiados (SPEC 27)
+
+Cada sección de Personal tiene un recorrido paso a paso con
+[Driver.js](https://driverjs.com) que enseña lo que se puede hacer en ella.
+
+| Sección         | Clave             | Ruta                                  |
+| --------------- | ----------------- | ------------------------------------- |
+| Resumen         | `summary`         | `/dashboard/personal`                 |
+| Movimientos     | `transactions`    | `/dashboard/personal/transactions`    |
+| Cuentas         | `accounts`        | `/dashboard/personal/accounts`        |
+| Gastos fijos    | `recurring`       | `/dashboard/personal/recurring`       |
+| Presupuestos    | `budgets`         | `/dashboard/personal/budgets`         |
+| Metas           | `goals`           | `/dashboard/personal/goals`           |
+| Deudas          | `debts`           | `/dashboard/personal/debts`           |
+| Reportes        | `reports`         | `/dashboard/personal/reports`         |
+| Recomendaciones | `recommendations` | `/dashboard/personal/recommendations` |
+
+- **Arranque automático:** al entrar a una sección cuyo tutorial no está
+  completado, el recorrido arranca solo tras el primer render. Espera a que
+  no haya un diálogo u hoja abierta (por ejemplo, la hoja de acciones rápidas
+  que se autoabre en móvil) y a que la página termine de cargar.
+- **Terminar** (último paso) lo marca completado y no vuelve a arrancar solo.
+  **Cerrar a medias** (X, Escape o clic fuera) no lo marca: arranca de nuevo
+  en la próxima visita a esa sección.
+- **Repetir:** el botón `?` del header (solo en las 9 secciones) arranca el
+  tutorial de la sección actual aunque esté completado. En **Cuenta ›
+  Preferencias**, la tarjeta **Tutoriales** lista las 9 secciones con su
+  estado (Completado / Pendiente), **Ver de nuevo** (navega a la sección y lo
+  arranca) y **Reiniciar todos** (borra el progreso).
+- **Escritorio y móvil:** cada paso puede ser solo de escritorio o solo de
+  móvil (`< 768 px`). En móvil se resaltan la barra inferior, el botón `+` y
+  los filtros en hoja, no el aside.
+- Un paso cuyo elemento no está en pantalla (lista vacía, sin archivadas,
+  otra pestaña) se omite y el recorrido sigue.
+- **Accesibilidad:** foco atrapado en el popover, botones Anterior /
+  Siguiente / Terminar, contador "Paso 2 de 6" y Escape para cerrar. Con
+  `prefers-reduced-motion`, sin animación ni scroll suave.
+- **Progreso:** tabla `tutorial_progress`, una fila por sección completada
+  (sin fila = pendiente). Se lee en el layout del dashboard y llega por
+  contexto, sin consulta por página. Reiniciar es un `delete`. Al agregar
+  tutoriales de Empresa se amplía el `check` de `section` con una migración.
+- Driver.js se descarga solo al arrancar un tutorial; no está en el bundle
+  inicial del dashboard.
 
 ## Dashboard
 

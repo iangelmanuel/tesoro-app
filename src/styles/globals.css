@@ -265,13 +265,115 @@
   }
 }
 
-/* Landing (SPEC 24): con reduced motion, los elementos que Motion revela al
-   entrar en pantalla aparecen ya en su estado final. Gana a los estilos en
-   línea que el servidor pinta para el estado oculto */
-@media (prefers-reduced-motion: reduce) {
-  [data-reveal] {
-    opacity: 1 !important;
-    transform: none !important;
-    filter: none !important;
+/* Landing (SPEC 24): revelado al entrar en pantalla, en CSS. reveal-observer
+   marca con `data-pending` solo lo que está debajo del pliegue y quita la
+   marca al verlo, una vez. Sin JS o con reduced motion no hay estado oculto */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal],
+  [data-reveal-list] > [data-reveal-item] {
+    transition:
+      opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+      translate 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  [data-reveal][data-pending],
+  [data-reveal-list][data-pending] > [data-reveal-item] {
+    opacity: 0;
+    translate: 0 24px;
+  }
+
+  [data-reveal-list] > [data-reveal-item]:nth-child(2) {
+    transition-delay: 80ms;
+  }
+  [data-reveal-list] > [data-reveal-item]:nth-child(3) {
+    transition-delay: 160ms;
+  }
+  [data-reveal-list] > [data-reveal-item]:nth-child(4) {
+    transition-delay: 240ms;
+  }
+  [data-reveal-list] > [data-reveal-item]:nth-child(5) {
+    transition-delay: 320ms;
+  }
+  [data-reveal-list] > [data-reveal-item]:nth-child(6) {
+    transition-delay: 400ms;
+  }
+  [data-reveal-list] > [data-reveal-item]:nth-child(7) {
+    transition-delay: 480ms;
+  }
+  [data-reveal-list] > [data-reveal-item]:nth-child(8) {
+    transition-delay: 560ms;
+  }
+  [data-reveal-list] > [data-reveal-item]:nth-child(9) {
+    transition-delay: 640ms;
+  }
+
+  /* Ligado al scroll (sin JS): la barra de factores se descubre y los clips
+     se acomodan mientras entran en pantalla */
+  @supports (animation-timeline: view()) {
+    .scroll-wipe {
+      animation: scroll-wipe linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 45%;
+    }
+
+    .scroll-settle {
+      animation: scroll-settle linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 40%;
+    }
+  }
+}
+
+@keyframes scroll-wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes scroll-settle {
+  from {
+    scale: 0.94;
+    opacity: 0.6;
+  }
+  to {
+    scale: 1;
+    opacity: 1;
+  }
+}
+
+/* Presión de los CTA de la landing: un leve levante y una presión corta */
+@media (prefers-reduced-motion: no-preference) {
+  .press {
+    transition: translate 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .press:hover {
+    translate: 0 -2px;
+  }
+  .press:active {
+    translate: 0 0;
+    scale: 0.97;
+  }
+}
+
+/* Hero de la landing (SPEC 24): entrada escalonada en CSS, desde el primer
+   pintado y sin ocultar el texto (solo desplazamiento, que va por la GPU:
+   un desenfoque repintaría en el hilo principal durante la carga), para que
+   el LCP no espere a hidratar. --hero-delay escalona cada bloque */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-enter {
+    animation: hero-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--hero-delay, 0ms);
+  }
+}
+
+@keyframes hero-enter {
+  from {
+    transform: translateY(16px);
+  }
+  to {
+    transform: none;
   }
 }

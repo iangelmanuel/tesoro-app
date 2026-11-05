@@ -1,17 +1,9 @@
 "use client"
 
-import { useEffect, useRef } from "react"
-import { cn } from "@heroui/react"
+import { useEffect, useRef, useState } from "react"
 import { ArrowRightIcon } from "lucide-react"
-import {
-  animate,
-  m,
-  useInView,
-  useMotionValue,
-  useReducedMotion,
-  useTransform
-} from "motion/react"
 import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
+import { cx as cn } from "@/libs/cx"
 import { SCORE_BANDS } from "./score-bands"
 
 // Ejemplo del score (datos ficticios). El medidor lleva las 4 bandas como
@@ -53,30 +45,52 @@ const ACTIVE = SCORE_BANDS.find(
 
 export function LandingScoreVisual() {
   const ref = useRef<HTMLDivElement>(null)
-  const inView = useInView(ref, { once: true, amount: 0.5 })
-  const reduce = useReducedMotion()
-  // El servidor pinta el valor final; el cliente lo baja a 0 solo si aún no
-  // está en pantalla y luego lo anima al verlo
-  const value = useMotionValue(SCORE)
-  const played = useRef(false)
+  // El servidor pinta el valor final; el cliente lo baja a 0 si aún no está
+  // en pantalla y lo anima una vez al verlo (requestAnimationFrame, sin
+  // librerías: el medidor no suma JS)
+  const [value, setValue] = useState(SCORE)
 
   useEffect(() => {
-    if (reduce || played.current) return
-    if (!inView) {
-      value.set(0)
-      return
-    }
-    played.current = true
-    const controls = animate(value, SCORE, {
-      duration: 1.4,
-      ease: [0.16, 1, 0.3, 1],
-      delay: 0.15
-    })
-    return () => controls.stop()
-  }, [inView, reduce, value])
+    const element = ref.current
+    if (!element) return
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
-  const cx = useTransform(value, (v) => point(v).x)
-  const cy = useTransform(value, (v) => point(v).y)
+    // El primer aviso del observer dice si ya está en pantalla (entonces se
+    // queda en el valor final); si no, baja a 0 y anima al verlo
+    let frame = 0
+    let first = true
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry) return
+        if (first) {
+          first = false
+          if (entry.isIntersecting) {
+            observer.disconnect()
+            return
+          }
+          setValue(0)
+          return
+        }
+        if (!entry.isIntersecting) return
+        observer.disconnect()
+        const start = performance.now() + 150
+        const tick = (now: number) => {
+          const t = Math.min(1, Math.max(0, (now - start) / 1400))
+          setValue(SCORE * (1 - Math.pow(1 - t, 4)))
+          if (t < 1) frame = requestAnimationFrame(tick)
+        }
+        frame = requestAnimationFrame(tick)
+      },
+      { threshold: 0.5 }
+    )
+    observer.observe(element)
+    return () => {
+      observer.disconnect()
+      cancelAnimationFrame(frame)
+    }
+  }, [])
+
+  const marker = point(value)
 
   return (
     <figure>
@@ -113,12 +127,13 @@ export function LandingScoreVisual() {
                 opacity={band === ACTIVE ? 1 : 0.28}
               />
             ))}
-            <m.circle
+            <circle
               r="6.5"
+              cx={marker.x}
+              cy={marker.y}
               fill="var(--surface)"
               stroke="var(--foreground)"
               strokeWidth="2.5"
-              style={{ cx, cy }}
             />
             <text
               x="60"

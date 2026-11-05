@@ -7,7 +7,9 @@ import { createClient } from "@/libs/supabase/server"
 
 // Botones de sesión del header. El fallback es el estado sin sesión, así el
 // shell prerenderizado ya trae enlaces útiles mientras la isla resuelve.
-// Son enlaces con el estilo del Button de HeroUI. La flecha del primario se
+// Son enlaces con el estilo del Button de HeroUI, sin prefetch al cargar: las
+// rutas de auth y del dashboard traen react-aria y se precargan al pasar el
+// mouse (rendimiento de la landing). La flecha del primario se
 // desliza un poco al pasar el mouse
 const PRIMARY = cn(
   buttonVariants(),
@@ -19,6 +21,7 @@ export function SessionButtons({ signedIn }: { signedIn: boolean }) {
     return (
       <Link
         href={SITE.routes.dashboard}
+        prefetch={false}
         className={PRIMARY}
       >
         Abrir Tesoro
@@ -31,12 +34,14 @@ export function SessionButtons({ signedIn }: { signedIn: boolean }) {
     <>
       <Link
         href={SITE.navigation.secondary.href}
+        prefetch={false}
         className={cn(buttonVariants({ variant: "ghost" }), "h-11 px-4")}
       >
         {SITE.navigation.secondary.label}
       </Link>
       <Link
         href={SITE.navigation.cta.href}
+        prefetch={false}
         className={PRIMARY}
       >
         {SITE.navigation.cta.label}

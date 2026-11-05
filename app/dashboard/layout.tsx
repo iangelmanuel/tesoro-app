@@ -1,6 +1,6 @@
 import { Suspense, cache } from "react"
 import { redirect } from "next/navigation"
-import { Skeleton } from "@heroui/react"
+import { Skeleton, ToastProvider } from "@heroui/react"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { AppSidebarSkeleton } from "@/components/dashboard/app-sidebar-skeleton"
 import { DashboardTitle } from "@/components/dashboard/dashboard-title"
@@ -80,6 +80,9 @@ export default function DashboardLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <WorkspaceThemeRoot>
+      {/* Los toasts solo existen en el dashboard: fuera de aquí, react-aria no
+          entra en el JS de la landing (SPEC 24) */}
+      <ToastProvider placement="bottom end" />
       <SidebarProvider>
         {/* Primer elemento enfocable: salta el aside y el header */}
         <a

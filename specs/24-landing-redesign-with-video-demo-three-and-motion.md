@@ -73,7 +73,7 @@ Es un spec grande (diseño, video, 3D, motion). Se ordena en etapas que se puede
   - detalle fino: espaciado, jerarquía tipográfica, estados hover/focus, contraste AA en claro y oscuro.
 - **Config en `SITE`** para la demo y los clips (ver "Modelo de datos"); los componentes no arman rutas de video a mano.
 - **Documentación:** `docs/ui.md` (sección Landing y animación), `docs/producto.md` (Landing), `CLAUDE.md` (comandos y pipeline de video), `PRODUCT.md` ("Evidence on Hand"), nota en SPEC 12 de que los videos pasaron a SPEC 19, `.env.example` y `CHANGELOG.md` en `[Unreleased]` (en inglés).
-- Lighthouse móvil ≥ 90 en Rendimiento, Accesibilidad, Buenas prácticas y SEO en `/`.
+- Lighthouse móvil en `/`: ≥ 90 en Accesibilidad, Buenas prácticas y SEO, y ≥ 70 en Rendimiento (ver Decisiones).
 
 **Fuera de alcance (para otros specs):**
 
@@ -167,7 +167,7 @@ Variables de entorno de desarrollo (solo en `.env.local`, placeholders en `.env.
 10. **Docs y limpieza.**
     - `docs/ui.md`, `docs/producto.md`, `CLAUDE.md`, `PRODUCT.md`, nota en SPEC 12, `.env.example` y `CHANGELOG.md`.
 11. **Medición.**
-    - `pnpm build && pnpm start`, Lighthouse móvil en `/`, y revisión del peso transferido de la carga inicial; corregir lo que baje de 90.
+    - `pnpm build && pnpm start`, Lighthouse móvil en `/`, y revisión del peso transferido de la carga inicial; corregir lo que baje del umbral.
 
 ## Criterios de aceptación
 
@@ -198,7 +198,7 @@ Variables de entorno de desarrollo (solo en `.env.local`, placeholders en `.env.
 - [ ] Los pares texto/fondo nuevos cumplen AA en claro y oscuro, y todo control nuevo (play/pausa) mide 44 px o más y es operable por teclado con foco visible.
 - [ ] Sin scroll horizontal en 375 px.
 - [ ] La landing no hace peticiones a dominios externos al cargar (salvo Supabase en la isla de sesión).
-- [ ] Lighthouse móvil ≥ 90 en Rendimiento, Accesibilidad, Buenas prácticas y SEO en `/`, sobre `pnpm start`.
+- [ ] Lighthouse móvil en `/`, sobre `pnpm start`: ≥ 90 en Accesibilidad, Buenas prácticas y SEO, y ≥ 70 en Rendimiento.
 - [ ] `DESIGN.md`, `docs/ui.md`, `docs/producto.md`, `CLAUDE.md`, `PRODUCT.md` y `CHANGELOG.md` están actualizados; SPEC 12 apunta a este spec para los videos.
 
 ## Decisiones
@@ -221,8 +221,11 @@ Variables de entorno de desarrollo (solo en `.env.local`, placeholders en `.env.
 - **Sí:** Three.js solo en el hero, diferido y desactivado en móvil, reduced-motion y `saveData`. Protege Lighthouse ≥ 90; el fallback estático es el mockup actual.
 - **No:** 3D en Score ni fondo global. Más JS y GPU a cambio de poco valor.
 - **Sí:** `@react-three/fiber` sin `drei`. Menos dependencias; se agrega `drei` solo si una pieza concreta lo exige.
-- **Sí:** Motion con `LazyMotion` + `domAnimation` y `MotionConfig reducedMotion="user"`. Menor bundle y respeto automático de la preferencia del sistema.
+- **Sí:** Motion con `LazyMotion` (funciones cargadas aparte) y `MotionConfig reducedMotion="user"`, solo en lo interactivo (reproductor, recorrido de funciones). Menor bundle y respeto automático de la preferencia del sistema.
+- **Sí:** revelados en CSS (2026-11-04, paso 11, decisión del usuario). `reveal.tsx` solo marca (`data-reveal`, `data-reveal-list`) y `reveal-observer.tsx` (un único `IntersectionObserver`) oculta lo que está fuera de pantalla y lo muestra al entrar. Animar con Motion los bloques del primer render retrasaba el LCP y sumaba JS a la hidratación.
 - **Sí:** `Reveal` compartido, no animaciones sueltas por componente. Mantiene un solo ritmo de movimiento.
+- **Sí:** Rendimiento de Lighthouse móvil ≥ 70, no ≥ 90 (2026-11-04, decisión del usuario). Medido entre 70 y 78 en local; Accesibilidad, Buenas prácticas y SEO dan 100. El LCP simulado (~3,8 s) lo marcan recursos de toda la app (CSS de HeroUI + Tailwind, react-dom, Inter), no la landing; en Chrome real el LCP es ~1 s. Recortar la CSS global queda para otro spec.
+- **No:** `experimental.inlineCss`. Probado en el paso 11: el HTML crece y el Rendimiento baja a 57–66.
 - **Sí:** la skill de Impeccable aplicada a toda la landing (`critique` → `polish` → `audit`), no solo a las secciones nuevas. Un hero pulido con el resto genérico se nota.
 - **Sí:** `score-visual.tsx` se queda como mockup mejorado, no se reemplaza por video: el score ya está en el video principal y en un clip.
 - **Sí:** JSON-LD `VideoObject` para el video principal. Aprovecha el contenido nuevo para SEO sin costo de peso.
@@ -235,7 +238,7 @@ Variables de entorno de desarrollo (solo en `.env.local`, placeholders en `.env.
 | Hyperframes cambia de CLI o estructura, o la skill queda en una ruta no reconocida | Paso 1 verifica la instalación y un render de prueba antes de invertir en las composiciones; la ubicación final se documenta en `CLAUDE.md`.              |
 | FFmpeg no está instalado en la máquina de Windows                                  | Paso 1 lo comprueba y documenta cómo instalarlo; los videos van commiteados, así que el CI no lo necesita.                                                |
 | Los videos superan el presupuesto de peso                                          | Se ajustan bitrate, resolución de salida (1280×720 si hace falta) y duración; el criterio de aceptación fija los máximos.                                 |
-| Three.js y Motion bajan Lighthouse de rendimiento                                  | Carga diferida, activación condicionada, `LazyMotion`, frameloop bajo demanda y medición en el paso 11; si no llega a 90, se recorta la escena 3D.        |
+| Three.js y Motion bajan Lighthouse de rendimiento                                  | Carga diferida, activación condicionada, `LazyMotion`, frameloop bajo demanda y medición en el paso 11; la escena 3D no entra en el LCP (medido).         |
 | Las grabaciones quedan desfasadas cuando cambie la UI                              | `seed-demo` y `record-demo` son repetibles en la máquina que los tiene (no están en el repo); re-renderizar es correr los scripts y `hyperframes render`. |
 | El usuario demo expone credenciales o se corre el seed contra producción           | Credenciales solo en `.env.local`; guarda de URL local en el script; `service_role` nunca en el repo.                                                     |
 | Autoplay de video y animaciones molestan o excluyen a usuarios                     | Respeto de `prefers-reduced-motion` y `saveData`, controles con teclado y sin audio.                                                                      |

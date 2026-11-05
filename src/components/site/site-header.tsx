@@ -1,11 +1,11 @@
 import Link from "next/link"
 import { Logo } from "@/components/brand/logo"
-import { ThemeToggle } from "@/components/theme/theme-toggle"
 import { SITE } from "@/config/site"
 import { GitHubStars } from "./github-stars"
 import { MobileNav } from "./mobile-nav"
 import { SiteHeaderSession } from "./site-header-session"
 import { SiteHeaderShell } from "./site-header-shell"
+import { SiteThemeToggle } from "./site-theme-toggle"
 
 // Header público: logo, navegación en una pastilla al centro y, a la derecha,
 // el repositorio con sus estrellas, el tema y la sesión
@@ -41,7 +41,7 @@ export function SiteHeader() {
 
         <div className="flex items-center justify-end gap-1">
           <GitHubStars className="hidden lg:inline-flex" />
-          <ThemeToggle className="size-11 rounded-full" />
+          <SiteThemeToggle />
           <span
             aria-hidden="true"
             className="mx-1 hidden h-6 w-px bg-separator sm:block"

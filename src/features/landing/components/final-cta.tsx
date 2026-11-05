@@ -3,7 +3,7 @@ import { buttonVariants } from "@heroui/react"
 import { ArrowRightIcon } from "lucide-react"
 import { Logo } from "@/components/brand/logo"
 import { SITE } from "@/config/site"
-import { Pressable, Reveal } from "./reveal"
+import { Reveal } from "./reveal"
 
 // Cierre: repite el final del video demo (isotipo, slogan y CTA) para que la
 // última imagen de la página sea la marca, no una tarjeta genérica
@@ -27,17 +27,19 @@ export function FinalCta() {
           instante.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-          <Pressable>
+          <span className="press inline-flex">
             <Link
               href={SITE.navigation.cta.href}
+              prefetch={false}
               className={buttonVariants({ size: "lg" })}
             >
               {SITE.navigation.cta.label}
               <ArrowRightIcon className="size-4" />
             </Link>
-          </Pressable>
+          </span>
           <Link
             href={SITE.navigation.secondary.href}
+            prefetch={false}
             className="inline-flex min-h-11 items-center rounded-md text-sm font-medium text-muted underline-offset-4 transition-colors outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-focus"
           >
             Ya tengo cuenta

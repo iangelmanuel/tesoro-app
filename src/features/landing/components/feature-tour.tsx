@@ -1,8 +1,8 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { cn } from "@heroui/react"
 import { m } from "motion/react"
+import { cx as cn } from "@/libs/cx"
 import { FeatureClip } from "./feature-clip"
 import { ScrollSettle } from "./reveal"
 

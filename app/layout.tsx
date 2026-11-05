@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
-import { ToastProvider, cn } from "@heroui/react"
+import { cn } from "@heroui/react"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import { SITE } from "@/config/site"
@@ -70,10 +70,7 @@ export default function RootLayout({
             buildAuthorSchema()
           ]}
         />
-        <ThemeProvider>
-          {children}
-          <ToastProvider placement="bottom end" />
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   )

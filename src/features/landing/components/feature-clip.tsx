@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import Image from "next/image"
 import { m } from "motion/react"
 
 type FeatureClipProps = {
@@ -52,7 +53,6 @@ export function FeatureClip({ sources }: FeatureClipProps) {
       <video
         ref={videoRef}
         className="absolute inset-0 size-full object-cover"
-        poster={sources.poster}
         width={1920}
         height={1080}
         preload="none"
@@ -73,14 +73,24 @@ export function FeatureClip({ sources }: FeatureClipProps) {
           type="video/mp4"
         />
       </video>
+      {/* Póster como imagen diferida (el atributo poster del video se
+          descarga enseguida aunque esté fuera de pantalla) */}
       <m.div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${sources.poster})` }}
+        className="pointer-events-none absolute inset-0"
         initial={false}
         animate={{ opacity: live ? 0 : 1 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      />
+      >
+        <Image
+          src={sources.poster}
+          alt=""
+          fill
+          sizes="(min-width: 1024px) 760px, 100vw"
+          unoptimized
+          className="object-cover"
+        />
+      </m.div>
     </div>
   )
 }

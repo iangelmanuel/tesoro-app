@@ -1,10 +1,11 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { cn } from "@heroui/react"
+import Image from "next/image"
 import { PauseIcon, PlayIcon } from "lucide-react"
 import { AnimatePresence, m } from "motion/react"
 import { SITE } from "@/config/site"
+import { cx as cn } from "@/libs/cx"
 
 const { demo } = SITE.landing
 
@@ -39,7 +40,6 @@ export function DemoPlayer() {
         <video
           ref={videoRef}
           className="absolute inset-0 size-full object-cover"
-          poster={demo.sources.poster}
           width={demo.width}
           height={demo.height}
           preload="none"
@@ -69,15 +69,28 @@ export function DemoPlayer() {
             // Capa del póster: un velo suave y el play grande al centro
             <m.div
               key="cover"
-              className="absolute inset-0 flex items-center justify-center bg-[rgba(2,44,34,0.1)]"
+              className="absolute inset-0 flex items-center justify-center"
               exit={{ opacity: 0, scale: 1.03 }}
               transition={{ duration: 0.45, ease: EASE_OUT }}
             >
+              {/* Póster como imagen diferida: no se descarga hasta acercarse */}
+              <Image
+                src={demo.sources.poster}
+                alt=""
+                fill
+                sizes="(min-width: 1152px) 1104px, 100vw"
+                unoptimized
+                className="object-cover"
+              />
+              <span
+                aria-hidden="true"
+                className="absolute inset-0 bg-[rgba(2,44,34,0.1)]"
+              />
               <m.button
                 type="button"
                 onClick={toggle}
                 aria-label="Reproducir el video"
-                className={cn(BUTTON, "size-20 sm:size-24")}
+                className={cn(BUTTON, "relative size-20 sm:size-24")}
                 whileHover={{ scale: 1.06 }}
                 whileTap={{ scale: 0.95 }}
               >

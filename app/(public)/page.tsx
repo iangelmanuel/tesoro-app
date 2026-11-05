@@ -6,6 +6,7 @@ import { FinalCta } from "@/features/landing/components/final-cta"
 import { Hero } from "@/features/landing/components/hero"
 import { MotionProvider } from "@/features/landing/components/motion-provider"
 import { OpenSource } from "@/features/landing/components/open-source"
+import { RevealObserver } from "@/features/landing/components/reveal-observer"
 import { ScoreSection } from "@/features/landing/components/score-section"
 import { WorkspacesSection } from "@/features/landing/components/workspaces-section"
 import { buildMetadata, buildVideoSchema } from "@/libs/seo"
@@ -18,6 +19,7 @@ export const metadata = buildMetadata({
 export default function HomePage() {
   return (
     <MotionProvider>
+      <RevealObserver />
       <main>
         <JsonLd schema={buildVideoSchema()} />
         <Hero />

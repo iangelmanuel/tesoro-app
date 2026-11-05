@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import dynamic from "next/dynamic"
-import { cn } from "@heroui/react"
+import { cx as cn } from "@/libs/cx"
 
 // El chunk de three/R3F solo se pide cuando de verdad se va a usar
 const HeroScene = dynamic(() => import("./hero-scene"), { ssr: false })

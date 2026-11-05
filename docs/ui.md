@@ -405,17 +405,27 @@ Piezas en `src/components/dashboard/mobile/`:
 - Tabs y diálogos: las transiciones propias de HeroUI.
 - Todo con `motion-reduce:transition-none` o dentro de
   `@media (prefers-reduced-motion: no-preference)`.
-- **Landing (Motion, SPEC 24):** `motion-provider.tsx` envuelve la página con
-  `LazyMotion` + `domAnimation` (`strict`: solo componentes `m`) y
-  `MotionConfig reducedMotion="user"`. Todo el movimiento sale de
-  `reveal.tsx`: una sola curva (expo.out `[0.16, 1, 0.3, 1]`), revelado de
-  0,7 s con subida de 24 px y desenfoque, escalonado de 80 ms, una vez por
-  elemento. `ScrollWipe` (barra de factores) y `ScrollSettle` (clips) van
-  ligados al scroll; el medidor del score se anima una sola vez al verse.
-- **Reduced motion en la landing:** el HTML del servidor no conoce la
-  preferencia, así que `globals.css` muestra `[data-reveal]` en su estado
-  final con `!important`; los hooks de scroll quedan fijos en 1 y no se carga
-  la escena 3D.
+- **Landing (SPEC 24): revelados en CSS.** `reveal.tsx` solo marca
+  (`data-reveal`, `data-reveal-list` / `data-reveal-item`) y
+  `reveal-observer.tsx`, un único `IntersectionObserver`, pone
+  `data-pending` en lo que arranca fuera de pantalla y lo quita al entrar.
+  La transición vive en `globals.css`: una sola curva (expo.out
+  `cubic-bezier(0.16, 1, 0.3, 1)`), 0,7 s con subida de 24 px, escalonado de
+  80 ms, una vez por elemento. Lo que ya se ve al cargar no se oculta nunca
+  (protege el LCP). El hero entra con `.hero-enter` (solo `translate`).
+- `ScrollWipe` (barra de factores) y `ScrollSettle` (clips) usan
+  `animation-timeline: view()` sin JS; el medidor del score se anima una vez
+  al verse. `.press` da el levante y la presión de los CTA.
+- **Motion solo en lo interactivo:** `motion-provider.tsx` (`LazyMotion`
+  estricto con las funciones cargadas aparte desde `motion-features.ts` y
+  `MotionConfig reducedMotion="user"`) cubre el reproductor de la demo y el
+  recorrido de funciones.
+- **Reduced motion y sin JS:** no hay estado oculto; todo se ve en su estado
+  final y no se carga la escena 3D.
+- **Peso de la landing:** `ToastProvider` solo en `app/dashboard/layout.tsx`,
+  enlaces a auth con `prefetch={false}`, cajón móvil del header cargado al
+  abrirlo y `SiteThemeToggle` como botón nativo. Así la landing no carga
+  react-aria al inicio.
 
 ## Accesibilidad
 

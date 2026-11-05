@@ -301,7 +301,7 @@ Un cofre en bloques (el isotipo) que se arma desde una nube de bloques sueltos, 
 
 ### Movimiento
 
-- **Landing:** una sola curva, expo.out `cubic-bezier(0.16, 1, 0.3, 1)`. Revelado al entrar en pantalla: 0.7 s desde 24 px abajo, opacidad 0 y desenfoque de 6 px; listas escalonadas cada 80 ms; una vez por elemento. `LazyMotion` estricto con componentes `m` y `MotionConfig reducedMotion="user"`. Con reduced motion, `[data-reveal]` aparece en su estado final desde el HTML del servidor.
+- **Landing:** una sola curva, expo.out `cubic-bezier(0.16, 1, 0.3, 1)`. Revelado al entrar en pantalla: 0.7 s desde 24 px abajo y opacidad 0; listas escalonadas cada 80 ms; una vez por elemento. Los revelados son CSS con un único `IntersectionObserver` (`data-reveal`, `data-pending`); lo visible al cargar nunca se oculta. Motion (`LazyMotion` estricto, `MotionConfig reducedMotion="user"`) queda solo para el reproductor y el recorrido de funciones. Con reduced motion o sin JS, todo aparece en su estado final.
 - **Dashboard:** tarjetas en 180 ms desde casi visibles, hover de 150 ms, gráficas en 400 ms; nada con `prefers-reduced-motion: reduce`.
 
 ## Do's and Don'ts

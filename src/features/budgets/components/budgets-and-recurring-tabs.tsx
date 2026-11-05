@@ -43,7 +43,10 @@ export function BudgetsAndRecurringTabs({
       className="gap-6"
     >
       <Tabs.ListContainer className="md:hidden">
-        <Tabs.List aria-label="Gastos fijos y presupuestos">
+        <Tabs.List
+          aria-label="Gastos fijos y presupuestos"
+          data-tour="budgets-recurring-tabs"
+        >
           <Tabs.Tab
             id="recurring"
             className="max-md:min-h-11"

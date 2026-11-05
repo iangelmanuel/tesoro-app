@@ -29,7 +29,7 @@ export async function RecurringView({
       workspaceId={workspace.id}
       categories={categories}
       trigger={
-        <Button>
+        <Button data-tour="recurring-create">
           <Plus />
           Nuevo gasto fijo
         </Button>
@@ -59,7 +59,7 @@ export async function RecurringView({
         <ImportButton target="recurring_expenses" />
       </div>
 
-      <Card>
+      <Card data-tour="recurring-upcoming">
         <CardHeading title="Próximos pagos" />
         <CardContent className="flex flex-col gap-3">
           {isUpToDate && (

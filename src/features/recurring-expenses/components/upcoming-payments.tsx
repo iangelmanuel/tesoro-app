@@ -80,6 +80,7 @@ export function PayOccurrenceButton({
           size="sm"
           variant="outline"
           className={className}
+          data-tour="recurring-pay"
         >
           <Check />
           Marcar como pagado

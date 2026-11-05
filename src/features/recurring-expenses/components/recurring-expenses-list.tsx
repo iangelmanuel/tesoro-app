@@ -37,7 +37,10 @@ export function RecurringExpensesList({
   currency
 }: RecurringExpensesListProps) {
   return (
-    <ScrollTable minWidth="56rem">
+    <ScrollTable
+      minWidth="56rem"
+      tour="recurring-list"
+    >
       <Table>
         <Table.ScrollContainer>
           <Table.Content aria-label="Gastos fijos">

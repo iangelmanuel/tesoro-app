@@ -304,7 +304,54 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
       viewport: "mobile"
     }
   ],
-  recurring: [],
+  recurring: [
+    {
+      title: "Tus gastos fijos",
+      description:
+        "Arriendo, servicios, suscripciones o seguros: lo que pagas cada cierto tiempo. Tesoro te avisa cuándo vence cada uno."
+    },
+    {
+      target: "budgets-recurring-tabs",
+      title: "Gastos fijos y presupuestos",
+      description:
+        "En el teléfono, las dos pantallas comparten lugar. Cambia entre ellas con estas pestañas.",
+      viewport: "mobile"
+    },
+    {
+      target: "recurring-create",
+      title: "Agrega un gasto fijo",
+      description: "Ponle nombre, monto, categoría y cada cuánto se repite."
+    },
+    {
+      target: "import-button",
+      title: "O impórtalos",
+      description: "Si ya los tienes en Excel o CSV, súbelos todos de una vez."
+    },
+    {
+      target: "recurring-upcoming",
+      title: "Próximos pagos",
+      description:
+        "Lo que vence pronto y lo que ya venció, con lo pagado este mes en verde."
+    },
+    {
+      target: "recurring-pay",
+      title: "Márcalo como pagado",
+      description:
+        "Registra el pago con su monto real y la cuenta de donde salió. Queda en tus movimientos."
+    },
+    {
+      target: "recurring-list",
+      title: "Todos tus gastos fijos",
+      description:
+        "Cada uno con su monto, frecuencia, vigencia y estado. En el teléfono, desliza la tabla hacia los lados."
+    },
+    {
+      target: "row-actions",
+      title: "Edita, pausa o elimina",
+      description:
+        "Pausa un gasto que no vas a pagar por un tiempo; reanúdalo cuando vuelva."
+    }
+  ],
   budgets: [],
   goals: [],
   debts: [],

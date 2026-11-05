@@ -1,7 +1,7 @@
 import { SITE } from "@/config/site"
 import type { OccurrenceTone } from "@/features/recurring-expenses/occurrences"
 import { shiftMonth, todayISO } from "@/libs/dates"
-import type { DebtKind, RateType } from "./schemas"
+import type { DebtKind, RateType, ReceivableSchedule } from "./schemas"
 
 export const DEBTS_PATH = `${SITE.routes.dashboardPersonal}/debts` as const
 
@@ -174,10 +174,37 @@ export function totalDebt(debts: DebtCalcInput[]) {
   return debts.filter(isActiveDebt).reduce((sum, debt) => sum + debt.balance, 0)
 }
 
-/** Σ saldo de cuentas por cobrar activas */
-export function totalReceivable(debts: DebtCalcInput[]) {
+/** Campos del tipo de cobro de una cuenta por cobrar (SPEC 28) */
+interface ReceivableScheduleFields {
+  kind: DebtKind
+  schedule: ReceivableSchedule | null
+  term_months: number | null
+}
+
+/**
+ * Cuenta por cobrar mes a mes sin número de cuotas (SPEC 28): no tiene saldo
+ * total, así que no suma en "Te deben" ni se marca como cobrada por saldo 0
+ */
+export function isOpenEndedReceivable(debt: ReceivableScheduleFields) {
+  return (
+    debt.kind === "receivable" &&
+    debt.schedule === "monthly" &&
+    debt.term_months === null
+  )
+}
+
+/** Σ saldo de cuentas por cobrar activas, sin las mensuales indefinidas */
+export function totalReceivable(
+  debts: (Pick<DebtCalcInput, "status" | "balance"> &
+    ReceivableScheduleFields)[]
+) {
   return debts
-    .filter((debt) => debt.kind === "receivable" && debt.status === "active")
+    .filter(
+      (debt) =>
+        debt.kind === "receivable" &&
+        debt.status === "active" &&
+        !isOpenEndedReceivable(debt)
+    )
     .reduce((sum, debt) => sum + debt.balance, 0)
 }
 
@@ -451,9 +478,16 @@ export function isReceivableOverdue(
   )
 }
 
-/** Activa con saldo 0: se puede marcar como pagada o cobrada */
+/**
+ * Activa con saldo 0: se puede marcar como pagada o cobrada. Una mensual
+ * indefinida arranca en 0 sin estar cobrada: sigue activa hasta archivarla
+ */
 export function hasZeroBalance(
-  debt: Pick<DebtCalcInput, "status" | "balance">
+  debt: Pick<DebtCalcInput, "status" | "balance"> & ReceivableScheduleFields
 ) {
-  return debt.status === "active" && debt.balance === 0
+  return (
+    debt.status === "active" &&
+    debt.balance === 0 &&
+    !isOpenEndedReceivable(debt)
+  )
 }

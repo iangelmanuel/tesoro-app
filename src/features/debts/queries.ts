@@ -65,6 +65,8 @@ export async function getDebts(workspaceId: string): Promise<Debt[]> {
     rate_type: row.rate_type ?? null,
     due_day: row.due_day ?? null,
     expected_on: row.expected_on ?? null,
+    schedule: row.schedule ?? null,
+    starts_on: row.starts_on ?? null,
     fee_day: row.fee_day ?? null,
     fee_charged_through: row.fee_charged_through ?? null,
     closed_at: row.closed_at ?? null,

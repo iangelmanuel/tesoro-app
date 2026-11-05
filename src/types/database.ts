@@ -247,6 +247,7 @@ export type Database = {
           note: string | null
           occurred_on: string
           occurred_time: string | null
+          period_on: string | null
           transaction_id: string | null
           updated_at: string
           workspace_id: string
@@ -265,6 +266,7 @@ export type Database = {
           note?: string | null
           occurred_on: string
           occurred_time?: string | null
+          period_on?: string | null
           transaction_id?: string | null
           updated_at?: string
           workspace_id: string
@@ -283,6 +285,7 @@ export type Database = {
           note?: string | null
           occurred_on?: string
           occurred_time?: string | null
+          period_on?: string | null
           transaction_id?: string | null
           updated_at?: string
           workspace_id?: string
@@ -339,6 +342,8 @@ export type Database = {
           opening_balance: number
           original_amount: number | null
           rate_type: Database["public"]["Enums"]["rate_type"] | null
+          schedule: Database["public"]["Enums"]["receivable_schedule"] | null
+          starts_on: string | null
           status: Database["public"]["Enums"]["debt_status"]
           term_months: number | null
           updated_at: string
@@ -364,6 +369,8 @@ export type Database = {
           opening_balance: number
           original_amount?: number | null
           rate_type?: Database["public"]["Enums"]["rate_type"] | null
+          schedule?: Database["public"]["Enums"]["receivable_schedule"] | null
+          starts_on?: string | null
           status?: Database["public"]["Enums"]["debt_status"]
           term_months?: number | null
           updated_at?: string
@@ -389,6 +396,8 @@ export type Database = {
           opening_balance?: number
           original_amount?: number | null
           rate_type?: Database["public"]["Enums"]["rate_type"] | null
+          schedule?: Database["public"]["Enums"]["receivable_schedule"] | null
+          starts_on?: string | null
           status?: Database["public"]["Enums"]["debt_status"]
           term_months?: number | null
           updated_at?: string
@@ -1083,6 +1092,8 @@ export type Database = {
           paid_total: number
           prev_due_on: string
           rate_type: Database["public"]["Enums"]["rate_type"]
+          schedule: Database["public"]["Enums"]["receivable_schedule"]
+          starts_on: string
           status: Database["public"]["Enums"]["debt_status"]
           term_months: number
           updated_at: string
@@ -1197,6 +1208,7 @@ export type Database = {
           p_note: string
           p_occurred_on: string
           p_occurred_time?: string
+          p_period_on?: string
           p_transfer_amount?: number
           p_transfer_from?: string
         }
@@ -1320,6 +1332,7 @@ export type Database = {
         | "debt_entries"
         | "goal_contributions"
       rate_type: "ea" | "mv"
+      receivable_schedule: "once" | "monthly"
       recurring_frequency: "monthly" | "yearly"
       transaction_type: "income" | "expense"
       workspace_type: "personal" | "business"
@@ -1460,6 +1473,7 @@ export const Constants = {
         "goal_contributions"
       ],
       rate_type: ["ea", "mv"],
+      receivable_schedule: ["once", "monthly"],
       recurring_frequency: ["monthly", "yearly"],
       transaction_type: ["income", "expense"],
       workspace_type: ["personal", "business"]

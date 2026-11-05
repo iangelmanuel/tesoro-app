@@ -236,9 +236,18 @@ function DebtForm({ debt, onSaved, onCancel }: DebtFormProps) {
             intrínseco del input más el toggle desbordan la celda y el toggle
             se monta sobre Día de pago */}
         <div className="flex min-w-0 flex-col gap-2">
+          {/* El label va sobre el campo y el tipo de tasa juntos: dentro del
+              campo se partía en tres líneas */}
+          <Label
+            id="debt-rate-label"
+            isRequired={!isCard}
+          >
+            {isCard ? "Tasa de interés (opcional)" : "Tasa de interés"}
+          </Label>
           <div className="flex min-w-0 items-end gap-2">
             <TextField
               name="interest_rate"
+              aria-labelledby="debt-rate-label"
               inputMode="decimal"
               autoComplete="off"
               defaultValue={
@@ -249,9 +258,6 @@ function DebtForm({ debt, onSaved, onCancel }: DebtFormProps) {
               validationBehavior="aria"
               className="flex min-w-0 flex-1 flex-col gap-2"
             >
-              <Label>
-                {isCard ? "Tasa de interés (opcional)" : "Tasa de interés"}
-              </Label>
               <Input
                 className="w-full min-w-0"
                 placeholder={isCard ? "28,5" : "0 si no tiene"}

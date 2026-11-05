@@ -6,13 +6,17 @@ import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { revalidatePersonalPages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import type { DebtStatus } from "./calculations"
+import { lastPeriodOn, periodOf } from "./receivable-schedule"
 import {
   DEBT_KINDS,
   DEBT_SCHEMAS,
   type DebtKind,
+  type ReceivableSchedule,
   adjustBalanceSchema,
   advanceSchema,
-  paymentSchema
+  monthlyReceivableSchema,
+  paymentSchema,
+  receivableScheduleSchema
 } from "./schemas"
 import type {
   AdjustBalanceFormState,
@@ -37,6 +41,11 @@ const ADVANCE_ONLY_CARD = "Solo una tarjeta admite avances"
 const SAME_TRANSFER_ACCOUNT = "Elige una cuenta distinta a la que paga"
 const RECEIVABLE_TRANSFER = "Un abono no admite traspaso"
 const RECEIVABLE_EXTRA = "Una cuenta por cobrar no tiene abonos extra"
+const INSTALLMENT_REQUIRED = "Elige la cuota que se cobra"
+const INSTALLMENT_PAID = "Esta cuota ya tiene un cobro"
+const INSTALLMENT_OUT_OF_RANGE = "La cuota está fuera del cobro mensual"
+const ENTRIES_OUT_OF_RANGE =
+  "Hay cobros de cuotas fuera de estas fechas. Elimínalos primero"
 
 const DEBT_FIELDS: Record<DebtKind, readonly string[]> = {
   credit_card: [
@@ -66,6 +75,16 @@ const DEBT_FIELDS: Record<DebtKind, readonly string[]> = {
   receivable: ["name", "counterparty", "opening_balance", "expected_on"]
 }
 
+// Cuenta por cobrar mensual (SPEC 28): el saldo inicial se calcula
+const MONTHLY_RECEIVABLE_FIELDS = [
+  "name",
+  "counterparty",
+  "installment",
+  "due_day",
+  "starts_on",
+  "term_months"
+] as const
+
 const PAYMENT_FIELDS = [
   "amount",
   "occurred_on",
@@ -73,6 +92,7 @@ const PAYMENT_FIELDS = [
   "note",
   "create_transaction",
   "is_extra_payment",
+  "period_on",
   "account_id",
   "transfer_from",
   "transfer_amount"
@@ -123,6 +143,19 @@ function debtPgError(
   if (error.message.includes(ADVANCE_ONLY_CARD)) {
     return { error: ADVANCE_ONLY_CARD }
   }
+  // Cuotas del cobro mensual: índice único y reglas de check_debt_entry
+  if (
+    error.code === "23505" &&
+    error.message.includes("debt_entries_one_payment_per_period")
+  ) {
+    return { fieldErrors: { period_on: [INSTALLMENT_PAID] } }
+  }
+  if (error.message.includes("La cuota es")) {
+    return { fieldErrors: { period_on: [INSTALLMENT_OUT_OF_RANGE] } }
+  }
+  if (error.message.includes(INSTALLMENT_REQUIRED)) {
+    return { fieldErrors: { period_on: [INSTALLMENT_REQUIRED] } }
+  }
   // El traspaso desde la misma cuenta que paga lo frena transfers_check
   if (error.message.includes("transfers_check")) {
     return { fieldErrors: { transfer_from: [SAME_TRANSFER_ACCOUNT] } }
@@ -162,7 +195,7 @@ async function findDebt(debtId: string) {
   const { data } = await supabase
     .from("debts")
     .select(
-      "id, workspace_id, kind, status, opening_balance, entries:debt_entries (kind, amount)"
+      "id, workspace_id, kind, status, opening_balance, schedule, term_months, entries:debt_entries (kind, amount, period_on)"
     )
     .eq("id", debtId)
     .eq("workspace_id", workspace.id)
@@ -181,7 +214,15 @@ async function findDebt(debtId: string) {
     Number(data.opening_balance)
   )
 
-  return { ...data, balance: roundCents(balance) }
+  return {
+    ...data,
+    balance: roundCents(balance),
+    // Mensual indefinida: sin saldo total, el saldo no limita los cobros
+    openEnded:
+      data.kind === "receivable" &&
+      data.schedule === "monthly" &&
+      data.term_months === null
+  }
 }
 
 // Entrada del espacio Personal del usuario, con su deuda
@@ -203,11 +244,26 @@ async function findEntry(entryId: string) {
   return debt ? { ...data, amount: Number(data.amount), debt } : null
 }
 
-// Valida con el esquema del tipo. Los errores se aplanan aquí porque cada
-// tipo tiene su propio esquema.
-function readDebtForm(formData: FormData, kind: DebtKind) {
-  const values = { ...readValues(formData, DEBT_FIELDS[kind]), kind }
-  const result = DEBT_SCHEMAS[kind].safeParse(values)
+// Valida con el esquema del tipo (y, en una cuenta por cobrar, del tipo de
+// cobro). Los errores se aplanan aquí porque cada tipo tiene su propio
+// esquema.
+function readDebtForm(
+  formData: FormData,
+  kind: DebtKind,
+  schedule: ReceivableSchedule | null
+) {
+  const monthly = kind === "receivable" && schedule === "monthly"
+  const values = {
+    ...readValues(
+      formData,
+      monthly ? MONTHLY_RECEIVABLE_FIELDS : DEBT_FIELDS[kind]
+    ),
+    kind,
+    ...(schedule ? { schedule } : {})
+  }
+  const result = (
+    monthly ? monthlyReceivableSchema : DEBT_SCHEMAS[kind]
+  ).safeParse(values)
   const parsed = result.success
     ? ({ success: true, data: result.data } as const)
     : ({
@@ -227,7 +283,19 @@ export async function createDebt(
     return { fieldErrors: { kind: ["Elige el tipo de deuda"] } }
   }
 
-  const { values, parsed } = readDebtForm(formData, kind.data)
+  // El tipo de cobro solo aplica a cuentas por cobrar; sin él, cobro único
+  let schedule: ReceivableSchedule | null = null
+  if (kind.data === "receivable") {
+    const parsedSchedule = receivableScheduleSchema.safeParse(
+      formData.get("schedule") ?? "once"
+    )
+    if (!parsedSchedule.success) {
+      return { fieldErrors: { schedule: ["Elige el tipo de cobro"] } }
+    }
+    schedule = parsedSchedule.data
+  }
+
+  const { values, parsed } = readDebtForm(formData, kind.data, schedule)
 
   if (!parsed.success) {
     return { fieldErrors: parsed.fieldErrors, values }
@@ -272,20 +340,40 @@ export async function updateDebt(
     return { error: DEBT_NOT_FOUND }
   }
 
-  // El tipo no cambia: se valida con el esquema del tipo guardado
-  const { values, parsed } = readDebtForm(formData, debt.kind)
+  // El tipo y el tipo de cobro no cambian: se valida con el esquema de los
+  // guardados
+  const { values, parsed } = readDebtForm(formData, debt.kind, debt.schedule)
 
   if (!parsed.success) {
     return { fieldErrors: parsed.fieldErrors, values }
   }
 
-  // El saldo cambia lo mismo que el saldo inicial
+  // Cobro mensual: los cobros ya hechos deben seguir dentro de las cuotas
+  if ("starts_on" in parsed.data) {
+    const first = periodOf(parsed.data.starts_on)
+    const last = lastPeriodOn(parsed.data)
+    const outside = debt.entries.some(
+      (entry) =>
+        entry.period_on !== null &&
+        (entry.period_on < first || (last !== null && entry.period_on > last))
+    )
+    if (outside) {
+      return { fieldErrors: { starts_on: [ENTRIES_OUT_OF_RANGE] }, values }
+    }
+  }
+
+  // El saldo cambia lo mismo que el saldo inicial. Una mensual indefinida no
+  // tiene saldo total. En una mensual con cuotas el saldo inicial sale de las
+  // cuotas, así que el error va en ellas.
+  const monthlyForm = "starts_on" in parsed.data
   const newBalance =
     debt.balance - Number(debt.opening_balance) + parsed.data.opening_balance
-  if (newBalance < 0) {
+  if (newBalance < 0 && !(monthlyForm && parsed.data.term_months === null)) {
     return {
       fieldErrors: {
-        opening_balance: ["Con este saldo inicial la deuda queda en negativo"]
+        [monthlyForm ? "term_months" : "opening_balance"]: [
+          "Con este saldo inicial la deuda queda en negativo"
+        ]
       },
       values
     }
@@ -362,6 +450,10 @@ export async function markDebtPaid(id: string): Promise<DebtActionResult> {
   if (debt.balance > 0) {
     return { error: HAS_BALANCE }
   }
+  // Mensual indefinida: sin saldo total, sigue activa hasta archivarla
+  if (debt.openEnded) {
+    return { error: "Un cobro mensual sin número de cuotas se archiva" }
+  }
 
   return transitionDebt(debt.id, ["active"], "paid")
 }
@@ -416,8 +508,22 @@ export async function recordPayment(
   if (debt.kind === "credit_card" && parsed.data.create_transaction) {
     return { error: CARD_TRANSACTION, values }
   }
-  if (parsed.data.amount > debt.balance) {
+  if (!debt.openEnded && parsed.data.amount > debt.balance) {
     return { fieldErrors: { amount: [OVER_PAYMENT] }, values }
+  }
+
+  // Cuota del cobro mensual (SPEC 28): obligatoria y con un solo cobro. En
+  // otras deudas no aplica.
+  const monthly = debt.kind === "receivable" && debt.schedule === "monthly"
+  const periodOn = monthly ? parsed.data.period_on : null
+  if (monthly && periodOn === null) {
+    return { fieldErrors: { period_on: [INSTALLMENT_REQUIRED] }, values }
+  }
+  if (
+    periodOn !== null &&
+    debt.entries.some((entry) => entry.period_on === periodOn)
+  ) {
+    return { fieldErrors: { period_on: [INSTALLMENT_PAID] }, values }
   }
   if (debt.kind === "receivable" && parsed.data.transfer_from) {
     return { fieldErrors: { transfer_from: [RECEIVABLE_TRANSFER] }, values }
@@ -450,7 +556,8 @@ export async function recordPayment(
     p_transfer_amount: hasTransfer
       ? (parsed.data.transfer_amount ?? undefined)
       : undefined,
-    p_is_extra_payment: parsed.data.is_extra_payment
+    p_is_extra_payment: parsed.data.is_extra_payment,
+    p_period_on: periodOn ?? undefined
   })
 
   if (error) {
@@ -572,8 +679,12 @@ export async function updateEntry(
         values
       }
     }
-    // El saldo sin este pago debe cubrir el monto nuevo
-    if (payment.parsed.data.amount > entry.debt.balance + entry.amount) {
+    // El saldo sin este pago debe cubrir el monto nuevo (salvo en una
+    // mensual indefinida, sin saldo total)
+    if (
+      !entry.debt.openEnded &&
+      payment.parsed.data.amount > entry.debt.balance + entry.amount
+    ) {
       return { fieldErrors: { amount: [OVER_PAYMENT] }, values }
     }
 

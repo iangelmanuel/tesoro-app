@@ -815,8 +815,11 @@ inválido de `tab` cae a Debo.
 - **Préstamo:** nombre, entidad opcional, saldo inicial (> 0), cuota, tasa
   (obligatoria, 0 permitido) con su tipo, día de pago, y opcionales monto
   original y plazo en meses (informativos).
-- **Cuenta por cobrar:** nombre, deudor opcional, monto (> 0) y fecha
-  esperada opcional. Sin tasa ni proyección.
+- **Cuenta por cobrar:** nombre y deudor opcional, sin tasa ni proyección.
+  Dos tipos de cobro (`schedule`), que se eligen al crear y no cambian:
+  - **Una vez** (`once`): monto (> 0) y fecha esperada opcional.
+  - **Mes a mes** (`monthly`): monto mensual, día de pago, fecha de inicio y
+    número de cuotas opcional. Ver "Me deben mes a mes".
 - **Tasa:** porcentaje con coma decimal (`28,5`), E.A. (máximo 200 %) o M.V.
   (máximo 10 %).
 - **Entradas** (`debt_entries`): pagos (monto > 0) y ajustes (monto con
@@ -861,7 +864,7 @@ es `due_day`; si el día no existe en el mes, cae en el último día del mes
 | Utilización        | `saldo / cupo`, en porcentaje truncado. Puede pasar de 100 %                   |
 | Utilización global | `Σ saldos / Σ cupos` de las tarjetas activas                                   |
 | Deuda total        | `Σ saldo` de tarjetas y préstamos activos                                      |
-| Te deben           | `Σ saldo` de cuentas por cobrar activas                                        |
+| Te deben           | `Σ saldo` de cuentas por cobrar activas, sin las mensuales indefinidas         |
 | Interés del mes    | `saldo × r` por deuda (en centavos); el encabezado suma las activas            |
 | % pagado           | `(monto original − saldo) / monto original`, solo préstamos con monto original |
 | % cobrado          | `(monto inicial − saldo) / monto inicial`                                      |
@@ -928,6 +931,9 @@ Etiquetas de la deuda:
 | activa con fecha esperada pasada | —                  | Vencida           | ámbar  |
 | activa con saldo 0               | Saldo en cero      | Saldo en cero     | verde  |
 
+Una cuenta mensual indefinida nunca muestra "Saldo en cero": arranca en 0 sin
+estar cobrada.
+
 ### Transiciones
 
 | Acción             | Desde              | Hacia      | Condición | Efecto              |
@@ -952,7 +958,8 @@ Etiquetas de la deuda:
   mes), "Próximos pagos" (vencidos primero y luego por fecha) y una tarjeta
   por deuda activa, ordenadas por próximo vencimiento.
 - **Me deben:** total "Te deben" y una tarjeta por cuenta activa, ordenadas
-  por fecha esperada (sin fecha al final).
+  por fecha esperada (sin fecha al final; las mes a mes no tienen fecha
+  esperada).
 - Cada tarjeta abre un Sheet con el detalle, la proyección y el simulador,
   "Registrar pago" (o "Registrar abono"), "Actualizar saldo" y el historial
   de pagos y ajustes, editable mientras la deuda está activa.
@@ -960,6 +967,59 @@ Etiquetas de la deuda:
   (si hay tarjetas activas) y hasta 3 próximos pagos, vencidos primero, con
   "Ver todas". Las cuentas por cobrar no aparecen. Como los demás widgets,
   solo se muestra cuando hay movimientos.
+
+### Me deben mes a mes (SPEC 28)
+
+Para quien paga una cuota fija cada mes (un arriendo, una cuota acordada con
+un familiar). Es una cuenta por cobrar con `schedule = 'monthly'`: hereda el
+Sheet, el archivo, los cobros con cuenta, Movimientos y la edición de SPEC 26.
+
+- **Crear:** el diálogo de cuenta por cobrar tiene tabs **Una vez | Mes a
+  mes** solo al crear. Mes a mes pide nombre, deudor (opcional), **monto
+  mensual** (`installment`), **día de pago** 1–31 (`due_day`), **fecha de
+  inicio** (`starts_on`) y **número de cuotas** opcional (`term_months`;
+  vacío = indefinida). Al editar se muestran los campos del tipo guardado; el
+  tipo de cobro no cambia (`check_debt_update`).
+- **Saldo:** con número de cuotas, `opening_balance = monto mensual ×
+cuotas` y el saldo baja con cada cobro. Indefinida: `opening_balance = 0`,
+  sin saldo total; no suma en "Te deben" ni valida saldo negativo.
+- **Cuotas:** una por mes desde el mes de inicio hasta el mes siguiente al
+  actual o la última cuota, lo que llegue primero. Si hay un cobro de una
+  cuota posterior (un adelanto), la lista llega hasta ella. El día de pago
+  cae en el último día del mes si el mes es más corto (31 → 30 de abril, 28 o
+  29 de febrero).
+- **Estados** (calculados en `receivable-schedule.ts`, no guardados; fechas en
+  `America/Bogota`):
+
+  | Estado    | Condición                                    | Color  |
+  | --------- | -------------------------------------------- | ------ |
+  | Pagada    | la cuota tiene cobro                         | verde  |
+  | Atrasada  | sin cobro y la fecha de pago ya pasó         | rojo   |
+  | Pendiente | sin cobro y la fecha de pago es hoy o futura | neutro |
+
+- **Cobrar:** **Marcar pagada** en una cuota pendiente o atrasada abre el
+  diálogo de abono con el monto mensual prellenado (editable), la fecha (hoy)
+  y la cuenta que recibe. Crea el abono (`debt_entries.period_on` = primer día
+  del mes de la cuota) y, si se marca, el ingreso en "Cobros". Una cuota solo
+  admite un cobro (índice único `(debt_id, period_on)`); si el monto difiere
+  del mensual, la fila lo resalta.
+- **Editar o eliminar** un cobro (desde el Historial o desde Movimientos)
+  devuelve la cuota a su estado calculado.
+- **Sheet:** sección **Cuotas** (las últimas 12 y **Ver más**), con mes,
+  estado, "Vence el …" o "Pagada el …" y el monto cobrado. Sin "Registrar
+  abono" ni "Actualizar saldo": se cobra por cuota. Con número de cuotas
+  muestra el saldo, la barra de % cobrado y "N de M cuotas cobradas";
+  indefinida, el monto mensual y lo cobrado en el año.
+- **Tarjeta:** con número de cuotas, saldo y "Mensual"; indefinida, el monto
+  mensual "al mes" y lo cobrado en el año. Además, la próxima cuota y un badge
+  "N cuotas atrasadas". Sin "Actualizar saldo" en el menú.
+- **Fin:** con número de cuotas, al cobrar la última el saldo llega a 0 y se
+  marca como cobrada como cualquier cuenta por cobrar. Indefinida: sigue
+  activa hasta que el usuario la archiva (`markDebtPaid` la rechaza).
+- Con cifras ocultas, montos de tarjeta, totales y cuotas muestran `***`.
+- Fuera de alcance: recordatorios, intereses o mora, cobros mensuales en
+  Empresa, importar cuotas, efecto en score y recomendaciones, otras
+  frecuencias y cambiar entre **Una vez** y **Mes a mes**.
 
 ### Cuota de manejo
 
@@ -1001,7 +1061,15 @@ tarjeta. Por eso Tesoro la genera sola, sin tocar cuentas.
   `delete` en `debts`.
 - `debt_entries` tiene `workspace_id` con FK compuesta `(debt_id,
 workspace_id)`: una entrada siempre es del mismo espacio que su deuda.
-- Trigger `check_debt_update`: el tipo de una deuda no cambia.
+- Trigger `check_debt_update`: el tipo de una deuda y el tipo de cobro de una
+  cuenta por cobrar no cambian.
+- Check `debts_kind_fields_check`: campos obligatorios y prohibidos por tipo y
+  tipo de cobro (SPEC 28). Tarjetas y préstamos no llevan `schedule` ni
+  `starts_on`.
+- Cobro mensual (SPEC 28): `check_debt_entry` exige `period_on` en los abonos
+  de una cuenta mensual y lo prohíbe en el resto; debe ser día 1, no anterior
+  al mes de inicio ni posterior a la última cuota. `check_debt_balance` no
+  valida saldo en las indefinidas.
 - Trigger `check_debt_entry` (`before`): la deuda debe estar activa (en
   `delete`, la fila vieja), la entrada no cambia de deuda ni de tipo, la fecha
   es ≤ hoy, y un movimiento enlazado es un gasto de un préstamo o un ingreso

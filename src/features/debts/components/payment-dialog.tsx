@@ -23,6 +23,7 @@ import {
 } from "@/features/accounts/components/payment-account-section"
 import { todayISO } from "@/libs/dates"
 import { recordAdvance, recordPayment, updateEntry } from "../actions"
+import { formatMonthYear } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
 import type { PaymentFormState } from "../types"
 import { amountInput } from "./field"
@@ -48,6 +49,15 @@ export type EditableDebtEntry = Pick<
 /** Pago del ciclo, abono extra o avance (solo tarjeta) */
 type PaymentMode = "payment" | "extra" | "advance"
 
+/**
+ * Cuota de una cuenta por cobrar mensual que se cobra con "Marcar pagada"
+ * (SPEC 28): el mes (YYYY-MM-01) y el monto mensual para prellenar
+ */
+export interface CollectedInstallment {
+  period_on: string
+  amount: number | null
+}
+
 /** Deuda que se puede elegir en el diálogo (acceso rápido del header) */
 export type DebtOption = Pick<Debt, "id" | "kind" | "name">
 
@@ -62,6 +72,8 @@ interface PaymentDialogProps {
   entry?: EditableDebtEntry
   /** Cuentas con saldo para la cuenta del pago; solo al registrar */
   accounts?: PaymentAccountOption[]
+  /** Cuota que se cobra (cuenta por cobrar mensual); solo al registrar */
+  installment?: CollectedInstallment
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
   trigger?: React.ReactNode
   open?: boolean
@@ -78,6 +90,7 @@ export function PaymentDialog({
   debts,
   entry,
   accounts = [],
+  installment,
   trigger,
   open: controlledOpen,
   onOpenChange
@@ -115,16 +128,22 @@ export function PaymentDialog({
             <Modal.CloseTrigger />
             <Modal.Header>
               <Modal.Heading>
-                {isEditing ? `Editar ${noun}` : `Registrar ${noun}`}
+                {installment
+                  ? "Marcar cuota pagada"
+                  : isEditing
+                    ? `Editar ${noun}`
+                    : `Registrar ${noun}`}
               </Modal.Heading>
               <p className="text-sm text-muted">
-                {isFeeEntry
-                  ? "Lo que el banco cobró a la tarjeta. No toca tus cuentas."
-                  : isEditing && entry.transaction_id
-                    ? "El movimiento enlazado se actualiza con el monto y la fecha."
-                    : kind === "receivable"
-                      ? "Lo que te pagaron de esta cuenta por cobrar."
-                      : "Lo que pagaste de esta deuda."}
+                {installment
+                  ? `Cuota de ${formatMonthYear(installment.period_on.slice(0, 7))}. Ajusta el monto si te pagaron otro valor.`
+                  : isFeeEntry
+                    ? "Lo que el banco cobró a la tarjeta. No toca tus cuentas."
+                    : isEditing && entry.transaction_id
+                      ? "El movimiento enlazado se actualiza con el monto y la fecha."
+                      : kind === "receivable"
+                        ? "Lo que te pagaron de esta cuenta por cobrar."
+                        : "Lo que pagaste de esta deuda."}
               </p>
             </Modal.Header>
             <Modal.Body>
@@ -144,6 +163,7 @@ export function PaymentDialog({
                   debt={debt}
                   entry={entry}
                   accounts={accounts}
+                  installment={isEditing ? undefined : installment}
                   onSaved={() => setOpen(false)}
                   onCancel={() => setOpen(false)}
                 />
@@ -247,6 +267,7 @@ interface PaymentFormProps {
   debt: PaymentDebt
   entry?: EditableDebtEntry
   accounts: PaymentAccountOption[]
+  installment?: CollectedInstallment
   onSaved: () => void
   onCancel: () => void
 }
@@ -278,6 +299,7 @@ function PaymentForm({
   debt,
   entry,
   accounts,
+  installment,
   onSaved,
   onCancel
 }: PaymentFormProps) {
@@ -316,11 +338,13 @@ function PaymentForm({
           ? "Abono"
           : "Pago"
       toast.success(
-        isFee
-          ? "Cuota actualizada"
-          : isEditing
-            ? `${noun} actualizado`
-            : `${noun} registrado`
+        installment
+          ? "Cuota marcada como pagada"
+          : isFee
+            ? "Cuota actualizada"
+            : isEditing
+              ? `${noun} actualizado`
+              : `${noun} registrado`
       )
       onSaved()
     }
@@ -330,7 +354,7 @@ function PaymentForm({
   const errors = state.fieldErrors
   const values = state.values
   const [amountText, setAmountText] = useState(
-    () => values?.amount ?? amountInput(entry?.amount)
+    () => values?.amount ?? amountInput(entry?.amount ?? installment?.amount)
   )
   const [createTransaction, setCreateTransaction] = useState(
     () => !values || values.create_transaction === "on"
@@ -359,6 +383,14 @@ function PaymentForm({
           type="hidden"
           name="debt_id"
           value={debt.id}
+        />
+      )}
+
+      {installment && (
+        <input
+          type="hidden"
+          name="period_on"
+          value={installment.period_on}
         />
       )}
 
@@ -508,12 +540,12 @@ function PaymentForm({
         </p>
       )}
 
-      {state.error && (
+      {(state.error ?? errors?.period_on?.[0]) && (
         <p
           role="alert"
           className="text-sm text-danger"
         >
-          {state.error}
+          {state.error ?? errors?.period_on?.[0]}
         </p>
       )}
 

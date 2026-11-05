@@ -204,6 +204,24 @@ export function DebtSheet({
                   </div>
                 )}
 
+                {/* Cobro de una cuota: el diálogo de abono con la cuota y el
+                    monto mensual prellenado (SPEC 28) */}
+                {collecting && (
+                  <PaymentDialog
+                    workspaceId={debt.workspace_id}
+                    debt={debt}
+                    accounts={accounts}
+                    installment={{
+                      period_on: collecting.period_on,
+                      amount: debt.installment
+                    }}
+                    open
+                    onOpenChange={(open) => {
+                      if (!open) setCollecting(null)
+                    }}
+                  />
+                )}
+
                 <section className="flex flex-col gap-2">
                   <h3 className="text-xs font-medium text-muted uppercase">
                     Historial

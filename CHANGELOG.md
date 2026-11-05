@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- UI fixes and faster entry (SPEC 25):
+  - **Categorías** and **Verificar movimientos** in the header **Más** menu on every page of a workspace, and at the end of the phone quick-actions sheet. Business now has a **Más** menu with just those two. Both open over the current page and work with zero movements (`CategoriesSheet` and `VerifyMovementsDialog` are now controlled-only).
+  - **Pago de deuda** and **Gasto fijo** tabs in the Personal "Registrar movimiento" dialog (`paymentTabs`), reusing the payment form (`DebtPaymentPanel`) and the linked recurring payment form (`OccurrenceSelect`). Hidden in Business, when editing and when paying a specific occurrence.
+  - `CategorySelectField` and `AccountSelectField` (`src/components/forms/`) end with **+ Crear categoría** / **+ Crear cuenta**: the existing category or account dialog opens on top and the new one is selected without clearing the form. Used by every form with those selects (movement, transfer, recurring expense, budget, debt and receivable payments, goal contribution, Business) and added to the import mapping step. `createCategory` and `createAccount` now return the created row.
+  - Debt, receivable and goal cards open their detail Sheet from anywhere on the card (stretched-link pattern: `SURFACE_ITEM_CLICKABLE`, `CARD_LINK`, `CARD_OVER_LINK`); the ⋮ menu stays separate. Only the hover and cursor change.
+
 - Landing demo video (SPEC 24): a ~56 s product walkthrough of the real app (Resumen, Presupuestos, Metas, Deudas, Score and the Empresa cash flow) recorded with Playwright on a local demo account and composed with Hyperframes on an original macOS-style desktop (own wallpaper, menu bar, auto-hiding Dock with own icons, cursor-following camera; no Apple assets). New `#demo` section right after the hero (`demo-section.tsx`, `demo-player.tsx`): poster until play, no autoplay, `preload="none"`, always-light frame, accessible description, keyboard play/pause. "Demo" link in the header.
 - Five short feature clips (Registros, Gráficas, Recomendaciones, Score, Personal y Empresa) shown in a tabbed feature tour (`feature-tour.tsx`, `feature-clip.tsx`): muted loops that only play while on screen and stay on their poster with reduced motion or Save-Data. Videos live in `public/videos/` as MP4 + WebM + WebP poster (1080p, two-pass, ≤ 25 MB in total); paths come from the new `SITE.landing` block.
 - `buildVideoSchema()` in `src/libs/seo.ts`: `VideoObject` JSON-LD with absolute URLs, injected on `/`.
@@ -202,6 +208,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Movimientos filter bar (SPEC 25): the **Categorías** and **Verificar** buttons left the bar and the phone filter sheet (Personal and Business); they live in the **Más** menu and the quick-actions sheet. `TransactionsFilters` lost its `categoriesAction` and `trailing` props. `PaymentDialog`, `ContributionDialog`, `BudgetDialog`, `RecurringExpenseDialog` and `PaymentAccountSection` take a `workspaceId` (needed to create accounts and categories from their selects).
+
 - Landing redesign after an Impeccable critique (SPEC 24): no eyebrows, no icons in tinted squares, no identical card grid and no radial halos; the slogan is the hero headline, with a "Gratis · Sin conectar bancos · Código abierto (MIT)" line under the CTAs; rewritten section headlines; borderless cards; open-source links as text links; a closing that echoes the video's end (mark, slogan, CTA).
 - Score section and `score-visual.tsx` redesigned: a single segmented bar for the 7 factor weights (sums to 100), a gauge with the four bands as arc segments and a marker that animates once, calm "data → action" recommendations, and state colors from `tone.ts` instead of the raw Tailwind palette.
 - Public header: centered pill navigation, transparent at the top and solid on scroll, 44 px theme toggle with an animated sun/moon swap (also in the dashboard aside), and session buttons with an arrow ("Abrir Tesoro" when signed in).
@@ -286,6 +294,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- `AccountSelect` (SPEC 25), replaced by `AccountSelectField`. `account-select.tsx` keeps `AccountOption`, `AccountLabel`, `accountName` and `selectableAccounts`.
+
 - The landing's "Cómo funciona" section and the "Inicio"/"Cómo funciona" header links; the three steps now live in the features subtitle.
 - `DataRows` / `DataRow` (SPEC 18 card pattern for tables): no longer used after SPEC 20.
 - The sticky Personal / Business tab under the mobile header (`MobileWorkspaceTabs`, SPEC 18). The workspace selector lives only in the aside, which opens as a drawer on mobile.
@@ -295,6 +305,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - shadcn/ui: `src/components/ui/`, `components.json`, `src/libs/utils.ts` and the `shadcn`, `radix-ui`, `class-variance-authority`, `tw-animate-css`, `cn`, `sonner` and `react-day-picker` packages.
 
 ### Fixed
+
+- The E.A. / M.V. rate toggle in the debt dialog no longer overlaps **Día de pago** (SPEC 25): the rate cell, field and input can shrink (`min-w-0`) and the toggle keeps its width, on desktop, phone and with a validation error.
 
 - Dialogs and sheets (movements, transfers, accounts, budgets, debts, goals, recurring expenses, business) never opened from their trigger buttons: `isOpen`/`onOpenChange` were set on `*.Backdrop`, so React Aria ignored the trigger state. They now go on the `Modal`/`Drawer`/`AlertDialog` root.
 - The recurring expenses table was wrapped in an extra bordered box, drawing a border around its header, and the "Pausado" chip had its own border.

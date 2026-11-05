@@ -9,7 +9,7 @@ export type InstallmentStatus = "paid" | "pending" | "overdue"
 
 export const INSTALLMENT_STATUS: Record<
   InstallmentStatus,
-  { label: string; tone: Tone }
+  { label: string; tone: Extract<Tone, "success" | "neutral" | "danger"> }
 > = {
   paid: { label: "Pagada", tone: "success" },
   pending: { label: "Pendiente", tone: "neutral" },

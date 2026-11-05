@@ -19,11 +19,13 @@ import {
   nextFeeDate
 } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
+import { type Installment, collectedInYear } from "../receivable-schedule"
 import { AdjustBalanceDialog } from "./adjust-balance-dialog"
 import { DebtEntriesList } from "./debt-entries-list"
 import { ToneBadge } from "./debt-indicators"
 import { DebtProgress, ReceivableProgress } from "./debt-progress"
 import { PaymentDialog } from "./payment-dialog"
+import { ReceivableInstallments } from "./receivable-installments"
 import { useDebtAction } from "./use-debt-action"
 
 interface DebtSheetProps {
@@ -54,8 +56,14 @@ export function DebtSheet({
 }: DebtSheetProps) {
   const isActive = debt.status === "active"
   const isReceivable = debt.kind === "receivable"
+  // Cobro mes a mes (SPEC 28): se cobra por cuota, sin abonos ni ajustes
+  // sueltos. Indefinida = sin número de cuotas ni saldo total.
+  const isMonthly = isReceivable && debt.schedule === "monthly"
+  const isOpenEnded = isMonthly && debt.term_months === null
   const status = debtStatusLabel(debt)
   const { pending, run } = useDebtAction(debt)
+  // Cuota que se está cobrando con "Marcar pagada"
+  const [collecting, setCollecting] = useState<Installment | null>(null)
 
   return (
     <Drawer
@@ -79,10 +87,10 @@ export function DebtSheet({
                 )}
               </div>
               <p className="text-sm text-muted tabular-nums">
-                Saldo{" "}
+                {isOpenEnded ? "Mensual" : "Saldo"}{" "}
                 <span className="font-medium text-foreground">
                   <Amount
-                    value={debt.balance}
+                    value={isOpenEnded ? (debt.installment ?? 0) : debt.balance}
                     currency={currency}
                   />
                 </span>
@@ -91,10 +99,25 @@ export function DebtSheet({
             <Drawer.Body>
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-4">
-                  {isReceivable ? (
+                  {isOpenEnded ? (
+                    <CollectedThisYear
+                      entries={entries}
+                      today={today}
+                      currency={currency}
+                    />
+                  ) : isReceivable ? (
                     <ReceivableProgress debt={debt} />
                   ) : (
                     <DebtProgress debt={debt} />
+                  )}
+                  {isMonthly && debt.term_months !== null && (
+                    <p className="text-sm text-muted tabular-nums">
+                      {
+                        entries.filter((entry) => entry.period_on !== null)
+                          .length
+                      }{" "}
+                      de {debt.term_months} cuotas cobradas
+                    </p>
                   )}
                   <DebtDetails
                     debt={debt}
@@ -123,7 +146,24 @@ export function DebtSheet({
                   </section>
                 )}
 
-                {isActive ? (
+                {isMonthly && (
+                  <section className="flex flex-col gap-2">
+                    <h3 className="text-xs font-medium text-muted uppercase">
+                      Cuotas
+                    </h3>
+                    <ReceivableInstallments
+                      debt={debt}
+                      entries={entries}
+                      today={today}
+                      currency={currency}
+                      readOnly={!isActive}
+                      onCollect={setCollecting}
+                    />
+                  </section>
+                )}
+
+                {/* Mes a mes: se cobra desde "Marcar pagada" de cada cuota */}
+                {isActive && isMonthly ? null : isActive ? (
                   <div className="grid grid-cols-2 gap-2">
                     <PaymentDialog
                       workspaceId={debt.workspace_id}
@@ -181,6 +221,34 @@ export function DebtSheet({
         </Drawer.Content>
       </Drawer.Backdrop>
     </Drawer>
+  )
+}
+
+/** Cobro mensual indefinido: lo cobrado en el año en curso (SPEC 28) */
+function CollectedThisYear({
+  entries,
+  today,
+  currency
+}: {
+  entries: DebtEntry[]
+  today: string
+  currency: string
+}) {
+  const collected = collectedInYear(
+    entries.filter((entry) => entry.kind === "payment"),
+    today
+  )
+
+  return (
+    <p className="text-sm text-muted tabular-nums">
+      Cobrado en {today.slice(0, 4)}{" "}
+      <span className="font-medium text-foreground">
+        <Amount
+          value={collected}
+          currency={currency}
+        />
+      </span>
+    </p>
   )
 }
 
@@ -268,14 +336,53 @@ function DebtDetails({ debt, currency }: { debt: Debt; currency: string }) {
               debt.term_months !== null ? `${debt.term_months} meses` : null
             ]
           ]
-        : [
-            ["Deudor", debt.counterparty],
-            ["Monto prestado", formatCurrency(debt.opening_balance, currency)],
-            [
-              "Fecha esperada",
-              debt.expected_on !== null ? formatDate(debt.expected_on) : null
+        : debt.schedule === "monthly"
+          ? [
+              ["Deudor", debt.counterparty],
+              [
+                "Monto mensual",
+                debt.installment !== null ? (
+                  <Amount
+                    value={debt.installment}
+                    currency={currency}
+                  />
+                ) : null
+              ],
+              [
+                "Día de pago",
+                debt.due_day !== null ? `Día ${debt.due_day}` : null
+              ],
+              [
+                "Inicio",
+                debt.starts_on !== null ? formatDate(debt.starts_on) : null
+              ],
+              [
+                "Cuotas",
+                debt.term_months !== null
+                  ? String(debt.term_months)
+                  : "Sin fecha de fin"
+              ],
+              [
+                "Total",
+                debt.term_months !== null ? (
+                  <Amount
+                    value={debt.opening_balance}
+                    currency={currency}
+                  />
+                ) : null
+              ]
             ]
-          ]
+          : [
+              ["Deudor", debt.counterparty],
+              [
+                "Monto prestado",
+                formatCurrency(debt.opening_balance, currency)
+              ],
+              [
+                "Fecha esperada",
+                debt.expected_on !== null ? formatDate(debt.expected_on) : null
+              ]
+            ]
 
   return (
     <dl className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-2">

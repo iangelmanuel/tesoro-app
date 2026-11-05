@@ -560,5 +560,50 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
         "El detalle completo. Toca una categoría para ver sus movimientos."
     }
   ],
-  recommendations: []
+  recommendations: [
+    {
+      title: "Tu salud financiera",
+      description:
+        "Un puntaje de 0 a 100 que resume cómo van tus finanzas, y qué hacer para mejorarlo."
+    },
+    {
+      target: "recommendations-score",
+      title: "Tu score del mes",
+      description:
+        "Cómo vas este mes y cuánto cambió frente al anterior. Si faltan datos, te decimos cuáles."
+    },
+    {
+      target: "recommendations-factors",
+      title: "Qué lo compone",
+      description:
+        "Cada factor con su peso. Si un factor no tiene datos, no cuenta y los demás pesan más."
+    },
+    {
+      target: "recommendations-history",
+      title: "Evolución",
+      description: "Tu score de los últimos 12 meses."
+    },
+    {
+      target: "recommendations-list",
+      title: "Recomendaciones",
+      description:
+        "Ordenadas por importancia. Cada una dice en qué dato se basa."
+    },
+    {
+      target: "recommendations-go",
+      title: "Actúa",
+      description: "Este botón te lleva a la sección donde puedes resolverla."
+    },
+    {
+      target: "recommendations-dismiss",
+      title: "Ocúltala este mes",
+      description:
+        "Si ya la tienes en cuenta, ocúltala. Vuelve el mes siguiente si sigue aplicando."
+    },
+    {
+      target: "recommendations-hidden",
+      title: "Ocultas",
+      description: "Las que ocultaste este mes. Puedes mostrarlas de nuevo."
+    }
+  ]
 }

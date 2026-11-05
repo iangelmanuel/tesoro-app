@@ -27,6 +27,10 @@ import type { PaymentAccountOption } from "@/features/accounts/components/paymen
 import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
+import { deleteEntry } from "@/features/debts/actions"
+import { PaymentDialog } from "@/features/debts/components/payment-dialog"
+import { deleteContribution } from "@/features/goals/actions"
+import { ContributionDialog } from "@/features/goals/components/contribution-dialog"
 import type { WorkspaceType } from "@/features/workspaces/queries"
 import { formatCurrency, formatDate, formatTime } from "@/libs/format"
 import { deleteTransaction, moveLedgerEntry } from "../actions"
@@ -312,6 +316,7 @@ export function TransactionsTable({
                     return (
                       <AccountMovementRow
                         key={row.id}
+                        workspaceId={workspaceId}
                         showCounterparty={isBusiness}
                         entry={row}
                         reorder={reorderFor(index)}
@@ -629,14 +634,17 @@ function isAccountMovement(row: LedgerEntry): row is AccountMovementEntry {
 }
 
 // Pago de tarjeta, avance o aporte con cuenta: gris, con signo según el saldo
-// de la cuenta, de solo lectura. No suma a los totales.
+// de la cuenta. No suma a los totales. Se edita y elimina con el diálogo y
+// las actions de la deuda o la meta (SPEC 26), que recalculan su saldo.
 function AccountMovementRow({
+  workspaceId,
   showCounterparty,
   entry,
   account,
   currency,
   reorder
 }: {
+  workspaceId: string
   showCounterparty: boolean
   entry: AccountMovementEntry
   account: PaymentAccountOption | undefined
@@ -667,8 +675,60 @@ function AccountMovementRow({
         {increases ? "+" : "−"}
         {formatCurrency(Math.abs(entry.amount), currency)}
       </Table.Cell>
-      {/* Se edita desde la deuda o la meta */}
-      <Table.Cell />
+      <Table.Cell>
+        {entry.kind === "goal_contribution" ? (
+          <EntryActions
+            label={title}
+            remove={{
+              title: `¿Eliminar este ${type.toLowerCase()}?`,
+              success: `${entry.amount < 0 ? "Retiro" : "Aporte"} eliminado`,
+              onDelete: () => deleteContribution(entry.id)
+            }}
+            renderEdit={(dialog) => (
+              <ContributionDialog
+                workspaceId={workspaceId}
+                goalId={entry.parent_id}
+                contribution={{
+                  id: entry.id,
+                  amount: entry.amount,
+                  occurred_on: entry.occurred_on,
+                  occurred_time: entry.occurred_time,
+                  note: entry.note
+                }}
+                open={dialog.open}
+                onOpenChange={dialog.onOpenChange}
+              />
+            )}
+          />
+        ) : (
+          <EntryActions
+            label={title}
+            remove={{
+              title: `¿Eliminar este ${type.toLowerCase()}?`,
+              success: `${entry.kind === "debt_advance" ? "Avance" : "Pago"} eliminado`,
+              onDelete: () => deleteEntry(entry.id)
+            }}
+            renderEdit={(dialog) => (
+              <PaymentDialog
+                workspaceId={workspaceId}
+                // Solo una tarjeta lleva cuenta en sus pagos y avances
+                debt={{ id: entry.parent_id, kind: "credit_card" }}
+                entry={{
+                  id: entry.id,
+                  kind: entry.kind === "debt_advance" ? "advance" : "payment",
+                  amount: entry.amount,
+                  occurred_on: entry.occurred_on,
+                  occurred_time: entry.occurred_time,
+                  note: entry.note,
+                  transaction_id: null
+                }}
+                open={dialog.open}
+                onOpenChange={dialog.onOpenChange}
+              />
+            )}
+          />
+        )}
+      </Table.Cell>
     </SortableRow>
   )
 }

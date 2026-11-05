@@ -10,7 +10,12 @@ import {
   RefreshCw
 } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
-import { SURFACE_ITEM } from "@/components/dashboard/surface"
+import {
+  CARD_LINK,
+  CARD_OVER_LINK,
+  SURFACE_ITEM,
+  SURFACE_ITEM_CLICKABLE
+} from "@/components/dashboard/surface"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { formatDate } from "@/libs/format"
 import { hasZeroBalance, isReceivableOverdue } from "../calculations"
@@ -57,12 +62,15 @@ export function ReceivableCard({
   }
 
   return (
-    <li className={`flex flex-col gap-4 ${SURFACE_ITEM}`}>
+    <li
+      className={`flex flex-col gap-4 ${SURFACE_ITEM} ${SURFACE_ITEM_CLICKABLE}`}
+    >
       <div className="flex items-start gap-3">
         {/* Abre el Sheet con el detalle y los abonos */}
         <button
           type="button"
-          className="-m-1 flex min-w-0 flex-1 flex-col gap-1 rounded-lg p-1 text-left transition-colors hover:bg-default/50 focus-visible:ring-[3px] focus-visible:ring-focus/50 focus-visible:outline-none"
+          data-card-link
+          className={`-m-1 flex min-w-0 flex-1 flex-col gap-1 rounded-lg p-1 ${CARD_LINK}`}
           onClick={() => setDetailOpen(true)}
         >
           <span className="flex flex-wrap items-center gap-2">
@@ -89,6 +97,7 @@ export function ReceivableCard({
             variant="ghost"
             isIconOnly
             size="sm"
+            className={CARD_OVER_LINK}
             aria-label={`Acciones de ${receivable.name}`}
             isDisabled={pending}
           >
@@ -166,6 +175,7 @@ export function ReceivableCard({
           </p>
           <Button
             size="sm"
+            className={CARD_OVER_LINK}
             isDisabled={pending}
             onPress={() => run("markCollected")}
           >

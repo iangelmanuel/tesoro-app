@@ -76,6 +76,8 @@ import {
 // metas) → vista previa → resumen. El estado vive en el cliente y se pierde
 // al recargar.
 interface ImportWizardProps {
+  /** Espacio Personal: crear categorías y cuentas desde el paso 4 */
+  workspaceId: string
   /** Destino de `?target=` */
   initialTarget: ImportTarget
   /** Categorías activas (sistema y propias) para el paso de categorías */
@@ -96,6 +98,7 @@ function linkedIds<V>(rows: { value?: V }[], idOf: (value: V) => string) {
 }
 
 export function ImportWizard({
+  workspaceId,
   initialTarget,
   categories,
   accounts,
@@ -604,6 +607,7 @@ export function ImportWizard({
           />
         ) : (
           <CategoriesStep
+            workspaceId={workspaceId}
             expenseOnly={state.target === "recurring_expenses"}
             pairs={pairs}
             targets={state.categoryTargets}

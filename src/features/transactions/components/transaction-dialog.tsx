@@ -99,7 +99,8 @@ interface TransactionDialogProps {
   /** Si llega, el movimiento nuevo es el pago de esta ocurrencia */
   recurring?: RecurringOccurrenceLink
   /**
-   * Tabs "Pago de deuda" y "Gasto fijo" (solo Personal y al registrar):
+   * Tabs "Deuda" (pagos y avances) y "Gasto fijo" (solo Personal y al
+   * registrar):
    * deudas activas y ocurrencias sin pagar. Los pasa el botón del header
    */
   paymentTabs?: PaymentTabsData
@@ -321,9 +322,14 @@ function TransactionForm({
   const showTransfer = !isEditing && type === "expense" && !isBusiness
 
   const typeToggle = hideTypeToggle ? null : (
-    // Con los tabs de pago son 5 opciones: en anchos chicos se desplaza en
-    // horizontal en vez de apretar los textos
-    <div className={cn(paymentTabs && "-mx-1 overflow-x-auto px-1")}>
+    // Con los tabs de pago son 5 opciones. Desde sm caben en el diálogo; en
+    // un teléfono angosto se desplazan en horizontal, sin barra visible
+    <div
+      className={cn(
+        paymentTabs &&
+          "-mx-1 [scrollbar-width:none] overflow-x-auto px-1 [&::-webkit-scrollbar]:hidden"
+      )}
+    >
       <ToggleButtonGroup
         selectionMode="single"
         disallowEmptySelection
@@ -359,7 +365,7 @@ function TransactionForm({
             id="debt_payment"
             className="flex-1 whitespace-nowrap"
           >
-            Pago de deuda
+            Deuda
           </ToggleButton>
         )}
         {paymentTabs && (

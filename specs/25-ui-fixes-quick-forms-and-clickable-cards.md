@@ -1,6 +1,6 @@
 # SPEC 25 — Correcciones de UI, atajos en formularios y tarjetas clicables
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 02, SPEC 05, SPEC 06, SPEC 08c, SPEC 15, SPEC 24
 > **Fecha:** 2026-11-04
 > **Objetivo:** Corregir los detalles de UI reportados (texto de botones, toggle de tasa, acceso a Categorías y Verificar) y acelerar el registro con tabs de pago en el diálogo de movimiento, creación de categorías y cuentas desde los selects y tarjetas de metas y deudas clicables completas.
@@ -89,18 +89,18 @@ Este spec no introduce datos nuevos ni migraciones. Reutiliza las actions existe
 
 ## Criterios de aceptación
 
-- [ ] Todo botón con relleno del primario muestra texto blanco en Personal y Empresa, en claro y oscuro, con contraste ≥ 4.5:1.
-- [ ] En **Nueva deuda** y **Editar deuda**, tipo Tarjeta y Préstamo, el toggle E.A. / M.V. no se superpone a **Día de pago** en escritorio ni en móvil.
-- [ ] Con cero movimientos, el menú **Más** permite abrir **Categorías** y crear una categoría.
-- [ ] **Categorías** y **Verificar movimientos** aparecen en el menú Más desde cualquier página de Personal y de Empresa.
-- [ ] La barra de filtros de Movimientos ya no tiene los botones Categorías ni Verificar.
-- [ ] En escritorio, Personal, el diálogo **Registrar movimiento** tiene los tabs **Pago de deuda** y **Gasto fijo**, y registrar desde ellos produce el mismo resultado que desde la hoja móvil.
-- [ ] En Empresa y al editar un movimiento, esos tabs no aparecen.
-- [ ] En cada formulario con select de Categoría o Cuenta, la última opción crea una nueva; al guardarla queda seleccionada y el resto de campos no se borra.
-- [ ] Un clic en cualquier parte de una tarjeta de deuda, cuenta por cobrar o meta abre su Sheet.
-- [ ] Un clic en el ⋮ abre el menú y no el Sheet.
-- [ ] Con teclado, la tarjeta y el ⋮ son alcanzables con Tab y tienen foco visible.
-- [ ] Las tarjetas se ven igual que antes salvo el hover y el cursor.
+- [x] Todo botón con relleno del primario muestra texto blanco en Personal y Empresa, en claro y oscuro, con contraste ≥ 4.5:1.
+- [x] En **Nueva deuda** y **Editar deuda**, tipo Tarjeta y Préstamo, el toggle E.A. / M.V. no se superpone a **Día de pago** en escritorio ni en móvil.
+- [x] Con cero movimientos, el menú **Más** permite abrir **Categorías** y crear una categoría.
+- [x] **Categorías** y **Verificar movimientos** aparecen en el menú Más desde cualquier página de Personal y de Empresa.
+- [x] La barra de filtros de Movimientos ya no tiene los botones Categorías ni Verificar.
+- [x] En escritorio, Personal, el diálogo **Registrar movimiento** tiene los tabs **Pago de deuda** y **Gasto fijo**, y registrar desde ellos produce el mismo resultado que desde la hoja móvil.
+- [x] En Empresa y al editar un movimiento, esos tabs no aparecen.
+- [x] En cada formulario con select de Categoría o Cuenta, la última opción crea una nueva; al guardarla queda seleccionada y el resto de campos no se borra.
+- [x] Un clic en cualquier parte de una tarjeta de deuda, cuenta por cobrar o meta abre su Sheet.
+- [x] Un clic en el ⋮ abre el menú y no el Sheet.
+- [x] Con teclado, la tarjeta y el ⋮ son alcanzables con Tab y tienen foco visible.
+- [x] Las tarjetas se ven igual que antes salvo el hover y el cursor.
 
 ## Decisiones
 
@@ -112,6 +112,10 @@ Este spec no introduce datos nuevos ni migraciones. Reutiliza las actions existe
 - **No:** campo inline dentro del popover del select. Solo serviría para categorías.
 - **Sí:** tarjeta clicable sin cambio visual (decisión del usuario). Motivo: los videos de la landing (SPEC 24) muestran esta UI.
 - **Sí:** patrón de enlace estirado en vez de envolver la tarjeta en un `<button>`. Motivo: un botón no puede contener el ⋮ (botones anidados no son válidos).
+- **Sí (al implementar):** el tab se llama **Deuda**, no "Pago de deuda". Motivo: cubre pagos y avances, y con el nombre corto los 5 tabs caben en el diálogo de escritorio.
+- **Sí (al implementar):** la importación suma **+ Crear categoría / + Crear cuenta** con el diálogo, además de su "Crear «valor»" (decisión del usuario).
+- **Sí (al implementar):** se quitó también el botón Categorías de la fila de "Nuevo movimiento" en Movimientos de Empresa; vive en el menú Más.
+- **Sí (al implementar):** `overflow-x: hidden` en `.modal__backdrop`. Motivo: la entrada de HeroUI escala desde 1.05 y abría un scroll horizontal al abrir un diálogo encima de otro.
 
 ## Riesgos
 

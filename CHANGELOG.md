@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - UI fixes and faster entry (SPEC 25):
   - **Categorías** and **Verificar movimientos** in the header **Más** menu on every page of a workspace, and at the end of the phone quick-actions sheet. Business now has a **Más** menu with just those two. Both open over the current page and work with zero movements (`CategoriesSheet` and `VerifyMovementsDialog` are now controlled-only).
-  - **Pago de deuda** and **Gasto fijo** tabs in the Personal "Registrar movimiento" dialog (`paymentTabs`), reusing the payment form (`DebtPaymentPanel`) and the linked recurring payment form (`OccurrenceSelect`). Hidden in Business, when editing and when paying a specific occurrence.
+  - **Deuda** (payments and advances) and **Gasto fijo** tabs in the Personal "Registrar movimiento" dialog (`paymentTabs`), reusing the payment form (`DebtPaymentPanel`) and the linked recurring payment form (`OccurrenceSelect`). Hidden in Business, when editing and when paying a specific occurrence.
   - `CategorySelectField` and `AccountSelectField` (`src/components/forms/`) end with **+ Crear categoría** / **+ Crear cuenta**: the existing category or account dialog opens on top and the new one is selected without clearing the form. Used by every form with those selects (movement, transfer, recurring expense, budget, debt and receivable payments, goal contribution, Business) and added to the import mapping step. `createCategory` and `createAccount` now return the created row.
   - Debt, receivable and goal cards open their detail Sheet from anywhere on the card (stretched-link pattern: `SURFACE_ITEM_CLICKABLE`, `CARD_LINK`, `CARD_OVER_LINK`); the ⋮ menu stays separate. Only the hover and cursor change.
 
@@ -306,6 +306,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Opening a modal (especially one on top of another, like **+ Crear categoría**) no longer flashes a horizontal scrollbar and jumps: HeroUI's 1.05 scale-in made the scrolling backdrop overflow on the x axis; `.modal__backdrop` now has `overflow-x: hidden` (SPEC 25).
 - The E.A. / M.V. rate toggle in the debt dialog no longer overlaps **Día de pago** (SPEC 25): the rate cell, field and input can shrink (`min-w-0`) and the toggle keeps its width, on desktop, phone and with a validation error.
 
 - Dialogs and sheets (movements, transfers, accounts, budgets, debts, goals, recurring expenses, business) never opened from their trigger buttons: `isOpen`/`onOpenChange` were set on `*.Backdrop`, so React Aria ignored the trigger state. They now go on the `Modal`/`Drawer`/`AlertDialog` root.

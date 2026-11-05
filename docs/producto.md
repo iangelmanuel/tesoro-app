@@ -305,7 +305,7 @@ de gráficas, presupuestos, metas, deudas y score.
   puede cambiar el tipo; eso limpia la categoría.
 - El botón "Registrar movimiento" del header abre el mismo diálogo desde
   cualquier página del espacio. En Personal, al registrar, el diálogo tiene
-  además los tabs **Pago de deuda** y **Gasto fijo** (SPEC 25): registran lo
+  además los tabs **Deuda** (pagos y avances) y **Gasto fijo** (SPEC 25): registran lo
   mismo que la hoja de acciones rápidas del teléfono. Aporte a meta sigue en
   el menú Más.
 - El menú **Más** del header, en Personal y Empresa, abre **Categorías** y

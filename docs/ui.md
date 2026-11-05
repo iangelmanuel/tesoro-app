@@ -295,12 +295,16 @@ Reglas:
   `onOpenChange`); no pintan botón propio.
 - **Tabs de pago** (`transaction-dialog.tsx`): el diálogo que abre
   "Registrar movimiento" en Personal tiene **Gasto · Ingreso · Traspaso ·
-  Pago de deuda · Gasto fijo** (prop `paymentTabs`). Pago de deuda usa
+  Deuda · Gasto fijo** (prop `paymentTabs`). Deuda (pagos y avances) usa
   `DebtPaymentPanel` (el formulario de `PaymentDialog`) y Gasto fijo elige la
   ocurrencia (`OccurrenceSelect`) y muestra el formulario de movimiento
   enlazado. No aparecen en Empresa, al editar ni al pagar una ocurrencia
   concreta. Con los tabs, el diálogo sube a `max-w-lg` y el selector se
-  desplaza en horizontal en anchos chicos. Aporte a meta sigue en Más.
+  desplaza en horizontal en anchos chicos, sin barra visible. Aporte a meta
+  sigue en Más.
+- **Modales anidados:** la entrada de HeroUI escala el contenedor desde
+  1.05; `globals.css` pone `overflow-x: hidden` en `.modal__backdrop` para
+  que esa animación no abra un scroll horizontal ni haga saltar el diálogo.
 - **Selects con creación** (`src/components/forms/`): `CategorySelectField`
   y `AccountSelectField` terminan con **+ Crear categoría** / **+ Crear
   cuenta** (`CreateOption`). La opción abre `CategoryDialog` o `AccountDialog`

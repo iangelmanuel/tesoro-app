@@ -52,6 +52,7 @@ export function ReportTypeToggle({
       onSelectionChange={changeType}
       size="sm"
       aria-busy={pending}
+      data-tour="reports-type"
       className={cn(
         "transition-opacity duration-150 motion-reduce:transition-none",
         pending && "opacity-60"

@@ -67,6 +67,7 @@ export function ReportPeriodPicker({ params, path }: ReportPeriodPickerProps) {
         "flex flex-wrap items-center gap-2 transition-opacity duration-150 motion-reduce:transition-none",
         pending && "opacity-60"
       )}
+      data-tour="reports-period"
     >
       <Select
         aria-label="Periodo"

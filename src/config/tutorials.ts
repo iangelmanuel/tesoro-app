@@ -518,6 +518,47 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
         "Aquí quedan las deudas que terminaste o guardaste. Puedes reactivarlas."
     }
   ],
-  reports: [],
+  reports: [
+    {
+      title: "Tus reportes",
+      description:
+        "Mira cómo se mueve tu plata en el tiempo y en qué categorías se va."
+    },
+    {
+      target: "reports-period",
+      title: "Elige el periodo",
+      description:
+        "Un mes, un trimestre, un año o un rango de fechas. Las flechas recorren los periodos."
+    },
+    {
+      target: "reports-type",
+      title: "Gastos o ingresos",
+      description:
+        "Cambia qué muestran las categorías: en qué gastas o de dónde te entra la plata."
+    },
+    {
+      target: "reports-kpis",
+      title: "El periodo en cifras",
+      description:
+        "Ingresos, gastos, balance y tasa de ahorro, comparados con el periodo anterior."
+    },
+    {
+      target: "reports-trend",
+      title: "Tendencia mensual",
+      description:
+        "Ingresos, gastos y balance mes a mes, con al menos 6 meses de historia."
+    },
+    {
+      target: "reports-top",
+      title: "Tus categorías principales",
+      description: "Las categorías que más pesan en el periodo."
+    },
+    {
+      target: "reports-categories",
+      title: "Todas las categorías",
+      description:
+        "El detalle completo. Toca una categoría para ver sus movimientos."
+    }
+  ],
   recommendations: []
 }

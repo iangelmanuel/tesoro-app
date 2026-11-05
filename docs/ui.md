@@ -83,6 +83,8 @@ OKLCH → sRGB). Mínimos: 4.5:1 texto, 3:1 gráficos y foco.
 | `danger` / `background`                   | 4.88  | 6.99   |
 | `accent-foreground` / `accent` Personal   | 5.22  | 5.22   |
 | `accent-foreground` / `accent` Empresa    | 5.08  | 5.08   |
+| `accent-foreground` / `accent-hover` P.   | 6.84  | 6.84   |
+| `accent-foreground` / `accent-hover` E.   | 6.68  | 6.68   |
 | `focus` / `background` Personal           | 4.81  | 8.71   |
 | `focus` / `background` Empresa            | 4.68  | 8.28   |
 | botón `danger` (blanco / relleno)         | 4.88  | 4.83   |

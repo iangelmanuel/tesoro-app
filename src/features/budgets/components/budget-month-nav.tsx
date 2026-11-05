@@ -33,6 +33,7 @@ export function BudgetMonthNav({ month }: BudgetMonthNavProps) {
         "flex items-center gap-1 transition-opacity",
         pending && "opacity-60"
       )}
+      data-tour="budgets-month"
     >
       <Button
         variant="ghost"

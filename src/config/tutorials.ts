@@ -352,7 +352,60 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
         "Pausa un gasto que no vas a pagar por un tiempo; reanúdalo cuando vuelva."
     }
   ],
-  budgets: [],
+  budgets: [
+    {
+      title: "Tus presupuestos",
+      description:
+        "Define cuánto quieres gastar como máximo en cada categoría y sigue tu avance durante el mes."
+    },
+    {
+      target: "budgets-recurring-tabs",
+      title: "Gastos fijos y presupuestos",
+      description:
+        "En el teléfono, las dos pantallas comparten lugar. Cambia entre ellas con estas pestañas.",
+      viewport: "mobile"
+    },
+    {
+      target: "budgets-month",
+      title: "Elige el mes",
+      description:
+        "Cada mes tiene sus propios presupuestos. Las flechas te llevan al anterior o al siguiente."
+    },
+    {
+      target: "budgets-create",
+      title: "Crea un presupuesto",
+      description: "Elige una categoría de gasto y el máximo para el mes."
+    },
+    {
+      target: "budgets-copy",
+      title: "Copia el mes anterior",
+      description:
+        "Si tus límites no cambian, trae los del mes pasado en un toque."
+    },
+    {
+      target: "budgets-totals",
+      title: "Cómo va el mes",
+      description:
+        "Lo presupuestado, lo gastado y lo que te queda, sumando todas las categorías."
+    },
+    {
+      target: "budgets-list",
+      title: "Avance por categoría",
+      description:
+        "La barra muestra lo gastado y lo que ya está comprometido en gastos fijos pendientes. Cambia de color al acercarte al límite."
+    },
+    {
+      target: "row-actions",
+      title: "Edita o elimina",
+      description: "Ajusta el monto de un presupuesto o quítalo."
+    },
+    {
+      target: "budgets-unbudgeted",
+      title: "Sin presupuesto",
+      description:
+        "Categorías donde gastaste este mes sin un límite. Presupuéstalas desde aquí."
+    }
+  ],
   goals: [],
   debts: [],
   reports: [],

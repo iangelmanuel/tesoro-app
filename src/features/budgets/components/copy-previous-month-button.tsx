@@ -34,6 +34,7 @@ export function CopyPreviousMonthButton({
       variant="ghost"
       className={CONTROL_BUTTON}
       isDisabled={pending}
+      data-tour="budgets-copy"
       onPress={handleCopy}
     >
       <Copy />

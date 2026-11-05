@@ -17,6 +17,7 @@ export function HideAmountsToggle() {
       aria-label={hidden ? "Mostrar cifras" : "Ocultar cifras"}
       aria-pressed={hidden}
       className="max-md:size-11"
+      data-tour="header-amounts"
       onPress={toggle}
     >
       <Icon className="size-4" />

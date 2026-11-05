@@ -76,7 +76,12 @@ export function AppSidebar({ user, businesses }: AppSidebarProps) {
         >
           <Logo />
         </Link>
-        <WorkspaceTabs />
+        <div
+          className="w-full"
+          data-tour="aside-workspaces"
+        >
+          <WorkspaceTabs />
+        </div>
         {business && (
           <BusinessSwitcher
             businesses={businesses}
@@ -86,7 +91,10 @@ export function AppSidebar({ user, businesses }: AppSidebarProps) {
       </SidebarHeader>
       <SidebarContent>
         {root && (
-          <nav aria-label="Secciones del espacio">
+          <nav
+            aria-label="Secciones del espacio"
+            data-tour="aside-sections"
+          >
             {/* Con una sola empresa el selector no se pinta: el nombre queda aquí */}
             {business && businesses.length < 2 && (
               <SidebarGroupLabel>

@@ -64,6 +64,7 @@ export function QuickActionsMenu() {
           <Button
             size="sm"
             className="max-md:h-11 max-md:min-w-11"
+            data-tour="header-quick-add"
           >
             <Plus className="size-4" />
             <span className="hidden sm:inline">{label}</span>
@@ -135,6 +136,7 @@ function MoreMenu({
           size="sm"
           aria-label="Más acciones"
           className="max-md:h-11 max-md:min-w-11"
+          data-tour="header-more"
         >
           <span className="hidden sm:inline">Más</span>
           <ChevronDown className="size-4" />

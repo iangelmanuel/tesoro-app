@@ -23,7 +23,7 @@ export async function AccountsCard({
   const total = active.reduce((sum, account) => sum + account.balance, 0)
 
   return (
-    <Card>
+    <Card data-tour="summary-accounts">
       <CardHeading
         title="Saldo en cuentas"
         href={ACCOUNTS_PATH}

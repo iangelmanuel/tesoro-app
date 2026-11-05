@@ -26,7 +26,7 @@ export function RecentTransactions({
   transactionsPath = TRANSACTIONS_PATH
 }: RecentTransactionsProps) {
   return (
-    <Card>
+    <Card data-tour="summary-recent">
       <CardHeading
         title="Últimos movimientos"
         href={`${transactionsPath}?${ALL_MONTHS_QUERY}`}

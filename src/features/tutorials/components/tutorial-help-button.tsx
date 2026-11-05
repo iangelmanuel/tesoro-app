@@ -36,6 +36,7 @@ function HelpButton({ section }: Readonly<{ section: TutorialSection }>) {
       isIconOnly
       aria-label="Ver tutorial de esta sección"
       className="max-md:size-11"
+      data-tour="header-help"
       onPress={() => {
         start().catch(() => {
           toast.danger("No se pudo abrir el tutorial. Intenta de nuevo")

@@ -15,6 +15,7 @@ import {
 import { WorkspaceThemeRoot } from "@/components/dashboard/workspace-theme-root"
 import { SITE } from "@/config/site"
 import { TutorialAutoStart } from "@/features/tutorials/components/tutorial-auto-start"
+import { TutorialHelpButton } from "@/features/tutorials/components/tutorial-help-button"
 import { TutorialProvider } from "@/features/tutorials/components/tutorial-provider"
 import { getCompletedTutorials } from "@/features/tutorials/queries"
 import { getBusinessWorkspaces } from "@/features/workspaces/queries"
@@ -135,8 +136,9 @@ export default function DashboardLayout({
                     <DashboardHeaderTitle />
                   </Suspense>
                 </div>
-                {/* Ojo y accesos rápidos del espacio */}
+                {/* Tutorial, ojo y accesos rápidos del espacio */}
                 <div className="flex shrink-0 items-center gap-2">
+                  <TutorialHelpButton />
                   <HideAmountsToggle />
                   <QuickActions />
                 </div>

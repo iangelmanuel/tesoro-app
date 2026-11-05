@@ -1,5 +1,7 @@
 import { NO_ACCOUNT } from "@/features/accounts/constants"
 import { TRANSACTION_TYPES } from "@/features/categories/constants"
+import type { DebtEntry } from "@/features/debts/queries"
+import type { DebtKind } from "@/features/debts/schemas"
 import { createClient } from "@/libs/supabase/server"
 import type { Database } from "@/types/database"
 import {
@@ -35,6 +37,27 @@ export type EditableTransaction = Pick<
   | "recurring_expense_id"
 >
 
+/**
+ * Abono enlazado a un movimiento: pago de préstamo o cobro de una cuenta por
+ * cobrar (SPEC 26). Es la fuente de verdad: el movimiento se edita y elimina
+ * desde el diálogo del pago. Trae lo que ese diálogo prellena (la nota del
+ * abono no se sincroniza con la del movimiento).
+ */
+export type LinkedDebtEntry = Pick<
+  DebtEntry,
+  | "id"
+  | "debt_id"
+  | "workspace_id"
+  | "kind"
+  | "amount"
+  | "occurred_on"
+  | "occurred_time"
+  | "note"
+  | "transaction_id"
+> & {
+  debt_kind: DebtKind
+}
+
 /** Hora y posición manual dentro del día, comunes a toda fila de Movimientos */
 interface LedgerOrder {
   /** "HH:MM:SS" desde Postgres; null si el usuario no la puso */
@@ -53,6 +76,8 @@ export type LedgerEntry = LedgerOrder &
     | {
         kind: TransactionType
         transaction: EditableTransaction
+        /** Abono enlazado, si el movimiento es un pago de deuda */
+        debt_entry: LinkedDebtEntry | null
       }
     | {
         kind: "transfer"
@@ -114,8 +139,8 @@ const RANGE_NOT_SATISFIABLE = "PGRST103"
 
 // Lee la vista ledger_entries para paginar movimientos, traspasos, ajustes y
 // pagos con cuenta juntos, con el orden real (fecha, posición manual del día,
-// captura). El enlace a un gasto fijo no está en la vista:
-// se pide aparte solo para los movimientos de la página.
+// captura). Los enlaces a un gasto fijo y a un abono no están en la vista:
+// se piden aparte solo para los movimientos de la página.
 export async function getTransactions(
   workspaceId: string,
   filters: TransactionFilters
@@ -190,32 +215,58 @@ export async function getTransactions(
   const transactionIds = data
     .filter((row) => row.kind === "income" || row.kind === "expense")
     .map((row) => row.id as string)
-  const recurringIds = new Map<string, string | null>()
+  const links = new Map<string, TransactionLinks>()
 
   if (transactionIds.length > 0) {
-    const { data: links, error: linksError } = await supabase
+    const { data: rows, error: linksError } = await supabase
       .from("transactions")
-      .select("id, recurring_expense_id")
+      .select(
+        "id, recurring_expense_id, debt_entries(id, debt_id, workspace_id, kind, amount, occurred_on, occurred_time, note, transaction_id, debts(kind))"
+      )
       .in("id", transactionIds)
 
     if (linksError) {
       throw new Error("No se pudieron cargar los movimientos")
     }
-    for (const link of links) {
-      recurringIds.set(link.id, link.recurring_expense_id)
+    for (const link of rows) {
+      // transaction_id es único: a lo sumo un abono por movimiento
+      const entry = link.debt_entries
+      links.set(link.id, {
+        recurringExpenseId: link.recurring_expense_id,
+        debtEntry: entry
+          ? {
+              id: entry.id,
+              debt_id: entry.debt_id,
+              workspace_id: entry.workspace_id,
+              kind: entry.kind,
+              amount: Number(entry.amount),
+              occurred_on: entry.occurred_on,
+              occurred_time: entry.occurred_time,
+              note: entry.note,
+              transaction_id: entry.transaction_id,
+              debt_kind: entry.debts.kind
+            }
+          : null
+      })
     }
   }
 
   return {
-    rows: data.map((row) => toLedgerEntry(row, recurringIds)),
+    rows: data.map((row) => toLedgerEntry(row, links)),
     count: count ?? 0
   }
+}
+
+/** Enlaces de un movimiento que la vista ledger_entries no trae */
+interface TransactionLinks {
+  recurringExpenseId: string | null
+  debtEntry: LinkedDebtEntry | null
 }
 
 // Las columnas de una vista llegan como nullable en los tipos generados
 function toLedgerEntry(
   row: LedgerEntryRow,
-  recurringIds: Map<string, string | null>
+  links: Map<string, TransactionLinks>
 ): LedgerEntry {
   const id = row.id as string
   const amount = Number(row.amount)
@@ -263,9 +314,11 @@ function toLedgerEntry(
   }
 
   const type = row.kind as TransactionType
+  const link = links.get(id)
   return {
     ...order,
     kind: type,
+    debt_entry: link?.debtEntry ?? null,
     transaction: {
       id,
       type,
@@ -278,7 +331,7 @@ function toLedgerEntry(
       account_id: row.account_id,
       counterparty: row.counterparty,
       invoice_ref: row.invoice_ref,
-      recurring_expense_id: recurringIds.get(id) ?? null
+      recurring_expense_id: link?.recurringExpenseId ?? null
     }
   }
 }

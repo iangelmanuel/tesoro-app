@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Edit linked payments from Movimientos (SPEC 26):
+  - Gray rows (card payments and advances, goal contributions and withdrawals) now have Edit and Delete, on desktop and phone. They open the debt's `PaymentDialog` or the goal's `ContributionDialog` in edit mode and delete with `deleteEntry` / `deleteContribution`, so the card balance and goal progress follow. They still stay out of the totals.
+  - A loan payment or receivable collection movement opens its debt entry's `PaymentDialog` (the entry is the source of truth; the existing trigger syncs the movement) and deleting it removes entry and movement together. `getTransactions` now returns the linked `debt_entry` and the parent `debt_id` / `goal_id` of gray rows.
+  - Migration `realign_debt_entries_with_transactions`: aligns debt entries whose amount, date or time drifted from their linked movement (edited from Movimientos before this change), taking the movement's values. Rows that would break a trigger are reported with `raise notice` and left untouched.
+
 - UI fixes and faster entry (SPEC 25):
   - **Categorías** and **Verificar movimientos** in the header **Más** menu on every page of a workspace, and at the end of the phone quick-actions sheet. Business now has a **Más** menu with just those two. Both open over the current page and work with zero movements (`CategoriesSheet` and `VerifyMovementsDialog` are now controlled-only).
   - **Deuda** (payments and advances) and **Gasto fijo** tabs in the Personal "Registrar movimiento" dialog (`paymentTabs`), reusing the payment form (`DebtPaymentPanel`) and the linked recurring payment form (`OccurrenceSelect`). Hidden in Business, when editing and when paying a specific occurrence.
@@ -306,6 +311,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Movimientos rows alone on their day (common in past months), and every row while searching, could not be edited or deleted: `useSortable({ disabled })` set `aria-disabled="true"` on the `<tr>` and HeroUI's disabled row style removed pointer events, so the row menu never opened. Rows that cannot be dragged are no longer registered with dnd-kit (SPEC 26).
+- Editing or deleting a loan payment or receivable collection from Movimientos no longer leaves its debt entry behind with the old amount or date: `updateTransaction` and `deleteTransaction` now reject a movement linked to a debt entry ("Este movimiento es un pago de deuda: edítalo desde su diálogo de pago") (SPEC 26).
 - Opening a modal (especially one on top of another, like **+ Crear categoría**) no longer flashes a horizontal scrollbar and jumps: HeroUI's 1.05 scale-in made the scrolling backdrop overflow on the x axis; `.modal__backdrop` now has `overflow-x: hidden` (SPEC 25).
 - The E.A. / M.V. rate toggle in the debt dialog no longer overlaps **Día de pago** (SPEC 25): the rate cell, field and input can shrink (`min-w-0`) and the toggle keeps its width, on desktop, phone and with a validation error.
 

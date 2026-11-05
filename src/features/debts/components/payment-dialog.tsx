@@ -29,6 +29,21 @@ import { amountInput } from "./field"
 
 type PaymentDebt = Pick<Debt, "id" | "kind">
 
+/**
+ * Campos de un pago o avance que el diálogo edita. Movimientos (SPEC 26) los
+ * arma desde su fila sin cargar el abono completo
+ */
+export type EditableDebtEntry = Pick<
+  DebtEntry,
+  | "id"
+  | "kind"
+  | "amount"
+  | "occurred_on"
+  | "occurred_time"
+  | "note"
+  | "transaction_id"
+>
+
 type PaymentMode = "payment" | "advance"
 
 /** Deuda que se puede elegir en el diálogo (acceso rápido del header) */
@@ -42,7 +57,7 @@ interface PaymentDialogProps {
   /** Deudas activas para elegir; se usa cuando no llega `debt` */
   debts?: DebtOption[]
   /** Si llega, el diálogo edita este pago o avance */
-  entry?: DebtEntry
+  entry?: EditableDebtEntry
   /** Cuentas con saldo para la cuenta del pago; solo al registrar */
   accounts?: PaymentAccountOption[]
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
@@ -228,7 +243,7 @@ function DebtSelect({
 interface PaymentFormProps {
   workspaceId: string
   debt: PaymentDebt
-  entry?: DebtEntry
+  entry?: EditableDebtEntry
   accounts: PaymentAccountOption[]
   onSaved: () => void
   onCancel: () => void

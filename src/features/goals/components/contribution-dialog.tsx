@@ -42,6 +42,15 @@ export interface GoalOption {
   name: string
 }
 
+/**
+ * Campos de un aporte o retiro que el diálogo edita. Movimientos (SPEC 26)
+ * los arma desde su fila sin cargar el aporte completo
+ */
+export type EditableContribution = Pick<
+  GoalContribution,
+  "id" | "amount" | "occurred_on" | "occurred_time" | "note"
+>
+
 interface ContributionDialogProps {
   /** Espacio de la meta (para crear una cuenta desde el select) */
   workspaceId: string
@@ -52,7 +61,7 @@ interface ContributionDialogProps {
   /** Tipo inicial. Al editar se toma del signo del monto. */
   kind?: ContributionKind
   /** Si llega, el diálogo edita este aporte */
-  contribution?: GoalContribution
+  contribution?: EditableContribution
   /** Cuentas con saldo para el aporte; solo al registrar */
   accounts?: PaymentAccountOption[]
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
@@ -129,7 +138,7 @@ interface ContributionFormProps {
   goalId?: string
   goals?: GoalOption[]
   initialKind: ContributionKind
-  contribution?: GoalContribution
+  contribution?: EditableContribution
   accounts: PaymentAccountOption[]
   onSaved: () => void
   onCancel: () => void

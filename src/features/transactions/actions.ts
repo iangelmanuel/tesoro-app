@@ -26,6 +26,8 @@ const RECURRING_MUST_BE_EXPENSE = "El pago de un gasto fijo debe ser un gasto"
 const ARCHIVED_ACCOUNT = "La cuenta está archivada"
 const INVALID_ACCOUNT = "Elige una cuenta válida"
 const SAME_TRANSFER_ACCOUNT = "Elige una cuenta distinta a la que paga"
+const LINKED_DEBT_ENTRY =
+  "Este movimiento es un pago de deuda: edítalo desde su diálogo de pago"
 const UNIQUE_VIOLATION = "23505"
 
 const FIELDS = [
@@ -269,13 +271,17 @@ export async function updateTransaction(
   const supabase = await createClient()
   const { data: current } = await supabase
     .from("transactions")
-    .select("category_id, recurring_expense_id")
+    .select("category_id, recurring_expense_id, debt_entries(id)")
     .eq("id", id.data)
     .eq("workspace_id", workspace.id)
     .maybeSingle()
 
   if (!current) {
     return { error: NOT_FOUND, values }
+  }
+  // El abono manda sobre su movimiento (SPEC 26): editarlo aquí lo desfasaría
+  if (current.debt_entries) {
+    return { error: LINKED_DEBT_ENTRY, values }
   }
   if (current.recurring_expense_id !== null && parsed.data.type !== "expense") {
     return { error: RECURRING_MUST_BE_EXPENSE, values }
@@ -321,6 +327,22 @@ export async function deleteTransaction(
 
   const workspace = await requireWritableWorkspace(workspaceId)
   const supabase = await createClient()
+
+  // Un pago de deuda se elimina con su abono (deleteEntry): borrar solo el
+  // movimiento dejaría el abono contando en la deuda (SPEC 26)
+  const { data: link, error: linkError } = await supabase
+    .from("debt_entries")
+    .select("id")
+    .eq("transaction_id", parsedId.data)
+    .maybeSingle()
+
+  if (linkError) {
+    return { error: "No se pudo eliminar el movimiento. Intenta de nuevo" }
+  }
+  if (link) {
+    return { error: LINKED_DEBT_ENTRY }
+  }
+
   const { data, error } = await supabase
     .from("transactions")
     .delete()

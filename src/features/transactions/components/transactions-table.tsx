@@ -27,10 +27,18 @@ import type { PaymentAccountOption } from "@/features/accounts/components/paymen
 import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
+import { deleteEntry } from "@/features/debts/actions"
+import { PaymentDialog } from "@/features/debts/components/payment-dialog"
+import { deleteContribution } from "@/features/goals/actions"
+import { ContributionDialog } from "@/features/goals/components/contribution-dialog"
 import type { WorkspaceType } from "@/features/workspaces/queries"
 import { formatCurrency, formatDate, formatTime } from "@/libs/format"
 import { deleteTransaction, moveLedgerEntry } from "../actions"
-import { type AccountMovementKind, type LedgerEntry } from "../queries"
+import {
+  type AccountMovementKind,
+  type LedgerEntry,
+  type LinkedDebtEntry
+} from "../queries"
 import { TransactionDialog } from "./transaction-dialog"
 
 interface TransactionsTableProps {
@@ -312,6 +320,7 @@ export function TransactionsTable({
                     return (
                       <AccountMovementRow
                         key={row.id}
+                        workspaceId={workspaceId}
                         showCounterparty={isBusiness}
                         entry={row}
                         reorder={reorderFor(index)}
@@ -389,26 +398,33 @@ export function TransactionsTable({
                         {formatCurrency(transaction.amount, currency)}
                       </Table.Cell>
                       <Table.Cell>
-                        <EntryActions
-                          label={transaction.description}
-                          remove={{
-                            title: "¿Eliminar este movimiento?",
-                            success: "Movimiento eliminado",
-                            onDelete: () =>
-                              deleteTransaction(workspaceId, transaction.id)
-                          }}
-                          renderEdit={(dialog) => (
-                            <TransactionDialog
-                              workspaceId={workspaceId}
-                              workspaceType={workspaceType}
-                              categories={categories}
-                              accounts={accounts}
-                              transaction={transaction}
-                              open={dialog.open}
-                              onOpenChange={dialog.onOpenChange}
-                            />
-                          )}
-                        />
+                        {row.debt_entry ? (
+                          <LinkedPaymentActions
+                            label={transaction.description}
+                            entry={row.debt_entry}
+                          />
+                        ) : (
+                          <EntryActions
+                            label={transaction.description}
+                            remove={{
+                              title: "¿Eliminar este movimiento?",
+                              success: "Movimiento eliminado",
+                              onDelete: () =>
+                                deleteTransaction(workspaceId, transaction.id)
+                            }}
+                            renderEdit={(dialog) => (
+                              <TransactionDialog
+                                workspaceId={workspaceId}
+                                workspaceType={workspaceType}
+                                categories={categories}
+                                accounts={accounts}
+                                transaction={transaction}
+                                open={dialog.open}
+                                onOpenChange={dialog.onOpenChange}
+                              />
+                            )}
+                          />
+                        )}
                       </Table.Cell>
                     </SortableRow>
                   )
@@ -482,7 +498,11 @@ function SortableRow({
 
   return (
     <Table.Row
-      ref={ref}
+      // Solo una fila arrastrable se registra en el <tr>. Deshabilitada,
+      // dnd-kit le pone aria-disabled="true" y HeroUI la atenúa con
+      // pointer-events: none: el menú de acciones quedaba inalcanzable en
+      // las filas solas en su día o con búsqueda activa (SPEC 26)
+      ref={reorder?.canDrag ? ref : undefined}
       className={cn(
         reorder?.className,
         // La fila original queda como hueco en el lugar de destino
@@ -625,14 +645,17 @@ function isAccountMovement(row: LedgerEntry): row is AccountMovementEntry {
 }
 
 // Pago de tarjeta, avance o aporte con cuenta: gris, con signo según el saldo
-// de la cuenta, de solo lectura. No suma a los totales.
+// de la cuenta. No suma a los totales. Se edita y elimina con el diálogo y
+// las actions de la deuda o la meta (SPEC 26), que recalculan su saldo.
 function AccountMovementRow({
+  workspaceId,
   showCounterparty,
   entry,
   account,
   currency,
   reorder
 }: {
+  workspaceId: string
   showCounterparty: boolean
   entry: AccountMovementEntry
   account: PaymentAccountOption | undefined
@@ -663,9 +686,94 @@ function AccountMovementRow({
         {increases ? "+" : "−"}
         {formatCurrency(Math.abs(entry.amount), currency)}
       </Table.Cell>
-      {/* Se edita desde la deuda o la meta */}
-      <Table.Cell />
+      <Table.Cell>
+        {entry.kind === "goal_contribution" ? (
+          <EntryActions
+            label={title}
+            remove={{
+              title: `¿Eliminar este ${type.toLowerCase()}?`,
+              success: `${entry.amount < 0 ? "Retiro" : "Aporte"} eliminado`,
+              onDelete: () => deleteContribution(entry.id)
+            }}
+            renderEdit={(dialog) => (
+              <ContributionDialog
+                workspaceId={workspaceId}
+                goalId={entry.parent_id}
+                contribution={{
+                  id: entry.id,
+                  amount: entry.amount,
+                  occurred_on: entry.occurred_on,
+                  occurred_time: entry.occurred_time,
+                  note: entry.note
+                }}
+                open={dialog.open}
+                onOpenChange={dialog.onOpenChange}
+              />
+            )}
+          />
+        ) : (
+          <EntryActions
+            label={title}
+            remove={{
+              title: `¿Eliminar este ${type.toLowerCase()}?`,
+              success: `${entry.kind === "debt_advance" ? "Avance" : "Pago"} eliminado`,
+              onDelete: () => deleteEntry(entry.id)
+            }}
+            renderEdit={(dialog) => (
+              <PaymentDialog
+                workspaceId={workspaceId}
+                // Solo una tarjeta lleva cuenta en sus pagos y avances
+                debt={{ id: entry.parent_id, kind: "credit_card" }}
+                entry={{
+                  id: entry.id,
+                  kind: entry.kind === "debt_advance" ? "advance" : "payment",
+                  amount: entry.amount,
+                  occurred_on: entry.occurred_on,
+                  occurred_time: entry.occurred_time,
+                  note: entry.note,
+                  transaction_id: null
+                }}
+                open={dialog.open}
+                onOpenChange={dialog.onOpenChange}
+              />
+            )}
+          />
+        )}
+      </Table.Cell>
     </SortableRow>
+  )
+}
+
+// Movimiento de un pago de préstamo o un cobro de Me deben (SPEC 26). El
+// abono es la fuente de verdad: se edita con su diálogo y el trigger copia
+// monto, fecha y hora al movimiento; eliminarlo borra los dos juntos.
+function LinkedPaymentActions({
+  label,
+  entry
+}: {
+  label: string
+  entry: LinkedDebtEntry
+}) {
+  const noun = entry.debt_kind === "receivable" ? "cobro" : "pago"
+
+  return (
+    <EntryActions
+      label={label}
+      remove={{
+        title: `¿Eliminar este ${noun}?`,
+        success: `${noun === "cobro" ? "Cobro" : "Pago"} eliminado`,
+        onDelete: () => deleteEntry(entry.id)
+      }}
+      renderEdit={(dialog) => (
+        <PaymentDialog
+          workspaceId={entry.workspace_id}
+          debt={{ id: entry.debt_id, kind: entry.debt_kind }}
+          entry={entry}
+          open={dialog.open}
+          onOpenChange={dialog.onOpenChange}
+        />
+      )}
+    />
   )
 }
 

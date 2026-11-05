@@ -17,9 +17,14 @@ import {
   SURFACE_ITEM_CLICKABLE
 } from "@/components/dashboard/surface"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
-import { formatDate } from "@/libs/format"
+import { formatDate, formatShortDate } from "@/libs/format"
 import { hasZeroBalance, isReceivableOverdue } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
+import {
+  buildInstallments,
+  collectedInYear,
+  summarizeInstallments
+} from "../receivable-schedule"
 import { AdjustBalanceDialog } from "./adjust-balance-dialog"
 import { ArchiveDebtDialog } from "./archive-debt-dialog"
 import { ToneBadge } from "./debt-indicators"
@@ -51,7 +56,11 @@ export function ReceivableCard({
   const [detailOpen, setDetailOpen] = useState(false)
   const [confirmArchive, setConfirmArchive] = useState(false)
   const { pending, run } = useDebtAction(receivable)
-  const zeroBalance = hasZeroBalance(receivable)
+  // Cobro mes a mes (SPEC 28): cuota fija; indefinida = sin saldo total
+  const isMonthly = receivable.schedule === "monthly"
+  const isOpenEnded = isMonthly && receivable.term_months === null
+  const zeroBalance = !isOpenEnded && hasZeroBalance(receivable)
+  const monthly = isMonthly ? monthlySummary(receivable, entries, today) : null
 
   function archive() {
     if (receivable.balance > 0) {
@@ -80,6 +89,13 @@ export function ReceivableCard({
             {isReceivableOverdue(receivable, today) && (
               <ToneBadge tone="warning">Vencida</ToneBadge>
             )}
+            {monthly !== null && monthly.overdueCount > 0 && (
+              <ToneBadge tone="danger">
+                {monthly.overdueCount === 1
+                  ? "1 cuota atrasada"
+                  : `${monthly.overdueCount} cuotas atrasadas`}
+              </ToneBadge>
+            )}
           </span>
           {receivable.counterparty && (
             <span className="text-xs text-muted">
@@ -88,9 +104,14 @@ export function ReceivableCard({
           )}
           <span className="text-2xl font-semibold tabular-nums">
             <Amount
-              value={receivable.balance}
+              value={
+                isOpenEnded ? (receivable.installment ?? 0) : receivable.balance
+              }
               currency={currency}
             />
+            {isOpenEnded && (
+              <span className="text-sm font-normal text-muted"> al mes</span>
+            )}
           </span>
         </button>
 
@@ -115,13 +136,16 @@ export function ReceivableCard({
                 <Pencil className="size-4" />
                 <Label>Editar</Label>
               </Dropdown.Item>
-              <Dropdown.Item
-                onAction={() => setAdjusting(true)}
-                textValue="Actualizar saldo"
-              >
-                <RefreshCw className="size-4" />
-                <Label>Actualizar saldo</Label>
-              </Dropdown.Item>
+              {/* Mes a mes: el saldo sale de las cuotas, sin ajustes */}
+              {!isMonthly && (
+                <Dropdown.Item
+                  onAction={() => setAdjusting(true)}
+                  textValue="Actualizar saldo"
+                >
+                  <RefreshCw className="size-4" />
+                  <Label>Actualizar saldo</Label>
+                </Dropdown.Item>
+              )}
               {zeroBalance && (
                 <Dropdown.Item
                   onAction={() => run("markCollected")}
@@ -169,7 +193,41 @@ export function ReceivableCard({
         />
       </div>
 
-      <ReceivableProgress debt={receivable} />
+      {!isOpenEnded && <ReceivableProgress debt={receivable} />}
+
+      {monthly !== null ? (
+        <dl className="flex flex-col gap-1 text-sm">
+          {isOpenEnded ? (
+            <div className="flex justify-between gap-2">
+              <dt className="text-muted">Cobrado en {today.slice(0, 4)}</dt>
+              <dd className="font-medium">
+                <Amount
+                  value={monthly.collectedThisYear}
+                  currency={currency}
+                />
+              </dd>
+            </div>
+          ) : (
+            <div className="flex justify-between gap-2">
+              <dt className="text-muted">Mensual</dt>
+              <dd className="font-medium">
+                <Amount
+                  value={receivable.installment ?? 0}
+                  currency={currency}
+                />
+              </dd>
+            </div>
+          )}
+          <div className="flex justify-between gap-2">
+            <dt className="text-muted">Próxima cuota</dt>
+            <dd className="font-medium tabular-nums">
+              {monthly.next
+                ? formatShortDate(monthly.next.due_on)
+                : "Sin cuotas pendientes"}
+            </dd>
+          </div>
+        </dl>
+      ) : null}
 
       {zeroBalance ? (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-emerald-50 p-3 dark:bg-emerald-950">
@@ -185,7 +243,7 @@ export function ReceivableCard({
             Marcar como cobrada
           </Button>
         </div>
-      ) : (
+      ) : isMonthly ? null : (
         <dl className="text-sm">
           <div className="flex justify-between gap-2">
             <dt className="text-muted">Fecha esperada</dt>
@@ -199,4 +257,34 @@ export function ReceivableCard({
       )}
     </li>
   )
+}
+
+/** Atrasadas, próxima cuota y cobrado en el año de una mensual (SPEC 28) */
+function monthlySummary(receivable: Debt, entries: DebtEntry[], today: string) {
+  const payments = entries
+    .filter((entry) => entry.kind === "payment")
+    .map((entry) => ({
+      id: entry.id,
+      amount: entry.amount,
+      occurred_on: entry.occurred_on,
+      period_on: entry.period_on
+    }))
+
+  const installments =
+    receivable.starts_on !== null && receivable.due_day !== null
+      ? buildInstallments(
+          {
+            starts_on: receivable.starts_on,
+            due_day: receivable.due_day,
+            term_months: receivable.term_months
+          },
+          payments,
+          today
+        )
+      : []
+
+  return {
+    ...summarizeInstallments(installments),
+    collectedThisYear: collectedInYear(payments, today)
+  }
 }

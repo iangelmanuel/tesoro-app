@@ -79,7 +79,7 @@ async function QuickActionsLoader() {
   )
 }
 
-/** Accesos rápidos del header: el primario del espacio y, en Personal, "Más" */
+/** Accesos rápidos del header: el primario del espacio y el menú "Más" */
 export function QuickActions() {
   return (
     // La ruta no se conoce en el shell estático: el placeholder tiene el

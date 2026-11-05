@@ -69,18 +69,20 @@ export function QuickActionsMenu() {
           </Button>
         }
       />
-      {isPersonal && (
-        <PersonalMoreMenu
-          workspace={workspace}
-          goals={goals}
-          debts={debts}
-        />
-      )}
+      <MoreMenu
+        // Los diálogos del menú también empiezan de cero al cambiar de espacio
+        key={`more-${workspace.id}`}
+        workspace={workspace}
+        goals={goals}
+        debts={debts}
+      />
     </>
   )
 }
 
-function PersonalMoreMenu({
+// Personal: aporte, pago, importar, categorías y verificar. Empresa no tiene
+// metas, deudas ni importación: solo categorías y verificar
+function MoreMenu({
   workspace,
   goals,
   debts
@@ -95,6 +97,7 @@ function PersonalMoreMenu({
   const [categoriesOpen, setCategoriesOpen] = useState(false)
   const [verifyOpen, setVerifyOpen] = useState(false)
   const { accounts } = workspace
+  const isPersonal = workspace.type === "personal"
 
   // Sin metas (o sin deudas) el ítem lleva a su página para crear una
   function onAction(key: React.Key) {
@@ -142,27 +145,33 @@ function PersonalMoreMenu({
             aria-label="Más acciones"
             onAction={onAction}
           >
-            <Dropdown.Item
-              id="contribution"
-              textValue="Aporte a meta"
-            >
-              <Target className="size-4" />
-              <Label>Aporte a meta</Label>
-            </Dropdown.Item>
-            <Dropdown.Item
-              id="payment"
-              textValue="Pago de deuda"
-            >
-              <CreditCard className="size-4" />
-              <Label>Pago de deuda</Label>
-            </Dropdown.Item>
-            <Dropdown.Item
-              id="import"
-              textValue="Importar"
-            >
-              <FileUp className="size-4" />
-              <Label>Importar</Label>
-            </Dropdown.Item>
+            {isPersonal && (
+              <Dropdown.Item
+                id="contribution"
+                textValue="Aporte a meta"
+              >
+                <Target className="size-4" />
+                <Label>Aporte a meta</Label>
+              </Dropdown.Item>
+            )}
+            {isPersonal && (
+              <Dropdown.Item
+                id="payment"
+                textValue="Pago de deuda"
+              >
+                <CreditCard className="size-4" />
+                <Label>Pago de deuda</Label>
+              </Dropdown.Item>
+            )}
+            {isPersonal && (
+              <Dropdown.Item
+                id="import"
+                textValue="Importar"
+              >
+                <FileUp className="size-4" />
+                <Label>Importar</Label>
+              </Dropdown.Item>
+            )}
             <Dropdown.Item
               id="categories"
               textValue="Categorías"
@@ -181,18 +190,22 @@ function PersonalMoreMenu({
         </Dropdown.Popover>
       </Dropdown>
       {/* Controlados por el menú: no tienen trigger propio */}
-      <ContributionDialog
-        goals={goals}
-        accounts={accounts}
-        open={contributionOpen}
-        onOpenChange={setContributionOpen}
-      />
-      <PaymentDialog
-        debts={debts}
-        accounts={accounts}
-        open={paymentOpen}
-        onOpenChange={setPaymentOpen}
-      />
+      {isPersonal && (
+        <>
+          <ContributionDialog
+            goals={goals}
+            accounts={accounts}
+            open={contributionOpen}
+            onOpenChange={setContributionOpen}
+          />
+          <PaymentDialog
+            debts={debts}
+            accounts={accounts}
+            open={paymentOpen}
+            onOpenChange={setPaymentOpen}
+          />
+        </>
+      )}
       <CategoriesSheet
         workspaceId={workspace.id}
         categories={workspace.categories}
@@ -203,7 +216,8 @@ function PersonalMoreMenu({
         workspaceId={workspace.id}
         accounts={accounts}
         currency={workspace.currency}
-        showAccountFilter
+        // Como en la página de Movimientos: solo Personal filtra por cuenta
+        showAccountFilter={isPersonal}
         open={verifyOpen}
         onOpenChange={setVerifyOpen}
       />

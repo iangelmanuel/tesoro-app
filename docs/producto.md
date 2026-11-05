@@ -315,6 +315,33 @@ de gráficas, presupuestos, metas, deudas y score.
   **+ Crear cuenta**: crea sin salir del formulario y deja la nueva elegida.
   La categoría nueva toma el tipo del formulario.
 
+### Movimientos vinculados (SPEC 26)
+
+Todo movimiento que viene de una deuda, una meta o un gasto fijo se edita y
+elimina desde Movimientos (escritorio y móvil). Cada fila abre el diálogo de
+su origen, que valida igual que al registrar y recalcula el saldo:
+
+| Fila en Movimientos                  | Editar abre                        | Eliminar                                              |
+| ------------------------------------ | ---------------------------------- | ----------------------------------------------------- |
+| Pago o avance de tarjeta (gris)      | Diálogo del pago o avance          | `deleteEntry`                                         |
+| Aporte o retiro de meta (gris)       | Diálogo del aporte                 | `deleteContribution`                                  |
+| Pago de préstamo o cobro de Me deben | Diálogo del pago (el abono manda)  | `deleteEntry`: borra abono y movimiento               |
+| Pago de gasto fijo                   | Diálogo del movimiento (tipo fijo) | `deleteTransaction`: la ocurrencia vuelve a pendiente |
+| Ingreso o gasto suelto               | Diálogo del movimiento             | `deleteTransaction`                                   |
+
+- No se cambia la deuda, la meta ni el gasto fijo de un pago: se elimina y se
+  registra de nuevo. Las cuotas de manejo no aparecen en Movimientos.
+- Un monto que deja la deuda en negativo se rechaza con el error en el campo.
+- Un movimiento con abono enlazado solo se edita desde el diálogo del pago:
+  `updateTransaction` y `deleteTransaction` responden "Este movimiento es un
+  pago de deuda: edítalo desde su diálogo de pago".
+- La migración `realign_debt_entries_with_transactions` alinea con su
+  movimiento (monto, fecha y hora) los abonos que quedaron desfasados antes de
+  SPEC 26. Los que violan un trigger se reportan y quedan igual.
+- Una fila que no se puede arrastrar (sola en su día o con búsqueda) no se
+  registra en dnd-kit: deshabilitada, recibía `aria-disabled` y HeroUI le
+  quitaba los clics, así que su menú no abría.
+
 ### Categorías
 
 - **Del sistema** (fijas, visibles para todos, no editables ni ocultables):
@@ -563,7 +590,8 @@ Estado de una ocurrencia (fechas en `America/Bogota`):
   Un índice único impide pagar dos veces la misma ocurrencia ("Este pago ya
   está registrado"). Borrar el movimiento devuelve la ocurrencia a pendiente.
   Editarlo desde Movimientos conserva el enlace, y debe seguir siendo un
-  gasto.
+  gasto: cambian monto, fecha, hora, cuenta, categoría y nota, y la
+  ocurrencia (`recurring_due_on`) sigue pagada.
 
 ### Presupuestos
 
@@ -756,9 +784,10 @@ inválido de `tab` cae a Debo.
 - **"Actualizar saldo":** el usuario escribe el saldo real (por ejemplo, el
   del extracto) y se crea un ajuste por la diferencia. Si es 0, "El saldo ya
   es ese". Corrige compras e intereses que el saldo no sube solo.
-- Editar un pago enlazado copia su monto y fecha al movimiento; eliminarlo
-  elimina el movimiento. Eliminar el movimiento desde Movimientos solo quita
-  el enlace: el pago y el saldo siguen igual.
+- Editar un pago enlazado copia su monto, fecha y hora al movimiento;
+  eliminarlo elimina el movimiento. El pago es la fuente de verdad: desde
+  Movimientos, ese movimiento abre el diálogo del pago y eliminarlo borra los
+  dos (SPEC 26). `updateTransaction` y `deleteTransaction` lo rechazan.
 
 ### Ciclo de pago
 
@@ -1146,9 +1175,9 @@ el traspaso se ofrece en los nuevos de Personal; al editar no hay sección.
 
 Los pagos y avances de tarjeta y los aportes y retiros con cuenta aparecen en
 la lista unificada (`ledger_entries`, kinds `debt_payment`, `debt_advance` y
-`goal_contribution`), en gris, sin sumar a los totales y de solo lectura: se
-editan desde la deuda o la meta. Entran en el filtro "Traspasos" y en
-`?account=`.
+`goal_contribution`), en gris y sin sumar a los totales. Se editan y eliminan
+desde Movimientos con el diálogo de la deuda o la meta (SPEC 26, ver
+"Movimientos vinculados"). Entran en el filtro "Traspasos" y en `?account=`.
 
 ### Seguridad
 

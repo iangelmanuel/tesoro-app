@@ -1,6 +1,6 @@
 # SPEC 28 — Me deben mes a mes
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 06, SPEC 16, SPEC 25, SPEC 26
 > **Fecha:** 2026-11-04
 > **Objetivo:** Que en **Me deben** se pueda registrar a alguien que paga una cuota mensual fija, con la lista de cuotas mes a mes (Pagada, Pendiente o Atrasada) y la fecha de cada cobro, además del cobro único que existe hoy.
@@ -121,21 +121,21 @@ interface Installment {
 
 ## Criterios de aceptación
 
-- [ ] Crear una cuenta por cobrar muestra los tabs **Una vez** y **Mes a mes**; **Una vez** se comporta igual que antes.
-- [ ] Las cuentas por cobrar existentes quedan como **Una vez** tras la migración y no cambian su saldo.
-- [ ] Una cuenta mes a mes con 12 cuotas de 100.000 tiene saldo inicial de 1.200.000.
-- [ ] Una cuenta mes a mes sin cuotas se crea sin saldo total y la tarjeta muestra el monto mensual.
-- [ ] El Sheet lista una fila por mes desde la fecha de inicio hasta el mes siguiente al actual (o la última cuota).
-- [ ] Una cuota cuyo día de pago ya pasó sin cobro aparece como **Atrasada**.
-- [ ] Una cuota con día de pago futuro aparece como **Pendiente**.
-- [ ] **Marcar pagada** crea un ingreso en la cuenta elegida y la cuota pasa a **Pagada** con su fecha.
-- [ ] Registrar un segundo cobro para la misma cuota es rechazado con error.
-- [ ] Con día de pago 31, la cuota de febrero vence el último día de febrero.
-- [ ] Eliminar el cobro de una cuota la devuelve a **Pendiente** o **Atrasada**.
-- [ ] Con número de cuotas, cobrar la última marca la cuenta por cobrar como pagada.
-- [ ] Una cuenta indefinida sigue activa hasta archivarla.
-- [ ] El tipo de cobro no se puede cambiar al editar.
-- [ ] Con cifras ocultas, montos de tarjeta y cuotas muestran `***`.
+- [x] Crear una cuenta por cobrar muestra los tabs **Una vez** y **Mes a mes**; **Una vez** se comporta igual que antes.
+- [x] Las cuentas por cobrar existentes quedan como **Una vez** tras la migración y no cambian su saldo.
+- [x] Una cuenta mes a mes con 12 cuotas de 100.000 tiene saldo inicial de 1.200.000.
+- [x] Una cuenta mes a mes sin cuotas se crea sin saldo total y la tarjeta muestra el monto mensual.
+- [x] El Sheet lista una fila por mes desde la fecha de inicio hasta el mes siguiente al actual (o la última cuota).
+- [x] Una cuota cuyo día de pago ya pasó sin cobro aparece como **Atrasada**.
+- [x] Una cuota con día de pago futuro aparece como **Pendiente**.
+- [x] **Marcar pagada** crea un ingreso en la cuenta elegida y la cuota pasa a **Pagada** con su fecha.
+- [x] Registrar un segundo cobro para la misma cuota es rechazado con error.
+- [x] Con día de pago 31, la cuota de febrero vence el último día de febrero.
+- [x] Eliminar el cobro de una cuota la devuelve a **Pendiente** o **Atrasada**.
+- [x] Con número de cuotas, cobrar la última marca la cuenta por cobrar como pagada.
+- [x] Una cuenta indefinida sigue activa hasta archivarla.
+- [x] El tipo de cobro no se puede cambiar al editar.
+- [x] Con cifras ocultas, montos de tarjeta y cuotas muestran `***`.
 
 ## Decisiones
 
@@ -147,6 +147,10 @@ interface Installment {
 - **Sí:** un cobro por cuota con monto editable. Motivo: simple de leer en la lista; los pagos parciales quedan visibles por el monto.
 - **No:** convertir entre **Una vez** y **Mes a mes** al editar. Cambia el saldo y el sentido de los abonos ya registrados.
 - **No:** guardar filas por cuota por adelantado. Una cuenta indefinida no tiene final.
+- **Sí:** la lista de cuotas llega hasta el mes siguiente al actual o la última cuota, lo que llegue primero, y se extiende hasta una cuota cobrada por adelantado (decisión del usuario al implementar).
+- **Sí:** en mes a mes no hay **Registrar abono** ni **Actualizar saldo**: se cobra solo desde **Marcar pagada** (decisión del usuario al implementar).
+- **Sí:** con número de cuotas, el Sheet muestra saldo, % cobrado y "N de M cuotas"; indefinida, monto mensual y lo cobrado en el año (decisión del usuario al implementar).
+- **Sí:** el formulario mes a mes elige la duración con **Sin fin | Con cuotas** y muestra un resumen en vivo (ajuste de UI pedido al revisar).
 
 ## Riesgos
 

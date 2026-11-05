@@ -1,3 +1,5 @@
+import type { Database } from "@/types/database"
+
 export interface CategoryFormState {
   /** true cuando la acción terminó bien */
   ok?: boolean
@@ -7,6 +9,8 @@ export interface CategoryFormState {
   fieldErrors?: Partial<Record<string, string[]>>
   /** Nombre enviado, para no vaciar el formulario si hay error */
   values?: { name: string }
+  /** Categoría creada: los selects con creación la dejan seleccionada */
+  category?: Database["public"]["Tables"]["categories"]["Row"]
 }
 
 export interface CategoryActionResult {

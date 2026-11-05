@@ -92,7 +92,7 @@ export function AccountSelect({
   )
 }
 
-function accountName(account: AccountOption) {
+export function accountName(account: AccountOption) {
   return account.archived_at ? `${account.name} (archivada)` : account.name
 }
 

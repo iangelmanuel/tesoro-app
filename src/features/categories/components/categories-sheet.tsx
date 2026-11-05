@@ -1,19 +1,12 @@
 "use client"
 
-import { useActionState, useState, useTransition } from "react"
+import { useState, useTransition } from "react"
 import { Button, Drawer, Tabs, cn, toast } from "@heroui/react"
 import { Archive, ArchiveRestore, Pencil } from "lucide-react"
-import { FormField } from "@/features/auth/components/form-field"
-import {
-  archiveCategory,
-  createCategory,
-  restoreCategory,
-  updateCategory
-} from "../actions"
+import { archiveCategory, restoreCategory } from "../actions"
 import type { Category } from "../queries"
-import type { CategoryFormState } from "../types"
 import { CategoryBadge } from "./category-badge"
-import { IconColorPicker } from "./icon-color-picker"
+import { CategoryForm } from "./category-form"
 
 type TransactionType = Category["type"]
 
@@ -280,113 +273,5 @@ function ArchiveButton({
     >
       {isArchived ? <ArchiveRestore /> : <Archive />}
     </Button>
-  )
-}
-
-interface CategoryFormProps {
-  workspaceId: string
-  type: TransactionType
-  category: Category | null
-  onSaved: () => void
-  onCancel: () => void
-}
-
-function CategoryForm({
-  workspaceId,
-  type,
-  category,
-  onSaved,
-  onCancel
-}: CategoryFormProps) {
-  const isEditing = category !== null && category.type === type
-
-  const [state, formAction, pending] = useActionState<
-    CategoryFormState,
-    FormData
-  >(async (prevState, formData) => {
-    const result = isEditing
-      ? await updateCategory(prevState, formData)
-      : await createCategory(prevState, formData)
-
-    if (result.ok) {
-      toast.success(isEditing ? "Categoría actualizada" : "Categoría creada")
-      onSaved()
-    }
-    return result
-  }, {})
-
-  return (
-    <form
-      action={formAction}
-      className="flex flex-col gap-4 rounded-xl border border-border p-4"
-      noValidate
-    >
-      <h3 className="text-sm font-medium">
-        {isEditing ? `Editar "${category.name}"` : "Nueva categoría"}
-      </h3>
-
-      {isEditing && (
-        <input
-          type="hidden"
-          name="id"
-          value={category.id}
-        />
-      )}
-      <input
-        type="hidden"
-        name="workspace_id"
-        value={workspaceId}
-      />
-      <input
-        type="hidden"
-        name="type"
-        value={type}
-      />
-
-      <FormField
-        name="name"
-        label="Nombre"
-        maxLength={40}
-        placeholder={type === "expense" ? "Mascotas" : "Arriendos"}
-        defaultValue={
-          state.values?.name ?? (isEditing ? category.name : undefined)
-        }
-        errors={state.fieldErrors?.name}
-        required
-      />
-
-      <IconColorPicker
-        defaultIcon={isEditing ? category.icon : undefined}
-        defaultColor={isEditing ? category.color : undefined}
-        iconErrors={state.fieldErrors?.icon}
-        colorErrors={state.fieldErrors?.color}
-      />
-
-      {state.error && (
-        <p
-          role="alert"
-          className="text-sm text-danger"
-        >
-          {state.error}
-        </p>
-      )}
-
-      <div className="flex justify-end gap-2">
-        {isEditing && (
-          <Button
-            variant="ghost"
-            onPress={onCancel}
-          >
-            Cancelar
-          </Button>
-        )}
-        <Button
-          type="submit"
-          isDisabled={pending}
-        >
-          {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear"}
-        </Button>
-      </div>
-    </form>
   )
 }

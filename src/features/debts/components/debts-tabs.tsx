@@ -38,7 +38,10 @@ export function DebtsTabs({ tab, children }: DebtsTabsProps) {
       className="gap-6"
     >
       <Tabs.ListContainer>
-        <Tabs.List aria-label="Deudas y cuentas por cobrar">
+        <Tabs.List
+          aria-label="Deudas y cuentas por cobrar"
+          data-tour="debts-tabs"
+        >
           <Tabs.Tab id="debts">
             Debo
             <Tabs.Indicator />

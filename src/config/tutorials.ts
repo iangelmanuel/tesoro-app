@@ -453,7 +453,71 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
         "Aquí quedan las metas que terminaste o guardaste. Puedes reactivarlas."
     }
   ],
-  debts: [],
+  debts: [
+    {
+      title: "Tus deudas",
+      description:
+        "Tarjetas y préstamos que pagas, y lo que otros te deben. Lleva el saldo de cada uno y cuándo termina."
+    },
+    {
+      target: "debts-tabs",
+      title: "Debo y Me deben",
+      description:
+        "En Debo van tus tarjetas y préstamos. En Me deben, lo que prestaste y los abonos que te hacen."
+    },
+    {
+      target: "debts-totals",
+      title: "Tus totales",
+      description:
+        "Tu deuda total, cuánto usas del cupo de tus tarjetas y el interés estimado del mes. En Me deben, cuánto te falta por cobrar."
+    },
+    {
+      target: "debts-upcoming",
+      title: "Próximos pagos",
+      description:
+        "Lo que vence pronto en tus tarjetas y préstamos, con el pago mínimo o la cuota."
+    },
+    {
+      target: "debts-create",
+      title: "Registra una deuda",
+      description:
+        "Agrega una tarjeta o un préstamo con su saldo, tasa y día de pago. En Me deben, registra lo que prestaste."
+    },
+    {
+      target: "import-button",
+      title: "Importa pagos",
+      description: "Sube tus pagos y abonos desde Excel o CSV."
+    },
+    {
+      target: "debts-card",
+      title: "Cada deuda",
+      description:
+        "Su saldo, el próximo pago y cuándo terminas de pagarla según lo que abonas."
+    },
+    {
+      target: "debts-detail",
+      title: "Paga y revisa el historial",
+      description:
+        "Toca la deuda para abrir su detalle: registra pagos o abonos extra, mira la proyección y el historial."
+    },
+    {
+      target: "debts-menu",
+      title: "Edita, ajusta o archiva",
+      description:
+        "Cambia sus datos, actualiza el saldo con la cifra del banco, márcala como pagada o archívala."
+    },
+    {
+      target: "header-more",
+      title: "Paga desde cualquier sección",
+      description: "En Más tienes Pago de deuda, sin entrar a esta página."
+    },
+    {
+      target: "debts-inactive",
+      title: "Pagadas y archivadas",
+      description:
+        "Aquí quedan las deudas que terminaste o guardaste. Puedes reactivarlas."
+    }
+  ],
   reports: [],
   recommendations: []
 }

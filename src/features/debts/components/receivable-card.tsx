@@ -64,12 +64,14 @@ export function ReceivableCard({
   return (
     <li
       className={`flex flex-col gap-4 ${SURFACE_ITEM} ${SURFACE_ITEM_CLICKABLE}`}
+      data-tour="debts-card"
     >
       <div className="flex items-start gap-3">
         {/* Abre el Sheet con el detalle y los abonos */}
         <button
           type="button"
           data-card-link
+          data-tour="debts-detail"
           className={`-m-1 flex min-w-0 flex-1 flex-col gap-1 rounded-lg p-1 ${CARD_LINK}`}
           onClick={() => setDetailOpen(true)}
         >
@@ -100,6 +102,7 @@ export function ReceivableCard({
             className={CARD_OVER_LINK}
             aria-label={`Acciones de ${receivable.name}`}
             isDisabled={pending}
+            data-tour="debts-menu"
           >
             <EllipsisVertical />
           </Button>

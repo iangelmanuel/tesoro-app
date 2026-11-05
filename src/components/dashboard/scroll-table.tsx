@@ -8,6 +8,8 @@ interface ScrollTableProps {
    *  él la tabla se desliza en horizontal en vez de comprimir las columnas */
   minWidth?: string
   className?: string
+  /** Ancla `data-tour` de los tutoriales guiados (SPEC 27) */
+  tour?: string
   /** El `<Table>` de HeroUI con su `Table.ScrollContainer` */
   children: React.ReactNode
 }
@@ -20,6 +22,7 @@ interface ScrollTableProps {
 export function ScrollTable({
   minWidth = "40rem",
   className,
+  tour,
   children
 }: ScrollTableProps) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -59,6 +62,7 @@ export function ScrollTable({
   return (
     <div
       ref={rootRef}
+      data-tour={tour}
       style={{ "--scroll-table-min": minWidth } as React.CSSProperties}
       className={cn(
         "relative [&_table]:max-md:min-w-(--scroll-table-min)",

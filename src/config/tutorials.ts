@@ -165,7 +165,77 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
         "Cada sección tiene su tutorial. Ábrelo cuando quieras con este botón."
     }
   ],
-  transactions: [],
+  transactions: [
+    {
+      title: "Tus movimientos",
+      description:
+        "Aquí está todo lo que registras: ingresos, gastos, traspasos y pagos. Te mostramos cómo encontrar y ordenar cada uno."
+    },
+    {
+      target: "header-quick-add",
+      title: "Registra o traspasa",
+      description:
+        "Desde aquí registras ingresos y gastos. Para mover plata entre tus cuentas, elige Traspaso en el mismo diálogo.",
+      viewport: "desktop"
+    },
+    {
+      target: "mobile-quick-add",
+      title: "Registra o traspasa",
+      description:
+        "El botón + registra ingresos y gastos. Para mover plata entre tus cuentas, elige Traspaso en el mismo diálogo.",
+      viewport: "mobile"
+    },
+    {
+      target: "transactions-search",
+      title: "Busca y cambia de mes",
+      description:
+        "Busca por descripción o nota. Las flechas recorren los meses."
+    },
+    {
+      target: "transactions-filters",
+      title: "Filtra la lista",
+      description:
+        "Ve todos los meses a la vez o filtra por tipo, categoría o cuenta. Limpiar filtros te devuelve a la vista completa.",
+      viewport: "desktop"
+    },
+    {
+      target: "transactions-filters-sheet",
+      title: "Filtra la lista",
+      description:
+        "Abre los filtros para elegir tipo, categoría, cuenta o todos los meses. Se aplican al tocar.",
+      viewport: "mobile"
+    },
+    {
+      target: "transactions-totals",
+      title: "Totales del periodo",
+      description:
+        "Ingresos, gastos y balance de lo que ves en la lista, con los filtros aplicados."
+    },
+    {
+      target: "transactions-table",
+      title: "La lista",
+      description:
+        "Cada movimiento con su fecha, categoría, cuenta y monto. En el teléfono, desliza la tabla hacia los lados."
+    },
+    {
+      target: "transactions-reorder",
+      title: "Ordena dentro del día",
+      description:
+        "Si registraste varios movimientos el mismo día, arrastra desde aquí para ponerlos en el orden en que pasaron."
+    },
+    {
+      target: "row-actions",
+      title: "Edita o elimina",
+      description:
+        "Corrige un movimiento o bórralo. Si es un pago de deuda o un aporte a meta, el cambio se refleja allá también."
+    },
+    {
+      target: "header-more",
+      title: "Verifica tus movimientos",
+      description:
+        "En Más está Verificar movimientos: todo tu historial en una lista, para compararlo con el extracto del banco."
+    }
+  ],
   accounts: [],
   recurring: [],
   budgets: [],

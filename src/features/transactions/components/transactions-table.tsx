@@ -269,7 +269,10 @@ export function TransactionsTable({
       }}
       onDragEnd={handleDragEnd}
     >
-      <ScrollTable minWidth={isBusiness ? "64rem" : "46rem"}>
+      <ScrollTable
+        minWidth={isBusiness ? "64rem" : "46rem"}
+        tour="transactions-table"
+      >
         <Table>
           <Table.ScrollContainer>
             <Table.Content
@@ -516,6 +519,7 @@ function SortableRow({
               ref={handleRef}
               type="button"
               aria-label="Reordenar dentro del día"
+              data-tour="transactions-reorder"
               className={cn(
                 "grid h-6 w-5 touch-none place-items-center rounded-md text-muted/50 outline-none select-none hover:bg-default hover:text-foreground focus-visible:ring-2 focus-visible:ring-focus pointer-coarse:h-11 pointer-coarse:w-7",
                 isDragging ? "cursor-grabbing" : "cursor-grab"

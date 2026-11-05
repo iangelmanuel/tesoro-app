@@ -45,6 +45,7 @@ export function RowActions({ label, actions }: RowActionsProps) {
         role="group"
         aria-label={ariaLabel}
         className="flex items-center justify-end gap-1 md:hidden"
+        data-tour="row-actions"
       >
         {items.map((action) => (
           <Button
@@ -63,7 +64,11 @@ export function RowActions({ label, actions }: RowActionsProps) {
         ))}
       </div>
 
-      <div className="hidden justify-end md:flex">
+      {/* Ancla compartida: el tutorial resalta la primera fila visible */}
+      <div
+        className="hidden justify-end md:flex"
+        data-tour="row-actions"
+      >
         <Dropdown>
           <Button
             variant="ghost"

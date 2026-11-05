@@ -25,7 +25,10 @@ export function ArchivedAccounts({
   return (
     <Disclosure className="flex flex-col gap-3">
       <Disclosure.Heading>
-        <Disclosure.Trigger className="flex w-fit items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-default">
+        <Disclosure.Trigger
+          className="flex w-fit items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-default"
+          data-tour="accounts-archived"
+        >
           <Disclosure.Indicator />
           Archivadas ({accounts.length})
         </Disclosure.Trigger>

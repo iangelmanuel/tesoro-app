@@ -236,7 +236,74 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
         "En Más está Verificar movimientos: todo tu historial en una lista, para compararlo con el extracto del banco."
     }
   ],
-  accounts: [],
+  accounts: [
+    {
+      title: "Tus cuentas",
+      description:
+        "Efectivo, bancos y billeteras: dónde está tu plata. Cada movimiento puede ir asociado a una cuenta."
+    },
+    {
+      target: "accounts-create",
+      title: "Crea una cuenta",
+      description:
+        "Agrega cada lugar donde guardas plata, con su saldo inicial y la fecha desde la que lo cuentas."
+    },
+    {
+      target: "accounts-total",
+      title: "Saldo en cuentas",
+      description: "La suma de todas tus cuentas activas."
+    },
+    {
+      target: "accounts-card",
+      title: "Cada cuenta",
+      description:
+        "Su saldo de hoy y, si tienes movimientos programados, cuánto quedará con ellos."
+    },
+    {
+      target: "accounts-update-balance",
+      title: "Actualiza el saldo",
+      description:
+        "Corrige el saldo con la cifra real de tu banco o billetera. No crea un movimiento."
+    },
+    {
+      target: "accounts-reconcile",
+      title: "Concilia",
+      description:
+        "Escribe el saldo real y su fecha. Tesoro crea un ajuste por la diferencia, para que tus cifras cuadren con el banco."
+    },
+    {
+      target: "accounts-transactions",
+      title: "Ver movimientos",
+      description:
+        "Abre Movimientos filtrado por esta cuenta, de todos los meses."
+    },
+    {
+      target: "accounts-menu",
+      title: "Edita o archiva",
+      description:
+        "Cambia nombre, tipo o color. Archivar la oculta sin borrar su historial."
+    },
+    {
+      target: "accounts-archived",
+      title: "Cuentas archivadas",
+      description:
+        "Aquí quedan las que archivaste. Puedes restaurarlas cuando quieras."
+    },
+    {
+      target: "header-quick-add",
+      title: "Mueve plata entre cuentas",
+      description:
+        "Para pasar plata de una cuenta a otra, registra un Traspaso desde este botón.",
+      viewport: "desktop"
+    },
+    {
+      target: "mobile-quick-add",
+      title: "Mueve plata entre cuentas",
+      description:
+        "Para pasar plata de una cuenta a otra, registra un Traspaso desde el botón +.",
+      viewport: "mobile"
+    }
+  ],
   recurring: [],
   budgets: [],
   goals: [],

@@ -21,7 +21,10 @@ export function AccountsGrid({
 
   return (
     <>
-      <Card className="gap-2">
+      <Card
+        className="gap-2"
+        data-tour="accounts-total"
+      >
         <span className="text-sm text-muted">Saldo en cuentas</span>
         <span
           className={cn(

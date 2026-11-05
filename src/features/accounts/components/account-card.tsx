@@ -65,6 +65,7 @@ export function AccountCard({
     <Card
       render={(props) => <li {...(props as React.ComponentProps<"li">)} />}
       className="gap-4"
+      data-tour="accounts-card"
     >
       <div className="flex items-start gap-3">
         <GoalIcon
@@ -85,6 +86,7 @@ export function AccountCard({
             size="sm"
             aria-label={`Acciones de ${account.name}`}
             isDisabled={pending}
+            data-tour="accounts-menu"
           >
             <EllipsisVertical />
           </Button>
@@ -186,6 +188,7 @@ export function AccountCard({
         <Button
           variant="secondary"
           size="sm"
+          data-tour="accounts-update-balance"
           onPress={() => setAdjusting(true)}
         >
           <RefreshCw />
@@ -195,6 +198,7 @@ export function AccountCard({
           variant="secondary"
           size="sm"
           className="max-md:h-11"
+          data-tour="accounts-reconcile"
           onPress={() => setReconciling(true)}
         >
           <Scale />
@@ -203,6 +207,7 @@ export function AccountCard({
         <Link
           href={accountTransactionsHref(account.id, transactionsPath)}
           className={buttonVariants({ variant: "ghost", size: "sm" })}
+          data-tour="accounts-transactions"
         >
           <List className="size-4" />
           Ver movimientos

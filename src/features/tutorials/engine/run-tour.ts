@@ -4,9 +4,33 @@
 import { type DriveStep, type Driver, driver } from "driver.js"
 import type { TutorialStep } from "@/config/tutorials"
 import { MOBILE_QUERY } from "@/hooks/use-is-mobile"
+import "./tour-theme.css"
 import "driver.js/dist/driver.css"
 
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)"
+
+// El primario del espacio (emerald en Personal) se define en el contenedor
+// del dashboard, no en <html>; driver.js monta el popover en <body>
+const WORKSPACE_TOKENS = ["--accent", "--accent-foreground", "--focus"]
+
+/** Copia el primario del espacio actual al popover */
+function applyWorkspaceTokens(popover: HTMLElement) {
+  const content = document.getElementById("contenido")
+
+  if (!content) {
+    return
+  }
+
+  const styles = getComputedStyle(content)
+
+  for (const token of WORKSPACE_TOKENS) {
+    const value = styles.getPropertyValue(token).trim()
+
+    if (value) {
+      popover.style.setProperty(token, value)
+    }
+  }
+}
 
 let activeTour: Driver | null = null
 
@@ -101,6 +125,9 @@ export function runTour({
     popoverClass: "tesoro-tour",
     stagePadding: 6,
     stageRadius: 16,
+    overlayColor: "black",
+    overlayOpacity: 0.6,
+    onPopoverRender: (popover) => applyWorkspaceTokens(popover.wrapper),
     onDestroyed: (_element, _step, { reason }) => {
       if (activeTour === tour) {
         activeTour = null

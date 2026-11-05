@@ -14,6 +14,7 @@ import {
 } from "@/components/dashboard/sidebar"
 import { WorkspaceThemeRoot } from "@/components/dashboard/workspace-theme-root"
 import { SITE } from "@/config/site"
+import { TutorialAutoStart } from "@/features/tutorials/components/tutorial-auto-start"
 import { TutorialProvider } from "@/features/tutorials/components/tutorial-provider"
 import { getCompletedTutorials } from "@/features/tutorials/queries"
 import { getBusinessWorkspaces } from "@/features/workspaces/queries"
@@ -78,6 +79,7 @@ async function DashboardPreferencesBoundary({
     <HideAmountsProvider initial={user.hideAmounts}>
       <TutorialProvider initial={completedTutorials}>
         {children}
+        <TutorialAutoStart />
       </TutorialProvider>
     </HideAmountsProvider>
   )

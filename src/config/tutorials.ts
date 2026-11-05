@@ -50,6 +50,17 @@ export const TUTORIAL_SECTION_INFO: Record<
   }
 }
 
+/** Sección con tutorial que corresponde a una ruta, o undefined si no tiene */
+export function getTutorialSection(
+  pathname: string
+): TutorialSection | undefined {
+  const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname
+
+  return TUTORIAL_SECTIONS.find(
+    (section) => TUTORIAL_SECTION_INFO[section].href === path
+  )
+}
+
 /** Pasos de cada sección; se escriben en el paso 7 del plan */
 export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
   summary: [],

@@ -35,6 +35,8 @@ type PaymentMode = "payment" | "advance"
 export type DebtOption = Pick<Debt, "id" | "kind" | "name">
 
 interface PaymentDialogProps {
+  /** Espacio de la deuda (para crear una cuenta desde el select) */
+  workspaceId: string
   /** Deuda fija. Sin ella, el diálogo deja elegir entre `debts` */
   debt?: PaymentDebt
   /** Deudas activas para elegir; se usa cuando no llega `debt` */
@@ -54,6 +56,7 @@ interface PaymentDialogProps {
  * tarjeta
  */
 export function PaymentDialog({
+  workspaceId,
   debt: fixedDebt,
   debts,
   entry,
@@ -120,6 +123,7 @@ export function PaymentDialog({
                 <PaymentForm
                   // Cambiar de deuda reinicia el formulario (tipo y textos)
                   key={debt.id}
+                  workspaceId={workspaceId}
                   debt={debt}
                   entry={entry}
                   accounts={accounts}
@@ -176,6 +180,7 @@ function DebtSelect({
 }
 
 interface PaymentFormProps {
+  workspaceId: string
   debt: PaymentDebt
   entry?: DebtEntry
   accounts: PaymentAccountOption[]
@@ -196,6 +201,7 @@ function cardEffect(mode: PaymentMode, accountName: string | null) {
 }
 
 function PaymentForm({
+  workspaceId,
   debt,
   entry,
   accounts,
@@ -374,6 +380,7 @@ function PaymentForm({
           él no aplica. El avance no lleva traspaso y un abono es un ingreso */}
       {showAccount && (
         <PaymentAccountSection
+          workspaceId={workspaceId}
           accounts={accounts}
           amount={parsePaymentAmount(amountText)}
           errors={{

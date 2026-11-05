@@ -126,6 +126,7 @@ export function DebtSheet({
                 {isActive ? (
                   <div className="grid grid-cols-2 gap-2">
                     <PaymentDialog
+                      workspaceId={debt.workspace_id}
                       debt={debt}
                       accounts={accounts}
                       trigger={

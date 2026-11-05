@@ -15,8 +15,8 @@ import {
   toast
 } from "@heroui/react"
 import { X } from "lucide-react"
+import { CategorySelectField } from "@/components/forms/category-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
-import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { todayISO } from "@/libs/dates"
 import { createRecurringExpense, updateRecurringExpense } from "../actions"
@@ -32,6 +32,8 @@ const AMOUNT_FORMAT = new Intl.NumberFormat("es-CO", {
 const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1)
 
 interface RecurringExpenseDialogProps {
+  /** Espacio del gasto fijo (para crear una categoría desde el select) */
+  workspaceId: string
   /** Categorías del sistema y propias, activas y archivadas */
   categories: Category[]
   /** Si llega, el diálogo edita este gasto fijo */
@@ -43,6 +45,7 @@ interface RecurringExpenseDialogProps {
 }
 
 export function RecurringExpenseDialog({
+  workspaceId,
   categories,
   expense,
   trigger,
@@ -77,6 +80,7 @@ export function RecurringExpenseDialog({
             <Modal.Body>
               {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
               <RecurringExpenseForm
+                workspaceId={workspaceId}
                 categories={categories}
                 expense={expense}
                 onSaved={() => setOpen(false)}
@@ -91,6 +95,7 @@ export function RecurringExpenseDialog({
 }
 
 interface RecurringExpenseFormProps {
+  workspaceId: string
   categories: Category[]
   expense?: RecurringExpense
   onSaved: () => void
@@ -98,6 +103,7 @@ interface RecurringExpenseFormProps {
 }
 
 function RecurringExpenseForm({
+  workspaceId,
   categories,
   expense,
   onSaved,
@@ -203,45 +209,21 @@ function RecurringExpenseForm({
           <FieldError>{errors?.amount?.[0]}</FieldError>
         </TextField>
 
-        <Select
+        <CategorySelectField
           name="category_id"
-          fullWidth
-          placeholder="Elige una categoría"
-          value={categoryId || null}
-          onChange={(key) => setCategoryId(key == null ? "" : String(key))}
-          isInvalid={Boolean(errors?.category_id)}
-          className="flex flex-col gap-2"
+          value={categoryId}
+          onChange={setCategoryId}
+          categories={options}
+          workspaceId={workspaceId}
+          type="expense"
+          error={errors?.category_id?.[0]}
         >
-          <Label>Categoría</Label>
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              {options.map((category) => (
-                <ListBox.Item
-                  key={category.id}
-                  id={category.id}
-                  textValue={category.name}
-                >
-                  <CategoryBadge
-                    name={category.name}
-                    icon={category.icon}
-                    color={category.color}
-                  />
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-          <FieldError>{errors?.category_id?.[0]}</FieldError>
           {currentCategoryArchived && !categoryId && (
             <p className="text-sm text-muted">
               La categoría de este gasto fijo está archivada. Elige otra.
             </p>
           )}
-        </Select>
+        </CategorySelectField>
       </div>
 
       <div className="flex flex-col gap-2">

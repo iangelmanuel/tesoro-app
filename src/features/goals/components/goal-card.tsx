@@ -22,6 +22,7 @@ import { GoalSummary } from "./goal-summary"
 import { useGoalAction } from "./use-goal-action"
 
 interface GoalCardProps {
+  workspaceId: string
   goal: Goal
   contributions: GoalContribution[]
   /** Hoy en America/Bogota, calculado en el servidor */
@@ -31,6 +32,7 @@ interface GoalCardProps {
 }
 
 export function GoalCard({
+  workspaceId,
   goal,
   contributions,
   today,
@@ -118,6 +120,7 @@ export function GoalCard({
           onOpenChange={setEditing}
         />
         <GoalSheet
+          workspaceId={workspaceId}
           goal={goal}
           contributions={contributions}
           today={today}

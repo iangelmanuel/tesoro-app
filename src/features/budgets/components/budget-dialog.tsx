@@ -6,12 +6,11 @@ import {
   FieldError,
   Input,
   Label,
-  ListBox,
   Modal,
-  Select,
   TextField,
   toast
 } from "@heroui/react"
+import { CategorySelectField } from "@/components/forms/category-select-field"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { upsertBudget } from "../actions"
@@ -24,6 +23,8 @@ const AMOUNT_FORMAT = new Intl.NumberFormat("es-CO", {
 })
 
 interface BudgetDialogProps {
+  /** Espacio del presupuesto (para crear una categoría desde el select) */
+  workspaceId: string
   month: BudgetMonth
   /**
    * Categorías que se pueden presupuestar: de gasto, activas y sin
@@ -41,6 +42,7 @@ interface BudgetDialogProps {
 }
 
 export function BudgetDialog({
+  workspaceId,
   month,
   categories,
   budget,
@@ -78,6 +80,7 @@ export function BudgetDialog({
             <Modal.Body>
               {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
               <BudgetForm
+                workspaceId={workspaceId}
                 month={month}
                 categories={categories}
                 budget={budget}
@@ -94,6 +97,7 @@ export function BudgetDialog({
 }
 
 interface BudgetFormProps {
+  workspaceId: string
   month: BudgetMonth
   categories: Category[]
   budget?: BudgetProgress
@@ -103,6 +107,7 @@ interface BudgetFormProps {
 }
 
 function BudgetForm({
+  workspaceId,
   month,
   categories,
   budget,
@@ -165,45 +170,22 @@ function BudgetForm({
           </div>
         </Field>
       ) : (
-        <Select
+        <CategorySelectField
           name="category_id"
-          fullWidth
-          placeholder="Elige una categoría"
-          value={categoryId || null}
-          onChange={(key) => setCategoryId(key == null ? "" : String(key))}
-          isInvalid={Boolean(errors?.category_id)}
-          className="flex flex-col gap-2"
+          value={categoryId}
+          onChange={setCategoryId}
+          categories={categories}
+          workspaceId={workspaceId}
+          type="expense"
+          error={errors?.category_id?.[0]}
         >
-          <Label>Categoría</Label>
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              {categories.map((category) => (
-                <ListBox.Item
-                  key={category.id}
-                  id={category.id}
-                  textValue={category.name}
-                >
-                  <CategoryBadge
-                    name={category.name}
-                    icon={category.icon}
-                    color={category.color}
-                  />
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-          <FieldError>{errors?.category_id?.[0]}</FieldError>
           {categories.length === 0 && (
             <p className="text-sm text-muted">
               Todas tus categorías de gasto ya tienen presupuesto este mes.
+              Puedes crear una nueva.
             </p>
           )}
-        </Select>
+        </CategorySelectField>
       )}
 
       <TextField

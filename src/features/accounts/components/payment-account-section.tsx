@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { FieldError, Input, Label, Switch, TextField } from "@heroui/react"
 import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
+import { AccountSelectField } from "@/components/forms/account-select-field"
 import { amountInput } from "@/features/debts/components/field"
 import { parseAmount } from "@/features/transactions/schemas"
 import { formatCurrency } from "@/libs/format"
@@ -12,11 +13,7 @@ import {
   transferSources
 } from "../payment-account"
 import type { AccountWithBalance } from "../types"
-import {
-  type AccountOption,
-  AccountSelect,
-  selectableAccounts
-} from "./account-select"
+import { type AccountOption, selectableAccounts } from "./account-select"
 
 export type PaymentAccountOption = AccountOption &
   Pick<AccountWithBalance, "balance">
@@ -28,6 +25,8 @@ export interface PaymentAccountErrors {
 }
 
 interface PaymentAccountSectionProps {
+  /** Espacio de las cuentas (para crear una desde el select) */
+  workspaceId: string
   /** Todas las cuentas del espacio con su saldo a hoy; solo se ofrecen las activas */
   accounts: PaymentAccountOption[]
   /** Monto del pago, para avisar el faltante y proponer el traspaso */
@@ -47,6 +46,7 @@ interface PaymentAccountSectionProps {
 // transfer_amount ("" cuando no aplican). Sin cuenta, el pago queda por fuera
 // de las cuentas y no toca ningún saldo.
 export function PaymentAccountSection({
+  workspaceId,
   accounts,
   amount,
   errors,
@@ -75,7 +75,8 @@ export function PaymentAccountSection({
 
   return (
     <div className="flex flex-col gap-3">
-      <AccountSelect
+      <AccountSelectField
+        workspaceId={workspaceId}
         name="account_id"
         label={label}
         value={accountId}
@@ -124,7 +125,8 @@ export function PaymentAccountSection({
 
       {transferOn ? (
         <div className="grid gap-4 sm:grid-cols-2">
-          <AccountSelect
+          <AccountSelectField
+            workspaceId={workspaceId}
             name="transfer_from"
             label="Desde"
             value={sourceId}

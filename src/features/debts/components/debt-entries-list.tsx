@@ -164,6 +164,7 @@ function EntryRow({
           />
           {isPayment || isAdvance || isFee ? (
             <PaymentDialog
+              workspaceId={entry.workspace_id}
               debt={debt}
               entry={entry}
               open={editing}

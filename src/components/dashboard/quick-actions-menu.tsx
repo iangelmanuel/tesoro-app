@@ -193,12 +193,14 @@ function MoreMenu({
       {isPersonal && (
         <>
           <ContributionDialog
+            workspaceId={workspace.id}
             goals={goals}
             accounts={accounts}
             open={contributionOpen}
             onOpenChange={setContributionOpen}
           />
           <PaymentDialog
+            workspaceId={workspace.id}
             debts={debts}
             accounts={accounts}
             open={paymentOpen}

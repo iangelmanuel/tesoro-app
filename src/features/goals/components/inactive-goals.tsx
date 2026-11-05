@@ -11,6 +11,7 @@ import { GoalSheet } from "./goal-sheet"
 import { useGoalAction } from "./use-goal-action"
 
 interface InactiveGoalsProps {
+  workspaceId: string
   /** Metas cumplidas y archivadas */
   goals: Goal[]
   /** Aportes por id de meta */
@@ -22,6 +23,7 @@ interface InactiveGoalsProps {
 
 /** Sección plegable "Cumplidas y archivadas", cerrada por defecto */
 export function InactiveGoals({
+  workspaceId,
   goals,
   contributions,
   today,
@@ -40,6 +42,7 @@ export function InactiveGoals({
           {goals.map((goal) => (
             <InactiveGoalRow
               key={goal.id}
+              workspaceId={workspaceId}
               goal={goal}
               contributions={contributions[goal.id] ?? []}
               today={today}
@@ -53,11 +56,13 @@ export function InactiveGoals({
 }
 
 function InactiveGoalRow({
+  workspaceId,
   goal,
   contributions,
   today,
   currency
 }: {
+  workspaceId: string
   goal: Goal
   contributions: GoalContribution[]
   today: string
@@ -107,6 +112,7 @@ function InactiveGoalRow({
         Reactivar
       </Button>
       <GoalSheet
+        workspaceId={workspaceId}
         goal={goal}
         contributions={contributions}
         today={today}

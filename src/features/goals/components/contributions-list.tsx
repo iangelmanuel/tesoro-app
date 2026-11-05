@@ -122,6 +122,7 @@ function ContributionRow({
             ]}
           />
           <ContributionDialog
+            workspaceId={contribution.workspace_id}
             goalId={contribution.goal_id}
             contribution={contribution}
             open={editing}

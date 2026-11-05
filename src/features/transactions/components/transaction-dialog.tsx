@@ -6,28 +6,24 @@ import {
   FieldError,
   Input,
   Label,
-  ListBox,
   Modal,
-  Select,
   TextArea,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
   toast
 } from "@heroui/react"
+import { AccountSelectField } from "@/components/forms/account-select-field"
+import { CategorySelectField } from "@/components/forms/category-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { TimePickerField } from "@/components/forms/time-picker-field"
-import {
-  AccountSelect,
-  selectableAccounts
-} from "@/features/accounts/components/account-select"
+import { selectableAccounts } from "@/features/accounts/components/account-select"
 import {
   type PaymentAccountOption,
   PaymentAccountSection,
   parsePaymentAmount
 } from "@/features/accounts/components/payment-account-section"
 import { TransferForm } from "@/features/accounts/components/transfer-dialog"
-import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import type { WorkspaceType } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
@@ -395,50 +391,21 @@ function TransactionForm({
         />
       </div>
 
-      <Select
+      <CategorySelectField
         name="category_id"
-        fullWidth
-        placeholder="Elige una categoría"
-        value={categoryId || null}
-        onChange={(key) => setCategoryId(key == null ? "" : String(key))}
-        isInvalid={Boolean(errors?.category_id)}
-        className="flex flex-col gap-2"
+        value={categoryId}
+        onChange={setCategoryId}
+        categories={options}
+        workspaceId={workspaceId}
+        type={type}
+        error={errors?.category_id?.[0]}
       >
-        <Label>Categoría</Label>
-        <Select.Trigger>
-          <Select.Value />
-          <Select.Indicator />
-        </Select.Trigger>
-        <Select.Popover>
-          <ListBox>
-            {options.map((category) => {
-              const name = category.archived_at
-                ? `${category.name} (archivada)`
-                : category.name
-              return (
-                <ListBox.Item
-                  key={category.id}
-                  id={category.id}
-                  textValue={name}
-                >
-                  <CategoryBadge
-                    name={name}
-                    icon={category.icon}
-                    color={category.color}
-                  />
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              )
-            })}
-          </ListBox>
-        </Select.Popover>
-        <FieldError>{errors?.category_id?.[0]}</FieldError>
         {initialCategoryUnavailable && !categoryId && (
           <p className="text-sm text-muted">
             La categoría de este gasto fijo está archivada. Elige otra.
           </p>
         )}
-      </Select>
+      </CategorySelectField>
 
       {/* Un gasto nuevo de Personal puede traspasar fondos antes de pagar
           (SPEC 16). Al editar, y en ingresos o Empresa, solo se elige la
@@ -446,6 +413,7 @@ function TransactionForm({
           archivada, para poder guardar sin cambiarla */}
       {showTransfer ? (
         <PaymentAccountSection
+          workspaceId={workspaceId}
           accounts={accounts}
           amount={parsePaymentAmount(amountText)}
           errors={{
@@ -457,7 +425,8 @@ function TransactionForm({
           onAccountChange={setAccountId}
         />
       ) : (
-        <AccountSelect
+        <AccountSelectField
+          workspaceId={workspaceId}
           name="account_id"
           label="Cuenta"
           value={accountId}

@@ -26,6 +26,7 @@ export async function RecurringView({
 
   const createButton = (
     <RecurringExpenseDialog
+      workspaceId={workspace.id}
       categories={categories}
       trigger={
         <Button>

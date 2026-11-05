@@ -88,6 +88,7 @@ export function BudgetProgressBar({
 }
 
 interface BudgetProgressRowProps {
+  workspaceId: string
   /** Fila con presupuesto (budgetAmount no es null) */
   budget: BudgetProgress & { budgetId: string; budgetAmount: number }
   month: BudgetMonth
@@ -95,6 +96,7 @@ interface BudgetProgressRowProps {
 }
 
 export function BudgetProgressRow({
+  workspaceId,
   budget,
   month,
   currency
@@ -145,6 +147,7 @@ export function BudgetProgressRow({
         </p>
         <div className="col-start-2 row-start-1 md:col-start-3">
           <BudgetActions
+            workspaceId={workspaceId}
             budget={budget}
             month={month}
           />
@@ -176,9 +179,11 @@ export function BudgetProgressRow({
 }
 
 function BudgetActions({
+  workspaceId,
   budget,
   month
 }: {
+  workspaceId: string
   budget: BudgetProgress & { budgetId: string }
   month: BudgetMonth
 }) {
@@ -218,6 +223,7 @@ function BudgetActions({
         ]}
       />
       <BudgetDialog
+        workspaceId={workspaceId}
         month={month}
         categories={[]}
         budget={budget}

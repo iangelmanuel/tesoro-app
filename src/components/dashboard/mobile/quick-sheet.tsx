@@ -221,12 +221,14 @@ export function QuickSheet({
       {isPersonal && (
         <>
           <ContributionDialog
+            workspaceId={workspace.id}
             goals={goals}
             accounts={workspace.accounts}
             open={dialog === "contribution"}
             onOpenChange={closeDialog}
           />
           <PaymentDialog
+            workspaceId={workspace.id}
             debts={debts}
             accounts={workspace.accounts}
             open={dialog === "payment"}

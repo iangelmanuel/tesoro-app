@@ -189,6 +189,7 @@ function ExpenseActions({
         ]}
       />
       <RecurringExpenseDialog
+        workspaceId={expense.workspace_id}
         categories={categories}
         expense={expense}
         open={editing}

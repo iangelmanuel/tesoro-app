@@ -110,6 +110,7 @@ async function BudgetsView({
           <div className="flex flex-wrap gap-2">
             <CopyPreviousMonthButton month={month.month} />
             <BudgetDialog
+              workspaceId={workspace.id}
               month={month}
               categories={available}
               trigger={
@@ -131,6 +132,7 @@ async function BudgetsView({
         >
           <div className="flex flex-wrap justify-center gap-2">
             <BudgetDialog
+              workspaceId={workspace.id}
               month={month}
               categories={available}
               trigger={
@@ -153,6 +155,7 @@ async function BudgetsView({
             {budgets.map((budget) => (
               <BudgetProgressRow
                 key={budget.budgetId}
+                workspaceId={workspace.id}
                 budget={budget}
                 month={month}
                 currency={workspace.currency}
@@ -164,6 +167,7 @@ async function BudgetsView({
 
       {unbudgeted.length > 0 && (
         <UnbudgetedCategories
+          workspaceId={workspace.id}
           rows={unbudgeted}
           month={month}
           categories={available}

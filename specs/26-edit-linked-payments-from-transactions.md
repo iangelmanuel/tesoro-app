@@ -1,6 +1,6 @@
 # SPEC 26 — Editar pagos de deuda, avances, aportes y pagos de gasto fijo desde Movimientos
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 02, SPEC 04, SPEC 05, SPEC 06, SPEC 16, SPEC 19
 > **Fecha:** 2026-11-04
 > **Objetivo:** Que todo movimiento vinculado (pago o avance de tarjeta, pago de préstamo o cobro de Me deben, aporte o retiro de meta y pago de gasto fijo) se pueda editar y eliminar desde Movimientos y que el cambio se refleje en la deuda, la meta o el gasto fijo de origen.
@@ -108,17 +108,22 @@ La migración se revisa contra los triggers de `debt_entries` (saldo no negativo
 
 ## Criterios de aceptación
 
-- [ ] Un pago de tarjeta de un mes pasado se edita desde Movimientos y el saldo de la tarjeta cambia en Deudas.
-- [ ] Un avance de tarjeta se edita y elimina desde Movimientos y el saldo de la tarjeta lo refleja.
-- [ ] Un pago de préstamo editado desde Movimientos cambia el saldo del préstamo en Deudas.
-- [ ] Eliminar un pago de préstamo desde Movimientos devuelve el saldo del préstamo y borra el abono.
-- [ ] Un cobro de Me deben editado desde Movimientos cambia el saldo pendiente.
-- [ ] Un aporte o retiro de meta se edita y elimina desde Movimientos y el progreso de la meta cambia.
-- [ ] Un pago de gasto fijo de un mes pasado se guarda con nuevo monto y fecha, y su ocurrencia sigue pagada.
-- [ ] Un monto que deja la deuda con saldo negativo se rechaza con error visible en el campo.
-- [ ] Llamar a `updateTransaction` o `deleteTransaction` con un movimiento enlazado a un abono devuelve error y no cambia nada.
-- [ ] Las filas grises siguen fuera de los totales de Movimientos.
-- [ ] Tras la migración, ningún abono con `transaction_id` difiere de su movimiento en monto, fecha u hora (salvo los reportados por violar un trigger).
+- [x] Un pago de tarjeta de un mes pasado se edita desde Movimientos y el saldo de la tarjeta cambia en Deudas.
+- [x] Un avance de tarjeta se edita y elimina desde Movimientos y el saldo de la tarjeta lo refleja.
+- [x] Un pago de préstamo editado desde Movimientos cambia el saldo del préstamo en Deudas.
+- [x] Eliminar un pago de préstamo desde Movimientos devuelve el saldo del préstamo y borra el abono.
+- [x] Un cobro de Me deben editado desde Movimientos cambia el saldo pendiente.
+- [x] Un aporte o retiro de meta se edita y elimina desde Movimientos y el progreso de la meta cambia.
+- [x] Un pago de gasto fijo de un mes pasado se guarda con nuevo monto y fecha, y su ocurrencia sigue pagada.
+- [x] Un monto que deja la deuda con saldo negativo se rechaza con error visible en el campo.
+- [x] Llamar a `updateTransaction` o `deleteTransaction` con un movimiento enlazado a un abono devuelve error y no cambia nada.
+- [x] Las filas grises siguen fuera de los totales de Movimientos.
+- [x] Tras la migración, ningún abono con `transaction_id` difiere de su movimiento en monto, fecha u hora (salvo los reportados por violar un trigger).
+
+Verificado con Playwright y SQL contra Supabase local (usuario demo, meses
+pasados). Dos casos se cubrieron por la ruta compartida y no de punta a punta:
+editar un avance (mismo `PaymentDialog` y `updateEntry` que el pago de tarjeta
+probado) y eliminar un aporte (misma `deleteContribution` que usa Metas).
 
 ## Decisiones
 

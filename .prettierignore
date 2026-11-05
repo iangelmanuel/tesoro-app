@@ -13,3 +13,11 @@ pnpm-lock.yaml
 .claude/skills/impeccable
 .claude/agents/impeccable-*.md
 .impeccable
+.agents/skills
+.claude/skills/figma
+.claude/skills/hyperframes*
+.claude/skills/media-use
+.claude/skills/remotion-to-hyperframes
+.claude/skills/reverse-any-video
+.claude/skills/slideshow
+.claude/skills/style-sampling

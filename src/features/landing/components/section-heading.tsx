@@ -1,25 +1,24 @@
 import { cn } from "@heroui/react"
+import { Reveal } from "./reveal"
 
 type SectionHeadingProps = {
   id: string
-  eyebrow: string
   title: string
   description?: string
   className?: string
 }
 
 // Encabezado común de las secciones de la landing. `id` va al <h2> para que
-// la sección lo use en `aria-labelledby`
+// la sección lo use en `aria-labelledby`. Sin eyebrow: el título se sostiene
+// solo (SPEC 24)
 export function SectionHeading({
   id,
-  eyebrow,
   title,
   description,
   className
 }: SectionHeadingProps) {
   return (
-    <div className={cn("flex max-w-2xl flex-col gap-3", className)}>
-      <p className="text-sm font-medium text-brand">{eyebrow}</p>
+    <Reveal className={cn("flex max-w-2xl flex-col gap-3", className)}>
       <h2
         id={id}
         className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl"
@@ -31,6 +30,6 @@ export function SectionHeading({
           {description}
         </p>
       )}
-    </div>
+    </Reveal>
   )
 }

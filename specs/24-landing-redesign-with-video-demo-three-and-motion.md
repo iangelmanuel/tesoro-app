@@ -22,15 +22,16 @@ Es un spec grande (diseño, video, 3D, motion). Se ordena en etapas que se puede
 **Entra:**
 
 - **Dependencias y skills** (versiones exactas, sin `^`):
-  - skill de Hyperframes: `npx skills add heygen-com/hyperframes`, verificando que quede en `.claude/skills/` (si queda en `.agents/skills/`, se mueve o se enlaza). CLI `hyperframes` por `npx`; requiere FFmpeg en la máquina;
+  - skill de Hyperframes: `npx skills add heygen-com/hyperframes`, verificando que quede en `.claude/skills/` (si queda en `.agents/skills/`, se mueve o se enlaza). Las skills de Hyperframes quedan instaladas solo en local, git-ignoradas. CLI `hyperframes` por `npx`; requiere FFmpeg en la máquina;
   - `motion` (import desde `motion/react`);
   - `three` y `@react-three/fiber` (sin `drei`, salvo que algo concreto lo exija);
   - `@types/three` y `playwright` como `devDependencies`.
-- **Datos demo y grabación de la app real** (solo desarrollo, nada de esto llega al bundle):
+- **Datos demo y grabación de la app real** (solo desarrollo, nada de esto llega al bundle). Los scripts viven **solo en local** y están git-ignorados; no se suben al repositorio:
   - `scripts/seed-demo.mjs`: crea contra **Supabase local** (`supabase start`) un usuario demo con Personal completo (movimientos de varios meses, presupuestos, metas, deudas y tarjeta, cuentas) y una empresa con flujo de caja. Usa `service_role` solo desde variable de entorno local y **se niega a correr** si la URL no es `localhost` / `127.0.0.1`;
   - `scripts/record-demo.mjs`: Playwright con viewport 1920×1080, tema **claro** (`localStorage.theme = "light"`), inicia sesión con el usuario demo y ejecuta tomas guionizadas (scroll, hover, clics). Cada toma produce un `.webm` y un `.json` con la trayectoria del cursor y los clics por tiempo, porque el cursor del sistema no sale en la grabación;
+  - `scripts/prepare-demo-video.mjs`: convierte las tomas para Hyperframes (`video/assets/takes/`) y genera `video/assets/cursor-data.js`, que usan las composiciones;
   - los `.webm` crudos van en `video/raw/` (git-ignorado).
-- **Composiciones Hyperframes** en `video/` (estructura final según `npx hyperframes init`): toman los `.webm` como fuente y dibujan encima cursor, clics, zooms, resaltados y texto en pantalla en español. Se renderizan a `public/videos/`.
+- **Composiciones Hyperframes** en `video/` (estructura final según `npx hyperframes init`; todo `video/` vive solo en local y está git-ignorado, al repo solo llega el resultado en `public/videos/`): toman los `.webm` como fuente y dibujan encima cursor, clics, zooms, resaltados y texto en pantalla en español. Se renderizan a `public/videos/`.
   - **Estilo escritorio macOS**: toda la composición se ve como una Mac, no como una página web suelta. La app real grabada va dentro de una ventana de macOS (esquinas redondeadas, sombra, botones de semáforo rojo/amarillo/verde y barra de título con la URL de Tesoro) sobre un escritorio con fondo propio, barra de menú superior (reloj, íconos de estado, nombre de la app) y Dock con íconos genéricos. El cursor es la flecha estilo macOS, con animación de clic. La ventana se abre, se mueve y se maximiza con animaciones (zoom, escala) al estilo del sistema.
     - Sin logo de Apple, sin íconos de apps de Apple ni fondos de pantalla de Apple (marca y derechos): fondo de escritorio original en degradado de la marca, íconos de Dock genéricos y propios.
     - Sin SF Pro (licencia): la barra de menú y el Dock usan Inter; la app grabada ya usa Inter.
@@ -45,7 +46,7 @@ Es un spec grande (diseño, video, 3D, motion). Se ordena en etapas que se puede
     7. Cierre: isotipo, slogan de `SITE.info.slogan` y CTA.
   - **5 clips cortos** (5–8 s) para las funciones de `SITE.features` que tienen UI: Registros como punto de partida, Gráficas claras, Recomendaciones, Score financiero, Personal y Empresa. "Código abierto" queda sin clip: no tiene pantalla que grabar.
   - Tono de los textos: tuteo, frases cortas, tranquilo con las cifras, sin jerga ni alarmismo (ver `PRODUCT.md`). Sin mencionar IA generativa ni inventar métricas, clientes o testimonios. Una nota "Datos de ejemplo" visible en el video.
-  - Cada video exporta MP4 (H.264) y WebM, más un póster WebP. Presupuesto: principal ≤ 8 MB, cada clip ≤ 1.5 MB, total en `public/videos/` ≤ 15 MB.
+  - Cada video exporta MP4 (H.264) y WebM, más un póster WebP, en 1920×1080 optimizado para web (codificación en dos pasadas, `faststart`). Presupuesto: principal ≤ 8 MB por formato, cada clip ≤ 1.5 MB por formato, total en `public/videos/` ≤ 25 MB.
 - **Sección de demo** (`#demo`) justo después del hero:
   - el video principal (que ya trae el escritorio macOS dentro) en un contenedor con esquinas redondeadas y sombra sutil, sin marco extra, siempre en claro aunque la página esté en oscuro;
   - póster hasta que el usuario pulsa play; controles de reproducir/pausar y silencio no aplica (sin audio); `preload="none"`, `playsInline`, dimensiones reservadas para evitar CLS;
@@ -72,7 +73,7 @@ Es un spec grande (diseño, video, 3D, motion). Se ordena en etapas que se puede
   - detalle fino: espaciado, jerarquía tipográfica, estados hover/focus, contraste AA en claro y oscuro.
 - **Config en `SITE`** para la demo y los clips (ver "Modelo de datos"); los componentes no arman rutas de video a mano.
 - **Documentación:** `docs/ui.md` (sección Landing y animación), `docs/producto.md` (Landing), `CLAUDE.md` (comandos y pipeline de video), `PRODUCT.md` ("Evidence on Hand"), nota en SPEC 12 de que los videos pasaron a SPEC 19, `.env.example` y `CHANGELOG.md` en `[Unreleased]` (en inglés).
-- Lighthouse móvil ≥ 90 en Rendimiento, Accesibilidad, Buenas prácticas y SEO en `/`.
+- Lighthouse móvil en `/`: ≥ 90 en Accesibilidad, Buenas prácticas y SEO, y ≥ 70 en Rendimiento (ver Decisiones).
 
 **Fuera de alcance (para otros specs):**
 
@@ -121,11 +122,12 @@ landing: {
 Archivos nuevos (nombres finales de `video/` según `hyperframes init`):
 
 ```text
-scripts/seed-demo.mjs
-scripts/record-demo.mjs
-scripts/demo/                         # tomas guionizadas (un archivo por toma)
-video/                                # composiciones Hyperframes (fuente)
-video/raw/                            # .webm y .json crudos (git-ignorado)
+scripts/seed-demo.mjs                 # local, git-ignorado
+scripts/record-demo.mjs               # local, git-ignorado
+scripts/prepare-demo-video.mjs        # local, git-ignorado
+scripts/demo/                         # local, git-ignorado: tomas guionizadas (un archivo por toma)
+video/                                # local, git-ignorado: composiciones Hyperframes (fuente)
+video/raw/                            # .webm y .json crudos
 public/videos/                        # demo, 5 clips y pósters (commiteados)
 src/features/landing/components/
   demo-section.tsx
@@ -165,17 +167,17 @@ Variables de entorno de desarrollo (solo en `.env.local`, placeholders en `.env.
 10. **Docs y limpieza.**
     - `docs/ui.md`, `docs/producto.md`, `CLAUDE.md`, `PRODUCT.md`, nota en SPEC 12, `.env.example` y `CHANGELOG.md`.
 11. **Medición.**
-    - `pnpm build && pnpm start`, Lighthouse móvil en `/`, y revisión del peso transferido de la carga inicial; corregir lo que baje de 90.
+    - `pnpm build && pnpm start`, Lighthouse móvil en `/`, y revisión del peso transferido de la carga inicial; corregir lo que baje del umbral.
 
 ## Criterios de aceptación
 
 - [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
 - [ ] `package.json` no tiene `^` ni `~`, y `pnpm install --frozen-lockfile` funciona.
-- [ ] La skill de Hyperframes aparece en `.claude/skills/` y `npx hyperframes` renderiza una composición.
+- [ ] La skill de Hyperframes está instalada en local en `.claude/skills/` (git-ignorada) y `npx hyperframes` renderiza una composición.
 - [ ] `scripts/seed-demo.mjs` termina con error y sin escribir nada si `NEXT_PUBLIC_SUPABASE_URL` no es `localhost` o `127.0.0.1`.
 - [ ] Tras el seed local, el usuario demo ve datos en Resumen, Presupuestos, Metas, Deudas, Score, Recomendaciones y en el espacio Empresa.
 - [ ] `public/videos/` contiene `demo.mp4`, `demo.webm`, `demo-poster.webp` y, por cada uno de los 5 clips, su MP4, WebM y póster.
-- [ ] El video principal dura entre 45 y 60 s, no tiene pista de audio y pesa ≤ 8 MB; cada clip dura entre 5 y 8 s y pesa ≤ 1.5 MB; `public/videos/` pesa ≤ 15 MB.
+- [ ] El video principal dura entre 45 y 60 s, no tiene pista de audio y pesa ≤ 8 MB por formato; cada clip dura entre 5 y 8 s y pesa ≤ 1.5 MB por formato; `public/videos/` pesa ≤ 25 MB.
 - [ ] En el video principal se ve un cursor que mueve, hace clic y navega por Resumen, Presupuestos, Metas, Deudas, Score, Recomendaciones y Empresa, en ese orden, y no muestra el registro de un movimiento.
 - [ ] La UI del video está en modo claro y coincide con la app: tipografía, colores y componentes son los reales (grabados, no recreados).
 - [ ] El video muestra la nota "Datos de ejemplo" y no contiene métricas, clientes ni testimonios inventados ni menciones a IA.
@@ -196,13 +198,14 @@ Variables de entorno de desarrollo (solo en `.env.local`, placeholders en `.env.
 - [ ] Los pares texto/fondo nuevos cumplen AA en claro y oscuro, y todo control nuevo (play/pausa) mide 44 px o más y es operable por teclado con foco visible.
 - [ ] Sin scroll horizontal en 375 px.
 - [ ] La landing no hace peticiones a dominios externos al cargar (salvo Supabase en la isla de sesión).
-- [ ] Lighthouse móvil ≥ 90 en Rendimiento, Accesibilidad, Buenas prácticas y SEO en `/`, sobre `pnpm start`.
+- [ ] Lighthouse móvil en `/`, sobre `pnpm start`: ≥ 90 en Accesibilidad, Buenas prácticas y SEO, y ≥ 70 en Rendimiento.
 - [ ] `DESIGN.md`, `docs/ui.md`, `docs/producto.md`, `CLAUDE.md`, `PRODUCT.md` y `CHANGELOG.md` están actualizados; SPEC 12 apunta a este spec para los videos.
 
 ## Decisiones
 
 - **Sí:** grabar la app real con datos demo y dibujar el cursor en Hyperframes. Es la única forma de que la UI sea idéntica a la real; reconstruirla en HTML se desfasa con cada cambio de UI.
 - **No:** reconstruir las pantallas en HTML ni usar capturas estáticas. Menos fieles y más trabajo de mantenimiento.
+- **Sí:** los scripts de seed, grabación y preparación del video quedan solo en local, git-ignorados (2026-11-04, decisión del usuario). `video/` (composiciones, tomas, renders y borradores) también queda solo en local. En el repo solo van los videos renderizados de `public/videos/`.
 - **Sí:** el seed corre solo contra Supabase local y rechaza otras URLs. Usa `service_role`, que nunca debe tocar el proyecto remoto ni el navegador.
 - **No:** cuenta demo en el proyecto remoto. Mezcla datos ficticios con los reales y deja credenciales a mano.
 - **Sí:** Playwright registra la trayectoria del cursor en un `.json`. La grabación de video no dibuja el cursor del sistema, y así la animación del cursor es controlable y suave.
@@ -212,14 +215,17 @@ Variables de entorno de desarrollo (solo en `.env.local`, placeholders en `.env.
 - **No:** logo, apps, fondos ni tipografía de Apple. Son marca y material con licencia; se imita la forma de la interfaz con elementos propios y genéricos.
 - **No:** landing en claro por defecto. Cambiaría la identidad oscura de SPEC 14 por una decisión que solo afecta al video.
 - **Sí:** 1 video principal + 5 clips. "Código abierto" no tiene pantalla que grabar; lo cubre su sección de texto.
-- **Sí:** videos en `public/videos/` del repo, MP4 + WebM + póster, ≤ 15 MB. Coherente con "sin peticiones externas"; el costo es que el repo crece con cada re-render.
+- **Sí:** videos en `public/videos/` del repo, MP4 + WebM + póster, en 1080p y ≤ 25 MB (2026-11-04: subido de 15 MB a pedido del usuario para no bajar a 720p). Coherente con "sin peticiones externas"; el costo es que el repo crece con cada re-render.
 - **No:** Supabase Storage ni YouTube/Vimeo. Añaden una petición externa y dependencias de terceros o cookies.
 - **Sí:** sin audio, con texto en pantalla. Se ve bien en autoplay silencioso y evita guion, voz y licencias.
 - **Sí:** Three.js solo en el hero, diferido y desactivado en móvil, reduced-motion y `saveData`. Protege Lighthouse ≥ 90; el fallback estático es el mockup actual.
 - **No:** 3D en Score ni fondo global. Más JS y GPU a cambio de poco valor.
 - **Sí:** `@react-three/fiber` sin `drei`. Menos dependencias; se agrega `drei` solo si una pieza concreta lo exige.
-- **Sí:** Motion con `LazyMotion` + `domAnimation` y `MotionConfig reducedMotion="user"`. Menor bundle y respeto automático de la preferencia del sistema.
+- **Sí:** Motion con `LazyMotion` (funciones cargadas aparte) y `MotionConfig reducedMotion="user"`, solo en lo interactivo (reproductor, recorrido de funciones). Menor bundle y respeto automático de la preferencia del sistema.
+- **Sí:** revelados en CSS (2026-11-04, paso 11, decisión del usuario). `reveal.tsx` solo marca (`data-reveal`, `data-reveal-list`) y `reveal-observer.tsx` (un único `IntersectionObserver`) oculta lo que está fuera de pantalla y lo muestra al entrar. Animar con Motion los bloques del primer render retrasaba el LCP y sumaba JS a la hidratación.
 - **Sí:** `Reveal` compartido, no animaciones sueltas por componente. Mantiene un solo ritmo de movimiento.
+- **Sí:** Rendimiento de Lighthouse móvil ≥ 70, no ≥ 90 (2026-11-04, decisión del usuario). Medido entre 70 y 78 en local; Accesibilidad, Buenas prácticas y SEO dan 100. El LCP simulado (~3,8 s) lo marcan recursos de toda la app (CSS de HeroUI + Tailwind, react-dom, Inter), no la landing; en Chrome real el LCP es ~1 s. Recortar la CSS global queda para otro spec.
+- **No:** `experimental.inlineCss`. Probado en el paso 11: el HTML crece y el Rendimiento baja a 57–66.
 - **Sí:** la skill de Impeccable aplicada a toda la landing (`critique` → `polish` → `audit`), no solo a las secciones nuevas. Un hero pulido con el resto genérico se nota.
 - **Sí:** `score-visual.tsx` se queda como mockup mejorado, no se reemplaza por video: el score ya está en el video principal y en un clip.
 - **Sí:** JSON-LD `VideoObject` para el video principal. Aprovecha el contenido nuevo para SEO sin costo de peso.
@@ -227,17 +233,17 @@ Variables de entorno de desarrollo (solo en `.env.local`, placeholders en `.env.
 
 ## Riesgos
 
-| Riesgo                                                                             | Mitigación                                                                                                                                           |
-| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Hyperframes cambia de CLI o estructura, o la skill queda en una ruta no reconocida | Paso 1 verifica la instalación y un render de prueba antes de invertir en las composiciones; la ubicación final se documenta en `CLAUDE.md`.         |
-| FFmpeg no está instalado en la máquina de Windows                                  | Paso 1 lo comprueba y documenta cómo instalarlo; los videos van commiteados, así que el CI no lo necesita.                                           |
-| Los videos superan el presupuesto de peso                                          | Se ajustan bitrate, resolución de salida (1280×720 si hace falta) y duración; el criterio de aceptación fija los máximos.                            |
-| Three.js y Motion bajan Lighthouse de rendimiento                                  | Carga diferida, activación condicionada, `LazyMotion`, frameloop bajo demanda y medición en el paso 11; si no llega a 90, se recorta la escena 3D.   |
-| Las grabaciones quedan desfasadas cuando cambie la UI                              | `seed-demo` y `record-demo` son repetibles; re-renderizar es correr los scripts y `hyperframes render`. Documentado en `CLAUDE.md`.                  |
-| El usuario demo expone credenciales o se corre el seed contra producción           | Credenciales solo en `.env.local`; guarda de URL local en el script; `service_role` nunca en el repo.                                                |
-| Autoplay de video y animaciones molestan o excluyen a usuarios                     | Respeto de `prefers-reduced-motion` y `saveData`, controles con teclado y sin audio.                                                                 |
-| El `critique` pide cambios que chocan con los tokens de SPEC 14                    | Los cambios se hacen dentro de los tokens existentes (`--brand`, `--income`...); cualquier token nuevo se documenta en `docs/ui.md` antes de usarse. |
-| Los datos demo se leen como cifras reales                                          | Nota "Datos de ejemplo" visible en el video y ningún dato de usuarios reales en el seed.                                                             |
+| Riesgo                                                                             | Mitigación                                                                                                                                                |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hyperframes cambia de CLI o estructura, o la skill queda en una ruta no reconocida | Paso 1 verifica la instalación y un render de prueba antes de invertir en las composiciones; la ubicación final se documenta en `CLAUDE.md`.              |
+| FFmpeg no está instalado en la máquina de Windows                                  | Paso 1 lo comprueba y documenta cómo instalarlo; los videos van commiteados, así que el CI no lo necesita.                                                |
+| Los videos superan el presupuesto de peso                                          | Se ajustan bitrate, resolución de salida (1280×720 si hace falta) y duración; el criterio de aceptación fija los máximos.                                 |
+| Three.js y Motion bajan Lighthouse de rendimiento                                  | Carga diferida, activación condicionada, `LazyMotion`, frameloop bajo demanda y medición en el paso 11; la escena 3D no entra en el LCP (medido).         |
+| Las grabaciones quedan desfasadas cuando cambie la UI                              | `seed-demo` y `record-demo` son repetibles en la máquina que los tiene (no están en el repo); re-renderizar es correr los scripts y `hyperframes render`. |
+| El usuario demo expone credenciales o se corre el seed contra producción           | Credenciales solo en `.env.local`; guarda de URL local en el script; `service_role` nunca en el repo.                                                     |
+| Autoplay de video y animaciones molestan o excluyen a usuarios                     | Respeto de `prefers-reduced-motion` y `saveData`, controles con teclado y sin audio.                                                                      |
+| El `critique` pide cambios que chocan con los tokens de SPEC 14                    | Los cambios se hacen dentro de los tokens existentes (`--brand`, `--income`...); cualquier token nuevo se documenta en `docs/ui.md` antes de usarse.      |
+| Los datos demo se leen como cifras reales                                          | Nota "Datos de ejemplo" visible en el video y ningún dato de usuarios reales en el seed.                                                                  |
 
 ## Lo que **no** entra en este spec
 

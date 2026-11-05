@@ -47,35 +47,52 @@ Presenta el producto y lleva a crear cuenta. Vive en el grupo `app/(public)/`,
 cuyo layout pone el header y el footer públicos en `/` y `/legal/*` (no en
 auth ni en el dashboard).
 
-Secciones, en orden (`src/features/landing/components/`):
+Secciones, en orden (`src/features/landing/components/`), rediseñadas en
+SPEC 24:
 
-1. **Hero**: título, `SITE.info.slogan`, CTA "Crear cuenta" y "Ver en GitHub",
-   y el visual `LandingHeroVisual`.
-2. **Funciones** (`#funciones`): los 6 ítems de `SITE.features`, cada uno con
-   su ícono de lucide (`icon`).
-3. **Cómo funciona** (`#como-funciona`): Registra → Visualiza → Mejora.
-4. **Score** (`#score`): los 7 factores con sus pesos, las 4 bandas y
-   `LandingScoreVisual`. Los pesos son constantes de presentación copiadas de
-   [Factores y pesos](#factores-y-pesos); si cambian allí, se cambian en
-   `score-section.tsx`.
-5. **Personal y Empresa**: `SITE.workspaces.types`, con lo que trae cada
+1. **Hero**: el slogan como `<h1>`, un texto corto, CTA "Crear cuenta" y "Ver
+   la demo" (ancla a `#demo`) y la lista "Gratis · Sin conectar bancos ·
+   Código abierto (MIT)". A la derecha, la escena 3D "cada registro suma"
+   (`hero-scene.tsx`): bloques sueltos que se ordenan hasta formar el cofre del
+   isotipo. Solo carga en ≥ 768 px, sin reduced motion ni ahorro de datos
+   (`hero-scene-loader.tsx`); si no, queda el mockup `hero-visual.tsx`.
+2. **Demo** (`#demo`): el video principal (`SITE.landing.demo`) en
+   `demo-player.tsx`. Póster hasta que el usuario pulsa play, sin autoplay y
+   con `preload="none"`. JSON-LD `VideoObject` con `buildVideoSchema()`.
+3. **Funciones** (`#funciones`): recorrido con pestañas (`feature-tour.tsx`)
+   y el clip grande de la función elegida (`SITE.landing.clips`, unido a
+   `SITE.features` por el título). "Código abierto" no tiene clip: lo cuenta su
+   sección.
+4. **Score** (`#score`): una barra segmentada con el peso de los 7 factores
+   (suma 100), su leyenda, las 4 bandas y `LandingScoreVisual` (medidor con
+   las bandas como tramos del arco y dos recomendaciones). Los pesos son
+   constantes de presentación copiadas de [Factores y pesos](#factores-y-pesos);
+   si cambian allí, se cambian en `score-section.tsx`. Las bandas viven en
+   `score-bands.ts`.
+5. **Personal y Empresa**: `SITE.workspaces.types`, con lo propio de cada
    espacio tomado de `SITE.navigation.personal` y `SITE.navigation.business`.
-6. **Código abierto** (`#open-source`): licencia, repositorio, issues y
-   `CONTRIBUTING`.
-7. **CTA final** a `/sign-up`.
+6. **Código abierto** (`#open-source`): repositorio, issues y `CONTRIBUTING`
+   como enlaces de texto, para no competir con "Crear cuenta".
+7. **Cierre**: isotipo, slogan y CTA, como el final del video.
 
-- Los visuales son **mockups JSX interinos** con datos ficticios fijos, en
-  `hero-visual.tsx` y `score-visual.tsx`. Son decorativos (`aria-hidden`) con
-  una descripción `sr-only`. Un spec futuro los reemplaza por videos.
-- **Header**: `Logo`, `SITE.navigation.main`, toggle de tema y botones de
-  sesión. Los botones son una isla en `<Suspense>` que lee la sesión con
-  `getClaims()`; el fallback es el estado sin sesión ("Iniciar sesión" y
-  "Crear cuenta") y con sesión muestra "Ir al dashboard". Así `/` sigue
-  prerenderizada (PPR). En móvil, los enlaces y botones van en un `Sheet`.
+- Los videos (`public/videos/`) muestran la app real grabada con datos de
+  ejemplo y la nota "Datos de ejemplo". El mockup del hero y el del score
+  también usan datos ficticios y lo dicen.
+- **Header**: `Logo`, `SITE.navigation.main` en una pastilla al centro, el
+  enlace a GitHub con sus estrellas, el toggle de tema y los botones de sesión.
+  Es transparente arriba y gana fondo al hacer scroll. Los botones son una isla
+  en `<Suspense>` que lee la sesión con `getClaims()`; el fallback es el
+  estado sin sesión ("Iniciar sesión" y "Crear cuenta") y con sesión muestra
+  "Abrir Tesoro". Así `/` sigue prerenderizada (PPR). En móvil, los enlaces,
+  los botones y GitHub van en un `Drawer`.
+- **Estrellas de GitHub**: `getRepoStars()` (`src/libs/github.ts`) las pide
+  en el servidor con `"use cache"` y `cacheLife("hours")`. Si la API falla, el
+  enlace se muestra sin número.
 - **Footer**: `Logo`, slogan, legales, repositorio, issues, seguridad, redes de
   `SITE.social`, licencia, versión y "Hecho por" `SITE.author`.
-- La landing no hace peticiones a dominios externos: sin analítica, sin
-  cookies de terceros y sin contador de estrellas de GitHub.
+- La landing no hace peticiones a dominios externos desde el navegador: sin
+  analítica ni cookies de terceros; los videos se sirven desde el propio sitio
+  y las estrellas se resuelven en el servidor.
 
 ### Páginas legales
 

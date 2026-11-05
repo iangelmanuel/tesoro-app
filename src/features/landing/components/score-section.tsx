@@ -1,10 +1,13 @@
 import { cn } from "@heroui/react"
+import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
+import { RevealItem, RevealList, ScrollWipe } from "./reveal"
+import { SCORE_BANDS } from "./score-bands"
 import { LandingScoreVisual } from "./score-visual"
 import { SectionHeading } from "./section-heading"
 
 // Constantes de presentación copiadas de docs/producto.md ("Factores y
-// pesos" y "Bandas"). La fuente de verdad del cálculo es
-// src/features/score/constants.ts: si cambian los pesos allá, cambian aquí
+// pesos"). La fuente de verdad del cálculo es src/features/score/constants.ts:
+// si cambian los pesos allá, cambian aquí. Suman 100.
 const FACTORS = [
   {
     label: "Tasa de ahorro",
@@ -19,7 +22,7 @@ const FACTORS = [
   {
     label: "Colchón",
     weight: 15,
-    description: "Cuántos meses de gastos cubre tu balance."
+    description: "Cuántos meses de gastos podrías cubrir con lo ahorrado."
   },
   {
     label: "Presupuestos",
@@ -29,7 +32,7 @@ const FACTORS = [
   {
     label: "Utilización de tarjetas",
     weight: 10,
-    description: "Saldo de tus tarjetas frente a su cupo."
+    description: "Cuánto debes en tus tarjetas frente a su cupo."
   },
   {
     label: "Metas",
@@ -43,106 +46,102 @@ const FACTORS = [
   }
 ]
 
-const MAX_WEIGHT = Math.max(...FACTORS.map((factor) => factor.weight))
-
-// Mismos colores que BandBadge en src/features/score/components/
-const BANDS = [
-  {
-    label: "Débil",
-    range: "0 – 39",
-    className: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
-  },
-  {
-    label: "Regular",
-    range: "40 – 59",
-    className:
-      "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-  },
-  {
-    label: "Bueno",
-    range: "60 – 79",
-    className: "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300"
-  },
-  {
-    label: "Excelente",
-    range: "80 – 100",
-    className:
-      "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-  }
-]
+// Un solo tono de marca, del más intenso al más suave según el peso
+const SHADES = [100, 82, 66, 54, 42, 32, 22]
 
 export function ScoreSection() {
   return (
     <section
       id="score"
       aria-labelledby="score-title"
-      className="scroll-mt-16 border-t"
+      className="scroll-mt-16"
     >
-      <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 py-20 sm:px-6 sm:py-24">
+      <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-20 sm:px-6 sm:py-24">
         <SectionHeading
           id="score-title"
-          eyebrow="Score financiero"
-          title="Tu salud financiera en un número de 0 a 100"
-          description="El score combina siete factores calculados sobre tus propios registros. Si un factor no aplica, por ejemplo porque no tienes tarjetas, se excluye y los demás se reescalan."
+          title="Tu salud financiera, en un número de 0 a 100"
+          description="Siete factores calculados sobre tus propios registros. Si uno no aplica, por ejemplo porque no tienes tarjetas, se deja por fuera y los demás se reparten su peso."
         />
 
-        <div className="grid gap-10 lg:grid-cols-2">
-          <div className="flex flex-col gap-4">
-            <h3 className="font-medium">Factores y pesos</h3>
-            <ul className="flex flex-col gap-4">
-              {FACTORS.map((factor) => (
-                <li
-                  key={factor.label}
-                  className="flex flex-col gap-1.5"
+        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-14">
+          <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-3">
+              <h3 className="font-medium">Cuánto pesa cada factor</h3>
+              {/* Barra única que suma 100: cada tramo es la parte del score */}
+              <ScrollWipe>
+                <div
+                  aria-hidden="true"
+                  className="flex h-3 gap-0.5 overflow-hidden rounded-full"
                 >
-                  <div className="flex items-baseline justify-between gap-4 text-sm">
-                    <span className="font-medium">{factor.label}</span>
-                    <span className="text-muted tabular-nums">
-                      {factor.weight} %
-                    </span>
-                  </div>
-                  <div
-                    aria-hidden="true"
-                    className="h-1.5 overflow-hidden rounded-full bg-default"
-                  >
+                  {FACTORS.map((factor, index) => (
                     <div
-                      className="h-full rounded-full bg-(--income)"
+                      key={factor.label}
+                      className="h-full first:rounded-l-full last:rounded-r-full"
                       style={{
-                        width: `${(factor.weight / MAX_WEIGHT) * 100}%`
+                        width: `${factor.weight}%`,
+                        backgroundColor: `color-mix(in oklab, var(--income) ${SHADES[index]}%, transparent)`
                       }}
                     />
-                  </div>
-                  <p className="text-sm text-muted">{factor.description}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
+                  ))}
+                </div>
+              </ScrollWipe>
+            </div>
 
-          <div className="flex flex-col gap-8">
-            <div className="flex flex-col gap-4">
-              <h3 className="font-medium">Bandas</h3>
-              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {BANDS.map((band) => (
+            <RevealList className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
+              {FACTORS.map((factor, index) => (
+                <RevealItem
+                  key={factor.label}
+                  className="flex gap-3"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="mt-1.5 size-2.5 shrink-0 rounded-full"
+                    style={{
+                      backgroundColor: `color-mix(in oklab, var(--income) ${SHADES[index]}%, transparent)`
+                    }}
+                  />
+                  <div className="flex flex-col gap-0.5">
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-medium">{factor.label}</span>
+                      <span className="text-sm text-muted tabular-nums">
+                        {factor.weight} %
+                      </span>
+                    </div>
+                    <p className="text-sm text-pretty text-muted">
+                      {factor.description}
+                    </p>
+                  </div>
+                </RevealItem>
+              ))}
+            </RevealList>
+
+            <div className="flex flex-col gap-3">
+              <h3 className="font-medium">Qué dice cada rango</h3>
+              <ul className="flex flex-wrap gap-2">
+                {SCORE_BANDS.map((band) => (
                   <li
                     key={band.label}
                     className={cn(
-                      "flex flex-col gap-0.5 rounded-lg px-3 py-2",
-                      band.className
+                      "rounded-full px-3 py-1 text-sm",
+                      TONE_BADGE_CLASSES[band.tone]
                     )}
                   >
-                    <span className="text-sm font-medium">{band.label}</span>
-                    <span className="text-xs tabular-nums">{band.range}</span>
+                    <span className="font-medium">{band.label}</span>{" "}
+                    <span className="tabular-nums">
+                      {band.from}–{band.to}
+                    </span>
                   </li>
                 ))}
               </ul>
+              <p className="text-sm text-pretty text-muted">
+                El score se recalcula cada vez que registras algo. A su lado,
+                las recomendaciones te dicen qué hacer, en qué dato se basan y
+                dónde resolverlo.
+              </p>
             </div>
-            <p className="text-sm text-muted">
-              El score se recalcula cada vez que registras algo y muestra su
-              evolución mes a mes. Junto a él, las recomendaciones te dicen qué
-              hacer, en qué dato se basan y dónde resolverlo.
-            </p>
-            <LandingScoreVisual />
           </div>
+
+          <LandingScoreVisual />
         </div>
       </div>
     </section>

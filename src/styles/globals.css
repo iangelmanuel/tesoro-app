@@ -152,36 +152,46 @@
 /* Primario por espacio. WorkspaceThemeRoot pinta un marcador oculto con
    data-workspace como hijo directo del contenedor del dashboard; :has() pone
    el primario en ese contenedor, así sidebar, header y contenido cambian
-   juntos. Emerald y naranja llevan texto oscuro: el blanco no da AA */
+   juntos. Los botones llevan texto blanco (SPEC 24): el relleno es el tono
+   700, el primero que da AA (≥ 4.5:1) con blanco. En oscuro, foco y texto
+   suave usan --accent-bright, porque el 700 no contrasta con el fondo casi
+   negro */
 :has(> [data-workspace="personal"]) {
-  --accent: oklch(59.6% 0.145 163.225); /* emerald-600 */
-  --accent-foreground: oklch(0.21 0.016 265);
+  --accent: oklch(50.8% 0.118 165.612); /* emerald-700 */
+  --accent-foreground: oklch(0.99 0 0);
+  --accent-bright: var(--accent);
 }
 
 .dark :has(> [data-workspace="personal"]) {
-  --accent: oklch(70% 0.15 162.5); /* emerald, menos vivo que el logo */
-  --accent-foreground: oklch(0.18 0.005 264);
+  --accent-bright: oklch(72% 0.15 162.5);
 }
 
 :has(> [data-workspace="business"]) {
-  --accent: oklch(64.6% 0.222 41.116); /* orange-600 */
-  --accent-foreground: oklch(0.21 0.016 265);
+  --accent: oklch(55.3% 0.195 38.402); /* orange-700 */
+  --accent-foreground: oklch(0.99 0 0);
+  --accent-bright: var(--accent);
 }
 
 .dark :has(> [data-workspace="business"]) {
-  --accent: oklch(72% 0.18 48); /* orange, menos vivo que orange-500 */
-  --accent-foreground: oklch(0.18 0.005 264);
+  --accent-bright: oklch(74% 0.17 48);
+}
+
+/* Botón de peligro en oscuro: relleno red-600 con texto blanco (≥ 4.5:1),
+   igual que el resto de botones de color. --danger sigue en red-400 para
+   textos y errores sobre el fondo oscuro */
+.dark .button--danger {
+  --button-bg: oklch(57.7% 0.245 27.325);
+  --button-bg-hover: oklch(50.5% 0.213 27.518);
+  --button-bg-pressed: oklch(50.5% 0.213 27.518);
+  --button-fg: oklch(0.99 0 0);
 }
 
 /* Los derivados del primario se recalculan en el contenedor del espacio:
    HeroUI los declara en :root y ahí se resuelven con el primario neutro */
 :has(> [data-workspace]) {
-  --focus: var(--accent);
-  --accent-hover: color-mix(
-    in oklab,
-    var(--accent) 90%,
-    var(--accent-foreground) 10%
-  );
+  --focus: var(--accent-bright);
+  /* Hover más oscuro: con texto blanco, aclarar bajaría el contraste */
+  --accent-hover: color-mix(in oklab, var(--accent) 88%, black 12%);
   --accent-soft: color-mix(in oklab, var(--accent) 12%, transparent);
   --accent-soft-foreground: color-mix(
     in oklab,
@@ -192,13 +202,17 @@
 }
 
 .dark :has(> [data-workspace]) {
-  --accent-soft: color-mix(in oklab, var(--accent) 12%, transparent);
+  --accent-soft: color-mix(in oklab, var(--accent-bright) 12%, transparent);
   --accent-soft-foreground: color-mix(
     in oklab,
-    var(--accent) 80%,
+    var(--accent-bright) 80%,
     var(--foreground) 20%
   );
-  --accent-soft-hover: color-mix(in oklab, var(--accent) 16%, transparent);
+  --accent-soft-hover: color-mix(
+    in oklab,
+    var(--accent-bright) 16%,
+    transparent
+  );
 }
 
 /* Radios: tarjetas grandes (HeroUI usa --radius-3xl, 24 px) y botones y
@@ -248,5 +262,118 @@
 @media (prefers-reduced-motion: no-preference) {
   #contenido .card {
     animation: card-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+/* Landing (SPEC 24): revelado al entrar en pantalla, en CSS. reveal-observer
+   marca con `data-pending` solo lo que está debajo del pliegue y quita la
+   marca al verlo, una vez. Sin JS o con reduced motion no hay estado oculto */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal],
+  [data-reveal-list] > [data-reveal-item] {
+    transition:
+      opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+      translate 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  [data-reveal][data-pending],
+  [data-reveal-list][data-pending] > [data-reveal-item] {
+    opacity: 0;
+    translate: 0 24px;
+  }
+
+  [data-reveal-list] > [data-reveal-item]:nth-child(2) {
+    transition-delay: 80ms;
+  }
+  [data-reveal-list] > [data-reveal-item]:nth-child(3) {
+    transition-delay: 160ms;
+  }
+  [data-reveal-list] > [data-reveal-item]:nth-child(4) {
+    transition-delay: 240ms;
+  }
+  [data-reveal-list] > [data-reveal-item]:nth-child(5) {
+    transition-delay: 320ms;
+  }
+  [data-reveal-list] > [data-reveal-item]:nth-child(6) {
+    transition-delay: 400ms;
+  }
+  [data-reveal-list] > [data-reveal-item]:nth-child(7) {
+    transition-delay: 480ms;
+  }
+  [data-reveal-list] > [data-reveal-item]:nth-child(8) {
+    transition-delay: 560ms;
+  }
+  [data-reveal-list] > [data-reveal-item]:nth-child(9) {
+    transition-delay: 640ms;
+  }
+
+  /* Ligado al scroll (sin JS): la barra de factores se descubre y los clips
+     se acomodan mientras entran en pantalla */
+  @supports (animation-timeline: view()) {
+    .scroll-wipe {
+      animation: scroll-wipe linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 45%;
+    }
+
+    .scroll-settle {
+      animation: scroll-settle linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 40%;
+    }
+  }
+}
+
+@keyframes scroll-wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes scroll-settle {
+  from {
+    scale: 0.94;
+    opacity: 0.6;
+  }
+  to {
+    scale: 1;
+    opacity: 1;
+  }
+}
+
+/* Presión de los CTA de la landing: un leve levante y una presión corta */
+@media (prefers-reduced-motion: no-preference) {
+  .press {
+    transition: translate 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .press:hover {
+    translate: 0 -2px;
+  }
+  .press:active {
+    translate: 0 0;
+    scale: 0.97;
+  }
+}
+
+/* Hero de la landing (SPEC 24): entrada escalonada en CSS, desde el primer
+   pintado y sin ocultar el texto (solo desplazamiento, que va por la GPU:
+   un desenfoque repintaría en el hilo principal durante la carga), para que
+   el LCP no espere a hidratar. --hero-delay escalona cada bloque */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-enter {
+    animation: hero-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--hero-delay, 0ms);
+  }
+}
+
+@keyframes hero-enter {
+  from {
+    transform: translateY(16px);
+  }
+  to {
+    transform: none;
   }
 }

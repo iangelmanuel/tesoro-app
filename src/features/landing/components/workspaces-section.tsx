@@ -1,78 +1,70 @@
-import { Building2Icon, CheckIcon, UserIcon } from "lucide-react"
+import { CheckIcon } from "lucide-react"
 import { SITE } from "@/config/site"
+import { RevealItem, RevealList } from "./reveal"
 import { SectionHeading } from "./section-heading"
 
-// Lo que trae cada espacio sale de su menú del dashboard, sin el resumen
-// ni los ajustes
+// Lo propio de cada espacio sale de su menú del dashboard: sin el resumen,
+// los ajustes ni lo que ambos comparten (movimientos y cuentas)
+const SHARED = ["Resumen", "Ajustes", "Movimientos", "Cuentas"]
+
 const HIGHLIGHTS = {
   personal: SITE.navigation.personal
     .map((item) => item.name)
-    .filter((name) => name !== "Resumen"),
+    .filter((name) => !SHARED.includes(name)),
   business: SITE.navigation.business
     .map((item) => item.name)
-    .filter((name) => name !== "Resumen" && name !== "Ajustes")
+    .filter((name) => !SHARED.includes(name))
 }
-
-const ICONS = { personal: UserIcon, business: Building2Icon }
 
 const NOTES = {
   personal: "Incluido desde que creas tu cuenta.",
-  business: "Opcional: créalo cuando lo necesites."
+  business: "Opcional: lo creas cuando tengas un negocio."
 }
 
 export function WorkspacesSection() {
   return (
     <section
       aria-labelledby="espacios-title"
-      className="border-t bg-default/40"
+      className="bg-default/40"
     >
-      <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 py-20 sm:px-6 sm:py-24">
+      <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-20 sm:px-6 sm:py-24">
         <SectionHeading
           id="espacios-title"
-          eyebrow="Personal y Empresa"
-          title="Dos espacios separados en la misma cuenta"
-          description="Cambia entre tus finanzas personales y las de tu negocio en un clic. Los datos de cada espacio nunca se mezclan."
+          title="Tu casa y tu negocio, cada uno en su lugar"
+          description="Dos espacios en la misma cuenta. Cambias de uno a otro en un clic y sus cifras nunca se mezclan. Ambos llevan movimientos y cuentas."
         />
-        <ul className="grid gap-4 md:grid-cols-2">
-          {SITE.workspaces.types.map((workspace) => {
-            const Icon = ICONS[workspace.id]
-
-            return (
-              <li
-                key={workspace.id}
-                className="flex flex-col gap-5 rounded-xl border bg-surface p-6"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="flex size-10 items-center justify-center rounded-lg bg-(--income)/10 text-(--income)">
-                    <Icon
+        <RevealList className="grid gap-4 md:grid-cols-2">
+          {SITE.workspaces.types.map((workspace) => (
+            <RevealItem
+              key={workspace.id}
+              className="flex flex-col gap-5 rounded-3xl bg-surface p-6 shadow-(--surface-shadow) sm:p-8"
+            >
+              <div className="flex flex-col gap-1">
+                <h3 className="text-xl font-semibold tracking-tight">
+                  {workspace.name}
+                </h3>
+                <p className="text-sm text-pretty text-muted">
+                  {NOTES[workspace.id]}
+                </p>
+              </div>
+              <p className="text-pretty text-muted">{workspace.description}</p>
+              <ul className="flex flex-wrap gap-2 text-sm">
+                {HIGHLIGHTS[workspace.id].map((name) => (
+                  <li
+                    key={name}
+                    className="flex items-center gap-1.5 rounded-full bg-default px-3 py-1.5"
+                  >
+                    <CheckIcon
                       aria-hidden="true"
-                      className="size-5"
+                      className="size-3.5 text-(--income)"
                     />
-                  </span>
-                  <div>
-                    <h3 className="font-medium">{workspace.name}</h3>
-                    <p className="text-xs text-muted">{NOTES[workspace.id]}</p>
-                  </div>
-                </div>
-                <p className="text-sm text-muted">{workspace.description}</p>
-                <ul className="grid grid-cols-2 gap-2 text-sm">
-                  {HIGHLIGHTS[workspace.id].map((name) => (
-                    <li
-                      key={name}
-                      className="flex items-center gap-2"
-                    >
-                      <CheckIcon
-                        aria-hidden="true"
-                        className="size-4 text-(--income)"
-                      />
-                      {name}
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            )
-          })}
-        </ul>
+                    {name}
+                  </li>
+                ))}
+              </ul>
+            </RevealItem>
+          ))}
+        </RevealList>
       </div>
     </section>
   )

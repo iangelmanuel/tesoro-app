@@ -58,6 +58,25 @@ supabase db reset                 # reaplica las migraciones en local
 
 Tras cambiar el esquema, regenera `src/types/database.ts` y pásale Prettier.
 
+Videos de la landing (SPEC 24). Solo en local: `video/` (proyecto
+Hyperframes) y los scripts `scripts/seed-demo.mjs`, `record-demo.mjs`,
+`prepare-demo-video.mjs` y `scripts/demo/` están git-ignorados, igual que
+las skills de Hyperframes. Al repo solo llega el resultado en `public/videos/`
+(MP4 + WebM + póster, ≤ 25 MB en total). Requiere FFmpeg y Docker.
+
+```bash
+supabase start                         # Supabase local (el seed se niega con otra URL)
+node scripts/seed-demo.mjs             # usuario demo con Personal y Empresa
+pnpm build && pnpm start               # la app que se graba (sin overlay de dev)
+node scripts/record-demo.mjs [tomas]   # Playwright: .webm + .json del cursor en video/raw/
+node scripts/prepare-demo-video.mjs    # tomas H.264 y cursor-data.js para Hyperframes
+cd video && npx hyperframes render     # video principal (clips: -c clips/<slug>.html)
+```
+
+Las variables (`DEMO_EMAIL`, `DEMO_PASSWORD`, `SUPABASE_SERVICE_ROLE_KEY`
+local) van en el entorno o en `.env.local`, nunca en el repo. Al
+re-renderizar, actualiza `SITE.landing.demo.durationSeconds`.
+
 Aún no hay tests. El CI (`.github/workflows/ci.yml`) corre `check`, `eslint`,
 `prettier:check` y luego `build` con `pnpm install --frozen-lockfile`. Por eso
 el lockfile tiene que estar siempre sincronizado con `package.json`.

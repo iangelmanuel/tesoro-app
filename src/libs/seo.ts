@@ -181,6 +181,31 @@ export function buildWebsiteSchema(): Record<string, unknown> {
   }
 }
 
+// Video principal de la landing (SPEC 24). Duración en ISO 8601 y todas las
+// URLs absolutas, como pide Google para los resultados de video
+export function buildVideoSchema(): Record<string, unknown> {
+  const { demo } = SITE.landing
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    "@id": `${SITE.seo.url}/#demo-video`,
+    name: demo.title,
+    description: demo.description,
+    thumbnailUrl: [absoluteUrl(demo.sources.poster)],
+    uploadDate: demo.uploadDate,
+    duration: `PT${demo.durationSeconds}S`,
+    contentUrl: absoluteUrl(demo.sources.mp4),
+    embedUrl: absoluteUrl("/#demo"),
+    width: demo.width,
+    height: demo.height,
+    inLanguage: SITE.seo.locale,
+    isFamilyFriendly: true,
+    about: { "@id": `${SITE.seo.url}/#application` },
+    publisher: { "@id": `${SITE.seo.url}/#author` }
+  }
+}
+
 export function buildBreadcrumbSchema(
   crumbs: { label: string; href: string }[]
 ): Record<string, unknown> {

@@ -77,8 +77,12 @@ vistazo y sabe qué hacer después, sin aprender contabilidad.
 
 - Especificación de producto: `docs/producto.md`. Specs por módulo en
   `specs/`.
-- Visuales de la landing: mockups JSX interinos con datos ficticios
-  (`hero-visual.tsx`, `score-visual.tsx`).
+- Videos de la landing (SPEC 24) en `public/videos/`: la app real grabada
+  con un usuario demo y datos de ejemplo, en un escritorio estilo macOS propio
+  (sin marcas de Apple), renderizados con Hyperframes. Un video principal de
+  ~56 s y 5 clips de funciones, todos con la nota "Datos de ejemplo".
+- Mockups JSX con datos ficticios que lo dicen: `hero-visual.tsx` (fallback
+  del hero sin 3D) y `score-visual.tsx` (ejemplo del score).
 - No hay testimonios, clientes, métricas de uso ni prensa. No se inventan.
 
 ## Product Principles

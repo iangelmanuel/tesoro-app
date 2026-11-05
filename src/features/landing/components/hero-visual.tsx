@@ -1,8 +1,9 @@
 import { cn } from "@heroui/react"
 import { formatCurrency } from "@/libs/format"
 
-// Mockup interino con datos ficticios fijos. El spec de videos de la landing
-// lo reemplaza; no depende de nada fuera de este archivo
+// Mockup del resumen con datos ficticios fijos. Es el fallback del hero
+// cuando no carga la escena 3D (móvil, reduced motion o ahorro de datos) y
+// marca el tamaño de esa escena. No depende de nada fuera de este archivo
 const STATS = [
   { label: "Ingresos", amount: 4_200_000, color: "bg-(--income)" },
   { label: "Gastos", amount: 3_150_000, color: "bg-(--expense)" },
@@ -29,7 +30,7 @@ export function LandingHeroVisual() {
       </figcaption>
       <div
         aria-hidden="true"
-        className="rounded-2xl border bg-surface p-4 shadow-xl shadow-black/5 sm:p-6 dark:shadow-black/40"
+        className="rounded-3xl bg-surface p-4 shadow-(--surface-shadow) sm:p-6"
       >
         <div className="mb-5 flex items-center justify-between">
           <div className="flex gap-1.5">
@@ -37,14 +38,16 @@ export function LandingHeroVisual() {
             <span className="size-2.5 rounded-full bg-muted/30" />
             <span className="size-2.5 rounded-full bg-muted/30" />
           </div>
-          <span className="text-xs text-muted">Resumen · octubre</span>
+          <span className="text-xs text-muted">
+            Resumen · octubre · datos de ejemplo
+          </span>
         </div>
 
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
           {STATS.map((stat) => (
             <div
               key={stat.label}
-              className="flex min-w-0 flex-col gap-1 rounded-lg border bg-background p-2.5 sm:p-3"
+              className="flex min-w-0 flex-col gap-1 rounded-xl bg-background p-2.5 sm:p-3"
             >
               <span className="flex items-center gap-1.5 text-[0.7rem] text-muted sm:text-xs">
                 <span className={cn("size-2 rounded-full", stat.color)} />
@@ -57,7 +60,7 @@ export function LandingHeroVisual() {
           ))}
         </div>
 
-        <div className="mt-5 rounded-lg border bg-background p-3 sm:p-4">
+        <div className="mt-5 rounded-xl bg-background p-3 sm:p-4">
           <div className="flex h-36 items-end justify-between gap-2 sm:h-44">
             {MONTHS.map((item) => (
               <div

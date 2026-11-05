@@ -54,6 +54,11 @@ Todo vive en `src/styles/globals.css`, con los nombres de HeroUI v3.
 - **Primario por espacio:** `WorkspaceThemeRoot` + `getWorkspaceTheme()`
   ponen `data-workspace` en el contenedor del dashboard y `globals.css`
   cambia `--accent` con `:has()`. Nunca se pasa un color por props.
+- **Botones de color con texto blanco:** el relleno de `--accent` es el tono
+  700 (emerald-700 en Personal, orange-700 en Empresa) en claro y oscuro, el
+  primero que da AA con blanco. En oscuro, el foco y el texto suave usan
+  `--accent-bright` (más claro), porque el 700 no contrasta con el fondo. El
+  botón `danger` en oscuro usa red-600 con texto blanco.
 - **Estados en chips y barras:** `src/components/dashboard/tone.ts`
   (`TONE_BADGE_CLASSES`, `TONE_BAR_CLASSES`, `TONE_TEXT_CLASSES`). No se usa
   la paleta cruda de Tailwind (`amber-*`, `rose-*`…).
@@ -76,13 +81,14 @@ OKLCH → sRGB). Mínimos: 4.5:1 texto, 3:1 gráficos y foco.
 | `income` / `background`                   | 4.98  | 5.74   |
 | `expense` / `background`                  | 4.79  | 5.77   |
 | `danger` / `background`                   | 4.88  | 6.99   |
-| `accent-foreground` / `accent` Personal   | 4.84  | 7.53   |
-| `accent-foreground` / `accent` Empresa    | 4.94  | 7.13   |
-| `accent` / `background` Personal (foco)   | 3.28  | 8.09   |
-| `accent` / `background` Empresa (foco)    | 3.22  | 7.66   |
+| `accent-foreground` / `accent` Personal   | 5.22  | 5.22   |
+| `accent-foreground` / `accent` Empresa    | 5.08  | 5.08   |
+| `focus` / `background` Personal           | 4.81  | 8.71   |
+| `focus` / `background` Empresa            | 4.68  | 8.28   |
+| botón `danger` (blanco / relleno)         | 4.88  | 4.83   |
 | `text-brand` / `background`               | 5.06  | 11.74  |
-| `accent-soft-fg` / `accent-soft` Personal | 5.82  | 7.19   |
-| `accent-soft-fg` / `accent-soft` Empresa  | 5.70  | 7.13   |
+| `accent-soft-fg` / `accent-soft` Personal | 7.11  | 9.31   |
+| `accent-soft-fg` / `accent-soft` Empresa  | 6.96  | 8.96   |
 | `muted` / `field-background`              | 5.22  | 5.11   |
 | `foreground` / `field-background`         | 15.41 | 12.15  |
 | `--chart-*` / `surface` (mínimo)          | 3.36  | 3.68   |
@@ -149,7 +155,7 @@ inconsistente, los niveles anidados, el primario menos saturado
 
 Sin P0. Lo que ya funciona y se conserva: AA en todo el texto (`foreground`
 18.96:1, `muted` 6.74:1 sobre la tarjeta, dinero ≥ 5.03:1), serie de gráficas
-con luminosidad escalonada (mínimo 3.72:1), primario con texto oscuro (≥ 6.13:1)
+con luminosidad escalonada (mínimo 3.72:1), primario con texto blanco sobre el tono 700 (≥ 5.08:1)
 y tarjetas sin borde.
 
 ## Componentes propios
@@ -250,6 +256,30 @@ Reglas:
   Movimientos y los formularios sí usan el valor real.
 - El layout lee `profiles.hide_amounts` dentro de un `Suspense`; mientras
   carga muestra el header y un `<main>` vacío, sin números.
+
+### Landing (SPEC 24)
+
+- **Sin eyebrows ni íconos en cuadros:** `SectionHeading` solo lleva título y
+  descripción. Nada de grillas de tarjetas iguales, halos ni degradados de
+  relleno (`DESIGN.md`, reglas "Título Solo" y "Sin Halo").
+- **Videos** (`demo-player.tsx`, `feature-clip.tsx`): contenedor claro en los
+  dos temas (el video trae su escritorio claro), `preload="none"` y póster. El
+  demo nunca hace autoplay; los clips se reproducen en loop silenciado solo
+  mientras están en pantalla (`IntersectionObserver`) y con reduced motion o
+  ahorro de datos se quedan en el póster sin descargar el video.
+- **Recorrido de funciones** (`feature-tour.tsx`): pestañas con
+  `role="tab"`, flechas, Inicio y Fin, y un clip grande de al menos 560 px.
+- **Score** (`score-section.tsx`, `score-visual.tsx`, `score-bands.ts`):
+  colores de estado desde `tone.ts`; la barra de factores usa un solo tono de
+  `--income` con mezclas de opacidad.
+- **Escena 3D** (`hero-scene.tsx`): React Three Fiber sin `drei`, un
+  `InstancedMesh` con los bloques del cofre, colores leídos de `--brand` e
+  `--income` (oklch → sRGB con un canvas 2D) y releídos al cambiar el tema.
+  `dpr` máximo 2, sin sombras, `frameloop` en "never" fuera de pantalla. El
+  lienzo es más grande que su columna y se difumina con `mask-image`.
+- **Header** (`site-header.tsx`, `site-header-shell.tsx`,
+  `github-stars.tsx`): navegación en pastilla, GitHub con estrellas (servidor,
+  cacheado), toggle de tema de 44 px y botones de sesión con flecha.
 
 ## Dónde vive cada pantalla
 
@@ -375,6 +405,27 @@ Piezas en `src/components/dashboard/mobile/`:
 - Tabs y diálogos: las transiciones propias de HeroUI.
 - Todo con `motion-reduce:transition-none` o dentro de
   `@media (prefers-reduced-motion: no-preference)`.
+- **Landing (SPEC 24): revelados en CSS.** `reveal.tsx` solo marca
+  (`data-reveal`, `data-reveal-list` / `data-reveal-item`) y
+  `reveal-observer.tsx`, un único `IntersectionObserver`, pone
+  `data-pending` en lo que arranca fuera de pantalla y lo quita al entrar.
+  La transición vive en `globals.css`: una sola curva (expo.out
+  `cubic-bezier(0.16, 1, 0.3, 1)`), 0,7 s con subida de 24 px, escalonado de
+  80 ms, una vez por elemento. Lo que ya se ve al cargar no se oculta nunca
+  (protege el LCP). El hero entra con `.hero-enter` (solo `translate`).
+- `ScrollWipe` (barra de factores) y `ScrollSettle` (clips) usan
+  `animation-timeline: view()` sin JS; el medidor del score se anima una vez
+  al verse. `.press` da el levante y la presión de los CTA.
+- **Motion solo en lo interactivo:** `motion-provider.tsx` (`LazyMotion`
+  estricto con las funciones cargadas aparte desde `motion-features.ts` y
+  `MotionConfig reducedMotion="user"`) cubre el reproductor de la demo y el
+  recorrido de funciones.
+- **Reduced motion y sin JS:** no hay estado oculto; todo se ve en su estado
+  final y no se carga la escena 3D.
+- **Peso de la landing:** `ToastProvider` solo en `app/dashboard/layout.tsx`,
+  enlaces a auth con `prefetch={false}`, cajón móvil del header cargado al
+  abrirlo y `SiteThemeToggle` como botón nativo. Así la landing no carga
+  react-aria al inicio.
 
 ## Accesibilidad
 

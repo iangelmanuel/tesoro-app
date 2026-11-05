@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-11-04T07:59:45.355Z",
+        "reason": "PRODUCT.md (Brand Commitments) y SPEC 24 fijan Inter como tipografía; el video usa Inter en lugar de SF Pro por licencia"
+      }
+    ]
+  }
+}

@@ -482,7 +482,11 @@ function SortableRow({
 
   return (
     <Table.Row
-      ref={ref}
+      // Solo una fila arrastrable se registra en el <tr>. Deshabilitada,
+      // dnd-kit le pone aria-disabled="true" y HeroUI la atenúa con
+      // pointer-events: none: el menú de acciones quedaba inalcanzable en
+      // las filas solas en su día o con búsqueda activa (SPEC 26)
+      ref={reorder?.canDrag ? ref : undefined}
       className={cn(
         reorder?.className,
         // La fila original queda como hueco en el lugar de destino

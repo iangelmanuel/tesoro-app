@@ -7,6 +7,7 @@ export {
   SidebarInset,
   SidebarNavLink,
   SidebarProvider,
+  SidebarResizeHandle,
   SidebarTrigger,
   useCloseSidebarOnNavigate,
   useSidebar
@@ -15,5 +16,6 @@ export {
   SIDEBAR_WIDTH,
   SIDEBAR_WIDTH_COOKIE,
   clampSidebarWidth,
-  parseSidebarWidth
+  parseSidebarWidth,
+  saveSidebarWidth
 } from "./width"

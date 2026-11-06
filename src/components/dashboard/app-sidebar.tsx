@@ -83,7 +83,10 @@ export function AppSidebar({ user, businesses, width }: AppSidebarProps) {
   }
 
   return (
-    <Sidebar width={width}>
+    <Sidebar
+      width={width}
+      resizable
+    >
       <SidebarHeader>
         <Link
           href={SITE.routes.dashboardPersonal}

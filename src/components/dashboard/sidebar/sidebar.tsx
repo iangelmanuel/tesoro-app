@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState
 } from "react"
 import type { Route } from "next"
@@ -13,7 +14,7 @@ import { usePathname } from "next/navigation"
 import { Button, Drawer, cn } from "@heroui/react"
 import { PanelLeft } from "lucide-react"
 import { MOBILE_QUERY, useIsMobile } from "@/hooks/use-is-mobile"
-import { SIDEBAR_WIDTH } from "./width"
+import { SIDEBAR_WIDTH, clampSidebarWidth, saveSidebarWidth } from "./width"
 
 // Sidebar del dashboard armado con primitivas de HeroUI (Button, Drawer) y
 // tokens del tema. En escritorio es una columna fija que se oculta con el
@@ -108,21 +109,34 @@ export function useCloseSidebarOnNavigate() {
 }
 
 /** Columna en escritorio y Drawer en móvil, con el mismo contenido. `width`
- *  (px) solo aplica a la columna; el Drawer mantiene su ancho */
+ *  (px) es el ancho inicial de la columna; con `resizable` se cambia con la
+ *  agarradera del borde. El Drawer mantiene su ancho */
 export function Sidebar({
   width = SIDEBAR_WIDTH.default,
+  resizable = false,
   children
-}: Readonly<{ width?: number; children: React.ReactNode }>) {
+}: Readonly<{
+  width?: number
+  resizable?: boolean
+  children: React.ReactNode
+}>) {
   const { open, openMobile, setOpenMobile } = useSidebar()
+  // Cerrar la columna no toca este estado: al abrir vuelve el último ancho
+  const [currentWidth, setCurrentWidth] = useState(width)
+  const [isResizing, setIsResizing] = useState(false)
 
   return (
     <>
       <div
         data-state={open ? "expanded" : "collapsed"}
-        style={{ "--sidebar-width": `${width}px` } as React.CSSProperties}
+        style={
+          { "--sidebar-width": `${currentWidth}px` } as React.CSSProperties
+        }
         className={cn(
           "sticky top-0 hidden h-svh shrink-0 overflow-hidden bg-background transition-[width] duration-200 ease-out motion-reduce:transition-none md:block",
-          open ? "w-(--sidebar-width)" : "w-0"
+          open ? "w-(--sidebar-width)" : "w-0",
+          // La transición queda para abrir y cerrar; al arrastrar sigue al puntero
+          isResizing && "transition-none"
         )}
       >
         <aside
@@ -133,6 +147,13 @@ export function Sidebar({
         >
           {children}
         </aside>
+        {resizable && open && (
+          <SidebarResizeHandle
+            width={currentWidth}
+            onWidthChange={setCurrentWidth}
+            onResizingChange={setIsResizing}
+          />
+        )}
       </div>
 
       <Drawer
@@ -151,6 +172,79 @@ export function Sidebar({
         </Drawer.Backdrop>
       </Drawer>
     </>
+  )
+}
+
+interface SidebarResizeHandleProps {
+  /** Ancho actual de la columna (px) */
+  width: number
+  onWidthChange: (width: number) => void
+  /** Mientras se arrastra, la columna quita su transición de ancho */
+  onResizingChange: (isResizing: boolean) => void
+}
+
+/** Agarradera del borde derecho de la columna (solo escritorio, abierta).
+ *  Arrastrar cambia el ancho en vivo, doble clic lo devuelve al de por
+ *  defecto; el ancho se guarda en la cookie al soltar */
+export function SidebarResizeHandle({
+  width,
+  onWidthChange,
+  onResizingChange
+}: SidebarResizeHandleProps) {
+  const drag = useRef<{ startX: number; startWidth: number; last: number }>(
+    null
+  )
+
+  function endDrag() {
+    if (!drag.current) return
+    const { last } = drag.current
+    drag.current = null
+    document.body.style.removeProperty("user-select")
+    document.body.style.removeProperty("cursor")
+    onResizingChange(false)
+    saveSidebarWidth(last)
+  }
+
+  // Si se desmonta a mitad de arrastre (atajo para cerrar), el body no queda
+  // sin selección de texto
+  useEffect(
+    () => () => {
+      document.body.style.removeProperty("user-select")
+      document.body.style.removeProperty("cursor")
+    },
+    []
+  )
+
+  return (
+    <div
+      className="absolute inset-y-0 right-0 z-10 w-2 cursor-col-resize touch-none"
+      onPointerDown={(event) => {
+        if (event.button !== 0) return
+        event.preventDefault()
+        event.currentTarget.setPointerCapture(event.pointerId)
+        drag.current = { startX: event.clientX, startWidth: width, last: width }
+        // Sin selección de texto ni hovers del contenido durante el arrastre
+        document.body.style.setProperty("user-select", "none")
+        document.body.style.setProperty("cursor", "col-resize")
+        onResizingChange(true)
+      }}
+      onPointerMove={(event) => {
+        if (!drag.current) return
+        const next = clampSidebarWidth(
+          drag.current.startWidth + event.clientX - drag.current.startX
+        )
+        if (next === drag.current.last) return
+        drag.current.last = next
+        onWidthChange(next)
+      }}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+      onLostPointerCapture={endDrag}
+      onDoubleClick={() => {
+        onWidthChange(SIDEBAR_WIDTH.default)
+        saveSidebarWidth(SIDEBAR_WIDTH.default)
+      }}
+    />
   )
 }
 

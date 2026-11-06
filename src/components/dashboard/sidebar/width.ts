@@ -18,6 +18,13 @@ export function clampSidebarWidth(width: number) {
   )
 }
 
+const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365
+
+/** Guarda el ancho en la cookie del navegador (solo en el cliente) */
+export function saveSidebarWidth(width: number) {
+  document.cookie = `${SIDEBAR_WIDTH_COOKIE}=${clampSidebarWidth(width)}; path=/; max-age=${ONE_YEAR_SECONDS}; SameSite=Lax`
+}
+
 /** Valor de cookie → px dentro del rango; inválido → default */
 export function parseSidebarWidth(value: string | undefined): number {
   if (!value?.trim()) return SIDEBAR_WIDTH.default

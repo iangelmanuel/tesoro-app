@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { TRANSACTION_TYPES } from "@/features/categories/constants"
+import { OTHER_INCOME } from "@/features/recurring-incomes/constants"
 
 export const MAX_AMOUNT = 999_999_999_999.99
 
@@ -133,7 +134,14 @@ export const transactionSchema = z.object({
     .string()
     .trim()
     .max(40, { error: "El número de factura debe tener máximo 40 caracteres" })
-    .transform((value) => value || null)
+    .transform((value) => value || null),
+  // Select "Ingreso fijo" (solo ingresos de Personal). "Otro ingreso" o
+  // vacío = sin enlace. La ocurrencia (recurring_income_due_on) la resuelve
+  // el servidor; el cliente no la envía
+  recurring_income_id: z.preprocess(
+    (value) => (value === "" || value === OTHER_INCOME ? null : value),
+    z.uuid({ error: "No se encontró el ingreso fijo" }).nullable()
+  )
 })
 
 // Movimiento nuevo, opcionalmente enlazado a una ocurrencia de gasto fijo

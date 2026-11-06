@@ -10,8 +10,7 @@ export const INCOME_FREQUENCIES = [
 
 export type IncomeFrequency = (typeof INCOME_FREQUENCIES)[number]
 
-/** Valor del select "Ingreso fijo" para "Otro ingreso" (sin enlace) */
-export const OTHER_INCOME = "other"
+export { OTHER_INCOME } from "./constants"
 
 /** Días de pago por defecto de un quincenal */
 export const BIWEEKLY_DEFAULT_DAYS = [15, 30] as const

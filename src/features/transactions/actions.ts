@@ -2,6 +2,7 @@
 
 import type { PostgrestError } from "@supabase/supabase-js"
 import { z } from "zod"
+import { getOldestUnreceivedOccurrences } from "@/features/recurring-incomes/queries"
 import {
   type WorkspaceType,
   requireWritableWorkspace
@@ -26,6 +27,8 @@ const RECURRING_MUST_BE_EXPENSE = "El pago de un gasto fijo debe ser un gasto"
 const ARCHIVED_ACCOUNT = "La cuenta está archivada"
 const INVALID_ACCOUNT = "Elige una cuenta válida"
 const SAME_TRANSFER_ACCOUNT = "Elige una cuenta distinta a la que paga"
+const INCOME_NOT_FOUND = "No se encontró el ingreso fijo"
+const ALREADY_RECEIVED = "Este ingreso ya está registrado. Intenta de nuevo"
 const LINKED_DEBT_ENTRY =
   "Este movimiento es un pago de deuda: edítalo desde su diálogo de pago"
 const UNIQUE_VIOLATION = "23505"
@@ -43,6 +46,7 @@ const FIELDS = [
   "invoice_ref",
   "recurring_expense_id",
   "recurring_due_on",
+  "recurring_income_id",
   "transfer_from",
   "transfer_amount"
 ] as const
@@ -152,6 +156,47 @@ async function validateRecurring(
   return (count ?? 0) > 0 ? ALREADY_PAID : null
 }
 
+interface IncomeLink {
+  recurring_income_id: string | null
+  recurring_income_due_on: string | null
+}
+
+const NO_INCOME_LINK: IncomeLink = {
+  recurring_income_id: null,
+  recurring_income_due_on: null
+}
+
+// Enlace de un ingreso a un ingreso fijo activo del espacio (SPEC 30): con
+// calendario, a su ocurrencia no recibida más antigua (las atrasadas
+// primero); sin ocurrencias no recibidas o "Sin fecha fija", a la fuente sin
+// ocurrencia. El cliente nunca elige la ocurrencia.
+async function resolveIncomeLink(
+  workspaceId: string,
+  recurringIncomeId: string
+): Promise<IncomeLink | { error: string }> {
+  const supabase = await createClient()
+  const { data: income } = await supabase
+    .from("recurring_incomes")
+    .select("id, frequency")
+    .eq("id", recurringIncomeId)
+    .eq("workspace_id", workspaceId)
+    .eq("is_active", true)
+    .maybeSingle()
+
+  if (!income) {
+    return { error: INCOME_NOT_FOUND }
+  }
+  if (income.frequency === "none") {
+    return { recurring_income_id: income.id, recurring_income_due_on: null }
+  }
+
+  const oldest = await getOldestUnreceivedOccurrences(workspaceId)
+  return {
+    recurring_income_id: income.id,
+    recurring_income_due_on: oldest.get(income.id) ?? null
+  }
+}
+
 // La categoría debe existir, ser visible para el usuario (RLS), tener el tipo
 // del movimiento y el scope del espacio, y estar activa. Una archivada solo se
 // acepta si ya era la categoría actual del movimiento que se edita.
@@ -214,13 +259,33 @@ export async function createTransaction(
     }
   }
 
-  const { transfer_from, transfer_amount, ...fields } = parsed.data
+  const { transfer_from, transfer_amount, recurring_income_id, ...fields } =
+    parsed.data
   const row = workspaceFields(fields, workspace.type)
 
+  // Ingreso fijo: solo en ingresos de Personal; en otro caso se ignora
+  let incomeLink = NO_INCOME_LINK
+  if (
+    recurring_income_id !== null &&
+    row.type === "income" &&
+    workspace.type === "personal"
+  ) {
+    const resolved = await resolveIncomeLink(workspace.id, recurring_income_id)
+    if ("error" in resolved) {
+      return { error: resolved.error, values }
+    }
+    incomeLink = resolved
+  }
+
   const supabase = await createClient()
+  const insertRow = (link: IncomeLink) =>
+    supabase
+      .from("transactions")
+      .insert({ ...row, ...link, workspace_id: workspace.id })
+
   // Con traspaso, el traspaso y el movimiento se guardan juntos (RPC); sin
   // él basta el insert directo
-  const { error } =
+  let { error } =
     transfer_from !== null && row.account_id !== null
       ? await supabase.rpc("record_transaction", {
           p_workspace_id: workspace.id,
@@ -239,10 +304,27 @@ export async function createTransaction(
           p_transfer_from: transfer_from,
           p_transfer_amount: transfer_amount ?? undefined
         })
-      : await supabase.from("transactions").insert({
-          ...row,
-          workspace_id: workspace.id
-        })
+      : await insertRow(incomeLink)
+
+  // Otro movimiento recibió la misma ocurrencia a la vez: se reintenta una
+  // vez con la siguiente no recibida
+  if (
+    error?.code === UNIQUE_VIOLATION &&
+    incomeLink.recurring_income_due_on !== null &&
+    incomeLink.recurring_income_id !== null
+  ) {
+    const retry = await resolveIncomeLink(
+      workspace.id,
+      incomeLink.recurring_income_id
+    )
+    if (
+      "error" in retry ||
+      retry.recurring_income_due_on === incomeLink.recurring_income_due_on
+    ) {
+      return { error: ALREADY_RECEIVED, values }
+    }
+    ;({ error } = await insertRow(retry))
+  }
 
   if (error) {
     return toFormError(error, values)
@@ -256,8 +338,11 @@ export async function updateTransaction(
   _prevState: TransactionFormState,
   formData: FormData
 ): Promise<TransactionFormState> {
-  // transactionSchema no incluye el enlace al gasto fijo: editar lo conserva
+  // transactionSchema no incluye el enlace al gasto fijo: editar lo conserva.
+  // El de ingreso fijo sí se puede cambiar (SPEC 30)
   const { values, parsed } = parseForm(formData, transactionSchema)
+  // Sin el campo (formularios sin select) el enlace se conserva
+  const incomeFieldSent = formData.has("recurring_income_id")
   const id = idSchema.safeParse(formData.get("id"))
 
   if (!id.success) {
@@ -271,7 +356,9 @@ export async function updateTransaction(
   const supabase = await createClient()
   const { data: current } = await supabase
     .from("transactions")
-    .select("category_id, recurring_expense_id, debt_entries(id)")
+    .select(
+      "category_id, recurring_expense_id, recurring_income_id, debt_entries(id)"
+    )
     .eq("id", id.data)
     .eq("workspace_id", workspace.id)
     .maybeSingle()
@@ -297,9 +384,40 @@ export async function updateTransaction(
     return { fieldErrors: { category_id: [categoryError] }, values }
   }
 
+  // Enlace al ingreso fijo:
+  // - un gasto, o Empresa, no lleva enlace;
+  // - sin el campo o con la misma fuente, se conserva (aunque cambien monto,
+  //   fecha o cuenta);
+  // - "Otro ingreso" lo quita y la ocurrencia vuelve a su estado calculado;
+  // - otra fuente re-enlaza a su ocurrencia no recibida más antigua.
+  const { recurring_income_id, ...fields } = parsed.data
+  let incomeLink: IncomeLink | null = null
+  if (parsed.data.type !== "income" || workspace.type !== "personal") {
+    incomeLink = current.recurring_income_id === null ? null : NO_INCOME_LINK
+  } else if (
+    incomeFieldSent &&
+    recurring_income_id !== current.recurring_income_id
+  ) {
+    if (recurring_income_id === null) {
+      incomeLink = NO_INCOME_LINK
+    } else {
+      const resolved = await resolveIncomeLink(
+        workspace.id,
+        recurring_income_id
+      )
+      if ("error" in resolved) {
+        return { error: resolved.error, values }
+      }
+      incomeLink = resolved
+    }
+  }
+
   const { data, error } = await supabase
     .from("transactions")
-    .update(workspaceFields(parsed.data, workspace.type))
+    .update({
+      ...workspaceFields(fields, workspace.type),
+      ...(incomeLink ?? {})
+    })
     .eq("id", id.data)
     .eq("workspace_id", workspace.id)
     .select("id")

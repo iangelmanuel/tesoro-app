@@ -134,7 +134,7 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
       target: "aside-sections",
       title: "Secciones",
       description:
-        "Movimientos, cuentas, gastos e ingresos fijos, presupuestos, metas, deudas, reportes y recomendaciones.",
+        "En Tu plan defines lo que Tesoro usa para calcular: cuentas, ingresos y gastos fijos, presupuestos, metas y deudas. Día a día y Entiende tu dinero son para consultar.",
       viewport: "desktop"
     },
     {

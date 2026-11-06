@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState
 } from "react"
 import type { Route } from "next"
@@ -13,6 +14,7 @@ import { usePathname } from "next/navigation"
 import { Button, Drawer, cn } from "@heroui/react"
 import { PanelLeft } from "lucide-react"
 import { MOBILE_QUERY, useIsMobile } from "@/hooks/use-is-mobile"
+import { SIDEBAR_WIDTH, clampSidebarWidth, saveSidebarWidth } from "./width"
 
 // Sidebar del dashboard armado con primitivas de HeroUI (Button, Drawer) y
 // tokens del tema. En escritorio es una columna fija que se oculta con el
@@ -106,27 +108,53 @@ export function useCloseSidebarOnNavigate() {
   }, [pathname, setOpenMobile])
 }
 
-/** Columna en escritorio y Drawer en móvil, con el mismo contenido */
-export function Sidebar({ children }: Readonly<{ children: React.ReactNode }>) {
+/** Columna en escritorio y Drawer en móvil, con el mismo contenido. `width`
+ *  (px) es el ancho inicial de la columna; con `resizable` se cambia con la
+ *  agarradera del borde. El Drawer mantiene su ancho */
+export function Sidebar({
+  width = SIDEBAR_WIDTH.default,
+  resizable = false,
+  children
+}: Readonly<{
+  width?: number
+  resizable?: boolean
+  children: React.ReactNode
+}>) {
   const { open, openMobile, setOpenMobile } = useSidebar()
+  // Cerrar la columna no toca este estado: al abrir vuelve el último ancho
+  const [currentWidth, setCurrentWidth] = useState(width)
+  const [isResizing, setIsResizing] = useState(false)
 
   return (
     <>
       <div
         data-state={open ? "expanded" : "collapsed"}
+        style={
+          { "--sidebar-width": `${currentWidth}px` } as React.CSSProperties
+        }
         className={cn(
           "sticky top-0 hidden h-svh shrink-0 overflow-hidden bg-background transition-[width] duration-200 ease-out motion-reduce:transition-none md:block",
-          open ? "w-64" : "w-0"
+          open ? "w-(--sidebar-width)" : "w-0",
+          // La transición queda para abrir y cerrar; al arrastrar sigue al puntero
+          isResizing && "transition-none"
         )}
       >
         <aside
           id={SIDEBAR_ID}
           aria-label="Menú del dashboard"
           inert={!open}
-          className="flex h-full w-64 flex-col"
+          className="flex h-full w-(--sidebar-width) flex-col"
         >
           {children}
         </aside>
+        {resizable && open && (
+          <SidebarResizeHandle
+            width={currentWidth}
+            onWidthChange={setCurrentWidth}
+            isResizing={isResizing}
+            onResizingChange={setIsResizing}
+          />
+        )}
       </div>
 
       <Drawer
@@ -145,6 +173,114 @@ export function Sidebar({ children }: Readonly<{ children: React.ReactNode }>) {
         </Drawer.Backdrop>
       </Drawer>
     </>
+  )
+}
+
+interface SidebarResizeHandleProps {
+  /** Ancho actual de la columna (px) */
+  width: number
+  /** La línea queda visible mientras se arrastra */
+  isResizing: boolean
+  onWidthChange: (width: number) => void
+  /** Mientras se arrastra, la columna quita su transición de ancho */
+  onResizingChange: (isResizing: boolean) => void
+}
+
+/** Agarradera del borde derecho de la columna (solo escritorio, abierta).
+ *  Arrastrar cambia el ancho en vivo, doble clic lo devuelve al de por
+ *  defecto; el ancho se guarda en la cookie al soltar */
+export function SidebarResizeHandle({
+  width,
+  isResizing,
+  onWidthChange,
+  onResizingChange
+}: SidebarResizeHandleProps) {
+  const drag = useRef<{ startX: number; startWidth: number; last: number }>(
+    null
+  )
+
+  function endDrag() {
+    if (!drag.current) return
+    const { last } = drag.current
+    drag.current = null
+    document.body.style.removeProperty("user-select")
+    document.body.style.removeProperty("cursor")
+    onResizingChange(false)
+    saveSidebarWidth(last)
+  }
+
+  // Si se desmonta a mitad de arrastre (atajo para cerrar), el body no queda
+  // sin selección de texto y la columna recupera su transición
+  useEffect(
+    () => () => {
+      document.body.style.removeProperty("user-select")
+      document.body.style.removeProperty("cursor")
+      onResizingChange(false)
+    },
+    [onResizingChange]
+  )
+
+  // Teclado: cada tecla cambia el ancho y lo guarda
+  function resizeTo(next: number) {
+    const value = clampSidebarWidth(next)
+    onWidthChange(value)
+    saveSidebarWidth(value)
+  }
+
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Cambiar el ancho del menú"
+      aria-controls={SIDEBAR_ID}
+      aria-valuemin={SIDEBAR_WIDTH.min}
+      aria-valuemax={SIDEBAR_WIDTH.max}
+      aria-valuenow={width}
+      tabIndex={0}
+      data-resizing={isResizing || undefined}
+      // Invisible en reposo; hover y arrastre muestran una línea fina con el
+      // color del foco y el foco de teclado, el anillo (3:1 en claro y oscuro)
+      className="absolute inset-y-0 right-0 z-10 w-2 cursor-col-resize touch-none outline-none after:absolute after:inset-y-0 after:right-0 after:w-0.5 after:bg-transparent after:transition-colors after:duration-150 hover:after:bg-focus focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-inset data-resizing:after:bg-focus motion-reduce:after:transition-none"
+      onKeyDown={(event) => {
+        const { min, max, step } = SIDEBAR_WIDTH
+        const next =
+          event.key === "ArrowLeft"
+            ? width - step
+            : event.key === "ArrowRight"
+              ? width + step
+              : event.key === "Home"
+                ? min
+                : event.key === "End"
+                  ? max
+                  : null
+        if (next === null) return
+        event.preventDefault()
+        resizeTo(next)
+      }}
+      onPointerDown={(event) => {
+        if (event.button !== 0) return
+        event.preventDefault()
+        event.currentTarget.setPointerCapture(event.pointerId)
+        drag.current = { startX: event.clientX, startWidth: width, last: width }
+        // Sin selección de texto ni hovers del contenido durante el arrastre
+        document.body.style.setProperty("user-select", "none")
+        document.body.style.setProperty("cursor", "col-resize")
+        onResizingChange(true)
+      }}
+      onPointerMove={(event) => {
+        if (!drag.current) return
+        const next = clampSidebarWidth(
+          drag.current.startWidth + event.clientX - drag.current.startX
+        )
+        if (next === drag.current.last) return
+        drag.current.last = next
+        onWidthChange(next)
+      }}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+      onLostPointerCapture={endDrag}
+      onDoubleClick={() => resizeTo(SIDEBAR_WIDTH.default)}
+    />
   )
 }
 
@@ -213,10 +349,14 @@ export function SidebarFooter({
 }
 
 export function SidebarGroupLabel({
+  id,
   children
-}: Readonly<{ children: React.ReactNode }>) {
+}: Readonly<{ id?: string; children: React.ReactNode }>) {
   return (
-    <div className="flex h-8 items-center px-2 text-xs font-medium text-muted">
+    <div
+      id={id}
+      className="flex h-8 items-center px-2 text-xs font-medium text-muted"
+    >
       {children}
     </div>
   )

@@ -3,6 +3,10 @@
 import { usePathname } from "next/navigation"
 import { SITE } from "@/config/site"
 import { greeting } from "@/libs/dates"
+import { flattenNav } from "./nav"
+
+const PERSONAL_ITEMS = flattenNav(SITE.navigation.personal)
+const BUSINESS_ITEMS = flattenNav(SITE.navigation.business)
 
 // Rutas del dashboard que no están en la navegación de los espacios
 const EXTRA_TITLES: Record<string, string> = {
@@ -21,20 +25,16 @@ export function getDashboardTitle(pathname: string) {
     return "Cuenta"
   }
 
-  const personal = SITE.navigation.personal
-    .filter(
-      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
-    )
-    .sort((a, b) => b.href.length - a.href.length)[0]
+  const personal = PERSONAL_ITEMS.filter(
+    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
+  ).sort((a, b) => b.href.length - a.href.length)[0]
   if (personal) return personal.name
 
   // /dashboard/business/[id]/<segment>
   const match = pathname.match(/^\/dashboard\/business\/[^/]+(\/[^/]+)?/)
   if (match) {
     const segment = match[1] ?? ""
-    const item = SITE.navigation.business.find(
-      (entry) => entry.segment === segment
-    )
+    const item = BUSINESS_ITEMS.find((entry) => entry.segment === segment)
     if (item) return item.name
   }
 

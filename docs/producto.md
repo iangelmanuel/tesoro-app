@@ -34,8 +34,10 @@ Visión y alcance de Tesoro. Este documento describe **qué** se construye; el
 | `/dashboard/business/[id]/...`   | Espacio de una empresa                      | No        |
 
 Las rutas viven en `SITE.routes` y la navegación de los espacios en
-`SITE.navigation.personal` y `SITE.navigation.business` (este con `segment`,
-que se agrega a `/dashboard/business/[id]`). `robots.ts` bloquea `/dashboard/`, `/api/` y
+`SITE.navigation.personal` y `SITE.navigation.business`, agrupadas en "Día a
+día", "Tu plan" / "Tu operación" y "Entiende tu dinero" / "Entiende tu
+negocio" (SPEC 31). Empresa usa `segment`, que se agrega a
+`/dashboard/business/[id]`. `robots.ts` bloquea `/dashboard/`, `/api/` y
 `/auth/`, y `proxy.ts` exige sesión en `/dashboard/*`. Los slugs van en inglés
 (`/transactions`, `/recurring`, `/recurring-income`, `/budgets`, `/goals`, `/debts`,
 `/reports`, `/recommendations`); la UI, en español. Cada empresa vive en

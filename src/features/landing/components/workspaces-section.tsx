@@ -1,4 +1,5 @@
 import { CheckIcon } from "lucide-react"
+import { flattenNav } from "@/components/dashboard/nav"
 import { SITE } from "@/config/site"
 import { RevealItem, RevealList } from "./reveal"
 import { SectionHeading } from "./section-heading"
@@ -8,10 +9,10 @@ import { SectionHeading } from "./section-heading"
 const SHARED = ["Resumen", "Ajustes", "Movimientos", "Cuentas"]
 
 const HIGHLIGHTS = {
-  personal: SITE.navigation.personal
+  personal: flattenNav(SITE.navigation.personal)
     .map((item) => item.name)
     .filter((name) => !SHARED.includes(name)),
-  business: SITE.navigation.business
+  business: flattenNav(SITE.navigation.business)
     .map((item) => item.name)
     .filter((name) => !SHARED.includes(name))
 }

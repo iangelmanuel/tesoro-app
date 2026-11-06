@@ -1,4 +1,5 @@
 import { Suspense, cache } from "react"
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { Skeleton, ToastProvider } from "@heroui/react"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
@@ -12,6 +13,10 @@ import {
   SidebarProvider,
   SidebarTrigger
 } from "@/components/dashboard/sidebar"
+import {
+  SIDEBAR_WIDTH_COOKIE,
+  parseSidebarWidth
+} from "@/components/dashboard/sidebar/width"
 import { WorkspaceThemeRoot } from "@/components/dashboard/workspace-theme-root"
 import { SITE } from "@/config/site"
 import { TutorialAutoStart } from "@/features/tutorials/components/tutorial-auto-start"
@@ -48,15 +53,17 @@ const getDashboardUser = cache(async () => {
 })
 
 async function DashboardSidebar() {
-  const [user, businesses] = await Promise.all([
+  const [user, businesses, cookieStore] = await Promise.all([
     getDashboardUser(),
-    getBusinessWorkspaces()
+    getBusinessWorkspaces(),
+    cookies()
   ])
 
   return (
     <AppSidebar
       user={user}
       businesses={businesses.map(({ id, name }) => ({ id, name }))}
+      width={parseSidebarWidth(cookieStore.get(SIDEBAR_WIDTH_COOKIE)?.value)}
     />
   )
 }

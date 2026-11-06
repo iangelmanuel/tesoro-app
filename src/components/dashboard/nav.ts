@@ -16,8 +16,17 @@ import {
 import type { SITE } from "@/config/site"
 
 export type NavIcon =
-  | (typeof SITE.navigation.personal)[number]["icon"]
-  | (typeof SITE.navigation.business)[number]["icon"]
+  | (typeof SITE.navigation.personal)[number]["items"][number]["icon"]
+  | (typeof SITE.navigation.business)[number]["items"][number]["icon"]
+
+/** Lista plana para la barra inferior, el título del header y la landing */
+// Genérico sobre el grupo (no sobre el ítem): con tuplas `as const`, TS
+// infiere T solo del primer grupo y rechaza los demás
+export function flattenNav<G extends { readonly items: readonly unknown[] }>(
+  groups: readonly G[]
+): G["items"][number][] {
+  return groups.flatMap((group) => [...group.items])
+}
 
 export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   LayoutDashboard,

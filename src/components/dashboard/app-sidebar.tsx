@@ -1,5 +1,6 @@
 "use client"
 
+import { useId } from "react"
 import type { Route } from "next"
 import Link from "next/link"
 import { useParams, usePathname } from "next/navigation"
@@ -31,15 +32,24 @@ interface NavItem {
   icon: NavIcon
 }
 
+interface NavGroup {
+  label: string
+  items: NavItem[]
+}
+
 interface AppSidebarProps {
   user: DashboardUser
   /** Empresas del usuario, para el menú y el selector de Empresa */
   businesses: BusinessOption[]
+  /** Ancho del aside de escritorio (px), leído de la cookie en el servidor */
+  width: number
 }
 
-export function AppSidebar({ user, businesses }: AppSidebarProps) {
+export function AppSidebar({ user, businesses, width }: AppSidebarProps) {
   const pathname = usePathname()
   const params = useParams<{ id?: string }>()
+  // Prefijo único: el aside de escritorio y el Drawer pueden convivir
+  const groupId = useId()
   useCloseSidebarOnNavigate()
   // /dashboard/account mantiene el menú Personal, sin ningún ítem activo
   const isPersonal =
@@ -52,22 +62,31 @@ export function AppSidebar({ user, businesses }: AppSidebarProps) {
     : undefined
 
   let root: string | null = null
-  let items: NavItem[] = []
+  let groups: NavGroup[] = []
   if (isPersonal) {
     root = SITE.routes.dashboardPersonal
-    items = [...SITE.navigation.personal]
+    groups = SITE.navigation.personal.map((group) => ({
+      label: group.label,
+      items: [...group.items]
+    }))
   } else if (business) {
     const base = workspaceBasePath({ id: business.id, type: "business" })
     root = base
-    items = SITE.navigation.business.map((item) => ({
-      name: item.name,
-      href: `${base}${item.segment}`,
-      icon: item.icon
+    groups = SITE.navigation.business.map((group) => ({
+      label: group.label,
+      items: group.items.map((item) => ({
+        name: item.name,
+        href: `${base}${item.segment}`,
+        icon: item.icon
+      }))
     }))
   }
 
   return (
-    <Sidebar>
+    <Sidebar
+      width={width}
+      resizable
+    >
       <SidebarHeader>
         <Link
           href={SITE.routes.dashboardPersonal}
@@ -93,6 +112,7 @@ export function AppSidebar({ user, businesses }: AppSidebarProps) {
         {root && (
           <nav
             aria-label="Secciones del espacio"
+            className="flex flex-col gap-4"
             data-tour="aside-sections"
           >
             {/* Con una sola empresa el selector no se pinta: el nombre queda aquí */}
@@ -101,22 +121,35 @@ export function AppSidebar({ user, businesses }: AppSidebarProps) {
                 <span className="truncate">{business.name}</span>
               </SidebarGroupLabel>
             )}
-            <ul className="flex flex-col gap-0.5">
-              {items.map((item) => {
-                const Icon = NAV_ICONS[item.icon]
-                return (
-                  <li key={item.href}>
-                    <SidebarNavLink
-                      href={item.href as Route}
-                      isActive={isActive(pathname, item.href, root)}
-                    >
-                      <Icon />
-                      <span className="truncate">{item.name}</span>
-                    </SidebarNavLink>
-                  </li>
-                )
-              })}
-            </ul>
+            {groups.map((group, index) => {
+              const labelId = `${groupId}-group-${index}`
+              return (
+                <div key={group.label}>
+                  <SidebarGroupLabel id={labelId}>
+                    <span className="truncate">{group.label}</span>
+                  </SidebarGroupLabel>
+                  <ul
+                    aria-labelledby={labelId}
+                    className="flex flex-col gap-0.5"
+                  >
+                    {group.items.map((item) => {
+                      const Icon = NAV_ICONS[item.icon]
+                      return (
+                        <li key={item.href}>
+                          <SidebarNavLink
+                            href={item.href as Route}
+                            isActive={isActive(pathname, item.href, root)}
+                          >
+                            <Icon />
+                            <span className="truncate">{item.name}</span>
+                          </SidebarNavLink>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </div>
+              )
+            })}
           </nav>
         )}
       </SidebarContent>

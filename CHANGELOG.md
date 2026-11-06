@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Grouped aside and resizable width (SPEC 31).
+  - The aside groups its sections: Personal shows **Día a día** (Resumen, Movimientos), **Tu plan** (Cuentas, Ingresos fijos, Gastos fijos, Presupuestos, Metas, Deudas) and **Entiende tu dinero** (Reportes, Recomendaciones); a business shows **Día a día**, **Tu operación** (Cuentas, Ajustes) and **Entiende tu negocio** (Flujo de caja, Reportes, Recomendaciones). Each group has a title and its own list labelled by it, separated by space only. **Ingresos fijos** now comes before **Gastos fijos**. The sidebar skeleton shows three titled blocks.
+  - `SITE.navigation.personal` and `.business` are now arrays of `{ label, items }` groups; the bottom nav, the header title and the landing use the new `flattenNav` helper (`src/components/dashboard/nav.ts`).
+  - On desktop the aside width can be changed by dragging its right edge (240–360 px, 256 by default), double-clicking to reset, or with the keyboard (`←` / `→` by 16 px, `Home` / `End`) through the new `SidebarResizeHandle` (`role="separator"`). The width is stored in the `tesoro-sidebar-width` cookie and read on the server, so the first render already has it. The mobile drawer keeps its width.
+  - The `aside-sections` tour step now explains the three groups.
+
 - Recurring incomes and quick movement (SPEC 30).
   - New **Ingresos fijos** page (`/dashboard/personal/recurring-income`, right after **Gastos fijos** in the aside) to define salary, rent received, projects or investments with an expected amount, income category, optional default account and a frequency: monthly, biweekly (two configurable days, 15 and 30 by default), yearly or **Sin fecha fija**. Days missing from a month fall on its last day.
   - **Próximos ingresos** lists this month's occurrences plus unreceived ones from the 2 previous months with **Recibido**, **Pendiente**, **De hoy** or **Atrasado** status. **Marcar recibido** (on the oldest unreceived occurrence of each source) opens the movement dialog on Ingreso, prefilled and linked. **Sin fecha fija** sources show what was received this month and year. Amounts respect hidden figures.

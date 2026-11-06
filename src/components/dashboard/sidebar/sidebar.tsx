@@ -13,6 +13,7 @@ import { usePathname } from "next/navigation"
 import { Button, Drawer, cn } from "@heroui/react"
 import { PanelLeft } from "lucide-react"
 import { MOBILE_QUERY, useIsMobile } from "@/hooks/use-is-mobile"
+import { SIDEBAR_WIDTH } from "./width"
 
 // Sidebar del dashboard armado con primitivas de HeroUI (Button, Drawer) y
 // tokens del tema. En escritorio es una columna fija que se oculta con el
@@ -106,24 +107,29 @@ export function useCloseSidebarOnNavigate() {
   }, [pathname, setOpenMobile])
 }
 
-/** Columna en escritorio y Drawer en móvil, con el mismo contenido */
-export function Sidebar({ children }: Readonly<{ children: React.ReactNode }>) {
+/** Columna en escritorio y Drawer en móvil, con el mismo contenido. `width`
+ *  (px) solo aplica a la columna; el Drawer mantiene su ancho */
+export function Sidebar({
+  width = SIDEBAR_WIDTH.default,
+  children
+}: Readonly<{ width?: number; children: React.ReactNode }>) {
   const { open, openMobile, setOpenMobile } = useSidebar()
 
   return (
     <>
       <div
         data-state={open ? "expanded" : "collapsed"}
+        style={{ "--sidebar-width": `${width}px` } as React.CSSProperties}
         className={cn(
           "sticky top-0 hidden h-svh shrink-0 overflow-hidden bg-background transition-[width] duration-200 ease-out motion-reduce:transition-none md:block",
-          open ? "w-64" : "w-0"
+          open ? "w-(--sidebar-width)" : "w-0"
         )}
       >
         <aside
           id={SIDEBAR_ID}
           aria-label="Menú del dashboard"
           inert={!open}
-          className="flex h-full w-64 flex-col"
+          className="flex h-full w-(--sidebar-width) flex-col"
         >
           {children}
         </aside>

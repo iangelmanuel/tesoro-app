@@ -41,9 +41,11 @@ interface AppSidebarProps {
   user: DashboardUser
   /** Empresas del usuario, para el menú y el selector de Empresa */
   businesses: BusinessOption[]
+  /** Ancho del aside de escritorio (px), leído de la cookie en el servidor */
+  width: number
 }
 
-export function AppSidebar({ user, businesses }: AppSidebarProps) {
+export function AppSidebar({ user, businesses, width }: AppSidebarProps) {
   const pathname = usePathname()
   const params = useParams<{ id?: string }>()
   // Prefijo único: el aside de escritorio y el Drawer pueden convivir
@@ -81,7 +83,7 @@ export function AppSidebar({ user, businesses }: AppSidebarProps) {
   }
 
   return (
-    <Sidebar>
+    <Sidebar width={width}>
       <SidebarHeader>
         <Link
           href={SITE.routes.dashboardPersonal}

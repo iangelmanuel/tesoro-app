@@ -40,7 +40,7 @@ Además el aside mide 256 px fijos. Con nombres de empresa largos o ítems trunc
   - con el aside cerrado (`open = false`, atajo o `SidebarTrigger`) la agarradera no existe y el ancho guardado se recupera al abrir.
 - **Persistencia del ancho** en la cookie `tesoro-sidebar-width` (px enteros, `path=/`, `max-age` de un año, `SameSite=Lax`). Se escribe al soltar el arrastre o tras cada tecla. Por navegador; no va a la base de datos.
   - `DashboardSidebar` (ya dentro de un `Suspense` en `app/dashboard/layout.tsx`) lee la cookie con `cookies()` y pasa el ancho a `AppSidebar`. El aside sale con el ancho correcto desde el primer render.
-  - Un valor ausente, no numérico o fuera de rango se trata como 256 (lectura) o se ajusta al rango (escritura).
+  - Un valor ausente o no numérico se trata como 256; uno fuera de rango se ajusta al rango (240–360), tanto al leer como al escribir.
 - **Tour (SPEC 27):** el paso `aside-sections` de `src/config/tutorials.ts` cambia su texto para explicar los grupos: en **Tu plan** se define todo lo que Tesoro usa para calcular; **Día a día** y **Entiende tu dinero** son para consultar. Sin pasos nuevos.
 - **Documentación:** `docs/ui.md` (grupos del aside y ancho ajustable), `CLAUDE.md` si cambia la descripción del aside, y `CHANGELOG.md` en `[Unreleased]` (en inglés).
 
@@ -95,7 +95,12 @@ export function flattenNav<T>(groups: readonly { items: readonly T[] }[]): T[]
 
 ```ts
 // src/components/dashboard/sidebar/width.ts
-export const SIDEBAR_WIDTH = { min: 240, max: 360, default: 256, step: 16 } as const
+export const SIDEBAR_WIDTH = {
+  min: 240,
+  max: 360,
+  default: 256,
+  step: 16
+} as const
 export const SIDEBAR_WIDTH_COOKIE = "tesoro-sidebar-width"
 /** Valor de cookie → px dentro del rango; inválido → default */
 export function parseSidebarWidth(value: string | undefined): number

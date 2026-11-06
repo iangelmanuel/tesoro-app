@@ -11,3 +11,9 @@ export {
   useCloseSidebarOnNavigate,
   useSidebar
 } from "./sidebar"
+export {
+  SIDEBAR_WIDTH,
+  SIDEBAR_WIDTH_COOKIE,
+  clampSidebarWidth,
+  parseSidebarWidth
+} from "./width"

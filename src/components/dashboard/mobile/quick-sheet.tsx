@@ -1,42 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button, Drawer, Separator, Switch } from "@heroui/react"
-import {
-  CalendarCheck,
-  CreditCard,
-  ListChecks,
-  Receipt,
-  ShoppingBag,
-  Tags,
-  Target,
-  TrendingDown,
-  TrendingUp
-} from "lucide-react"
-import { RECURRING_PATH } from "@/features/budgets/tabs"
+import { ListChecks, Plus, Tags } from "lucide-react"
 import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
-import { DEBTS_PATH } from "@/features/debts/calculations"
-import { PaymentDialog } from "@/features/debts/components/payment-dialog"
-import { ContributionDialog } from "@/features/goals/components/contribution-dialog"
-import { GOALS_PATH } from "@/features/goals/progress"
-import { PayOccurrenceDialog } from "@/features/recurring-expenses/components/pay-occurrence-dialog"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
 import { VerifyMovementsDialog } from "@/features/transactions/components/verify-movements-dialog"
-import type { TransactionType } from "@/features/transactions/filters"
 import { useQuickActions } from "../quick-actions-context"
 import { useActiveWorkspace } from "../use-active-workspace"
 
-export type QuickSheetAction =
-  | "expense"
-  | "income"
-  | "contribution"
-  | "payment"
-  | "recurring" // Personal
-  | "sale"
-  | "cost" // Empresa
-  | "categories"
-  | "verify" // Ambos
+type QuickSheetAction = "movement" | "categories" | "verify"
 
 interface ActionItem {
   id: QuickSheetAction
@@ -44,33 +17,19 @@ interface ActionItem {
   icon: React.ComponentType<{ className?: string }>
 }
 
-const PERSONAL_ACTIONS: ActionItem[] = [
-  { id: "expense", label: "Gasto", icon: TrendingDown },
-  { id: "income", label: "Ingreso", icon: TrendingUp },
-  { id: "contribution", label: "Aporte a meta", icon: Target },
-  { id: "payment", label: "Pago de deuda o tarjeta", icon: CreditCard },
-  { id: "recurring", label: "Marcar gasto fijo pagado", icon: CalendarCheck }
-]
+// Una sola acción de registro con todos los tipos en tabs (SPEC 30)
+const MOVEMENT_ACTION: ActionItem = {
+  id: "movement",
+  label: "Movimiento rápido",
+  icon: Plus
+}
 
-const BUSINESS_ACTIONS: ActionItem[] = [
-  { id: "sale", label: "Venta", icon: ShoppingBag },
-  { id: "cost", label: "Costo o gasto", icon: Receipt }
-]
-
-// Herramientas del espacio (las mismas del menú Más): van aparte, bajo las
-// acciones de registro
+// Herramientas del espacio (las mismas del menú Más): van aparte, bajo la
+// acción de registro
 const TOOL_ACTIONS: ActionItem[] = [
   { id: "categories", label: "Categorías", icon: Tags },
   { id: "verify", label: "Verificar movimientos", icon: ListChecks }
 ]
-
-// Tipo de movimiento que preselecciona cada acción de la hoja
-const TRANSACTION_TYPES: Partial<Record<QuickSheetAction, TransactionType>> = {
-  expense: "expense",
-  income: "income",
-  sale: "income",
-  cost: "expense"
-}
 
 interface QuickSheetProps {
   open: boolean
@@ -80,18 +39,19 @@ interface QuickSheetProps {
   onAutoOpenChange: (autoOpen: boolean) => void
 }
 
-// Hoja inferior de acciones rápidas del teléfono. Cada acción cierra la hoja
-// y abre su diálogo sin cambiar de página; sin metas, deudas o pendientes
-// lleva a la página donde se crean. Se cierra deslizando el asa, tocando el
-// fondo, con "Cerrar" o con Escape. Solo existe en rutas de un espacio.
+// Hoja inferior de acciones rápidas del teléfono, igual en Personal y
+// Empresa. "Movimiento rápido" abre el mismo diálogo que el + del escritorio,
+// con todos los tabs del espacio y en Gasto por defecto. Cada acción cierra la
+// hoja y abre su diálogo sin cambiar de página. Se cierra deslizando el asa,
+// tocando el fondo, con "Cerrar" o con Escape. Solo existe en rutas de un
+// espacio.
 export function QuickSheet({
   open,
   onOpenChange,
   autoOpen,
   onAutoOpenChange
 }: QuickSheetProps) {
-  const router = useRouter()
-  const { goals, debts, pendingPayments } = useQuickActions()
+  const { goals, debts, pendingPayments, incomeSources } = useQuickActions()
   const workspace = useActiveWorkspace()
   const [dialog, setDialog] = useState<QuickSheetAction | null>(null)
 
@@ -100,28 +60,10 @@ export function QuickSheet({
   }
 
   const isPersonal = workspace.type === "personal"
-  const actions = isPersonal ? PERSONAL_ACTIONS : BUSINESS_ACTIONS
-  const transactionType = dialog ? TRANSACTION_TYPES[dialog] : undefined
 
   function onAction(action: QuickSheetAction) {
     onOpenChange(false)
-
-    switch (action) {
-      case "contribution":
-        if (goals.length > 0) setDialog(action)
-        else router.push(GOALS_PATH)
-        break
-      case "payment":
-        if (debts.length > 0) setDialog(action)
-        else router.push(DEBTS_PATH)
-        break
-      case "recurring":
-        if (pendingPayments.length > 0) setDialog(action)
-        else router.push(RECURRING_PATH)
-        break
-      default:
-        setDialog(action)
-    }
+    setDialog(action)
   }
 
   function closeDialog(isOpen: boolean) {
@@ -162,7 +104,7 @@ export function QuickSheet({
                 </Drawer.Heading>
               </Drawer.Header>
               <Drawer.Body className="flex flex-col gap-2">
-                {actions.map(renderAction)}
+                {renderAction(MOVEMENT_ACTION)}
                 <Separator className="my-1" />
                 {TOOL_ACTIONS.map(renderAction)}
               </Drawer.Body>
@@ -191,15 +133,22 @@ export function QuickSheet({
       </Drawer>
 
       {/* Controlados por la hoja: no tienen trigger propio */}
-      {transactionType && (
+      {dialog === "movement" && (
         <TransactionDialog
-          // Cada acción monta el formulario con su tipo preseleccionado
-          key={`${workspace.id}-${dialog}`}
+          // Al cambiar de espacio el diálogo empieza de cero
+          key={workspace.id}
           workspaceId={workspace.id}
           workspaceType={workspace.type}
           categories={workspace.categories}
           accounts={workspace.accounts}
-          initialValues={{ type: transactionType }}
+          // Personal: tabs "Deuda", "Gasto fijo" y "Meta", y el select
+          // "Ingreso fijo" del tab Ingreso. Empresa: Venta, Costo o gasto y
+          // Traspaso
+          paymentTabs={
+            isPersonal
+              ? { debts, pendingPayments, goals, incomeSources }
+              : undefined
+          }
           open
           onOpenChange={closeDialog}
         />
@@ -218,32 +167,6 @@ export function QuickSheet({
         open={dialog === "verify"}
         onOpenChange={closeDialog}
       />
-      {isPersonal && (
-        <>
-          <ContributionDialog
-            workspaceId={workspace.id}
-            goals={goals}
-            accounts={workspace.accounts}
-            open={dialog === "contribution"}
-            onOpenChange={closeDialog}
-          />
-          <PaymentDialog
-            workspaceId={workspace.id}
-            debts={debts}
-            accounts={workspace.accounts}
-            open={dialog === "payment"}
-            onOpenChange={closeDialog}
-          />
-          <PayOccurrenceDialog
-            workspaceId={workspace.id}
-            payments={pendingPayments}
-            categories={workspace.categories}
-            accounts={workspace.accounts}
-            open={dialog === "recurring"}
-            onOpenChange={closeDialog}
-          />
-        </>
-      )}
     </>
   )
 }

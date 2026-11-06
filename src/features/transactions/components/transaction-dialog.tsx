@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useActionState, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import {
   Button,
@@ -34,7 +34,11 @@ import {
   type DebtOption,
   DebtPaymentPanel
 } from "@/features/debts/components/payment-dialog"
-import type { GoalOption } from "@/features/goals/components/contribution-dialog"
+import {
+  GoalContributionPanel,
+  type GoalOption
+} from "@/features/goals/components/contribution-dialog"
+import { GOALS_PATH } from "@/features/goals/progress"
 import {
   OccurrenceSelect,
   paymentKey,
@@ -161,7 +165,7 @@ export function TransactionDialog({
       <Modal.Backdrop>
         <Modal.Container scroll="outside">
           <Modal.Dialog
-            // Con 5 tabs el diálogo se ensancha un poco para que quepan
+            // Con 6 tabs el diálogo se ensancha un poco para que quepan
             className={showPaymentTabs ? "sm:max-w-lg" : "sm:max-w-md"}
           >
             <Modal.CloseTrigger />
@@ -221,7 +225,7 @@ export interface PaymentTabsData {
 }
 
 /** Opciones del selector que no son un tipo de movimiento */
-type FormPanel = "transfer" | "debt_payment" | "recurring"
+type FormPanel = "transfer" | "debt_payment" | "recurring" | "goal"
 
 interface TransactionFormProps {
   workspaceId: string
@@ -347,7 +351,8 @@ function TransactionForm({
     if (
       value === "transfer" ||
       value === "debt_payment" ||
-      value === "recurring"
+      value === "recurring" ||
+      value === "goal"
     ) {
       setPanel(value)
       return
@@ -390,16 +395,46 @@ function TransactionForm({
     setPrefilled(next)
   }
 
+  // En un teléfono angosto los tabs se desplazan: el activo se lleva a la
+  // vista al cambiar de tab
+  const tabsRef = useRef<HTMLDivElement>(null)
+  const activeTab = panel ?? type
+  useEffect(() => {
+    tabsRef.current
+      ?.querySelector<HTMLElement>('[data-selected="true"]')
+      ?.scrollIntoView({ block: "nearest", inline: "nearest" })
+  }, [activeTab])
+
   const errors = state.fieldErrors
   const values = state.values
   const showIncomeSource =
     !isBusiness && type === "income" && incomeSources !== undefined
   const showTransfer = !isEditing && type === "expense" && !isBusiness
 
+  const expenseTab = (
+    <ToggleButton
+      id="expense"
+      className="flex-1 whitespace-nowrap"
+    >
+      {copy.expense}
+    </ToggleButton>
+  )
+  const incomeTab = (
+    <ToggleButton
+      id="income"
+      className="flex-1 whitespace-nowrap"
+    >
+      {copy.income}
+    </ToggleButton>
+  )
+
+  // Orden de los tabs (SPEC 30). Personal: Gasto, Ingreso, Traspaso, Deuda,
+  // Gasto fijo y Meta. Empresa: Venta, Costo o gasto y Traspaso
   const typeToggle = hideTypeToggle ? null : (
-    // Con los tabs de pago son 5 opciones. Desde sm caben en el diálogo; en
+    // Con los tabs de pago son 6 opciones. Desde sm caben en el diálogo; en
     // un teléfono angosto se desplazan en horizontal, sin barra visible
     <div
+      ref={tabsRef}
       className={cn(
         paymentTabs &&
           "-mx-1 [scrollbar-width:none] overflow-x-auto px-1 [&::-webkit-scrollbar]:hidden"
@@ -415,18 +450,8 @@ function TransactionForm({
         aria-label="Tipo de movimiento"
         className={cn(paymentTabs && "w-max min-w-full")}
       >
-        <ToggleButton
-          id="expense"
-          className="flex-1 whitespace-nowrap"
-        >
-          {copy.expense}
-        </ToggleButton>
-        <ToggleButton
-          id="income"
-          className="flex-1 whitespace-nowrap"
-        >
-          {copy.income}
-        </ToggleButton>
+        {isBusiness ? incomeTab : expenseTab}
+        {isBusiness ? expenseTab : incomeTab}
         {canTransfer && (
           <ToggleButton
             id="transfer"
@@ -449,6 +474,14 @@ function TransactionForm({
             className="flex-1 whitespace-nowrap"
           >
             Gasto fijo
+          </ToggleButton>
+        )}
+        {paymentTabs && (
+          <ToggleButton
+            id="goal"
+            className="flex-1 whitespace-nowrap"
+          >
+            Meta
           </ToggleButton>
         )}
       </ToggleButtonGroup>
@@ -489,6 +522,30 @@ function TransactionForm({
             text="No tienes tarjetas ni préstamos activos."
             href={DEBTS_PATH}
             action="Ir a Deudas"
+            onNavigate={onCancel}
+          />
+        )}
+      </div>
+    )
+  }
+
+  if (panel === "goal" && paymentTabs) {
+    return (
+      <div className="flex flex-col gap-4">
+        {typeToggle}
+        {paymentTabs.goals.length > 0 ? (
+          <GoalContributionPanel
+            workspaceId={workspaceId}
+            goals={paymentTabs.goals}
+            accounts={accounts}
+            onSaved={onSaved}
+            onCancel={onCancel}
+          />
+        ) : (
+          <PanelEmpty
+            text="No tienes metas activas."
+            href={GOALS_PATH}
+            action="Ir a Metas"
             onNavigate={onCancel}
           />
         )}
@@ -821,7 +878,7 @@ function PanelEmpty({
   onNavigate
 }: {
   text: string
-  href: typeof DEBTS_PATH | typeof RECURRING_PATH
+  href: typeof DEBTS_PATH | typeof RECURRING_PATH | typeof GOALS_PATH
   action: string
   /** Cierra el diálogo: el header no se desmonta al navegar */
   onNavigate: () => void

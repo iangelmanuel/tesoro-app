@@ -374,4 +374,34 @@ function ContributionForm({
   )
 }
 
+/**
+ * Tab "Meta" del diálogo de movimiento (SPEC 30): elegir una meta activa y
+ * registrar el aporte o retiro en el mismo formulario de ContributionDialog
+ */
+export function GoalContributionPanel({
+  workspaceId,
+  goals,
+  accounts,
+  onSaved,
+  onCancel
+}: {
+  workspaceId: string
+  /** Metas activas; al menos una */
+  goals: GoalOption[]
+  accounts: PaymentAccountOption[]
+  onSaved: () => void
+  onCancel: () => void
+}) {
+  return (
+    <ContributionForm
+      workspaceId={workspaceId}
+      goals={goals}
+      initialKind="deposit"
+      accounts={accounts}
+      onSaved={onSaved}
+      onCancel={onCancel}
+    />
+  )
+}
+
 // Solo deja elegir fechas hasta hoy

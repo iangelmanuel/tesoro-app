@@ -6,6 +6,7 @@ import {
   SidebarHeader
 } from "@/components/dashboard/sidebar"
 import { SITE } from "@/config/site"
+import { flattenNav } from "./nav"
 
 // Anchos fijos: Math.random() no se permite al prerenderizar (cacheComponents)
 export function AppSidebarSkeleton() {
@@ -17,7 +18,7 @@ export function AppSidebarSkeleton() {
       </SidebarHeader>
       <SidebarContent>
         <ul className="flex flex-col gap-0.5">
-          {SITE.navigation.personal.map((item) => (
+          {flattenNav(SITE.navigation.personal).map((item) => (
             <li
               key={item.href}
               className="flex h-9 items-center gap-2.5 px-2.5"

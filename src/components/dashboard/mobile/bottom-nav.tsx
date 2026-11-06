@@ -8,8 +8,11 @@ import { Plus } from "lucide-react"
 import { SITE } from "@/config/site"
 import { BUDGETS_PATH, RECURRING_PATH } from "@/features/budgets/tabs"
 import { workspaceBasePath } from "@/features/workspaces/paths"
-import { NAV_ICONS, type NavIcon, isActive } from "../nav"
+import { NAV_ICONS, type NavIcon, flattenNav, isActive } from "../nav"
 import { useActiveWorkspace } from "../use-active-workspace"
+
+const PERSONAL_ITEMS = flattenNav(SITE.navigation.personal)
+const BUSINESS_ITEMS = flattenNav(SITE.navigation.business)
 
 interface Destination {
   name: string
@@ -40,9 +43,7 @@ export function BottomNav({ onOpenQuickSheet }: BottomNavProps) {
 
   const destinations: Destination[] = business
     ? SITE.navigation.mobile.business.map((segment) => {
-        const item = SITE.navigation.business.find(
-          (option) => option.segment === segment
-        )
+        const item = BUSINESS_ITEMS.find((option) => option.segment === segment)
         return {
           name: item?.name ?? "",
           href: `${root}${segment}`,
@@ -50,9 +51,7 @@ export function BottomNav({ onOpenQuickSheet }: BottomNavProps) {
         }
       })
     : SITE.navigation.mobile.personal.map((href) => {
-        const item = SITE.navigation.personal.find(
-          (option) => option.href === href
-        )
+        const item = PERSONAL_ITEMS.find((option) => option.href === href)
         return {
           name: item?.name ?? "",
           href,

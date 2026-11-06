@@ -21,7 +21,7 @@ import {
   BusinessSwitcher
 } from "@/features/business/components/business-switcher"
 import { workspaceBasePath } from "@/features/workspaces/paths"
-import { NAV_ICONS, type NavIcon, isActive } from "./nav"
+import { NAV_ICONS, type NavIcon, flattenNav, isActive } from "./nav"
 import { type DashboardUser, UserMenu } from "./user-menu"
 import { WorkspaceTabs } from "./workspace-tabs"
 
@@ -55,11 +55,11 @@ export function AppSidebar({ user, businesses }: AppSidebarProps) {
   let items: NavItem[] = []
   if (isPersonal) {
     root = SITE.routes.dashboardPersonal
-    items = [...SITE.navigation.personal]
+    items = flattenNav(SITE.navigation.personal)
   } else if (business) {
     const base = workspaceBasePath({ id: business.id, type: "business" })
     root = base
-    items = SITE.navigation.business.map((item) => ({
+    items = flattenNav(SITE.navigation.business).map((item) => ({
       name: item.name,
       href: `${base}${item.segment}`,
       icon: item.icon

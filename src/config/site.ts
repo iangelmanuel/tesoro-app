@@ -278,64 +278,104 @@ export const SITE = {
     ],
     cta: { label: "Crear cuenta", href: "/sign-up" },
     secondary: { label: "Iniciar sesión", href: "/sign-in" },
-    // `icon` es el nombre del ícono de lucide-react que pinta el aside
+    // Grupos del aside, en orden. `icon` es el nombre del ícono de
+    // lucide-react que pinta el aside. Los consumidores planos (barra
+    // inferior, título del header, landing) usan `flattenNav`
     personal: [
       {
-        name: "Resumen",
-        href: "/dashboard/personal",
-        icon: "LayoutDashboard"
+        label: "Día a día",
+        items: [
+          {
+            name: "Resumen",
+            href: "/dashboard/personal",
+            icon: "LayoutDashboard"
+          },
+          {
+            name: "Movimientos",
+            href: "/dashboard/personal/transactions",
+            icon: "ArrowLeftRight"
+          }
+        ]
       },
       {
-        name: "Movimientos",
-        href: "/dashboard/personal/transactions",
-        icon: "ArrowLeftRight"
+        label: "Tu plan",
+        items: [
+          {
+            name: "Cuentas",
+            href: "/dashboard/personal/accounts",
+            icon: "Wallet"
+          },
+          {
+            name: "Ingresos fijos",
+            href: "/dashboard/personal/recurring-income",
+            icon: "CalendarPlus"
+          },
+          {
+            name: "Gastos fijos",
+            href: "/dashboard/personal/recurring",
+            icon: "CalendarClock"
+          },
+          {
+            name: "Presupuestos",
+            href: "/dashboard/personal/budgets",
+            icon: "PiggyBank"
+          },
+          { name: "Metas", href: "/dashboard/personal/goals", icon: "Target" },
+          {
+            name: "Deudas",
+            href: "/dashboard/personal/debts",
+            icon: "CreditCard"
+          }
+        ]
       },
       {
-        name: "Cuentas",
-        href: "/dashboard/personal/accounts",
-        icon: "Wallet"
-      },
-      {
-        name: "Gastos fijos",
-        href: "/dashboard/personal/recurring",
-        icon: "CalendarClock"
-      },
-      {
-        name: "Ingresos fijos",
-        href: "/dashboard/personal/recurring-income",
-        icon: "CalendarPlus"
-      },
-      {
-        name: "Presupuestos",
-        href: "/dashboard/personal/budgets",
-        icon: "PiggyBank"
-      },
-      { name: "Metas", href: "/dashboard/personal/goals", icon: "Target" },
-      { name: "Deudas", href: "/dashboard/personal/debts", icon: "CreditCard" },
-      {
-        name: "Reportes",
-        href: "/dashboard/personal/reports",
-        icon: "ChartColumn"
-      },
-      {
-        name: "Recomendaciones",
-        href: "/dashboard/personal/recommendations",
-        icon: "Lightbulb"
+        label: "Entiende tu dinero",
+        items: [
+          {
+            name: "Reportes",
+            href: "/dashboard/personal/reports",
+            icon: "ChartColumn"
+          },
+          {
+            name: "Recomendaciones",
+            href: "/dashboard/personal/recommendations",
+            icon: "Lightbulb"
+          }
+        ]
       }
     ],
     // `segment` se agrega a /dashboard/business/[id]
     business: [
-      { name: "Resumen", segment: "", icon: "LayoutDashboard" },
-      { name: "Movimientos", segment: "/transactions", icon: "ArrowLeftRight" },
-      { name: "Cuentas", segment: "/accounts", icon: "Wallet" },
-      { name: "Flujo de caja", segment: "/cash-flow", icon: "Activity" },
-      { name: "Reportes", segment: "/reports", icon: "ChartColumn" },
       {
-        name: "Recomendaciones",
-        segment: "/recommendations",
-        icon: "Lightbulb"
+        label: "Día a día",
+        items: [
+          { name: "Resumen", segment: "", icon: "LayoutDashboard" },
+          {
+            name: "Movimientos",
+            segment: "/transactions",
+            icon: "ArrowLeftRight"
+          }
+        ]
       },
-      { name: "Ajustes", segment: "/settings", icon: "Settings" }
+      {
+        label: "Tu operación",
+        items: [
+          { name: "Cuentas", segment: "/accounts", icon: "Wallet" },
+          { name: "Ajustes", segment: "/settings", icon: "Settings" }
+        ]
+      },
+      {
+        label: "Entiende tu negocio",
+        items: [
+          { name: "Flujo de caja", segment: "/cash-flow", icon: "Activity" },
+          { name: "Reportes", segment: "/reports", icon: "ChartColumn" },
+          {
+            name: "Recomendaciones",
+            segment: "/recommendations",
+            icon: "Lightbulb"
+          }
+        ]
+      }
     ],
     // Destinos de la barra inferior del teléfono (4, a cada lado del botón
     // central). Se toman de los ítems de arriba: Personal por `href` y

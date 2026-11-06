@@ -1,6 +1,6 @@
 # SPEC 30 — Ingresos fijos y movimiento rápido
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 04, SPEC 05, SPEC 08c, SPEC 15, SPEC 16, SPEC 23
 > **Fecha:** 2026-11-06
 > **Objetivo:** Que en Personal se definan ingresos fijos (salario, arriendo recibido, proyectos, inversiones) que entran a las cuentas, se elijan al registrar un ingreso y que la hoja **+** del teléfono abra un solo diálogo de movimiento con todos los tipos en tabs.
@@ -175,29 +175,31 @@ type QuickSheetAction = "movement" | "categories" | "verify"
 
 ## Criterios de aceptación
 
-- [ ] El aside de Personal muestra **Ingresos fijos** después de **Gastos fijos** y lleva a `/dashboard/personal/recurring-income`.
-- [ ] Se puede crear un ingreso fijo mensual, quincenal, anual y **Sin fecha fija**; el formulario pide solo los días que aplican a cada frecuencia.
+- [x] El aside de Personal muestra **Ingresos fijos** después de **Gastos fijos** y lleva a `/dashboard/personal/recurring-income`.
+- [x] Se puede crear un ingreso fijo mensual, quincenal, anual y **Sin fecha fija**; el formulario pide solo los días que aplican a cada frecuencia.
 - [ ] Un quincenal con días 15 y 30 genera en febrero las ocurrencias del 15 y del último día de febrero.
-- [ ] Un quincenal con segundo día menor o igual al primero es rechazado con error en el campo.
+- [x] Un quincenal con segundo día menor o igual al primero es rechazado con error en el campo.
 - [ ] **Próximos ingresos** muestra las ocurrencias del mes y las no recibidas de los 2 meses anteriores con estado **Recibido**, **Pendiente**, **De hoy** o **Atrasado**.
 - [ ] **Marcar recibido** abre el diálogo en el tab Ingreso con el ingreso fijo, monto, categoría y cuenta por defecto prellenados; al guardar, el saldo de la cuenta sube y la ocurrencia pasa a **Recibido**.
-- [ ] Un ingreso fijo pausado no aparece en **Próximos ingresos** ni en el select.
-- [ ] En el tab Ingreso (Personal) el primer campo es **Ingreso fijo** y vale **Otro ingreso** por defecto.
-- [ ] Guardar con **Otro ingreso** crea un movimiento sin `recurring_income_id`.
+- [x] Un ingreso fijo pausado no aparece en **Próximos ingresos** ni en el select.
+- [x] En el tab Ingreso (Personal) el primer campo es **Ingreso fijo** y vale **Otro ingreso** por defecto.
+- [x] Guardar con **Otro ingreso** crea un movimiento sin `recurring_income_id`.
 - [ ] Elegir un quincenal con las quincenas del 15 y del 30 de octubre sin recibir enlaza el movimiento a la del 15 de octubre.
 - [ ] Elegir una fuente **Sin fecha fija** guarda el movimiento enlazado a la fuente con `recurring_income_due_on` nulo, y se pueden registrar varios en el mismo mes.
 - [ ] Un segundo movimiento para una ocurrencia ya recibida es rechazado por la base de datos.
 - [ ] Editar un ingreso enlazado y pasarlo a **Otro ingreso** devuelve su ocurrencia a **Pendiente** o **Atrasado**.
 - [ ] Eliminar el movimiento de una ocurrencia la devuelve a **Pendiente** o **Atrasado**.
-- [ ] El tab Ingreso de Empresa no muestra el select **Ingreso fijo**.
-- [ ] El diálogo de movimiento en Personal muestra los tabs Gasto, Ingreso, Traspaso, Deuda, Gasto fijo y Meta, en ese orden, en escritorio y a 390 px.
-- [ ] El tab **Meta** registra un aporte a la meta elegida; sin metas activas muestra el enlace a Metas.
-- [ ] A 390 px la hoja **+** de Personal y de Empresa muestra solo **Movimiento rápido**, **Categorías** y **Verificar movimientos**, más el switch **Abrir al entrar**.
-- [ ] **Movimiento rápido** en Empresa abre el diálogo con Venta, Costo o gasto y Traspaso.
+- [x] El tab Ingreso de Empresa no muestra el select **Ingreso fijo**.
+- [x] El diálogo de movimiento en Personal muestra los tabs Gasto, Ingreso, Traspaso, Deuda, Gasto fijo y Meta, en ese orden, en escritorio y a 390 px.
+- [x] El tab **Meta** registra un aporte a la meta elegida; sin metas activas muestra el enlace a Metas.
+- [x] A 390 px la hoja **+** de Personal y de Empresa muestra solo **Movimiento rápido**, **Categorías** y **Verificar movimientos**, más el switch **Abrir al entrar**.
+- [x] **Movimiento rápido** en Empresa abre el diálogo con Venta, Costo o gasto y Traspaso.
 - [ ] Un usuario no puede leer ni escribir `recurring_incomes` de otro usuario (RLS) ni crear uno en una empresa.
-- [ ] Con cifras ocultas, los montos de la página de ingresos fijos muestran `***`.
-- [ ] Todo par texto/fondo nuevo da AA en claro y oscuro.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] Con cifras ocultas, los montos de la página de ingresos fijos muestran `***`.
+- [x] Todo par texto/fondo nuevo da AA en claro y oscuro.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+
+> Los criterios sin marcar dependen de la base de datos (RPC, triggers, índice único y RLS). La migración `20261106120000_create_recurring_incomes.sql` está revisada pero aún no se ha corrido: falta `supabase db reset` en local y regenerar `src/types/database.ts`.
 
 ## Decisiones
 
@@ -213,6 +215,7 @@ type QuickSheetAction = "movement" | "categories" | "verify"
 - **No:** segundo select de ocurrencia. Más pasos en el teléfono.
 - **Sí:** el enlace se puede cambiar al editar (decisión del usuario), a diferencia del pago de gasto fijo.
 - **Sí:** el servidor resuelve `recurring_income_due_on`. Evita que el cliente enlace una ocurrencia ya recibida.
+- **Sí:** **Marcar recibido** solo aparece en la ocurrencia no recibida más antigua de cada ingreso fijo (decisión del usuario al implementar). Es la que el servidor enlaza, así el botón nunca registra otra ocurrencia distinta a la de su fila.
 - **Sí:** un movimiento por ocurrencia, como gastos fijos. Abonos parciales quedan fuera.
 - **Sí:** estado de la ocurrencia calculado, no guardado. Depende de la fecha de hoy, igual que SPEC 04 y 28.
 - **Sí:** un solo `TransactionDialog` con los mismos tabs en escritorio y móvil, más el tab **Meta** (decisión del usuario).

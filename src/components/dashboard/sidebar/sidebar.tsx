@@ -151,6 +151,7 @@ export function Sidebar({
           <SidebarResizeHandle
             width={currentWidth}
             onWidthChange={setCurrentWidth}
+            isResizing={isResizing}
             onResizingChange={setIsResizing}
           />
         )}
@@ -178,6 +179,8 @@ export function Sidebar({
 interface SidebarResizeHandleProps {
   /** Ancho actual de la columna (px) */
   width: number
+  /** La línea queda visible mientras se arrastra */
+  isResizing: boolean
   onWidthChange: (width: number) => void
   /** Mientras se arrastra, la columna quita su transición de ancho */
   onResizingChange: (isResizing: boolean) => void
@@ -188,6 +191,7 @@ interface SidebarResizeHandleProps {
  *  defecto; el ancho se guarda en la cookie al soltar */
 export function SidebarResizeHandle({
   width,
+  isResizing,
   onWidthChange,
   onResizingChange
 }: SidebarResizeHandleProps) {
@@ -215,9 +219,43 @@ export function SidebarResizeHandle({
     []
   )
 
+  // Teclado: cada tecla cambia el ancho y lo guarda
+  function resizeTo(next: number) {
+    const value = clampSidebarWidth(next)
+    onWidthChange(value)
+    saveSidebarWidth(value)
+  }
+
   return (
     <div
-      className="absolute inset-y-0 right-0 z-10 w-2 cursor-col-resize touch-none"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Cambiar el ancho del menú"
+      aria-controls={SIDEBAR_ID}
+      aria-valuemin={SIDEBAR_WIDTH.min}
+      aria-valuemax={SIDEBAR_WIDTH.max}
+      aria-valuenow={width}
+      tabIndex={0}
+      data-resizing={isResizing || undefined}
+      // Invisible en reposo; hover y arrastre muestran una línea fina con el
+      // color del foco y el foco de teclado, el anillo (3:1 en claro y oscuro)
+      className="absolute inset-y-0 right-0 z-10 w-2 cursor-col-resize touch-none outline-none after:absolute after:inset-y-0 after:right-0 after:w-0.5 after:bg-transparent after:transition-colors after:duration-150 hover:after:bg-focus focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-inset data-resizing:after:bg-focus motion-reduce:after:transition-none"
+      onKeyDown={(event) => {
+        const { min, max, step } = SIDEBAR_WIDTH
+        const next =
+          event.key === "ArrowLeft"
+            ? width - step
+            : event.key === "ArrowRight"
+              ? width + step
+              : event.key === "Home"
+                ? min
+                : event.key === "End"
+                  ? max
+                  : null
+        if (next === null) return
+        event.preventDefault()
+        resizeTo(next)
+      }}
       onPointerDown={(event) => {
         if (event.button !== 0) return
         event.preventDefault()
@@ -240,10 +278,7 @@ export function SidebarResizeHandle({
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
       onLostPointerCapture={endDrag}
-      onDoubleClick={() => {
-        onWidthChange(SIDEBAR_WIDTH.default)
-        saveSidebarWidth(SIDEBAR_WIDTH.default)
-      }}
+      onDoubleClick={() => resizeTo(SIDEBAR_WIDTH.default)}
     />
   )
 }

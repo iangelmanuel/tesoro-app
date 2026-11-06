@@ -700,6 +700,82 @@ export type Database = {
           }
         ]
       }
+      recurring_incomes: {
+        Row: {
+          account_id: string | null
+          amount: number
+          category_id: string
+          created_at: string
+          day_of_month: number | null
+          ends_on: string | null
+          frequency: Database["public"]["Enums"]["income_frequency"]
+          id: string
+          is_active: boolean
+          month_of_year: number | null
+          name: string
+          second_day_of_month: number | null
+          starts_on: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          amount: number
+          category_id: string
+          created_at?: string
+          day_of_month?: number | null
+          ends_on?: string | null
+          frequency: Database["public"]["Enums"]["income_frequency"]
+          id?: string
+          is_active?: boolean
+          month_of_year?: number | null
+          name: string
+          second_day_of_month?: number | null
+          starts_on: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          account_id?: string | null
+          amount?: number
+          category_id?: string
+          created_at?: string
+          day_of_month?: number | null
+          ends_on?: string | null
+          frequency?: Database["public"]["Enums"]["income_frequency"]
+          id?: string
+          is_active?: boolean
+          month_of_year?: number | null
+          name?: string
+          second_day_of_month?: number | null
+          starts_on?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_incomes_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_incomes_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_incomes_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       savings_goals: {
         Row: {
           color: string
@@ -767,6 +843,8 @@ export type Database = {
           occurred_time: string | null
           recurring_due_on: string | null
           recurring_expense_id: string | null
+          recurring_income_due_on: string | null
+          recurring_income_id: string | null
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at: string
           workspace_id: string
@@ -787,6 +865,8 @@ export type Database = {
           occurred_time?: string | null
           recurring_due_on?: string | null
           recurring_expense_id?: string | null
+          recurring_income_due_on?: string | null
+          recurring_income_id?: string | null
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
           workspace_id: string
@@ -807,6 +887,8 @@ export type Database = {
           occurred_time?: string | null
           recurring_due_on?: string | null
           recurring_expense_id?: string | null
+          recurring_income_due_on?: string | null
+          recurring_income_id?: string | null
           type?: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
           workspace_id?: string
@@ -838,6 +920,13 @@ export type Database = {
             columns: ["recurring_expense_id"]
             isOneToOne: false
             referencedRelation: "recurring_expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_recurring_income_id_fkey"
+            columns: ["recurring_income_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_incomes"
             referencedColumns: ["id"]
           },
           {
@@ -1199,6 +1288,18 @@ export type Database = {
         }
         Returns: string
       }
+      is_recurring_income_due_date: {
+        Args: {
+          p_date: string
+          p_day_of_month: number
+          p_ends_on: string
+          p_frequency: Database["public"]["Enums"]["income_frequency"]
+          p_month_of_year: number
+          p_second_day_of_month: number
+          p_starts_on: string
+        }
+        Returns: boolean
+      }
       is_workspace_owner: { Args: { p_workspace_id: string }; Returns: boolean }
       is_workspace_writable: {
         Args: { p_workspace_id: string }
@@ -1285,6 +1386,19 @@ export type Database = {
         }
         Returns: string
       }
+      recurring_income_occurrences: {
+        Args: { p_from: string; p_to: string; p_workspace_id: string }
+        Returns: {
+          account_id: string
+          amount: number
+          category_id: string
+          due_on: string
+          name: string
+          received_amount: number
+          recurring_income_id: string
+          transaction_id: string
+        }[]
+      }
       recurring_occurrences: {
         Args: { p_from: string; p_to: string; p_workspace_id: string }
         Returns: {
@@ -1363,6 +1477,7 @@ export type Database = {
       debt_kind: "credit_card" | "loan" | "receivable"
       debt_status: "active" | "paid" | "archived"
       goal_status: "active" | "completed" | "archived"
+      income_frequency: "monthly" | "biweekly" | "yearly" | "none"
       import_status: "completed" | "undone"
       import_target:
         | "transactions"
@@ -1503,6 +1618,7 @@ export const Constants = {
       debt_kind: ["credit_card", "loan", "receivable"],
       debt_status: ["active", "paid", "archived"],
       goal_status: ["active", "completed", "archived"],
+      income_frequency: ["monthly", "biweekly", "yearly", "none"],
       import_status: ["completed", "undone"],
       import_target: [
         "transactions",

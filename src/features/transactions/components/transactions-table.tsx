@@ -31,6 +31,7 @@ import { deleteEntry } from "@/features/debts/actions"
 import { PaymentDialog } from "@/features/debts/components/payment-dialog"
 import { deleteContribution } from "@/features/goals/actions"
 import { ContributionDialog } from "@/features/goals/components/contribution-dialog"
+import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
 import type { WorkspaceType } from "@/features/workspaces/queries"
 import { formatCurrency, formatDate, formatTime } from "@/libs/format"
 import { deleteTransaction, moveLedgerEntry } from "../actions"
@@ -52,6 +53,8 @@ interface TransactionsTableProps {
   currency: string
   /** Muestra ↑/↓ para reordenar dentro del día: con permiso de escritura y sin búsqueda */
   canReorder?: boolean
+  /** Ingresos fijos activos para el select del tab Ingreso (solo Personal) */
+  incomeSources?: IncomeSourceOption[]
 }
 
 // En móvil la tabla se muestra completa y se desliza en horizontal: fecha,
@@ -168,7 +171,8 @@ export function TransactionsTable({
   categories,
   accounts,
   currency,
-  canReorder = false
+  canReorder = false,
+  incomeSources
 }: TransactionsTableProps) {
   // La fila se mueve al instante; si la action falla, vuelve a su lugar
   const [orderedRows, moveOptimistic] = useOptimistic(rows, reorderRows)
@@ -422,6 +426,7 @@ export function TransactionsTable({
                                 categories={categories}
                                 accounts={accounts}
                                 transaction={transaction}
+                                incomeSources={incomeSources}
                                 open={dialog.open}
                                 onOpenChange={dialog.onOpenChange}
                               />

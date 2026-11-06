@@ -35,6 +35,8 @@ export type EditableTransaction = Pick<
   | "counterparty"
   | "invoice_ref"
   | "recurring_expense_id"
+  | "recurring_income_id"
+  | "recurring_income_due_on"
 >
 
 /**
@@ -238,6 +240,8 @@ export async function getTransactions(
 /** Enlaces de un movimiento que la vista ledger_entries no trae */
 interface TransactionLinks {
   recurringExpenseId: string | null
+  recurringIncomeId: string | null
+  recurringIncomeDueOn: string | null
   debtEntry: LinkedDebtEntry | null
 }
 
@@ -252,7 +256,7 @@ async function getTransactionLinks(ids: string[]) {
   const { data, error } = await supabase
     .from("transactions")
     .select(
-      "id, recurring_expense_id, debt_entries(id, debt_id, workspace_id, kind, amount, occurred_on, occurred_time, note, transaction_id, is_extra_payment, debts(kind))"
+      "id, recurring_expense_id, recurring_income_id, recurring_income_due_on, debt_entries(id, debt_id, workspace_id, kind, amount, occurred_on, occurred_time, note, transaction_id, is_extra_payment, debts(kind))"
     )
     .in("id", ids)
 
@@ -264,6 +268,8 @@ async function getTransactionLinks(ids: string[]) {
     const entry = link.debt_entries
     links.set(link.id, {
       recurringExpenseId: link.recurring_expense_id,
+      recurringIncomeId: link.recurring_income_id,
+      recurringIncomeDueOn: link.recurring_income_due_on,
       debtEntry: entry
         ? {
             id: entry.id,
@@ -404,7 +410,9 @@ function toLedgerEntry(
       account_id: row.account_id,
       counterparty: row.counterparty,
       invoice_ref: row.invoice_ref,
-      recurring_expense_id: link?.recurringExpenseId ?? null
+      recurring_expense_id: link?.recurringExpenseId ?? null,
+      recurring_income_id: link?.recurringIncomeId ?? null,
+      recurring_income_due_on: link?.recurringIncomeDueOn ?? null
     }
   }
 }

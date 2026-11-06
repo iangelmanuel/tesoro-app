@@ -13,7 +13,11 @@ export const HELP = {
   maintenanceFee:
     "Lo que el banco le suma cada mes al saldo de tu tarjeta. Tesoro lo registra solo el día de cobro y no toca tus cuentas: lo pagas dentro del pago de la tarjeta.",
   reconciliation:
-    "Compara el saldo que ves en tu banco o billetera con el que calcula Tesoro en esa fecha y crea un ajuste por la diferencia. Con una fecha pasada, el saldo de hoy también cambia por los movimientos posteriores."
+    "Compara el saldo que ves en tu banco o billetera con el que calcula Tesoro en esa fecha y crea un ajuste por la diferencia. Con una fecha pasada, el saldo de hoy también cambia por los movimientos posteriores.",
+  upcomingIncomes:
+    "Lo que esperas recibir este mes, más lo que no te llegó en los dos meses anteriores. Atrasado quiere decir que ya pasó el día de pago y no has registrado el ingreso.",
+  noFixedDate:
+    "Para proyectos o inversiones que pagan cuando pagan. No tienen fechas ni estados: Tesoro suma lo que registras con ellos en el mes y en el año."
 } as const
 
 export type HelpKey = keyof typeof HELP
@@ -25,5 +29,7 @@ export const HELP_LABELS: Record<HelpKey, string> = {
   savingsRate: "la tasa de ahorro",
   accumulatedBalance: "el balance acumulado",
   maintenanceFee: "la cuota de manejo",
-  reconciliation: "la conciliación"
+  reconciliation: "la conciliación",
+  upcomingIncomes: "los próximos ingresos",
+  noFixedDate: "los ingresos sin fecha fija"
 }

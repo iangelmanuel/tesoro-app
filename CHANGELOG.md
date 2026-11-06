@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Recurring incomes and quick movement (SPEC 30).
+  - New **Ingresos fijos** page (`/dashboard/personal/recurring-income`, right after **Gastos fijos** in the aside) to define salary, rent received, projects or investments with an expected amount, income category, optional default account and a frequency: monthly, biweekly (two configurable days, 15 and 30 by default), yearly or **Sin fecha fija**. Days missing from a month fall on its last day.
+  - **Próximos ingresos** lists this month's occurrences plus unreceived ones from the 2 previous months with **Recibido**, **Pendiente**, **De hoy** or **Atrasado** status. **Marcar recibido** (on the oldest unreceived occurrence of each source) opens the movement dialog on Ingreso, prefilled and linked. **Sin fecha fija** sources show what was received this month and year. Amounts respect hidden figures.
+  - The Personal Ingreso tab starts with an **Ingreso fijo** select (**Otro ingreso** by default). Picking a source prefills amount, category and account (only untouched fields) and the server links the income to its oldest unreceived occurrence, or to the source alone when there is none or it has no schedule. Editing from Movimientos keeps, changes or removes the link.
+  - The movement dialog gets a **Meta** tab (goal contributions and withdrawals) and the tab order becomes Gasto, Ingreso, Traspaso, Deuda, Gasto fijo, Meta in Personal and Venta, Costo o gasto, Traspaso in Business. The active tab scrolls into view on narrow phones.
+  - The phone **+** sheet now has just **Movimiento rápido** (the same dialog as the desktop **+**, all tabs, Gasto by default), **Categorías** and **Verificar movimientos** in both workspaces. The loose actions and `PayOccurrenceDialog` were removed, and the tour steps about the **+** button now mention **Movimiento rápido**.
+  - Migration `create_recurring_incomes`: `income_frequency` enum, `recurring_incomes` table with RLS and grants, `transactions.recurring_income_id` / `recurring_income_due_on` with a unique index per occurrence, the `check_recurring_income` and `check_transaction_recurring_income` triggers, `is_recurring_income_due_date` and the `recurring_income_occurrences` RPC.
+
 - Partial payments and installment history for monthly receivables (SPEC 29).
   - An installment accepts several collections. It is **Pagada** once they add up to its value; with less it shows **Abonada**, how much was collected, what is missing and an **Abonar** button prefilled with the remainder. Past-due partial installments count in the overdue badge.
   - Open-ended monthly receivables keep the installment value over time in `receivable_installment_history` ("until this month it was worth X"). Editing the monthly amount stores the previous value through last month, so past months are not left short.

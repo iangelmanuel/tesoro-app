@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useActionState, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import {
   Button,
@@ -35,11 +35,19 @@ import {
   DebtPaymentPanel
 } from "@/features/debts/components/payment-dialog"
 import {
+  GoalContributionPanel,
+  type GoalOption
+} from "@/features/goals/components/contribution-dialog"
+import { GOALS_PATH } from "@/features/goals/progress"
+import {
   OccurrenceSelect,
   paymentKey,
   selectedPayment
 } from "@/features/recurring-expenses/components/occurrence-select"
 import type { UpcomingPayment } from "@/features/recurring-expenses/queries"
+import { IncomeSourceField } from "@/features/recurring-incomes/components/income-source-field"
+import { OTHER_INCOME } from "@/features/recurring-incomes/constants"
+import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
 import type { WorkspaceType } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
 import { createTransaction, updateTransaction } from "../actions"
@@ -75,6 +83,10 @@ export interface TransactionInitialValues {
   category_id?: string
   occurred_on?: string
   description?: string
+  /** Cuenta prellenada (la cuenta por defecto de un ingreso fijo) */
+  account_id?: string | null
+  /** Ingreso fijo elegido en el select (Marcar recibido) */
+  recurring_income_id?: string
 }
 
 /** Ocurrencia de gasto fijo que paga el movimiento nuevo */
@@ -104,6 +116,12 @@ interface TransactionDialogProps {
    * deudas activas y ocurrencias sin pagar. Los pasa el botón del header
    */
   paymentTabs?: PaymentTabsData
+  /**
+   * Ingresos fijos activos para el select "Ingreso fijo" del tab Ingreso
+   * (solo Personal). Sin ellos no hay select y, al editar, el enlace se
+   * conserva
+   */
+  incomeSources?: IncomeSourceOption[]
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
   trigger?: React.ReactNode
   open?: boolean
@@ -119,6 +137,7 @@ export function TransactionDialog({
   initialValues,
   recurring,
   paymentTabs,
+  incomeSources,
   trigger,
   open: controlledOpen,
   onOpenChange
@@ -146,7 +165,7 @@ export function TransactionDialog({
       <Modal.Backdrop>
         <Modal.Container scroll="outside">
           <Modal.Dialog
-            // Con 5 tabs el diálogo se ensancha un poco para que quepan
+            // Con 6 tabs el diálogo se ensancha un poco para que quepan
             className={showPaymentTabs ? "sm:max-w-lg" : "sm:max-w-md"}
           >
             <Modal.CloseTrigger />
@@ -177,6 +196,11 @@ export function TransactionDialog({
                 initialValues={isEditing ? undefined : initialValues}
                 recurring={isEditing ? undefined : recurring}
                 paymentTabs={showPaymentTabs ? paymentTabs : undefined}
+                incomeSources={
+                  workspaceType === "personal" && !isPayment
+                    ? (incomeSources ?? paymentTabs?.incomeSources)
+                    : undefined
+                }
                 onSaved={() => setOpen(false)}
                 onCancel={() => setOpen(false)}
               />
@@ -194,10 +218,14 @@ export interface PaymentTabsData {
   debts: DebtOption[]
   /** Ocurrencias de gastos fijos sin pagar, vencidas primero */
   pendingPayments: UpcomingPayment[]
+  /** Metas activas (tab "Meta") */
+  goals: GoalOption[]
+  /** Ingresos fijos activos (select "Ingreso fijo" del tab Ingreso) */
+  incomeSources: IncomeSourceOption[]
 }
 
 /** Opciones del selector que no son un tipo de movimiento */
-type FormPanel = "transfer" | "debt_payment" | "recurring"
+type FormPanel = "transfer" | "debt_payment" | "recurring" | "goal"
 
 interface TransactionFormProps {
   workspaceId: string
@@ -208,6 +236,7 @@ interface TransactionFormProps {
   initialValues?: TransactionInitialValues
   recurring?: RecurringOccurrenceLink
   paymentTabs?: PaymentTabsData
+  incomeSources?: IncomeSourceOption[]
   /** Sin selector de tipo (el pago de gasto fijo dentro de su tab) */
   hideTypeToggle?: boolean
   onSaved: () => void
@@ -223,6 +252,7 @@ function TransactionForm({
   initialValues,
   recurring,
   paymentTabs,
+  incomeSources,
   hideTypeToggle = false,
   onSaved,
   onCancel
@@ -255,13 +285,28 @@ function TransactionForm({
   const [time, setTime] = useState(
     () => transaction?.occurred_time?.slice(0, 5) ?? ""
   )
-  const [accountId, setAccountId] = useState(transaction?.account_id ?? "")
+  const [accountId, setAccountId] = useState(
+    transaction?.account_id ?? initialValues?.account_id ?? ""
+  )
   const [amountText, setAmountText] = useState(() =>
     transaction
       ? AMOUNT_FORMAT.format(transaction.amount)
       : initialValues?.amount !== undefined
         ? AMOUNT_FORMAT.format(initialValues.amount)
         : ""
+  )
+  // Select "Ingreso fijo" (SPEC 30): al elegir uno se prellenan monto,
+  // categoría y cuenta, solo si el usuario no los cambió. `prefilled` guarda
+  // lo último que se prellenó para saber si el campo sigue intacto
+  const [incomeSourceId, setIncomeSourceId] = useState(
+    transaction?.recurring_income_id ??
+      initialValues?.recurring_income_id ??
+      OTHER_INCOME
+  )
+  const [prefilled, setPrefilled] = useState(() =>
+    initialValues?.recurring_income_id
+      ? { amount: amountText, category: categoryId, account: accountId }
+      : { amount: "", category: "", account: "" }
   )
   // Un movimiento nuevo y suelto también puede ser un traspaso entre dos
   // cuentas propias (se guarda en transfers y no cuenta como ingreso ni
@@ -306,7 +351,8 @@ function TransactionForm({
     if (
       value === "transfer" ||
       value === "debt_payment" ||
-      value === "recurring"
+      value === "recurring" ||
+      value === "goal"
     ) {
       setPanel(value)
       return
@@ -317,14 +363,78 @@ function TransactionForm({
     setCategoryId("")
   }
 
+  function handleIncomeSourceChange(value: string) {
+    setIncomeSourceId(value)
+    const source = incomeSources?.find((option) => option.id === value)
+    if (!source) return
+
+    const category = categories.find(
+      (option) =>
+        option.id === source.category_id &&
+        option.type === "income" &&
+        option.archived_at === null
+    )
+    const account = selectableAccounts(accounts).find(
+      (option) => option.id === source.account_id
+    )
+    const next = {
+      amount: AMOUNT_FORMAT.format(source.amount),
+      category: category?.id ?? "",
+      account: account?.id ?? ""
+    }
+
+    if (amountText === "" || amountText === prefilled.amount) {
+      setAmountText(next.amount)
+    }
+    if (categoryId === "" || categoryId === prefilled.category) {
+      setCategoryId(next.category)
+    }
+    if (accountId === "" || accountId === prefilled.account) {
+      setAccountId(next.account)
+    }
+    setPrefilled(next)
+  }
+
+  // En un teléfono angosto los tabs se desplazan: el activo se lleva a la
+  // vista al cambiar de tab
+  const tabsRef = useRef<HTMLDivElement>(null)
+  const activeTab = panel ?? type
+  useEffect(() => {
+    tabsRef.current
+      ?.querySelector<HTMLElement>('[data-selected="true"]')
+      ?.scrollIntoView({ block: "nearest", inline: "nearest" })
+  }, [activeTab])
+
   const errors = state.fieldErrors
   const values = state.values
+  const showIncomeSource =
+    !isBusiness && type === "income" && incomeSources !== undefined
   const showTransfer = !isEditing && type === "expense" && !isBusiness
 
+  const expenseTab = (
+    <ToggleButton
+      id="expense"
+      className="flex-1 whitespace-nowrap"
+    >
+      {copy.expense}
+    </ToggleButton>
+  )
+  const incomeTab = (
+    <ToggleButton
+      id="income"
+      className="flex-1 whitespace-nowrap"
+    >
+      {copy.income}
+    </ToggleButton>
+  )
+
+  // Orden de los tabs (SPEC 30). Personal: Gasto, Ingreso, Traspaso, Deuda,
+  // Gasto fijo y Meta. Empresa: Venta, Costo o gasto y Traspaso
   const typeToggle = hideTypeToggle ? null : (
-    // Con los tabs de pago son 5 opciones. Desde sm caben en el diálogo; en
+    // Con los tabs de pago son 6 opciones. Desde sm caben en el diálogo; en
     // un teléfono angosto se desplazan en horizontal, sin barra visible
     <div
+      ref={tabsRef}
       className={cn(
         paymentTabs &&
           "-mx-1 [scrollbar-width:none] overflow-x-auto px-1 [&::-webkit-scrollbar]:hidden"
@@ -340,18 +450,8 @@ function TransactionForm({
         aria-label="Tipo de movimiento"
         className={cn(paymentTabs && "w-max min-w-full")}
       >
-        <ToggleButton
-          id="expense"
-          className="flex-1 whitespace-nowrap"
-        >
-          {copy.expense}
-        </ToggleButton>
-        <ToggleButton
-          id="income"
-          className="flex-1 whitespace-nowrap"
-        >
-          {copy.income}
-        </ToggleButton>
+        {isBusiness ? incomeTab : expenseTab}
+        {isBusiness ? expenseTab : incomeTab}
         {canTransfer && (
           <ToggleButton
             id="transfer"
@@ -374,6 +474,14 @@ function TransactionForm({
             className="flex-1 whitespace-nowrap"
           >
             Gasto fijo
+          </ToggleButton>
+        )}
+        {paymentTabs && (
+          <ToggleButton
+            id="goal"
+            className="flex-1 whitespace-nowrap"
+          >
+            Meta
           </ToggleButton>
         )}
       </ToggleButtonGroup>
@@ -414,6 +522,30 @@ function TransactionForm({
             text="No tienes tarjetas ni préstamos activos."
             href={DEBTS_PATH}
             action="Ir a Deudas"
+            onNavigate={onCancel}
+          />
+        )}
+      </div>
+    )
+  }
+
+  if (panel === "goal" && paymentTabs) {
+    return (
+      <div className="flex flex-col gap-4">
+        {typeToggle}
+        {paymentTabs.goals.length > 0 ? (
+          <GoalContributionPanel
+            workspaceId={workspaceId}
+            goals={paymentTabs.goals}
+            accounts={accounts}
+            onSaved={onSaved}
+            onCancel={onCancel}
+          />
+        ) : (
+          <PanelEmpty
+            text="No tienes metas activas."
+            href={GOALS_PATH}
+            action="Ir a Metas"
             onNavigate={onCancel}
           />
         )}
@@ -485,6 +617,23 @@ function TransactionForm({
       )}
 
       {typeToggle}
+
+      {/* En Ingreso es el primer campo: prellena los siguientes */}
+      {showIncomeSource && (
+        <IncomeSourceField
+          sources={incomeSources}
+          value={incomeSourceId}
+          onChange={handleIncomeSourceChange}
+          current={
+            transaction?.recurring_income_id
+              ? {
+                  id: transaction.recurring_income_id,
+                  dueOn: transaction.recurring_income_due_on
+                }
+              : null
+          }
+        />
+      )}
 
       <TextField
         name="amount"
@@ -729,7 +878,7 @@ function PanelEmpty({
   onNavigate
 }: {
   text: string
-  href: typeof DEBTS_PATH | typeof RECURRING_PATH
+  href: typeof DEBTS_PATH | typeof RECURRING_PATH | typeof GOALS_PATH
   action: string
   /** Cierra el diálogo: el header no se desmonta al navegar */
   onNavigate: () => void

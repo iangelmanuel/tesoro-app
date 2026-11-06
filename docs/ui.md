@@ -294,14 +294,20 @@ Reglas:
   separador. Ambos componentes son solo controlados (`open` /
   `onOpenChange`); no pintan botón propio.
 - **Tabs de pago** (`transaction-dialog.tsx`): el diálogo que abre
-  "Registrar movimiento" en Personal tiene **Gasto · Ingreso · Traspaso ·
-  Deuda · Gasto fijo** (prop `paymentTabs`). Deuda (pagos y avances) usa
+  "Registrar movimiento" en Personal (y **Movimiento rápido** en el
+  teléfono) tiene **Gasto · Ingreso · Traspaso · Deuda · Gasto fijo · Meta**
+  (prop `paymentTabs`, SPEC 30). En Empresa: **Venta · Costo o gasto ·
+  Traspaso**. Meta usa `GoalContributionPanel` (el formulario de
+  `ContributionDialog`) y, sin metas activas, `PanelEmpty` con enlace a
+  Metas. El tab activo se lleva a la vista con `scrollIntoView`. El tab
+  Ingreso de Personal empieza con `IncomeSourceField` (select "Ingreso
+  fijo", `src/features/recurring-incomes/components/`). Deuda (pagos y avances) usa
   `DebtPaymentPanel` (el formulario de `PaymentDialog`) y Gasto fijo elige la
   ocurrencia (`OccurrenceSelect`) y muestra el formulario de movimiento
   enlazado. No aparecen en Empresa, al editar ni al pagar una ocurrencia
   concreta. Con los tabs, el diálogo sube a `max-w-lg` y el selector se
   desplaza en horizontal en anchos chicos, sin barra visible. Aporte a meta
-  sigue en Más.
+  sigue también en Más.
 - **Modales anidados:** la entrada de HeroUI escala el contenedor desde
   1.05; `globals.css` pone `overflow-x: hidden` en `.modal__backdrop` para
   que esa animación no abra un scroll horizontal ni haga saltar el diálogo.
@@ -391,17 +397,20 @@ Formularios a pantalla completa y gráficas angostas siguen pendientes.
 
 Piezas en `src/components/dashboard/mobile/`:
 
-| Pieza                          | Qué hace                                                                                                                                                    |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `quick-sheet.tsx`              | Hoja inferior (`Drawer` con asa). Personal: Gasto, Ingreso, Aporte a meta, Pago de deuda o tarjeta, Marcar gasto fijo pagado. Empresa: Venta, Costo o gasto |
-| `use-quick-sheet-auto-open.ts` | Estado de la hoja y su apertura automática                                                                                                                  |
-| `bottom-nav.tsx`               | Barra inferior: 4 destinos, [+] al centro (abre la hoja)                                                                                                    |
-| `mobile-shell.tsx`             | Une la hoja, la barra y el hook con el mismo estado de apertura                                                                                             |
+| Pieza                          | Qué hace                                                                                                                                   |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `quick-sheet.tsx`              | Hoja inferior (`Drawer` con asa), igual en Personal y Empresa: **Movimiento rápido**, **Categorías** y **Verificar movimientos** (SPEC 30) |
+| `use-quick-sheet-auto-open.ts` | Estado de la hoja y su apertura automática                                                                                                 |
+| `bottom-nav.tsx`               | Barra inferior: 4 destinos, [+] al centro (abre la hoja)                                                                                   |
+| `mobile-shell.tsx`             | Une la hoja, la barra y el hook con el mismo estado de apertura                                                                            |
 
 - **Hoja:** se cierra deslizando el asa, tocando el fondo, con "Cerrar" o con
   Escape. Cada acción cierra la hoja y abre su diálogo sin cambiar de página.
-  Sin metas, deudas o gastos fijos pendientes, la acción lleva a la página
-  donde se crean. Solo existe en rutas de un espacio. Los datos salen de
+  **Movimiento rápido** abre `TransactionDialog` con todos los tabs del
+  espacio, en Gasto por defecto: el mismo diálogo que el **+** del
+  escritorio. Las acciones sueltas de antes (Gasto, Ingreso, Aporte a meta,
+  Pago de deuda, Marcar gasto fijo pagado, Venta y Costo o gasto) se quitaron.
+  Solo existe en rutas de un espacio. Los datos salen de
   `QuickActionsProvider`, la misma carga del header.
 - **Apertura automática:** se abre sola en cada carga completa de una ruta de
   espacio y al volver visible la pestaña tras 5 minutos o más oculta. Navegar

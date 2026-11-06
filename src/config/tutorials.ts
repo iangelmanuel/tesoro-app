@@ -108,7 +108,7 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
       target: "header-quick-add",
       title: "Registra un movimiento",
       description:
-        "Ingresos, gastos, traspasos, pagos de deudas y gastos fijos. Todo empieza aquí.",
+        "Gastos, ingresos, traspasos, pagos de deudas, gastos fijos y aportes a metas. Todo empieza aquí.",
       viewport: "desktop"
     },
     {
@@ -134,7 +134,7 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
       target: "aside-sections",
       title: "Secciones",
       description:
-        "Movimientos, cuentas, gastos fijos, presupuestos, metas, deudas, reportes y recomendaciones.",
+        "Movimientos, cuentas, gastos e ingresos fijos, presupuestos, metas, deudas, reportes y recomendaciones.",
       viewport: "desktop"
     },
     {
@@ -148,7 +148,7 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
       target: "mobile-quick-add",
       title: "Registra en un toque",
       description:
-        "El botón + abre las acciones rápidas: movimientos, traspasos, aportes y pagos.",
+        "El botón + abre Movimiento rápido: gastos, ingresos, traspasos, pagos, gastos fijos y aportes a metas en un solo diálogo.",
       viewport: "mobile"
     },
     {
@@ -182,7 +182,7 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
       target: "mobile-quick-add",
       title: "Registra o traspasa",
       description:
-        "El botón + registra ingresos y gastos. Para mover plata entre tus cuentas, elige Traspaso en el mismo diálogo.",
+        "El botón + abre Movimiento rápido para registrar ingresos y gastos. Para mover plata entre tus cuentas, elige Traspaso en el mismo diálogo.",
       viewport: "mobile"
     },
     {
@@ -300,7 +300,7 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
       target: "mobile-quick-add",
       title: "Mueve plata entre cuentas",
       description:
-        "Para pasar plata de una cuenta a otra, registra un Traspaso desde el botón +.",
+        "Para pasar plata de una cuenta a otra, toca el botón +, abre Movimiento rápido y elige Traspaso.",
       viewport: "mobile"
     }
   ],

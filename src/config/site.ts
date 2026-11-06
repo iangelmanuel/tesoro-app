@@ -116,6 +116,7 @@ export const SITE = {
     dashboard: "/dashboard",
     dashboardPersonal: "/dashboard/personal",
     personalRecurring: "/dashboard/personal/recurring",
+    personalRecurringIncome: "/dashboard/personal/recurring-income",
     dashboardBusiness: "/dashboard/business",
     authCallback: "/auth/callback",
     account: "/dashboard/account",
@@ -298,6 +299,11 @@ export const SITE = {
         name: "Gastos fijos",
         href: "/dashboard/personal/recurring",
         icon: "CalendarClock"
+      },
+      {
+        name: "Ingresos fijos",
+        href: "/dashboard/personal/recurring-income",
+        icon: "CalendarPlus"
       },
       {
         name: "Presupuestos",

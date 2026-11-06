@@ -210,13 +210,14 @@ export function SidebarResizeHandle({
   }
 
   // Si se desmonta a mitad de arrastre (atajo para cerrar), el body no queda
-  // sin selección de texto
+  // sin selección de texto y la columna recupera su transición
   useEffect(
     () => () => {
       document.body.style.removeProperty("user-select")
       document.body.style.removeProperty("cursor")
+      onResizingChange(false)
     },
-    []
+    [onResizingChange]
   )
 
   // Teclado: cada tecla cambia el ancho y lo guarda

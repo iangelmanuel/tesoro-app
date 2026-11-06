@@ -1,6 +1,6 @@
 # SPEC 31 — Aside agrupado y ancho ajustable
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 01, SPEC 20, SPEC 27, SPEC 30
 > **Fecha:** 2026-11-06
 > **Objetivo:** Que el aside del dashboard agrupe sus secciones en "Día a día", "Tu plan" y "Entiende tu dinero" (con variante en Empresa) y que en escritorio su ancho se ajuste arrastrando el borde entre 240 y 360 px.
@@ -90,7 +90,11 @@ export type NavIcon =
   | (typeof SITE.navigation.business)[number]["items"][number]["icon"]
 
 /** Lista plana para la barra inferior, el título del header y la landing */
-export function flattenNav<T>(groups: readonly { items: readonly T[] }[]): T[]
+// Genérico sobre el grupo: con tuplas `as const`, uno sobre el ítem infiere
+// T solo del primer grupo y rechaza los demás
+export function flattenNav<G extends { readonly items: readonly unknown[] }>(
+  groups: readonly G[]
+): G["items"][number][]
 ```
 
 ```ts
@@ -104,6 +108,10 @@ export const SIDEBAR_WIDTH = {
 export const SIDEBAR_WIDTH_COOKIE = "tesoro-sidebar-width"
 /** Valor de cookie → px dentro del rango; inválido → default */
 export function parseSidebarWidth(value: string | undefined): number
+/** Ancho → rango y entero */
+export function clampSidebarWidth(width: number): number
+/** Escribe la cookie (solo cliente) */
+export function saveSidebarWidth(width: number): void
 ```
 
 - `Sidebar` recibe `width` (px) y lo aplica con la variable CSS `--sidebar-width` en el contenedor y en el panel interno (hoy `w-64`). Cerrado sigue en `w-0`.
@@ -123,24 +131,24 @@ export function parseSidebarWidth(value: string | undefined): number
 
 ## Criterios de aceptación
 
-- [ ] El aside de Personal muestra los títulos **Día a día**, **Tu plan** y **Entiende tu dinero**, en ese orden, cada uno con exactamente sus ítems del alcance.
-- [ ] En **Tu plan**, **Ingresos fijos** aparece antes de **Gastos fijos**.
-- [ ] El aside de una empresa muestra **Día a día** (Resumen, Movimientos), **Tu operación** (Cuentas, Ajustes) y **Entiende tu negocio** (Flujo de caja, Reportes, Recomendaciones).
-- [ ] Entre grupos no hay líneas ni bordes.
-- [ ] Un lector de pantalla anuncia el título del grupo al entrar en su lista.
-- [ ] El ítem activo se marca igual que hoy en las tres agrupaciones; el Resumen solo con coincidencia exacta.
-- [ ] El skeleton del aside muestra tres bloques con título.
-- [ ] A 390 px el Drawer muestra los grupos y no tiene agarradera; la barra inferior tiene los mismos cuatro destinos que antes.
-- [ ] En escritorio, arrastrar el borde derecho cambia el ancho y no baja de 240 px ni pasa de 360 px.
-- [ ] Doble clic en la agarradera deja el aside en 256 px.
-- [ ] Con foco en la agarradera, `→` suma 16 px, `←` resta 16 px, `Home` lleva a 240 px y `End` a 360 px.
-- [ ] La agarradera expone `role="separator"` y `aria-valuenow` con el ancho actual.
-- [ ] Tras recargar la página, el aside sale con el último ancho elegido sin salto visible después de cargar.
-- [ ] Con la cookie `tesoro-sidebar-width=9999` o `=abc`, el aside sale en 360 px o 256 px respectivamente sin errores.
-- [ ] Cerrar el aside (`SidebarTrigger` o atajo) y volver a abrirlo recupera el ancho elegido.
-- [ ] El paso `aside-sections` del tour describe los tres grupos.
-- [ ] El foco de la agarradera da 3:1 y los títulos de grupo dan 4.5:1, en claro y oscuro.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] El aside de Personal muestra los títulos **Día a día**, **Tu plan** y **Entiende tu dinero**, en ese orden, cada uno con exactamente sus ítems del alcance.
+- [x] En **Tu plan**, **Ingresos fijos** aparece antes de **Gastos fijos**.
+- [x] El aside de una empresa muestra **Día a día** (Resumen, Movimientos), **Tu operación** (Cuentas, Ajustes) y **Entiende tu negocio** (Flujo de caja, Reportes, Recomendaciones).
+- [x] Entre grupos no hay líneas ni bordes.
+- [x] Un lector de pantalla anuncia el título del grupo al entrar en su lista.
+- [x] El ítem activo se marca igual que hoy en las tres agrupaciones; el Resumen solo con coincidencia exacta.
+- [x] El skeleton del aside muestra tres bloques con título.
+- [x] A 390 px el Drawer muestra los grupos y no tiene agarradera; la barra inferior tiene los mismos cuatro destinos que antes.
+- [x] En escritorio, arrastrar el borde derecho cambia el ancho y no baja de 240 px ni pasa de 360 px.
+- [x] Doble clic en la agarradera deja el aside en 256 px.
+- [x] Con foco en la agarradera, `→` suma 16 px, `←` resta 16 px, `Home` lleva a 240 px y `End` a 360 px.
+- [x] La agarradera expone `role="separator"` y `aria-valuenow` con el ancho actual.
+- [x] Tras recargar la página, el aside sale con el último ancho elegido sin salto visible después de cargar.
+- [x] Con la cookie `tesoro-sidebar-width=9999` o `=abc`, el aside sale en 360 px o 256 px respectivamente sin errores.
+- [x] Cerrar el aside (`SidebarTrigger` o atajo) y volver a abrirlo recupera el ancho elegido.
+- [x] El paso `aside-sections` del tour describe los tres grupos.
+- [x] El foco de la agarradera da 3:1 y los títulos de grupo dan 4.5:1, en claro y oscuro.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
 
 ## Decisiones
 

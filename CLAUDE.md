@@ -158,6 +158,12 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   ponen `data-workspace` y `globals.css` lo aplica con `:has()`. Neutro fuera
   del dashboard, emerald en Personal, naranja en Empresa. Nunca se pasa el
   color por props; `data-workspace` solo aparece en esos dos archivos.
+- **Aside** (SPEC 31): `SITE.navigation.personal` / `.business` son grupos
+  (`{ label, items }`): "Día a día", "Tu plan" / "Tu operación" (donde se
+  configura) y "Entiende tu dinero" / "Entiende tu negocio". Los
+  consumidores planos usan `flattenNav` (`nav.ts`). En escritorio el ancho se
+  ajusta (240–360 px) y se guarda en la cookie `tesoro-sidebar-width`
+  (`sidebar/width.ts`). Ver `docs/ui.md`.
 - **Móvil (`< 768 px`)**: hoja de acciones rápidas (**Movimiento rápido**,
   Categorías y Verificar) y barra inferior
   (`src/components/dashboard/mobile/`) en vez del aside; el selector Personal /

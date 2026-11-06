@@ -87,6 +87,8 @@ OKLCH → sRGB). Mínimos: 4.5:1 texto, 3:1 gráficos y foco.
 | `accent-foreground` / `accent-hover` E.   | 6.68  | 6.68   |
 | `focus` / `background` Personal           | 4.81  | 8.71   |
 | `focus` / `background` Empresa            | 4.68  | 8.28   |
+| `focus` / `background` neutro             | 15.87 | 19.36  |
+| `muted` / `background` (títulos aside)    | 5.37  | 8.15   |
 | botón `danger` (blanco / relleno)         | 4.88  | 4.83   |
 | `text-brand` / `background`               | 5.06  | 11.74  |
 | `accent-soft-fg` / `accent-soft` Personal | 7.11  | 9.31   |
@@ -169,7 +171,7 @@ estos solo agregan lo que HeroUI no trae.
 
 | Pieza                                                                      | Qué hace                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app-sidebar.tsx`, `sidebar/`                                              | Aside: logo → tabs Personal/Empresa → navegación; abajo Ayuda (issues de GitHub), tema y usuario                                                                                                                                                                                                                                                                                                                             |
+| `app-sidebar.tsx`, `sidebar/`                                              | Aside: logo → tabs Personal/Empresa → navegación por grupos y ancho ajustable (SPEC 31); abajo Ayuda (issues de GitHub), tema y usuario                                                                                                                                                                                                                                                                                      |
 | `dashboard-title.tsx`                                                      | Único `<h1>` de la página, en el header. Saludo según la hora de Bogotá en el Resumen de Personal                                                                                                                                                                                                                                                                                                                            |
 | `quick-actions.tsx`, `quick-actions-menu.tsx`, `quick-actions-context.tsx` | Accesos del header: "Registrar movimiento" (con tabs de pago, SPEC 25) + "Más" (aporte, pago, importar, Categorías y Verificar) en Personal; "Registrar operación" + "Más" (Categorías y Verificar) en Empresa                                                                                                                                                                                                               |
 | `stat-card.tsx`                                                            | KPI: etiqueta, valor y badge de variación con color por significado (`trend`); `<dl>` accesible                                                                                                                                                                                                                                                                                                                              |
@@ -374,6 +376,41 @@ Reglas:
 - El popover se monta en `<body>`, fuera del contenedor del espacio:
   `run-tour.ts` le copia `--accent`, `--accent-foreground` y `--focus` desde
   `#contenido`.
+
+### Aside agrupado y ancho ajustable (SPEC 31)
+
+`SITE.navigation.personal` y `.business` son grupos (`{ label, items }`) en
+orden. El aside pinta cada grupo con su `SidebarGroupLabel` y una `<ul>` con
+`aria-labelledby` (ids de `useId`), dentro de
+`<nav aria-label="Secciones del espacio" data-tour="aside-sections">`. Entre
+grupos solo hay espacio (`gap-4`), sin líneas ni bordes. Barra inferior,
+título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
+
+| Espacio  | Grupos                                                                                                                                                                       |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Personal | **Día a día** (Resumen, Movimientos) · **Tu plan** (Cuentas, Ingresos fijos, Gastos fijos, Presupuestos, Metas, Deudas) · **Entiende tu dinero** (Reportes, Recomendaciones) |
+| Empresa  | **Día a día** (Resumen, Movimientos) · **Tu operación** (Cuentas, Ajustes) · **Entiende tu negocio** (Flujo de caja, Reportes, Recomendaciones)                              |
+
+- **Tu plan** / **Tu operación** es donde se define lo que Tesoro usa para
+  calcular; los otros dos grupos son para consultar. Una sección nueva entra
+  en el grupo que corresponda según ese criterio.
+- Con una sola empresa, su nombre va arriba de los grupos. El skeleton pinta
+  un bloque por grupo de Personal (título + 2, 6 y 2 filas).
+- **Ancho (solo escritorio, `≥ 768 px`):** `SidebarResizeHandle`, en el
+  borde derecho de la columna abierta. Rango y paso en
+  `sidebar/width.ts` (`SIDEBAR_WIDTH`: 240–360 px, 256 por defecto, 16 por
+  tecla). Arrastrar cambia el ancho en vivo (sin transición de `width`,
+  `setPointerCapture` y `user-select: none` en el body); doble clic vuelve a
+  256; `←` / `→` restan o suman 16, `Home` / `End` van al mínimo y al máximo.
+  Es `role="separator"` con `aria-valuenow`. Invisible en reposo; hover y
+  arrastre muestran una línea de 2 px `bg-focus`, el foco un anillo
+  `ring-focus` (≥ 3:1).
+- **Persistencia:** cookie `tesoro-sidebar-width` (`saveSidebarWidth`: px
+  enteros, `path=/`, un año, `SameSite=Lax`), escrita al soltar y tras cada
+  tecla. `DashboardSidebar` la lee con `cookies()` y `parseSidebarWidth`
+  (ausente o no numérica → 256, fuera de rango → al límite), así el primer
+  render sale con el ancho correcto. Cerrar el aside no pierde el ancho. El
+  Drawer móvil sigue en `w-72`, sin agarradera.
 
 ## Dónde vive cada pantalla
 

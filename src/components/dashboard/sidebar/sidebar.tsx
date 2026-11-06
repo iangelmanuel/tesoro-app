@@ -213,10 +213,14 @@ export function SidebarFooter({
 }
 
 export function SidebarGroupLabel({
+  id,
   children
-}: Readonly<{ children: React.ReactNode }>) {
+}: Readonly<{ id?: string; children: React.ReactNode }>) {
   return (
-    <div className="flex h-8 items-center px-2 text-xs font-medium text-muted">
+    <div
+      id={id}
+      className="flex h-8 items-center px-2 text-xs font-medium text-muted"
+    >
       {children}
     </div>
   )

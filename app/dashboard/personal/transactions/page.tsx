@@ -5,6 +5,7 @@ import { es } from "date-fns/locale"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { getCategories } from "@/features/categories/queries"
+import { getIncomeSources } from "@/features/recurring-incomes/queries"
 import {
   NoFilteredTransactions,
   NoTransactions
@@ -68,20 +69,27 @@ async function TransactionsContent({
   // new Date() solo se permite después de connection()
   const filters = parseTransactionFilters(query)
   const isAllMonths = filters.month === "all"
-  const [categories, accounts, { rows, count }, totals, previousTotals] =
-    await Promise.all([
-      getCategories(workspace.id),
-      getAccountBalances(workspace.id),
-      getTransactions(workspace.id, filters),
-      getTransactionTotals(workspace.id, filters),
-      // Mismos filtros en el mes anterior, para el badge de las KPI
-      isAllMonths
-        ? null
-        : getTransactionTotals(workspace.id, {
-            ...filters,
-            month: shiftMonth(filters.month, -1)
-          })
-    ])
+  const [
+    categories,
+    accounts,
+    { rows, count },
+    totals,
+    previousTotals,
+    incomeSources
+  ] = await Promise.all([
+    getCategories(workspace.id),
+    getAccountBalances(workspace.id),
+    getTransactions(workspace.id, filters),
+    getTransactionTotals(workspace.id, filters),
+    // Mismos filtros en el mes anterior, para el badge de las KPI
+    isAllMonths
+      ? null
+      : getTransactionTotals(workspace.id, {
+          ...filters,
+          month: shiftMonth(filters.month, -1)
+        }),
+    getIncomeSources(workspace.id)
+  ])
   const previous =
     previousTotals && (previousTotals.income || previousTotals.expense)
       ? previousTotals
@@ -100,6 +108,7 @@ async function TransactionsContent({
         workspaceId={workspace.id}
         categories={categories}
         accounts={accounts}
+        incomeSources={incomeSources}
       />
     )
   }
@@ -135,6 +144,7 @@ async function TransactionsContent({
           accounts={accounts}
           currency={workspace.currency}
           canReorder={!filters.q}
+          incomeSources={incomeSources}
         />
       ) : (
         <NoFilteredTransactions filters={filters} />

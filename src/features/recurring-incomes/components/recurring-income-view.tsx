@@ -10,9 +10,11 @@ import { getCategories } from "@/features/categories/queries"
 import type { PersonalWorkspace } from "@/features/workspaces/queries"
 import {
   type RecurringIncome,
+  getIncomeSources,
   getRecurringIncomes,
   getUpcomingIncomes
 } from "../queries"
+import { ReceiveIncomeButton } from "./receive-income-button"
 import { RecurringIncomeDialog } from "./recurring-income-dialog"
 import { RecurringIncomesList } from "./recurring-incomes-list"
 import { UpcomingIncomes } from "./upcoming-incomes"
@@ -23,11 +25,12 @@ export async function RecurringIncomeView({
 }: {
   workspace: PersonalWorkspace
 }) {
-  const [categories, incomes, upcoming, accounts] = await Promise.all([
+  const [categories, incomes, upcoming, accounts, sources] = await Promise.all([
     getCategories(workspace.id),
     getRecurringIncomes(workspace.id),
     getUpcomingIncomes(workspace.id),
-    getAccountBalances(workspace.id)
+    getAccountBalances(workspace.id),
+    getIncomeSources(workspace.id)
   ])
 
   const createButton = (
@@ -63,6 +66,17 @@ export async function RecurringIncomeView({
     (income) => income.frequency === "none" && income.is_active
   )
   const isUpToDate = upcoming.every((income) => income.transactionId !== null)
+  // "Marcar recibido" solo en la ocurrencia no recibida más antigua de cada
+  // ingreso fijo: es la que el servidor enlaza al guardar. La lista viene en
+  // orden de vencimiento
+  const receivable = new Set<string>()
+  const seen = new Set<string>()
+  for (const income of upcoming) {
+    if (income.transactionId === null && !seen.has(income.recurringIncomeId)) {
+      seen.add(income.recurringIncomeId)
+      receivable.add(`${income.recurringIncomeId}-${income.dueOn}`)
+    }
+  }
 
   return (
     <>
@@ -86,6 +100,19 @@ export async function RecurringIncomeView({
               <UpcomingIncomes
                 incomes={upcoming}
                 currency={workspace.currency}
+                renderAction={(income) =>
+                  receivable.has(
+                    `${income.recurringIncomeId}-${income.dueOn}`
+                  ) ? (
+                    <ReceiveIncomeButton
+                      workspaceId={workspace.id}
+                      income={income}
+                      categories={categories}
+                      accounts={accounts}
+                      incomeSources={sources}
+                    />
+                  ) : null
+                }
               />
             )}
           </CardContent>

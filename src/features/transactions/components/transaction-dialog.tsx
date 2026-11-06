@@ -40,6 +40,9 @@ import {
   selectedPayment
 } from "@/features/recurring-expenses/components/occurrence-select"
 import type { UpcomingPayment } from "@/features/recurring-expenses/queries"
+import { IncomeSourceField } from "@/features/recurring-incomes/components/income-source-field"
+import { OTHER_INCOME } from "@/features/recurring-incomes/constants"
+import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
 import type { WorkspaceType } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
 import { createTransaction, updateTransaction } from "../actions"
@@ -75,6 +78,10 @@ export interface TransactionInitialValues {
   category_id?: string
   occurred_on?: string
   description?: string
+  /** Cuenta prellenada (la cuenta por defecto de un ingreso fijo) */
+  account_id?: string | null
+  /** Ingreso fijo elegido en el select (Marcar recibido) */
+  recurring_income_id?: string
 }
 
 /** Ocurrencia de gasto fijo que paga el movimiento nuevo */
@@ -104,6 +111,12 @@ interface TransactionDialogProps {
    * deudas activas y ocurrencias sin pagar. Los pasa el botón del header
    */
   paymentTabs?: PaymentTabsData
+  /**
+   * Ingresos fijos activos para el select "Ingreso fijo" del tab Ingreso
+   * (solo Personal). Sin ellos no hay select y, al editar, el enlace se
+   * conserva
+   */
+  incomeSources?: IncomeSourceOption[]
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
   trigger?: React.ReactNode
   open?: boolean
@@ -119,6 +132,7 @@ export function TransactionDialog({
   initialValues,
   recurring,
   paymentTabs,
+  incomeSources,
   trigger,
   open: controlledOpen,
   onOpenChange
@@ -177,6 +191,11 @@ export function TransactionDialog({
                 initialValues={isEditing ? undefined : initialValues}
                 recurring={isEditing ? undefined : recurring}
                 paymentTabs={showPaymentTabs ? paymentTabs : undefined}
+                incomeSources={
+                  workspaceType === "personal" && !isPayment
+                    ? incomeSources
+                    : undefined
+                }
                 onSaved={() => setOpen(false)}
                 onCancel={() => setOpen(false)}
               />
@@ -208,6 +227,7 @@ interface TransactionFormProps {
   initialValues?: TransactionInitialValues
   recurring?: RecurringOccurrenceLink
   paymentTabs?: PaymentTabsData
+  incomeSources?: IncomeSourceOption[]
   /** Sin selector de tipo (el pago de gasto fijo dentro de su tab) */
   hideTypeToggle?: boolean
   onSaved: () => void
@@ -223,6 +243,7 @@ function TransactionForm({
   initialValues,
   recurring,
   paymentTabs,
+  incomeSources,
   hideTypeToggle = false,
   onSaved,
   onCancel
@@ -255,13 +276,28 @@ function TransactionForm({
   const [time, setTime] = useState(
     () => transaction?.occurred_time?.slice(0, 5) ?? ""
   )
-  const [accountId, setAccountId] = useState(transaction?.account_id ?? "")
+  const [accountId, setAccountId] = useState(
+    transaction?.account_id ?? initialValues?.account_id ?? ""
+  )
   const [amountText, setAmountText] = useState(() =>
     transaction
       ? AMOUNT_FORMAT.format(transaction.amount)
       : initialValues?.amount !== undefined
         ? AMOUNT_FORMAT.format(initialValues.amount)
         : ""
+  )
+  // Select "Ingreso fijo" (SPEC 30): al elegir uno se prellenan monto,
+  // categoría y cuenta, solo si el usuario no los cambió. `prefilled` guarda
+  // lo último que se prellenó para saber si el campo sigue intacto
+  const [incomeSourceId, setIncomeSourceId] = useState(
+    transaction?.recurring_income_id ??
+      initialValues?.recurring_income_id ??
+      OTHER_INCOME
+  )
+  const [prefilled, setPrefilled] = useState(() =>
+    initialValues?.recurring_income_id
+      ? { amount: amountText, category: categoryId, account: accountId }
+      : { amount: "", category: "", account: "" }
   )
   // Un movimiento nuevo y suelto también puede ser un traspaso entre dos
   // cuentas propias (se guarda en transfers y no cuenta como ingreso ni
@@ -317,8 +353,42 @@ function TransactionForm({
     setCategoryId("")
   }
 
+  function handleIncomeSourceChange(value: string) {
+    setIncomeSourceId(value)
+    const source = incomeSources?.find((option) => option.id === value)
+    if (!source) return
+
+    const category = categories.find(
+      (option) =>
+        option.id === source.category_id &&
+        option.type === "income" &&
+        option.archived_at === null
+    )
+    const account = selectableAccounts(accounts).find(
+      (option) => option.id === source.account_id
+    )
+    const next = {
+      amount: AMOUNT_FORMAT.format(source.amount),
+      category: category?.id ?? "",
+      account: account?.id ?? ""
+    }
+
+    if (amountText === "" || amountText === prefilled.amount) {
+      setAmountText(next.amount)
+    }
+    if (categoryId === "" || categoryId === prefilled.category) {
+      setCategoryId(next.category)
+    }
+    if (accountId === "" || accountId === prefilled.account) {
+      setAccountId(next.account)
+    }
+    setPrefilled(next)
+  }
+
   const errors = state.fieldErrors
   const values = state.values
+  const showIncomeSource =
+    !isBusiness && type === "income" && incomeSources !== undefined
   const showTransfer = !isEditing && type === "expense" && !isBusiness
 
   const typeToggle = hideTypeToggle ? null : (
@@ -485,6 +555,23 @@ function TransactionForm({
       )}
 
       {typeToggle}
+
+      {/* En Ingreso es el primer campo: prellena los siguientes */}
+      {showIncomeSource && (
+        <IncomeSourceField
+          sources={incomeSources}
+          value={incomeSourceId}
+          onChange={handleIncomeSourceChange}
+          current={
+            transaction?.recurring_income_id
+              ? {
+                  id: transaction.recurring_income_id,
+                  dueOn: transaction.recurring_income_due_on
+                }
+              : null
+          }
+        />
+      )}
 
       <TextField
         name="amount"

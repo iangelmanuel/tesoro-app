@@ -6,6 +6,7 @@ import { isActiveDebt } from "@/features/debts/calculations"
 import { getDebts } from "@/features/debts/queries"
 import { getGoals } from "@/features/goals/queries"
 import { getUpcomingPayments } from "@/features/recurring-expenses/queries"
+import { getIncomeSources } from "@/features/recurring-incomes/queries"
 import {
   getBusinessWorkspaces,
   getPersonalWorkspace
@@ -19,8 +20,8 @@ import {
 import { QuickActionsMenu } from "./quick-actions-menu"
 
 // Lee la sesión: va dentro de un Suspense por cacheComponents. El layout no
-// conoce la ruta en el servidor, así que carga Personal (con sus metas y
-// deudas activas) y las empresas que aceptan escrituras; el componente
+// conoce la ruta en el servidor, así que carga Personal (con sus metas,
+// deudas e ingresos fijos activos) y las empresas que aceptan escrituras; el componente
 // client elige el espacio activo por la ruta.
 async function QuickActionsLoader() {
   const [personal, businesses] = await Promise.all([
@@ -42,20 +43,23 @@ async function QuickActionsLoader() {
       }))
   ]
 
-  const [workspaces, goals, debts, payments] = await Promise.all([
-    Promise.all(
-      targets.map(async (workspace): Promise<QuickActionsWorkspace> => {
-        const [categories, accounts] = await Promise.all([
-          getCategories(workspace.id),
-          getAccountBalances(workspace.id)
-        ])
-        return { ...workspace, categories, accounts }
-      })
-    ),
-    getGoals(personal.id),
-    getDebts(personal.id),
-    getUpcomingPayments(personal.id)
-  ])
+  const [workspaces, goals, debts, payments, incomeSources] = await Promise.all(
+    [
+      Promise.all(
+        targets.map(async (workspace): Promise<QuickActionsWorkspace> => {
+          const [categories, accounts] = await Promise.all([
+            getCategories(workspace.id),
+            getAccountBalances(workspace.id)
+          ])
+          return { ...workspace, categories, accounts }
+        })
+      ),
+      getGoals(personal.id),
+      getDebts(personal.id),
+      getUpcomingPayments(personal.id),
+      getIncomeSources(personal.id)
+    ]
+  )
 
   const data: QuickActionsData = {
     workspaces,
@@ -68,7 +72,8 @@ async function QuickActionsLoader() {
     // Ocurrencias sin pagar: las vencidas quedan primero (orden de vencimiento)
     pendingPayments: payments.filter(
       (payment) => payment.transactionId === null
-    )
+    ),
+    incomeSources
   }
 
   return (

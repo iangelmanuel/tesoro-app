@@ -34,6 +34,7 @@ import {
   type DebtOption,
   DebtPaymentPanel
 } from "@/features/debts/components/payment-dialog"
+import type { GoalOption } from "@/features/goals/components/contribution-dialog"
 import {
   OccurrenceSelect,
   paymentKey,
@@ -193,7 +194,7 @@ export function TransactionDialog({
                 paymentTabs={showPaymentTabs ? paymentTabs : undefined}
                 incomeSources={
                   workspaceType === "personal" && !isPayment
-                    ? incomeSources
+                    ? (incomeSources ?? paymentTabs?.incomeSources)
                     : undefined
                 }
                 onSaved={() => setOpen(false)}
@@ -213,6 +214,10 @@ export interface PaymentTabsData {
   debts: DebtOption[]
   /** Ocurrencias de gastos fijos sin pagar, vencidas primero */
   pendingPayments: UpcomingPayment[]
+  /** Metas activas (tab "Meta") */
+  goals: GoalOption[]
+  /** Ingresos fijos activos (select "Ingreso fijo" del tab Ingreso) */
+  incomeSources: IncomeSourceOption[]
 }
 
 /** Opciones del selector que no son un tipo de movimiento */

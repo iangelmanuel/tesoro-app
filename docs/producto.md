@@ -37,7 +37,7 @@ Las rutas viven en `SITE.routes` y la navegación de los espacios en
 `SITE.navigation.personal` y `SITE.navigation.business` (este con `segment`,
 que se agrega a `/dashboard/business/[id]`). `robots.ts` bloquea `/dashboard/`, `/api/` y
 `/auth/`, y `proxy.ts` exige sesión en `/dashboard/*`. Los slugs van en inglés
-(`/transactions`, `/recurring`, `/budgets`, `/goals`, `/debts`,
+(`/transactions`, `/recurring`, `/recurring-income`, `/budgets`, `/goals`, `/debts`,
 `/reports`, `/recommendations`); la UI, en español. Cada empresa vive en
 `/dashboard/business/[id]/...`, para que la URL refleje el espacio activo.
 
@@ -203,6 +203,7 @@ usuario tiene RLS.
 | `transfers`                 | Traspasos entre cuentas propias: `from_account_id`, `to_account_id` (distintas), `amount` > 0, `occurred_on`, `note`                                                                                                                     | `select`, `insert`, `update`, `delete`                    |
 | `account_adjustments`       | Ajustes de saldo de "Actualizar saldo": `account_id`, `amount` ≠ 0 (> 0 sube el saldo), `occurred_on`, `note`                                                                                                                            | `select`, `insert`, `update`, `delete`                    |
 | `recurring_expenses`        | Gastos fijos: `name`, `amount`, `category_id`, `frequency`, día y mes de pago, vigencia, `is_active`                                                                                                                                     | `select`, `insert`, `update`, `delete`                    |
+| `recurring_incomes`         | Ingresos fijos (SPEC 30, solo Personal): `name`, `amount`, `category_id`, `account_id` opcional, `frequency`, días y mes de pago, vigencia, `is_active`                                                                                  | `select`, `insert`, `update`, `delete`                    |
 | `budgets`                   | Presupuesto por categoría de gasto y mes (`month` = primer día), único por categoría y mes                                                                                                                                               | `select`, `insert`, `update`, `delete`                    |
 | `savings_goals`             | Metas de ahorro: `name`, `target_amount`, `target_date` opcional, `icon`, `color`, `status`                                                                                                                                              | `select`, `insert`, `update`                              |
 | `goal_contributions`        | Aportes (`amount` > 0) y retiros (`amount` < 0) de una meta, con `occurred_on` y `note`                                                                                                                                                  | `select`, `insert`, `update`, `delete`                    |
@@ -349,10 +350,14 @@ de gráficas, presupuestos, metas, deudas y score.
 - Se crean y editan en un diálogo, y se eliminan con confirmación. Al editar se
   puede cambiar el tipo; eso limpia la categoría.
 - El botón "Registrar movimiento" del header abre el mismo diálogo desde
-  cualquier página del espacio. En Personal, al registrar, el diálogo tiene
-  además los tabs **Deuda** (pagos y avances) y **Gasto fijo** (SPEC 25): registran lo
-  mismo que la hoja de acciones rápidas del teléfono. Aporte a meta sigue en
-  el menú Más.
+  cualquier página del espacio, y **Movimiento rápido** de la hoja **+** del
+  teléfono abre el mismo (SPEC 30). En Personal, al registrar, los tabs son
+  **Gasto**, **Ingreso**, **Traspaso**, **Deuda** (pagos y avances),
+  **Gasto fijo** y **Meta** (aportes y retiros), en ese orden. En Empresa:
+  **Venta**, **Costo o gasto** y **Traspaso**. Traspaso solo aparece con dos
+  cuentas o más. El tab Ingreso de Personal empieza con el select
+  [Ingreso fijo](#select-ingreso-fijo). Aporte a meta sigue también en el
+  menú Más.
 - El menú **Más** del header, en Personal y Empresa, abre **Categorías** y
   **Verificar movimientos** desde cualquier página, aunque el espacio aún no
   tenga movimientos.
@@ -681,6 +686,99 @@ Estado de una ocurrencia (fechas en `America/Bogota`):
   fecha de vencimiento, sea un gasto y enlace un gasto fijo del mismo espacio.
 - Las RPC son `security invoker` y solo las ejecuta `authenticated`. Con un
   espacio ajeno devuelven vacío.
+
+## Ingresos fijos (SPEC 30)
+
+Página `/dashboard/personal/recurring-income`, en el aside justo después de
+Gastos fijos (ícono `CalendarPlus`). Solo existe en Personal: Empresa ya
+tiene Ventas.
+
+- Un ingreso fijo es algo que entra a tus cuentas de forma repetida: salario,
+  arriendo recibido, un proyecto o una inversión.
+- Campos: nombre (1 a 60 caracteres), monto esperado (mismas reglas que
+  movimientos), categoría de ingreso activa, cuenta por defecto opcional,
+  frecuencia, días de pago según la frecuencia, fecha de inicio y fecha de fin
+  opcional (≥ inicio).
+- Se pueden pausar y reanudar. Uno pausado no aparece en **Próximos
+  ingresos** ni en el select **Ingreso fijo**.
+- Al eliminarlo, sus ingresos se conservan en Movimientos con el enlace en
+  `null`. Si se borra la cuenta por defecto, queda en `null`.
+
+| Frecuencia | Días que pide                          | Vencimiento                                    |
+| ---------- | -------------------------------------- | ---------------------------------------------- |
+| `monthly`  | `day_of_month`                         | ese día de cada mes                            |
+| `biweekly` | `day_of_month` y `second_day_of_month` | los dos días de cada mes (por defecto 15 y 30) |
+| `yearly`   | `day_of_month` y `month_of_year`       | ese día y mes de cada año                      |
+| `none`     | ninguno                                | sin ocurrencias (proyectos, inversiones)       |
+
+- El segundo día de un quincenal debe ser mayor que el primero.
+- Un día que no existe en el mes cae en el último día (30 → 28 o 29 de
+  febrero; 31 → 30 de abril). Si los dos días caen en la misma fecha, cuenta
+  una sola ocurrencia.
+- Las ocurrencias no se guardan: las calcula la RPC
+  `recurring_income_occurrences(workspace, from, to)` (solo activos y con
+  calendario), con el ingreso recibido si existe. También devuelve las
+  ocurrencias recibidas cuya fecha ya no calza con el calendario actual
+  (cambió la frecuencia o los días): siguen saliendo como **Recibido**.
+
+Estado de una ocurrencia (fechas en `America/Bogota`):
+
+| Estado    | Condición                    | Tono    |
+| --------- | ---------------------------- | ------- |
+| Recibido  | tiene ingreso enlazado       | success |
+| Atrasado  | sin recibir y `due_on < hoy` | danger  |
+| De hoy    | sin recibir y `due_on = hoy` | warning |
+| Pendiente | sin recibir y `due_on > hoy` | neutro  |
+
+- **Próximos ingresos** muestra todas las ocurrencias del mes actual y las no
+  recibidas de los 2 meses anteriores, en orden de vencimiento.
+- **Marcar recibido** aparece solo en la ocurrencia no recibida más antigua
+  de cada ingreso fijo (es la que el servidor enlaza). Abre el diálogo de
+  movimiento en el tab Ingreso con el ingreso fijo, el monto esperado, la
+  categoría, la cuenta por defecto, la fecha de vencimiento y el nombre como
+  descripción. Todo es editable.
+- **Sin fecha fija** lista las fuentes `none` con lo recibido en el mes y en
+  el año, sin estados.
+- Con cifras ocultas, los montos de la página muestran `***`.
+
+### Select "Ingreso fijo"
+
+- Es el primer campo del tab Ingreso del diálogo de movimiento, solo en
+  Personal. Vale **Otro ingreso** por defecto (sin enlace, como antes) y
+  lista los ingresos fijos activos.
+- Al elegir uno se prellenan monto esperado, categoría y cuenta por defecto,
+  solo en los campos vacíos o que aún tienen el valor prellenado antes.
+- El enlace lo resuelve el servidor (`resolveIncomeLink`); el cliente no
+  envía la fecha:
+  - con calendario, a la ocurrencia no recibida más antigua dentro de la
+    ventana de Próximos ingresos (atrasadas primero). Bajo el select se
+    anticipa: "Quincena del 15 nov", "Mes de noviembre" o "Año 2026";
+  - sin ocurrencias no recibidas, o `none`, a la fuente con
+    `recurring_income_due_on` en `null` (se pueden registrar varios).
+- Un índice único impide recibir dos veces la misma ocurrencia. Si dos
+  ingresos la toman a la vez, la action reintenta una vez con la siguiente no
+  recibida o responde "Este ingreso ya está registrado".
+- **Editar** desde Movimientos: sin cambiar el select se conserva el enlace
+  aunque cambien monto, fecha o cuenta; otro ingreso fijo re-enlaza a su
+  ocurrencia no recibida más antigua; **Otro ingreso** quita el enlace y la
+  ocurrencia vuelve a Pendiente o Atrasado. Pasar el movimiento a gasto
+  también quita el enlace. Borrar el movimiento devuelve la ocurrencia a su
+  estado calculado.
+- Los ingresos enlazados cuentan como cualquier ingreso: no cambian score,
+  presupuestos ni reportes.
+
+### Seguridad
+
+- RLS en `recurring_incomes`: `select` con `is_workspace_owner`;
+  `insert`, `update` y `delete` con `is_workspace_writable`.
+- `check_recurring_income` exige espacio Personal, categoría de ingreso del
+  sistema o del mismo espacio y cuenta del mismo espacio.
+- `check_transaction_recurring_income` exige que el ingreso enlazado sea de
+  tipo `income` y del mismo espacio, y que `recurring_income_due_on` sea
+  `null` en fuentes `none` y una fecha de vencimiento real en las demás
+  (`is_recurring_income_due_date`). Si el enlace no cambia al editar, no
+  revalida la fecha. Un movimiento no puede enlazar a la vez un gasto fijo y
+  un ingreso fijo.
 
 ## Metas de ahorro
 

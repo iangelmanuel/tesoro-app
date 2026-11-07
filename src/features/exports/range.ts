@@ -105,6 +105,21 @@ export function monthLabel(month: string) {
   return `${MONTH_NAMES[monthNumber - 1]} ${year}`
 }
 
+const GENERATED_FORMAT = new Intl.DateTimeFormat("es-CO", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC"
+})
+
+/** "6 nov 2026" desde YYYY-MM-DD. Lo usan el Excel y el PDF */
+export function formatGenerated(today: string) {
+  const [year, month, day] = today.split("-").map(Number)
+  return GENERATED_FORMAT.format(new Date(Date.UTC(year, month - 1, day)))
+    .replace(/\./g, "")
+    .replace(/ de /g, " ")
+}
+
 const MAX_SLUG_LENGTH = 40
 
 /** Minúsculas, sin tildes, palabras con guiones y máximo 40 caracteres */

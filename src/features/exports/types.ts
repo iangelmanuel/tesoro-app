@@ -1,4 +1,4 @@
-export const EXPORT_FORMATS = ["xlsx", "csv"] as const
+export const EXPORT_FORMATS = ["xlsx", "csv", "pdf"] as const
 export type ExportFormat = (typeof EXPORT_FORMATS)[number]
 
 /** Meses que puede cubrir un archivo, contando el primero y el último */

@@ -1,22 +1,29 @@
 import type { NextRequest } from "next/server"
 import { buildMovementsCsv } from "@/features/exports/csv"
+import { buildPdf } from "@/features/exports/pdf/build-pdf"
+import { loadPdfData } from "@/features/exports/pdf/load-pdf-data"
 import { loadExportData } from "@/features/exports/queries"
 import {
   exportFileName,
   exportFormatSchema,
-  parseExportRange
+  parseExportRange,
+  parsePdfOptions
 } from "@/features/exports/range"
 import { buildWorkbook } from "@/features/exports/workbook/build-workbook"
 import { findWorkspace } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
 import { createClient } from "@/libs/supabase/server"
 
-// Descarga de la exportación de un espacio (SPEC 32). Lee con la sesión del
-// usuario y RLS, nunca con service_role. Un espacio marcado para borrar
-// también se exporta: es la última forma de sacar los datos.
+// Descarga de la exportación de un espacio: Excel y CSV (SPEC 32) y PDF
+// (SPEC 33). Lee con la sesión del usuario y RLS, nunca con service_role. Un
+// espacio marcado para borrar también se exporta: es la última forma de
+// sacar los datos.
 
-const XLSX_TYPE =
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+const CONTENT_TYPES = {
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  csv: "text/csv; charset=utf-8",
+  pdf: "application/pdf"
+} as const
 
 function jsonError(status: number, error: string) {
   return Response.json(
@@ -48,26 +55,59 @@ export async function GET(
   const params = request.nextUrl.searchParams
   const format = exportFormatSchema.safeParse(params.get("format"))
   if (!format.success) {
-    return jsonError(400, "El formato debe ser xlsx o csv.")
+    return jsonError(400, "El formato debe ser xlsx, csv o pdf.")
+  }
+
+  // Tamaño, orientación y tema solo cuentan con PDF
+  const pdfOptions =
+    format.data === "pdf"
+      ? parsePdfOptions({
+          size: params.get("size"),
+          orientation: params.get("orientation"),
+          theme: params.get("theme")
+        })
+      : null
+  if (pdfOptions && !pdfOptions.success) {
+    return jsonError(400, pdfOptions.error)
   }
 
   const today = todayISO()
-  const parsed = parseExportRange(params.get("from"), params.get("to"), today)
+  const parsed = parseExportRange(
+    params.get("from"),
+    params.get("to"),
+    today,
+    format.data
+  )
   if (!parsed.success) {
     return jsonError(400, parsed.error)
   }
 
   try {
-    const data = await loadExportData(workspace, parsed.range, today)
-    const fileName = exportFileName(workspace, parsed.range, format.data)
-    const isExcel = format.data === "xlsx"
-    const body = isExcel
-      ? await buildWorkbook(workspace, data, parsed.range, today)
-      : buildMovementsCsv(workspace.type, data.movements)
+    const range = parsed.range
+    let body: BodyInit
 
+    if (pdfOptions) {
+      const data = await loadPdfData(workspace, range, today)
+      const buffer = await buildPdf(
+        workspace,
+        data,
+        range,
+        today,
+        pdfOptions.options
+      )
+      body = new Uint8Array(buffer)
+    } else {
+      const data = await loadExportData(workspace, range, today)
+      body =
+        format.data === "xlsx"
+          ? await buildWorkbook(workspace, data, range, today)
+          : buildMovementsCsv(workspace.type, data.movements)
+    }
+
+    const fileName = exportFileName(workspace, range, format.data)
     return new Response(body, {
       headers: {
-        "Content-Type": isExcel ? XLSX_TYPE : "text/csv; charset=utf-8",
+        "Content-Type": CONTENT_TYPES[format.data],
         "Content-Disposition": `attachment; filename="${fileName}"`,
         "Cache-Control": "no-store"
       }

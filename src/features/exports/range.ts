@@ -81,6 +81,30 @@ export function parseExportRange(
   }
 }
 
+const MONTH_NAMES = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre"
+]
+
+/**
+ * "Octubre 2026" desde YYYY-MM. Es el nombre de la hoja de cada mes: único,
+ * de menos de 31 caracteres y sin `: \ / ? * [ ]`
+ */
+export function monthLabel(month: string) {
+  const [year, monthNumber] = month.split("-").map(Number)
+  return `${MONTH_NAMES[monthNumber - 1]} ${year}`
+}
+
 const MAX_SLUG_LENGTH = 40
 
 /** Minúsculas, sin tildes, palabras con guiones y máximo 40 caracteres */

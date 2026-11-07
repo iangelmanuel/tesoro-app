@@ -101,7 +101,7 @@ La idea original abarca todas las entidades. Se parte en dos:
   - **Tu URL de MCP**: `<SITE_URL>/api/mcp` en un campo de solo lectura con botón **Copiar** (toast "URL copiada") y enlace "Cómo conectarla" a `/mcp`;
   - **Agentes conectados**: lista con `surface.ts` (nombre del cliente, autorizado el, último uso). Por fila: `Select` **Leer y escribir** / **Solo lectura** y botón **Revocar** con confirmación. Revocar llama a `supabase.auth.oauth.revokeGrant` y borra la fila de `mcp_connections`. Lee los grants con `getUserGrants()`;
   - vacío: `EmptyState` "Aún no has conectado ningún agente." con enlace a `/mcp`;
-  - **Historial**: las últimas 50 operaciones (fecha, agente, espacio, resumen, estado `Aplicada` / `Revertida` / `Fallida`) con botón **Revertir** en las aplicadas de menos de 30 días. Usa la misma RPC que `undo_operation`;
+  - **Historial**: las últimas 50 operaciones (fecha, agente, espacio, resumen, estado `Aplicada` / `Revertida` / `Fallida`) con botón **Revertir** en las aplicadas y fallidas de menos de 30 días. Usa la misma RPC que `undo_operation`;
   - en móvil, listas como tarjetas (`DataRows`) y controles de 44 px.
 - **Landing:**
   - sección `src/features/landing/components/agents-section.tsx` en `app/(public)/page.tsx`, entre `ScoreSection` y `WorkspacesSection`;
@@ -193,8 +193,9 @@ RLS y funciones:
 - `mcp_rate_limits`: RLS sin políticas; solo se toca desde `mcp_hit_rate_limit()`.
 - `mcp_hit_rate_limit() returns table (allowed boolean, retry_after int)`: `security definer`, usa `auth.uid()`, hace upsert del contador de la ventana actual y borra ventanas de más de una hora del mismo usuario. `grant execute` solo a `authenticated`.
 - `undo_mcp_operation(p_operation_id uuid) returns void`: `security invoker` (RLS de cada tabla aplica), en una transacción:
-  - falla si la operación no es del usuario, no está `applied` o tiene más de 30 días;
+  - falla si la operación no es del usuario, no está `applied` o `failed`, o tiene más de 30 días;
   - recorre las filas en orden inverso a `position`, verifica conflictos (`updated_at` y existencia) y restaura con `jsonb_populate_record` solo en las tablas de la lista;
+  - en una `failed`, las filas que la compensación ya dejó como en `before` (o ya borró, si se crearon) se saltan en vez de contar como conflicto;
   - marca la operación `undone`.
 - `pg_cron` `purge-mcp-operations`: diario, borra `mcp_operations` con `created_at < now() - interval '30 days'`.
 - Índices: `mcp_operations (user_id, created_at desc)`.

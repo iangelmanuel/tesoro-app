@@ -214,7 +214,8 @@ export function pdfTable<T>(
           style: [cellStyle, "total"],
           alignment: index === 0 ? "left" : ALIGNMENT[column.kind],
           noWrap: column.kind === "money",
-          color: column.kind === "money" && tone ? theme.tone[tone] : undefined,
+          // Texto oscuro, como en el Excel: verde y rojo sobre el tinte del
+          // total bajan de 4.5:1. El tono solo pone el signo (Ahorro de tinta)
           fillColor: theme.filled ? theme.totalTint : undefined
         }
       })

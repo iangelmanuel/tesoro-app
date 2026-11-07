@@ -1,6 +1,6 @@
 # SPEC 33 — Reportes PDF con pdfmake
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 03, SPEC 07, SPEC 11, SPEC 12, SPEC 22, SPEC 32
 > **Fecha:** 2026-11-07
 > **Objetivo:** Que el usuario descargue desde el diálogo Exportar un reporte `.pdf` de un espacio (Personal o Empresa) con portada y QR, resumen del periodo, gráficas, score con recomendaciones y el detalle de cada mes, para hasta 12 meses, eligiendo tamaño, orientación y tema.
@@ -226,34 +226,34 @@ src/features/exports/pdf/
 
 ## Criterios de aceptación
 
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
-- [ ] El diálogo Exportar muestra el formato **PDF (.pdf)** y, al elegirlo, Tamaño, Orientación y Tema.
-- [ ] Con PDF, un rango de 13 meses muestra el error del diálogo y no llama al servidor.
-- [ ] `GET` con `format=pdf` y 13 meses responde 400 con "El PDF admite hasta 12 meses.".
-- [ ] `GET` con `format=pdf&size=a3` responde 400.
-- [ ] Un PDF de un espacio ajeno responde 404 y sin sesión responde 401.
-- [ ] El archivo se llama `tesoro-personal-2026-10.pdf` para octubre 2026 en Personal.
-- [ ] La portada no tiene encabezado ni pie; las demás páginas sí.
-- [ ] El pie de la última página dice "Página M de M" con M igual al total de páginas.
-- [ ] Escanear el QR de la portada abre Reportes del mismo espacio con el mismo periodo (tras iniciar sesión).
-- [ ] Los totales del Resumen del periodo coinciden con los de la hoja Resumen del Excel para el mismo periodo.
-- [ ] La página de Gráficas tiene 4 gráficas vectoriales (el texto del eje se puede seleccionar).
-- [ ] Un periodo de un solo mes muestra la tarjeta de un solo mes en lugar de las dos gráficas por mes.
-- [ ] El score del PDF coincide con el de la pantalla de Recomendaciones el mismo día, con las mismas recomendaciones activas.
-- [ ] Con datos insuficientes para el score, la página muestra las razones y ningún número.
-- [ ] Cada mes del detalle empieza en página nueva y tiene las mismas secciones que su hoja del Excel.
-- [ ] Un mes con más movimientos de los que caben en una página repite el encabezado de la tabla en la página siguiente y ninguna fila queda partida.
-- [ ] En horizontal, la tabla de movimientos de Personal tiene 9 columnas y las de Ventas y Costos y gastos de Empresa, las 9 del Excel; en vertical, 5 en ambos.
-- [ ] Carta horizontal y A4 vertical generan páginas del tamaño correcto (612 × 792 pt rotado y 595 × 842 pt).
-- [ ] Con el tema **Ahorro de tinta** no hay rellenos de color y los montos llevan `+` o `−`.
-- [ ] Con el tema **Color**, el texto blanco sobre la banda del acento da 4.5:1 en Personal y en Empresa.
-- [ ] Una categoría llamada `<b>Comida & más</b>` se ve tal cual en tablas y gráficas, sin romper el SVG.
-- [ ] Una nota de movimiento con `<script>` o `<a href="javascript:...">` sale como texto plano.
-- [ ] Las tildes y la ñ se ven correctas con Inter en todo el documento.
-- [ ] Las propiedades del PDF muestran título, autor "Tesoro" y asunto "Reporte financiero".
-- [ ] Un PDF de 12 meses con más de 1000 movimientos se genera en menos de 10 s en local con `pnpm build && pnpm start`.
-- [ ] Con **Ocultar montos** activo, el diálogo muestra el aviso y el PDF trae los montos reales.
-- [ ] Ningún componente cliente importa `pdfmake`, `html-to-pdfmake` ni `jsdom` (el bundle del cliente no los incluye).
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] El diálogo Exportar muestra el formato **PDF (.pdf)** y, al elegirlo, Tamaño, Orientación y Tema.
+- [x] Con PDF, un rango de 13 meses muestra el error del diálogo y no llama al servidor.
+- [x] `GET` con `format=pdf` y 13 meses responde 400 con "El PDF admite hasta 12 meses.".
+- [x] `GET` con `format=pdf&size=a3` responde 400.
+- [x] Un PDF de un espacio ajeno responde 404 y sin sesión responde 401.
+- [x] El archivo se llama `tesoro-personal-2026-10.pdf` para octubre 2026 en Personal.
+- [x] La portada no tiene encabezado ni pie; las demás páginas sí.
+- [x] El pie de la última página dice "Página M de M" con M igual al total de páginas.
+- [x] Escanear el QR de la portada abre Reportes del mismo espacio con el mismo periodo (tras iniciar sesión).
+- [x] Los totales del Resumen del periodo coinciden con los de la hoja Resumen del Excel para el mismo periodo.
+- [x] La página de Gráficas tiene 4 gráficas vectoriales (el texto del eje se puede seleccionar).
+- [x] Un periodo de un solo mes muestra la tarjeta de un solo mes en lugar de las dos gráficas por mes.
+- [x] El score del PDF coincide con el de la pantalla de Recomendaciones el mismo día, con las mismas recomendaciones activas.
+- [x] Con datos insuficientes para el score, la página muestra las razones y ningún número.
+- [x] Cada mes del detalle empieza en página nueva y tiene las mismas secciones que su hoja del Excel.
+- [x] Un mes con más movimientos de los que caben en una página repite el encabezado de la tabla en la página siguiente y ninguna fila queda partida.
+- [x] En horizontal, la tabla de movimientos de Personal tiene 9 columnas y las de Ventas y Costos y gastos de Empresa, las 9 del Excel; en vertical, 5 en ambos.
+- [x] Carta horizontal y A4 vertical generan páginas del tamaño correcto (612 × 792 pt rotado y 595 × 842 pt).
+- [x] Con el tema **Ahorro de tinta** no hay rellenos de color y los montos llevan `+` o `−`.
+- [x] Con el tema **Color**, el texto blanco sobre la banda del acento da 4.5:1 en Personal y en Empresa.
+- [x] Una categoría llamada `<b>Comida & más</b>` se ve tal cual en tablas y gráficas, sin romper el SVG.
+- [x] Una nota de movimiento con `<script>` o `<a href="javascript:...">` sale como texto plano.
+- [x] Las tildes y la ñ se ven correctas con Inter en todo el documento.
+- [x] Las propiedades del PDF muestran título, autor "Tesoro" y asunto "Reporte financiero".
+- [x] Un PDF de 12 meses con más de 1000 movimientos se genera en menos de 10 s en local con `pnpm build && pnpm start`.
+- [x] Con **Ocultar montos** activo, el diálogo muestra el aviso y el PDF trae los montos reales.
+- [x] Ningún componente cliente importa `pdfmake`, `html-to-pdfmake` ni `jsdom` (el bundle del cliente no los incluye).
 
 ## Decisiones
 

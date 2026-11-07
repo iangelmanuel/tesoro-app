@@ -412,7 +412,7 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
   render sale con el ancho correcto. Cerrar el aside no pierde el ancho. El
   Drawer móvil sigue en `w-72`, sin agarradera.
 
-### Exportar (SPEC 32)
+### Exportar (SPEC 32 y 33)
 
 - **Botón:** `ExportButton` (`src/features/exports/components/`), en los
   accesos rápidos del header, solo en Reportes de Personal y de una empresa.
@@ -420,11 +420,19 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
   desde 640 px y solo ícono de 44 px por debajo.
 - **Diálogo:** `ExportDialog`, `Modal` centrado (hoja inferior en móvil),
   `sm:max-w-md`.
-  - Tabs **Excel (.xlsx)** | **CSV (.csv)**.
+  - Tabs **Excel (.xlsx)** | **CSV (.csv)** | **PDF (.pdf)**; Excel por
+    defecto.
   - `Select` **Periodo** y, según el periodo, otro `Select` con el valor, o
     **Desde** / **Hasta** en dos columnas (una en móvil). Controles de 44 px.
-  - Bajo el periodo, en `text-muted`, "Se crearán N hojas de mes" (solo
-    Excel). Errores de rango en `text-danger` con `role="alert"`; aviso de
+  - Con PDF, bajo el periodo: `Select` **Tamaño** (A4 | Carta) y tabs
+    **Orientación** (Vertical | Horizontal) y **Tema** (Color | Ahorro de
+    tinta) con una línea en `text-muted` que explica el tema elegido. Las
+    tabs llevan etiqueta visible (`OptionTabs`, `aria-labelledby`).
+  - Bajo el periodo, en `text-muted`, "Se crearán N hojas de mes" (Excel) o
+    "Incluye N meses de detalle" (PDF). Con PDF el tope es de 12 meses: un
+    rango mayor muestra "El PDF admite hasta 12 meses. Usa Excel para
+    periodos más largos." y no llama al servidor; con un historial de más de
+    12 meses, **Todo el historial** se deshabilita. Errores de rango en `text-danger` con `role="alert"`; aviso de
     **Ocultar montos** en `text-warning`. La zona es `aria-live="polite"`.
   - **Descargar** dice "Generando…" mientras espera; al terminar cierra y
     muestra el toast "Archivo descargado". Si falla, toast de error y el
@@ -454,6 +462,20 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
 
   En la fila de total los montos van en texto oscuro: verde y rojo sobre su
   tinte bajan de 4.5:1.
+
+- **PDF** (`src/features/exports/pdf/`): `theme.ts` (`pdfTheme(type,
+"color" | "ink")`) toma los colores de `COLORS` y `workbookPalette` del
+  libro, más `balance` y `chart1`–`chart5` (`--balance` y `--chart-*` en
+  claro); ninguna sección fija un color a mano. Los pares del tema Color son
+  los del libro (tabla de arriba); la fila de total también va en texto
+  oscuro. Ahorro de tinta usa texto ≥ `#4b5563` sobre blanco, sin rellenos de
+  color, y las gráficas en grises con contorno y rayado.
+  - Secciones reutilizables en `sections/` (`pdfTable` para toda tabla) y
+    gráficas en `charts/` como funciones puras que devuelven un SVG (solo
+    `rect`, `path`, `line`, `circle`, `text` y `g`).
+  - Inter y el logo van en base64 (`fonts-data.ts`, `brand-data.ts`),
+    generados por `pnpm brand:assets` desde `assets/fonts/` y
+    `assets/brand/mark.svg`.
 
 ## Dónde vive cada pantalla
 

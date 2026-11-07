@@ -412,6 +412,36 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
   render sale con el ancho correcto. Cerrar el aside no pierde el ancho. El
   Drawer móvil sigue en `w-72`, sin agarradera.
 
+### Exportar (SPEC 32)
+
+- **Botón:** `ExportButton` (`src/features/exports/components/`), en los
+  accesos rápidos del header, solo en Reportes de Personal y de una empresa.
+  `variant="secondary"`, ícono `Download`, `aria-label="Exportar"`; con texto
+  desde 640 px y solo ícono de 44 px por debajo.
+- **Diálogo:** `ExportDialog`, `Modal` centrado (hoja inferior en móvil),
+  `sm:max-w-md`.
+  - Tabs **Excel (.xlsx)** | **CSV (.csv)**.
+  - `Select` **Periodo** y, según el periodo, otro `Select` con el valor, o
+    **Desde** / **Hasta** en dos columnas (una en móvil). Controles de 44 px.
+  - Bajo el periodo, en `text-muted`, "Se crearán N hojas de mes" (solo
+    Excel). Errores de rango en `text-danger` con `role="alert"`; aviso de
+    **Ocultar montos** en `text-warning`. La zona es `aria-live="polite"`.
+  - **Descargar** dice "Generando…" mientras espera; al terminar cierra y
+    muestra el toast "Archivo descargado". Si falla, toast de error y el
+    diálogo sigue abierto.
+- **Contraste** sobre `--overlay`:
+
+  | Par                   | Claro | Oscuro |
+  | --------------------- | ----- | ------ |
+  | `muted` / `overlay`   | 5.97  | 6.20   |
+  | `warning` / `overlay` | 5.03  | 8.90   |
+  | `danger` / `overlay`  | 5.44  | 5.31   |
+
+- **Libro:** colores ARGB en `src/features/exports/workbook/theme.ts`, copia
+  de los tokens en claro. Encabezados con texto blanco sobre emerald
+  (`007A55`, 5.36:1) o naranja (`CA3500`, 5.22:1). Si cambian `--accent`,
+  `--income`, `--expense` o `--muted`, se actualizan ahí.
+
 ## Dónde vive cada pantalla
 
 | Pantalla         | Ruta                                                           | Piezas                                                                               |

@@ -102,6 +102,13 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   todas derivadas de `SITE`:
   - `robots.ts` bloquea `/dashboard/`, `/api/` y `/auth/`.
   - Las rutas públicas nuevas se agregan a `STATIC_ROUTES` en `sitemap.ts`.
+- **Exportar** (SPEC 32): `app/api/export/[workspaceId]/route.ts` responde
+  el `.xlsx` o el `.csv`. `exceljs` solo se importa desde
+  `src/features/exports/workbook/` y nunca desde un componente cliente. Los
+  Route Handlers resuelven el espacio con `findWorkspace` (null → 404 en
+  JSON), no con `getWorkspace` (`notFound()` responde HTML). Si cambian
+  `--accent`, `--income`, `--expense` o `--muted`, actualiza
+  `workbook/theme.ts`.
 - `app/` contiene solo rutas. El resto del código vive en `src/` (alias
   `@/*` → `./src/*`). Estilos globales en `src/styles/globals.css` (Tailwind
   4, cargado vía `@tailwindcss/turbopack` en `next.config.ts`).

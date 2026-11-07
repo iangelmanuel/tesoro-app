@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   typedRoutes: true,
+  // Reportes PDF (SPEC 33): empaquetado, pdfkit (dependencia de pdfmake)
+  // pierde sus imports internos `#standard-fonts/*`. jsdom ya viene externo
+  serverExternalPackages: ["pdfmake"],
   experimental: {
     serverActions: {
       // Importar movimientos (SPEC 08) envía hasta 2.000 filas mapeadas,

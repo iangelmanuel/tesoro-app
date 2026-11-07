@@ -8,11 +8,13 @@ import { listBudgets } from "./tools/read/list-budgets"
 import { listCategories } from "./tools/read/list-categories"
 import { listDebts } from "./tools/read/list-debts"
 import { listGoals } from "./tools/read/list-goals"
+import { listOperations } from "./tools/read/list-operations"
 import { listReceivables } from "./tools/read/list-receivables"
 import { listRecurring } from "./tools/read/list-recurring"
 import { listTransactions } from "./tools/read/list-transactions"
 import { listTransfers } from "./tools/read/list-transfers"
 import { listWorkspaces } from "./tools/read/list-workspaces"
+import { undoOperation } from "./tools/write/undo-operation"
 import type { McpTool, McpToolDefinition } from "./types"
 
 // Catálogo único de tools (SPEC 34): el servidor las registra desde aquí y
@@ -34,7 +36,9 @@ export const MCP_TOOLS: readonly McpTool[] = [
   listGoals,
   listDebts,
   listRecurring,
-  listReceivables
+  listReceivables,
+  listOperations,
+  undoOperation
 ]
 
 export const MCP_GROUP_LABELS: Record<McpToolDefinition["group"], string> = {

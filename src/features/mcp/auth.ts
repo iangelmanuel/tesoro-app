@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
+import { deletionRequestedAt } from "@/features/account/deletion"
 import type { AppSupabase } from "@/libs/supabase/types"
 import type { Database } from "@/types/database"
 import { MCP_RESOURCE_METADATA_URL } from "./discovery"
@@ -90,12 +91,28 @@ export async function authenticateMcpRequest(
     return { ok: false, response: unauthorized("El token no es de un agente.") }
   }
 
-  if (typeof claims.app_metadata?.deletion_requested_at === "string") {
+  // getClaims solo verifica la firma. getUser pregunta al servidor de auth:
+  // falla si la sesión del token ya no existe, que es lo que hace revokeGrant
+  // al revocar el agente en Cuenta → Agentes IA. Trae además el app_metadata
+  // al día (la marca de borrado puede ser posterior al token)
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser(token)
+
+  if (userError || !user || user.id !== claims.sub) {
+    return {
+      ok: false,
+      response: unauthorized("El acceso de este agente ya no es válido.")
+    }
+  }
+
+  if (deletionRequestedAt(user) !== null) {
     return {
       ok: false,
       response: jsonError(403, "Tu cuenta está en proceso de borrado.")
     }
   }
 
-  return { ok: true, identity: { supabase, userId: claims.sub, clientId } }
+  return { ok: true, identity: { supabase, userId: user.id, clientId } }
 }

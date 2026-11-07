@@ -2,7 +2,7 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 import { authenticateMcpRequest, jsonError } from "@/features/mcp/auth"
 import { loadMcpContext } from "@/features/mcp/context"
 import { hitRateLimit } from "@/features/mcp/rate-limit"
-import { createMcpServer } from "@/features/mcp/server"
+import { createMcpServer, readOnlyCallResponse } from "@/features/mcp/server"
 import { runWithSupabaseClient } from "@/libs/supabase/server"
 
 // Endpoint MCP (SPEC 34): Streamable HTTP sin estado. POST atiende JSON-RPC
@@ -33,6 +33,18 @@ export async function POST(request: Request) {
   }
 
   const ctx = await loadMcpContext(auth.identity)
+
+  // Solo lectura: una llamada a una escritura responde el error del spec. El
+  // cuerpo se lee de una copia; el transporte lee el original
+  const body: unknown = await request
+    .clone()
+    .json()
+    .catch(() => undefined)
+  const readOnly = readOnlyCallResponse(ctx, body)
+  if (readOnly) {
+    return readOnly
+  }
+
   const server = createMcpServer(ctx)
   const transport = new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: undefined,

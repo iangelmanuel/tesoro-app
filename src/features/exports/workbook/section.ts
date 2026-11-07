@@ -29,7 +29,7 @@ export interface SectionColumn<T, K extends string = string> {
   /** Valor de la celda; por defecto `row[key]` */
   value?: (row: T) => CellValue
   /** Fórmula de la celda en la fila `rowNumber`; su `result` es `value` */
-  formula?: (rowNumber: number, letters: ColumnLetters<K>) => string
+  formula?: (rowNumber: number, letters: ColumnLetters<K>, row: T) => string
   /** Color del monto según la fila (ingreso, gasto, traspaso) */
   tone?: (row: T) => AmountTone | null
 }
@@ -169,7 +169,7 @@ export function writeSection<T, K extends string>(
 
       cell.value = column.formula
         ? {
-            formula: column.formula(rowNumber, letters),
+            formula: column.formula(rowNumber, letters, row),
             result: typeof value === "number" ? value : 0
           }
         : value

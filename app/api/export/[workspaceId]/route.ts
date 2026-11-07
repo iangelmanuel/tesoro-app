@@ -62,7 +62,7 @@ export async function GET(
     const fileName = exportFileName(workspace, parsed.range, format.data)
     const isExcel = format.data === "xlsx"
     const body = isExcel
-      ? await buildWorkbook(workspace, data, today)
+      ? await buildWorkbook(workspace, data, parsed.range, today)
       : buildMovementsCsv(workspace.type, data.movements)
 
     return new Response(body, {

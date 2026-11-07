@@ -1,9 +1,11 @@
 import ExcelJS from "exceljs"
 import type { Workspace } from "@/features/workspaces/queries"
 import type { ExportData } from "../queries"
+import type { ExportRange } from "../types"
 import { addBusinessMonthSheet } from "./business-month-sheet"
 import { addMovementsSheet } from "./movements-sheet"
 import { addPersonalMonthSheet } from "./personal-month-sheet"
+import { addSummarySheet, fillSummarySheet } from "./summary-sheet"
 
 // Libro de la exportación. Orden de las hojas: Resumen, una por mes (de la
 // más antigua a la más reciente) y Movimientos. `today` es YYYY-MM-DD en
@@ -11,6 +13,7 @@ import { addPersonalMonthSheet } from "./personal-month-sheet"
 export async function buildWorkbook(
   workspace: Workspace,
   data: ExportData,
+  range: ExportRange,
   today: string
 ) {
   const workbook = new ExcelJS.Workbook()
@@ -21,17 +24,30 @@ export async function buildWorkbook(
       ? "Tesoro · Personal"
       : `Tesoro · ${workspace.name}`
 
-  if (data.type === "personal") {
-    for (const month of data.months) {
-      addPersonalMonthSheet(workbook, month, today)
-    }
-  } else {
-    for (const month of data.months) {
-      addBusinessMonthSheet(workbook, workspace.name, month, today)
-    }
-  }
+  // Resumen va primero, pero sus fórmulas apuntan a las hojas de mes
+  const summary = addSummarySheet(workbook)
+
+  const months =
+    data.type === "personal"
+      ? data.months.map((month) =>
+          addPersonalMonthSheet(workbook, month, today)
+        )
+      : data.months.map((month) =>
+          addBusinessMonthSheet(workbook, workspace.name, month, today)
+        )
 
   addMovementsSheet(workbook, workspace.type, data.movements)
+
+  fillSummarySheet(workbook, summary, {
+    type: workspace.type,
+    workspaceName: workspace.name,
+    range,
+    months,
+    today
+  })
+
+  // Excel recalcula todo al abrir; los visores sin motor usan `result`
+  workbook.calcProperties.fullCalcOnLoad = true
 
   const buffer = await workbook.xlsx.writeBuffer()
   return new Uint8Array(buffer)

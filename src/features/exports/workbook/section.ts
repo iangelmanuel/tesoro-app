@@ -46,9 +46,9 @@ export interface SectionTotal<K extends string> {
 }
 
 export interface SectionOptions<T, K extends string> {
-  /** Fila donde va el título */
+  /** Fila donde va el título (o los encabezados, sin título) */
   startRow: number
-  title: string
+  title?: string
   columns: SectionColumn<T, K>[]
   rows: T[]
   total?: SectionTotal<K>
@@ -129,14 +129,16 @@ export function writeSection<T, K extends string>(
     columns.map((column, index) => [column.key, columnLetter(index + 1)])
   ) as ColumnLetters<K>
 
+  // Sin título (hoja Movimientos) los encabezados van en `startRow`
   const titleRow = startRow
-  const headerRow = startRow + 1
-  const firstRow = startRow + 2
+  const headerRow = title ? startRow + 1 : startRow
+  const firstRow = headerRow + 1
 
-  // Título
-  const titleCell = sheet.getCell(titleRow, 1)
-  titleCell.value = title
-  titleCell.font = { bold: true, size: 12 }
+  if (title) {
+    const titleCell = sheet.getCell(titleRow, 1)
+    titleCell.value = title
+    titleCell.font = { bold: true, size: 12 }
+  }
 
   // Encabezados con el color del espacio y texto blanco
   columns.forEach((column, index) => {

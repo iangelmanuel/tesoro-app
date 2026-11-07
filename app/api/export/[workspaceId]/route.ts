@@ -6,6 +6,7 @@ import {
   exportFormatSchema,
   parseExportRange
 } from "@/features/exports/range"
+import { buildWorkbook } from "@/features/exports/workbook/build-workbook"
 import { findWorkspace } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
 import { createClient } from "@/libs/supabase/server"
@@ -13,6 +14,9 @@ import { createClient } from "@/libs/supabase/server"
 // Descarga de la exportación de un espacio (SPEC 32). Lee con la sesión del
 // usuario y RLS, nunca con service_role. Un espacio marcado para borrar
 // también se exporta: es la última forma de sacar los datos.
+
+const XLSX_TYPE =
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 function jsonError(status: number, error: string) {
   return Response.json(
@@ -53,18 +57,17 @@ export async function GET(
     return jsonError(400, parsed.error)
   }
 
-  if (format.data === "xlsx") {
-    return jsonError(400, "La exportación a Excel aún no está disponible.")
-  }
-
   try {
     const data = await loadExportData(workspace, parsed.range, today)
-    const body = buildMovementsCsv(workspace.type, data.movements)
     const fileName = exportFileName(workspace, parsed.range, format.data)
+    const isExcel = format.data === "xlsx"
+    const body = isExcel
+      ? await buildWorkbook(workspace, data)
+      : buildMovementsCsv(workspace.type, data.movements)
 
     return new Response(body, {
       headers: {
-        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Type": isExcel ? XLSX_TYPE : "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="${fileName}"`,
         "Cache-Control": "no-store"
       }

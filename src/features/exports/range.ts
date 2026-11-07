@@ -66,6 +66,14 @@ export function monthsSpanned(from: string, to: string) {
   return (toYear - fromYear) * 12 + (toMonth - fromMonth) + 1
 }
 
+/** Periodo anterior de igual largo: los N meses justo antes de `from` */
+export function previousRange(range: Pick<ExportRange, "from" | "months">) {
+  return {
+    from: shiftMonth(range.from, -range.months.length),
+    to: shiftMonth(range.from, -1)
+  }
+}
+
 /** ["2026-01", "2026-02", ...] de `from` a `to` (YYYY-MM), inclusivo */
 export function listMonths(from: string, to: string) {
   const count = monthsSpanned(from, to)

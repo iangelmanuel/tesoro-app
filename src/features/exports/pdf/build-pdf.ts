@@ -1,7 +1,7 @@
 import type { Content, TDocumentDefinitions } from "pdfmake/interfaces"
 import { SITE } from "@/config/site"
 import type { Workspace } from "@/features/workspaces/queries"
-import { formatGenerated, monthLabel } from "../range"
+import { formatGenerated, monthLabel, previousRange } from "../range"
 import type { ExportRange, PdfOptions } from "../types"
 import { getPdfmake } from "./fonts"
 import { pdfFooter } from "./layout/footer"
@@ -9,6 +9,7 @@ import { pdfHeader } from "./layout/header"
 import { pageSetup } from "./page"
 import { businessMonthSection } from "./sections/business-month"
 import { coverSection } from "./sections/cover"
+import { periodSummarySection } from "./sections/period-summary"
 import { personalMonthSection } from "./sections/personal-month"
 import { keepTitlesWithTables } from "./sections/table"
 import { pdfTheme } from "./theme"
@@ -58,13 +59,16 @@ export async function buildPdf(
     today
   }
 
-  // Detalle por mes, en orden cronológico. Resumen, gráficas y score
-  // llegan en los pasos 10 a 12
+  // Detalle por mes, en orden cronológico. Gráficas y score llegan en los
+  // pasos 11 y 12
   const monthSections: Content[] =
     data.export.type === "personal"
       ? data.export.months.flatMap((month) => personalMonthSection(ctx, month))
       : data.export.months.flatMap((month) => businessMonthSection(ctx, month))
-  const sections: Content[] = [...monthSections]
+  const sections: Content[] = [
+    ...periodSummarySection(ctx, data, previousRange(range)),
+    ...monthSections
+  ]
 
   const doc: TDocumentDefinitions = {
     info: {

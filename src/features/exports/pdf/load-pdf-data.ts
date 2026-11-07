@@ -1,9 +1,11 @@
 import { SITE } from "@/config/site"
 import { type ReportQuery, buildReportQuery } from "@/features/reports/period"
+import { getMonthlyTotals } from "@/features/reports/queries"
 import { workspaceReportsPath } from "@/features/workspaces/paths"
 import type { Workspace } from "@/features/workspaces/queries"
 import { monthRange } from "@/libs/dates"
 import { loadExportData } from "../queries"
+import { previousRange } from "../range"
 import type { ExportRange } from "../types"
 import type { PdfReportData } from "./types"
 
@@ -55,20 +57,40 @@ export function reportsUrlFor(
   return `${SITE.site.url}${path}?${query}`
 }
 
+/**
+ * Ingresos y gastos (ventas y costos en Empresa) del periodo anterior, con
+ * la misma RPC que la comparación de Reportes. Los traspasos no cuentan
+ */
+async function loadPreviousTotals(workspace: Workspace, range: ExportRange) {
+  const previous = previousRange(range)
+  const rows = await getMonthlyTotals(
+    workspace.id,
+    `${previous.from}-01`,
+    monthRange(previous.to).to
+  )
+
+  return {
+    income: rows.reduce((total, row) => total + row.income, 0),
+    expense: rows.reduce((total, row) => total + row.expense, 0)
+  }
+}
+
 // Datos del PDF (SPEC 33), con la sesión del usuario y RLS. Parte de
 // `loadExportData` (SPEC 32) para que los totales cuadren con el Excel.
-// Provisional: los totales del periodo anterior, las categorías y el score
-// llegan en los pasos 10 y 12 del spec.
+// Provisional: las categorías y el score llegan en los pasos 11 y 12.
 export async function loadPdfData(
   workspace: Workspace,
   range: ExportRange,
   today: string
 ): Promise<PdfReportData> {
-  const data = await loadExportData(workspace, range, today)
+  const [data, previousTotals] = await Promise.all([
+    loadExportData(workspace, range, today),
+    loadPreviousTotals(workspace, range)
+  ])
 
   return {
     export: data,
-    previousTotals: { income: 0, expense: 0 },
+    previousTotals,
     categoryTotals: [],
     score: { status: "insufficient", reasons: [] },
     reportsUrl: reportsUrlFor(workspace, range, today)

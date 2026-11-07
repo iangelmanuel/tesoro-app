@@ -3,6 +3,7 @@
 import { z } from "zod"
 import { requireWritableWorkspace } from "@/features/workspaces/queries"
 import { revalidateWorkspacePages } from "@/libs/revalidate"
+import type { ServiceFailure } from "@/libs/service-result"
 import { createClient } from "@/libs/supabase/server"
 import { type VerifyEntry, getVerifyEntries } from "./queries"
 import {
@@ -12,7 +13,6 @@ import {
 } from "./schemas"
 import {
   NOT_FOUND,
-  type ServiceFailure,
   createTransactionRecord,
   deleteTransactionRecord,
   updateTransactionRecord

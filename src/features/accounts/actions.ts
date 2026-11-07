@@ -14,6 +14,12 @@ import {
   reconcileAccountSchema,
   transferSchema
 } from "./schemas"
+import {
+  TRANSFER_NOT_FOUND,
+  createTransferRecord,
+  deleteTransferRecord,
+  updateTransferRecord
+} from "./transfer-service"
 import type {
   AccountActionResult,
   AccountFormState,
@@ -23,15 +29,11 @@ import type {
 } from "./types"
 
 const ACCOUNT_NOT_FOUND = "No se encontró la cuenta"
-const TRANSFER_NOT_FOUND = "No se encontró el traspaso"
 const ADJUSTMENT_NOT_FOUND = "No se encontró el ajuste"
 const ACCOUNT_DEFAULT_ERROR = "No se pudo guardar la cuenta. Intenta de nuevo"
-const TRANSFER_DEFAULT_ERROR =
-  "No se pudo guardar el traspaso. Intenta de nuevo"
 const ADJUST_DEFAULT_ERROR = "No se pudo actualizar el saldo. Intenta de nuevo"
 const DUPLICATE_NAME = "Ya existe una cuenta con ese nombre"
 const ACCOUNT_ARCHIVED = "La cuenta está archivada"
-const SAME_ACCOUNT = "Elige una cuenta distinta a la de origen"
 const SAME_BALANCE = "El saldo ya coincide"
 const ALREADY_RECONCILED = "La cuenta ya cuadra"
 const RECONCILE_DEFAULT_ERROR =
@@ -74,24 +76,6 @@ function accountPgError(error: PostgrestError): AccountFormState {
     return { error: "No tienes permiso para modificar esta cuenta" }
   }
   return { error: ACCOUNT_DEFAULT_ERROR }
-}
-
-// check_account_active lanza check_violation con su mensaje; la FK compuesta
-// falla si la cuenta no es del espacio
-function transferPgError(error: PostgrestError): TransferFormState {
-  if (error.message.includes(ACCOUNT_ARCHIVED)) {
-    return { error: ACCOUNT_ARCHIVED }
-  }
-  if (error.code === "23514") {
-    return { fieldErrors: { to_account_id: [SAME_ACCOUNT] } }
-  }
-  if (error.code === "23503") {
-    return { error: ACCOUNT_NOT_FOUND }
-  }
-  if (error.code === "42501") {
-    return { error: "No tienes permiso para modificar este traspaso" }
-  }
-  return { error: TRANSFER_DEFAULT_ERROR }
 }
 
 function readValues<const T extends readonly string[]>(
@@ -233,12 +217,10 @@ export async function createTransfer(
 
   const workspace = await requireWritableWorkspace(formData.get("workspace_id"))
   const supabase = await createClient()
-  const { error } = await supabase
-    .from("transfers")
-    .insert({ ...parsed.data, workspace_id: workspace.id })
+  const result = await createTransferRecord(supabase, workspace, parsed.data)
 
-  if (error) {
-    return { ...transferPgError(error), values }
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
   }
 
   revalidateWorkspacePages(workspace)
@@ -263,18 +245,15 @@ export async function updateTransfer(
 
   const workspace = await requireWritableWorkspace(formData.get("workspace_id"))
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("transfers")
-    .update(parsed.data)
-    .eq("id", id.data)
-    .eq("workspace_id", workspace.id)
-    .select("id")
+  const result = await updateTransferRecord(
+    supabase,
+    workspace,
+    id.data,
+    parsed.data
+  )
 
-  if (error) {
-    return { ...transferPgError(error), values }
-  }
-  if (data.length === 0) {
-    return { error: TRANSFER_NOT_FOUND, values }
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
   }
 
   revalidateWorkspacePages(workspace)
@@ -293,18 +272,10 @@ export async function deleteTransfer(
 
   const workspace = await requireWritableWorkspace(workspaceId)
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("transfers")
-    .delete()
-    .eq("id", parsedId.data)
-    .eq("workspace_id", workspace.id)
-    .select("id")
+  const result = await deleteTransferRecord(supabase, workspace, parsedId.data)
 
-  if (error) {
-    return { error: "No se pudo eliminar el traspaso. Intenta de nuevo" }
-  }
-  if (data.length === 0) {
-    return { error: TRANSFER_NOT_FOUND }
+  if (!result.ok) {
+    return { error: result.error }
   }
 
   revalidateWorkspacePages(workspace)

@@ -2,6 +2,12 @@ import type { PostgrestError } from "@supabase/supabase-js"
 import type { z } from "zod"
 import { getOldestUnreceivedOccurrences } from "@/features/recurring-incomes/queries"
 import type { WorkspaceType } from "@/features/workspaces/queries"
+import {
+  type ServiceFailure,
+  type ServiceResult,
+  type ServiceWorkspace,
+  fail
+} from "@/libs/service-result"
 import type { AppSupabase } from "@/libs/supabase/types"
 import type { Database } from "@/types/database"
 import type { TransactionInput, createTransactionSchema } from "./schemas"
@@ -26,19 +32,6 @@ export type UpdateTransactionData = Omit<
 > & {
   recurring_income_id?: TransactionInput["recurring_income_id"]
 }
-
-export interface ServiceWorkspace {
-  id: string
-  type: WorkspaceType
-}
-
-export interface ServiceFailure {
-  ok: false
-  error?: string
-  fieldErrors?: Partial<Record<string, string[]>>
-}
-
-export type ServiceResult<T> = ({ ok: true } & T) | ServiceFailure
 
 export const NOT_FOUND = "No se encontró el movimiento"
 const DEFAULT_ERROR = "No se pudo guardar el movimiento. Intenta de nuevo"
@@ -66,11 +59,6 @@ const PG_ERROR_MESSAGES: Record<string, Omit<ServiceFailure, "ok">> = {
   // RLS
   "42501": { error: "No tienes permiso para modificar este movimiento" }
 }
-
-const fail = (failure: Omit<ServiceFailure, "ok">): ServiceFailure => ({
-  ok: false,
-  ...failure
-})
 
 function toServiceError(error: PostgrestError): ServiceFailure {
   // Índice único por ocurrencia: el pago ya existe (p. ej. doble clic)

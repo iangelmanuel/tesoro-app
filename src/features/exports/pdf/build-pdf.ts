@@ -7,6 +7,7 @@ import { getPdfmake } from "./fonts"
 import { pdfFooter } from "./layout/footer"
 import { pdfHeader } from "./layout/header"
 import { pageSetup } from "./page"
+import { businessMonthSection } from "./sections/business-month"
 import { coverSection } from "./sections/cover"
 import { personalMonthSection } from "./sections/personal-month"
 import { keepTitlesWithTables } from "./sections/table"
@@ -57,18 +58,12 @@ export async function buildPdf(
     today
   }
 
-  // Detalle por mes, en orden cronológico. Empresa llega en el paso 9 y
-  // resumen, gráficas y score en los pasos 10 a 12
+  // Detalle por mes, en orden cronológico. Resumen, gráficas y score
+  // llegan en los pasos 10 a 12
   const monthSections: Content[] =
     data.export.type === "personal"
       ? data.export.months.flatMap((month) => personalMonthSection(ctx, month))
-      : [
-          {
-            text: `Incluye ${data.export.months.length} meses de detalle.`,
-            style: "body",
-            pageBreak: "before"
-          }
-        ]
+      : data.export.months.flatMap((month) => businessMonthSection(ctx, month))
   const sections: Content[] = [...monthSections]
 
   const doc: TDocumentDefinitions = {

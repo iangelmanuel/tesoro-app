@@ -81,7 +81,8 @@ El motor es **pdfmake**, con el enfoque de un curso de reportes PDF (originalmen
   - montos alineados a la derecha en columna de ancho fijo (pdfmake no aplica `tabular-nums`).
 - **Movimientos del mes** completos, en tabla compacta (8 pt):
   - **Vertical**: Fecha, Descripción, Categoría, Cuenta, Monto. Los traspasos muestran "Origen → Destino" en Cuenta;
-  - **Horizontal**: Fecha, Hora, Tipo, Descripción, Categoría, Cuenta, Destino, Nota, Monto. En Empresa, además Contraparte y Factura;
+  - **Horizontal**: Fecha, Hora, Tipo, Descripción, Categoría, Cuenta, Destino, Nota, Monto;
+  - Empresa no tiene tabla de Movimientos (igual que su hoja del Excel): **Ventas** y **Costos y gastos** van en vertical con las mismas 5 columnas y en horizontal con las 9 del Excel (Fecha, Hora, Descripción, Categoría, Contraparte, Factura, Cuenta, Nota, Monto). **Traspasos** usa las 6 del Excel (Fecha, Hora, Origen, Destino, Nota, Monto) en ambas orientaciones;
   - orden: fecha, `day_position`, igual que SPEC 32.
 - **Gráficas en SVG propio** (`src/features/exports/pdf/charts/`): funciones puras que reciben datos, tamaño y tema y devuelven un string SVG que pdfmake inserta como vector. Sin Chart.js, canvas ni servicios externos.
   - Escala y marcas del eje con valores redondos; etiquetas con `chart-format.ts`;
@@ -242,7 +243,7 @@ src/features/exports/pdf/
 - [ ] Con datos insuficientes para el score, la página muestra las razones y ningún número.
 - [ ] Cada mes del detalle empieza en página nueva y tiene las mismas secciones que su hoja del Excel.
 - [ ] Un mes con más movimientos de los que caben en una página repite el encabezado de la tabla en la página siguiente y ninguna fila queda partida.
-- [ ] En horizontal, la tabla de movimientos tiene 9 columnas en Personal y 11 en Empresa; en vertical, 5.
+- [ ] En horizontal, la tabla de movimientos de Personal tiene 9 columnas y las de Ventas y Costos y gastos de Empresa, las 9 del Excel; en vertical, 5 en ambos.
 - [ ] Carta horizontal y A4 vertical generan páginas del tamaño correcto (612 × 792 pt rotado y 595 × 842 pt).
 - [ ] Con el tema **Ahorro de tinta** no hay rellenos de color y los montos llevan `+` o `−`.
 - [ ] Con el tema **Color**, el texto blanco sobre la banda del acento da 4.5:1 en Personal y en Empresa.

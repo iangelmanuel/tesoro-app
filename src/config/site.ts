@@ -121,6 +121,9 @@ export const SITE = {
     authCallback: "/auth/callback",
     account: "/dashboard/account",
     accountDeleted: "/account-deleted",
+    // Consentimiento OAuth de agentes MCP (SPEC 34). Debe coincidir con
+    // authorization_url_path del servidor OAuth de Supabase
+    oauthConsent: "/oauth/consent",
     legal: "/legal"
   },
 

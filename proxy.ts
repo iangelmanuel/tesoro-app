@@ -12,6 +12,12 @@ function isDashboardRoute(pathname: string) {
   )
 }
 
+// Rutas que exigen sesión y una cuenta sin marca de borrado: el dashboard y
+// el consentimiento OAuth de agentes MCP (SPEC 34)
+function isProtectedRoute(pathname: string) {
+  return isDashboardRoute(pathname) || pathname === SITE.routes.oauthConsent
+}
+
 // Redirige conservando las cookies que dejó el refresco de sesión
 function redirectTo(url: URL, response: NextResponse) {
   const redirect = NextResponse.redirect(url)
@@ -23,7 +29,7 @@ export async function proxy(request: NextRequest) {
   const { response, user } = await updateSession(request)
   const { pathname, search } = request.nextUrl
 
-  if (!user && isDashboardRoute(pathname)) {
+  if (!user && isProtectedRoute(pathname)) {
     const url = new URL(SITE.routes.signIn, request.url)
     url.searchParams.set("next", `${pathname}${search}`)
     return redirectTo(url, response)
@@ -42,7 +48,7 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  if (isMarked && isDashboardRoute(pathname)) {
+  if (isMarked && isProtectedRoute(pathname)) {
     return redirectTo(
       new URL(SITE.routes.accountDeleted, request.url),
       response

@@ -7,6 +7,7 @@ const STATIC_ROUTES: Array<{
   priority: number
 }> = [
   { path: SITE.routes.home, changeFrequency: "weekly", priority: 1 },
+  { path: SITE.mcp.docsPath, changeFrequency: "monthly", priority: 0.7 },
   { path: SITE.routes.signUp, changeFrequency: "yearly", priority: 0.6 },
   { path: SITE.routes.signIn, changeFrequency: "yearly", priority: 0.5 },
   ...SITE.legal.map(({ slug }) => ({

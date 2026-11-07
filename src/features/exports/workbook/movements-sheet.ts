@@ -1,24 +1,11 @@
 import type { Workbook } from "exceljs"
 import type { WorkspaceType } from "@/features/workspaces/queries"
-import { movementColumns } from "../columns"
-import type { ExportMovementKind, ExportMovementRow } from "../types"
+import { movementColumns, movementTone } from "../columns"
+import type { ExportMovementRow } from "../types"
 import { type SectionColumn, writeSection } from "./section"
-import { type AmountTone, finishSheet, workbookPalette } from "./theme"
+import { finishSheet, workbookPalette } from "./theme"
 
 export const MOVEMENTS_SHEET = "Movimientos"
-
-const KIND_TONES: Record<ExportMovementKind, AmountTone> = {
-  Ingreso: "income",
-  Venta: "income",
-  Gasto: "expense",
-  "Costo o gasto": "expense",
-  Traspaso: "transfer"
-}
-
-/** Color del monto según el tipo del movimiento */
-export function movementTone(row: ExportMovementRow) {
-  return KIND_TONES[row.kind]
-}
 
 /** Columnas de movimientos como columnas de sección, con el color del monto */
 export function movementSectionColumns(

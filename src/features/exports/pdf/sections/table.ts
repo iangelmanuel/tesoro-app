@@ -23,6 +23,8 @@ export interface PdfColumn<T> {
   kind: ColumnKind
   /** Valor de la celda. money y percent esperan número; date, YYYY-MM-DD */
   value: (row: T) => string | number | null | undefined
+  /** Tipo de una celda cuando cambia por fila (p. ej. una tasa en % entre montos) */
+  kindOf?: (row: T) => ColumnKind
   /** Color (tema Color) o signo (Ahorro de tinta) del monto según la fila */
   tone?: (row: T) => AmountTone | null
   /** Ancho propio; por defecto fijo en montos, fechas y horas, y "*" en texto */
@@ -62,6 +64,13 @@ const FIXED_WIDTHS: Record<ColumnKind, number | null> = {
 
 const COMPACT_SCALE = 0.9
 
+/**
+ * Una "palabra" sin espacios de este largo (un enlace, una referencia) haría
+ * que la columna crezca y la tabla se salga de la página: esas celdas se
+ * parten en cualquier carácter
+ */
+const LONG_WORD = /\S{25,}/
+
 const PERCENT_FORMAT = new Intl.NumberFormat("es-CO", {
   style: "percent",
   minimumFractionDigits: 1,
@@ -89,7 +98,7 @@ function formatValue(
     case "money": {
       const amount = Number(raw)
       const text = formatCurrency(amount).replace("-", MINUS)
-      return ctx.theme.signedAmounts && tone && amount >= 0
+      return ctx.theme.signedAmounts && tone && amount > 0
         ? `${SIGNS[tone]}${text}`
         : text
     }
@@ -174,13 +183,15 @@ export function pdfTable<T>(
     for (const row of rows) {
       body.push(
         columns.map((column) => {
+          const kind = column.kindOf?.(row) ?? column.kind
           const tone = column.tone?.(row) ?? null
-          const text = formatValue(ctx, column.kind, column.value(row), tone)
-          const isAmount = column.kind === "money"
+          const text = formatValue(ctx, kind, column.value(row), tone)
+          const isAmount = kind === "money"
           return {
             text,
             style: cellStyle,
-            alignment: ALIGNMENT[column.kind],
+            alignment: ALIGNMENT[kind],
+            wordBreak: LONG_WORD.test(text) ? "break-all" : undefined,
             noWrap: isAmount,
             color: isAmount && tone ? theme.tone[tone] : undefined
           }

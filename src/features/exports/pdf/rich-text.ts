@@ -96,7 +96,7 @@ export function richText(source: string, theme: PdfTheme): Content {
   container.innerHTML = source
   sanitize(container)
 
-  return htmlToPdfmake(container.innerHTML, {
+  const content = htmlToPdfmake(container.innerHTML, {
     window,
     removeExtraBlanks: true,
     defaultStyles: {
@@ -107,4 +107,8 @@ export function richText(source: string, theme: PdfTheme): Content {
       a: { color: theme.accentDark, decoration: "underline" }
     }
   })
+
+  // @types/html-to-pdfmake declara su salida con @types/pdfmake 0.2; la
+  // forma es la misma que la de 0.3
+  return content as unknown as Content
 }

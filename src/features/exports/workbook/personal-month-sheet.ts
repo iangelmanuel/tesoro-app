@@ -1,5 +1,5 @@
 import type { Workbook, Worksheet } from "exceljs"
-import { monthLabel } from "../range"
+import { monthLabel, monthTitle } from "../range"
 import type { PersonalMonthData } from "../types"
 import { movementSectionColumns } from "./movements-sheet"
 import {
@@ -122,11 +122,6 @@ export function sumByKind(
     formula: `SUMIFS(${movements.range("amount")},${movements.range("kind")},"${kind}")`,
     result
   }
-}
-
-export function monthTitle(month: string, today: string) {
-  const label = monthLabel(month)
-  return month === today.slice(0, 7) ? `${label} (en curso)` : label
 }
 
 export function addPersonalMonthSheet(

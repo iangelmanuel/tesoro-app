@@ -8,6 +8,7 @@ import { pdfFooter } from "./layout/footer"
 import { pdfHeader } from "./layout/header"
 import { pageSetup } from "./page"
 import { coverSection } from "./sections/cover"
+import { personalMonthSection } from "./sections/personal-month"
 import { keepTitlesWithTables } from "./sections/table"
 import { pdfTheme } from "./theme"
 import type { PdfContext, PdfReportData } from "./types"
@@ -56,14 +57,19 @@ export async function buildPdf(
     today
   }
 
-  // Provisional hasta los pasos 7 a 12: una página tras la portada
-  const sections: Content[] = [
-    {
-      text: `Incluye ${data.export.months.length} meses de detalle.`,
-      style: "body",
-      pageBreak: "before"
-    }
-  ]
+  // Detalle por mes, en orden cronológico. Empresa llega en el paso 9 y
+  // resumen, gráficas y score en los pasos 10 a 12
+  const monthSections: Content[] =
+    data.export.type === "personal"
+      ? data.export.months.flatMap((month) => personalMonthSection(ctx, month))
+      : [
+          {
+            text: `Incluye ${data.export.months.length} meses de detalle.`,
+            style: "body",
+            pageBreak: "before"
+          }
+        ]
+  const sections: Content[] = [...monthSections]
 
   const doc: TDocumentDefinitions = {
     info: {

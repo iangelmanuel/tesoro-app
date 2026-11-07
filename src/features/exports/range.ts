@@ -153,6 +153,12 @@ export function monthLabel(month: string) {
   return `${MONTH_NAMES[monthNumber - 1]} ${year}`
 }
 
+/** "Octubre 2026" o "Noviembre 2026 (en curso)". Lo usan el Excel y el PDF */
+export function monthTitle(month: string, today: string) {
+  const label = monthLabel(month)
+  return month === today.slice(0, 7) ? `${label} (en curso)` : label
+}
+
 const GENERATED_FORMAT = new Intl.DateTimeFormat("es-CO", {
   day: "numeric",
   month: "short",

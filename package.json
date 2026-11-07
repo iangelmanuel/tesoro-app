@@ -85,13 +85,13 @@
     "@trivago/prettier-plugin-sort-imports": "6.0.2",
     "@types/html-to-pdfmake": "2.4.5",
     "@types/jsdom": "30.0.0",
-    "@types/node": "24.19.2",
+    "@types/node": "26.6.6",
     "@types/papaparse": "5.5.2",
     "@types/pdfmake": "0.3.3",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@types/three": "0.187.0",
-    "eslint": "9.39.5",
+    "eslint": "10.14.0",
     "eslint-config-next": "16.4.3",
     "eslint-config-prettier": "10.1.8",
     "playwright": "1.64.1",
@@ -99,6 +99,6 @@
     "prettier-plugin-tailwindcss": "0.8.1",
     "sharp": "0.35.5",
     "tailwindcss": "4.3.3",
-    "typescript": "6.0.3"
+    "typescript": "7.0.2"
   }
 }

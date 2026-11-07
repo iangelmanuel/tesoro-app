@@ -1,6 +1,6 @@
 # SPEC 34 — Servidor MCP para agentes de IA
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 01, SPEC 02, SPEC 08c, SPEC 09, SPEC 10, SPEC 12, SPEC 26, SPEC 32
 > **Fecha:** 2026-11-06
 > **Objetivo:** Que el usuario conecte Claude, ChatGPT u otro agente a Tesoro con una URL MCP y un login OAuth, y que el agente lea todos sus datos y cree, edite en lote, borre y revierta movimientos y traspasos de sus espacios Personal y Empresa.
@@ -105,7 +105,7 @@ La idea original abarca todas las entidades. Se parte en dos:
   - en móvil, listas como tarjetas (`DataRows`) y controles de 44 px.
 - **Landing:**
   - sección `src/features/landing/components/agents-section.tsx` en `app/(public)/page.tsx`, entre `ScoreSection` y `WorkspacesSection`;
-  - contenido: título, una frase de valor, tres ejemplos de pedidos al agente (registrar, preguntar, corregir en lote), logos en texto de Claude, ChatGPT, Claude Code y Cursor (sin marcas gráficas de terceros), URL copiable y CTA **Ver cómo conectarlo** → `/mcp`;
+  - contenido: título, una frase de valor, tres ejemplos de pedidos al agente (registrar, preguntar, corregir en lote), Claude, ChatGPT, Claude Code y Cursor con su logo en el color de su marca (`src/components/brand/ai-logos.tsx`), un video de HyperFrames de una conversación con el agente (`video/clips/agentes.html`), URL copiable y CTA **Ver cómo conectarlo** → `/mcp`;
   - textos en `SITE.landing.agents`. Animación con `Reveal`, igual que las otras secciones.
 - **Página pública `/mcp`** (`app/(public)/mcp/page.tsx`, `buildMetadata`, `buildBreadcrumbSchema`, en `STATIC_ROUTES` de `sitemap.ts`):
   - qué es y qué puede hacer el agente;
@@ -284,12 +284,12 @@ docs/mcp.md
 
 ## Criterios de aceptación
 
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
 - [ ] Agregar `<SITE_URL>/api/mcp` como conector personalizado en Claude.ai abre `/oauth/consent`, y tras **Autorizar** Claude lista las tools de Tesoro.
 - [ ] El mismo flujo funciona en ChatGPT (conector con la URL) y en Claude Code (`claude mcp add --transport http`).
 - [ ] Abrir `/oauth/consent?authorization_id=...` sin sesión lleva a `/sign-in` y, tras iniciar sesión, vuelve a la pantalla de consentimiento.
 - [ ] **Cancelar** en el consentimiento deja al agente sin acceso y no crea fila en `mcp_connections`.
-- [ ] `POST /api/mcp` sin `Authorization` responde 401 con `WWW-Authenticate` que apunta a `/.well-known/oauth-protected-resource/api/mcp`.
+- [x] `POST /api/mcp` sin `Authorization` responde 401 con `WWW-Authenticate` que apunta a `/.well-known/oauth-protected-resource/api/mcp`.
 - [ ] Un token de sesión del navegador (sin claim `client_id`) recibe 401.
 - [ ] La llamada 121 de un usuario dentro del mismo minuto responde 429 con `Retry-After`.
 - [ ] `list_workspaces` devuelve solo los espacios del usuario del token.
@@ -310,11 +310,19 @@ docs/mcp.md
 - [ ] Cambiar el acceso en Cuenta → Agentes IA se aplica en la siguiente llamada del agente.
 - [ ] **Revocar** en Cuenta → Agentes IA hace que la siguiente llamada del agente responda 401.
 - [ ] El historial de Cuenta → Agentes IA muestra la operación de un agente y **Revertir** la deja en estado `Revertida`.
-- [ ] La home muestra la sección de agentes entre Score y Espacios, y su CTA lleva a `/mcp`.
-- [ ] `/mcp` aparece en `sitemap.xml`, tiene canonical y breadcrumb, y su catálogo coincide con las tools que registra el servidor.
-- [ ] `/oauth/` aparece bloqueado en `robots.txt`.
+- [x] La home muestra la sección de agentes entre Score y Espacios, y su CTA lleva a `/mcp`.
+- [x] `/mcp` aparece en `sitemap.xml`, tiene canonical y breadcrumb, y su catálogo coincide con las tools que registra el servidor.
+- [x] `/oauth/` aparece bloqueado en `robots.txt`.
 - [ ] Los pares texto/fondo nuevos (consentimiento, Agentes IA, sección y página `/mcp`) dan AA en claro y oscuro.
-- [ ] Ningún archivo del MCP importa la clave `service_role`.
+- [x] Ningún archivo del MCP importa la clave `service_role`.
+
+**Verificación (2026-11-07).** Los criterios marcados se comprobaron en local
+(CI, `curl` al endpoint, render de la home y de `/mcp`, `robots.txt`,
+`sitemap.xml` y búsqueda de `service_role`). El resto depende del login OAuth
+de un agente real contra un despliegue cuyo Site URL tenga este código (ver
+`docs/mcp.md` → Probar en local), de la RPC `undo_mcp_operation` con datos
+reales y de una revisión de contraste en el navegador. Quedan como prueba
+manual antes de publicar.
 
 ## Decisiones
 
@@ -343,7 +351,7 @@ docs/mcp.md
 - **Sí:** el agente ve montos reales aunque **Ocultar montos** esté activo. Ocultar es una preferencia visual de la UI (SPEC 22), igual que en la exportación de SPEC 32.
 - **Sí:** nombres de tools en inglés y textos en español. Los nombres siguen la convención MCP; lo que lee el usuario va en su idioma.
 - **Sí:** catálogo único en `catalog.ts`. La página `/mcp` y el servidor no se desincronizan.
-- **Sí:** nombres de clientes en texto, sin logos de Claude, ChatGPT o Cursor. Evita usar marcas de terceros.
+- **Sí (cambio del 2026-11-07):** logos de Claude, ChatGPT, Claude Code y Cursor con el color de su marca y siempre junto a su nombre (uso nominativo: solo identifican el cliente). Se decidió al pulir la landing; antes iban solo en texto.
 
 ## Riesgos
 

@@ -73,6 +73,12 @@ node scripts/prepare-demo-video.mjs    # tomas H.264 y cursor-data.js para Hyper
 cd video && npx hyperframes render     # video principal (clips: -c clips/<slug>.html)
 ```
 
+El clip de agentes (SPEC 34) no graba la app: es HTML en
+`video/clips/agentes.html`. Se renderiza con
+`npx hyperframes render -c clips/agentes.html -q delivery` y se codifica
+a 864 × 960 (H.264 `-tune animation` CRF 27 y VP9 CRF 40, sin audio) más el
+póster WebP del segundo 12,9.
+
 Las variables (`DEMO_EMAIL`, `DEMO_PASSWORD`, `SUPABASE_SERVICE_ROLE_KEY`
 local) van en el entorno o en `.env.local`, nunca en el repo. Al
 re-renderizar, actualiza `SITE.landing.demo.durationSeconds`.
@@ -100,7 +106,7 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
     (`src/components/seo/JsonLd.tsx`).
 - **Rutas de metadata** en `app/`: `robots.ts`, `sitemap.ts` y `manifest.ts`,
   todas derivadas de `SITE`:
-  - `robots.ts` bloquea `/dashboard/`, `/api/` y `/auth/`.
+  - `robots.ts` bloquea `/dashboard/`, `/api/`, `/auth/` y `/oauth/`.
   - Las rutas públicas nuevas se agregan a `STATIC_ROUTES` en `sitemap.ts`.
 - **Exportar** (SPEC 32 y 33): `app/api/export/[workspaceId]/route.ts`
   responde el `.xlsx`, el `.csv` o el `.pdf`. `exceljs` solo se importa desde
@@ -112,6 +118,23 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   `--income`, `--expense`, `--muted`, `--balance` o `--chart-*`, actualiza
   `workbook/theme.ts` (de ahí también lee `pdf/theme.ts`). Las notas y
   descripciones del usuario nunca pasan por HTML en el PDF.
+- **MCP para agentes de IA** (SPEC 34, guía en `docs/mcp.md`):
+  `app/api/mcp/route.ts` (Streamable HTTP sin estado,
+  `@modelcontextprotocol/sdk`) con OAuth 2.1 del servidor de Supabase
+  (consentimiento en `app/oauth/consent/`, descubrimiento en
+  `app/.well-known/*`). El Bearer se valida en `src/features/mcp/auth.ts`
+  (`getClaims` + `getUser`) y se usa con la clave publicable: todo pasa por
+  RLS, nunca `service_role`. La ruta corre dentro de
+  `runWithSupabaseClient`, así `createClient()` devuelve el cliente del
+  agente y las tools reusan las consultas de la UI; ahí no sirven funciones
+  que lean la sesión sin token (`getPersonalWorkspace`). Las tools viven en
+  `src/features/mcp/tools/` y se registran en `catalog.ts` (de ahí sale
+  también la página `/mcp`). Las escrituras usan los servicios compartidos
+  con las actions (`transactions/service.ts`,
+  `accounts/transfer-service.ts`, `debts/entry-service.ts`,
+  `categories/service.ts`), validan todo antes de escribir y dejan log en
+  `mcp_operations` para revertir con `undo_mcp_operation`. `/api/mcp` y
+  `/.well-known/*` no pasan por `updateSession` (matcher de `proxy.ts`).
 - `app/` contiene solo rutas. El resto del código vive en `src/` (alias
   `@/*` → `./src/*`). Estilos globales en `src/styles/globals.css` (Tailwind
   4, cargado vía `@tailwindcss/turbopack` en `next.config.ts`).
@@ -200,11 +223,16 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
 - Storage: bucket público `avatars` (1 MB, solo WebP), escritura solo en la
   carpeta `<user_id>/`. Postgres no borra archivos de Storage: se borran desde
   las actions con la sesión del usuario.
-- `pg_cron` corre dos jobs diarios:
+- `pg_cron` corre tres jobs diarios:
   - `purge-deleted-accounts` borra las cuentas marcadas para borrar hace más
     de 30 días (`raw_app_meta_data.deletion_requested_at`);
   - `purge-deleted-workspaces` borra las empresas marcadas hace más de 30 días
-    (`workspaces.deletion_requested_at`).
+    (`workspaces.deletion_requested_at`);
+  - `purge-mcp-operations` borra las operaciones del MCP de más de 30 días
+    (ventana para revertir).
+- Servidor OAuth 2.1 de Supabase activo (Authentication → OAuth Server, ruta
+  `/oauth/consent`, registro dinámico; `[auth.oauth_server]` en
+  `config.toml`). Las claves de firma JWT son asimétricas (ES256).
 - `business_workspace_limit()` es el único punto que fija cuántas empresas
   tiene un usuario (hoy 1). `SITE.businessLimit` solo lo refleja en la UI.
 - Las políticas de escritura de las tablas de un espacio usan

@@ -165,6 +165,17 @@ export const SITE = {
   // Debe coincidir con public.business_workspace_limit(). La BD es la que manda
   businessLimit: 1,
 
+  // Servidor MCP para agentes de IA (SPEC 34). Los límites de verdad viven
+  // en el servidor (bulkLimit en Zod; rate limit y ventana de revertir en
+  // SQL): esto solo los refleja en la UI y en la página /mcp
+  mcp: {
+    path: "/api/mcp",
+    docsPath: "/mcp",
+    bulkLimit: 200,
+    rateLimitPerMinute: 120,
+    undoWindowDays: 30
+  },
+
   // Conciliación de cuentas (SPEC 21). El aviso "faltan movimientos" salta si la
   // diferencia supera warnPercent % del saldo calculado o warnAmount (COP)
   reconciliation: {

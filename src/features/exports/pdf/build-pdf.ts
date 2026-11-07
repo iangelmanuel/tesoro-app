@@ -80,7 +80,7 @@ export async function buildPdf(
     footer: pdfFooter(ctx),
     styles: ctx.theme.styles,
     defaultStyle: ctx.theme.defaultStyle,
-    content: [coverSection(ctx), ...sections]
+    content: [coverSection(ctx, data.reportsUrl), ...sections]
   }
 
   return getPdfmake().createPdf(doc).getBuffer()

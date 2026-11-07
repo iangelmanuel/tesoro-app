@@ -1,6 +1,6 @@
 import type { Workbook, Worksheet } from "exceljs"
 import type { WorkspaceType } from "@/features/workspaces/queries"
-import { monthLabel } from "../range"
+import { formatGenerated, monthLabel } from "../range"
 import type { ExportRange } from "../types"
 import type { MonthSummaryCells } from "./personal-month-sheet"
 import { FIRST_SECTION_ROW, writeSection, writeSheetHeader } from "./section"
@@ -15,21 +15,6 @@ const round = (value: number) => Math.round(value * 100) / 100
 /** Referencia a una celda de otra hoja: 'Octubre 2026'!B7 */
 function ref(sheetName: string, cell: string) {
   return `'${sheetName.replace(/'/g, "''")}'!${cell}`
-}
-
-const GENERATED_FORMAT = new Intl.DateTimeFormat("es-CO", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: "UTC"
-})
-
-/** "6 nov 2026" desde YYYY-MM-DD */
-function formatGenerated(today: string) {
-  const [year, month, day] = today.split("-").map(Number)
-  return GENERATED_FORMAT.format(new Date(Date.UTC(year, month - 1, day)))
-    .replace(/\./g, "")
-    .replace(/ de /g, " ")
 }
 
 /** "Octubre 2026", "2026" (enero a diciembre) o "Enero 2026 – Octubre 2026" */

@@ -1,4 +1,5 @@
-// Genera los PNG de marca y el favicon desde los SVG fuente de assets/brand/.
+// Genera los PNG de marca y el favicon desde los SVG fuente de assets/brand/,
+// y los datos embebidos de los reportes exportados (logo y fuentes).
 // Uso: pnpm brand:assets. La salida se commitea; el CI no corre este script.
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
@@ -7,6 +8,7 @@ import sharp from "sharp"
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const BRAND = path.join(ROOT, "assets/brand")
+const FONTS = path.join(ROOT, "assets/fonts")
 
 // [SVG fuente, ancho del SVG, salida, ancho, alto]
 const PNG_TARGETS = [
@@ -30,6 +32,17 @@ const ICO_SIZES = [16, 32, 48]
 // código: el Route Handler no lee public/ con fs. Se muestra a 36 px; se
 // rasteriza a 128 para que se vea nítido con zoom.
 const EXPORT_LOGO_TARGET = ["src/features/exports/workbook/logo-data.ts", 128]
+
+// Reportes PDF (SPEC 33): el logo va como SVG vectorial y la fuente Inter en
+// base64, por la misma razón (sin fs en el despliegue). Solo cuatro pesos.
+const PDF_BRAND_TARGET = ["mark.svg", "src/features/exports/pdf/brand-data.ts"]
+const PDF_FONTS_TARGET = "src/features/exports/pdf/fonts-data.ts"
+const PDF_FONTS = [
+  ["INTER_REGULAR", "Inter-Regular.ttf"],
+  ["INTER_SEMIBOLD", "Inter-SemiBold.ttf"],
+  ["INTER_BOLD", "Inter-Bold.ttf"],
+  ["INTER_ITALIC", "Inter-Italic.ttf"]
+]
 
 // Rasteriza el SVG a la densidad justa para no escalar un bitmap
 async function renderPng(source, sourceWidth, width, height) {
@@ -116,6 +129,40 @@ async function main() {
     ].join("\n")
   )
   console.log(`✓ ${logoOutput} (${logoSize}×${logoSize})`)
+
+  const [brandSource, brandOutput] = PDF_BRAND_TARGET
+  const markSvg = (await readFile(path.join(BRAND, brandSource), "utf8"))
+    .replace(/>\s+</g, "><")
+    // Atributos con comilla simple: el string queda sin escapes y Prettier
+    // lo acepta tal cual
+    .replaceAll('"', "'")
+    .trim()
+  await mkdir(path.dirname(path.join(ROOT, brandOutput)), { recursive: true })
+  await writeFile(
+    path.join(ROOT, brandOutput),
+    [
+      `// Generado por \`pnpm brand:assets\` desde assets/brand/${brandSource}. No editar.`,
+      `export const MARK_SVG =\n  ${JSON.stringify(markSvg)}`,
+      ""
+    ].join("\n")
+  )
+  console.log(`✓ ${brandOutput}`)
+
+  const fonts = await Promise.all(
+    PDF_FONTS.map(async ([name, file]) => {
+      const data = await readFile(path.join(FONTS, file))
+      return `export const ${name} =\n  "${data.toString("base64")}"`
+    })
+  )
+  await writeFile(
+    path.join(ROOT, PDF_FONTS_TARGET),
+    [
+      "// Generado por `pnpm brand:assets` desde assets/fonts/ (Inter, licencia OFL). No editar.",
+      ...fonts,
+      ""
+    ].join("\n")
+  )
+  console.log(`✓ ${PDF_FONTS_TARGET} (${PDF_FONTS.length} fuentes)`)
 }
 
 main().catch((error) => {

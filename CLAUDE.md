@@ -43,7 +43,7 @@ pnpm check            # tsc --noEmit
 pnpm eslint           # lint (eslint:fix para corregir)
 pnpm prettier         # formatea (prettier:check solo verifica)
 pnpm next typegen     # regenera los tipos de typedRoutes (antes de `check`)
-pnpm brand:assets     # regenera PNG y favicon desde assets/brand/*.svg
+pnpm brand:assets     # regenera PNG, favicon y logo/fuentes de los exports (assets/)
 ```
 
 Supabase (CLI global; el proyecto remoto se enlaza con `supabase link`):
@@ -102,13 +102,16 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   todas derivadas de `SITE`:
   - `robots.ts` bloquea `/dashboard/`, `/api/` y `/auth/`.
   - Las rutas públicas nuevas se agregan a `STATIC_ROUTES` en `sitemap.ts`.
-- **Exportar** (SPEC 32): `app/api/export/[workspaceId]/route.ts` responde
-  el `.xlsx` o el `.csv`. `exceljs` solo se importa desde
-  `src/features/exports/workbook/` y nunca desde un componente cliente. Los
-  Route Handlers resuelven el espacio con `findWorkspace` (null → 404 en
-  JSON), no con `getWorkspace` (`notFound()` responde HTML). Si cambian
-  `--accent`, `--income`, `--expense` o `--muted`, actualiza
-  `workbook/theme.ts`.
+- **Exportar** (SPEC 32 y 33): `app/api/export/[workspaceId]/route.ts`
+  responde el `.xlsx`, el `.csv` o el `.pdf`. `exceljs` solo se importa desde
+  `src/features/exports/workbook/`, y `pdfmake`, `html-to-pdfmake` y `jsdom`
+  solo desde `src/features/exports/pdf/`; nunca desde un componente cliente.
+  `pdfmake` va en `serverExternalPackages` (`next.config.ts`). Los Route
+  Handlers resuelven el espacio con `findWorkspace` (null → 404 en JSON), no
+  con `getWorkspace` (`notFound()` responde HTML). Si cambian `--accent`,
+  `--income`, `--expense`, `--muted`, `--balance` o `--chart-*`, actualiza
+  `workbook/theme.ts` (de ahí también lee `pdf/theme.ts`). Las notas y
+  descripciones del usuario nunca pasan por HTML en el PDF.
 - `app/` contiene solo rutas. El resto del código vive en `src/` (alias
   `@/*` → `./src/*`). Estilos globales en `src/styles/globals.css` (Tailwind
   4, cargado vía `@tailwindcss/turbopack` en `next.config.ts`).

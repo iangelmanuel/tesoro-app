@@ -1,5 +1,6 @@
 import type { WorkspaceType } from "@/features/workspaces/queries"
-import type { ExportMovementRow } from "./types"
+import type { ExportMovementKind, ExportMovementRow } from "./types"
+import type { AmountTone } from "./workbook/theme"
 
 export type ColumnKind = "date" | "time" | "text" | "money" | "percent"
 
@@ -27,6 +28,19 @@ const BUSINESS: MovementColumn[] = [
   { header: "Contraparte", key: "counterparty", kind: "text" },
   { header: "Factura", key: "invoiceRef", kind: "text" }
 ]
+
+const KIND_TONES: Record<ExportMovementKind, AmountTone> = {
+  Ingreso: "income",
+  Venta: "income",
+  Gasto: "expense",
+  "Costo o gasto": "expense",
+  Traspaso: "transfer"
+}
+
+/** Color (o signo, en el PDF) del monto según el tipo del movimiento */
+export function movementTone(row: ExportMovementRow) {
+  return KIND_TONES[row.kind]
+}
 
 const AMOUNT: MovementColumn = { header: "Monto", key: "amount", kind: "money" }
 

@@ -2140,12 +2140,13 @@ Personal, sobre `dismissed_recommendations` de la empresa.
 - Ocultar en Empresa no oculta nada en Personal: las filas son por
   `workspace_id`.
 
-## Exportar (SPEC 32)
+## Exportar (SPEC 32 y 33)
 
 Desde Reportes (Personal o una empresa), el botón **Exportar** del header
-descarga un libro `.xlsx` o un `.csv` de un espacio. Sirve para presentar las
-cuentas a un contador, a la familia o a un banco, o para trabajarlas a la
-manera del usuario. Google Sheets abre los dos archivos con Archivo →
+descarga un libro `.xlsx`, un `.csv` o un reporte `.pdf` de un espacio. El
+Excel y el CSV sirven para trabajar los datos a la manera del usuario; el PDF,
+para **presentarlos** (a un contador, a la familia o a un banco) o
+archivarlos. Google Sheets abre el `.xlsx` y el `.csv` con Archivo →
 Importar; no hay integración con su API.
 
 ### Periodo
@@ -2155,9 +2156,9 @@ Importar; no hay integración con su API.
 - Solo meses completos, del día 1 al último en `America/Bogota`. El mes actual
   va hasta hoy y su título dice "(en curso)": un movimiento con fecha futura
   no entra.
-- Máximo **36 meses** por archivo, en el diálogo y en el servidor. Con un
-  historial más largo, **Todo el historial** se deshabilita y se exporta por
-  rangos.
+- Máximo **36 meses** por archivo en Excel y CSV, y **12 meses** en PDF, en el
+  diálogo y en el servidor. Con un historial más largo, **Todo el historial**
+  se deshabilita y se exporta por rangos.
 - El diálogo se prellena con el periodo de Reportes; un rango por días pasa a
   los meses que contienen sus dos fechas.
 - **Ocultar montos** no aplica: el archivo es del usuario y trae los montos
@@ -2165,7 +2166,7 @@ Importar; no hay integración con su API.
 
 ### Nombre del archivo
 
-`tesoro-<espacio>-<periodo>.<ext>`: `personal` o el slug del nombre de la
+`tesoro-<espacio>-<periodo>.<ext>` (`xlsx`, `csv` o `pdf`): `personal` o el slug del nombre de la
 empresa (sin tildes, máximo 40 caracteres) y `2026-10` (un mes), `2026` (enero
 a diciembre) o `2026-01_2026-10` (otro rango). Ejemplo:
 `tesoro-cafe-nunoa-2026.xlsx`.
@@ -2244,20 +2245,90 @@ Con otra configuración regional, Excel puede abrirlo en una sola columna: se
 importa con Datos → Desde texto/CSV y separador `;`. Google Sheets detecta el
 separador al importar.
 
+### PDF (SPEC 33)
+
+Un reporte para leer o imprimir, generado en el servidor con **pdfmake**. El
+usuario elige **Tamaño** (A4 por defecto o Carta), **Orientación** (Vertical
+por defecto u Horizontal) y **Tema**:
+
+- **Color** (por defecto): bandas de título con el color del espacio (emerald
+  en Personal, naranja en Empresa) y texto blanco, encabezados de columna con
+  un tinte claro, filas alternas, ingresos y ventas en verde, gastos y costos
+  en rojo, traspasos en gris. Todo par texto/fondo da AA (4.5:1).
+- **Ahorro de tinta**: sin rellenos de color. Títulos con línea debajo,
+  encabezados en negrita, montos en gris oscuro con signo `+` (ingreso,
+  venta) o `−` (gasto, costo; los traspasos sin signo) y gráficas en grises
+  con rayado. Texto ≥ `#4b5563` sobre blanco.
+
+Página: A4 (595 × 842 pt) o Carta (612 × 792 pt), márgenes de 40 pt a los
+lados, 72 arriba y 56 abajo; tablas y gráficas toman el ancho útil. Fuente
+Inter embebida (Regular, SemiBold, Bold e Italic). Metadatos: título "Tesoro ·
+<Espacio> · <Periodo>", autor "Tesoro", asunto "Reporte financiero", creador
+"Tesoro <versión>" e idioma `es-CO`.
+
+Estructura, cada parte en página nueva:
+
+1. **Portada**, sin encabezado ni pie: logo, "Reporte financiero", espacio,
+   periodo ("Enero – Octubre 2026"; termina en "(en curso)" si el último mes
+   es el actual), fecha de generación, una introducción y un **QR** a
+   Reportes del espacio con el mismo periodo (mes, trimestre, año o rango de
+   días). La página pide la sesión del dueño: el QR no expone datos.
+2. **Resumen del periodo**: cuatro KPIs (Personal: Ingresos, Gastos,
+   Balance, Tasa de ahorro; Empresa: Ventas, Costos y gastos, Utilidad,
+   Margen) con su variación contra el periodo anterior de igual largo,
+   calculada como en Reportes (la tasa y el margen en puntos, "pp"), y la
+   tabla mes a mes de la hoja Resumen del Excel.
+3. **Gráficas**, en SVG propio (vectoriales, texto seleccionable):
+   Personal: Ingresos vs gastos por mes, Gastos por categoría (dona, top 6 +
+   "Otras"), Top categorías de gasto (top 8) y Saldo en cuentas al cierre;
+   Empresa: Ventas vs costos por mes, Costos por categoría, Top categorías de
+   costo y Utilidad por mes (pérdidas bajo el eje). Montos abreviados ("$ 1,2
+   M"). Con un solo mes, las dos gráficas por mes se cambian por una tarjeta
+   "Un solo mes: compara periodos más largos para ver la tendencia."; sin
+   datos, cada gráfica dice "Sin datos en este periodo".
+4. **Score y recomendaciones**: el score **actual**, al día de generación
+   ("Score al 7 nov 2026"), no un histórico del periodo, con su banda,
+   medidor, tabla de factores (peso, dato y estado) y las recomendaciones
+   activas (las ocultas este mes no salen) con el texto de la pantalla. Sin
+   datos suficientes, los motivos y ningún número.
+5. **Detalle por mes**, en orden cronológico, con las mismas secciones,
+   columnas, omisiones y textos vacíos que las hojas de mes del Excel.
+   - Movimientos de Personal en tabla compacta: en vertical Fecha,
+     Descripción, Categoría, Cuenta ("Origen → Destino" en traspasos) y
+     Monto; en horizontal las 9 columnas de la hoja Movimientos sin Mes.
+   - Empresa no tiene tabla de Movimientos: Ventas y Costos y gastos van con
+     esas mismas 5 columnas en vertical y con las 9 del Excel en horizontal;
+     Traspasos, con sus 6 columnas.
+
+Las demás páginas llevan encabezado (logo, "Tesoro · <Espacio>" y periodo,
+con una línea del color del espacio) y pie ("Generado el 7 nov 2026" y
+"Página N de M"; la portada cuenta como página 1). Las tablas repiten el
+encabezado al saltar de página, ninguna fila se parte y una banda de título
+no queda sola al final de una página.
+
 ### Seguridad
 
-- `GET /api/export/[workspaceId]?format=xlsx|csv&from=YYYY-MM&to=YYYY-MM`
-  lee con la sesión del usuario (clave publicable) y RLS, nunca con
-  `service_role`. Sin sesión responde 401; un espacio ajeno o inexistente,
-  404; parámetros inválidos o más de 36 meses, 400. Errores en JSON
-  `{ error }`. Respuesta con `Cache-Control: no-store`.
+- `GET /api/export/[workspaceId]?format=xlsx|csv|pdf&from=YYYY-MM&to=YYYY-MM`
+  (con PDF, además `size=a4|letter`, `orientation=portrait|landscape` y
+  `theme=color|ink`; si faltan, toman el valor por defecto) lee con la sesión
+  del usuario (clave publicable) y RLS, nunca con `service_role`. Sin sesión
+  responde 401; un espacio ajeno o inexistente, 404; parámetros inválidos,
+  más de 36 meses o más de 12 con PDF ("El PDF admite hasta 12 meses."), 400. Errores en JSON `{ error }`. Respuesta con `Cache-Control: no-store`.
 - Un espacio marcado para borrar también se exporta: es la última forma de
   sacar los datos.
 - `account_balances_by_month` es `security invoker`, `stable` y
   `search_path = ''`; solo la ejecuta `authenticated`.
 - Las consultas paginan de 1000 en 1000: un periodo con más filas se exporta
   completo.
-- `exceljs` corre solo en el servidor; no llega al navegador.
+- `exceljs`, `pdfmake`, `html-to-pdfmake` y `jsdom` corren solo en el
+  servidor; no llegan al navegador. pdfmake no lee archivos ni descarga nada:
+  las fuentes y el logo van en memoria y sus políticas de acceso niegan todo.
+- En el PDF, el HTML solo sirve para textos de Tesoro (introducción y
+  recomendaciones) y pasa por una lista de etiquetas permitidas (`p`,
+  `strong`, `em`, `ul`, `ol`, `li`, `br` y `a` con `https:` o del propio
+  sitio); los valores interpolados se escapan. Notas, descripciones y nombres
+  del usuario van siempre como texto plano, y todo texto de las gráficas SVG
+  se escapa.
 
 ## Specs
 

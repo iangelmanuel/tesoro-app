@@ -8,6 +8,9 @@ import type { ColumnKind } from "../columns"
 //   [data-workspace="business"] (orange-700)
 // - income / expense: --income / --expense de :root
 // - muted: --muted de :root (traspasos y textos atenuados)
+// - balance y chart1–chart5: --balance y --chart-1…5 de :root (solo las
+//   gráficas del PDF, SPEC 33; contra blanco: balance 8.17, chart1 9.15,
+//   chart2 4.27, chart3 15.07, chart4 6.02, chart5 3.37)
 // Los tintes (encabezado, total) y el tono oscuro son propios del libro.
 // Contraste verificado (WCAG 2.x):
 // - blanco / accent: 5.36 Personal, 5.22 Empresa (banda de título)
@@ -21,7 +24,13 @@ export const COLORS = {
   ink: "FF1F2937",
   white: "FFFFFFFF",
   zebra: "FFF6F8FA",
-  gridline: "FFE3E7EC"
+  gridline: "FFE3E7EC",
+  balance: "FF004CA4",
+  chart1: "FF3C495B",
+  chart2: "FF6B7C92",
+  chart3: "FF1D2735",
+  chart4: "FF55647A",
+  chart5: "FF7D8DA5"
 } as const
 
 export interface WorkbookPalette {

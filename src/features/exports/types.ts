@@ -1,8 +1,30 @@
-export const EXPORT_FORMATS = ["xlsx", "csv"] as const
+export const EXPORT_FORMATS = ["xlsx", "csv", "pdf"] as const
 export type ExportFormat = (typeof EXPORT_FORMATS)[number]
 
 /** Meses que puede cubrir un archivo, contando el primero y el último */
 export const MAX_EXPORT_MONTHS = 36
+
+/** Meses que puede cubrir un PDF (SPEC 33): cada mes lleva su detalle */
+export const MAX_PDF_MONTHS = 12
+
+export const PDF_SIZES = ["a4", "letter"] as const
+export const PDF_ORIENTATIONS = ["portrait", "landscape"] as const
+export const PDF_THEMES = ["color", "ink"] as const
+
+export interface PdfOptions {
+  /** Por defecto "a4" */
+  size: (typeof PDF_SIZES)[number]
+  /** Por defecto "portrait" */
+  orientation: (typeof PDF_ORIENTATIONS)[number]
+  /** Por defecto "color" */
+  theme: (typeof PDF_THEMES)[number]
+}
+
+export const DEFAULT_PDF_OPTIONS: PdfOptions = {
+  size: "a4",
+  orientation: "portrait",
+  theme: "color"
+}
 
 export interface ExportRange {
   /** YYYY-MM, inclusivo */

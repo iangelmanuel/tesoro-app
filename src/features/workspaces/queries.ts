@@ -63,34 +63,37 @@ export const getPersonalWorkspace = cache(
 )
 
 // Espacio por id, o null si no existe o no es del usuario: la política select
-// de workspaces solo devuelve los del dueño. Deduplicado por request.
-const findWorkspace = cache(async (id: string): Promise<Workspace | null> => {
-  if (!idSchema.safeParse(id).success) {
-    return null
-  }
+// de workspaces solo devuelve los del dueño. Deduplicado por request. Los
+// Route Handlers la usan para responder 404 en JSON en vez de notFound().
+export const findWorkspace = cache(
+  async (id: string): Promise<Workspace | null> => {
+    if (!idSchema.safeParse(id).success) {
+      return null
+    }
 
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("workspaces")
-    .select("id, type, name, deletion_requested_at, profiles (currency)")
-    .eq("id", id)
-    .maybeSingle()
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from("workspaces")
+      .select("id, type, name, deletion_requested_at, profiles (currency)")
+      .eq("id", id)
+      .maybeSingle()
 
-  if (error) {
-    throw new Error("No se pudo cargar el espacio")
-  }
-  if (!data) {
-    return null
-  }
+    if (error) {
+      throw new Error("No se pudo cargar el espacio")
+    }
+    if (!data) {
+      return null
+    }
 
-  return {
-    id: data.id,
-    type: data.type,
-    name: data.name,
-    currency: data.profiles.currency,
-    deletionRequestedAt: data.deletion_requested_at
+    return {
+      id: data.id,
+      type: data.type,
+      name: data.name,
+      currency: data.profiles.currency,
+      deletionRequestedAt: data.deletion_requested_at
+    }
   }
-})
+)
 
 /** Espacio del usuario por id. Si no existe o es ajeno, 404 */
 export async function getWorkspace(id: string): Promise<Workspace> {

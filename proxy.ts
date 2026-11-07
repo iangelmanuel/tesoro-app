@@ -64,7 +64,9 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Todo menos estáticos, optimización de imágenes, metadata e imágenes
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico)$).*)"
+    // Todo menos estáticos, optimización de imágenes, metadata e imágenes.
+    // Tampoco el MCP (api/mcp) ni el descubrimiento OAuth (.well-known): no
+    // usan cookies, se autentican con Bearer (SPEC 34)
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|api/mcp(?:/|$)|\\.well-known/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico)$).*)"
   ]
 }

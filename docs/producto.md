@@ -2330,6 +2330,94 @@ no queda sola al final de una página.
   del usuario van siempre como texto plano, y todo texto de las gráficas SVG
   se escapa.
 
+## Agentes de IA (MCP)
+
+Desde SPEC 34 el usuario puede conectar Claude, ChatGPT, Claude Code, Cursor
+u otro agente que hable MCP con una URL (`<SITE_URL>/api/mcp`). El agente
+inicia sesión con la cuenta del usuario y trabaja con sus datos reales:
+registra, pregunta y corrige movimientos y traspasos en Personal y Empresa.
+La guía para el usuario está en `/mcp`; la técnica, en
+[`docs/mcp.md`](mcp.md).
+
+### Conectar
+
+- El agente abre `/oauth/consent`. Sin sesión, pasa por `/sign-in` y vuelve.
+  Con la cuenta marcada para borrar, va a `/account-deleted`.
+- La pantalla muestra "**<Cliente>** quiere acceder a tu cuenta de Tesoro", el
+  correo de la sesión, qué podrá hacer y el selector **Acceso**: **Leer y
+  escribir** (por defecto) o **Solo lectura**. **Cancelar** deja al agente sin
+  acceso.
+- Una solicitud inválida o vencida muestra "Esta solicitud ya no es válida.
+  Vuelve a conectar desde tu agente.".
+
+### Qué puede hacer
+
+- **Leer** (con cualquier acceso): espacios, cuentas con saldo, categorías,
+  movimientos y traspasos (con filtros y paginado), resumen del mes, reporte
+  de un periodo (hasta 36 meses), flujo de caja (Empresa), score con
+  factores y recomendaciones, presupuestos, metas, deudas, gastos e ingresos
+  fijos, lo que te deben e historial de operaciones. Presupuestos, metas,
+  deudas, fijos y Me deben solo existen en Personal.
+- **Escribir** (solo con **Leer y escribir**): crear, editar y borrar de 1 a
+  200 movimientos o traspasos por llamada, y crear categorías.
+- **Revertir** una operación por su id.
+- El agente ve los montos reales aunque **Ocultar montos** esté activo: es
+  una preferencia visual de la app, como en la exportación.
+
+### Reglas de escritura
+
+- Mismas validaciones que la app (categoría del tipo correcto, cuenta activa,
+  monto > 0, descripción de 1 a 120 caracteres, nota de hasta 500).
+- **Todo o nada:** se validan todas las filas antes de escribir; si una
+  falla no se guarda ninguna y la respuesta lista los errores por índice. Si
+  algo falla a mitad de camino, se deshace lo escrito y la operación queda
+  **Fallida**.
+- **Vista previa:** con `dry_run` el agente muestra el antes y el después sin
+  guardar.
+- **Pagos de préstamo y cobros de Me deben:** el abono manda. Monto, fecha y
+  hora se cambian en el abono (con las reglas del diálogo de pago) y el
+  movimiento se actualiza con él; la nota va al movimiento. Tipo, categoría,
+  cuenta y descripción no se cambian. Borrar el movimiento borra su abono.
+- Un pago de gasto fijo sigue siendo un gasto y conserva su ocurrencia; un
+  ingreso fijo conserva su enlace.
+- Un espacio marcado para borrar no admite escrituras; sí lecturas.
+- Los pagos de tarjeta y la escritura de cuentas, fijos, presupuestos, metas,
+  deudas y Me deben llegan en SPEC 35.
+
+### Revertir
+
+- Toda escritura del agente queda en el historial con el estado de cada fila
+  antes y después.
+- Revertir borra lo creado, recrea lo borrado con sus mismos ids y vínculos y
+  devuelve lo editado. Es todo o nada: si una fila cambió después (p. ej.
+  desde la app), no revierte nada y dice cuántas cambiaron.
+- Una operación se revierte una sola vez, hasta 30 días después. No hay
+  rehacer. El job `purge-mcp-operations` borra las operaciones más viejas.
+
+### Cuenta → Agentes IA
+
+- **Tu URL de MCP** con botón **Copiar** y el enlace a `/mcp`.
+- **Agentes conectados:** nombre, fecha de autorización y último uso. Por
+  agente, **Leer y escribir** / **Solo lectura** (aplica en su siguiente
+  llamada) y **Revocar** (con confirmación; su siguiente llamada recibe 401).
+- **Historial:** las últimas 50 operaciones con fecha, agente, espacio,
+  resumen y estado (**Aplicada**, **Revertida** o **Fallida**). **Revertir**
+  en las aplicadas y fallidas de menos de 30 días.
+
+### Seguridad
+
+- OAuth 2.1 con PKCE y registro dinámico del servidor de Supabase. El token
+  del agente solo sirve en `/api/mcp`; un token de sesión del navegador no.
+- Todas las lecturas y escrituras pasan por RLS como el usuario; el servidor
+  nunca usa `service_role`.
+- **120 llamadas por minuto** por usuario (429 con `Retry-After`).
+- Acceso por agente en `mcp_connections`: Supabase OAuth no tiene scopes
+  propios. Un agente sin fila queda en solo lectura.
+- Las descripciones y notas llegan al agente como datos: un texto malicioso
+  en un movimiento podría intentar darle instrucciones. El agente solo actúa
+  sobre datos del propio usuario y toda escritura se puede revertir; `/mcp`
+  lo advierte.
+
 ## Specs
 
 Tesoro se construye en 13 specs (`specs/`), cada uno sobre los anteriores. El

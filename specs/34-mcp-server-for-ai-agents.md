@@ -1,6 +1,6 @@
 # SPEC 34 — Servidor MCP para agentes de IA
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 01, SPEC 02, SPEC 08c, SPEC 09, SPEC 10, SPEC 12, SPEC 26, SPEC 32
 > **Fecha:** 2026-11-06
 > **Objetivo:** Que el usuario conecte Claude, ChatGPT u otro agente a Tesoro con una URL MCP y un login OAuth, y que el agente lea todos sus datos y cree, edite en lote, borre y revierta movimientos y traspasos de sus espacios Personal y Empresa.
@@ -66,7 +66,7 @@ La idea original abarca todas las entidades. Se parte en dos:
   - `list_categories`: categorías del espacio por tipo (ingreso/gasto), del sistema y propias;
   - `get_month_summary`: un mes (`YYYY-MM`). Personal: ingresos, gastos, balance, tasa de ahorro, saldo al inicio y al cierre, top 5 categorías de gasto. Empresa: ventas, costos y gastos, utilidad, margen, saldos;
   - `get_period_report`: rango `from`/`to` en meses (hasta 36). Serie mes a mes con los mismos totales y `category_totals` del periodo. Reusa `src/features/reports/` y las consultas de SPEC 32;
-  - `list_transactions`: filtros `from`, `to`, `type`, `category_id`, `account_id`, `search` (descripción y nota), `verified`, `linked` (`any`/`none`/`debt`/`recurring_expense`/`recurring_income`/`receivable`); paginado con `limit` (1–200, por defecto 50) y `cursor` opaco. Cada fila trae su vínculo si lo tiene;
+  - `list_transactions`: filtros `from`, `to`, `type`, `category_id`, `account_id`, `search` (descripción y nota), `linked` (`any`/`none`/`debt`/`recurring_expense`/`recurring_income`/`receivable`); paginado con `limit` (1–200, por defecto 50) y `cursor` opaco. Cada fila trae su vínculo si lo tiene;
   - `get_transaction`: un movimiento por id, con vínculo y cuenta;
   - `list_transfers`: traspasos con filtros `from`, `to`, `account_id`; mismo paginado;
   - `list_budgets`: presupuestos con progreso del mes (`budget_progress`);
@@ -79,14 +79,14 @@ La idea original abarca todas las entidades. Se parte en dos:
   - `list_operations`: historial de operaciones del MCP (ver "Revertir"), de la conexión actual o de todas (`all_connections: true`).
 - **Tools de escritura** (solo con `write`). Todas aceptan `dry_run` (por defecto `false`):
   - `create_transactions`: 1–200 movimientos `{ type, amount, category_id, account_id, occurred_on, time?, description, note? }`;
-  - `update_transactions`: 1–200 parches `{ id, ...campos }`. Campos editables: `type`, `amount`, `category_id`, `account_id`, `occurred_on`, `time`, `description`, `note`, `verified`;
+  - `update_transactions`: 1–200 parches `{ id, ...campos }`. Campos editables: `type`, `amount`, `category_id`, `account_id`, `occurred_on`, `time`, `description`, `note`. Sin `verified`: Tesoro no marca movimientos como verificados (SPEC 19 lo descartó);
   - `delete_transactions`: 1–200 ids;
   - `create_transfers`, `update_transfers`, `delete_transfers`: mismo contrato con `{ from_account_id, to_account_id, amount, occurred_on, time?, note? }`;
   - `create_category`: crea una categoría del espacio (`name`, `type`). Necesaria para que el agente registre movimientos en una categoría que no existe;
   - `undo_operation`: revierte una operación por id.
 - **Reglas de escritura:**
   - misma validación que la UI (Zod de `src/features/transactions/schemas.ts` y de traspasos): categoría del tipo correcto, cuenta activa, monto > 0, descripción 1–120, nota ≤ 500;
-  - **movimientos vinculados** siguen las reglas de la UI (SPEC 26): editar monto, fecha o cuenta propaga al vínculo (pago de deuda o tarjeta, gasto fijo, ingreso fijo, cobro de "me deben"); borrar borra el vínculo. El log guarda las dos filas;
+  - **movimientos vinculados** siguen las reglas de la UI (SPEC 26). En un pago de préstamo o cobro de "me deben" el abono es la fuente de verdad: monto, fecha y hora se escriben en el abono (con las validaciones del diálogo de pago) y el trigger los copia al movimiento; la nota va al movimiento; cambiar tipo, categoría, cuenta o descripción se rechaza. Borrar borra el abono y su movimiento. Un gasto fijo o ingreso fijo conserva su enlace. El log guarda las dos filas. Un pago de tarjeta no es un movimiento (vive en `debt_entries`): se escribe en SPEC 35;
   - `day_position` se asigna igual que al crear desde la UI;
   - **todo o nada:** primero se validan todas las filas; si una falla, no se escribe ninguna y la respuesta lista cada error con su índice. Si falla una escritura a mitad de camino, las filas ya aplicadas se revierten con el log y la operación queda `failed`;
   - **`dry_run: true`** valida y devuelve el antes y el después de cada fila sin guardar ni crear operación;
@@ -99,13 +99,13 @@ La idea original abarca todas las entidades. Se parte en dos:
   - ventana de **30 días**. Un job de `pg_cron` diario `purge-mcp-operations` borra las operaciones más viejas.
 - **Cuenta → Agentes IA** (`app/dashboard/account/agents/page.tsx`, ícono `Bot`, nueva línea en `SITE.account.sections`):
   - **Tu URL de MCP**: `<SITE_URL>/api/mcp` en un campo de solo lectura con botón **Copiar** (toast "URL copiada") y enlace "Cómo conectarla" a `/mcp`;
-  - **Agentes conectados**: lista con `surface.ts` (nombre del cliente, autorizado el, último uso). Por fila: `Select` **Leer y escribir** / **Solo lectura** y botón **Revocar** con confirmación. Revocar llama a `supabase.auth.oauth.revokeGrant` y borra la fila de `mcp_connections`. Lee los grants con `getUserGrants()`;
+  - **Agentes conectados**: lista con `surface.ts` (nombre del cliente, autorizado el, último uso). Por fila: `Select` **Leer y escribir** / **Solo lectura** y botón **Revocar** con confirmación. Revocar llama a `supabase.auth.oauth.revokeGrant` y borra la fila de `mcp_connections`. Lee los grants con `listGrants()`;
   - vacío: `EmptyState` "Aún no has conectado ningún agente." con enlace a `/mcp`;
-  - **Historial**: las últimas 50 operaciones (fecha, agente, espacio, resumen, estado `Aplicada` / `Revertida` / `Fallida`) con botón **Revertir** en las aplicadas de menos de 30 días. Usa la misma RPC que `undo_operation`;
+  - **Historial**: las últimas 50 operaciones (fecha, agente, espacio, resumen, estado `Aplicada` / `Revertida` / `Fallida`) con botón **Revertir** en las aplicadas y fallidas de menos de 30 días. Usa la misma RPC que `undo_operation`;
   - en móvil, listas como tarjetas (`DataRows`) y controles de 44 px.
 - **Landing:**
   - sección `src/features/landing/components/agents-section.tsx` en `app/(public)/page.tsx`, entre `ScoreSection` y `WorkspacesSection`;
-  - contenido: título, una frase de valor, tres ejemplos de pedidos al agente (registrar, preguntar, corregir en lote), logos en texto de Claude, ChatGPT, Claude Code y Cursor (sin marcas gráficas de terceros), URL copiable y CTA **Ver cómo conectarlo** → `/mcp`;
+  - contenido: título, una frase de valor, tres ejemplos de pedidos al agente (registrar, preguntar, corregir en lote), Claude, ChatGPT, Claude Code y Cursor con su logo en el color de su marca (`src/components/brand/ai-logos.tsx`), un video de HyperFrames de una conversación con el agente (`video/clips/agentes.html`), URL copiable y CTA **Ver cómo conectarlo** → `/mcp`;
   - textos en `SITE.landing.agents`. Animación con `Reveal`, igual que las otras secciones.
 - **Página pública `/mcp`** (`app/(public)/mcp/page.tsx`, `buildMetadata`, `buildBreadcrumbSchema`, en `STATIC_ROUTES` de `sitemap.ts`):
   - qué es y qué puede hacer el agente;
@@ -193,8 +193,9 @@ RLS y funciones:
 - `mcp_rate_limits`: RLS sin políticas; solo se toca desde `mcp_hit_rate_limit()`.
 - `mcp_hit_rate_limit() returns table (allowed boolean, retry_after int)`: `security definer`, usa `auth.uid()`, hace upsert del contador de la ventana actual y borra ventanas de más de una hora del mismo usuario. `grant execute` solo a `authenticated`.
 - `undo_mcp_operation(p_operation_id uuid) returns void`: `security invoker` (RLS de cada tabla aplica), en una transacción:
-  - falla si la operación no es del usuario, no está `applied` o tiene más de 30 días;
+  - falla si la operación no es del usuario, no está `applied` o `failed`, o tiene más de 30 días;
   - recorre las filas en orden inverso a `position`, verifica conflictos (`updated_at` y existencia) y restaura con `jsonb_populate_record` solo en las tablas de la lista;
+  - en una `failed`, las filas que la compensación ya dejó como en `before` (o ya borró, si se crearon) se saltan en vez de contar como conflicto;
   - marca la operación `undone`.
 - `pg_cron` `purge-mcp-operations`: diario, borra `mcp_operations` con `created_at < now() - interval '30 days'`.
 - Índices: `mcp_operations (user_id, created_at desc)`.
@@ -283,12 +284,12 @@ docs/mcp.md
 
 ## Criterios de aceptación
 
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
 - [ ] Agregar `<SITE_URL>/api/mcp` como conector personalizado en Claude.ai abre `/oauth/consent`, y tras **Autorizar** Claude lista las tools de Tesoro.
 - [ ] El mismo flujo funciona en ChatGPT (conector con la URL) y en Claude Code (`claude mcp add --transport http`).
 - [ ] Abrir `/oauth/consent?authorization_id=...` sin sesión lleva a `/sign-in` y, tras iniciar sesión, vuelve a la pantalla de consentimiento.
 - [ ] **Cancelar** en el consentimiento deja al agente sin acceso y no crea fila en `mcp_connections`.
-- [ ] `POST /api/mcp` sin `Authorization` responde 401 con `WWW-Authenticate` que apunta a `/.well-known/oauth-protected-resource/api/mcp`.
+- [x] `POST /api/mcp` sin `Authorization` responde 401 con `WWW-Authenticate` que apunta a `/.well-known/oauth-protected-resource/api/mcp`.
 - [ ] Un token de sesión del navegador (sin claim `client_id`) recibe 401.
 - [ ] La llamada 121 de un usuario dentro del mismo minuto responde 429 con `Retry-After`.
 - [ ] `list_workspaces` devuelve solo los espacios del usuario del token.
@@ -299,7 +300,7 @@ docs/mcp.md
 - [ ] `create_transactions` con 201 movimientos se rechaza sin escribir nada.
 - [ ] `create_transactions` con 5 filas donde la 4 tiene una categoría de ingreso en un gasto no crea ninguna y el error señala el índice 3.
 - [ ] `update_transactions` con `dry_run: true` devuelve antes y después y no cambia ninguna fila ni crea operación.
-- [ ] `update_transactions` que cambia el monto de un pago de tarjeta actualiza también el `debt_entries` vinculado, como en la UI.
+- [ ] `update_transactions` que cambia el monto de un pago de préstamo actualiza también el `debt_entries` vinculado, como el diálogo de pago.
 - [ ] `delete_transactions` de 10 movimientos y luego `undo_operation` deja los 10 de vuelta con sus mismos ids y vínculos.
 - [ ] `undo_operation` falla con el mensaje de conflicto si uno de los movimientos se editó desde la UI después, y no revierte ninguno.
 - [ ] `undo_operation` sobre una operación ya revertida responde error y no cambia nada.
@@ -309,11 +310,19 @@ docs/mcp.md
 - [ ] Cambiar el acceso en Cuenta → Agentes IA se aplica en la siguiente llamada del agente.
 - [ ] **Revocar** en Cuenta → Agentes IA hace que la siguiente llamada del agente responda 401.
 - [ ] El historial de Cuenta → Agentes IA muestra la operación de un agente y **Revertir** la deja en estado `Revertida`.
-- [ ] La home muestra la sección de agentes entre Score y Espacios, y su CTA lleva a `/mcp`.
-- [ ] `/mcp` aparece en `sitemap.xml`, tiene canonical y breadcrumb, y su catálogo coincide con las tools que registra el servidor.
-- [ ] `/oauth/` aparece bloqueado en `robots.txt`.
+- [x] La home muestra la sección de agentes entre Score y Espacios, y su CTA lleva a `/mcp`.
+- [x] `/mcp` aparece en `sitemap.xml`, tiene canonical y breadcrumb, y su catálogo coincide con las tools que registra el servidor.
+- [x] `/oauth/` aparece bloqueado en `robots.txt`.
 - [ ] Los pares texto/fondo nuevos (consentimiento, Agentes IA, sección y página `/mcp`) dan AA en claro y oscuro.
-- [ ] Ningún archivo del MCP importa la clave `service_role`.
+- [x] Ningún archivo del MCP importa la clave `service_role`.
+
+**Verificación (2026-11-07).** Los criterios marcados se comprobaron en local
+(CI, `curl` al endpoint, render de la home y de `/mcp`, `robots.txt`,
+`sitemap.xml` y búsqueda de `service_role`). El resto depende del login OAuth
+de un agente real contra un despliegue cuyo Site URL tenga este código (ver
+`docs/mcp.md` → Probar en local), de la RPC `undo_mcp_operation` con datos
+reales y de una revisión de contraste en el navegador. Quedan como prueba
+manual antes de publicar.
 
 ## Decisiones
 
@@ -342,7 +351,7 @@ docs/mcp.md
 - **Sí:** el agente ve montos reales aunque **Ocultar montos** esté activo. Ocultar es una preferencia visual de la UI (SPEC 22), igual que en la exportación de SPEC 32.
 - **Sí:** nombres de tools en inglés y textos en español. Los nombres siguen la convención MCP; lo que lee el usuario va en su idioma.
 - **Sí:** catálogo único en `catalog.ts`. La página `/mcp` y el servidor no se desincronizan.
-- **Sí:** nombres de clientes en texto, sin logos de Claude, ChatGPT o Cursor. Evita usar marcas de terceros.
+- **Sí (cambio del 2026-11-07):** logos de Claude, ChatGPT, Claude Code y Cursor con el color de su marca y siempre junto a su nombre (uso nominativo: solo identifican el cliente). Se decidió al pulir la landing; antes iban solo en texto.
 
 ## Riesgos
 

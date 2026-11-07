@@ -559,6 +559,133 @@ export type Database = {
           }
         ]
       }
+      mcp_connections: {
+        Row: {
+          access: Database["public"]["Enums"]["mcp_access"]
+          client_id: string
+          client_name: string
+          created_at: string
+          last_used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access?: Database["public"]["Enums"]["mcp_access"]
+          client_id: string
+          client_name: string
+          created_at?: string
+          last_used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access?: Database["public"]["Enums"]["mcp_access"]
+          client_id?: string
+          client_name?: string
+          created_at?: string
+          last_used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mcp_operation_rows: {
+        Row: {
+          after: Json | null
+          before: Json | null
+          operation_id: string
+          position: number
+          row_id: string
+          table_name: string
+        }
+        Insert: {
+          after?: Json | null
+          before?: Json | null
+          operation_id: string
+          position: number
+          row_id: string
+          table_name: string
+        }
+        Update: {
+          after?: Json | null
+          before?: Json | null
+          operation_id?: string
+          position?: number
+          row_id?: string
+          table_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcp_operation_rows_operation_id_fkey"
+            columns: ["operation_id"]
+            isOneToOne: false
+            referencedRelation: "mcp_operations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      mcp_operations: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          row_count: number
+          status: Database["public"]["Enums"]["mcp_operation_status"]
+          summary: string
+          tool: string
+          undone_at: string | null
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          row_count: number
+          status?: Database["public"]["Enums"]["mcp_operation_status"]
+          summary: string
+          tool: string
+          undone_at?: string | null
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          row_count?: number
+          status?: Database["public"]["Enums"]["mcp_operation_status"]
+          summary?: string
+          tool?: string
+          undone_at?: string | null
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcp_operations_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      mcp_rate_limits: {
+        Row: {
+          count: number
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          user_id: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1316,6 +1443,17 @@ export type Database = {
         Args: { p_workspace_id: string }
         Returns: boolean
       }
+      mcp_hit_rate_limit: {
+        Args: never
+        Returns: {
+          allowed: boolean
+          retry_after: number
+        }[]
+      }
+      mcp_snapshot_columns: {
+        Args: { p_snapshot: Json; p_table: string }
+        Returns: string
+      }
       monthly_totals: {
         Args: { p_from: string; p_to: string; p_workspace_id: string }
         Returns: {
@@ -1337,6 +1475,7 @@ export type Database = {
       }
       purge_deleted_accounts: { Args: never; Returns: number }
       purge_deleted_workspaces: { Args: never; Returns: number }
+      purge_mcp_operations: { Args: never; Returns: number }
       record_card_advance: {
         Args: {
           p_account_id?: string
@@ -1480,6 +1619,10 @@ export type Database = {
         }[]
       }
       undo_import: { Args: { p_import_id: string }; Returns: number }
+      undo_mcp_operation: {
+        Args: { p_operation_id: string }
+        Returns: undefined
+      }
       workspace_balance: { Args: { p_workspace_id: string }; Returns: number }
     }
     Enums: {
@@ -1495,6 +1638,8 @@ export type Database = {
         | "debt_entries"
         | "goal_contributions"
       income_frequency: "monthly" | "biweekly" | "yearly" | "none"
+      mcp_access: "read" | "write"
+      mcp_operation_status: "applied" | "undone" | "failed"
       rate_type: "ea" | "mv"
       receivable_schedule: "once" | "monthly"
       recurring_frequency: "monthly" | "yearly"
@@ -1637,6 +1782,8 @@ export const Constants = {
         "goal_contributions"
       ],
       income_frequency: ["monthly", "biweekly", "yearly", "none"],
+      mcp_access: ["read", "write"],
+      mcp_operation_status: ["applied", "undone", "failed"],
       rate_type: ["ea", "mv"],
       receivable_schedule: ["once", "monthly"],
       recurring_frequency: ["monthly", "yearly"],

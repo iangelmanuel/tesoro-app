@@ -121,6 +121,9 @@ export const SITE = {
     authCallback: "/auth/callback",
     account: "/dashboard/account",
     accountDeleted: "/account-deleted",
+    // Consentimiento OAuth de agentes MCP (SPEC 34). Debe coincidir con
+    // authorization_url_path del servidor OAuth de Supabase
+    oauthConsent: "/oauth/consent",
     legal: "/legal"
   },
 
@@ -140,7 +143,8 @@ export const SITE = {
         name: "Preferencias",
         href: "/dashboard/account/preferences",
         icon: "SlidersHorizontal"
-      }
+      },
+      { name: "Agentes IA", href: "/dashboard/account/agents", icon: "Bot" }
     ]
   },
 
@@ -161,6 +165,17 @@ export const SITE = {
 
   // Debe coincidir con public.business_workspace_limit(). La BD es la que manda
   businessLimit: 1,
+
+  // Servidor MCP para agentes de IA (SPEC 34). Los límites de verdad viven
+  // en el servidor (bulkLimit en Zod; rate limit y ventana de revertir en
+  // SQL): esto solo los refleja en la UI y en la página /mcp
+  mcp: {
+    path: "/api/mcp",
+    docsPath: "/mcp",
+    bulkLimit: 200,
+    rateLimitPerMinute: 120,
+    undoWindowDays: 30
+  },
 
   // Conciliación de cuentas (SPEC 21). El aviso "faltan movimientos" salta si la
   // diferencia supera warnPercent % del saldo calculado o warnAmount (COP)
@@ -266,7 +281,27 @@ export const SITE = {
           poster: "/videos/espacios-poster.webp"
         }
       }
-    ]
+    ],
+
+    // Sección "Agentes de IA" de la landing (SPEC 34). Los clientes y sus
+    // logos viven en src/components/brand/ai-logos.tsx
+    agents: {
+      title: "Pídeselo a tu agente de IA",
+      description:
+        "Conecta Claude, ChatGPT u otro agente con una URL. Registra, pregunta y corrige tus movimientos hablando, contra tus datos reales.",
+      cta: "Ver cómo conectarlo",
+      // Video de la conversación (HyperFrames, video/clips/agentes.html):
+      // 864 × 960, 17,6 s, sin sonido y en loop
+      video: {
+        mp4: "/videos/agentes.mp4",
+        webm: "/videos/agentes.webm",
+        poster: "/videos/agentes-poster.webp",
+        width: 864,
+        height: 960,
+        description:
+          "Ejemplo con datos ficticios: la persona pregunta cuánto gastó en comida este mes; el agente consulta Tesoro con get_month_summary y responde 412.000 pesos, 18 % menos que en octubre. Luego le pide registrar el almuerzo de 32.000 en Nequi y el agente lo registra con create_transactions, que se puede revertir durante 30 días."
+      }
+    }
   },
 
   navigation: {

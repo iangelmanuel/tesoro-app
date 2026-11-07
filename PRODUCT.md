@@ -28,9 +28,14 @@ vistazo y sabe qué hacer después, sin aprender contabilidad.
 - El score y las recomendaciones salen de los movimientos propios del usuario,
   no de consejos genéricos.
 - Código abierto (MIT) y privado por defecto: cada usuario solo ve sus datos.
-- **Abierto (sin decidir):** una futura capa de IA sobre esos mismos
-  registros. Aún no hay alcance, proveedor ni fecha. Ninguna UI ni texto debe
-  prometerla todavía.
+- **Se conecta con tu agente de IA (SPEC 34).** Tesoro no tiene IA propia:
+  expone un servidor MCP para que el agente que el usuario ya usa (Claude,
+  ChatGPT, Claude Code, Cursor u otro) lea y registre sus datos, con su login
+  y bajo su control. Los textos hablan de "conectar tu agente", nunca de una
+  IA de Tesoro que analiza, decide o recomienda por su cuenta.
+- **Abierto (sin decidir):** una capa de IA propia sobre esos registros. Aún
+  no hay alcance, proveedor ni fecha. Ninguna UI ni texto debe prometerla
+  todavía.
 
 ## Operating Context
 

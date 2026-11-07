@@ -1,5 +1,6 @@
 import { JsonLd } from "@/components/seo/JsonLd"
 import { SITE } from "@/config/site"
+import { AgentsSection } from "@/features/landing/components/agents-section"
 import { DemoSection } from "@/features/landing/components/demo-section"
 import { Features } from "@/features/landing/components/features"
 import { FinalCta } from "@/features/landing/components/final-cta"
@@ -26,6 +27,7 @@ export default function HomePage() {
         <DemoSection />
         <Features />
         <ScoreSection />
+        <AgentsSection />
         <WorkspacesSection />
         <OpenSource />
         <FinalCta />

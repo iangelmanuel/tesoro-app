@@ -6,10 +6,10 @@ import { z } from "zod"
 import { requireWritableWorkspace } from "@/features/workspaces/queries"
 import { createClient } from "@/libs/supabase/server"
 import { categorySchema } from "./schemas"
+import { DUPLICATE_NAME, createCategoryRecord } from "./service"
 import type { CategoryActionResult, CategoryFormState } from "./types"
 
 const UNIQUE_VIOLATION = "23505"
-const DUPLICATE_NAME = "Ya tienes una categoría de este tipo con ese nombre"
 const NOT_FOUND = "No se encontró la categoría"
 const DEFAULT_ERROR = "No se pudo guardar la categoría. Intenta de nuevo"
 
@@ -50,19 +50,18 @@ export async function createCategory(
   const workspace = await requireWritableWorkspace(
     readString(formData, "workspace_id")
   )
-  const supabase = await createClient()
-  const { data: category, error } = await supabase
-    .from("categories")
-    .insert({ ...parsed.data, workspace_id: workspace.id })
-    .select("*")
-    .single()
+  const result = await createCategoryRecord(
+    await createClient(),
+    workspace,
+    parsed.data
+  )
 
-  if (error) {
-    return toFormError(error, values)
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
   }
 
   refresh()
-  return { ok: true, category }
+  return { ok: true, category: result.after }
 }
 
 // El tipo no se cambia: los movimientos de la categoría dependen de él

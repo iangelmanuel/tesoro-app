@@ -8,6 +8,7 @@ import { pdfFooter } from "./layout/footer"
 import { pdfHeader } from "./layout/header"
 import { pageSetup } from "./page"
 import { coverSection } from "./sections/cover"
+import { keepTitlesWithTables } from "./sections/table"
 import { pdfTheme } from "./theme"
 import type { PdfContext, PdfReportData } from "./types"
 
@@ -78,6 +79,7 @@ export async function buildPdf(
     pageMargins: ctx.page.pageMargins,
     header: pdfHeader(ctx),
     footer: pdfFooter(ctx),
+    pageBreakBefore: keepTitlesWithTables,
     styles: ctx.theme.styles,
     defaultStyle: ctx.theme.defaultStyle,
     content: [coverSection(ctx, data.reportsUrl), ...sections]

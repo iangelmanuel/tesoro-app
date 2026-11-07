@@ -1105,6 +1105,17 @@ export type Database = {
           workspace_id: string
         }[]
       }
+      account_balances_by_month: {
+        Args: { p_from: string; p_to: string; p_workspace_id: string }
+        Returns: {
+          account_id: string
+          closing: number
+          inflow: number
+          month: string
+          opening: number
+          outflow: number
+        }[]
+      }
       account_monthly_balances: {
         Args: { p_from: string; p_to: string; p_workspace_id: string }
         Returns: {
@@ -1477,13 +1488,13 @@ export type Database = {
       debt_kind: "credit_card" | "loan" | "receivable"
       debt_status: "active" | "paid" | "archived"
       goal_status: "active" | "completed" | "archived"
-      income_frequency: "monthly" | "biweekly" | "yearly" | "none"
       import_status: "completed" | "undone"
       import_target:
         | "transactions"
         | "recurring_expenses"
         | "debt_entries"
         | "goal_contributions"
+      income_frequency: "monthly" | "biweekly" | "yearly" | "none"
       rate_type: "ea" | "mv"
       receivable_schedule: "once" | "monthly"
       recurring_frequency: "monthly" | "yearly"
@@ -1618,7 +1629,6 @@ export const Constants = {
       debt_kind: ["credit_card", "loan", "receivable"],
       debt_status: ["active", "paid", "archived"],
       goal_status: ["active", "completed", "archived"],
-      income_frequency: ["monthly", "biweekly", "yearly", "none"],
       import_status: ["completed", "undone"],
       import_target: [
         "transactions",
@@ -1626,6 +1636,7 @@ export const Constants = {
         "debt_entries",
         "goal_contributions"
       ],
+      income_frequency: ["monthly", "biweekly", "yearly", "none"],
       rate_type: ["ea", "mv"],
       receivable_schedule: ["once", "monthly"],
       recurring_frequency: ["monthly", "yearly"],

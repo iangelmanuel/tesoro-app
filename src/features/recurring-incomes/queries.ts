@@ -1,5 +1,6 @@
 import { currentMonth, monthRange, shiftMonth, todayISO } from "@/libs/dates"
 import { createClient } from "@/libs/supabase/server"
+import type { AppSupabase } from "@/libs/supabase/types"
 import type { Database } from "@/types/database"
 import {
   type IncomeOccurrenceStatus,
@@ -69,9 +70,10 @@ function upcomingWindow() {
   }
 }
 
-async function fetchOccurrences(workspaceId: string) {
+// `client` permite usarla fuera de una request con cookies (MCP, SPEC 34)
+async function fetchOccurrences(workspaceId: string, client?: AppSupabase) {
   const { from, to } = upcomingWindow()
-  const supabase = await createClient()
+  const supabase = client ?? (await createClient())
   const { data, error } = await supabase.rpc("recurring_income_occurrences", {
     p_workspace_id: workspaceId,
     p_from: from,
@@ -236,9 +238,10 @@ export async function getUpcomingIncomes(
  * no hay ninguna o la fuente es "none".
  */
 export async function getOldestUnreceivedOccurrences(
-  workspaceId: string
+  workspaceId: string,
+  client?: AppSupabase
 ): Promise<Map<string, string>> {
-  const data = await fetchOccurrences(workspaceId)
+  const data = await fetchOccurrences(workspaceId, client)
   const oldest = new Map<string, string>()
 
   // La RPC devuelve las filas ordenadas por fecha

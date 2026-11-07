@@ -17,6 +17,8 @@ export interface QuickActionsWorkspace {
   currency: string
   categories: Category[]
   accounts: PaymentAccountOption[]
+  /** Mes YYYY-MM del primer movimiento o traspaso (Exportar, SPEC 32) */
+  historyStart: string | null
 }
 
 export interface QuickActionsData {

@@ -18,6 +18,7 @@ import {
   type DebtOption,
   PaymentDialog
 } from "@/features/debts/components/payment-dialog"
+import { ExportButton } from "@/features/exports/components/export-button"
 import {
   ContributionDialog,
   type GoalOption
@@ -51,6 +52,12 @@ export function QuickActionsMenu() {
 
   return (
     <>
+      {/* Solo en Reportes (SPEC 32) */}
+      <ExportButton
+        key={`export-${workspace.id}`}
+        workspaceId={workspace.id}
+        historyStart={workspace.historyStart}
+      />
       <TransactionDialog
         // Al cambiar de espacio el diálogo empieza de cero
         key={workspace.id}

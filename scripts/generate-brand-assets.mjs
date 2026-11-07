@@ -26,6 +26,11 @@ const MASKABLE_MARK_SCALE = 0.8
 
 const ICO_SIZES = [16, 32, 48]
 
+// Logo de la cabecera del Excel exportado (SPEC 32), en base64 dentro del
+// código: el Route Handler no lee public/ con fs. Se muestra a 36 px; se
+// rasteriza a 128 para que se vea nítido con zoom.
+const EXPORT_LOGO_TARGET = ["src/features/exports/workbook/logo-data.ts", 128]
+
 // Rasteriza el SVG a la densidad justa para no escalar un bitmap
 async function renderPng(source, sourceWidth, width, height) {
   const svg = await readFile(path.join(BRAND, source))
@@ -99,6 +104,18 @@ async function main() {
   )
   await writeFile(path.join(ROOT, "app/favicon.ico"), buildIco(icons))
   console.log(`✓ app/favicon.ico (${ICO_SIZES.join(", ")})`)
+
+  const [logoOutput, logoSize] = EXPORT_LOGO_TARGET
+  const logo = await renderPng("mark.svg", 64, logoSize, logoSize)
+  await writeFile(
+    path.join(ROOT, logoOutput),
+    [
+      "// Generado por `pnpm brand:assets` desde assets/brand/mark.svg. No editar.",
+      `export const LOGO_PNG_BASE64 =\n  "${logo.toString("base64")}"`,
+      ""
+    ].join("\n")
+  )
+  console.log(`✓ ${logoOutput} (${logoSize}×${logoSize})`)
 }
 
 main().catch((error) => {

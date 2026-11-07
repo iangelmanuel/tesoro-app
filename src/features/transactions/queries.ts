@@ -137,7 +137,7 @@ export interface TransactionTotals {
 }
 
 // Valor entre comillas para un filtro `or` de PostgREST: escapa `\` y `"`
-function quotePostgrestValue(value: string) {
+export function quotePostgrestValue(value: string) {
   return `"${value.replace(/[\\"]/g, (match) => `\\${match}`)}"`
 }
 

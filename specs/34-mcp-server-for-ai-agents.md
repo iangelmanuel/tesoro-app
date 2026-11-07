@@ -66,7 +66,7 @@ La idea original abarca todas las entidades. Se parte en dos:
   - `list_categories`: categorías del espacio por tipo (ingreso/gasto), del sistema y propias;
   - `get_month_summary`: un mes (`YYYY-MM`). Personal: ingresos, gastos, balance, tasa de ahorro, saldo al inicio y al cierre, top 5 categorías de gasto. Empresa: ventas, costos y gastos, utilidad, margen, saldos;
   - `get_period_report`: rango `from`/`to` en meses (hasta 36). Serie mes a mes con los mismos totales y `category_totals` del periodo. Reusa `src/features/reports/` y las consultas de SPEC 32;
-  - `list_transactions`: filtros `from`, `to`, `type`, `category_id`, `account_id`, `search` (descripción y nota), `verified`, `linked` (`any`/`none`/`debt`/`recurring_expense`/`recurring_income`/`receivable`); paginado con `limit` (1–200, por defecto 50) y `cursor` opaco. Cada fila trae su vínculo si lo tiene;
+  - `list_transactions`: filtros `from`, `to`, `type`, `category_id`, `account_id`, `search` (descripción y nota), `linked` (`any`/`none`/`debt`/`recurring_expense`/`recurring_income`/`receivable`); paginado con `limit` (1–200, por defecto 50) y `cursor` opaco. Cada fila trae su vínculo si lo tiene;
   - `get_transaction`: un movimiento por id, con vínculo y cuenta;
   - `list_transfers`: traspasos con filtros `from`, `to`, `account_id`; mismo paginado;
   - `list_budgets`: presupuestos con progreso del mes (`budget_progress`);
@@ -79,7 +79,7 @@ La idea original abarca todas las entidades. Se parte en dos:
   - `list_operations`: historial de operaciones del MCP (ver "Revertir"), de la conexión actual o de todas (`all_connections: true`).
 - **Tools de escritura** (solo con `write`). Todas aceptan `dry_run` (por defecto `false`):
   - `create_transactions`: 1–200 movimientos `{ type, amount, category_id, account_id, occurred_on, time?, description, note? }`;
-  - `update_transactions`: 1–200 parches `{ id, ...campos }`. Campos editables: `type`, `amount`, `category_id`, `account_id`, `occurred_on`, `time`, `description`, `note`, `verified`;
+  - `update_transactions`: 1–200 parches `{ id, ...campos }`. Campos editables: `type`, `amount`, `category_id`, `account_id`, `occurred_on`, `time`, `description`, `note`. Sin `verified`: Tesoro no marca movimientos como verificados (SPEC 19 lo descartó);
   - `delete_transactions`: 1–200 ids;
   - `create_transfers`, `update_transfers`, `delete_transfers`: mismo contrato con `{ from_account_id, to_account_id, amount, occurred_on, time?, note? }`;
   - `create_category`: crea una categoría del espacio (`name`, `type`). Necesaria para que el agente registre movimientos en una categoría que no existe;

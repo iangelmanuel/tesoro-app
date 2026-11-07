@@ -1,10 +1,10 @@
 import { z } from "zod"
-import type { McpTool } from "../../types"
 import { toolError, toolResult } from "../result"
+import { defineTool } from "../shared"
 
 const input = z.object({})
 
-export const listWorkspaces: McpTool<typeof input> = {
+export const listWorkspaces = defineTool({
   name: "list_workspaces",
   group: "read",
   title: "Listar espacios",
@@ -40,4 +40,4 @@ export const listWorkspaces: McpTool<typeof input> = {
       { workspaces, currency: ctx.currency }
     )
   }
-}
+})

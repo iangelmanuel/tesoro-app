@@ -281,7 +281,31 @@ export const SITE = {
           poster: "/videos/espacios-poster.webp"
         }
       }
-    ]
+    ],
+
+    // Sección "Agentes de IA" de la landing (SPEC 34). Los clientes van en
+    // texto: sin logos ni marcas gráficas de terceros
+    agents: {
+      title: "Pídeselo a tu agente de IA",
+      description:
+        "Conecta Claude, ChatGPT u otro agente con una URL. Registra, pregunta y corrige tus movimientos hablando, contra tus datos reales.",
+      examples: [
+        {
+          label: "Registrar",
+          prompt: "Anota el almuerzo de hoy, 32.000 en Nequi."
+        },
+        {
+          label: "Preguntar",
+          prompt: "¿Cuánto gasté en comida este mes comparado con octubre?"
+        },
+        {
+          label: "Corregir en lote",
+          prompt: "Pasa a Transporte todos los Uber de noviembre."
+        }
+      ],
+      clients: ["Claude", "ChatGPT", "Claude Code", "Cursor"],
+      cta: "Ver cómo conectarlo"
+    }
   },
 
   navigation: {

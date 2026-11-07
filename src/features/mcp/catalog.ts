@@ -1,3 +1,7 @@
+import { getCashFlow } from "./tools/read/get-cash-flow"
+import { getMonthSummary } from "./tools/read/get-month-summary"
+import { getPeriodReport } from "./tools/read/get-period-report"
+import { getScore } from "./tools/read/get-score"
 import { getTransaction } from "./tools/read/get-transaction"
 import { listAccounts } from "./tools/read/list-accounts"
 import { listCategories } from "./tools/read/list-categories"
@@ -16,7 +20,11 @@ export const MCP_TOOLS: readonly McpTool[] = [
   listCategories,
   listTransactions,
   getTransaction,
-  listTransfers
+  listTransfers,
+  getMonthSummary,
+  getPeriodReport,
+  getCashFlow,
+  getScore
 ]
 
 export const MCP_GROUP_LABELS: Record<McpToolDefinition["group"], string> = {

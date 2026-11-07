@@ -3,6 +3,7 @@ import { authenticateMcpRequest, jsonError } from "@/features/mcp/auth"
 import { loadMcpContext } from "@/features/mcp/context"
 import { hitRateLimit } from "@/features/mcp/rate-limit"
 import { createMcpServer } from "@/features/mcp/server"
+import { runWithSupabaseClient } from "@/libs/supabase/server"
 
 // Endpoint MCP (SPEC 34): Streamable HTTP sin estado. POST atiende JSON-RPC
 // con el Bearer del agente; GET (SSE) y DELETE (sesiones) no se usan. Todo
@@ -40,7 +41,12 @@ export async function POST(request: Request) {
 
   try {
     await server.connect(transport)
-    return withNoStore(await transport.handleRequest(request))
+    // Las consultas de la UI que usen las tools llaman createClient(): dentro
+    // de este contexto reciben el cliente del agente
+    const response = await runWithSupabaseClient(ctx.supabase, () =>
+      transport.handleRequest(request)
+    )
+    return withNoStore(response)
   } finally {
     await server.close()
   }

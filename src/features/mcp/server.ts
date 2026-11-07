@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { SITE } from "@/config/site"
+import { runWithSupabaseClient } from "@/libs/supabase/server"
 import { MCP_TOOLS } from "./catalog"
 import { toolError } from "./tools/result"
 import type { McpContext } from "./types"
@@ -26,7 +27,11 @@ export function createMcpServer(ctx: McpContext) {
       },
       async (input) => {
         try {
-          return await tool.run(ctx, input)
+          // También aquí: el contexto debe valer aunque el SDK cambie cómo
+          // despacha los handlers
+          return await runWithSupabaseClient(ctx.supabase, () =>
+            tool.run(ctx, input)
+          )
         } catch {
           return toolError("Algo falló en Tesoro. Intenta de nuevo.")
         }

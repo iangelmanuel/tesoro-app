@@ -283,28 +283,24 @@ export const SITE = {
       }
     ],
 
-    // Sección "Agentes de IA" de la landing (SPEC 34). Los clientes van en
-    // texto: sin logos ni marcas gráficas de terceros
+    // Sección "Agentes de IA" de la landing (SPEC 34). Los clientes y sus
+    // logos viven en src/components/brand/ai-logos.tsx
     agents: {
       title: "Pídeselo a tu agente de IA",
       description:
         "Conecta Claude, ChatGPT u otro agente con una URL. Registra, pregunta y corrige tus movimientos hablando, contra tus datos reales.",
-      examples: [
-        {
-          label: "Registrar",
-          prompt: "Anota el almuerzo de hoy, 32.000 en Nequi."
-        },
-        {
-          label: "Preguntar",
-          prompt: "¿Cuánto gasté en comida este mes comparado con octubre?"
-        },
-        {
-          label: "Corregir en lote",
-          prompt: "Pasa a Transporte todos los Uber de noviembre."
-        }
-      ],
-      clients: ["Claude", "ChatGPT", "Claude Code", "Cursor"],
-      cta: "Ver cómo conectarlo"
+      cta: "Ver cómo conectarlo",
+      // Video de la conversación (HyperFrames, video/clips/agentes.html):
+      // 864 × 960, 17,6 s, sin sonido y en loop
+      video: {
+        mp4: "/videos/agentes.mp4",
+        webm: "/videos/agentes.webm",
+        poster: "/videos/agentes-poster.webp",
+        width: 864,
+        height: 960,
+        description:
+          "Ejemplo con datos ficticios: la persona pregunta cuánto gastó en comida este mes; el agente consulta Tesoro con get_month_summary y responde 412.000 pesos, 18 % menos que en octubre. Luego le pide registrar el almuerzo de 32.000 en Nequi y el agente lo registra con create_transactions, que se puede revertir durante 30 días."
+      }
     }
   },
 

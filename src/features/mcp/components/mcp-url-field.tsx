@@ -1,11 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import type { Route } from "next"
 import Link from "next/link"
-import { Button, Input, Label, TextField, cn, toast } from "@heroui/react"
-import { Check, Copy } from "lucide-react"
+import { Input, Label, TextField, cn } from "@heroui/react"
 import { SITE } from "@/config/site"
+import { CopyButton } from "./copy-button"
 
 interface McpUrlFieldProps {
   /** URL completa del endpoint MCP (SITE_URL + SITE.mcp.path) */
@@ -24,26 +23,6 @@ export function McpUrlField({
   label = "Tu URL de MCP",
   className
 }: McpUrlFieldProps) {
-  // El botón confirma por sí mismo: en las páginas públicas no hay
-  // ToastProvider, así que el toast solo se ve en el dashboard
-  const [copied, setCopied] = useState(false)
-
-  useEffect(() => {
-    if (!copied) return
-    const timer = setTimeout(() => setCopied(false), 2000)
-    return () => clearTimeout(timer)
-  }, [copied])
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(url)
-      setCopied(true)
-      toast.success("URL copiada")
-    } catch {
-      toast.danger("No se pudo copiar. Selecciónala y cópiala a mano.")
-    }
-  }
-
   return (
     <div className={cn("flex flex-col gap-2", className)}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
@@ -58,14 +37,10 @@ export function McpUrlField({
             onFocus={(event) => event.currentTarget.select()}
           />
         </TextField>
-        <Button
-          variant="secondary"
-          className="min-h-11 sm:min-h-10"
-          onPress={copy}
-        >
-          {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-          <span aria-live="polite">{copied ? "Copiada" : "Copiar"}</span>
-        </Button>
+        <CopyButton
+          value={url}
+          toastMessage="URL copiada"
+        />
       </div>
       {showGuideLink && (
         <Link

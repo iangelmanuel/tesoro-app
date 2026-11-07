@@ -1,8 +1,27 @@
 import Link from "next/link"
-import { buttonVariants } from "@heroui/react"
+import { buttonVariants, cn } from "@heroui/react"
+import {
+  ArrowRightIcon,
+  ChartColumnIcon,
+  EyeIcon,
+  KeyRoundIcon,
+  ListChecksIcon,
+  MessageSquareWarningIcon,
+  PencilLineIcon,
+  ShieldOffIcon,
+  SlidersHorizontalIcon,
+  Undo2Icon,
+  WalletIcon
+} from "lucide-react"
+import { AI_CLIENTS } from "@/components/brand/ai-logos"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { SITE } from "@/config/site"
+import { RevealObserver } from "@/features/landing/components/reveal-observer"
 import { MCP_GROUP_LABELS, getMcpCatalog } from "@/features/mcp/catalog"
+import { AgentClients } from "@/features/mcp/components/agent-clients"
+import { AgentDemoVideo } from "@/features/mcp/components/agent-demo-video"
+import { ClientGuides } from "@/features/mcp/components/client-guides"
+import { CopyButton } from "@/features/mcp/components/copy-button"
 import { McpUrlField } from "@/features/mcp/components/mcp-url-field"
 import { MCP_AGENTS_PATH } from "@/features/mcp/constants"
 import { MCP_RESOURCE_URL } from "@/features/mcp/discovery"
@@ -15,97 +34,103 @@ export const metadata = buildMetadata({
   path: SITE.mcp.docsPath
 })
 
+const SECTIONS = [
+  { id: "conectar", title: "Cómo conectarlo" },
+  { id: "que-puede-hacer", title: "Qué puede hacer" },
+  { id: "ideas", title: "Ideas para empezar" },
+  { id: "seguridad", title: "Seguridad y control" },
+  { id: "herramientas", title: "Herramientas" }
+] as const
+
+type SectionId = (typeof SECTIONS)[number]["id"]
+
 const CAPABILITIES = [
-  "Registrar ingresos, gastos y traspasos: “Anota el almuerzo de hoy, 32.000 en Nequi”.",
-  "Responder con tus cifras reales: resúmenes del mes, reportes, flujo de caja, score y recomendaciones.",
-  "Corregir en lote: cambiar la categoría, la fecha o la cuenta de muchos movimientos a la vez.",
-  "Leer tus cuentas, presupuestos, metas, deudas, fijos y lo que te deben, en Personal y en Empresa."
+  {
+    icon: PencilLineIcon,
+    title: "Registrar",
+    text: "Ingresos, gastos y traspasos, de uno en uno o hasta 200 a la vez."
+  },
+  {
+    icon: ChartColumnIcon,
+    title: "Responder con tus cifras",
+    text: "Resumen del mes, reportes por periodo, flujo de caja, score y recomendaciones."
+  },
+  {
+    icon: ListChecksIcon,
+    title: "Corregir en lote",
+    text: "Cambiar categoría, fecha o cuenta de muchos movimientos, con vista previa antes de guardar."
+  },
+  {
+    icon: WalletIcon,
+    title: "Leer todo tu plan",
+    text: "Cuentas, presupuestos, metas, deudas, fijos y lo que te deben, en Personal y en Empresa."
+  }
 ]
 
-const EXAMPLES = [
+const IDEAS = [
   "Registra el almuerzo de hoy, 32.000 en Nequi.",
   "¿Cuánto gasté en comida este mes comparado con octubre?",
-  "Pasa a “Transporte” todos los movimientos de Uber de noviembre.",
+  "Pasa a Transporte todos los movimientos de Uber de noviembre.",
   "¿Cómo va mi score y qué me recomienda Tesoro?",
   "¿Qué gastos fijos me faltan por pagar este mes?"
 ]
 
 const SECURITY = [
-  `Te conectas con tu cuenta de ${SITE.info.name}: el agente inicia sesión por ti y solo ve tus datos.`,
-  "Al autorizar eliges el acceso: Leer y escribir, o Solo lectura. Lo cambias cuando quieras.",
-  `Toda escritura queda en el historial y se puede revertir durante ${SITE.mcp.undoWindowDays} días.`,
-  "Revocas un agente desde Cuenta → Agentes IA y pierde el acceso en su siguiente llamada.",
-  "El agente ve tus montos reales, aunque tengas activo Ocultar montos en la app.",
-  "Lo que escribes en descripciones y notas llega al agente: no pegues ahí instrucciones de otras personas."
+  {
+    icon: KeyRoundIcon,
+    text: `Inicias sesión con tu cuenta de ${SITE.info.name}: el agente solo ve tus datos.`
+  },
+  {
+    icon: SlidersHorizontalIcon,
+    text: "Eliges el acceso al autorizar, Leer y escribir o Solo lectura, y lo cambias cuando quieras."
+  },
+  {
+    icon: Undo2Icon,
+    text: `Toda escritura queda en el historial y se revierte durante ${SITE.mcp.undoWindowDays} días.`
+  },
+  {
+    icon: ShieldOffIcon,
+    text: "Revocas un agente en Cuenta → Agentes IA y pierde el acceso en su siguiente llamada."
+  },
+  {
+    icon: EyeIcon,
+    text: "El agente ve tus montos reales, aunque tengas activo Ocultar montos en la app."
+  },
+  {
+    icon: MessageSquareWarningIcon,
+    text: "Lo que escribes en descripciones y notas llega al agente: no pegues ahí instrucciones de otras personas."
+  }
 ]
 
-const CODE_CLASSES =
-  "overflow-x-auto rounded-2xl bg-default p-4 font-mono text-sm leading-relaxed"
-
-function ClientSteps() {
-  const clients = [
-    {
-      name: "Claude",
-      steps: [
-        "Abre Ajustes → Conectores y elige agregar un conector personalizado.",
-        "Pega la URL de arriba y guarda.",
-        `Pulsa Conectar, inicia sesión en ${SITE.info.name} y elige el acceso.`
-      ]
-    },
-    {
-      name: "ChatGPT",
-      steps: [
-        "Abre Ajustes → Conectores (o Apps) y crea un conector nuevo.",
-        "Pega la URL de arriba como dirección del servidor MCP.",
-        `Inicia sesión en ${SITE.info.name} cuando te lo pida y autoriza.`
-      ]
-    }
-  ]
-
+function Section({
+  id,
+  description,
+  children
+}: {
+  id: SectionId
+  description?: string
+  children: React.ReactNode
+}) {
+  const title = SECTIONS.find((section) => section.id === id)?.title
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {clients.map((client) => (
-        <div
-          key={client.name}
-          className="flex flex-col gap-3 rounded-3xl bg-surface p-5 shadow-(--surface-shadow)"
+    <section
+      id={id}
+      aria-labelledby={`${id}-title`}
+      className="flex scroll-mt-24 flex-col gap-6"
+    >
+      <div className="flex flex-col gap-2">
+        <h2
+          id={`${id}-title`}
+          className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl"
         >
-          <h3 className="text-lg font-semibold">{client.name}</h3>
-          <ol className="flex list-decimal flex-col gap-2 pl-5 text-pretty text-muted">
-            {client.steps.map((step) => (
-              <li key={step}>{step}</li>
-            ))}
-          </ol>
-        </div>
-      ))}
-
-      <div className="flex flex-col gap-3 rounded-3xl bg-surface p-5 shadow-(--surface-shadow)">
-        <h3 className="text-lg font-semibold">Claude Code</h3>
-        <p className="text-muted">En tu terminal:</p>
-        <pre className={CODE_CLASSES}>
-          <code>{`claude mcp add --transport http tesoro ${MCP_RESOURCE_URL}`}</code>
-        </pre>
-        <p className="text-pretty text-muted">
-          Luego escribe <code className="font-mono">/mcp</code> en Claude Code
-          para iniciar sesión.
-        </p>
+          {title}
+        </h2>
+        {description && (
+          <p className="max-w-2xl text-pretty text-muted">{description}</p>
+        )}
       </div>
-
-      <div className="flex flex-col gap-3 rounded-3xl bg-surface p-5 shadow-(--surface-shadow)">
-        <h3 className="text-lg font-semibold">Cursor</h3>
-        <p className="text-muted">
-          En <code className="font-mono">mcp.json</code>:
-        </p>
-        <pre className={CODE_CLASSES}>
-          <code>
-            {JSON.stringify(
-              { mcpServers: { tesoro: { url: MCP_RESOURCE_URL } } },
-              null,
-              2
-            )}
-          </code>
-        </pre>
-      </div>
-    </div>
+      {children}
+    </section>
   )
 }
 
@@ -126,21 +151,21 @@ function ToolCatalog() {
           key={group}
           className="flex flex-col gap-3"
         >
-          <h3 className="text-lg font-semibold">
-            {label}{" "}
-            <span className="text-sm font-normal text-muted">
-              ({tools.length})
+          <h3 className="flex items-baseline gap-2 text-lg font-semibold">
+            {label}
+            <span className="text-sm font-normal text-muted tabular-nums">
+              {tools.length}
             </span>
           </h3>
           <dl className="flex flex-col divide-y divide-separator overflow-hidden rounded-3xl bg-surface shadow-(--surface-shadow)">
             {tools.map((tool) => (
               <div
                 key={tool.name}
-                className="flex flex-col gap-1 px-5 py-4 md:grid md:grid-cols-[16rem_1fr] md:gap-6"
+                className="flex flex-col gap-1.5 px-5 py-4 md:grid md:grid-cols-[13rem_1fr] md:gap-6"
               >
-                <dt className="flex flex-col gap-0.5">
+                <dt className="flex flex-col gap-1">
                   <span className="font-medium">{tool.title}</span>
-                  <code className="font-mono text-sm break-all text-muted">
+                  <code className="self-start rounded-md bg-default px-1.5 py-0.5 font-mono text-xs break-all text-muted">
                     {tool.name}
                   </code>
                 </dt>
@@ -156,140 +181,172 @@ function ToolCatalog() {
   )
 }
 
-function Section({
-  id,
-  title,
-  children
-}: {
-  id: string
-  title: string
-  children: React.ReactNode
-}) {
-  return (
-    <section
-      id={id}
-      aria-labelledby={`${id}-title`}
-      className="flex scroll-mt-24 flex-col gap-6"
-    >
-      <h2
-        id={`${id}-title`}
-        className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl"
-      >
-        {title}
-      </h2>
-      {children}
-    </section>
-  )
-}
-
-const LIST_CLASSES =
-  "flex list-disc flex-col gap-2 pl-5 text-pretty text-muted marker:text-(--income)"
-
 // Página pública del servidor MCP (SPEC 34): qué hace, la URL, cómo
-// conectarla en cada cliente, el catálogo de tools y la seguridad
+// conectarlo en cada cliente, ideas, seguridad y el catálogo de tools
 export default function McpPage() {
   return (
     <main>
+      <RevealObserver />
       <JsonLd
         schema={buildBreadcrumbSchema([
           { label: "Inicio", href: SITE.routes.home },
           { label: "Agentes de IA", href: SITE.mcp.docsPath }
         ])}
       />
-      <article className="mx-auto flex max-w-4xl flex-col gap-16 px-4 py-16 sm:px-6 sm:py-20">
-        <header className="flex flex-col gap-6">
-          <div className="flex flex-col gap-3">
-            <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+
+      <header className="mx-auto grid max-w-6xl gap-12 px-4 pt-16 pb-12 sm:px-6 sm:pt-20 lg:grid-cols-[1fr_1.05fr] lg:items-center lg:gap-16 lg:pb-20">
+        <div className="flex min-w-0 flex-col gap-8">
+          <div className="flex flex-col gap-4">
+            <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
               Conecta tu agente de IA a {SITE.info.name}
             </h1>
-            <p className="text-base text-pretty text-muted sm:text-lg">
-              Con una URL, Claude, ChatGPT u otro agente que hable MCP puede
-              registrar tus movimientos y responder con tus cifras reales.
-              Inicias sesión con tu cuenta y decides qué puede hacer.
+            <p className="max-w-xl text-lg text-pretty text-muted">
+              Con una URL, tu agente registra movimientos y responde con tus
+              cifras reales. Inicias sesión con tu cuenta y decides qué puede
+              hacer.
             </p>
           </div>
+          <AgentClients clients={AI_CLIENTS} />
           <McpUrlField
             url={MCP_RESOURCE_URL}
             label="URL del servidor MCP"
           />
-        </header>
+        </div>
+        <AgentDemoVideo />
+      </header>
 
-        <Section
-          id="que-puede-hacer"
-          title="Qué puede hacer tu agente"
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 pb-20 sm:px-6 sm:pb-24 lg:grid-cols-[13rem_1fr] lg:gap-16">
+        <nav
+          aria-label="En esta página"
+          className="hidden lg:sticky lg:top-24 lg:block lg:self-start"
         >
-          <ul className={LIST_CLASSES}>
-            {CAPABILITIES.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </Section>
-
-        <Section
-          id="como-conectarlo"
-          title="Cómo conectarlo"
-        >
-          <ClientSteps />
-          <p className="text-sm text-pretty text-muted">
-            Los menús de cada aplicación cambian con el tiempo. Lo único fijo es
-            la URL: busca la opción para agregar un servidor MCP remoto o un
-            conector personalizado.
-          </p>
-        </Section>
-
-        <Section
-          id="ejemplos"
-          title="Pídele cosas como"
-        >
-          <ul className="flex flex-col gap-2">
-            {EXAMPLES.map((example) => (
-              <li
-                key={example}
-                className="rounded-2xl bg-surface px-4 py-3 text-pretty shadow-(--surface-shadow)"
-              >
-                “{example}”
+          <p className="mb-3 text-sm font-medium">En esta página</p>
+          <ol className="flex flex-col gap-1 border-l border-separator text-sm">
+            {SECTIONS.map((section) => (
+              <li key={section.id}>
+                <a
+                  href={`#${section.id}`}
+                  className="-ml-px flex min-h-9 items-center border-l-2 border-transparent pl-4 text-muted transition-colors hover:border-(--income) hover:text-foreground focus-visible:text-foreground"
+                >
+                  {section.title}
+                </a>
               </li>
             ))}
-          </ul>
-        </Section>
+          </ol>
+        </nav>
 
-        <Section
-          id="herramientas"
-          title="Herramientas"
-        >
-          <p className="text-pretty text-muted">
-            Lo que el agente puede usar. Las de escritura aceptan hasta{" "}
-            {SITE.mcp.bulkLimit} filas por llamada, todo o nada, y una vista
-            previa sin guardar.
-          </p>
-          <ToolCatalog />
-        </Section>
+        <div className="flex min-w-0 flex-col gap-20">
+          <Section
+            id="conectar"
+            description="Elige tu cliente. Lo único fijo es la URL: si los menús de tu app cambian, busca la opción para agregar un servidor MCP remoto o un conector personalizado."
+          >
+            <ClientGuides
+              url={MCP_RESOURCE_URL}
+              appName={SITE.info.name}
+            />
+          </Section>
 
-        <Section
-          id="seguridad"
-          title="Seguridad y control"
-        >
-          <ul className={LIST_CLASSES}>
-            {SECURITY.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href={SITE.routes.signUp}
-              className={buttonVariants()}
-            >
-              Crear cuenta
-            </Link>
-            <Link
-              href={MCP_AGENTS_PATH}
-              className={buttonVariants({ variant: "secondary" })}
-            >
-              Ir a Agentes IA
-            </Link>
-          </div>
-        </Section>
-      </article>
+          <Section id="que-puede-hacer">
+            <ul className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
+              {CAPABILITIES.map(({ icon: Icon, title, text }) => (
+                <li
+                  key={title}
+                  className="flex flex-col gap-2"
+                >
+                  <Icon
+                    aria-hidden="true"
+                    className="size-5 text-(--income)"
+                  />
+                  <p className="font-semibold">{title}</p>
+                  <p className="text-pretty text-muted">{text}</p>
+                </li>
+              ))}
+            </ul>
+          </Section>
+
+          <Section
+            id="ideas"
+            description="Cópialas tal cual o cámbialas a tu manera: el agente entiende lenguaje natural."
+          >
+            <ul className="flex flex-col divide-y divide-separator overflow-hidden rounded-3xl bg-surface shadow-(--surface-shadow)">
+              {IDEAS.map((idea) => (
+                <li
+                  key={idea}
+                  className="flex items-center justify-between gap-3 py-2 pr-2 pl-5"
+                >
+                  <span className="text-pretty">{idea}</span>
+                  <CopyButton
+                    value={idea}
+                    label="Copiar pedido"
+                    iconOnly
+                    variant="ghost"
+                  />
+                </li>
+              ))}
+            </ul>
+          </Section>
+
+          <Section id="seguridad">
+            <ul className="flex flex-col gap-5">
+              {SECURITY.map(({ icon: Icon, text }) => (
+                <li
+                  key={text}
+                  className="flex gap-4"
+                >
+                  <Icon
+                    aria-hidden="true"
+                    className="mt-0.5 size-5 shrink-0 text-muted"
+                  />
+                  <p className="text-pretty">{text}</p>
+                </li>
+              ))}
+            </ul>
+          </Section>
+
+          <Section
+            id="herramientas"
+            description={`Lo que el agente puede usar. Las de escritura aceptan hasta ${SITE.mcp.bulkLimit} filas por llamada, todo o nada, con vista previa sin guardar. Con Solo lectura, el agente solo ve las de lectura.`}
+          >
+            <ToolCatalog />
+          </Section>
+
+          <section
+            aria-labelledby="mcp-cta-title"
+            className="flex flex-col gap-6 rounded-3xl bg-surface p-6 shadow-(--surface-shadow) sm:p-8"
+          >
+            <div className="flex flex-col gap-2">
+              <h2
+                id="mcp-cta-title"
+                className="text-2xl font-semibold tracking-tight text-balance"
+              >
+                Empieza con tu cuenta de {SITE.info.name}
+              </h2>
+              <p className="max-w-xl text-pretty text-muted">
+                Crea tu cuenta y conecta tu agente. Si ya la tienes, revisa tus
+                agentes y su historial en Cuenta → Agentes IA.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href={SITE.routes.signUp}
+                className={cn(buttonVariants({ size: "lg" }), "group")}
+              >
+                Crear cuenta
+                <ArrowRightIcon
+                  aria-hidden="true"
+                  className="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
+                />
+              </Link>
+              <Link
+                href={MCP_AGENTS_PATH}
+                className={buttonVariants({ size: "lg", variant: "tertiary" })}
+              >
+                Ir a Agentes IA
+              </Link>
+            </div>
+          </section>
+        </div>
+      </div>
     </main>
   )
 }

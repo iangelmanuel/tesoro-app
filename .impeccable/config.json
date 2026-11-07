@@ -8,6 +8,24 @@
         "value": "inter",
         "createdAt": "2026-11-04T07:59:45.355Z",
         "reason": "PRODUCT.md (Brand Commitments) y SPEC 24 fijan Inter como tipografía; el video usa Inter en lugar de SF Pro por licencia"
+      },
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "video/clips/agentes.html"
+        ],
+        "createdAt": "2026-11-07T09:28:01.073Z",
+        "reason": "agent: shimmer on 'Pensando…' is the standard LLM thinking indicator in a demo video, not decorative text"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "jetbrains mono",
+        "files": [
+          "video/clips/agentes.html"
+        ],
+        "createdAt": "2026-11-07T09:28:01.687Z",
+        "reason": "agent: monospace only for real MCP tool names (code) in the demo video"
       }
     ]
   }

@@ -2,16 +2,20 @@ import type { Route } from "next"
 import Link from "next/link"
 import { buttonVariants, cn } from "@heroui/react"
 import { ArrowRightIcon } from "lucide-react"
+import { AI_CLIENTS } from "@/components/brand/ai-logos"
 import { SITE } from "@/config/site"
+import { AgentClients } from "@/features/mcp/components/agent-clients"
+import { AgentDemoVideo } from "@/features/mcp/components/agent-demo-video"
 import { McpUrlField } from "@/features/mcp/components/mcp-url-field"
 import { MCP_RESOURCE_URL } from "@/features/mcp/discovery"
-import { Reveal, RevealItem, RevealList } from "./reveal"
+import { Reveal } from "./reveal"
 import { SectionHeading } from "./section-heading"
 
 const COPY = SITE.landing.agents
 
-// Agentes de IA (SPEC 34): tres pedidos de ejemplo, los clientes en texto,
-// la URL copiable y el enlace a la guía /mcp
+// Agentes de IA (SPEC 34): a la izquierda qué es, con qué funciona y la URL;
+// a la derecha el video de una conversación real de agente con Tesoro
+// (piensa, usa las tools del MCP, responde y registra un movimiento)
 export function AgentsSection() {
   return (
     <section
@@ -19,57 +23,39 @@ export function AgentsSection() {
       aria-labelledby="agentes-title"
       className="scroll-mt-16"
     >
-      <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-20 sm:px-6 sm:py-24">
-        <SectionHeading
-          id="agentes-title"
-          title={COPY.title}
-          description={COPY.description}
-        />
-
-        <RevealList className="grid gap-4 md:grid-cols-3">
-          {COPY.examples.map((example) => (
-            <RevealItem
-              key={example.label}
-              className="flex flex-col gap-3 rounded-3xl bg-surface p-6 shadow-(--surface-shadow)"
-            >
-              <p className="text-sm font-medium text-muted">{example.label}</p>
-              <p className="text-lg text-pretty">“{example.prompt}”</p>
-            </RevealItem>
-          ))}
-        </RevealList>
-
-        <Reveal className="flex flex-col gap-6 rounded-3xl bg-surface p-6 shadow-(--surface-shadow) sm:p-8">
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium">Funciona con</p>
-            <ul className="flex flex-wrap gap-2 text-sm">
-              {COPY.clients.map((client) => (
-                <li
-                  key={client}
-                  className="rounded-full bg-default px-3 py-1.5"
-                >
-                  {client}
-                </li>
-              ))}
-              <li className="rounded-full px-3 py-1.5 text-muted">
-                y otros agentes MCP
-              </li>
-            </ul>
-          </div>
-          <McpUrlField
-            url={MCP_RESOURCE_URL}
-            label="URL del servidor MCP"
+      <div className="mx-auto grid max-w-6xl gap-12 px-4 py-20 sm:px-6 sm:py-24 lg:grid-cols-[1fr_1.05fr] lg:items-center lg:gap-16">
+        <div className="flex min-w-0 flex-col gap-10">
+          <SectionHeading
+            id="agentes-title"
+            title={COPY.title}
+            description={COPY.description}
           />
-          <Link
-            href={SITE.mcp.docsPath as Route}
-            className={cn(buttonVariants(), "self-start")}
-          >
-            {COPY.cta}
-            <ArrowRightIcon
-              aria-hidden="true"
-              className="size-4"
+
+          <Reveal className="flex flex-col gap-4">
+            <p className="text-sm font-medium text-muted">Funciona con</p>
+            <AgentClients clients={AI_CLIENTS} />
+          </Reveal>
+
+          <Reveal className="flex flex-col gap-6">
+            <McpUrlField
+              url={MCP_RESOURCE_URL}
+              label="URL del servidor MCP"
             />
-          </Link>
-        </Reveal>
+            <Link
+              href={SITE.mcp.docsPath as Route}
+              className={cn(buttonVariants({ size: "lg" }), "group self-start")}
+            >
+              {COPY.cta}
+              <ArrowRightIcon
+                aria-hidden="true"
+                className="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
+              />
+            </Link>
+          </Reveal>
+        </div>
+
+        {/* En el teléfono, el visual va primero (DESIGN.md) */}
+        <AgentDemoVideo className="order-first lg:order-none" />
       </div>
     </section>
   )

@@ -4,6 +4,7 @@ import { getAccountBalances } from "@/features/accounts/queries"
 import { getCategories } from "@/features/categories/queries"
 import { isActiveDebt } from "@/features/debts/calculations"
 import { getDebts } from "@/features/debts/queries"
+import { getExportHistoryStart } from "@/features/exports/queries"
 import { getGoals } from "@/features/goals/queries"
 import { getUpcomingPayments } from "@/features/recurring-expenses/queries"
 import { getIncomeSources } from "@/features/recurring-incomes/queries"
@@ -47,11 +48,12 @@ async function QuickActionsLoader() {
     [
       Promise.all(
         targets.map(async (workspace): Promise<QuickActionsWorkspace> => {
-          const [categories, accounts] = await Promise.all([
+          const [categories, accounts, historyStart] = await Promise.all([
             getCategories(workspace.id),
-            getAccountBalances(workspace.id)
+            getAccountBalances(workspace.id),
+            getExportHistoryStart(workspace.id)
           ])
-          return { ...workspace, categories, accounts }
+          return { ...workspace, categories, accounts, historyStart }
         })
       ),
       getGoals(personal.id),

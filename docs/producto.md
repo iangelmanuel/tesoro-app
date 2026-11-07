@@ -2140,6 +2140,125 @@ Personal, sobre `dismissed_recommendations` de la empresa.
 - Ocultar en Empresa no oculta nada en Personal: las filas son por
   `workspace_id`.
 
+## Exportar (SPEC 32)
+
+Desde Reportes (Personal o una empresa), el botón **Exportar** del header
+descarga un libro `.xlsx` o un `.csv` de un espacio. Sirve para presentar las
+cuentas a un contador, a la familia o a un banco, o para trabajarlas a la
+manera del usuario. Google Sheets abre los dos archivos con Archivo →
+Importar; no hay integración con su API.
+
+### Periodo
+
+- **Mes**, **Trimestre**, **Año**, **Rango de meses** o **Todo el historial**
+  (del primer mes con un movimiento o traspaso hasta el actual).
+- Solo meses completos, del día 1 al último en `America/Bogota`. El mes actual
+  va hasta hoy y su título dice "(en curso)": un movimiento con fecha futura
+  no entra.
+- Máximo **36 meses** por archivo, en el diálogo y en el servidor. Con un
+  historial más largo, **Todo el historial** se deshabilita y se exporta por
+  rangos.
+- El diálogo se prellena con el periodo de Reportes; un rango por días pasa a
+  los meses que contienen sus dos fechas.
+- **Ocultar montos** no aplica: el archivo es del usuario y trae los montos
+  reales (el diálogo lo avisa).
+
+### Nombre del archivo
+
+`tesoro-<espacio>-<periodo>.<ext>`: `personal` o el slug del nombre de la
+empresa (sin tildes, máximo 40 caracteres) y `2026-10` (un mes), `2026` (enero
+a diciembre) o `2026-01_2026-10` (otro rango). Ejemplo:
+`tesoro-cafe-nunoa-2026.xlsx`.
+
+### Libro `.xlsx`
+
+Hojas en orden: **Resumen**, una por mes (`Octubre 2026`, de la más antigua a
+la más reciente) y **Movimientos**.
+
+- **Resumen:** tabla mes a mes con Ingresos, Gastos, Balance, Tasa de ahorro
+  y Saldo en cuentas al cierre (en Empresa: Ventas, Costos y gastos,
+  Utilidad, Margen). Cada celda es una fórmula a la hoja del mes. Totales:
+  suman Ingresos, Gastos y Balance; la tasa es la del total; el saldo, el del
+  último mes.
+- **Hoja de mes de Personal**, secciones apiladas en vertical:
+  1. Resumen del mes;
+  2. Saldos por cuenta;
+  3. Ingresos fijos;
+  4. Gastos fijos;
+  5. Presupuestos;
+  6. Metas;
+  7. Deudas y tarjetas;
+  8. Me deben;
+  9. Movimientos, con los traspasos.
+
+  Las secciones 3 a 8 se omiten sin registros que apliquen al mes. Las 1, 2 y
+  9 siempre aparecen ("Sin movimientos este mes").
+
+- **Hoja de mes de Empresa:** Resumen del mes, Saldos por cuenta, Costos por
+  categoría, Ventas, Costos y gastos y, si hubo, Traspasos.
+- **Movimientos:** una tabla plana del periodo (Mes, Fecha, Hora, Tipo,
+  Descripción, Categoría, Cuenta, Destino, Nota, Monto; en Empresa también
+  Contraparte y Factura), con encabezado inmovilizado y autofiltro.
+
+Reglas de los datos:
+
+- Movimientos son ingresos, gastos y traspasos. Los traspasos no suman a
+  ingresos ni gastos. Ajustes, pagos o avances de tarjeta y aportes a metas no
+  van en Movimientos, pero sí mueven **Saldos por cuenta**.
+- **Saldos por cuenta** sale de la RPC `account_balances_by_month`, con el
+  mismo cálculo que el saldo de Cuentas. Inicio + entradas − salidas = cierre;
+  un saldo inicial con fecha cuenta como entrada de ese día. Las cuentas
+  archivadas salen si tuvieron saldo o movimientos en el periodo.
+- Los estados (Pagado, Recibido, Pendiente, De hoy, Vencido, Atrasado…) son
+  los mismos de cada página, con hoy en `America/Bogota`.
+- Una deuda, meta o cuenta por cobrar sin saldo ni actividad en el mes, o
+  cerrada antes del mes, no sale en esa hoja.
+- Los totales y el Resumen del mes son fórmulas A1 (`SUM`, `SUMIFS`) con su
+  valor guardado: si el usuario edita un monto, se recalcula; un visor sin
+  motor de cálculo igual ve el número. Excel recalcula al abrir.
+- Formato: montos `"$" #,##0` (COP sin decimales), fechas reales de Excel
+  `dd/mm/yyyy`, hora como texto, porcentajes `0.0%`. Ingresos y ventas en
+  verde, gastos y costos en rojo, traspasos en gris. Impresión A4 vertical,
+  una página de ancho y pie "Tesoro · <hoja> · Página N de M"; en
+  Movimientos, la banda y los encabezados se repiten en cada página.
+- Presentación: las hojas no muestran cuadrícula, así que todo lo que no es
+  una tabla queda en blanco. Cada tabla es un bloque con borde grueso del
+  color del espacio y bordes finos por dentro: banda de título combinada a lo
+  ancho de la tabla (texto blanco grande sobre el color del espacio),
+  encabezados en un tinte claro, filas alternas en blanco y gris muy claro y
+  fila de total con su propio tinte y texto oscuro en negrita. Solo se
+  combinan la banda de título, el aviso "Sin movimientos este mes" y la
+  cabecera de la hoja; datos y totales nunca, para que ordenar, filtrar y las
+  fórmulas sigan funcionando. El ancho de cada columna se ajusta a su
+  contenido, con un mínimo por tipo y un máximo.
+
+### CSV
+
+Las mismas filas y columnas de la hoja **Movimientos**, para Excel en es-CO:
+UTF-8 con BOM, separador `;`, montos sin separador de miles (`35000`), fecha
+`YYYY-MM-DD` y saltos `\r\n`. Campos con `;`, comillas o saltos van entre
+comillas dobles. Una celda que empieza por `=`, `+`, `-`, `@`, tabulación o
+retorno lleva un apóstrofo delante para que no se ejecute como fórmula.
+
+Con otra configuración regional, Excel puede abrirlo en una sola columna: se
+importa con Datos → Desde texto/CSV y separador `;`. Google Sheets detecta el
+separador al importar.
+
+### Seguridad
+
+- `GET /api/export/[workspaceId]?format=xlsx|csv&from=YYYY-MM&to=YYYY-MM`
+  lee con la sesión del usuario (clave publicable) y RLS, nunca con
+  `service_role`. Sin sesión responde 401; un espacio ajeno o inexistente,
+  404; parámetros inválidos o más de 36 meses, 400. Errores en JSON
+  `{ error }`. Respuesta con `Cache-Control: no-store`.
+- Un espacio marcado para borrar también se exporta: es la última forma de
+  sacar los datos.
+- `account_balances_by_month` es `security invoker`, `stable` y
+  `search_path = ''`; solo la ejecuta `authenticated`.
+- Las consultas paginan de 1000 en 1000: un periodo con más filas se exporta
+  completo.
+- `exceljs` corre solo en el servidor; no llega al navegador.
+
 ## Specs
 
 Tesoro se construye en 13 specs (`specs/`), cada uno sobre los anteriores. El

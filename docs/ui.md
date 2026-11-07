@@ -412,6 +412,49 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
   render sale con el ancho correcto. Cerrar el aside no pierde el ancho. El
   Drawer móvil sigue en `w-72`, sin agarradera.
 
+### Exportar (SPEC 32)
+
+- **Botón:** `ExportButton` (`src/features/exports/components/`), en los
+  accesos rápidos del header, solo en Reportes de Personal y de una empresa.
+  `variant="secondary"`, ícono `Download`, `aria-label="Exportar"`; con texto
+  desde 640 px y solo ícono de 44 px por debajo.
+- **Diálogo:** `ExportDialog`, `Modal` centrado (hoja inferior en móvil),
+  `sm:max-w-md`.
+  - Tabs **Excel (.xlsx)** | **CSV (.csv)**.
+  - `Select` **Periodo** y, según el periodo, otro `Select` con el valor, o
+    **Desde** / **Hasta** en dos columnas (una en móvil). Controles de 44 px.
+  - Bajo el periodo, en `text-muted`, "Se crearán N hojas de mes" (solo
+    Excel). Errores de rango en `text-danger` con `role="alert"`; aviso de
+    **Ocultar montos** en `text-warning`. La zona es `aria-live="polite"`.
+  - **Descargar** dice "Generando…" mientras espera; al terminar cierra y
+    muestra el toast "Archivo descargado". Si falla, toast de error y el
+    diálogo sigue abierto.
+- **Contraste** sobre `--overlay`:
+
+  | Par                   | Claro | Oscuro |
+  | --------------------- | ----- | ------ |
+  | `muted` / `overlay`   | 5.97  | 6.20   |
+  | `warning` / `overlay` | 5.03  | 8.90   |
+  | `danger` / `overlay`  | 5.44  | 5.31   |
+
+- **Libro:** paleta ARGB por espacio en
+  `src/features/exports/workbook/theme.ts` (`workbookPalette`). Los colores
+  base copian los tokens en claro; si cambian `--accent`, `--income`,
+  `--expense` o `--muted`, se actualizan ahí. Sin cuadrícula
+  (`finishSheet`); cada tabla (`writeSection`) lleva borde `medium` del color
+  del espacio por fuera y `thin` gris (`E3E7EC`) por dentro.
+
+  | Par                                  | Personal | Empresa |
+  | ------------------------------------ | -------- | ------- |
+  | Blanco / banda de título (`accent`)  | 5.36     | 5.22    |
+  | `accentDark` / encabezado (tinte)    | 7.13     | 6.91    |
+  | Texto oscuro / fila de total (tinte) | 11.54    | 11.00   |
+  | `income` / fila alterna (`F6F8FA`)   | 5.19     | 5.19    |
+  | `expense` / fila alterna             | 5.01     | 5.01    |
+
+  En la fila de total los montos van en texto oscuro: verde y rojo sobre su
+  tinte bajan de 4.5:1.
+
 ## Dónde vive cada pantalla
 
 | Pantalla         | Ruta                                                           | Piezas                                                                               |

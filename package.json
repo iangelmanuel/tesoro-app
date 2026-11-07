@@ -62,6 +62,7 @@
     "@supabase/supabase-js": "2.118.0",
     "date-fns": "4.4.0",
     "driver.js": "1.10.2",
+    "exceljs": "4.4.0",
     "lucide-react": "1.63.0",
     "motion": "14.9.0",
     "next": "16.4.3",

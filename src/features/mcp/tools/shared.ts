@@ -6,6 +6,8 @@ import type { McpContext, McpTool } from "../types"
 // el paginado por cursor.
 
 export const WORKSPACE_NOT_FOUND = "Espacio no encontrado."
+// Presupuestos, metas, deudas, fijos y Me deben solo existen en Personal
+export const PERSONAL_ONLY = "Solo disponible en el espacio Personal."
 export const WORKSPACE_NOT_WRITABLE =
   "Este espacio está marcado para borrarse y no admite cambios."
 

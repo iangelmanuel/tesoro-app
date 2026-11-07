@@ -12,6 +12,7 @@ import { chartsSection } from "./sections/charts"
 import { coverSection } from "./sections/cover"
 import { periodSummarySection } from "./sections/period-summary"
 import { personalMonthSection } from "./sections/personal-month"
+import { scoreSection } from "./sections/score"
 import { keepTitlesWithTables } from "./sections/table"
 import { pdfTheme } from "./theme"
 import type { PdfContext, PdfReportData } from "./types"
@@ -60,7 +61,7 @@ export async function buildPdf(
     today
   }
 
-  // Detalle por mes, en orden cronológico. El score llega en el paso 12
+  // Detalle por mes, en orden cronológico
   const monthSections: Content[] =
     data.export.type === "personal"
       ? data.export.months.flatMap((month) => personalMonthSection(ctx, month))
@@ -68,6 +69,7 @@ export async function buildPdf(
   const sections: Content[] = [
     ...periodSummarySection(ctx, data, previousRange(range)),
     ...chartsSection(ctx, data),
+    ...scoreSection(ctx, data.score),
     ...monthSections
   ]
 

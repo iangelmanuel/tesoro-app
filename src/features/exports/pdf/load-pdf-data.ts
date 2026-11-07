@@ -1,13 +1,39 @@
 import { SITE } from "@/config/site"
+import {
+  BUSINESS_FACTOR_LABELS,
+  BUSINESS_MONTH_FACTORS
+} from "@/features/business-score/constants"
+import { getBusinessScoreHistory } from "@/features/business-score/queries"
+import { getBusinessRecommendations } from "@/features/business-score/recommendations"
 import { type ReportQuery, buildReportQuery } from "@/features/reports/period"
 import { getCategoryTotals, getMonthlyTotals } from "@/features/reports/queries"
+import {
+  FACTOR_LABELS,
+  MONTH_FACTORS,
+  SEVERITY_LABELS
+} from "@/features/score/constants"
+import { bandInfo, hasScore, isIncluded } from "@/features/score/curves"
+import {
+  getDismissedRecommendations,
+  getScoreHistory
+} from "@/features/score/queries"
+import {
+  getRecommendations,
+  splitDismissed
+} from "@/features/score/recommendations"
+import type {
+  FactorResult,
+  Recommendation,
+  ScoreResult
+} from "@/features/score/types"
 import { workspaceReportsPath } from "@/features/workspaces/paths"
 import type { Workspace } from "@/features/workspaces/queries"
 import { monthRange } from "@/libs/dates"
 import { loadExportData } from "../queries"
 import { previousRange } from "../range"
 import type { ExportRange } from "../types"
-import type { PdfReportData } from "./types"
+import { html } from "./rich-text"
+import type { PdfReportData, PdfScore } from "./types"
 
 const minMonth = (a: string, b: string) => (a < b ? a : b)
 
@@ -89,25 +115,118 @@ async function loadCategoryTotals(workspace: Workspace, range: ExportRange) {
   return rows.map((row) => ({ name: row.name, total: row.total }))
 }
 
+const PERCENT_FORMAT = new Intl.NumberFormat("es-CO", {
+  style: "percent",
+  maximumFractionDigits: 1
+})
+
+const DECIMAL_FORMAT = new Intl.NumberFormat("es-CO", {
+  maximumFractionDigits: 1
+})
+
+/** El dato del factor como en la pantalla: meses o porcentaje */
+function factorValue(value: number, inMonths: boolean) {
+  if (inMonths) {
+    return `${DECIMAL_FORMAT.format(value)} ${value === 1 ? "mes" : "meses"}`
+  }
+  return PERCENT_FORMAT.format(value)
+}
+
+/**
+ * Score y recomendaciones en la forma del PDF. Título y dato de cada
+ * recomendación pasan por `html`, que escapa todo: pueden traer nombres de
+ * categorías, metas o cuentas del usuario
+ */
+function toPdfScore<K extends string>(
+  current: ScoreResult<K>,
+  labels: Record<K, string>,
+  monthFactors: readonly K[],
+  active: Recommendation<string>[]
+): PdfScore {
+  if (!hasScore(current)) {
+    return { status: "insufficient", reasons: current.insufficient }
+  }
+
+  return {
+    status: "ok",
+    value: current.score,
+    band: bandInfo(current.band).label,
+    factors: current.factors.map((factor: FactorResult<K>) => ({
+      name: labels[factor.key],
+      weight: factor.weight,
+      value: isIncluded(factor)
+        ? factorValue(factor.value, monthFactors.includes(factor.key))
+        : "—",
+      state: isIncluded(factor)
+        ? `${Math.round(factor.points)} pts`
+        : `Excluido: ${factor.excluded}`
+    })),
+    recommendations: active.map((item) => ({
+      title: item.title,
+      html: html`<p>
+        <strong
+          >Prioridad ${SEVERITY_LABELS[item.severity].toLowerCase()}.</strong
+        >
+        ${item.evidence}
+      </p>`
+    }))
+  }
+}
+
+/**
+ * Score actual (al día de generación) con las mismas consultas que la
+ * pantalla de Recomendaciones (SPEC 07 y 11) y solo las recomendaciones
+ * activas: las ocultas este mes no salen
+ */
+async function loadScore(
+  workspace: Workspace,
+  today: string
+): Promise<PdfScore> {
+  const month = today.slice(0, 7)
+
+  if (workspace.type === "personal") {
+    const { inputs, history } = await getScoreHistory(workspace.id, today)
+    const [recommendations, dismissed] = await Promise.all([
+      getRecommendations(workspace.id, inputs),
+      getDismissedRecommendations(workspace.id, month)
+    ])
+    const { active } = splitDismissed(recommendations, dismissed)
+    return toPdfScore(history.at(-1)!, FACTOR_LABELS, MONTH_FACTORS, active)
+  }
+
+  const { inputs, history } = await getBusinessScoreHistory(workspace.id, today)
+  const [recommendations, dismissed] = await Promise.all([
+    getBusinessRecommendations(workspace, inputs),
+    getDismissedRecommendations(workspace.id, month)
+  ])
+  const { active } = splitDismissed(recommendations, dismissed)
+  return toPdfScore(
+    history.at(-1)!,
+    BUSINESS_FACTOR_LABELS,
+    BUSINESS_MONTH_FACTORS,
+    active
+  )
+}
+
 // Datos del PDF (SPEC 33), con la sesión del usuario y RLS. Parte de
 // `loadExportData` (SPEC 32) para que los totales cuadren con el Excel.
-// Provisional: el score llega en el paso 12.
 export async function loadPdfData(
   workspace: Workspace,
   range: ExportRange,
   today: string
 ): Promise<PdfReportData> {
-  const [data, previousTotals, categoryTotals] = await Promise.all([
+  const [data, previousTotals, categoryTotals, score] = await Promise.all([
     loadExportData(workspace, range, today),
     loadPreviousTotals(workspace, range),
-    loadCategoryTotals(workspace, range)
+    loadCategoryTotals(workspace, range),
+    loadScore(workspace, today)
   ])
 
   return {
     export: data,
     previousTotals,
     categoryTotals,
-    score: { status: "insufficient", reasons: [] },
+    score,
     reportsUrl: reportsUrlFor(workspace, range, today)
   }
 }

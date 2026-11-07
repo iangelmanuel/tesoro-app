@@ -14,7 +14,10 @@ import { listRecurring } from "./tools/read/list-recurring"
 import { listTransactions } from "./tools/read/list-transactions"
 import { listTransfers } from "./tools/read/list-transfers"
 import { listWorkspaces } from "./tools/read/list-workspaces"
+import { createTransactions } from "./tools/write/create-transactions"
+import { deleteTransactions } from "./tools/write/delete-transactions"
 import { undoOperation } from "./tools/write/undo-operation"
+import { updateTransactions } from "./tools/write/update-transactions"
 import type { McpTool, McpToolDefinition } from "./types"
 
 // Catálogo único de tools (SPEC 34): el servidor las registra desde aquí y
@@ -38,6 +41,9 @@ export const MCP_TOOLS: readonly McpTool[] = [
   listRecurring,
   listReceivables,
   listOperations,
+  createTransactions,
+  updateTransactions,
+  deleteTransactions,
   undoOperation
 ]
 

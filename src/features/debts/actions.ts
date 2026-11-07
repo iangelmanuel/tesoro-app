@@ -1,12 +1,23 @@
 "use server"
 
-import type { PostgrestError } from "@supabase/supabase-js"
 import { z } from "zod"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { shiftMonth, todayISO } from "@/libs/dates"
 import { revalidatePersonalPages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import type { DebtStatus } from "./calculations"
+import { deleteEntryRecord, loadDebt, loadEntry } from "./entry-service"
+import {
+  ADVANCE_ONLY_CARD,
+  CARD_TRANSACTION,
+  DEBT_NOT_ACTIVE,
+  DEBT_NOT_FOUND,
+  ENTRY_NOT_FOUND,
+  INSTALLMENT_REQUIRED,
+  NEGATIVE_BALANCE,
+  OVER_PAYMENT,
+  debtPgError
+} from "./errors"
 import { lastPeriodOn, periodOf } from "./receivable-schedule"
 import {
   DEBT_KINDS,
@@ -26,24 +37,12 @@ import type {
   PaymentFormState
 } from "./types"
 
-const DEBT_NOT_FOUND = "No se encontró la deuda"
-const ENTRY_NOT_FOUND = "No se encontró el pago"
 const DEBT_DEFAULT_ERROR = "No se pudo guardar la deuda. Intenta de nuevo"
 const ENTRY_DEFAULT_ERROR = "No se pudo guardar el pago. Intenta de nuevo"
-const DEBT_NOT_ACTIVE = "Reactiva la deuda para registrar pagos"
-const OVER_PAYMENT = "El pago supera el saldo"
-const NEGATIVE_BALANCE = "El saldo de la deuda no puede quedar negativo"
 const HAS_BALANCE = "La deuda aún tiene saldo"
 const SAME_BALANCE = "El saldo ya es ese"
-const FUTURE_DATE = "La fecha no puede ser futura"
-const CARD_TRANSACTION = "Un pago de tarjeta no crea un movimiento"
-const ARCHIVED_ACCOUNT = "La cuenta está archivada"
-const ADVANCE_ONLY_CARD = "Solo una tarjeta admite avances"
-const SAME_TRANSFER_ACCOUNT = "Elige una cuenta distinta a la que paga"
 const RECEIVABLE_TRANSFER = "Un abono no admite traspaso"
 const RECEIVABLE_EXTRA = "Una cuenta por cobrar no tiene abonos extra"
-const INSTALLMENT_REQUIRED = "Elige la cuota que se cobra"
-const INSTALLMENT_OUT_OF_RANGE = "La cuota está fuera del cobro mensual"
 const ENTRIES_OUT_OF_RANGE =
   "Hay cobros de cuotas fuera de estas fechas. Elimínalos primero"
 
@@ -120,56 +119,6 @@ const kindSchema = z.enum(DEBT_KINDS)
 // de punto flotante
 const roundCents = (value: number) => Math.round(value * 100) / 100
 
-// Los triggers de debts y debt_entries lanzan check_violation con su mensaje.
-// `balanceField` es el campo al que se asigna el error de saldo negativo.
-function debtPgError(
-  error: PostgrestError,
-  balanceField: string,
-  balanceMessage: string,
-  defaultError: string
-): DebtFormState {
-  if (error.message.includes(NEGATIVE_BALANCE)) {
-    return { fieldErrors: { [balanceField]: [balanceMessage] } }
-  }
-  if (error.message.includes(DEBT_NOT_ACTIVE)) {
-    return { error: DEBT_NOT_ACTIVE }
-  }
-  if (error.message.includes(FUTURE_DATE)) {
-    return { fieldErrors: { occurred_on: [FUTURE_DATE] } }
-  }
-  if (error.message.includes(CARD_TRANSACTION)) {
-    return { error: CARD_TRANSACTION }
-  }
-  if (error.message.includes(ADVANCE_ONLY_CARD)) {
-    return { error: ADVANCE_ONLY_CARD }
-  }
-  // Cuotas del cobro mensual: reglas de check_debt_entry
-  if (error.message.includes("La cuota es")) {
-    return { fieldErrors: { period_on: [INSTALLMENT_OUT_OF_RANGE] } }
-  }
-  if (error.message.includes(INSTALLMENT_REQUIRED)) {
-    return { fieldErrors: { period_on: [INSTALLMENT_REQUIRED] } }
-  }
-  // El traspaso desde la misma cuenta que paga lo frena transfers_check
-  if (error.message.includes("transfers_check")) {
-    return { fieldErrors: { transfer_from: [SAME_TRANSFER_ACCOUNT] } }
-  }
-  // Cuenta del movimiento de un pago: archivada o de otro espacio
-  if (error.message.includes(ARCHIVED_ACCOUNT)) {
-    return { fieldErrors: { account_id: [ARCHIVED_ACCOUNT] } }
-  }
-  if (error.code === "23503" && error.message.includes("account_id")) {
-    return { fieldErrors: { account_id: ["Elige una cuenta válida"] } }
-  }
-  if (error.code === "23503") {
-    return { error: DEBT_NOT_FOUND }
-  }
-  if (error.code === "42501") {
-    return { error: "No tienes permiso para modificar esta deuda" }
-  }
-  return { error: defaultError }
-}
-
 function readValues<const T extends readonly string[]>(
   formData: FormData,
   fields: T
@@ -185,57 +134,13 @@ function readValues<const T extends readonly string[]>(
 // Deuda del espacio Personal del usuario, con su saldo actual
 async function findDebt(debtId: string) {
   const workspace = await getPersonalWorkspace()
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from("debts")
-    .select(
-      "id, workspace_id, kind, status, opening_balance, installment, schedule, starts_on, term_months, entries:debt_entries (kind, amount, period_on)"
-    )
-    .eq("id", debtId)
-    .eq("workspace_id", workspace.id)
-    .maybeSingle()
-
-  if (!data) {
-    return null
-  }
-
-  // saldo = saldo inicial − pagos + ajustes + avances
-  const balance = data.entries.reduce(
-    (sum, entry) =>
-      entry.kind === "payment"
-        ? sum - Number(entry.amount)
-        : sum + Number(entry.amount),
-    Number(data.opening_balance)
-  )
-
-  return {
-    ...data,
-    balance: roundCents(balance),
-    // Mensual indefinida: sin saldo total, el saldo no limita los cobros
-    openEnded:
-      data.kind === "receivable" &&
-      data.schedule === "monthly" &&
-      data.term_months === null
-  }
+  return loadDebt(await createClient(), workspace.id, debtId)
 }
 
 // Entrada del espacio Personal del usuario, con su deuda
 async function findEntry(entryId: string) {
   const workspace = await getPersonalWorkspace()
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from("debt_entries")
-    .select("id, debt_id, kind, amount, is_extra_payment")
-    .eq("id", entryId)
-    .eq("workspace_id", workspace.id)
-    .maybeSingle()
-
-  if (!data) {
-    return null
-  }
-
-  const debt = await findDebt(data.debt_id)
-  return debt ? { ...data, amount: Number(data.amount), debt } : null
+  return loadEntry(await createClient(), workspace.id, entryId)
 }
 
 // Valida con el esquema del tipo (y, en una cuenta por cobrar, del tipo de
@@ -810,37 +715,10 @@ export async function deleteEntry(id: string): Promise<DebtActionResult> {
   if (!entry) {
     return { error: ENTRY_NOT_FOUND }
   }
-  if (entry.debt.status !== "active") {
-    return { error: DEBT_NOT_ACTIVE }
-  }
-  // Borrar un ajuste, un avance o una cuota que subió el saldo lo baja
-  if (
-    (entry.kind === "adjustment" ||
-      entry.kind === "advance" ||
-      entry.kind === "fee") &&
-    entry.debt.balance - entry.amount < 0
-  ) {
-    return { error: NEGATIVE_BALANCE }
-  }
 
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("debt_entries")
-    .delete()
-    .eq("id", entry.id)
-    .select("id")
-
-  if (error) {
-    const result = debtPgError(
-      error,
-      "amount",
-      NEGATIVE_BALANCE,
-      "No se pudo eliminar. Intenta de nuevo"
-    )
-    return { error: result.error ?? result.fieldErrors?.amount?.[0] }
-  }
-  if (data.length === 0) {
-    return { error: ENTRY_NOT_FOUND }
+  const result = await deleteEntryRecord(await createClient(), entry)
+  if (!result.ok) {
+    return { error: result.error }
   }
 
   revalidatePersonalPages()

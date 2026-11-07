@@ -86,7 +86,7 @@ La idea original abarca todas las entidades. Se parte en dos:
   - `undo_operation`: revierte una operación por id.
 - **Reglas de escritura:**
   - misma validación que la UI (Zod de `src/features/transactions/schemas.ts` y de traspasos): categoría del tipo correcto, cuenta activa, monto > 0, descripción 1–120, nota ≤ 500;
-  - **movimientos vinculados** siguen las reglas de la UI (SPEC 26): editar monto, fecha o cuenta propaga al vínculo (pago de deuda o tarjeta, gasto fijo, ingreso fijo, cobro de "me deben"); borrar borra el vínculo. El log guarda las dos filas;
+  - **movimientos vinculados** siguen las reglas de la UI (SPEC 26). En un pago de préstamo o cobro de "me deben" el abono es la fuente de verdad: monto, fecha y hora se escriben en el abono (con las validaciones del diálogo de pago) y el trigger los copia al movimiento; la nota va al movimiento; cambiar tipo, categoría, cuenta o descripción se rechaza. Borrar borra el abono y su movimiento. Un gasto fijo o ingreso fijo conserva su enlace. El log guarda las dos filas. Un pago de tarjeta no es un movimiento (vive en `debt_entries`): se escribe en SPEC 35;
   - `day_position` se asigna igual que al crear desde la UI;
   - **todo o nada:** primero se validan todas las filas; si una falla, no se escribe ninguna y la respuesta lista cada error con su índice. Si falla una escritura a mitad de camino, las filas ya aplicadas se revierten con el log y la operación queda `failed`;
   - **`dry_run: true`** valida y devuelve el antes y el después de cada fila sin guardar ni crear operación;
@@ -300,7 +300,7 @@ docs/mcp.md
 - [ ] `create_transactions` con 201 movimientos se rechaza sin escribir nada.
 - [ ] `create_transactions` con 5 filas donde la 4 tiene una categoría de ingreso en un gasto no crea ninguna y el error señala el índice 3.
 - [ ] `update_transactions` con `dry_run: true` devuelve antes y después y no cambia ninguna fila ni crea operación.
-- [ ] `update_transactions` que cambia el monto de un pago de tarjeta actualiza también el `debt_entries` vinculado, como en la UI.
+- [ ] `update_transactions` que cambia el monto de un pago de préstamo actualiza también el `debt_entries` vinculado, como el diálogo de pago.
 - [ ] `delete_transactions` de 10 movimientos y luego `undo_operation` deja los 10 de vuelta con sus mismos ids y vínculos.
 - [ ] `undo_operation` falla con el mensaje de conflicto si uno de los movimientos se editó desde la UI después, y no revierte ninguno.
 - [ ] `undo_operation` sobre una operación ya revertida responde error y no cambia nada.

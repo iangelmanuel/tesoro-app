@@ -3,7 +3,7 @@ import type { WorkspaceType } from "@/features/workspaces/queries"
 import { movementColumns } from "../columns"
 import type { ExportMovementKind, ExportMovementRow } from "../types"
 import { type SectionColumn, writeSection } from "./section"
-import { type AmountTone, accentColor, applyPrintSetup } from "./theme"
+import { type AmountTone, finishSheet, workbookPalette } from "./theme"
 
 export const MOVEMENTS_SHEET = "Movimientos"
 
@@ -40,15 +40,19 @@ export function movementSectionColumns(
 export function addMovementsSheet(
   workbook: Workbook,
   type: WorkspaceType,
-  rows: ExportMovementRow[]
+  rows: ExportMovementRow[],
+  /** Periodo para la banda de título: "Enero 2026 – Octubre 2026" */
+  period: string
 ) {
+  // Banda de título en la fila 1 y encabezados en la 2: ambas quedan fijas
   const sheet = workbook.addWorksheet(MOVEMENTS_SHEET, {
-    views: [{ state: "frozen", ySplit: 1 }]
+    views: [{ state: "frozen", ySplit: 2 }]
   })
   const columns = movementSectionColumns(type, { withMonth: true })
 
-  const section = writeSection(sheet, accentColor(type), {
+  const section = writeSection(sheet, workbookPalette(type), {
     startRow: 1,
+    title: `Movimientos · ${period}`,
     columns,
     rows,
     emptyText: "Sin movimientos en este periodo"
@@ -59,6 +63,8 @@ export function addMovementsSheet(
     to: { row: section.lastRow, column: columns.length }
   }
 
-  applyPrintSetup(sheet)
+  finishSheet(sheet)
+  // Al imprimir, la banda y los encabezados se repiten en cada página
+  sheet.pageSetup.printTitlesRow = "1:2"
   return sheet
 }

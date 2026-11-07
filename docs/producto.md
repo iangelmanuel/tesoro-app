@@ -2218,9 +2218,19 @@ Reglas de los datos:
   motor de cálculo igual ve el número. Excel recalcula al abrir.
 - Formato: montos `"$" #,##0` (COP sin decimales), fechas reales de Excel
   `dd/mm/yyyy`, hora como texto, porcentajes `0.0%`. Ingresos y ventas en
-  verde, gastos y costos en rojo, traspasos en gris. Encabezados con el color
-  del espacio y texto blanco (AA). Impresión A4 vertical, una página de ancho
-  y pie "Tesoro · <hoja> · Página N de M".
+  verde, gastos y costos en rojo, traspasos en gris. Impresión A4 vertical,
+  una página de ancho y pie "Tesoro · <hoja> · Página N de M"; en
+  Movimientos, la banda y los encabezados se repiten en cada página.
+- Presentación: las hojas no muestran cuadrícula, así que todo lo que no es
+  una tabla queda en blanco. Cada tabla es un bloque con borde grueso del
+  color del espacio y bordes finos por dentro: banda de título combinada a lo
+  ancho de la tabla (texto blanco grande sobre el color del espacio),
+  encabezados en un tinte claro, filas alternas en blanco y gris muy claro y
+  fila de total con su propio tinte y texto oscuro en negrita. Solo se
+  combinan la banda de título, el aviso "Sin movimientos este mes" y la
+  cabecera de la hoja; datos y totales nunca, para que ordenar, filtrar y las
+  fórmulas sigan funcionando. El ancho de cada columna se ajusta a su
+  contenido, con un mínimo por tipo y un máximo.
 
 ### CSV
 

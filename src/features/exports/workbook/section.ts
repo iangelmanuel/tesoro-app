@@ -1,17 +1,23 @@
-import type { CellValue, Workbook, Worksheet } from "exceljs"
+import type { Borders, CellValue, Workbook, Worksheet } from "exceljs"
 import type { ColumnKind } from "../columns"
 import { LOGO_PNG_BASE64 } from "./logo-data"
 import {
   type AmountTone,
   COLORS,
-  COLUMN_WIDTHS,
+  MAX_COLUMN_WIDTH,
+  MIN_COLUMN_WIDTHS,
   NUMBER_FORMATS,
-  TONE_COLORS
+  TONE_COLORS,
+  type WorkbookPalette
 } from "./theme"
 
-// Secciones apiladas en vertical: título, encabezados, filas y fila de total.
-// Sin celdas combinadas (solo la cabecera de la hoja). Cada sección devuelve
-// sus rangos para que otras celdas armen fórmulas A1 con ellos.
+// Cada tabla es un bloque apilado en vertical: banda de título combinada,
+// encabezados, filas alternas y fila de total, con borde grueso exterior y
+// bordes finos internos. Fuera de las tablas no hay bordes (las hojas no
+// muestran cuadrícula). Solo se combinan la banda de título y el aviso de
+// tabla vacía: datos y totales nunca, para que ordenar, filtrar y las
+// fórmulas sigan funcionando. Cada tabla devuelve sus rangos para que otras
+// celdas armen fórmulas A1 con ellos.
 
 /** Fórmula con su valor calculado, para visores sin motor de cálculo */
 export interface Formula {
@@ -46,9 +52,9 @@ export interface SectionTotal<K extends string> {
 }
 
 export interface SectionOptions<T, K extends string> {
-  /** Fila donde va el título (o los encabezados, sin título) */
+  /** Fila de la banda de título */
   startRow: number
-  title?: string
+  title: string
   columns: SectionColumn<T, K>[]
   rows: T[]
   total?: SectionTotal<K>
@@ -94,10 +100,42 @@ export function excelDate(value: string) {
 
 const roundCents = (value: number) => Math.round(value * 100) / 100
 
-/** El ancho de cada columna es el mayor que le pide cualquier sección */
-function widen(sheet: Worksheet, index: number, kind: ColumnKind) {
+/** Caracteres que ocupa un valor ya formateado, para el ancho de columna */
+function displayLength(value: CellValue, kind: ColumnKind) {
+  if (value === null || value === undefined) return 0
+  switch (kind) {
+    case "money": {
+      const digits = String(Math.round(Math.abs(Number(value)))).length
+      // "$ " + dígitos + puntos de miles
+      return digits + Math.floor((digits - 1) / 3) + 2
+    }
+    case "percent":
+      return 7
+    case "date":
+      return 10
+    case "time":
+      return 5
+    default:
+      return String(value).length
+  }
+}
+
+/**
+ * El ancho de cada columna es el mayor que le pide cualquier tabla de la
+ * hoja: su contenido más largo, con un mínimo por tipo y un máximo
+ */
+function widen(
+  sheet: Worksheet,
+  index: number,
+  kind: ColumnKind,
+  chars: number
+) {
   const column = sheet.getColumn(index)
-  column.width = Math.max(column.width ?? 0, COLUMN_WIDTHS[kind])
+  const wanted = Math.min(
+    Math.max(chars + 3, MIN_COLUMN_WIDTHS[kind]),
+    MAX_COLUMN_WIDTH
+  )
+  column.width = Math.max(column.width ?? 0, wanted)
 }
 
 function cellValue<T, K extends string>(
@@ -119,46 +157,98 @@ const FORMATS: Partial<Record<ColumnKind, string>> = {
   percent: NUMBER_FORMATS.percent
 }
 
+const ALIGN: Record<ColumnKind, "left" | "center" | "right"> = {
+  text: "left",
+  date: "center",
+  time: "center",
+  money: "right",
+  percent: "right"
+}
+
+const solid = (argb: string) =>
+  ({ type: "pattern", pattern: "solid", fgColor: { argb } }) as const
+
+/**
+ * Borde grueso exterior del color del espacio y bordes finos grises por
+ * dentro, en el rectángulo [top, bottom] × [1, width]
+ */
+function frame(
+  sheet: Worksheet,
+  palette: WorkbookPalette,
+  top: number,
+  bottom: number,
+  width: number,
+  heavyRows: Set<number>
+) {
+  const inner = { style: "thin", color: { argb: COLORS.gridline } } as const
+  const outer = { style: "medium", color: { argb: palette.accent } } as const
+
+  for (let row = top; row <= bottom; row++) {
+    for (let col = 1; col <= width; col++) {
+      const border: Partial<Borders> = {
+        top: row === top || heavyRows.has(row) ? outer : inner,
+        bottom: row === bottom ? outer : inner,
+        left: col === 1 ? outer : inner,
+        right: col === width ? outer : inner
+      }
+      sheet.getCell(row, col).border = border
+    }
+  }
+}
+
 export function writeSection<T, K extends string>(
   sheet: Worksheet,
-  accent: string,
+  palette: WorkbookPalette,
   options: SectionOptions<T, K>
 ): SectionRanges<K> {
   const { startRow, title, columns, rows, total, emptyText } = options
+  const width = columns.length
   const letters = Object.fromEntries(
     columns.map((column, index) => [column.key, columnLetter(index + 1)])
   ) as ColumnLetters<K>
 
-  // Sin título (hoja Movimientos) los encabezados van en `startRow`
   const titleRow = startRow
-  const headerRow = title ? startRow + 1 : startRow
+  const headerRow = startRow + 1
   const firstRow = headerRow + 1
+  const lastRow = rows.length === 0 ? firstRow : firstRow + rows.length - 1
+  const totalRow = total ? lastRow + 1 : null
+  const bottomRow = totalRow ?? lastRow
 
-  if (title) {
-    const titleCell = sheet.getCell(titleRow, 1)
-    titleCell.value = title
-    titleCell.font = { bold: true, size: 12 }
+  // Banda de título: combinada a lo ancho de la tabla, grande y en blanco
+  // sobre el color del espacio
+  for (let col = 1; col <= width; col++) {
+    sheet.getCell(titleRow, col).fill = solid(palette.accent)
   }
+  const titleCell = sheet.getCell(titleRow, 1)
+  titleCell.value = title
+  titleCell.font = { bold: true, size: 13, color: { argb: COLORS.white } }
+  titleCell.alignment = { vertical: "middle", horizontal: "left", indent: 1 }
+  if (width > 1) sheet.mergeCellsWithoutStyle(titleRow, 1, titleRow, width)
+  sheet.getRow(titleRow).height = 24
 
-  // Encabezados con el color del espacio y texto blanco
+  // Encabezados con un tinte del espacio
   columns.forEach((column, index) => {
     const cell = sheet.getCell(headerRow, index + 1)
     cell.value = column.header
-    cell.font = { bold: true, color: { argb: COLORS.white } }
-    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: accent } }
+    cell.font = { bold: true, color: { argb: palette.accentDark } }
+    cell.fill = solid(palette.header)
     cell.alignment = {
       vertical: "middle",
-      horizontal:
-        column.kind === "money" || column.kind === "percent" ? "right" : "left"
+      horizontal: ALIGN[column.kind],
+      wrapText: true
     }
-    widen(sheet, index + 1, column.kind)
+    widen(sheet, index + 1, column.kind, column.header.length + 1)
   })
+  sheet.getRow(headerRow).height = 20
 
-  // Filas
+  // Filas alternas en blanco y gris muy claro
   if (rows.length === 0) {
     const cell = sheet.getCell(firstRow, 1)
     cell.value = emptyText ?? "Sin registros"
     cell.font = { italic: true, color: { argb: COLORS.muted } }
+    cell.alignment = { vertical: "middle", horizontal: "center" }
+    if (width > 1) sheet.mergeCellsWithoutStyle(firstRow, 1, firstRow, width)
+    sheet.getRow(firstRow).height = 20
   }
 
   rows.forEach((row, rowIndex) => {
@@ -176,13 +266,15 @@ export function writeSection<T, K extends string>(
 
       const format = FORMATS[column.kind]
       if (format) cell.numFmt = format
+      cell.alignment = { vertical: "middle", horizontal: ALIGN[column.kind] }
+      if (rowIndex % 2 === 1) cell.fill = solid(COLORS.zebra)
 
       const tone = column.tone?.(row)
-      if (tone) cell.font = { color: { argb: TONE_COLORS[tone] } }
+      cell.font = { color: { argb: tone ? TONE_COLORS[tone] : COLORS.ink } }
+
+      widen(sheet, index + 1, column.kind, displayLength(value, column.kind))
     })
   })
-
-  const lastRow = rows.length === 0 ? firstRow : firstRow + rows.length - 1
 
   const values = (key: K) => {
     const column = columns.find((item) => item.key === key)
@@ -198,27 +290,26 @@ export function writeSection<T, K extends string>(
     headerRow,
     firstRow,
     lastRow,
-    totalRow: null,
-    nextRow: lastRow + 2,
+    totalRow,
+    nextRow: bottomRow + 2,
     columnLetters: letters,
     range: (key) => `${letters[key]}${firstRow}:${letters[key]}${lastRow}`,
     totalCell: (key) => `${letters[key]}${lastRow + 1}`,
     values
   }
 
-  if (total) {
-    const totalRow = lastRow + 1
-    ranges.totalRow = totalRow
-    ranges.nextRow = totalRow + 2
-
+  // Fila de total con su tinte y texto oscuro en negrita
+  if (total && totalRow) {
     columns.forEach((column, index) => {
       const cell = sheet.getCell(totalRow, index + 1)
-      cell.font = { bold: true }
-      cell.border = { top: { style: "thin", color: { argb: COLORS.border } } }
+      cell.font = { bold: true, color: { argb: COLORS.ink } }
+      cell.fill = solid(palette.total)
+      cell.alignment = { vertical: "middle", horizontal: ALIGN[column.kind] }
 
       const spec = total.cells[column.key]
       if (index === 0 && !spec) {
         cell.value = total.label
+        cell.alignment = { vertical: "middle", horizontal: "left" }
         return
       }
       if (!spec) return
@@ -235,46 +326,71 @@ export function writeSection<T, K extends string>(
       const format = FORMATS[column.kind]
       if (format) cell.numFmt = format
     })
+    sheet.getRow(totalRow).height = 20
   }
+
+  // Bordes al final: combinar celdas copia el estilo de la primera a las
+  // demás, así que el marco se pinta cuando ya están combinadas
+  frame(
+    sheet,
+    palette,
+    titleRow,
+    bottomRow,
+    width,
+    new Set(totalRow ? [totalRow] : [])
+  )
 
   return ranges
 }
 
-/** Filas de la cabecera de la hoja (logo, título, subtítulo) */
+/** Filas de la cabecera de la hoja (título, subtítulo, línea) */
 export const HEADER_ROWS = 3
 
 /**
- * Cabecera de la hoja: logo, título y subtítulo. Es lo único combinado del
- * libro. Ocupa las filas 1 a 3; la primera sección va en la 5.
+ * Cabecera de la hoja: logo, título grande, subtítulo y una línea del color
+ * del espacio debajo. Ocupa las filas 1 a 3; la primera tabla va en la 5.
  */
 export function writeSheetHeader(
   workbook: Workbook,
   sheet: Worksheet,
+  palette: WorkbookPalette,
   options: { title: string; subtitle: string; width: number }
 ) {
-  const lastColumn = columnLetter(Math.max(options.width, 2))
+  const width = Math.max(options.width, 2)
+  const lastColumn = columnLetter(width)
 
   sheet.mergeCells(`B1:${lastColumn}1`)
   sheet.mergeCells(`B2:${lastColumn}2`)
 
   const title = sheet.getCell("B1")
   title.value = options.title
-  title.font = { bold: true, size: 16 }
-  title.alignment = { vertical: "middle" }
+  title.font = { bold: true, size: 20, color: { argb: COLORS.ink } }
+  title.alignment = { vertical: "bottom", indent: 1 }
 
   const subtitle = sheet.getCell("B2")
   subtitle.value = options.subtitle
-  subtitle.font = { color: { argb: COLORS.muted } }
-  subtitle.alignment = { vertical: "top" }
+  subtitle.font = { size: 11, color: { argb: COLORS.muted } }
+  subtitle.alignment = { vertical: "top", indent: 1 }
 
-  sheet.getRow(1).height = 24
-  sheet.getRow(2).height = 18
+  sheet.getRow(1).height = 30
+  sheet.getRow(2).height = 20
+  sheet.getRow(3).height = 8
+
+  // Línea del color del espacio bajo la cabecera
+  for (let col = 1; col <= width; col++) {
+    sheet.getCell(3, col).border = {
+      bottom: { style: "medium", color: { argb: palette.accent } }
+    }
+  }
 
   sheet.addImage(logoImage(workbook), {
-    tl: { col: 0.15, row: 0.1 },
-    ext: { width: 36, height: 36 },
+    tl: { col: 0.2, row: 0.15 },
+    ext: { width: 40, height: 40 },
     editAs: "oneCell"
   })
+  // La columna A lleva el logo: al menos su ancho
+  const first = sheet.getColumn(1)
+  first.width = Math.max(first.width ?? 0, 8)
 }
 
 // Una sola imagen por libro, compartida por todas las hojas
@@ -289,5 +405,5 @@ function logoImage(workbook: Workbook) {
   return id
 }
 
-/** Fila de la primera sección, debajo de la cabecera */
+/** Fila de la primera tabla, debajo de la cabecera */
 export const FIRST_SECTION_ROW = HEADER_ROWS + 2

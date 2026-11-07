@@ -4,7 +4,7 @@ import { monthLabel } from "../range"
 import type { ExportRange } from "../types"
 import type { MonthSummaryCells } from "./personal-month-sheet"
 import { FIRST_SECTION_ROW, writeSection, writeSheetHeader } from "./section"
-import { COLORS, accentColor, applyPrintSetup } from "./theme"
+import { finishSheet, workbookPalette } from "./theme"
 
 export const SUMMARY_SHEET = "Resumen"
 
@@ -91,7 +91,8 @@ export function fillSummarySheet(
       ? "Tesoro · Personal"
       : `Tesoro · ${options.workspaceName}`
 
-  writeSheetHeader(workbook, sheet, {
+  const palette = workbookPalette(type)
+  writeSheetHeader(workbook, sheet, palette, {
     title,
     subtitle: `${periodLabel(range)} · Generado el ${formatGenerated(today)}`,
     width: 6
@@ -104,7 +105,7 @@ export function fillSummarySheet(
     net: round(months.reduce((sum, m) => sum + m.values.net, 0))
   }
 
-  const table = writeSection(sheet, accentColor(type), {
+  writeSection(sheet, palette, {
     startRow: FIRST_SECTION_ROW,
     title: "Mes a mes",
     columns: [
@@ -176,15 +177,5 @@ export function fillSummarySheet(
     }
   })
 
-  // El color de ingresos y gastos también en los totales
-  sheet.getCell(table.totalCell("in")).font = {
-    bold: true,
-    color: { argb: COLORS.income }
-  }
-  sheet.getCell(table.totalCell("out")).font = {
-    bold: true,
-    color: { argb: COLORS.expense }
-  }
-
-  applyPrintSetup(sheet)
+  finishSheet(sheet)
 }

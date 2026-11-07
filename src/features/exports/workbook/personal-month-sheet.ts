@@ -9,7 +9,13 @@ import {
   writeSection,
   writeSheetHeader
 } from "./section"
-import { COLORS, NUMBER_FORMATS, accentColor, applyPrintSetup } from "./theme"
+import {
+  COLORS,
+  NUMBER_FORMATS,
+  type WorkbookPalette,
+  finishSheet,
+  workbookPalette
+} from "./theme"
 
 const EMPTY_MONTH = "Sin movimientos este mes"
 
@@ -52,7 +58,7 @@ interface SummaryRow {
  */
 export function writeMonthSummary(
   sheet: Worksheet,
-  accent: string,
+  accent: WorkbookPalette,
   startRow: number,
   rows: SummaryRow[]
 ) {
@@ -83,7 +89,7 @@ export function setFormula(
 /** Saldos por cuenta, con totales; común a Personal y Empresa */
 export function writeAccountsSection(
   sheet: Worksheet,
-  accent: string,
+  accent: WorkbookPalette,
   startRow: number,
   accounts: PersonalMonthData["accounts"]
 ) {
@@ -128,11 +134,11 @@ export function addPersonalMonthSheet(
   data: PersonalMonthData,
   today: string
 ): MonthSummaryCells {
-  const accent = accentColor("personal")
+  const accent = workbookPalette("personal")
   const sheetName = monthLabel(data.month)
   const sheet = workbook.addWorksheet(sheetName)
 
-  writeSheetHeader(workbook, sheet, {
+  writeSheetHeader(workbook, sheet, accent, {
     title: monthTitle(data.month, today),
     subtitle: "Tesoro · Personal",
     width: SHEET_WIDTH
@@ -373,7 +379,7 @@ export function addPersonalMonthSheet(
     result: closingBalance
   })
 
-  applyPrintSetup(sheet)
+  finishSheet(sheet)
 
   return {
     sheetName,

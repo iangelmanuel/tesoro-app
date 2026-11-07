@@ -437,10 +437,23 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
   | `warning` / `overlay` | 5.03  | 8.90   |
   | `danger` / `overlay`  | 5.44  | 5.31   |
 
-- **Libro:** colores ARGB en `src/features/exports/workbook/theme.ts`, copia
-  de los tokens en claro. Encabezados con texto blanco sobre emerald
-  (`007A55`, 5.36:1) o naranja (`CA3500`, 5.22:1). Si cambian `--accent`,
-  `--income`, `--expense` o `--muted`, se actualizan ahí.
+- **Libro:** paleta ARGB por espacio en
+  `src/features/exports/workbook/theme.ts` (`workbookPalette`). Los colores
+  base copian los tokens en claro; si cambian `--accent`, `--income`,
+  `--expense` o `--muted`, se actualizan ahí. Sin cuadrícula
+  (`finishSheet`); cada tabla (`writeSection`) lleva borde `medium` del color
+  del espacio por fuera y `thin` gris (`E3E7EC`) por dentro.
+
+  | Par                                  | Personal | Empresa |
+  | ------------------------------------ | -------- | ------- |
+  | Blanco / banda de título (`accent`)  | 5.36     | 5.22    |
+  | `accentDark` / encabezado (tinte)    | 7.13     | 6.91    |
+  | Texto oscuro / fila de total (tinte) | 11.54    | 11.00   |
+  | `income` / fila alterna (`F6F8FA`)   | 5.19     | 5.19    |
+  | `expense` / fila alterna             | 5.01     | 5.01    |
+
+  En la fila de total los montos van en texto oscuro: verde y rojo sobre su
+  tinte bajan de 4.5:1.
 
 ## Dónde vive cada pantalla
 

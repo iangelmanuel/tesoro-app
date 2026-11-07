@@ -5,7 +5,7 @@ import type { ExportRange } from "../types"
 import { addBusinessMonthSheet } from "./business-month-sheet"
 import { addMovementsSheet } from "./movements-sheet"
 import { addPersonalMonthSheet } from "./personal-month-sheet"
-import { addSummarySheet, fillSummarySheet } from "./summary-sheet"
+import { addSummarySheet, fillSummarySheet, periodLabel } from "./summary-sheet"
 
 // Libro de la exportación. Orden de las hojas: Resumen, una por mes (de la
 // más antigua a la más reciente) y Movimientos. `today` es YYYY-MM-DD en
@@ -36,7 +36,12 @@ export async function buildWorkbook(
           addBusinessMonthSheet(workbook, workspace.name, month, today)
         )
 
-  addMovementsSheet(workbook, workspace.type, data.movements)
+  addMovementsSheet(
+    workbook,
+    workspace.type,
+    data.movements,
+    periodLabel(range)
+  )
 
   fillSummarySheet(workbook, summary, {
     type: workspace.type,

@@ -1,6 +1,6 @@
 # SPEC 32 — Exportar a Excel y CSV mes a mes
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 03, SPEC 04, SPEC 05, SPEC 06, SPEC 08c, SPEC 10, SPEC 11, SPEC 22, SPEC 28, SPEC 30
 > **Fecha:** 2026-11-06
 > **Objetivo:** Que el usuario descargue desde Reportes un libro `.xlsx` de un espacio (Personal o Empresa) con una hoja de resumen, una hoja por mes y una hoja plana de movimientos, o un `.csv` de movimientos, para un mes, trimestre, año, rango de meses o todo el historial (hasta 36 meses).
@@ -87,9 +87,15 @@ Google Sheets no tiene integración propia: abre el `.xlsx` y el `.csv` directam
   - fechas como fecha real de Excel con formato `dd/mm/yyyy`; hora como texto `HH:MM` o vacía;
   - porcentajes con `0.0%`;
   - montos de ingreso y venta en verde, de gasto y costo en rojo, de traspaso en gris (texto, no relleno);
-  - encabezados de tabla con relleno del color del espacio (emerald en Personal, naranja en Empresa) y texto blanco con contraste AA (4.5:1);
-  - títulos de sección en negrita, sin celdas combinadas salvo la cabecera de la hoja;
-  - ancho de columnas fijo por tipo de columna (fecha, texto, monto);
+  - hojas sin líneas de cuadrícula: las celdas que no son parte de una tabla quedan en blanco, sin bordes;
+  - cada tabla es un bloque con borde grueso exterior del color del espacio y bordes internos finos grises;
+  - título de cada tabla en una banda combinada que abarca todas sus columnas, con relleno del color del espacio (emerald en Personal, naranja en Empresa), texto blanco grande en negrita (AA, 4.5:1);
+  - encabezados de columna con un tinte claro del espacio y texto del color del espacio oscuro (AA);
+  - filas alternas en blanco y gris muy claro;
+  - fila de total con un tinte propio del espacio, texto oscuro en negrita y borde superior grueso;
+  - "Sin movimientos este mes" combinado a lo ancho de la tabla, centrado y en cursiva;
+  - ancho de columnas según su contenido, con un mínimo por tipo de columna (fecha, texto, monto) y un máximo;
+  - cabecera de la hoja con logo, título grande combinado, subtítulo y una línea del color del espacio debajo;
   - logo de Tesoro (PNG) en la cabecera de Resumen y de cada mes;
   - impresión: A4 vertical, ajustar a una página de ancho, pie de página "Tesoro · <hoja> · Página &P de &N".
 - **CSV:** las mismas filas y columnas de la hoja **Movimientos**:
@@ -180,20 +186,68 @@ export interface ExportMovementRow {
 /** Todo lo que necesita una hoja de mes */
 export interface PersonalMonthData {
   month: string
-  summary: { income: number; expense: number; openingBalance: number; closingBalance: number }
-  accounts: { name: string; opening: number; inflow: number; outflow: number; closing: number }[]
-  recurringIncomes: { name: string; dueOn: string | null; category: string; account: string | null; expected: number; received: number; status: string }[]
-  recurringExpenses: { name: string; dueOn: string; category: string; amount: number; paid: number; status: string }[]
+  summary: {
+    income: number
+    expense: number
+    openingBalance: number
+    closingBalance: number
+  }
+  accounts: {
+    name: string
+    opening: number
+    inflow: number
+    outflow: number
+    closing: number
+  }[]
+  recurringIncomes: {
+    name: string
+    dueOn: string | null
+    category: string
+    account: string | null
+    expected: number
+    received: number
+    status: string
+  }[]
+  recurringExpenses: {
+    name: string
+    dueOn: string
+    category: string
+    amount: number
+    paid: number
+    status: string
+  }[]
   budgets: { category: string; limit: number; spent: number }[]
-  goals: { name: string; contributed: number; savedAtClose: number; target: number }[]
-  debts: { name: string; kind: string; payments: number; charges: number; balanceAtClose: number }[]
-  receivables: { name: string; expected: number; collected: number; pendingAtClose: number; status: string }[]
+  goals: {
+    name: string
+    contributed: number
+    savedAtClose: number
+    target: number
+  }[]
+  debts: {
+    name: string
+    kind: string
+    payments: number
+    charges: number
+    balanceAtClose: number
+  }[]
+  receivables: {
+    name: string
+    expected: number
+    collected: number
+    pendingAtClose: number
+    status: string
+  }[]
   movements: ExportMovementRow[]
 }
 
 export interface BusinessMonthData {
   month: string
-  summary: { sales: number; costs: number; openingBalance: number; closingBalance: number }
+  summary: {
+    sales: number
+    costs: number
+    openingBalance: number
+    closingBalance: number
+  }
   accounts: PersonalMonthData["accounts"]
   costsByCategory: { category: string; total: number }[]
   sales: ExportMovementRow[]
@@ -246,38 +300,43 @@ src/features/exports/
 
 ## Criterios de aceptación
 
-- [ ] `exceljs` está en `package.json` con versión exacta y `pnpm install --frozen-lockfile` funciona.
-- [ ] `exceljs` no aparece en ningún bundle del navegador (solo lo importa el Route Handler).
+- [x] `exceljs` está en `package.json` con versión exacta y `pnpm install --frozen-lockfile` funciona.
+- [x] `exceljs` no aparece en ningún bundle del navegador (solo lo importa el Route Handler).
 - [ ] El botón **Exportar** aparece en el header de Reportes de Personal y de una empresa, y en ninguna otra pantalla.
 - [ ] A 390 px el botón es solo ícono, mide al menos 44 px y tiene `aria-label="Exportar"`.
-- [ ] Al abrir el diálogo desde Reportes con `period=year&value=2026`, el periodo viene en **Año** 2026.
-- [ ] Un rango de Reportes del 10 oct al 5 nov 2026 llega al diálogo como **Rango de meses** oct 2026 – nov 2026.
-- [ ] Un rango de 37 meses muestra un error en el diálogo y no permite descargar.
-- [ ] `GET /api/export/<id>?format=xlsx&from=2023-01&to=2026-02` (38 meses) responde 400.
+- [x] Al abrir el diálogo desde Reportes con `period=year&value=2026`, el periodo viene en **Año** 2026.
+- [x] Un rango de Reportes del 10 oct al 5 nov 2026 llega al diálogo como **Rango de meses** oct 2026 – nov 2026.
+- [x] Un rango de 37 meses muestra un error en el diálogo y no permite descargar.
+- [x] `GET /api/export/<id>?format=xlsx&from=2023-01&to=2026-02` (38 meses) responde 400.
 - [ ] `GET /api/export/<id-de-otro-usuario>?...` responde 404 y no entrega datos.
-- [ ] Sin sesión, el Route Handler responde 401.
-- [ ] Exportar Personal de ene–oct 2026 descarga `tesoro-personal-2026-01_2026-10.xlsx` con 12 hojas: Resumen, Enero 2026 … Octubre 2026 y Movimientos.
-- [ ] Exportar una empresa "Café Ñuñoa" del año 2026 descarga `tesoro-cafe-nunoa-2026.xlsx`.
+- [x] Sin sesión, el Route Handler responde 401.
+- [x] Exportar Personal de ene–oct 2026 descarga `tesoro-personal-2026-01_2026-10.xlsx` con 12 hojas: Resumen, Enero 2026 … Octubre 2026 y Movimientos.
+- [x] Exportar una empresa "Café Ñuñoa" del año 2026 descarga `tesoro-cafe-nunoa-2026.xlsx`.
 - [ ] El libro abre sin aviso de reparación en Excel, en LibreOffice y al importarlo en Google Sheets.
-- [ ] En cada hoja de mes de Personal, Ingresos, Gastos y Balance del **Resumen del mes** coinciden con las tarjetas de Reportes para ese mes.
-- [ ] El **Saldo al cierre** de cada cuenta en una hoja de mes coincide con el saldo que muestra Cuentas al último día de ese mes.
-- [ ] Los traspasos aparecen en la sección Movimientos con Tipo "Traspaso" y no cambian Ingresos ni Gastos.
+- [x] En cada hoja de mes de Personal, Ingresos, Gastos y Balance del **Resumen del mes** coinciden con las tarjetas de Reportes para ese mes.
+- [x] El **Saldo al cierre** de cada cuenta en una hoja de mes coincide con el saldo que muestra Cuentas al último día de ese mes.
+- [x] Los traspasos aparecen en la sección Movimientos con Tipo "Traspaso" y no cambian Ingresos ni Gastos.
 - [ ] Editar un monto de la sección Movimientos en Excel recalcula el **Resumen del mes** y la fila de ese mes en **Resumen**.
-- [ ] Un mes sin movimientos tiene su hoja con ceros y "Sin movimientos este mes".
-- [ ] Un usuario sin metas no ve la sección **Metas** en ninguna hoja de mes.
-- [ ] Las hojas de mes de Empresa tienen Resumen del mes, Saldos por cuenta, Costos por categoría, Ventas y Costos y gastos, y Traspasos solo si hubo.
-- [ ] La hoja **Movimientos** tiene el encabezado inmovilizado y autofiltro, y una fila por movimiento o traspaso del periodo.
-- [ ] Un periodo con más de 1000 movimientos los exporta todos.
+- [x] Un mes sin movimientos tiene su hoja con ceros y "Sin movimientos este mes".
+- [x] Un usuario sin metas no ve la sección **Metas** en ninguna hoja de mes.
+- [x] Las hojas de mes de Empresa tienen Resumen del mes, Saldos por cuenta, Costos por categoría, Ventas y Costos y gastos, y Traspasos solo si hubo.
+- [x] La hoja **Movimientos** tiene el encabezado inmovilizado y autofiltro, y una fila por movimiento o traspaso del periodo.
+- [x] Un periodo con más de 1000 movimientos los exporta todos.
 - [ ] Las fechas se muestran `dd/mm/yyyy` y Excel las reconoce como fecha (se pueden ordenar y filtrar por fecha).
-- [ ] Una fecha `2026-10-01` se exporta como 1 de octubre, no 30 de septiembre.
+- [x] Una fecha `2026-10-01` se exporta como 1 de octubre, no 30 de septiembre.
 - [ ] Los montos se muestran con formato `$ 35.000` en Excel es-CO.
-- [ ] El encabezado de tabla con texto blanco sobre el color del espacio da 4.5:1 en Personal y en Empresa.
-- [ ] La vista de impresión de una hoja de mes es A4 vertical, una página de ancho y con "Página 1 de N" en el pie.
+- [x] El encabezado de tabla con texto blanco sobre el color del espacio da 4.5:1 en Personal y en Empresa.
+- [x] La vista de impresión de una hoja de mes es A4 vertical, una página de ancho y con "Página 1 de N" en el pie.
 - [ ] El CSV abre con tildes y ñ correctas en Excel es-CO con doble clic, con una columna por campo.
-- [ ] Una descripción `=HYPERLINK("x")` sale en el CSV como `'=HYPERLINK("x")`.
+- [x] Una descripción `=HYPERLINK("x")` sale en el CSV como `'=HYPERLINK("x")`.
 - [ ] Con **Ocultar montos** activo, el diálogo muestra el aviso y el archivo trae los montos reales.
 - [ ] Con un historial de más de 36 meses, **Todo el historial** está deshabilitado con su texto explicativo.
 - [ ] Si la descarga falla, el diálogo sigue abierto y aparece un toast de error.
+
+> Los criterios sin marcar requieren verificación manual en el navegador con
+> sesión o abriendo los archivos en Excel es-CO, LibreOffice y Google Sheets.
+> El código que los cubre está implementado (botón, diálogo, formatos,
+> fórmulas y CSV); falta confirmarlos a mano.
 
 ## Decisiones
 
@@ -291,6 +350,8 @@ src/features/exports/
 - **Sí:** Resumen + una hoja por mes + Movimientos plana. Resumen y meses sirven para presentar; la plana, para analizar.
 - **Sí:** secciones apiladas en vertical. Se imprimen bien y no dependen de que las tablas paralelas tengan el mismo largo.
 - **No:** el layout lado a lado del Excel del autor. Muchas celdas combinadas y frágil con longitudes distintas.
+- **Sí:** combinar solo la banda de título de cada tabla y la cabecera de la hoja; datos y totales nunca se combinan, así ordenar, filtrar y las fórmulas siguen funcionando. Revisión de diseño pedida tras la primera implementación.
+- **Sí:** sin líneas de cuadrícula y bordes solo en las tablas. El libro se lee como un reporte, no como una hoja en blanco.
 - **Sí:** solo meses completos. Mantiene el patrón mes a mes y evita hojas parciales.
 - **Sí:** límite de 36 meses. Acota el tiempo del Route Handler y el tamaño del libro.
 - **Sí:** fórmulas en los totales con su valor guardado. Si el usuario edita, recalcula; si el visor no calcula, igual ve el número.

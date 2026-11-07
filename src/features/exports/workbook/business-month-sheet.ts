@@ -15,7 +15,12 @@ import {
   writeSection,
   writeSheetHeader
 } from "./section"
-import { COLORS, accentColor, applyPrintSetup } from "./theme"
+import {
+  COLORS,
+  type WorkbookPalette,
+  finishSheet,
+  workbookPalette
+} from "./theme"
 
 const EMPTY_MONTH = "Sin movimientos este mes"
 
@@ -52,7 +57,7 @@ const TRANSFER_COLUMNS: SectionColumn<ExportMovementRow, MovementKey>[] = [
 
 function writeOperations(
   sheet: Worksheet,
-  accent: string,
+  accent: WorkbookPalette,
   startRow: number,
   title: string,
   rows: ExportMovementRow[]
@@ -73,11 +78,11 @@ export function addBusinessMonthSheet(
   data: BusinessMonthData,
   today: string
 ): MonthSummaryCells {
-  const accent = accentColor("business")
+  const accent = workbookPalette("business")
   const sheetName = monthLabel(data.month)
   const sheet = workbook.addWorksheet(sheetName)
 
-  writeSheetHeader(workbook, sheet, {
+  writeSheetHeader(workbook, sheet, accent, {
     title: monthTitle(data.month, today),
     subtitle: `Tesoro · ${workspaceName}`,
     width: SHEET_WIDTH
@@ -208,7 +213,7 @@ export function addBusinessMonthSheet(
     result: closingBalance
   })
 
-  applyPrintSetup(sheet)
+  finishSheet(sheet)
 
   return {
     sheetName,

@@ -1,6 +1,7 @@
 import ExcelJS from "exceljs"
 import type { Workspace } from "@/features/workspaces/queries"
 import type { ExportData } from "../queries"
+import { addBusinessMonthSheet } from "./business-month-sheet"
 import { addMovementsSheet } from "./movements-sheet"
 import { addPersonalMonthSheet } from "./personal-month-sheet"
 
@@ -23,6 +24,10 @@ export async function buildWorkbook(
   if (data.type === "personal") {
     for (const month of data.months) {
       addPersonalMonthSheet(workbook, month, today)
+    }
+  } else {
+    for (const month of data.months) {
+      addBusinessMonthSheet(workbook, workspace.name, month, today)
     }
   }
 

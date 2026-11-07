@@ -14,8 +14,14 @@ import { listRecurring } from "./tools/read/list-recurring"
 import { listTransactions } from "./tools/read/list-transactions"
 import { listTransfers } from "./tools/read/list-transfers"
 import { listWorkspaces } from "./tools/read/list-workspaces"
+import { createCategory } from "./tools/write/create-category"
 import { createTransactions } from "./tools/write/create-transactions"
 import { deleteTransactions } from "./tools/write/delete-transactions"
+import {
+  createTransfers,
+  deleteTransfers,
+  updateTransfers
+} from "./tools/write/transfers"
 import { undoOperation } from "./tools/write/undo-operation"
 import { updateTransactions } from "./tools/write/update-transactions"
 import type { McpTool, McpToolDefinition } from "./types"
@@ -44,6 +50,10 @@ export const MCP_TOOLS: readonly McpTool[] = [
   createTransactions,
   updateTransactions,
   deleteTransactions,
+  createTransfers,
+  updateTransfers,
+  deleteTransfers,
+  createCategory,
   undoOperation
 ]
 

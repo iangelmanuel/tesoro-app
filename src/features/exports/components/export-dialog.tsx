@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useId, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import {
   Button,
@@ -16,12 +16,19 @@ import { parseReportParams } from "@/features/reports/period"
 import { useIsMobile } from "@/hooks/use-is-mobile"
 import { todayISO } from "@/libs/dates"
 import {
+  PDF_MONTHS_ERROR,
   listMonths,
   monthLabel,
   monthsSpanned,
   parseExportRange
 } from "../range"
-import { type ExportFormat, MAX_EXPORT_MONTHS } from "../types"
+import {
+  DEFAULT_PDF_OPTIONS,
+  type ExportFormat,
+  MAX_EXPORT_MONTHS,
+  MAX_PDF_MONTHS,
+  type PdfOptions
+} from "../types"
 
 const PERIODS = ["month", "quarter", "year", "range", "all"] as const
 type Period = (typeof PERIODS)[number]
@@ -32,6 +39,16 @@ const PERIOD_LABELS: Record<Period, string> = {
   year: "Año",
   range: "Rango de meses",
   all: "Todo el historial"
+}
+
+const PDF_SIZE_LABELS: Record<PdfOptions["size"], string> = {
+  a4: "A4",
+  letter: "Carta"
+}
+
+const PDF_THEME_HINTS: Record<PdfOptions["theme"], string> = {
+  color: "Bandas y montos con los colores de tu espacio.",
+  ink: "Sin rellenos de color: ideal para imprimir en blanco y negro."
 }
 
 interface Selection {
@@ -124,7 +141,7 @@ interface ExportDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-/** Descarga de Excel o CSV desde Reportes (SPEC 32) */
+/** Descarga de Excel o CSV (SPEC 32) y PDF (SPEC 33) desde Reportes */
 export function ExportDialog({
   workspaceId,
   historyStart,
@@ -191,6 +208,7 @@ function ExportForm({
   const current = today.slice(0, 7)
 
   const [format, setFormat] = useState<ExportFormat>("xlsx")
+  const [pdfOptions, setPdfOptions] = useState<PdfOptions>(DEFAULT_PDF_OPTIONS)
   const [selection, setSelection] = useState(() =>
     initialSelection(new URLSearchParams(searchParams.toString()), current)
   )
@@ -198,7 +216,10 @@ function ExportForm({
 
   const start = historyStart ?? current
   const historyMonths = monthsSpanned(start, current)
-  const allDisabled = historyStart === null || historyMonths > MAX_EXPORT_MONTHS
+  const isPdf = format === "pdf"
+  // Con PDF el tope es de 12 meses; con Excel y CSV, de 36
+  const maxMonths = isPdf ? MAX_PDF_MONTHS : MAX_EXPORT_MONTHS
+  const allDisabled = historyStart === null || historyMonths > maxMonths
 
   // Opciones desde el primer mes con historial (o el prellenado, si es
   // anterior) hasta el actual, de la más reciente a la más antigua
@@ -214,8 +235,8 @@ function ExportForm({
   }
 
   const { from, to } = selectionMonths(selection, current, start)
-  const parsed = parseExportRange(from, to, today)
-  const sheetCount = parsed.success ? parsed.range.months.length : 0
+  const parsed = parseExportRange(from, to, today, format)
+  const monthCount = parsed.success ? parsed.range.months.length : 0
 
   function changePeriod(period: Period) {
     setSelection((prev) => {
@@ -240,7 +261,12 @@ function ExportForm({
     setPending(true)
 
     try {
-      const query = new URLSearchParams({ format, from, to })
+      const query = new URLSearchParams({
+        format,
+        from,
+        to,
+        ...(isPdf ? pdfOptions : {})
+      })
       const response = await fetch(
         `/api/export/${workspaceId}?${query.toString()}`
       )
@@ -288,6 +314,10 @@ function ExportForm({
               CSV (.csv)
               <Tabs.Indicator />
             </Tabs.Tab>
+            <Tabs.Tab id="pdf">
+              PDF (.pdf)
+              <Tabs.Indicator />
+            </Tabs.Tab>
           </Tabs.List>
         </Tabs.ListContainer>
       </Tabs>
@@ -302,10 +332,11 @@ function ExportForm({
           isDisabled: period === "all" && allDisabled
         }))}
       />
-      {historyMonths > MAX_EXPORT_MONTHS && (
+      {historyMonths > maxMonths && (
         <p className="-mt-2 text-sm text-muted">
-          Tu historial tiene {historyMonths} meses. Exporta por rangos de hasta{" "}
-          {MAX_EXPORT_MONTHS}.
+          {isPdf
+            ? `Tu historial tiene ${historyMonths} meses. El PDF admite hasta ${MAX_PDF_MONTHS}.`
+            : `Tu historial tiene ${historyMonths} meses. Exporta por rangos de hasta ${MAX_EXPORT_MONTHS}.`}
         </p>
       )}
 
@@ -374,23 +405,81 @@ function ExportForm({
         </div>
       )}
 
+      {isPdf && (
+        <>
+          <PeriodSelect
+            label="Tamaño"
+            value={pdfOptions.size}
+            onChange={(value) =>
+              setPdfOptions({
+                ...pdfOptions,
+                size: value as PdfOptions["size"]
+              })
+            }
+            options={Object.entries(PDF_SIZE_LABELS).map(([id, label]) => ({
+              id,
+              label
+            }))}
+          />
+          <OptionTabs
+            label="Orientación"
+            value={pdfOptions.orientation}
+            onChange={(value) =>
+              setPdfOptions({
+                ...pdfOptions,
+                orientation: value as PdfOptions["orientation"]
+              })
+            }
+            options={[
+              { id: "portrait", label: "Vertical" },
+              { id: "landscape", label: "Horizontal" }
+            ]}
+          />
+          <OptionTabs
+            label="Tema"
+            value={pdfOptions.theme}
+            onChange={(value) =>
+              setPdfOptions({
+                ...pdfOptions,
+                theme: value as PdfOptions["theme"]
+              })
+            }
+            options={[
+              { id: "color", label: "Color" },
+              { id: "ink", label: "Ahorro de tinta" }
+            ]}
+            hint={PDF_THEME_HINTS[pdfOptions.theme]}
+          />
+        </>
+      )}
+
       <div
         className="flex flex-col gap-2 text-sm"
         aria-live="polite"
       >
         {parsed.success ? (
-          format === "xlsx" && (
-            <p className="text-muted">
-              Se crearán {sheetCount} {sheetCount === 1 ? "hoja" : "hojas"} de
-              mes
-            </p>
-          )
+          <>
+            {format === "xlsx" && (
+              <p className="text-muted">
+                Se crearán {monthCount} {monthCount === 1 ? "hoja" : "hojas"} de
+                mes
+              </p>
+            )}
+            {isPdf && (
+              <p className="text-muted">
+                Incluye {monthCount} {monthCount === 1 ? "mes" : "meses"} de
+                detalle
+              </p>
+            )}
+          </>
         ) : (
           <p
             role="alert"
             className="text-danger"
           >
-            {parsed.error}
+            {parsed.error === PDF_MONTHS_ERROR
+              ? `${PDF_MONTHS_ERROR} Usa Excel para periodos más largos.`
+              : parsed.error}
           </p>
         )}
         {hidden && (
@@ -457,5 +546,52 @@ function PeriodSelect({
         </ListBox>
       </Select.Popover>
     </Select>
+  )
+}
+
+/** Tabs con etiqueta visible, para opciones de pocas alternativas */
+function OptionTabs({
+  label,
+  value,
+  onChange,
+  options,
+  hint
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  options: { id: string; label: string }[]
+  hint?: string
+}) {
+  const labelId = useId()
+
+  return (
+    <div className="flex flex-col gap-2">
+      <span
+        id={labelId}
+        className="text-sm font-medium"
+      >
+        {label}
+      </span>
+      <Tabs
+        selectedKey={value}
+        onSelectionChange={(key) => onChange(String(key))}
+      >
+        <Tabs.ListContainer>
+          <Tabs.List aria-labelledby={labelId}>
+            {options.map((option) => (
+              <Tabs.Tab
+                key={option.id}
+                id={option.id}
+              >
+                {option.label}
+                <Tabs.Indicator />
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+        </Tabs.ListContainer>
+      </Tabs>
+      {hint && <p className="text-sm text-muted">{hint}</p>}
+    </div>
   )
 }

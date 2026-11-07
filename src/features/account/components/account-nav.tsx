@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@heroui/react"
 import {
+  Bot,
   Eye,
   type LucideIcon,
   ShieldCheck,
@@ -17,6 +18,7 @@ type AccountIcon = (typeof SITE.account.sections)[number]["icon"]
 
 const ICONS: Record<AccountIcon, LucideIcon> = {
   User,
+  Bot,
   ShieldCheck,
   Eye,
   SlidersHorizontal

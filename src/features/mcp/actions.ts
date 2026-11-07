@@ -1,10 +1,17 @@
 "use server"
 
 import type { Route } from "next"
+import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { z } from "zod"
+import { SITE } from "@/config/site"
 import { createClient } from "@/libs/supabase/server"
-import { MCP_ACCESS_VALUES, MCP_FALLBACK_CLIENT_NAME } from "./constants"
+import {
+  MCP_ACCESS_VALUES,
+  MCP_AGENTS_PATH,
+  MCP_FALLBACK_CLIENT_NAME
+} from "./constants"
+import { undoOperation } from "./operations"
 import type { ConsentFormState } from "./types"
 
 // Consentimiento OAuth de un agente (SPEC 34). Supabase guarda el grant; la
@@ -99,4 +106,106 @@ export async function denyMcpAuthorization(
   }
 
   redirect(data.redirect_url as Route)
+}
+
+// Cuenta → Agentes IA: cambiar acceso, revocar y revertir (SPEC 34)
+
+export interface AgentActionResult {
+  error?: string
+}
+
+const AGENT_DEFAULT_ERROR = "No se pudo guardar el cambio. Intenta de nuevo"
+
+const accessSchema = z.object({
+  clientId: z.string().trim().min(1).max(200),
+  name: z.string().trim().max(120),
+  access: z.enum(MCP_ACCESS_VALUES)
+})
+
+async function currentUserId() {
+  const supabase = await createClient()
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+  return user ? { supabase, userId: user.id } : null
+}
+
+/** Cambia el acceso de un agente. Aplica en su siguiente llamada */
+export async function updateAgentAccess(
+  clientId: string,
+  name: string,
+  access: string
+): Promise<AgentActionResult> {
+  const parsed = accessSchema.safeParse({ clientId, name, access })
+  const session = await currentUserId()
+  if (!parsed.success || !session) {
+    return { error: AGENT_DEFAULT_ERROR }
+  }
+
+  // Un grant sin fila (falló el upsert del consentimiento) la crea aquí
+  const { error } = await session.supabase.from("mcp_connections").upsert(
+    {
+      user_id: session.userId,
+      client_id: parsed.data.clientId,
+      client_name: parsed.data.name || MCP_FALLBACK_CLIENT_NAME,
+      access: parsed.data.access
+    },
+    { onConflict: "user_id,client_id" }
+  )
+  if (error) {
+    return { error: AGENT_DEFAULT_ERROR }
+  }
+
+  revalidatePath(MCP_AGENTS_PATH)
+  return {}
+}
+
+/**
+ * Revoca un agente: Supabase borra su grant y sus sesiones (la siguiente
+ * llamada responde 401) y se borra su fila de mcp_connections. Su historial
+ * se conserva.
+ */
+export async function revokeAgent(
+  clientId: string
+): Promise<AgentActionResult> {
+  const parsed = accessSchema.shape.clientId.safeParse(clientId)
+  const session = await currentUserId()
+  if (!parsed.success || !session) {
+    return { error: "No se pudo revocar el agente. Intenta de nuevo" }
+  }
+
+  const { error } = await session.supabase.auth.oauth.revokeGrant({
+    clientId: parsed.data
+  })
+  if (error) {
+    return { error: "No se pudo revocar el agente. Intenta de nuevo" }
+  }
+
+  await session.supabase
+    .from("mcp_connections")
+    .delete()
+    .eq("user_id", session.userId)
+    .eq("client_id", parsed.data)
+
+  revalidatePath(MCP_AGENTS_PATH)
+  return {}
+}
+
+/** Revierte una operación del historial con la misma RPC que undo_operation */
+export async function undoAgentOperation(
+  operationId: string
+): Promise<AgentActionResult> {
+  const parsed = z.uuid().safeParse(operationId)
+  if (!parsed.success) {
+    return { error: "No se encontró la operación" }
+  }
+
+  const result = await undoOperation(await createClient(), parsed.data)
+  if (!result.ok) {
+    return { error: result.error }
+  }
+
+  // Lo revertido toca movimientos y traspasos de cualquier espacio
+  revalidatePath(SITE.routes.dashboard, "layout")
+  return {}
 }

@@ -28,3 +28,6 @@ export const MCP_ACCESS_OPTIONS: Record<
 
 // Nombre que se guarda si el cliente OAuth no trae uno
 export const MCP_FALLBACK_CLIENT_NAME = "Agente de IA"
+
+/** Cuenta → Agentes IA (también en SITE.account.sections) */
+export const MCP_AGENTS_PATH = "/dashboard/account/agents"

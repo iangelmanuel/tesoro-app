@@ -99,7 +99,7 @@ La idea original abarca todas las entidades. Se parte en dos:
   - ventana de **30 días**. Un job de `pg_cron` diario `purge-mcp-operations` borra las operaciones más viejas.
 - **Cuenta → Agentes IA** (`app/dashboard/account/agents/page.tsx`, ícono `Bot`, nueva línea en `SITE.account.sections`):
   - **Tu URL de MCP**: `<SITE_URL>/api/mcp` en un campo de solo lectura con botón **Copiar** (toast "URL copiada") y enlace "Cómo conectarla" a `/mcp`;
-  - **Agentes conectados**: lista con `surface.ts` (nombre del cliente, autorizado el, último uso). Por fila: `Select` **Leer y escribir** / **Solo lectura** y botón **Revocar** con confirmación. Revocar llama a `supabase.auth.oauth.revokeGrant` y borra la fila de `mcp_connections`. Lee los grants con `getUserGrants()`;
+  - **Agentes conectados**: lista con `surface.ts` (nombre del cliente, autorizado el, último uso). Por fila: `Select` **Leer y escribir** / **Solo lectura** y botón **Revocar** con confirmación. Revocar llama a `supabase.auth.oauth.revokeGrant` y borra la fila de `mcp_connections`. Lee los grants con `listGrants()`;
   - vacío: `EmptyState` "Aún no has conectado ningún agente." con enlace a `/mcp`;
   - **Historial**: las últimas 50 operaciones (fecha, agente, espacio, resumen, estado `Aplicada` / `Revertida` / `Fallida`) con botón **Revertir** en las aplicadas y fallidas de menos de 30 días. Usa la misma RPC que `undo_operation`;
   - en móvil, listas como tarjetas (`DataRows`) y controles de 44 px.

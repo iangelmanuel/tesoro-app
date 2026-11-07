@@ -143,7 +143,8 @@ export const SITE = {
         name: "Preferencias",
         href: "/dashboard/account/preferences",
         icon: "SlidersHorizontal"
-      }
+      },
+      { name: "Agentes IA", href: "/dashboard/account/agents", icon: "Bot" }
     ]
   },
 

@@ -1,4 +1,5 @@
 import pdfmake from "pdfmake"
+import PdfmakeDocument from "pdfmake/js/PDFDocument"
 import {
   INTER_BOLD,
   INTER_ITALIC,
@@ -29,6 +30,28 @@ interface VirtualFs {
   writeFileSync(name: string, data: Buffer): void
 }
 
+/**
+ * Las gráficas SVG (svg-to-pdfkit) piden la fuente a PDFKit por nombre
+ * ("Inter-Regular.ttf") y PDFKit la buscaría en disco. Antes de eso, el
+ * documento la registra con ese nombre desde el sistema de archivos virtual
+ * de pdfmake. Solo cambia algo para nombres que existen en ese sistema.
+ */
+function resolveSvgFontsFromMemory() {
+  const proto = PdfmakeDocument.prototype
+  const font = proto.font
+
+  proto.font = function (this: PdfmakeDocument, src, ...rest) {
+    if (
+      typeof src === "string" &&
+      !this._registeredFonts[src] &&
+      this.virtualfs?.existsSync(src)
+    ) {
+      this.registerFont(src, this.virtualfs.readFileSync(src))
+    }
+    return font.call(this, src, ...rest)
+  }
+}
+
 let registered = false
 
 /** Prepara pdfmake una sola vez por proceso y lo devuelve */
@@ -55,6 +78,7 @@ export function getPdfmake() {
       bolditalics: FILES.bold[0]
     }
   })
+  resolveSvgFontsFromMemory()
   pdfmake.setUrlAccessPolicy(() => false)
   pdfmake.setLocalAccessPolicy(() => false)
 

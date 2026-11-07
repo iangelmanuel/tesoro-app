@@ -8,6 +8,7 @@ import { pdfFooter } from "./layout/footer"
 import { pdfHeader } from "./layout/header"
 import { pageSetup } from "./page"
 import { businessMonthSection } from "./sections/business-month"
+import { chartsSection } from "./sections/charts"
 import { coverSection } from "./sections/cover"
 import { periodSummarySection } from "./sections/period-summary"
 import { personalMonthSection } from "./sections/personal-month"
@@ -59,14 +60,14 @@ export async function buildPdf(
     today
   }
 
-  // Detalle por mes, en orden cronológico. Gráficas y score llegan en los
-  // pasos 11 y 12
+  // Detalle por mes, en orden cronológico. El score llega en el paso 12
   const monthSections: Content[] =
     data.export.type === "personal"
       ? data.export.months.flatMap((month) => personalMonthSection(ctx, month))
       : data.export.months.flatMap((month) => businessMonthSection(ctx, month))
   const sections: Content[] = [
     ...periodSummarySection(ctx, data, previousRange(range)),
+    ...chartsSection(ctx, data),
     ...monthSections
   ]
 

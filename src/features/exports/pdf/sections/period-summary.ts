@@ -32,7 +32,7 @@ const POINTS = new Intl.NumberFormat("es-CO", {
 })
 
 /** Fila de la tabla mes a mes */
-interface MonthRow {
+export interface MonthRow {
   month: string
   in: number
   out: number
@@ -41,7 +41,7 @@ interface MonthRow {
   closing: number
 }
 
-function monthRows(data: PdfReportData): MonthRow[] {
+export function monthRows(data: PdfReportData): MonthRow[] {
   const round = (value: number) => Math.round(value * 100) / 100
 
   if (data.export.type === "personal") {
@@ -188,7 +188,7 @@ function kpis(ctx: PdfContext, data: PdfReportData, rows: MonthRow[]): Kpi[] {
     },
     {
       label: labels.rate,
-      value: rate === null ? "—" : PERCENT.format(rate / 100),
+      value: rate === null ? "—" : PERCENT.format(rate / 100).replace("-", "−"),
       change: rateChange === null ? "—" : `${POINTS.format(rateChange)} pp`,
       rounded: rateChange,
       trend: "higher-is-better"

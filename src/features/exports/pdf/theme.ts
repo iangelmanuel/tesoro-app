@@ -40,10 +40,35 @@ export interface PdfTheme {
   /** false en "ink": ningún relleno de color */
   filled: boolean
   tone: Record<AmountTone, string>
+  /** Gráficas SVG (`charts/*`) */
+  chart: ChartPalette
   /** true en "ink": los montos llevan + o − en vez de color */
   signedAmounts: boolean
   styles: StyleDictionary
   defaultStyle: Style
+}
+
+export interface ChartPalette {
+  /** Serie de entradas (ingresos, ventas) */
+  income: string
+  /** Serie de salidas (gastos, costos) */
+  expense: string
+  /** Línea de saldo */
+  balance: string
+  /** Barras del top de categorías */
+  bar: string
+  /** Porciones de la dona y barras de categorías, en orden */
+  categories: string[]
+  /** Porción "Otras" */
+  others: string
+  /** Rayado sobre la segunda serie y los negativos ("ink": sin color) */
+  hatch: boolean
+  /** Trazo de contorno de barras y porciones */
+  stroke: string
+  axis: string
+  grid: string
+  text: string
+  muted: string
 }
 
 /** "FF00784F" (ARGB del Excel) → "#00784F" */
@@ -126,6 +151,28 @@ export function pdfTheme(
       zebra: null,
       filled: false,
       tone: { income: text, expense: text, transfer: text },
+      // Grises escalonados, trazos y rayado en vez de color
+      chart: {
+        income: hex(COLORS.chart1),
+        expense: hex(COLORS.white),
+        balance: text,
+        bar: hex(COLORS.chart4),
+        categories: [
+          hex(COLORS.chart3),
+          hex(COLORS.chart1),
+          hex(COLORS.chart4),
+          hex(COLORS.chart2),
+          hex(COLORS.chart5),
+          hex(COLORS.gridline)
+        ],
+        others: hex(COLORS.white),
+        hatch: true,
+        stroke: text,
+        axis: INK_MUTED,
+        grid: hex(COLORS.gridline),
+        text,
+        muted: INK_MUTED
+      },
       signedAmounts: true,
       styles: buildStyles({
         text,
@@ -155,6 +202,28 @@ export function pdfTheme(
       income: hex(TONE_COLORS.income),
       expense: hex(TONE_COLORS.expense),
       transfer: hex(TONE_COLORS.transfer)
+    },
+    chart: {
+      income: hex(COLORS.income),
+      expense: hex(COLORS.expense),
+      balance: hex(COLORS.balance),
+      bar: hex(COLORS.expense),
+      // El acento del espacio y la serie neutra --chart-*
+      categories: [
+        accent,
+        hex(COLORS.chart3),
+        hex(COLORS.chart1),
+        hex(COLORS.chart4),
+        hex(COLORS.chart2),
+        hex(COLORS.chart5)
+      ],
+      others: hex(COLORS.gridline),
+      hatch: false,
+      stroke: hex(COLORS.white),
+      axis: muted,
+      grid: hex(COLORS.gridline),
+      text,
+      muted
     },
     signedAmounts: false,
     styles: buildStyles({

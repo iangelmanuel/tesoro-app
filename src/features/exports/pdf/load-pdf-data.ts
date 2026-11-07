@@ -1,6 +1,6 @@
 import { SITE } from "@/config/site"
 import { type ReportQuery, buildReportQuery } from "@/features/reports/period"
-import { getMonthlyTotals } from "@/features/reports/queries"
+import { getCategoryTotals, getMonthlyTotals } from "@/features/reports/queries"
 import { workspaceReportsPath } from "@/features/workspaces/paths"
 import type { Workspace } from "@/features/workspaces/queries"
 import { monthRange } from "@/libs/dates"
@@ -75,23 +75,38 @@ async function loadPreviousTotals(workspace: Workspace, range: ExportRange) {
   }
 }
 
+/**
+ * Gastos (costos en Empresa) por categoría del periodo, de mayor a menor,
+ * con la misma RPC que las gráficas de Reportes
+ */
+async function loadCategoryTotals(workspace: Workspace, range: ExportRange) {
+  const rows = await getCategoryTotals(
+    workspace.id,
+    `${range.from}-01`,
+    monthRange(range.to).to,
+    "expense"
+  )
+  return rows.map((row) => ({ name: row.name, total: row.total }))
+}
+
 // Datos del PDF (SPEC 33), con la sesión del usuario y RLS. Parte de
 // `loadExportData` (SPEC 32) para que los totales cuadren con el Excel.
-// Provisional: las categorías y el score llegan en los pasos 11 y 12.
+// Provisional: el score llega en el paso 12.
 export async function loadPdfData(
   workspace: Workspace,
   range: ExportRange,
   today: string
 ): Promise<PdfReportData> {
-  const [data, previousTotals] = await Promise.all([
+  const [data, previousTotals, categoryTotals] = await Promise.all([
     loadExportData(workspace, range, today),
-    loadPreviousTotals(workspace, range)
+    loadPreviousTotals(workspace, range),
+    loadCategoryTotals(workspace, range)
   ])
 
   return {
     export: data,
     previousTotals,
-    categoryTotals: [],
+    categoryTotals,
     score: { status: "insufficient", reasons: [] },
     reportsUrl: reportsUrlFor(workspace, range, today)
   }

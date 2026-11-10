@@ -395,6 +395,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Metadata` / `Viewport` were imported as default exports from `next`, which broke type checking.
 - The transactions page read the current date before the session, which made Next.js reject `new Date()` while prerendering when the URL had no `month`.
 
+## [0.2.0] — 2026-11-09
+
+Actualización a Node.js 26 (LTS), dependencias exactas y ajustes de tooling.
+
+### Changed
+
+- **Node.js 26.13.0** (LTS) en `engines`, `.nvmrc` y CI; antes Node 22.
+- **pnpm 12.18.0** como `packageManager`.
+- **Dependencias** a su última versión exacta, incluidas Next.js 16.4.5, React 19.3.1,
+  Tailwind CSS 4.3.5, Playwright 1.65.0, ESLint 10.14.0 y `@types/node` 26.6.6.
+- `check` ejecuta `next typegen` antes de `tsc --noEmit`, para que los tipos de
+  rutas existan también en un checkout limpio (CI).
+
+### Fixed
+
+- Tipos de `PageProps` no encontrados en un checkout sin `.next` (resuelto por
+  el paso `next typegen`).
+
 ## [0.1.0] - 2026-10-29
 
 ### Added

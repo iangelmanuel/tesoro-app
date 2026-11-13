@@ -527,7 +527,7 @@ function PaymentForm({
           label={
             isAdvance || isReceivable ? "Cuenta que recibe" : "Cuenta que paga"
           }
-          allowTransfer={!isAdvance && !isReceivable}
+          direction={isAdvance || isReceivable ? "in" : "out"}
           onAccountChange={setAccountId}
         />
       )}

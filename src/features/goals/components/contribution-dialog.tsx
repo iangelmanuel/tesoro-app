@@ -343,7 +343,7 @@ function ContributionForm({
           label={
             kind === "withdrawal" ? "Cuenta que recibe" : "Cuenta que paga"
           }
-          allowTransfer={kind === "deposit"}
+          direction={kind === "withdrawal" ? "in" : "out"}
         />
       )}
 

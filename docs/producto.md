@@ -586,7 +586,8 @@ Periodo y tipo viven en la URL, así un enlace se puede compartir y recargar:
 Son dos pantallas separadas, las dos de la planificación del mes: lo que se
 debe pagar y lo que se quiere gastar como máximo.
 
-- **Gastos fijos:** `/dashboard/personal/recurring`. Va primero en el aside.
+- **Gastos fijos:** `/dashboard/personal/recurring`, con el parámetro `month`
+  (SPEC 37). Va primero en el aside.
 - **Presupuestos:** `/dashboard/personal/budgets`, con el parámetro `month`.
 - `/dashboard/personal/budgets?tab=recurring` redirige a Gastos fijos
   (compatibilidad con enlaces antiguos).
@@ -598,16 +599,20 @@ debe pagar y lo que se quiere gastar como máximo.
 | --------- | --------- | ------------------------------ |
 | `month`   | `YYYY-MM` | mes actual en `America/Bogota` |
 
-- `month` solo aplica a Presupuestos. Un valor inválido cae a su valor por
-  defecto. Todos los meses, pasados y futuros, se pueden ver y editar.
+- En Presupuestos, un valor inválido cae a su valor por defecto. Todos los
+  meses, pasados y futuros, se pueden ver y editar.
+- En Gastos fijos, `month` va del mes del `starts_on` más antiguo de los
+  gastos fijos al mes actual. Un valor inválido, futuro o anterior cae al
+  límite más cercano.
 
 ### Gastos fijos
 
 - Nombre (1 a 60 caracteres), monto (mismas reglas que movimientos), categoría
   de gasto activa, frecuencia `monthly` o `yearly`, día de pago (1 a 31), mes
   de pago (solo anuales), fecha de inicio y fecha de fin opcional (≥ inicio).
-- Se pueden pausar y reanudar. Uno pausado no aparece en Próximos pagos ni en
-  el comprometido de los presupuestos.
+- Se pueden pausar y reanudar. Uno pausado no aparece en Próximos pagos (de
+  ningún mes), en los atrasados ni en el comprometido de los presupuestos, y
+  su Sheet no lista periodos: la RPC solo calcula gastos activos.
 - Al eliminarlo, sus pagos se conservan en Movimientos con el enlace en `null`
   (`on delete set null` + trigger `check_transaction_recurring`).
 - Las ocurrencias no se guardan: las calcula la RPC
@@ -626,15 +631,38 @@ Reglas de vencimiento:
 
 Estado de una ocurrencia (fechas en `America/Bogota`):
 
-| Estado  | Condición                  | Color  |
-| ------- | -------------------------- | ------ |
-| Pagado  | tiene movimiento enlazado  | verde  |
-| Vencido | pendiente y `due_on < hoy` | rojo   |
-| Hoy     | pendiente y `due_on = hoy` | ámbar  |
-| Próximo | pendiente y `due_on > hoy` | neutro |
+| Estado   | Condición                  | Color  |
+| -------- | -------------------------- | ------ |
+| Pagado   | tiene movimiento enlazado  | verde  |
+| Atrasado | pendiente y `due_on < hoy` | rojo   |
+| Hoy      | pendiente y `due_on = hoy` | ámbar  |
+| Próximo  | pendiente y `due_on > hoy` | neutro |
 
-- **Próximos pagos** muestra todas las ocurrencias del mes actual y las
-  impagas de los 2 meses anteriores, en orden de vencimiento.
+- **Próximos pagos** tiene un navegador de mes (`‹ mes ›`, `?month`). El
+  siguiente se deshabilita en el mes actual y el anterior en el mes del
+  gasto fijo más antiguo. En otro mes, el título dice "Pagos de <mes>".
+  - **Mes actual:** todas sus ocurrencias y todas las impagas anteriores,
+    desde el inicio de cada gasto (sin tope de meses), en orden de
+    vencimiento.
+  - **Mes anterior:** todas sus ocurrencias, pagadas (con "Pagado el
+    <fecha>" y el monto pagado) e impagas (**Atrasado**).
+  - Arriba de la lista, "Pagado $ X de $ Y": lo pagado y lo esperado de las
+    ocurrencias que vencen en el mes elegido (los atrasados de meses
+    anteriores no cuentan en el mes actual).
+  - Un mes pasado sin ocurrencias dice "Sin pagos en este mes".
+  - Los anuales aparecen solo en el mes de su vencimiento.
+- **Atrasados:** si hay ocurrencias impagas de meses anteriores al actual, la
+  fila de acciones muestra "N atrasados · $ Z" (`getOverdueSummary`), que
+  lleva a `?month=` del atraso más antiguo.
+- **Sheet del gasto fijo:** un clic en la fila de la lista lo abre (el ⋮
+  sigue abriendo su menú). Trae el monto, la frecuencia, la categoría, la
+  vigencia, **Editar**, **Pausar/Reanudar** y **Eliminar**, "Pagado en
+  <año>" y "Atrasado a la fecha", y los periodos desde `starts_on` hasta el
+  mes actual, el más reciente primero (un periodo por mes o, en los anuales,
+  por año). Cada fila tiene estado, vencimiento y, si se pagó, fecha y monto
+  del pago; las impagas tienen **Marcar como pagado**. Muestra los últimos 12
+  y **Ver más** suma 12. Se recarga tras registrar un pago desde él. En el
+  teléfono es una hoja inferior. El estado se calcula, no se guarda.
 - **Marcar como pagado** abre el diálogo de movimiento prellenado (gasto,
   monto, categoría, fecha = vencimiento, descripción = nombre). El monto se
   puede cambiar antes de guardar; si la categoría está archivada queda vacía
@@ -675,8 +703,8 @@ Estado de una ocurrencia (fechas en `America/Bogota`):
 
 ### Widgets del Resumen
 
-- **Próximos pagos:** hasta 5 ocurrencias pendientes, vencidas primero, con
-  "Marcar como pagado".
+- **Próximos pagos:** hasta 5 ocurrencias pendientes, atrasadas primero
+  (de cualquier mes anterior), con "Marcar como pagado".
 - **Presupuestos en riesgo:** hasta 5 presupuestos del mes actual con gastado
   ≥ 80 %, de mayor a menor porcentaje.
 - Ambos con enlace "Ver todos" a su tab.
@@ -1588,7 +1616,7 @@ suficientes".
 | `goal_at_risk`        | Meta activa "En riesgo"                                                                                                                                    | media     | Metas                        |
 | `high_utilization`    | Tarjeta activa con utilización ≥ 70 %                                                                                                                      | media     | Deudas                       |
 | `highest_rate_first`  | ≥ 2 tarjetas o préstamos activos con saldo y tasa > 0; señala la de mayor tasa mensual                                                                     | baja      | Deudas                       |
-| `overdue_payment`     | Deuda "Vencida" u ocurrencia de gasto fijo vencida                                                                                                         | alta      | Deudas o Gastos fijos        |
+| `overdue_payment`     | Deuda "Vencida" u ocurrencia de gasto fijo atrasada                                                                                                        | alta      | Deudas o Gastos fijos        |
 | `low_cushion`         | Factor colchón incluido y < 3 meses                                                                                                                        | media     | Metas                        |
 | `unbudgeted_spending` | ≥ 2 categorías con gastos en el mes actual y sin presupuesto                                                                                               | baja      | Presupuestos                 |
 | `irregular_records`   | Regularidad del mes actual < 50 %, solo con datos suficientes                                                                                              | baja      | Movimientos                  |

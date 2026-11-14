@@ -149,6 +149,18 @@
   --balance: oklch(67% 0.16 255);
 }
 
+/* Páginas públicas (landing, legales, /mcp) en claro (SPEC 40): fondo blanco
+   puro. El layout de (public) pinta data-surface="site" y :has() lo sube a
+   :root para que también body y el área de overscroll queden en blanco. Las
+   tarjetas bajan a un gris muy suave (sin borde, misma sombra) para seguir
+   distinguiéndose del fondo; --muted da 5.6:1 sobre esa superficie y 6:1 sobre el blanco. El gris
+   hueso de --background queda para el dashboard y la auth. El oscuro no
+   cambia */
+:root:not(.dark):has([data-surface="site"]) {
+  --background: oklch(1 0 0);
+  --surface: oklch(0.975 0.003 264);
+}
+
 /* Primario por espacio. WorkspaceThemeRoot pinta un marcador oculto con
    data-workspace como hijo directo del contenedor del dashboard; :has() pone
    el primario en ese contenedor, así sidebar, header y contenido cambian

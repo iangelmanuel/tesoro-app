@@ -6,6 +6,7 @@ import type { PaymentAccountOption } from "@/features/accounts/components/paymen
 import type { Category } from "@/features/categories/queries"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
 import type { IncomeSourceOption, UpcomingIncome } from "../queries"
+import { amountDueUntil } from "../receipt"
 
 interface ReceiveIncomeButtonProps {
   workspaceId: string
@@ -16,10 +17,11 @@ interface ReceiveIncomeButtonProps {
   incomeSources: IncomeSourceOption[]
 }
 
-// Abre TransactionDialog en Ingreso con el ingreso fijo, el monto esperado,
-// la categoría y la cuenta por defecto prellenados (todo editable). Solo se
-// muestra en la ocurrencia no recibida más antigua de cada ingreso fijo: es
-// la que el servidor enlaza al guardar
+// Abre TransactionDialog en Ingreso con el ingreso fijo, la categoría y la
+// cuenta por defecto prellenados (todo editable). Se muestra en toda
+// ocurrencia no recibida o abonada (SPEC 38). El monto es lo que falta de
+// todas las ocurrencias abiertas hasta la de la fila: el servidor lo reparte
+// desde la más antigua, y la vista previa bajo el monto lo anticipa
 export function ReceiveIncomeButton({
   workspaceId,
   income,
@@ -33,6 +35,11 @@ export function ReceiveIncomeButton({
   )
     ? income.accountId
     : null
+  const source = incomeSources.find(
+    (option) => option.id === income.recurringIncomeId
+  )
+  const dueUntilRow = source ? amountDueUntil(source, income.dueOn) : 0
+  const amount = dueUntilRow > 0 ? dueUntilRow : income.amount
 
   return (
     <TransactionDialog
@@ -42,10 +49,9 @@ export function ReceiveIncomeButton({
       incomeSources={incomeSources}
       initialValues={{
         type: "income",
-        amount: income.amount,
+        amount,
         category_id: income.category.id,
         account_id: accountId,
-        occurred_on: income.dueOn,
         description: income.name,
         recurring_income_id: income.recurringIncomeId
       }}
@@ -59,7 +65,7 @@ export function ReceiveIncomeButton({
           className="max-md:min-h-11 max-md:w-full"
         >
           <Check />
-          Marcar recibido
+          Recibir
         </Button>
       }
     />

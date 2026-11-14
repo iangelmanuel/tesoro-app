@@ -6,6 +6,7 @@ import {
   type IncomeOccurrenceStatus,
   getIncomeOccurrenceStatus
 } from "./occurrences"
+import { type IncomeReceiptPeriods, incomeReceiptPeriods } from "./receipt"
 import type { IncomeFrequency } from "./schemas"
 
 export { OTHER_INCOME } from "./schemas"
@@ -44,15 +45,13 @@ export interface UpcomingIncome {
   status: IncomeOccurrenceStatus
 }
 
-export interface IncomeSourceOption {
+export interface IncomeSourceOption extends IncomeReceiptPeriods {
   id: string
   name: string
   amount: number
   category_id: string
   account_id: string | null
   frequency: IncomeFrequency
-  /** Ocurrencia no recibida más antigua; null si no hay o es "none" */
-  nextDueOn: string | null
 }
 
 // Meses anteriores al actual cuyas ocurrencias no recibidas siguen en la lista
@@ -233,48 +232,81 @@ export async function getUpcomingIncomes(
 }
 
 /**
- * Ocurrencia no recibida más antigua de cada ingreso fijo activo, dentro de
- * la ventana de "Próximos ingresos" (las atrasadas primero). Sin entrada si
- * no hay ninguna o la fuente es "none".
+ * Lo asignado a cada ocurrencia de estos ingresos fijos, por fuente y fecha.
+ * `client` permite usarla fuera de una request con cookies (MCP, SPEC 34).
  */
-export async function getOldestUnreceivedOccurrences(
-  workspaceId: string,
+export async function getReceivedByOccurrence(
+  incomeIds: string[],
   client?: AppSupabase
-): Promise<Map<string, string>> {
-  const data = await fetchOccurrences(workspaceId, client)
-  const oldest = new Map<string, string>()
-
-  // La RPC devuelve las filas ordenadas por fecha
-  for (const row of data) {
-    if (row.transaction_id === null && !oldest.has(row.recurring_income_id)) {
-      oldest.set(row.recurring_income_id, row.due_on)
-    }
+): Promise<Map<string, Map<string, number>>> {
+  const received = new Map<string, Map<string, number>>()
+  if (incomeIds.length === 0) {
+    return received
   }
-  return oldest
-}
 
-/** Ingresos fijos activos para el select "Ingreso fijo" */
-export async function getIncomeSources(
-  workspaceId: string
-): Promise<IncomeSourceOption[]> {
-  const supabase = await createClient()
-  const [{ data, error }, oldest] = await Promise.all([
-    supabase
-      .from("recurring_incomes")
-      .select("id, name, amount, category_id, account_id, frequency")
-      .eq("workspace_id", workspaceId)
-      .eq("is_active", true)
-      .order("name", { ascending: true }),
-    getOldestUnreceivedOccurrences(workspaceId)
-  ])
+  const supabase = client ?? (await createClient())
+  const { data, error } = await supabase
+    .from("recurring_income_allocations")
+    .select("recurring_income_id, due_on, amount")
+    .in("recurring_income_id", incomeIds)
 
   if (error) {
     throw new Error("No se pudieron cargar los ingresos fijos")
   }
 
-  return data.map((row) => ({
-    ...row,
-    amount: Number(row.amount),
-    nextDueOn: oldest.get(row.id) ?? null
-  }))
+  for (const row of data) {
+    const byDate = received.get(row.recurring_income_id) ?? new Map()
+    const cents =
+      Math.round((byDate.get(row.due_on) ?? 0) * 100) +
+      Math.round(Number(row.amount) * 100)
+    byDate.set(row.due_on, cents / 100)
+    received.set(row.recurring_income_id, byDate)
+  }
+  return received
+}
+
+/**
+ * Ingresos fijos activos para el select "Ingreso fijo" y **Recibir**, con las
+ * ocurrencias en las que un cobro nuevo se puede repartir (vista previa)
+ */
+export async function getIncomeSources(
+  workspaceId: string
+): Promise<IncomeSourceOption[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("recurring_incomes")
+    .select(
+      "id, name, amount, category_id, account_id, frequency, day_of_month, second_day_of_month, month_of_year, day_of_week, interval_days, starts_on, ends_on"
+    )
+    .eq("workspace_id", workspaceId)
+    .eq("is_active", true)
+    .order("name", { ascending: true })
+
+  if (error) {
+    throw new Error("No se pudieron cargar los ingresos fijos")
+  }
+
+  const today = todayISO()
+  const received = await getReceivedByOccurrence(
+    data.filter((row) => row.frequency !== "none").map((row) => row.id)
+  )
+
+  return data.map((row) => {
+    const amount = Number(row.amount)
+    const { periods, futureLimited } = incomeReceiptPeriods(
+      { ...row, amount },
+      received.get(row.id) ?? new Map(),
+      today
+    )
+    return {
+      id: row.id,
+      name: row.name,
+      amount,
+      category_id: row.category_id,
+      account_id: row.account_id,
+      frequency: row.frequency,
+      periods,
+      futureLimited
+    }
+  })
 }

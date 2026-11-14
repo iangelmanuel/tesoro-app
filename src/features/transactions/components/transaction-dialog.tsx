@@ -45,9 +45,11 @@ import {
   selectedPayment
 } from "@/features/recurring-expenses/components/occurrence-select"
 import type { UpcomingPayment } from "@/features/recurring-expenses/queries"
+import { IncomeReceiptPreview } from "@/features/recurring-incomes/components/income-receipt-preview"
 import { IncomeSourceField } from "@/features/recurring-incomes/components/income-source-field"
 import { OTHER_INCOME } from "@/features/recurring-incomes/constants"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
+import { describeSavedReceipt } from "@/features/recurring-incomes/receipt"
 import type { WorkspaceType } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
 import { createTransaction, updateTransaction } from "../actions"
@@ -324,12 +326,15 @@ function TransactionForm({
       : await createTransaction(prevState, formData)
 
     if (result.ok) {
+      // Con ingreso fijo, el toast describe el reparto que guardó el servidor
+      const receipt = describeSavedReceipt(result.allocations ?? [])
       toast.success(
         isEditing
           ? "Movimiento actualizado"
           : recurring
             ? "Pago registrado"
-            : "Movimiento registrado"
+            : "Movimiento registrado",
+        receipt ? { description: receipt } : undefined
       )
       onSaved()
     }
@@ -409,6 +414,10 @@ function TransactionForm({
   const values = state.values
   const showIncomeSource =
     !isBusiness && type === "income" && incomeSources !== undefined
+  // Ingreso fijo con calendario elegido: muestra el reparto bajo el monto
+  const incomeSource = showIncomeSource
+    ? incomeSources.find((source) => source.id === incomeSourceId)
+    : undefined
   const showTransfer = !isEditing && type === "expense" && !isBusiness
 
   const expenseTab = (
@@ -626,10 +635,7 @@ function TransactionForm({
           onChange={handleIncomeSourceChange}
           current={
             transaction?.recurring_income_id
-              ? {
-                  id: transaction.recurring_income_id,
-                  dueOn: transaction.recurring_income_due_on
-                }
+              ? { id: transaction.recurring_income_id }
               : null
           }
         />
@@ -650,6 +656,18 @@ function TransactionForm({
         <Input placeholder="0" />
         <FieldError>{errors?.amount?.[0]}</FieldError>
       </TextField>
+      {incomeSource && (
+        <IncomeReceiptPreview
+          source={incomeSource}
+          amount={parsePaymentAmount(amountText) ?? 0}
+          hideError={Boolean(errors?.amount)}
+          own={
+            incomeSource.id === transaction?.recurring_income_id
+              ? transaction.recurring_income_allocations
+              : []
+          }
+        />
+      )}
 
       <div className="grid gap-4 md:grid-cols-2">
         <DatePickerField

@@ -525,8 +525,9 @@ export async function recordPayment(
   return { ok: true }
 }
 
-// Avance de tarjeta: sube el saldo de la deuda y, con cuenta, el de la cuenta
-// (record_card_advance). No crea movimiento ni lleva traspaso.
+// Avance de tarjeta: sube el saldo de la deuda (record_card_advance). Con
+// cuenta, crea además un ingreso en ella con la categoría "Avance de tarjeta",
+// enlazado a la entrada (SPEC 36). No lleva traspaso.
 export async function recordAdvance(
   _prevState: PaymentFormState,
   formData: FormData
@@ -576,8 +577,9 @@ export async function recordAdvance(
 }
 
 // Edita un pago, un avance, una cuota de manejo o un ajuste. En un pago se
-// cambian monto, fecha, nota y si es un abono extra (el trigger copia monto y
-// fecha a su movimiento). En un ajuste, el formulario
+// cambian monto, fecha, nota y si es un abono extra; en un pago o un avance
+// con movimiento, el trigger copia monto, fecha y hora a él. En un ajuste, el
+// formulario
 // pide el saldo real como en "Actualizar saldo" y el ajuste se recalcula
 // sobre el saldo sin él.
 export async function updateEntry(
@@ -702,8 +704,8 @@ export async function updateEntry(
   return { ok: true }
 }
 
-// Borra un pago o un ajuste. Si el pago tiene movimiento, el trigger también
-// lo borra.
+// Borra un pago, un avance, una cuota o un ajuste. Si el pago o el avance
+// tiene movimiento, el trigger también lo borra.
 export async function deleteEntry(id: string): Promise<DebtActionResult> {
   const parsedId = idSchema.safeParse(id)
 

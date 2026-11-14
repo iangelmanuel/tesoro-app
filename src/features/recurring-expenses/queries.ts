@@ -1,7 +1,11 @@
 import { currentMonth, monthRange, shiftMonth, todayISO } from "@/libs/dates"
 import { createClient } from "@/libs/supabase/server"
 import type { Database } from "@/types/database"
-import { type OccurrenceStatus, getOccurrenceStatus } from "./occurrences"
+import {
+  HISTORY_PAGE_SIZE,
+  type OccurrenceStatus,
+  getOccurrenceStatus
+} from "./occurrences"
 
 type RecurringExpenseRow =
   Database["public"]["Tables"]["recurring_expenses"]["Row"]
@@ -53,9 +57,6 @@ export interface RecurringExpenseHistory {
   /** Ocurrencias impagas ya vencidas, a la fecha */
   overdueAmount: number
 }
-
-/** Filas visibles del historial de un gasto fijo antes de "Ver más" */
-export const HISTORY_PAGE_SIZE = 12
 
 const CATEGORY_COLUMNS = "id, name, icon, color, archived_at"
 

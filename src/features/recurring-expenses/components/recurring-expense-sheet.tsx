@@ -15,12 +15,11 @@ import { useIsMobile } from "@/hooks/use-is-mobile"
 import { currentMonth } from "@/libs/dates"
 import { formatDate, formatShortDate } from "@/libs/format"
 import { loadRecurringExpenseHistory } from "../actions"
-import { frequencyLabel } from "../occurrences"
-import {
-  HISTORY_PAGE_SIZE,
-  type RecurringExpense,
-  type RecurringExpenseHistory,
-  type UpcomingPayment
+import { HISTORY_PAGE_SIZE, frequencyLabel } from "../occurrences"
+import type {
+  RecurringExpense,
+  RecurringExpenseHistory,
+  UpcomingPayment
 } from "../queries"
 import { RecurringExpenseDialog } from "./recurring-expense-dialog"
 import {

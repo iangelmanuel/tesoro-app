@@ -53,3 +53,10 @@ export function frequencyLabel(expense: {
   }
   return `Mensual, día ${expense.day_of_month}`
 }
+
+/**
+ * Periodos visibles del historial de un gasto fijo antes de "Ver más". Vive
+ * aquí y no en queries.ts para que el Sheet (cliente) lo importe sin arrastrar
+ * el cliente de Supabase del servidor.
+ */
+export const HISTORY_PAGE_SIZE = 12

@@ -1,6 +1,6 @@
 # SPEC 39 — Me deben en movimiento rápido: abono, pago completo y varios meses
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 28, SPEC 29, SPEC 30, SPEC 36, SPEC 38
 > **Fecha:** 2026-11-13
 > **Objetivo:** Que **Me deben** tenga su propio tab en el diálogo de movimiento rápido con abono o pago completo para cobros únicos, y una cuota o varios meses para cobros mensuales, repartiendo un solo pago entre varias cuotas.
@@ -114,22 +114,22 @@ type FormPanel = /* existentes */ "receivable"
 
 ## Criterios de aceptación
 
-- [ ] El diálogo de movimiento en Personal muestra los tabs Gasto, Ingreso, Traspaso, Deuda, Me deben, Gasto fijo y Meta, en ese orden, en escritorio y a 390 px.
-- [ ] El tab **Deuda** ya no lista cuentas por cobrar.
-- [ ] Sin cuentas por cobrar activas, el tab **Me deben** muestra el enlace a Me deben.
-- [ ] En un cobro único, **Abono** de 50.000 sobre un saldo de 200.000 deja saldo de 150.000.
-- [ ] En un cobro único, **Pago completo** muestra el saldo fijo y al guardar la cuenta por cobrar queda pagada.
-- [ ] En una mensual de 5.100 con sep, oct y nov sin pagar, **Varios meses** con 20.000 deja sep, oct y nov **Pagada** y dic **Abonada** con "Falta 400".
-- [ ] Ese cobro crea un solo ingreso de 20.000 en la cuenta elegida y un solo abono en la cuenta por cobrar.
-- [ ] La vista previa describe el mismo reparto que se guarda.
-- [ ] En una mensual con número de cuotas, un monto mayor que lo que falta en total es rechazado con error en el campo.
-- [ ] **Una cuota** con monto menor que lo que falta deja esa cuota **Abonada**.
-- [ ] Editar el cobro de 20.000 a 10.200 deja sep y oct **Pagada** y nov y dic sin pagar.
-- [ ] Eliminar el cobro devuelve las cuotas a su estado calculado.
-- [ ] Las cuotas cobradas con SPEC 28/29 conservan su estado tras la migración.
-- [ ] El cobro desde el Sheet y desde el tab usan el mismo formulario y dan el mismo resultado.
-- [ ] Un usuario no puede leer ni escribir asignaciones de otro (RLS).
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] El diálogo de movimiento en Personal muestra los tabs Gasto, Ingreso, Traspaso, Deuda, Me deben, Gasto fijo y Meta, en ese orden, en escritorio y a 390 px.
+- [x] El tab **Deuda** ya no lista cuentas por cobrar.
+- [x] Sin cuentas por cobrar activas, el tab **Me deben** muestra el enlace a Me deben.
+- [x] En un cobro único, **Abono** de 50.000 sobre un saldo de 200.000 deja saldo de 150.000.
+- [x] En un cobro único, **Pago completo** muestra el saldo fijo y al guardar la cuenta por cobrar queda pagada.
+- [x] En una mensual de 5.100 con sep, oct y nov sin pagar, **Varios meses** con 20.000 deja sep, oct y nov **Pagada** y dic **Abonada** con "Falta 400".
+- [x] Ese cobro crea un solo ingreso de 20.000 en la cuenta elegida y un solo abono en la cuenta por cobrar.
+- [x] La vista previa describe el mismo reparto que se guarda.
+- [x] En una mensual con número de cuotas, un monto mayor que lo que falta en total es rechazado con error en el campo.
+- [x] **Una cuota** con monto menor que lo que falta deja esa cuota **Abonada**.
+- [x] Editar el cobro de 20.000 a 10.200 deja sep y oct **Pagada** y nov y dic sin pagar.
+- [x] Eliminar el cobro devuelve las cuotas a su estado calculado.
+- [x] Las cuotas cobradas con SPEC 28/29 conservan su estado tras la migración.
+- [x] El cobro desde el Sheet y desde el tab usan el mismo formulario y dan el mismo resultado.
+- [x] Un usuario no puede leer ni escribir asignaciones de otro (RLS).
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
 
 ## Decisiones
 

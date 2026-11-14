@@ -298,14 +298,18 @@ Reglas:
   `onOpenChange`); no pintan botón propio.
 - **Tabs de pago** (`transaction-dialog.tsx`): el diálogo que abre
   "Registrar movimiento" en Personal (y **Movimiento rápido** en el
-  teléfono) tiene **Gasto · Ingreso · Traspaso · Deuda · Gasto fijo · Meta**
-  (prop `paymentTabs`, SPEC 30). En Empresa: **Venta · Costo o gasto ·
+  teléfono) tiene **Gasto · Ingreso · Traspaso · Deuda · Me deben · Gasto
+  fijo · Meta** (prop `paymentTabs`, SPEC 30 y 39; `initialPanel` abre en un
+  tab, como **Más → Cobro de Me deben**). En Empresa: **Venta · Costo o gasto ·
   Traspaso**. Meta usa `GoalContributionPanel` (el formulario de
   `ContributionDialog`) y, sin metas activas, `PanelEmpty` con enlace a
   Metas. El tab activo se lleva a la vista con `scrollIntoView`. El tab
   Ingreso de Personal empieza con `IncomeSourceField` (select "Ingreso
   fijo", `src/features/recurring-incomes/components/`). Deuda (pagos y avances) usa
-  `DebtPaymentPanel` (el formulario de `PaymentDialog`) y Gasto fijo elige la
+  `DebtPaymentPanel` (el formulario de `PaymentDialog`), solo tarjetas y
+  préstamos. Me deben usa `ReceivableCollectForm`, el mismo del Sheet de la
+  cuenta por cobrar (`ReceivableCollectDialog`), y sin cuentas por cobrar
+  activas `PanelEmpty` con enlace a Me deben. Gasto fijo elige la
   ocurrencia (`OccurrenceSelect`) y muestra el formulario de movimiento
   enlazado. No aparecen en Empresa, al editar ni al pagar una ocurrencia
   concreta. Con los tabs, el diálogo sube a `max-w-lg` y el selector se
@@ -511,7 +515,9 @@ Piezas en `src/components/dashboard/mobile/`:
 - **Hoja:** se cierra deslizando el asa, tocando el fondo, con "Cerrar" o con
   Escape. Cada acción cierra la hoja y abre su diálogo sin cambiar de página.
   **Movimiento rápido** abre `TransactionDialog` con todos los tabs del
-  espacio, en Gasto por defecto: el mismo diálogo que el **+** del
+  espacio (Personal: Gasto · Ingreso · Traspaso · Deuda · Me deben · Gasto
+  fijo · Meta; se desplazan en horizontal y el activo se lleva a la vista),
+  en Gasto por defecto: el mismo diálogo que el **+** del
   escritorio. Las acciones sueltas de antes (Gasto, Ingreso, Aporte a meta,
   Pago de deuda, Marcar gasto fijo pagado, Venta y Costo o gasto) se quitaron.
   Solo existe en rutas de un espacio. Los datos salen de

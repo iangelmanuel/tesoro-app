@@ -355,11 +355,13 @@ de gráficas, presupuestos, metas, deudas y score.
   cualquier página del espacio, y **Movimiento rápido** de la hoja **+** del
   teléfono abre el mismo (SPEC 30). En Personal, al registrar, los tabs son
   **Gasto**, **Ingreso**, **Traspaso**, **Deuda** (pagos y avances),
-  **Gasto fijo** y **Meta** (aportes y retiros), en ese orden. En Empresa:
+  **Me deben** (cobros, SPEC 39), **Gasto fijo** y **Meta** (aportes y
+  retiros), en ese orden. En Empresa:
   **Venta**, **Costo o gasto** y **Traspaso**. Traspaso solo aparece con dos
   cuentas o más. El tab Ingreso de Personal empieza con el select
   [Ingreso fijo](#select-ingreso-fijo). Aporte a meta sigue también en el
-  menú Más.
+  menú Más, igual que **Cobro de Me deben**, que abre el diálogo en el tab
+  **Me deben**.
 - El menú **Más** del header, en Personal y Empresa, abre **Categorías** y
   **Verificar movimientos** desde cualquier página, aunque el espacio aún no
   tenga movimientos.
@@ -1220,17 +1222,17 @@ cuotas` y el saldo baja con cada cobro. Indefinida: `opening_balance = 0`,
 - **Por cobrar a la fecha:** la tarjeta de una indefinida muestra lo que
   falta de las cuotas hasta el mes actual, y "Te deben" lo suma.
 
-- **Cobrar:** **Marcar pagada** en una cuota pendiente o atrasada abre el
-  diálogo de abono con el monto mensual prellenado (editable), la fecha (hoy)
-  y la cuenta que recibe. Crea el abono (`debt_entries.period_on` = primer día
-  del mes de la cuota) y, si se marca, el ingreso en "Cobros". Una cuota solo
-  admite un cobro (índice único `(debt_id, period_on)`); si el monto difiere
-  del mensual, la fila lo resalta.
-- **Editar o eliminar** un cobro (desde el Historial o desde Movimientos)
-  devuelve la cuota a su estado calculado.
+- **Cobrar:** ver [Cobro de Me deben](#cobro-de-me-deben-spec-39). **Marcar
+  pagada** o **Abonar** en una cuota abre el cobro en **Una cuota** con esa
+  cuota y lo que le falta prellenados.
+- **Editar o eliminar** un cobro (desde el Historial o desde Movimientos):
+  cambiar el monto lo reparte de nuevo desde la cuota no pagada más antigua;
+  eliminarlo devuelve las cuotas a su estado calculado.
 - **Sheet:** sección **Cuotas** (las últimas 12 y **Ver más**), con mes,
-  estado, "Vence el …" o "Pagada el …" y el monto cobrado. Sin "Registrar
-  abono" ni "Actualizar saldo": se cobra por cuota. Con número de cuotas
+  estado, "Vence el …" o "Pagada el …" y el monto cobrado. Si una cuota
+  tiene varios abonos o uno repartido, los lista: "$ 4.700 · parte de un pago
+  de $ 20.000 del 12 nov". **Registrar cobro** abre el cobro; sin
+  "Actualizar saldo". Con número de cuotas
   muestra el saldo, la barra de % cobrado y "N de M cuotas cobradas";
   indefinida, el monto mensual y lo cobrado en el año.
 - **Tarjeta:** con número de cuotas, saldo y "Mensual"; indefinida, el monto
@@ -1243,6 +1245,47 @@ cuotas` y el saldo baja con cada cobro. Indefinida: `opening_balance = 0`,
 - Fuera de alcance: recordatorios, intereses o mora, cobros mensuales en
   Empresa, importar cuotas, efecto en score y recomendaciones, otras
   frecuencias y cambiar entre **Una vez** y **Mes a mes**.
+
+### Cobro de Me deben (SPEC 39)
+
+Un solo formulario de cobro (`receivable-collect-form.tsx`) para el tab
+**Me deben** del diálogo de movimiento (solo Personal) y para el Sheet de la
+cuenta por cobrar. El tab **Deuda** solo lista tarjetas y préstamos.
+
+- **Campos:** cuenta por cobrar activa (con "Saldo $ X" o "N cuotas por
+  cobrar · $ Z"; en el Sheet ya viene elegida), fecha, nota, "Registrar como
+  ingreso" y la cuenta que recibe con "Quedará en" (SPEC 36). Sin cuentas
+  por cobrar activas, el tab enlaza a Me deben.
+- **Cobro único:** **Abono** (monto mayor que 0 y hasta el saldo) o **Pago
+  completo** (el saldo, de solo lectura; la cuenta por cobrar pasa a
+  pagada).
+- **Mensual:** **Una cuota** (cuota no pagada, por defecto la más antigua,
+  con lo que falta prellenado y editable, sin pasar de eso; menos la deja
+  **Abonada**) o **Varios meses** (monto libre que se reparte desde la cuota
+  no pagada más antigua con `allocateOldestFirst`).
+  - Vista previa bajo el monto: "Cubre sep, oct y nov · Abona $ 4.700 a dic
+    (falta $ 400)". Más de 4 meses se resumen como rango.
+  - Atajos **2 meses**, **3 meses** y **6 meses** llenan el monto con lo que
+    falta de esas cuotas (solo los que alcanzan).
+  - Con número de cuotas, no puede pasar de lo que falta en total. Indefinida:
+    cubre hasta 12 meses después del actual. Si sobra, error en el campo.
+- **Un pago, un registro:** crea un solo abono y, si se marca, un solo
+  ingreso ("Cobros"). Las cuotas que cubre van en `debt_entry_allocations`
+  (una fila por cuota con la parte asignada). Si el cobro deja en 0 una
+  cuenta con saldo total (una vez, o mensual con número de cuotas), pasa a
+  pagada.
+- **Servidor:** RPC `record_receivable_collection` (modos `partial`, `full`,
+  `single` y `allocate`), que bloquea la cuenta por cobrar y reparte con
+  `allocate_debt_entry`. `reallocate_debt_entry` reparte de nuevo un abono.
+  Un trigger reparte de nuevo al cambiar el monto de un abono (desde el
+  Sheet, Movimientos o el MCP) y otro, diferido, revisa al final de la
+  transacción que las asignaciones sumen el monto (un abono sin
+  asignaciones, como el que recrea Revertir del MCP, se reparte desde la
+  cuota más antigua).
+- **Menú Más:** **Cobro de Me deben** abre el diálogo en el tab **Me deben**.
+- Fuera de alcance: elegir meses a mano, cambiar entre **Una vez** y **Mes a
+  mes**, grupos de deudores, recordatorios, intereses, Empresa y pagos de
+  varios meses en gastos fijos o deudas propias.
 
 ### Cuota de manejo
 
@@ -1289,11 +1332,14 @@ workspace_id)`: una entrada siempre es del mismo espacio que su deuda.
 - Check `debts_kind_fields_check`: campos obligatorios y prohibidos por tipo y
   tipo de cobro (SPEC 28). Tarjetas y préstamos no llevan `schedule` ni
   `starts_on`.
-- Cobro mensual (SPEC 28): `check_debt_entry` exige `period_on` en los abonos
-  de una cuenta mensual y lo prohíbe en el resto; debe ser día 1, no anterior
-  al mes de inicio ni posterior a la última cuota. `check_debt_balance` no
-  valida saldo en las indefinidas. Desde SPEC 29 una cuota admite varios
-  abonos (índice `debt_entries_period`, no único).
+- Cobro mensual (SPEC 28 y 39): las cuotas que cubre un abono van en
+  `debt_entry_allocations` (RLS con `is_workspace_owner` /
+  `is_workspace_writable`). `check_debt_entry_allocation` solo las admite en
+  abonos de una cuenta mensual del mismo espacio, día 1, no anteriores al
+  mes de inicio ni posteriores a la última cuota. Un trigger diferido exige
+  que sumen el monto del abono. `check_debt_balance` no valida saldo en las
+  indefinidas. `debt_entries.period_on` se borró en SPEC 39 tras migrar cada
+  abono a una asignación por su monto completo.
 - `receivable_installment_history` (SPEC 29): valores anteriores de la cuota,
   solo en mensuales indefinidas (trigger
   `check_receivable_installment_history`), un valor por mes de corte, RLS con

@@ -340,8 +340,7 @@ const checkboxField = z.preprocess(
 // creado o, en una tarjeta, la del pago; vacío = fuera de las cuentas.
 // is_extra_payment marca un abono extra de tarjeta o préstamo: baja el saldo
 // pero no cubre el pago mínimo o la cuota del ciclo.
-// period_on es la cuota (primer día del mes) que cobra un abono de una cuenta
-// por cobrar mensual; vacío en el resto (SPEC 28).
+// El cobro de una cuenta por cobrar va por receivableCollectSchema (SPEC 39).
 export const paymentSchema = z
   .object({
     amount: amountField,
@@ -350,20 +349,74 @@ export const paymentSchema = z
     note: noteField,
     create_transaction: checkboxField,
     is_extra_payment: checkboxField,
-    period_on: z.preprocess(
-      emptyToNull,
-      z.iso
-        .date({ error: "Elige una cuota válida" })
-        .refine((value) => value.endsWith("-01"), {
-          error: "Elige una cuota válida"
-        })
-        .nullable()
-    ),
     ...paymentAccountSchema.shape
   })
   .superRefine(refinePaymentAccount)
 
 export type PaymentInput = z.infer<typeof paymentSchema>
+
+// Cobro de una cuenta por cobrar (SPEC 39). El modo depende del tipo de
+// cobro: Abono o Pago completo en una de cobro único; Una cuota o Varios
+// meses en una mensual.
+export const RECEIVABLE_COLLECT_MODES = [
+  "partial", // Abono (una vez)
+  "full", // Pago completo (una vez)
+  "single", // Una cuota (mes a mes)
+  "allocate" // Varios meses (mes a mes)
+] as const
+
+export type ReceivableCollectMode = (typeof RECEIVABLE_COLLECT_MODES)[number]
+
+/** Modos válidos para cada tipo de cobro */
+export const COLLECT_MODES_BY_SCHEDULE: Record<
+  ReceivableSchedule,
+  readonly ReceivableCollectMode[]
+> = {
+  once: ["partial", "full"],
+  monthly: ["single", "allocate"]
+}
+
+// Cuota (primer día del mes) que cobra "Una cuota"
+const periodField = z.iso
+  .date({ error: "Elige la cuota que se cobra" })
+  .refine((value) => value.endsWith("-01"), {
+    error: "Elige la cuota que se cobra"
+  })
+
+// account_id es la cuenta del ingreso: solo aplica con create_transaction
+const collectBase = {
+  occurred_on: pastDateField,
+  note: noteField,
+  create_transaction: checkboxField,
+  account_id: paymentAccountSchema.shape.account_id
+}
+
+// En "Pago completo" el monto es el saldo pendiente: lo pone el servidor
+export const receivableCollectSchema = z.discriminatedUnion(
+  "mode",
+  [
+    z.object({
+      mode: z.literal("partial"),
+      amount: amountField,
+      ...collectBase
+    }),
+    z.object({ mode: z.literal("full"), ...collectBase }),
+    z.object({
+      mode: z.literal("single"),
+      amount: amountField,
+      period_on: periodField,
+      ...collectBase
+    }),
+    z.object({
+      mode: z.literal("allocate"),
+      amount: amountField,
+      ...collectBase
+    })
+  ],
+  { error: "Elige cómo se cobra" }
+)
+
+export type ReceivableCollectInput = z.infer<typeof receivableCollectSchema>
 
 // Avance de tarjeta: sube el saldo de la deuda y, con cuenta, el de la
 // cuenta. No lleva traspaso.

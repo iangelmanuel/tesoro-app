@@ -29,6 +29,8 @@ export interface UpcomingPayment {
   dueOn: string
   transactionId: string | null
   paidAmount: number | null
+  /** Fecha del movimiento de pago (YYYY-MM-DD); null sin pagar */
+  paidOn: string | null
   /** Cuenta del pago; null = fuera de las cuentas (o sin pagar) */
   accountName: string | null
   status: OccurrenceStatus
@@ -139,16 +141,19 @@ async function toUpcomingPayments(
 
   const categoryById = new Map(categories.map((row) => [row.id, row]))
 
-  // Cuenta de cada pago, desde su movimiento enlazado
+  // Cuenta y fecha de cada pago, desde su movimiento enlazado
   const paidIds = occurrences.flatMap((row) =>
     row.transaction_id === null ? [] : [row.transaction_id]
   )
-  const accountByTransaction = new Map<string, string | null>()
+  const paymentByTransaction = new Map<
+    string,
+    { accountName: string | null; paidOn: string }
+  >()
   if (paidIds.length > 0) {
     const { data: paid, error: paidError } = await supabase
       .from("transactions")
       .select(
-        "id, account:accounts!transactions_account_id_workspace_id_fkey (name)"
+        "id, occurred_on, account:accounts!transactions_account_id_workspace_id_fkey (name)"
       )
       .in("id", paidIds)
 
@@ -156,7 +161,10 @@ async function toUpcomingPayments(
       throw new Error("No se pudieron cargar los pagos de los gastos fijos")
     }
     for (const row of paid) {
-      accountByTransaction.set(row.id, row.account?.name ?? null)
+      paymentByTransaction.set(row.id, {
+        accountName: row.account?.name ?? null,
+        paidOn: row.occurred_on
+      })
     }
   }
 
@@ -165,6 +173,10 @@ async function toUpcomingPayments(
     if (!category) {
       return []
     }
+    const paid =
+      row.transaction_id === null
+        ? undefined
+        : paymentByTransaction.get(row.transaction_id)
     return {
       recurringExpenseId: row.recurring_expense_id,
       name: row.name,
@@ -173,10 +185,8 @@ async function toUpcomingPayments(
       dueOn: row.due_on,
       transactionId: row.transaction_id,
       paidAmount: row.paid_amount === null ? null : Number(row.paid_amount),
-      accountName:
-        row.transaction_id === null
-          ? null
-          : (accountByTransaction.get(row.transaction_id) ?? null),
+      paidOn: paid?.paidOn ?? null,
+      accountName: paid?.accountName ?? null,
       status: getOccurrenceStatus(row, today)
     }
   })

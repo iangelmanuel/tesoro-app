@@ -6,7 +6,7 @@ import type { PaymentAccountOption } from "@/features/accounts/components/paymen
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
-import { formatCurrency, formatDate } from "@/libs/format"
+import { formatCurrency, formatDate, formatShortDate } from "@/libs/format"
 import {
   OCCURRENCE_STATUS,
   type OccurrenceStatus,
@@ -159,6 +159,11 @@ export function UpcomingPayments({
               <span className="whitespace-nowrap">
                 {formatDate(payment.dueOn)}
               </span>
+              {payment.paidOn !== null && (
+                <span className="whitespace-nowrap">
+                  Pagado el {formatShortDate(payment.paidOn)}
+                </span>
+              )}
               {payment.transactionId !== null && (
                 <span>
                   {payment.accountName

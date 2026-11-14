@@ -9,7 +9,7 @@ export const OCCURRENCE_STATUS: Record<
   { label: string; tone: OccurrenceTone }
 > = {
   paid: { label: "Pagado", tone: "success" },
-  overdue: { label: "Vencido", tone: "danger" },
+  overdue: { label: "Atrasado", tone: "danger" },
   today: { label: "Hoy", tone: "warning" },
   upcoming: { label: "Próximo", tone: "neutral" }
 }

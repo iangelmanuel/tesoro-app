@@ -1,5 +1,6 @@
 import { Button, Card, CardContent } from "@heroui/react"
 import { CalendarClock, CircleCheck, Plus } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardEmpty, EmptyState } from "@/components/dashboard/empty-state"
 import { MonthNav } from "@/components/dashboard/month-nav"
@@ -69,6 +70,16 @@ export async function RecurringView({
   }
 
   const isUpToDate = payments.every((payment) => payment.transactionId !== null)
+  // Resumen del mes elegido: en el mes actual no cuentan los atrasados que
+  // vienen de meses anteriores
+  const monthPayments = payments.filter((payment) =>
+    payment.dueOn.startsWith(month.month)
+  )
+  const expected = monthPayments.reduce((sum, row) => sum + row.amount, 0)
+  const paid = monthPayments.reduce(
+    (sum, row) => sum + (row.paidAmount ?? 0),
+    0
+  )
 
   return (
     <>
@@ -88,7 +99,29 @@ export async function RecurringView({
             prev={month.prev}
             next={month.next}
           />
-          {isUpToDate && (
+          {monthPayments.length > 0 && (
+            <p className="text-sm text-muted">
+              Pagado{" "}
+              <Amount
+                value={paid}
+                currency={workspace.currency}
+                className="font-medium text-foreground"
+              />{" "}
+              de{" "}
+              <Amount
+                value={expected}
+                currency={workspace.currency}
+              />
+            </p>
+          )}
+          {payments.length === 0 && !month.isCurrent && (
+            <CardEmpty
+              icon={CalendarClock}
+              message="Sin pagos en este mes"
+              hint="Tus gastos fijos no vencían en este mes."
+            />
+          )}
+          {isUpToDate && month.isCurrent && (
             <CardEmpty
               icon={CircleCheck}
               message="Estás al día con tus pagos"

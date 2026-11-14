@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Money-in balance hint (SPEC 36). `PaymentAccountSection` gets a `direction` prop (`"out"` by default, `"in"` when money enters the account). Receivable collections and partial payments (including **Marcar pagada**), the card **Avance** tab and goal **Retiro** use `"in"`: they no longer warn "Faltan" or offer a transfer, and show "Nequi tiene $ X. Quedará en $ Y" in muted text instead. Card, loan and expense payments keep the shortfall warning and the transfer.
+
 - MCP server for AI agents (SPEC 34).
   - Users connect Claude, ChatGPT, Claude Code, Cursor or any MCP client with one URL (`<SITE_URL>/api/mcp`, `SITE.mcp`). The agent signs in with the user's Tesoro account and works on their real data in Personal and business workspaces.
   - Authorization uses the Supabase OAuth 2.1 server (PKCE, dynamic client registration), enabled in the project and in `supabase/config.toml`. Tesoro adds the consent screen `/oauth/consent` (client name, session email, what the agent can do and an **Acceso** tab: **Leer y escribir** by default or **Solo lectura**; requires a session, redirects marked accounts to `/account-deleted`, and shows an empty state for invalid or expired requests) and the discovery routes `/.well-known/oauth-protected-resource`, `/.well-known/oauth-protected-resource/api/mcp` and `/.well-known/oauth-authorization-server` (proxy of the Supabase metadata, cached for an hour).
@@ -281,6 +283,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reports KPIs (income, expenses, balance and savings rate, or margin in Business).
 
 ### Changed
+
+- Card advances into an account now count as income (SPEC 36), reverting the SPEC 16 decision for advances only.
+  - `record_card_advance` (same signature) creates, in the same transaction, an income in the chosen account (new system category **Avance de tarjeta**, description "Avance <card>") and the `advance` entry linked by `transaction_id`. The account lives on the income, so the account balance counts it once. Advances without an account only raise the debt, as before.
+  - The income shows up in the summary, reports, charts, exports and score like any income. Editing or deleting the advance from the card syncs or deletes its income (SPEC 26 rules); in Movimientos it is a regular income row with a banknote icon whose actions open the advance dialog.
+  - `check_debt_entry` now allows `transaction_id` on card advances (the linked movement must be an income) and only allows `account_id` on card payments.
+  - Migration `card_advance_as_income` converts existing advances with an account row by row: each gets its income and the entry's `account_id` moves to it, keeping account balances unchanged. Rows that cannot be converted (paid or archived card) are reported with `raise notice` and stay as grey capital rows.
+  - MCP transaction links include `entry_kind` (`payment` or `advance`) and the tool descriptions mention card advances.
 
 - Movimientos filter bar (SPEC 25): the **Categorías** and **Verificar** buttons left the bar and the phone filter sheet (Personal and Business); they live in the **Más** menu and the quick-actions sheet. `TransactionsFilters` lost its `categoriesAction` and `trailing` props. `PaymentDialog`, `ContributionDialog`, `BudgetDialog`, `RecurringExpenseDialog` and `PaymentAccountSection` take a `workspaceId` (needed to create accounts and categories from their selects).
 

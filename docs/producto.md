@@ -373,13 +373,14 @@ Todo movimiento que viene de una deuda, una meta o un gasto fijo se edita y
 elimina desde Movimientos (escritorio y móvil). Cada fila abre el diálogo de
 su origen, que valida igual que al registrar y recalcula el saldo:
 
-| Fila en Movimientos                  | Editar abre                        | Eliminar                                              |
-| ------------------------------------ | ---------------------------------- | ----------------------------------------------------- |
-| Pago, abono o avance de tarjeta      | Diálogo del pago o avance          | `deleteEntry`                                         |
-| Aporte o retiro de meta (gris)       | Diálogo del aporte                 | `deleteContribution`                                  |
-| Pago de préstamo o cobro de Me deben | Diálogo del pago (el abono manda)  | `deleteEntry`: borra abono y movimiento               |
-| Pago de gasto fijo                   | Diálogo del movimiento (tipo fijo) | `deleteTransaction`: la ocurrencia vuelve a pendiente |
-| Ingreso o gasto suelto               | Diálogo del movimiento             | `deleteTransaction`                                   |
+| Fila en Movimientos                  | Editar abre                          | Eliminar                                              |
+| ------------------------------------ | ------------------------------------ | ----------------------------------------------------- |
+| Pago, abono o avance de tarjeta      | Diálogo del pago o avance            | `deleteEntry`                                         |
+| Aporte o retiro de meta (gris)       | Diálogo del aporte                   | `deleteContribution`                                  |
+| Pago de préstamo o cobro de Me deben | Diálogo del pago (el abono manda)    | `deleteEntry`: borra abono y movimiento               |
+| Ingreso de un avance (SPEC 36)       | Diálogo del avance (el avance manda) | `deleteEntry`: borra avance e ingreso                 |
+| Pago de gasto fijo                   | Diálogo del movimiento (tipo fijo)   | `deleteTransaction`: la ocurrencia vuelve a pendiente |
+| Ingreso o gasto suelto               | Diálogo del movimiento               | `deleteTransaction`                                   |
 
 - No se cambia la deuda, la meta ni el gasto fijo de un pago: se elimina y se
   registra de nuevo. Las cuotas de manejo no aparecen en Movimientos.
@@ -1334,19 +1335,20 @@ anteriores a este cambio se muestran así y los saldos no cambian.
 
 **Qué se mueve en cada caso**
 
-| Operación                  | Dónde queda la cuenta                 | Efecto en la cuenta | Crea fila en `transactions` |
-| -------------------------- | ------------------------------------- | ------------------- | --------------------------- |
-| Gasto (incluye gasto fijo) | `transactions.account_id`             | baja                | sí (es un gasto)            |
-| Pago de préstamo           | movimiento enlazado (casilla marcada) | baja                | sí (gasto "Deudas")         |
-| Abono de cuenta por cobrar | movimiento enlazado (casilla marcada) | sube                | sí (ingreso "Cobros")       |
-| Pago de tarjeta            | `debt_entries.account_id`             | baja                | no                          |
-| Avance de tarjeta          | `debt_entries.account_id`             | sube                | no                          |
-| Aporte a una meta          | `goal_contributions.account_id`       | baja                | no                          |
-| Retiro de una meta         | `goal_contributions.account_id`       | sube                | no                          |
+| Operación                  | Dónde queda la cuenta                 | Efecto en la cuenta | Crea fila en `transactions`      |
+| -------------------------- | ------------------------------------- | ------------------- | -------------------------------- |
+| Gasto (incluye gasto fijo) | `transactions.account_id`             | baja                | sí (es un gasto)                 |
+| Pago de préstamo           | movimiento enlazado (casilla marcada) | baja                | sí (gasto "Deudas")              |
+| Abono de cuenta por cobrar | movimiento enlazado (casilla marcada) | sube                | sí (ingreso "Cobros")            |
+| Pago de tarjeta            | `debt_entries.account_id`             | baja                | no                               |
+| Avance de tarjeta          | movimiento enlazado (SPEC 36)         | sube                | sí (ingreso "Avance de tarjeta") |
+| Aporte a una meta          | `goal_contributions.account_id`       | baja                | no                               |
+| Retiro de una meta         | `goal_contributions.account_id`       | sube                | no                               |
 
-Pagos y avances de tarjeta, aportes y retiros mueven capital: **no son
-ingreso ni gasto**, igual que los traspasos. Reportes, Presupuestos y score
-dan los mismos números antes y después de registrarlos con cuenta.
+Pagos de tarjeta, aportes y retiros mueven capital: **no son ingreso ni
+gasto**, igual que los traspasos. Reportes, Presupuestos y score dan los
+mismos números antes y después de registrarlos con cuenta. El avance de
+tarjeta con cuenta es la excepción desde SPEC 36: es un ingreso.
 
 **Fórmulas de saldo** (siempre calculadas, nunca guardadas)
 
@@ -1354,21 +1356,40 @@ dan los mismos números antes y después de registrarlos con cuenta.
 saldo deuda  = saldo inicial − Σ pagos + Σ ajustes + Σ avances
 saldo cuenta = (fórmula de Cuentas)
              − Σ pagos de tarjeta con cuenta
-             + Σ avances de tarjeta con cuenta
+             + Σ avances de tarjeta con cuenta en la entrada (solo antiguos)
              − Σ aportes de metas con cuenta   (un retiro es negativo y suma)
 ```
+
+El avance con cuenta suma a la cuenta por su ingreso, que ya entra en la
+fórmula de Cuentas. La rama de avances con `debt_entries.account_id` solo
+cubre los antiguos que la migración de SPEC 36 no pudo convertir.
 
 `debt_overview`, `check_debt_balance` y `score_balances` suman los avances al
 saldo de la deuda; `account_balances` y `account_monthly_balances` suman los tres
 orígenes nuevos.
 
-**Avance de tarjeta**
+**Avance de tarjeta** (SPEC 16 y 36)
 
 - Solo en tarjetas (la BD lo rechaza en préstamos y cuentas por cobrar). El
   diálogo de pago tiene los tabs **Pago**, **Abono** y **Avance**.
-- Sube el saldo de la tarjeta y, con cuenta, el de la cuenta. No lleva
-  traspaso. Una comisión o interés propio del avance se corrige con
-  "Actualizar saldo".
+- Sube el saldo de la tarjeta. No lleva traspaso. Una comisión o interés
+  propio del avance se corrige con "Actualizar saldo".
+- **Con cuenta es un ingreso** (SPEC 36): `record_card_advance` crea, en la
+  misma transacción, un ingreso en la cuenta elegida (categoría de sistema
+  **Avance de tarjeta**, descripción "Avance <tarjeta>", monto, fecha y hora
+  del avance) y la entrada `advance` enlazada por `transaction_id`, sin
+  `account_id`. El ingreso suma en Resumen, Reportes, gráficas, exportes y
+  score como cualquier ingreso. Decisión del usuario: para él es dinero nuevo
+  en su cuenta; si molesta en el score, otro spec puede excluir la categoría.
+- **Sin cuenta** solo sube la deuda y no crea movimiento: no entró dinero a
+  una cuenta registrada.
+- El avance manda sobre su ingreso, como en préstamos y cuentas por cobrar
+  (SPEC 26): editarlo desde la tarjeta copia monto, fecha y hora al ingreso
+  (`sync_debt_entry_transaction`) y eliminarlo borra los dos.
+- La migración `card_advance_as_income` convirtió los avances anteriores con
+  cuenta: cada uno recibió su ingreso y la cuenta pasó al movimiento, sin
+  cambiar saldos. Los que no se pudieron convertir (tarjeta pagada o
+  archivada) siguen como fila gris de capital.
 
 **Abono extra** (SPEC 26)
 
@@ -1402,6 +1423,14 @@ Si el saldo de la cuenta elegida es menor al pago, el diálogo avisa "Nequi
 tiene $ 50.000. Faltan $ 250.000" y el switch arranca encendido. Solo avisa:
 el saldo negativo sigue permitido.
 
+**Dirección del dinero** (SPEC 36): la prop `direction` dice si el dinero
+sale (`"out"`, por defecto) o entra (`"in"`) a la cuenta. Usan `"in"` los
+cobros y abonos de Me deben (incluido **Marcar pagada**), el tab **Avance**
+de tarjetas y el **Retiro** de metas. En `"in"` no hay faltante ni traspaso:
+debajo del select dice "Nequi tiene $ 20.000. Quedará en $ 120.000" en texto
+atenuado (sin monto válido, solo "Saldo de Nequi: $ 20.000"). Cada uso fija
+la dirección explícita.
+
 En préstamos y cuentas por cobrar la sección aparece solo con la casilla
 "Registrar como gasto/ingreso" marcada, porque la cuenta es la del
 movimiento creado. Un abono no admite traspaso (el dinero entra). En gastos,
@@ -1428,11 +1457,16 @@ el traspaso se ofrece en los nuevos de Personal; al editar no hay sección.
 
 **Movimientos**
 
-Los pagos y avances de tarjeta y los aportes y retiros con cuenta aparecen en
-la lista unificada (`ledger_entries`, kinds `debt_payment`, `debt_advance` y
-`goal_contribution`), en gris y sin sumar a los totales. Se editan y eliminan
-desde Movimientos con el diálogo de la deuda o la meta (SPEC 26, ver
-"Movimientos vinculados"). Entran en el filtro "Traspasos" y en `?account=`.
+Los pagos de tarjeta y los aportes y retiros con cuenta aparecen en la lista
+unificada (`ledger_entries`, kinds `debt_payment` y `goal_contribution`), en
+gris y sin sumar a los totales. Se editan y eliminan desde Movimientos con el
+diálogo de la deuda o la meta (SPEC 26, ver "Movimientos vinculados"). Entran
+en el filtro "Traspasos" y en `?account=`.
+
+El avance con cuenta aparece como ingreso normal (SPEC 36), con el ícono de
+billete y la categoría **Avance de tarjeta**; Editar y Eliminar abren el
+diálogo del avance en la tarjeta. El kind `debt_advance` solo queda para los
+avances antiguos que la migración no convirtió.
 
 ### Seguridad
 
@@ -1447,7 +1481,8 @@ desde Movimientos con el diálogo de la deuda o la meta (SPEC 26, ver
 - Pagos desde cuentas (SPEC 16): FK compuesta `(account_id, workspace_id)` en
   `debt_entries` y `goal_contributions`, y `check_account_active` en ambas.
   `check_debt_entry` rechaza `advance` fuera de tarjetas y `account_id` fuera de
-  pagos y avances de tarjeta. `record_card_advance`, `record_goal_contribution`
+  pagos de tarjeta (SPEC 36: el avance lleva la cuenta en su ingreso, que debe
+  ser `type = 'income'`). `record_card_advance`, `record_goal_contribution`
   y `record_transaction` son `security invoker` y solo las ejecuta
   `authenticated`; el traspaso interno (`create_payment_transfer`) no se expone.
 
@@ -2204,8 +2239,9 @@ la más reciente) y **Movimientos**.
 Reglas de los datos:
 
 - Movimientos son ingresos, gastos y traspasos. Los traspasos no suman a
-  ingresos ni gastos. Ajustes, pagos o avances de tarjeta y aportes a metas no
-  van en Movimientos, pero sí mueven **Saldos por cuenta**.
+  ingresos ni gastos. Ajustes, pagos de tarjeta y aportes a metas no van en
+  Movimientos, pero sí mueven **Saldos por cuenta**. Un avance con cuenta va
+  como ingreso (SPEC 36).
 - **Saldos por cuenta** sale de la RPC `account_balances_by_month`, con el
   mismo cálculo que el saldo de Cuentas. Inicio + entradas − salidas = cierre;
   un saldo inicial con fecha cuenta como entrada de ese día. Las cuentas

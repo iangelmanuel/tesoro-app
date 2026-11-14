@@ -92,7 +92,9 @@ SPEC 24:
   (`data-surface="site"`); el gris de `--background` es del dashboard y la
   auth.
 - **Header**: `Logo`, `SITE.navigation.main` en una pastilla al centro, el
-  enlace a GitHub con sus estrellas, el toggle de tema y los botones de sesión.
+  enlace a GitHub con sus estrellas y los botones de sesión. Las páginas
+  públicas van siempre en claro, sin selector de tema (SPEC 40); el tema se
+  elige en el dashboard.
   Es transparente arriba y gana fondo al hacer scroll. Los botones son una isla
   en `<Suspense>` que lee la sesión con `getClaims()`; el fallback es el
   estado sin sesión ("Iniciar sesión" y "Crear cuenta") y con sesión muestra

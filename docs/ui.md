@@ -486,28 +486,40 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
   pasa a `#FFFFFF` y `--surface` a `oklch(0.975 0.003 264)` (las tarjetas se
   separan del blanco por tono y por `--surface-shadow`; `--muted` da 5,6:1
   sobre ellas y 6:1 sobre el blanco). El dashboard y la auth conservan el
-  gris. El oscuro no cambia.
+  gris.
+- **Siempre en claro:** el `ThemeProvider` (`theme-provider.tsx`) no vive en
+  el layout raíz sino en cada grupo de rutas. `app/(public)/layout.tsx` lo
+  monta con `forcedTheme="light"` (landing, legales y `/mcp`); el
+  dashboard, `(auth)`, `/account-deleted` y `/oauth` lo montan normal. Así
+  no hace falta leer la URL en la raíz (con `cacheComponents`,
+  `usePathname` fuera de `<Suspense>` rompe el prerender) y next-themes, que
+  ignora un proveedor anidado, tiene uno solo por árbol. El tema elegido se
+  guarda igual y vuelve en el dashboard. El header público no tiene
+  selector de tema (`site-theme-toggle.tsx` se borró).
 - **Hero** (`hero.tsx`, componente de servidor, y `hero-video.tsx`): toda
-  la primera pantalla (`min-h-[max(36rem,100svh)]`), oscura en los dos temas
-  (clase `dark` en la sección), con `-mt-16` para empezar en y = 0 bajo el
-  header y el texto apoyado abajo a la izquierda. Capas, de abajo arriba: pósters en `<picture>`
+  la primera pantalla (`min-h-[max(36rem,100svh)]`), clara, con `-mt-16`
+  para empezar en y = 0 bajo el header y el texto oscuro apoyado abajo a la
+  izquierda. Capas, de abajo arriba: pósters en `<picture>`
   (`hero-poster.webp` / `hero-mobile-poster.webp`, `fetchPriority="high"`,
   son el LCP), el `<video>` (autoplay, muted, loop, `preload="metadata"`,
   WebM/MP4 por `media`), ambos dentro de `.hero-media` (entra de 1.06 a 1),
-  y el velo `.hero-veil` (`globals.css`): degradado vertical 50 → 35 → 72 →
-  88 % más una capa lateral desde 1024 px. El texto atenuado empieza por
-  debajo de la mitad (65–72 % del alto), donde el velo es ≥ 72 %: da 4,7:1
-  sobre el fotograma más claro.
+  y el velo `.hero-veil` (`globals.css`): blanco al 12 % arriba y hasta
+  34 % en la mitad baja, más un fundido corto abajo. El video va en color
+  natural, corregido en Hyperframes con `adjust` (exposición +0,12,
+  contraste −0,2, sombras +0,35, negros +0,3, saturación −0,2; sin LUT ni
+  viñeta). Medido sobre el render, el 5 % más oscuro de la zona del texto
+  queda en Y ≥ 0,038; con el velo, la bajada y las promesas en
+  `text-foreground` dan ≥ 4,5:1 y el slogan en `.hero-accent` (emerald-900)
+  ≥ 3:1. La navegación del header, "Iniciar sesión" y las estrellas de
+  GitHub también van en `text-foreground`.
   `hero-video.tsx` solo pausa fuera de pantalla y, con reduced motion o
   Save-Data, quita las fuentes y marca `data-paused` (CSS oculta el video y
   queda el póster). Ningún tamaño depende de JS.
 - **Header** (`site-header.tsx`, `site-header-shell.tsx`): una línea sin
-  pastillas ni divisores; "Iniciar sesión" como texto y "Crear cuenta"
-  compacto (`SiteHeaderSession size="compact"`; en el cajón móvil van los de
-  44 px). Estados: transparente arriba, cristal oscuro sobre el hero y fondo
-  translúcido con línea de `--separator` (sombra, no borde) al salir. Lleva
-  `dark` mientras el borde inferior del hero esté por debajo de él (se mide
-  en el scroll) y sus colores se funden en 300 ms.
+  pastillas ni divisores ni selector de tema; "Iniciar sesión" como texto y
+  "Crear cuenta" compacto (`SiteHeaderSession size="compact"`; en el cajón
+  móvil van los de 44 px). Transparente arriba y, con scroll, fondo
+  translúcido con desenfoque y línea de `--separator` (sombra, no borde).
 - **Scrollbar** (`globals.css`): `scrollbar-width: thin` y
   `scrollbar-color: var(--scrollbar) transparent` en todo el proyecto, con
   respaldo `::-webkit-scrollbar` (10 px, pulgar pill) para Safari.
@@ -695,9 +707,8 @@ Piezas en `src/components/dashboard/mobile/`:
 - **Reduced motion y sin JS:** no hay estado oculto; todo se ve en su estado
   final y el hero se queda en el póster.
 - **Peso de la landing:** `ToastProvider` solo en `app/dashboard/layout.tsx`,
-  enlaces a auth con `prefetch={false}`, cajón móvil del header cargado al
-  abrirlo y `SiteThemeToggle` como botón nativo. Así la landing no carga
-  react-aria al inicio.
+  enlaces a auth con `prefetch={false}` y cajón móvil del header cargado al
+  abrirlo. Así la landing no carga react-aria al inicio.
 
 ## Accesibilidad
 

@@ -72,7 +72,9 @@ vistazo y sabe qué hacer después, sin aprender contabilidad.
 - Restricciones visuales fijadas por SPEC 14 (se registran aquí, el detalle
   vive en DESIGN.md / `docs/ui.md`):
   - tema HeroUI v3 con los tokens de `src/styles/globals.css`;
-  - oscuro por defecto sobre una base casi negra, con claro disponible;
+  - en el dashboard, oscuro por defecto sobre una base casi negra, con
+    claro disponible; las páginas públicas (landing, legales) siempre en
+    claro sobre blanco (SPEC 40);
   - un solo acento por espacio: neutro fuera de los espacios, emerald en
     Personal y naranja en Empresa, aplicado por ruta y nunca por props;
   - simplicidad y densidad media;

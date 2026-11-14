@@ -1,6 +1,6 @@
 # SPEC 40 — Hero con video de fondo sin Three.js y pulido de landing y dashboard
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 12, SPEC 24, SPEC 31, SPEC 37, SPEC 38
 > **Fecha:** 2026-11-13 (ampliado 2026-11-14)
 > **Objetivo:** Reemplazar la escena 3D del hero por un hero tipográfico sobre un video de fondo con tinte verde, que se pinte completo y estable en la primera carga; rediseñar las secciones de score y espacios de la landing; dejar el fondo claro de la landing en blanco puro; poner iconos de redes en el footer; y pulir en el dashboard el selector de mes de Gastos e Ingresos fijos, los paneles laterales de detalle y el pie del aside.
@@ -130,18 +130,23 @@ Cada cambio de los puntos 6 a 8 actualiza su estado de carga en la misma tarea, 
 
 - El video ocupa toda la primera pantalla (`100svh`, mínimo 36 rem), también detrás del header: el hero empieza en y = 0, sin la línea blanca de 1 px que dejaba el borde del header.
 - El texto se apoya abajo a la izquierda, como el pie de una foto: título más grande (hasta 4,5 rem) con la segunda parte del slogan en el verde de marca (color sólido), bajada, CTA principal y "Ver la demo" como botón de cristal, y las promesas en una franja inferior sobre una línea fina.
-- El velo pasa a un degradado vertical (claro arriba, denso abajo) más una capa lateral desde 1024 px; todo el texto sigue dando AA sobre el fotograma más claro.
+- **Hero claro (ajuste del usuario):** el video va en color natural, sin tinte verde, solo más luminoso (sombras levantadas, menos contraste y saturación, sin viñeta), y se ve completo bajo un velo blanco suave (12 % arriba, hasta 34 % detrás del texto) con un fundido corto abajo. La toma de billetes sobre mesa negra se cambia por una de manos intercambiando billetes sobre fondo claro. El texto pasa a oscuro: bajada y promesas en el color de texto completo y el verde del slogan en un verde profundo, para dar AA sobre las zonas más oscuras del video.
 - Entrada: el video se asienta de 1.06 a 1 en 2,4 s (expo.out). Sin animación con reduced motion.
 
 ### 12. Header de la landing minimalista (ampliación)
 
-- Una sola línea, sin pastilla ni divisores: logo, navegación como texto, GitHub con estrellas, tema, "Iniciar sesión" como texto y "Crear cuenta" compacto. Misma información que antes.
-- Tres estados: transparente arriba; cristal oscuro con scroll mientras sigue sobre el hero; fondo de la página translúcido con una línea fina al salir del hero. El tema solo cambia al cruzar el borde inferior del hero, y los colores se funden en 300 ms.
+- Una sola línea, sin pastilla ni divisores: logo, navegación como texto, GitHub con estrellas, "Iniciar sesión" como texto y "Crear cuenta" compacto.
+- Sin selector de tema (ver punto 14). Transparente arriba y, con scroll, fondo de la página translúcido con una línea fina, en 300 ms.
 - En móvil no cambia: menú en cajón con la sesión y GitHub.
 
 ### 13. Scrollbar del proyecto (ampliación)
 
 - Scrollbar fina en todo el proyecto (`scrollbar-width: thin`, con respaldo `::-webkit-scrollbar` para Safari), sin carril visible, con los grises neutros del sistema (`--scrollbar` y `--scrollbar-hover`, matiz 264) en claro y oscuro.
+
+### 14. Páginas públicas siempre en claro (ampliación)
+
+- La landing, las legales y `/mcp` van siempre en claro, sin importar el tema elegido: `forcedTheme="light"` de next-themes según la ruta. Se quita el selector de tema del header público (`site-theme-toggle.tsx`).
+- El dashboard y la auth conservan el tema del usuario y su selector (menú de cuenta).
 
 **Fuera de alcance (para otros specs):**
 
@@ -208,39 +213,41 @@ docs/producto.md, docs/ui.md, docs/creditos-media.md,
 
 **Landing**
 
-- [ ] `grep -r "three" src app package.json` no encuentra imports ni dependencias de Three.js.
-- [ ] `hero-scene.tsx`, `hero-scene-loader.tsx` y `hero-visual.tsx` no existen.
-- [ ] El hero muestra título, subtítulo, dos CTA y promesas sobre el video con tinte verde; no hay mockup ni visual a la derecha.
-- [ ] El video no lleva texto, logo, caras en primer plano ni marcas; cada clip está en `docs/creditos-media.md` con licencia de uso comercial libre.
-- [ ] El loop no muestra un corte visible al reiniciar.
-- [ ] Los archivos del hero suman ≤ 4 MB y `public/videos/` ≤ 30 MB.
-- [ ] Con JavaScript deshabilitado, el hero se ve completo, con el mismo tamaño y el mismo encuadre que con JavaScript.
-- [ ] Lighthouse móvil de `/` da CLS ≤ 0,02 y ningún cambio visible de tamaño del hero tras la carga.
-- [ ] A 390 × 844, título, subtítulo y CTA principal se ven sin desplazar, con el video móvil vertical.
-- [ ] Con `prefers-reduced-motion: reduce` no hay animación de entrada y solo se ve el póster (el video no se reproduce).
-- [ ] Todo texto del hero da AA sobre el fotograma más claro del loop, en claro y oscuro.
-- [ ] En claro, el fondo de la landing y de las páginas legales es `#FFFFFF`; el dashboard conserva su gris.
-- [ ] La sección de espacios muestra la misma información que antes; la de score muestra la cifra con su banda y los siete factores con su peso. Ninguna usa rejillas de tarjetas iguales ni iconos decorativos.
-- [ ] El hero ocupa toda la primera pantalla, empieza en y = 0 (sin línea blanca arriba) y apoya el texto abajo a la izquierda.
-- [ ] El header de la landing no cambia de tema mientras está sobre el hero; al salir, el cambio se funde sin salto. Muestra logo, navegación, GitHub, tema y sesión.
-- [ ] La scrollbar es fina y gris en claro y oscuro, en la landing y en el dashboard.
-- [ ] El footer muestra el icono de cada red, con nombre accesible y objetivo de 44 px o más en móvil.
+- [x] `grep -r "three" src app package.json` no encuentra imports ni dependencias de Three.js.
+- [x] `hero-scene.tsx`, `hero-scene-loader.tsx` y `hero-visual.tsx` no existen.
+- [x] El hero muestra título, subtítulo, dos CTA y promesas sobre el video de ambiente; no hay mockup ni visual a la derecha.
+- [x] El video no lleva texto, logo, caras en primer plano ni marcas; cada clip está en `docs/creditos-media.md` con licencia de uso comercial libre.
+- [x] El loop no muestra un corte visible al reiniciar.
+- [x] Los archivos del hero suman ≤ 4 MB y `public/videos/` ≤ 30 MB.
+- [x] Con JavaScript deshabilitado, el hero se ve completo, con el mismo tamaño y el mismo encuadre que con JavaScript.
+- [x] Lighthouse móvil de `/` da CLS ≤ 0,02 y ningún cambio visible de tamaño del hero tras la carga.
+- [x] A 390 × 844, título, subtítulo y CTA principal se ven sin desplazar, con el video móvil vertical.
+- [x] Con `prefers-reduced-motion: reduce` no hay animación de entrada y solo se ve el póster (el video no se reproduce).
+- [x] Todo texto del hero da AA sobre las zonas más oscuras del video (la landing va siempre en claro).
+- [x] En claro, el fondo de la landing y de las páginas legales es `#FFFFFF`; el dashboard conserva su gris.
+- [x] La sección de espacios muestra la misma información que antes; la de score muestra la cifra con su banda y los siete factores con su peso. Ninguna usa rejillas de tarjetas iguales ni iconos decorativos.
+- [x] El hero ocupa toda la primera pantalla, empieza en y = 0 (sin línea blanca arriba) y apoya el texto abajo a la izquierda.
+- [x] El header de la landing muestra logo, navegación, GitHub y sesión, sin selector de tema.
+- [x] Con el tema oscuro elegido en el dashboard, la landing, las legales y `/mcp` se ven en claro; al volver al dashboard sigue en oscuro.
+- [x] El hero se ve claro: el video completo, sin bordes negros ni bloques blancos encima, y el texto oscuro da AA sobre su tono más oscuro.
+- [x] La scrollbar es fina y gris en claro y oscuro, en la landing y en el dashboard.
+- [x] El footer muestra el icono de cada red, con nombre accesible y objetivo de 44 px o más en móvil.
 
 **Dashboard**
 
-- [ ] Movimientos, Gastos fijos, Ingresos fijos y Presupuestos usan el mismo componente de selector de mes, con aspecto de píldora.
-- [ ] En Gastos fijos e Ingresos fijos el selector ya no está suelto dentro de la tarjeta de pagos.
-- [ ] Los cinco paneles de detalle usan `DetailSheet`, siguen el mismo orden de secciones y abren abajo en móvil y a la derecha en escritorio.
-- [ ] En cada panel, la acción principal se ve sin desplazar en escritorio.
-- [ ] El pie del aside solo tiene el menú de cuenta; el menú incluye Ayuda (abre GitHub en otra pestaña) y tabs Claro / Oscuro que cambian el tema sin cerrar el menú.
-- [ ] Los skeletons de Movimientos, Gastos fijos, Ingresos fijos, Presupuestos, los paneles de detalle y el aside coinciden en forma y tamaño con el contenido nuevo: al terminar la carga no hay salto (comprobado con red lenta en DevTools).
-- [ ] Ningún skeleton muestra piezas que ya no existen (flechas sueltas del mes, fila Ayuda + tema del aside).
-- [ ] Todo par texto/fondo nuevo da AA en claro y oscuro; controles de 44 px o más en móvil.
+- [x] Movimientos, Gastos fijos, Ingresos fijos y Presupuestos usan el mismo componente de selector de mes, con aspecto de píldora.
+- [x] En Gastos fijos e Ingresos fijos el selector ya no está suelto dentro de la tarjeta de pagos.
+- [x] Los cinco paneles de detalle usan `DetailSheet`, siguen el mismo orden de secciones y abren abajo en móvil y a la derecha en escritorio.
+- [ ] En cada panel, la acción principal se ve sin desplazar en escritorio. _(Pendiente: revisión visual con sesión.)_
+- [x] El pie del aside solo tiene el menú de cuenta; el menú incluye Ayuda (abre GitHub en otra pestaña) y tabs Claro / Oscuro que cambian el tema sin cerrar el menú.
+- [ ] Los skeletons de Movimientos, Gastos fijos, Ingresos fijos, Presupuestos, los paneles de detalle y el aside coinciden en forma y tamaño con el contenido nuevo: al terminar la carga no hay salto (comprobado con red lenta en DevTools). _(Pendiente: revisión visual con sesión.)_
+- [x] Ningún skeleton muestra piezas que ya no existen (flechas sueltas del mes, fila Ayuda + tema del aside).
+- [ ] Todo par texto/fondo nuevo da AA en claro y oscuro; controles de 44 px o más en móvil. _(Pendiente: revisión visual con sesión.)_
 
 **Proyecto**
 
-- [ ] `pnpm-lock.yaml` está sincronizado (`pnpm install --frozen-lockfile` pasa).
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] `pnpm-lock.yaml` está sincronizado (`pnpm install --frozen-lockfile` pasa).
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
 
 ## Decisiones
 
@@ -258,6 +265,7 @@ docs/producto.md, docs/ui.md, docs/creditos-media.md,
 - **Sí:** toda la dirección visual se define con Impeccable antes de codificar (pedido del usuario).
 - **Sí:** simplificar la sección de score aunque deje fuera las descripciones y los rangos (pedido del usuario tras ver la primera versión). Motivo: se leía llena y confusa.
 - **Sí:** hero a pantalla completa, header minimalista y scrollbar global dentro de este spec (pedido del usuario).
+- **Sí:** páginas públicas siempre en claro y hero claro (pedido del usuario tras ver el hero oscuro). Reemplaza la decisión de banda oscura en los dos temas.
 
 ## Riesgos
 

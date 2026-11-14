@@ -82,7 +82,8 @@ póster WebP del segundo 12,9.
 
 El video del hero (SPEC 40) tampoco graba la app: es un proyecto aparte en
 `video/hero/` con tomas de stock (Pexels, créditos en
-`docs/creditos-media.md`) y el LUT duotono `assets/duotone-emerald.cube`.
+`docs/creditos-media.md`) en color natural, aclaradas con `adjust` de
+`hyperframes media-treatment` (sin LUT ni viñeta).
 
 ```bash
 cd video/hero
@@ -162,8 +163,12 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
 - **`docs/ui.md`** es la guía de la interfaz: tokens, contraste verificado,
   componentes propios, dónde vive cada pantalla y cómo usar los comandos de
   Impeccable (`teach`, `audit`, `critique`, `polish`, `distill`, `animate`).
-- **Tema**: Inter (`next/font/google`, `--font-sans`) y oscuro por defecto
-  (`defaultTheme="dark"`; el toggle del aside cambia a claro). Fondo casi
+- **Tema**: las páginas públicas (`/`, `/legal/*`, `/mcp`) van siempre en
+  claro: `app/(public)/layout.tsx` monta `ThemeProvider` con
+  `forcedTheme="light"` y cada otro grupo de rutas monta el suyo (nunca en el
+  layout raíz, SPEC 40). En el resto,
+  Inter (`next/font/google`, `--font-sans`) y oscuro por defecto
+  (`defaultTheme="dark"`; el tema se cambia en el menú de cuenta). Fondo casi
   negro y tarjetas gris oscuro **sin borde**; radios grandes en tarjetas y
   pill en botones, tabs y selects. Montos con `tabular-nums`.
 - **Un solo título por pantalla**: lo pone el header (`DashboardTitle`); las

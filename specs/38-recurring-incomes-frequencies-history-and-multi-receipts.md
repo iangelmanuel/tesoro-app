@@ -1,6 +1,6 @@
 # SPEC 38 — Ingresos fijos: semanal, diario, cada N días, historial y cobros de varias ocurrencias
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 30, SPEC 37
 > **Fecha:** 2026-11-13
 > **Objetivo:** Que un ingreso fijo pueda ser semanal, diario o cada N días, que se vean todas sus ocurrencias pasadas con su estado (como **Gastos fijos**), y que un solo movimiento pueda cubrir varias ocurrencias o abonar una parte.

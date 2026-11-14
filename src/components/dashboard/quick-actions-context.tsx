@@ -4,6 +4,7 @@ import { createContext, useContext } from "react"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import type { DebtOption } from "@/features/debts/components/payment-dialog"
+import type { CollectableReceivable } from "@/features/debts/receivable-collect"
 import type { GoalOption } from "@/features/goals/components/contribution-dialog"
 import type { UpcomingPayment } from "@/features/recurring-expenses/queries"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
@@ -27,6 +28,8 @@ export interface QuickActionsData {
   goals: GoalOption[]
   /** Deudas activas de Personal (sin cuentas por cobrar) */
   debts: DebtOption[]
+  /** Cuentas por cobrar activas de Personal (tab "Me deben", SPEC 39) */
+  receivables: CollectableReceivable[]
   /** Ocurrencias de gastos fijos de Personal sin pagar (vencidas y pendientes) */
   pendingPayments: UpcomingPayment[]
   /**

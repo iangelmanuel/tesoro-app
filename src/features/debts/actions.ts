@@ -6,16 +6,21 @@ import { shiftMonth, todayISO } from "@/libs/dates"
 import { revalidatePersonalPages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import type { DebtStatus } from "./calculations"
-import { deleteEntryRecord, loadDebt, loadEntry } from "./entry-service"
+import {
+  deleteEntryRecord,
+  loadDebt,
+  loadEntry,
+  recordReceivableCollection
+} from "./entry-service"
 import {
   ADVANCE_ONLY_CARD,
   CARD_TRANSACTION,
   DEBT_NOT_ACTIVE,
   DEBT_NOT_FOUND,
   ENTRY_NOT_FOUND,
-  INSTALLMENT_REQUIRED,
   NEGATIVE_BALANCE,
   OVER_PAYMENT,
+  RECEIVABLE_NOT_FOUND,
   debtPgError
 } from "./errors"
 import { lastPeriodOn, periodOf } from "./receivable-schedule"
@@ -28,6 +33,7 @@ import {
   advanceSchema,
   monthlyReceivableSchema,
   paymentSchema,
+  receivableCollectSchema,
   receivableScheduleSchema
 } from "./schemas"
 import type {
@@ -91,10 +97,19 @@ const PAYMENT_FIELDS = [
   "note",
   "create_transaction",
   "is_extra_payment",
-  "period_on",
   "account_id",
   "transfer_from",
   "transfer_amount"
+] as const
+
+const COLLECT_FIELDS = [
+  "mode",
+  "amount",
+  "period_on",
+  "occurred_on",
+  "note",
+  "create_transaction",
+  "account_id"
 ] as const
 
 const ADVANCE_FIELDS = [
@@ -251,10 +266,11 @@ export async function updateDebt(
   if ("starts_on" in parsed.data) {
     const first = periodOf(parsed.data.starts_on)
     const last = lastPeriodOn(parsed.data)
-    const outside = debt.entries.some(
-      (entry) =>
-        entry.period_on !== null &&
-        (entry.period_on < first || (last !== null && entry.period_on > last))
+    const outside = debt.entries.some((entry) =>
+      entry.allocations.some(
+        ({ period_on }) =>
+          period_on < first || (last !== null && period_on > last)
+      )
     )
     if (outside) {
       return { fieldErrors: { starts_on: [ENTRIES_OUT_OF_RANGE] }, values }
@@ -472,13 +488,6 @@ export async function recordPayment(
     return { fieldErrors: { amount: [OVER_PAYMENT] }, values }
   }
 
-  // Cuota del cobro mensual (SPEC 28): obligatoria. Admite varios abonos
-  // hasta cubrir su valor (SPEC 29). En otras deudas no aplica.
-  const monthly = debt.kind === "receivable" && debt.schedule === "monthly"
-  const periodOn = monthly ? parsed.data.period_on : null
-  if (monthly && periodOn === null) {
-    return { fieldErrors: { period_on: [INSTALLMENT_REQUIRED] }, values }
-  }
   if (debt.kind === "receivable" && parsed.data.transfer_from) {
     return { fieldErrors: { transfer_from: [RECEIVABLE_TRANSFER] }, values }
   }
@@ -510,8 +519,7 @@ export async function recordPayment(
     p_transfer_amount: hasTransfer
       ? (parsed.data.transfer_amount ?? undefined)
       : undefined,
-    p_is_extra_payment: parsed.data.is_extra_payment,
-    p_period_on: periodOn ?? undefined
+    p_is_extra_payment: parsed.data.is_extra_payment
   })
 
   if (error) {
@@ -519,6 +527,43 @@ export async function recordPayment(
       ...debtPgError(error, "amount", OVER_PAYMENT, ENTRY_DEFAULT_ERROR),
       values
     }
+  }
+
+  revalidatePersonalPages()
+  return { ok: true }
+}
+
+// Cobro de una cuenta por cobrar (SPEC 39): Abono o Pago completo en una de
+// cobro único, Una cuota o Varios meses en una mensual. Lo usan el tab Me
+// deben del diálogo de movimiento y el Sheet de la cuenta por cobrar.
+export async function collectReceivable(
+  _prevState: PaymentFormState,
+  formData: FormData
+): Promise<PaymentFormState> {
+  const values = readValues(formData, COLLECT_FIELDS)
+  const debtId = idSchema.safeParse(formData.get("debt_id"))
+
+  if (!debtId.success) {
+    return { fieldErrors: { debt_id: [RECEIVABLE_NOT_FOUND] }, values }
+  }
+
+  const parsed = receivableCollectSchema.safeParse(values)
+  if (!parsed.success) {
+    return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
+  }
+
+  const debt = await findDebt(debtId.data)
+  if (!debt) {
+    return { fieldErrors: { debt_id: [RECEIVABLE_NOT_FOUND] }, values }
+  }
+
+  const result = await recordReceivableCollection(
+    await createClient(),
+    debt,
+    parsed.data
+  )
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
   }
 
   revalidatePersonalPages()

@@ -1,8 +1,10 @@
 import type { Tone } from "@/components/dashboard/tone"
 import { monthRange, shiftMonth } from "@/libs/dates"
 
-// Cuotas de una cuenta por cobrar mensual (SPEC 28 y 29). El estado de cada
-// cuota no se guarda: depende de sus abonos y de la fecha de hoy. Todas las
+// Cuotas de una cuenta por cobrar mensual (SPEC 28, 29 y 39). El estado de
+// cada cuota no se guarda: depende de lo que le asignan los abonos
+// (debt_entry_allocations) y de la fecha de hoy. Un abono puede repartirse
+// entre varias cuotas. Todas las
 // fechas son YYYY-MM-DD en America/Bogota; como texto ISO se comparan en
 // orden cronológico.
 
@@ -21,10 +23,19 @@ export const INSTALLMENT_STATUS: Record<
   overdue: { label: "Atrasada", tone: "danger" }
 }
 
+/** Abono que cubre una cuota: `amount` es la parte asignada a ella */
 export interface InstallmentEntry {
   id: string
   amount: number
   occurred_on: string
+  /** Monto total del abono: mayor que `amount` si cubre varias cuotas */
+  total: number
+}
+
+/** Parte de un abono asignada a una cuota */
+export interface EntryAllocation {
+  period_on: string // YYYY-MM-01
+  amount: number
 }
 
 /** Valor anterior de la cuota: hasta `through_period` valía `amount` */
@@ -58,9 +69,12 @@ export interface MonthlyReceivable {
   installment_history?: readonly InstallmentRate[]
 }
 
-/** Abono con la cuota que cobra */
-export interface PeriodEntry extends InstallmentEntry {
-  period_on: string | null
+/** Abono con las cuotas que cubre */
+export interface PeriodEntry {
+  id: string
+  amount: number
+  occurred_on: string
+  allocations: readonly EntryAllocation[]
 }
 
 const roundCents = (value: number) => Math.round(value * 100) / 100
@@ -143,14 +157,15 @@ export function buildInstallments(
 
   const byPeriod = new Map<string, InstallmentEntry[]>()
   for (const entry of entries) {
-    if (entry.period_on !== null) {
-      const list = byPeriod.get(entry.period_on) ?? []
+    for (const allocation of entry.allocations) {
+      const list = byPeriod.get(allocation.period_on) ?? []
       list.push({
         id: entry.id,
-        amount: entry.amount,
-        occurred_on: entry.occurred_on
+        amount: allocation.amount,
+        occurred_on: entry.occurred_on,
+        total: entry.amount
       })
-      byPeriod.set(entry.period_on, list)
+      byPeriod.set(allocation.period_on, list)
     }
   }
 
@@ -241,11 +256,11 @@ interface DebtEntryRow extends PeriodEntry {
 export function periodPayments(entries: readonly DebtEntryRow[]) {
   return entries
     .filter((entry) => entry.kind === "payment")
-    .map(({ id, amount, occurred_on, period_on }) => ({
+    .map(({ id, amount, occurred_on, allocations }) => ({
       id,
       amount,
       occurred_on,
-      period_on
+      allocations
     }))
 }
 

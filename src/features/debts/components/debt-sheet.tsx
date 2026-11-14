@@ -19,6 +19,7 @@ import {
   nextFeeDate
 } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
+import { toCollectableReceivable } from "../receivable-collect"
 import {
   type Installment,
   collectedInYear,
@@ -29,6 +30,7 @@ import { DebtEntriesList } from "./debt-entries-list"
 import { ToneBadge } from "./debt-indicators"
 import { DebtProgress, ReceivableProgress } from "./debt-progress"
 import { PaymentDialog } from "./payment-dialog"
+import { ReceivableCollectDialog } from "./receivable-collect-form"
 import { ReceivableInstallments } from "./receivable-installments"
 import { useDebtAction } from "./use-debt-action"
 
@@ -68,6 +70,7 @@ export function DebtSheet({
   const { pending, run } = useDebtAction(debt)
   // Cuota que se está cobrando con "Marcar pagada"
   const [collecting, setCollecting] = useState<Installment | null>(null)
+  const collectable = toCollectableReceivable(debt, entries, today)
 
   return (
     <Drawer
@@ -167,8 +170,39 @@ export function DebtSheet({
                   </section>
                 )}
 
-                {/* Mes a mes: se cobra desde "Marcar pagada" de cada cuota */}
-                {isActive && isMonthly ? null : isActive ? (
+                {/* Cuentas por cobrar: el formulario de cobro compartido con
+                    el tab Me deben (SPEC 39). Mes a mes no lleva ajustes */}
+                {isActive && isReceivable ? (
+                  <div
+                    className={
+                      isMonthly ? "grid gap-2" : "grid grid-cols-2 gap-2"
+                    }
+                  >
+                    <ReceivableCollectDialog
+                      workspaceId={debt.workspace_id}
+                      receivable={collectable}
+                      accounts={accounts ?? []}
+                      trigger={
+                        <Button isDisabled={!isOpenEnded && debt.balance <= 0}>
+                          <Plus />
+                          Registrar cobro
+                        </Button>
+                      }
+                    />
+                    {!isMonthly && (
+                      <AdjustBalanceDialog
+                        debt={debt}
+                        currency={currency}
+                        trigger={
+                          <Button variant="outline">
+                            <RefreshCw />
+                            Actualizar saldo
+                          </Button>
+                        }
+                      />
+                    )}
+                  </div>
+                ) : isActive ? (
                   <div className="grid grid-cols-2 gap-2">
                     <PaymentDialog
                       workspaceId={debt.workspace_id}
@@ -177,7 +211,7 @@ export function DebtSheet({
                       trigger={
                         <Button isDisabled={debt.balance <= 0}>
                           <Plus />
-                          {isReceivable ? "Registrar abono" : "Registrar pago"}
+                          Registrar pago
                         </Button>
                       }
                     />
@@ -209,20 +243,14 @@ export function DebtSheet({
                   </div>
                 )}
 
-                {/* Cobro de una cuota: el diálogo de abono con la cuota y el
-                    monto mensual prellenado (SPEC 28) */}
+                {/* Cobro de una cuota: "Una cuota" con esa cuota y lo que le
+                    falta prellenado (SPEC 28, 29 y 39) */}
                 {collecting && (
-                  <PaymentDialog
+                  <ReceivableCollectDialog
                     workspaceId={debt.workspace_id}
-                    debt={debt}
-                    accounts={accounts}
-                    installment={{
-                      period_on: collecting.period_on,
-                      // Lo que falta: la cuota completa o el resto si ya
-                      // tiene abonos (SPEC 29)
-                      amount: collecting.remaining,
-                      partial: collecting.status === "partial"
-                    }}
+                    receivable={collectable}
+                    periodOn={collecting.period_on}
+                    accounts={accounts ?? []}
                     open
                     onOpenChange={(open) => {
                       if (!open) setCollecting(null)

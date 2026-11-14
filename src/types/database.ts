@@ -247,7 +247,6 @@ export type Database = {
           note: string | null
           occurred_on: string
           occurred_time: string | null
-          period_on: string | null
           transaction_id: string | null
           updated_at: string
           workspace_id: string
@@ -266,7 +265,6 @@ export type Database = {
           note?: string | null
           occurred_on: string
           occurred_time?: string | null
-          period_on?: string | null
           transaction_id?: string | null
           updated_at?: string
           workspace_id: string
@@ -285,7 +283,6 @@ export type Database = {
           note?: string | null
           occurred_on?: string
           occurred_time?: string | null
-          period_on?: string | null
           transaction_id?: string | null
           updated_at?: string
           workspace_id?: string
@@ -317,6 +314,48 @@ export type Database = {
             columns: ["transaction_id"]
             isOneToOne: true
             referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      debt_entry_allocations: {
+        Row: {
+          amount: number
+          created_at: string
+          entry_id: string
+          id: string
+          period_on: string
+          workspace_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          entry_id: string
+          id?: string
+          period_on: string
+          workspace_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          entry_id?: string
+          id?: string
+          period_on?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "debt_entry_allocations_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "debt_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "debt_entry_allocations_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           }
         ]
@@ -1305,6 +1344,13 @@ export type Database = {
           month: string
         }[]
       }
+      allocate_debt_entry: {
+        Args: { p_entry_id: string; p_period_on?: string }
+        Returns: {
+          amount: number
+          period_on: string
+        }[]
+      }
       allocate_income_receipt: {
         Args: { p_transaction_id: string }
         Returns: {
@@ -1540,6 +1586,17 @@ export type Database = {
       purge_deleted_accounts: { Args: never; Returns: number }
       purge_deleted_workspaces: { Args: never; Returns: number }
       purge_mcp_operations: { Args: never; Returns: number }
+      reallocate_debt_entry: {
+        Args: { p_entry_id: string }
+        Returns: {
+          amount: number
+          period_on: string
+        }[]
+      }
+      receivable_installment_amount: {
+        Args: { p_debt_id: string; p_period_on: string }
+        Returns: number
+      }
       record_card_advance: {
         Args: {
           p_account_id?: string
@@ -1561,7 +1618,6 @@ export type Database = {
           p_note: string
           p_occurred_on: string
           p_occurred_time?: string
-          p_period_on?: string
           p_transfer_amount?: number
           p_transfer_from?: string
         }
@@ -1577,6 +1633,19 @@ export type Database = {
           p_occurred_time?: string
           p_transfer_amount?: number
           p_transfer_from?: string
+        }
+        Returns: string
+      }
+      record_receivable_collection: {
+        Args: {
+          p_account_id?: string
+          p_amount: number
+          p_create_transaction: boolean
+          p_debt_id: string
+          p_mode?: string
+          p_note: string
+          p_occurred_on: string
+          p_period_on?: string
         }
         Returns: string
       }

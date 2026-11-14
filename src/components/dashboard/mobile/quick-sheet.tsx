@@ -51,7 +51,8 @@ export function QuickSheet({
   autoOpen,
   onAutoOpenChange
 }: QuickSheetProps) {
-  const { goals, debts, pendingPayments, incomeSources } = useQuickActions()
+  const { goals, debts, receivables, pendingPayments, incomeSources } =
+    useQuickActions()
   const workspace = useActiveWorkspace()
   const [dialog, setDialog] = useState<QuickSheetAction | null>(null)
 
@@ -141,12 +142,12 @@ export function QuickSheet({
           workspaceType={workspace.type}
           categories={workspace.categories}
           accounts={workspace.accounts}
-          // Personal: tabs "Deuda", "Gasto fijo" y "Meta", y el select
+          // Personal: tabs "Deuda", "Me deben", "Gasto fijo" y "Meta", y el select
           // "Ingreso fijo" del tab Ingreso. Empresa: Venta, Costo o gasto y
           // Traspaso
           paymentTabs={
             isPersonal
-              ? { debts, pendingPayments, goals, incomeSources }
+              ? { debts, receivables, pendingPayments, goals, incomeSources }
               : undefined
           }
           open

@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useEffect, useRef, useState } from "react"
+import type { Route } from "next"
 import Link from "next/link"
 import {
   Button,
@@ -29,11 +30,13 @@ import {
 import { TransferForm } from "@/features/accounts/components/transfer-dialog"
 import { RECURRING_PATH } from "@/features/budgets/tabs"
 import type { Category } from "@/features/categories/queries"
-import { DEBTS_PATH } from "@/features/debts/calculations"
+import { DEBTS_PATH, RECEIVABLES_PATH } from "@/features/debts/calculations"
 import {
   type DebtOption,
   DebtPaymentPanel
 } from "@/features/debts/components/payment-dialog"
+import { ReceivableCollectForm } from "@/features/debts/components/receivable-collect-form"
+import type { CollectableReceivable } from "@/features/debts/receivable-collect"
 import {
   GoalContributionPanel,
   type GoalOption
@@ -124,6 +127,11 @@ interface TransactionDialogProps {
    * conserva
    */
   incomeSources?: IncomeSourceOption[]
+  /**
+   * Tab de pago con el que abre (p. ej. "receivable" desde "Cobro de Me
+   * deben" del menú Más). Solo aplica con `paymentTabs`
+   */
+  initialPanel?: FormPanel
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
   trigger?: React.ReactNode
   open?: boolean
@@ -140,6 +148,7 @@ export function TransactionDialog({
   recurring,
   paymentTabs,
   incomeSources,
+  initialPanel,
   trigger,
   open: controlledOpen,
   onOpenChange
@@ -167,7 +176,7 @@ export function TransactionDialog({
       <Modal.Backdrop>
         <Modal.Container scroll="outside">
           <Modal.Dialog
-            // Con 6 tabs el diálogo se ensancha un poco para que quepan
+            // Con 7 tabs el diálogo se ensancha un poco para que quepan
             className={showPaymentTabs ? "sm:max-w-lg" : "sm:max-w-md"}
           >
             <Modal.CloseTrigger />
@@ -198,6 +207,7 @@ export function TransactionDialog({
                 initialValues={isEditing ? undefined : initialValues}
                 recurring={isEditing ? undefined : recurring}
                 paymentTabs={showPaymentTabs ? paymentTabs : undefined}
+                initialPanel={showPaymentTabs ? initialPanel : undefined}
                 incomeSources={
                   workspaceType === "personal" && !isPayment
                     ? (incomeSources ?? paymentTabs?.incomeSources)
@@ -218,6 +228,8 @@ export function TransactionDialog({
 export interface PaymentTabsData {
   /** Deudas activas: tarjetas y préstamos */
   debts: DebtOption[]
+  /** Cuentas por cobrar activas (tab "Me deben", SPEC 39) */
+  receivables: CollectableReceivable[]
   /** Ocurrencias de gastos fijos sin pagar, vencidas primero */
   pendingPayments: UpcomingPayment[]
   /** Metas activas (tab "Meta") */
@@ -227,7 +239,8 @@ export interface PaymentTabsData {
 }
 
 /** Opciones del selector que no son un tipo de movimiento */
-type FormPanel = "transfer" | "debt_payment" | "recurring" | "goal"
+export type FormPanel =
+  "transfer" | "debt_payment" | "receivable" | "recurring" | "goal"
 
 interface TransactionFormProps {
   workspaceId: string
@@ -239,6 +252,7 @@ interface TransactionFormProps {
   recurring?: RecurringOccurrenceLink
   paymentTabs?: PaymentTabsData
   incomeSources?: IncomeSourceOption[]
+  initialPanel?: FormPanel
   /** Sin selector de tipo (el pago de gasto fijo dentro de su tab) */
   hideTypeToggle?: boolean
   onSaved: () => void
@@ -255,6 +269,7 @@ function TransactionForm({
   recurring,
   paymentTabs,
   incomeSources,
+  initialPanel,
   hideTypeToggle = false,
   onSaved,
   onCancel
@@ -313,7 +328,7 @@ function TransactionForm({
   // Un movimiento nuevo y suelto también puede ser un traspaso entre dos
   // cuentas propias (se guarda en transfers y no cuenta como ingreso ni
   // gasto), un pago de deuda o el pago de un gasto fijo
-  const [panel, setPanel] = useState<FormPanel | null>(null)
+  const [panel, setPanel] = useState<FormPanel | null>(initialPanel ?? null)
   const canTransfer =
     !isEditing && !isLinked && selectableAccounts(accounts).length >= 2
 
@@ -356,6 +371,7 @@ function TransactionForm({
     if (
       value === "transfer" ||
       value === "debt_payment" ||
+      value === "receivable" ||
       value === "recurring" ||
       value === "goal"
     ) {
@@ -437,10 +453,11 @@ function TransactionForm({
     </ToggleButton>
   )
 
-  // Orden de los tabs (SPEC 30). Personal: Gasto, Ingreso, Traspaso, Deuda,
-  // Gasto fijo y Meta. Empresa: Venta, Costo o gasto y Traspaso
+  // Orden de los tabs (SPEC 30 y 39). Personal: Gasto, Ingreso, Traspaso,
+  // Deuda, Me deben, Gasto fijo y Meta. Empresa: Venta, Costo o gasto y
+  // Traspaso
   const typeToggle = hideTypeToggle ? null : (
-    // Con los tabs de pago son 6 opciones. Desde sm caben en el diálogo; en
+    // Con los tabs de pago son 7 opciones. Desde sm caben en el diálogo; en
     // un teléfono angosto se desplazan en horizontal, sin barra visible
     <div
       ref={tabsRef}
@@ -475,6 +492,14 @@ function TransactionForm({
             className="flex-1 whitespace-nowrap"
           >
             Deuda
+          </ToggleButton>
+        )}
+        {paymentTabs && (
+          <ToggleButton
+            id="receivable"
+            className="flex-1 whitespace-nowrap"
+          >
+            Me deben
           </ToggleButton>
         )}
         {paymentTabs && (
@@ -531,6 +556,30 @@ function TransactionForm({
             text="No tienes tarjetas ni préstamos activos."
             href={DEBTS_PATH}
             action="Ir a Deudas"
+            onNavigate={onCancel}
+          />
+        )}
+      </div>
+    )
+  }
+
+  if (panel === "receivable" && paymentTabs) {
+    return (
+      <div className="flex flex-col gap-4">
+        {typeToggle}
+        {paymentTabs.receivables.length > 0 ? (
+          <ReceivableCollectForm
+            workspaceId={workspaceId}
+            receivables={paymentTabs.receivables}
+            accounts={accounts}
+            onSaved={onSaved}
+            onCancel={onCancel}
+          />
+        ) : (
+          <PanelEmpty
+            text="No tienes cuentas por cobrar activas."
+            href={RECEIVABLES_PATH}
+            action="Ir a Me deben"
             onNavigate={onCancel}
           />
         )}
@@ -897,7 +946,7 @@ function PanelEmpty({
   onNavigate
 }: {
   text: string
-  href: typeof DEBTS_PATH | typeof RECURRING_PATH | typeof GOALS_PATH
+  href: Route
   action: string
   /** Cierra el diálogo: el header no se desmonta al navegar */
   onNavigate: () => void

@@ -1,6 +1,6 @@
 import { createClient } from "@/libs/supabase/server"
 import type { Database } from "@/types/database"
-import type { InstallmentRate } from "./receivable-schedule"
+import type { EntryAllocation, InstallmentRate } from "./receivable-schedule"
 
 type DebtRow = Database["public"]["Tables"]["debts"]["Row"]
 type DebtEntryRow = Database["public"]["Tables"]["debt_entries"]["Row"]
@@ -43,6 +43,8 @@ export type DebtEntry = Omit<DebtEntryRow, "amount"> & {
    * enlazado en préstamos y cuentas por cobrar. null = fuera de las cuentas.
    */
   account_name: string | null
+  /** Cuotas que cubre un abono de una mensual (SPEC 39); vacío en el resto */
+  allocations: EntryAllocation[]
 }
 
 const toNumber = (value: number | string | null) =>
@@ -112,7 +114,7 @@ export async function getDebtEntries(debtId: string): Promise<DebtEntry[]> {
   const { data, error } = await supabase
     .from("debt_entries")
     .select(
-      "*, account:accounts!debt_entries_account_id_workspace_id_fkey (name), transaction:transactions!debt_entries_transaction_id_fkey (account:accounts!transactions_account_id_workspace_id_fkey (name))"
+      "*, account:accounts!debt_entries_account_id_workspace_id_fkey (name), transaction:transactions!debt_entries_transaction_id_fkey (account:accounts!transactions_account_id_workspace_id_fkey (name)), allocations:debt_entry_allocations (period_on, amount)"
     )
     .eq("debt_id", debtId)
     .order("occurred_on", { ascending: false })
@@ -122,9 +124,15 @@ export async function getDebtEntries(debtId: string): Promise<DebtEntry[]> {
     throw new Error("No se pudieron cargar los pagos")
   }
 
-  return data.map(({ account, transaction, ...row }) => ({
+  return data.map(({ account, transaction, allocations, ...row }) => ({
     ...row,
     amount: Number(row.amount),
-    account_name: account?.name ?? transaction?.account?.name ?? null
+    account_name: account?.name ?? transaction?.account?.name ?? null,
+    allocations: allocations
+      .map((allocation) => ({
+        period_on: allocation.period_on,
+        amount: Number(allocation.amount)
+      }))
+      .sort((a, b) => a.period_on.localeCompare(b.period_on))
   }))
 }

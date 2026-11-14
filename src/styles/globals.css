@@ -423,3 +423,90 @@
     transform: none;
   }
 }
+
+/* Entrada del video del hero: se asienta de 1.06 a 1 en 2,4 s, la misma
+   curva expo.out. Es el único momento de movimiento de la landing al cargar;
+   el póster ya está en su encuadre final, así que no tapa nada */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-media {
+    animation: hero-media 2.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes hero-media {
+  from {
+    scale: 1.06;
+  }
+  to {
+    scale: 1;
+  }
+}
+
+/* Velo del hero (SPEC 40): más claro arriba, donde solo va el header, y
+   denso abajo, donde va el texto. Con ≥ 72 % detrás del texto atenuado, todo
+   el texto da AA sobre el fotograma más claro del loop. Desde 1024 px una
+   segunda capa oscurece la izquierda, donde se apoya el texto */
+.hero-veil {
+  background: linear-gradient(
+    to bottom,
+    oklch(0 0 0 / 0.5) 0%,
+    oklch(0 0 0 / 0.35) 22%,
+    oklch(0 0 0 / 0.72) 50%,
+    oklch(0 0 0 / 0.88) 100%
+  );
+}
+
+@media (min-width: 1024px) {
+  .hero-veil::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to right,
+      oklch(0 0 0 / 0.45) 0%,
+      oklch(0 0 0 / 0.15) 55%,
+      transparent 100%
+    );
+  }
+}
+
+/* Scrollbar de todo el proyecto: fina, sin flechas ni carril visible, con el
+   gris neutro del sistema (matiz 264). Se aclara al pasar el mouse */
+:root {
+  --scrollbar: oklch(0.83 0.006 264);
+  --scrollbar-hover: oklch(0.7 0.01 264);
+}
+
+.dark {
+  --scrollbar: oklch(0.34 0.005 264);
+  --scrollbar-hover: oklch(0.46 0.006 264);
+}
+
+@supports (scrollbar-color: auto) {
+  * {
+    scrollbar-color: var(--scrollbar) transparent;
+    scrollbar-width: thin;
+  }
+}
+
+/* Safari todavía no tiene scrollbar-color */
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 9999px;
+    background: var(--scrollbar) padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-hover) padding-box;
+  }
+}

@@ -1,5 +1,6 @@
 import { type Debt, getDebts } from "@/features/debts/queries"
 import {
+  type EntryAllocation,
   INSTALLMENT_STATUS,
   type Installment,
   receivableInstallments
@@ -559,7 +560,8 @@ interface DebtEntryLite {
   kind: string
   amount: number
   occurred_on: string
-  period_on: string | null
+  /** Cuotas que cubre un abono de una mensual (SPEC 39) */
+  allocations: EntryAllocation[]
 }
 
 /**
@@ -607,7 +609,9 @@ async function loadDebts(
       (from, to) =>
         supabase
           .from("debt_entries")
-          .select("id, debt_id, kind, amount, occurred_on, period_on")
+          .select(
+            "id, debt_id, kind, amount, occurred_on, allocations:debt_entry_allocations (period_on, amount)"
+          )
           .eq("workspace_id", workspaceId)
           .order("id", { ascending: true })
           .range(from, to),
@@ -616,7 +620,14 @@ async function loadDebts(
   ])
 
   const entriesByDebt = Map.groupBy(
-    entries.map((row) => ({ ...row, amount: Number(row.amount) })),
+    entries.map((row) => ({
+      ...row,
+      amount: Number(row.amount),
+      allocations: row.allocations.map((allocation) => ({
+        period_on: allocation.period_on,
+        amount: Number(allocation.amount)
+      }))
+    })),
     (row) => row.debt_id
   )
 

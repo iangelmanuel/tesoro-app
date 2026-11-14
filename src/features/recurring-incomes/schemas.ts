@@ -2,9 +2,12 @@ import { z } from "zod"
 import { amountSchema } from "@/features/transactions/schemas"
 
 export const INCOME_FREQUENCIES = [
-  "monthly",
+  "weekly",
   "biweekly",
+  "monthly",
   "yearly",
+  "daily",
+  "every_n_days",
   "none"
 ] as const
 

@@ -189,7 +189,9 @@ export function DetailStats({
       {items.map((item, index) => (
         <div
           key={index}
-          className="flex min-w-0 flex-col gap-0.5"
+          // Con un número impar de cifras, la última ("Próximo por pagar",
+          // la más larga) ocupa la fila entera
+          className="flex min-w-0 flex-col gap-0.5 [&:last-child:nth-child(odd)]:col-span-2"
         >
           <dt className="text-muted">{item.label}</dt>
           <dd className={cn("font-medium tabular-nums", item.className)}>

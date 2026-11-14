@@ -135,14 +135,17 @@ export async function RecurringIncomeView({
                 : `Ingresos de ${month.label}`
             }
             help="upcomingIncomes"
+            control={
+              <MonthNav
+                path={SITE.routes.personalRecurringIncome}
+                label={month.label}
+                prev={month.prev}
+                next={month.next}
+                on="card"
+              />
+            }
           />
           <CardContent className="flex flex-col gap-3">
-            <MonthNav
-              path={SITE.routes.personalRecurringIncome}
-              label={month.label}
-              prev={month.prev}
-              next={month.next}
-            />
             {monthIncomes.length > 0 && (
               <p className="text-sm text-muted">
                 Recibido{" "}

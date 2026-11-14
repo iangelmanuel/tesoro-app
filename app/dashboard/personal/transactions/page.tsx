@@ -3,6 +3,7 @@ import { Skeleton } from "@heroui/react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
+import { MonthSwitcherSkeleton } from "@/components/dashboard/month-switcher"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { getCategories } from "@/features/categories/queries"
 import { getIncomeSources } from "@/features/recurring-incomes/queries"
@@ -163,7 +164,7 @@ function TransactionsSkeleton() {
       <div className="flex flex-wrap gap-2">
         {/* Mismo orden que los filtros: buscador; mes + Filtros en el teléfono */}
         <Skeleton className="h-11 w-full rounded-3xl md:min-w-72 md:flex-1 md:basis-72" />
-        <Skeleton className="h-11 flex-1 rounded-3xl md:w-52 md:flex-none" />
+        <MonthSwitcherSkeleton className="w-auto flex-1 md:flex-none" />
         <Skeleton className="h-11 w-28 rounded-3xl md:hidden" />
         <Skeleton className="h-11 w-11 rounded-3xl sm:w-28" />
       </div>

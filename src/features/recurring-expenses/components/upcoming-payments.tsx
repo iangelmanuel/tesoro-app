@@ -1,12 +1,13 @@
 import { Button, Chip, cn } from "@heroui/react"
 import { Check } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import { TONE_BADGE_CLASSES as TONE_BADGE } from "@/components/dashboard/tone"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
-import { formatCurrency, formatDate, formatShortDate } from "@/libs/format"
+import { formatDate, formatShortDate } from "@/libs/format"
 import {
   OCCURRENCE_STATUS,
   type OccurrenceStatus,
@@ -125,7 +126,10 @@ function AmountText({
         className
       )}
     >
-      {formatCurrency(payment.paidAmount ?? payment.amount, currency)}
+      <Amount
+        value={payment.paidAmount ?? payment.amount}
+        currency={currency}
+      />
     </p>
   )
 }

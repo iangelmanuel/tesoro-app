@@ -18,7 +18,10 @@ interface MonthNavProps {
   "data-tour"?: string
 }
 
-/** Anterior, mes y siguiente. Reemplaza `?month` sin mover el scroll. */
+/**
+ * Anterior, mes y siguiente. Reemplaza `?month` sin mover el scroll. Las
+ * flechas miden 44 px en el teléfono.
+ */
 export function MonthNav({
   path,
   label,
@@ -46,7 +49,7 @@ export function MonthNav({
       <Button
         variant="ghost"
         isIconOnly
-        className={CONTROL_BUTTON}
+        className={cn(CONTROL_BUTTON, "max-md:size-11")}
         aria-label="Mes anterior"
         isDisabled={prev === null}
         onPress={() => prev !== null && goTo(prev)}
@@ -62,7 +65,7 @@ export function MonthNav({
       <Button
         variant="ghost"
         isIconOnly
-        className={CONTROL_BUTTON}
+        className={cn(CONTROL_BUTTON, "max-md:size-11")}
         aria-label="Mes siguiente"
         isDisabled={next === null}
         onPress={() => next !== null && goTo(next)}

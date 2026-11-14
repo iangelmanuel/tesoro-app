@@ -11,6 +11,7 @@ import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { formatMonthYear } from "@/features/debts/calculations"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
+import { useIsMobile } from "@/hooks/use-is-mobile"
 import { currentMonth } from "@/libs/dates"
 import { formatDate, formatShortDate } from "@/libs/format"
 import { loadRecurringExpenseHistory } from "../actions"
@@ -83,6 +84,7 @@ export function RecurringExpenseSheet({
   }, [open, expense.id, expense.is_active, expense.updated_at, limit, version])
 
   const isYearly = expense.frequency === "yearly"
+  const isMobile = useIsMobile()
 
   return (
     <>
@@ -91,8 +93,16 @@ export function RecurringExpenseSheet({
         onOpenChange={onOpenChange}
       >
         <Drawer.Backdrop>
-          <Drawer.Content placement="right">
-            <Drawer.Dialog className="w-full sm:max-w-md">
+          {/* < 768 px: hoja inferior con asa, como los demás Sheets móviles */}
+          <Drawer.Content placement={isMobile ? "bottom" : "right"}>
+            <Drawer.Dialog
+              className={
+                isMobile
+                  ? "max-h-[90dvh] pb-[env(safe-area-inset-bottom)]"
+                  : "w-full sm:max-w-md"
+              }
+            >
+              {isMobile && <Drawer.Handle />}
               <Drawer.CloseTrigger aria-label="Cerrar" />
               <Drawer.Header>
                 <div className="flex flex-wrap items-center gap-2">

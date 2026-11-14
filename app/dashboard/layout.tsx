@@ -18,6 +18,7 @@ import {
   parseSidebarWidth
 } from "@/components/dashboard/sidebar/width"
 import { WorkspaceThemeRoot } from "@/components/dashboard/workspace-theme-root"
+import { ThemeProvider } from "@/components/theme/theme-provider"
 import { SITE } from "@/config/site"
 import { TutorialAutoStart } from "@/features/tutorials/components/tutorial-auto-start"
 import { TutorialHelpButton } from "@/features/tutorials/components/tutorial-help-button"
@@ -96,71 +97,74 @@ async function DashboardPreferencesBoundary({
 export default function DashboardLayout({
   children
 }: Readonly<{ children: React.ReactNode }>) {
+  // Tema del usuario: el proveedor vive por grupo de rutas (SPEC 40)
   return (
-    <WorkspaceThemeRoot>
-      {/* Los toasts solo existen en el dashboard: fuera de aquí, react-aria no
+    <ThemeProvider>
+      <WorkspaceThemeRoot>
+        {/* Los toasts solo existen en el dashboard: fuera de aquí, react-aria no
           entra en el JS de la landing (SPEC 24) */}
-      <ToastProvider placement="bottom end" />
-      <SidebarProvider>
-        {/* Primer elemento enfocable: salta el aside y el header */}
-        <a
-          href="#contenido"
-          className="sr-only z-50 rounded-3xl bg-accent px-4 py-2 text-sm font-medium text-accent-foreground focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
-        >
-          Saltar al contenido
-        </a>
-        <Suspense fallback={<AppSidebarSkeleton />}>
-          <DashboardSidebar />
-        </Suspense>
-        <SidebarInset>
-          {/* Hasta leer el perfil: el header sin acciones y el contenido vacío
+        <ToastProvider placement="bottom end" />
+        <SidebarProvider>
+          {/* Primer elemento enfocable: salta el aside y el header */}
+          <a
+            href="#contenido"
+            className="sr-only z-50 rounded-3xl bg-accent px-4 py-2 text-sm font-medium text-accent-foreground focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+          >
+            Saltar al contenido
+          </a>
+          <Suspense fallback={<AppSidebarSkeleton />}>
+            <DashboardSidebar />
+          </Suspense>
+          <SidebarInset>
+            {/* Hasta leer el perfil: el header sin acciones y el contenido vacío
               (sin números que luego haya que ocultar) */}
-          <Suspense
-            fallback={
-              <>
+            <Suspense
+              fallback={
+                <>
+                  <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 bg-background px-4 md:px-6">
+                    <SidebarTrigger className="-ml-1.5 max-md:size-11" />
+                    <Skeleton className="h-6 w-44 rounded-lg" />
+                  </header>
+                  <main
+                    id="contenido"
+                    tabIndex={-1}
+                    className="flex flex-1 flex-col px-4 pt-2 outline-none md:px-6"
+                  />
+                </>
+              }
+            >
+              <DashboardPreferencesBoundary>
                 <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 bg-background px-4 md:px-6">
+                  {/* En el teléfono abre el Drawer del aside (44 px de área táctil) */}
                   <SidebarTrigger className="-ml-1.5 max-md:size-11" />
-                  <Skeleton className="h-6 w-44 rounded-lg" />
+                  <div className="min-w-0 flex-1">
+                    {/* La ruta y la sesión son dinámicas: hasta resolverlas, un
+                      placeholder del tamaño del título */}
+                    <Suspense
+                      fallback={<Skeleton className="h-6 w-44 rounded-lg" />}
+                    >
+                      <DashboardHeaderTitle />
+                    </Suspense>
+                  </div>
+                  {/* Tutorial, ojo y accesos rápidos del espacio */}
+                  <div className="flex shrink-0 items-center gap-2">
+                    <TutorialHelpButton />
+                    <HideAmountsToggle />
+                    <QuickActions />
+                  </div>
                 </header>
                 <main
                   id="contenido"
                   tabIndex={-1}
-                  className="flex flex-1 flex-col px-4 pt-2 outline-none md:px-6"
-                />
-              </>
-            }
-          >
-            <DashboardPreferencesBoundary>
-              <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 bg-background px-4 md:px-6">
-                {/* En el teléfono abre el Drawer del aside (44 px de área táctil) */}
-                <SidebarTrigger className="-ml-1.5 max-md:size-11" />
-                <div className="min-w-0 flex-1">
-                  {/* La ruta y la sesión son dinámicas: hasta resolverlas, un
-                      placeholder del tamaño del título */}
-                  <Suspense
-                    fallback={<Skeleton className="h-6 w-44 rounded-lg" />}
-                  >
-                    <DashboardHeaderTitle />
-                  </Suspense>
-                </div>
-                {/* Tutorial, ojo y accesos rápidos del espacio */}
-                <div className="flex shrink-0 items-center gap-2">
-                  <TutorialHelpButton />
-                  <HideAmountsToggle />
-                  <QuickActions />
-                </div>
-              </header>
-              <main
-                id="contenido"
-                tabIndex={-1}
-                className="flex flex-1 flex-col px-4 pt-2 pb-[calc(5.5rem+env(safe-area-inset-bottom))] outline-none md:px-6 md:pb-6"
-              >
-                {children}
-              </main>
-            </DashboardPreferencesBoundary>
-          </Suspense>
-        </SidebarInset>
-      </SidebarProvider>
-    </WorkspaceThemeRoot>
+                  className="flex flex-1 flex-col px-4 pt-2 pb-[calc(5.5rem+env(safe-area-inset-bottom))] outline-none md:px-6 md:pb-6"
+                >
+                  {children}
+                </main>
+              </DashboardPreferencesBoundary>
+            </Suspense>
+          </SidebarInset>
+        </SidebarProvider>
+      </WorkspaceThemeRoot>
+    </ThemeProvider>
   )
 }

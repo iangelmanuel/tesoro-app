@@ -23,7 +23,7 @@ const COMPACT_PRIMARY = cn(
   "group h-9 gap-1 pr-3 pl-4 whitespace-nowrap [&_svg]:transition-transform hover:[&_svg]:translate-x-0.5 motion-reduce:[&_svg]:transition-none"
 )
 const COMPACT_SECONDARY =
-  "flex h-9 items-center rounded-full px-3 text-sm font-medium whitespace-nowrap text-muted outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-focus"
+  "flex h-9 items-center rounded-full px-3 text-sm font-medium whitespace-nowrap text-foreground outline-none hover:opacity-70 focus-visible:ring-2 focus-visible:ring-focus"
 
 export type SessionSize = "default" | "compact"
 

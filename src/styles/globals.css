@@ -442,32 +442,32 @@
   }
 }
 
-/* Velo del hero (SPEC 40): más claro arriba, donde solo va el header, y
-   denso abajo, donde va el texto. Con ≥ 72 % detrás del texto atenuado, todo
-   el texto da AA sobre el fotograma más claro del loop. Desde 1024 px una
-   segunda capa oscurece la izquierda, donde se apoya el texto */
+/* Velo del hero (SPEC 40): el video ya viene claro (gradación duotono de
+   verde medio a casi blanco, sin negros ni viñeta), así que el velo no lo
+   tapa: solo un blanco muy leve encima, que sube un poco el contraste del
+   texto oscuro, y un fundido corto abajo que empalma con la sección
+   siguiente */
+/* Verde del slogan en el hero: emerald-900, que da 3:1 (texto grande) sobre
+   las zonas más oscuras del video con su velo; --brand se pierde encima */
+.hero-accent {
+  color: oklch(37.8% 0.077 168.94);
+}
+
+/* Velo del hero (SPEC 40): el video va en color natural, solo más luminoso
+   (sombras levantadas, menos contraste y saturación, sin tinte ni viñeta).
+   El velo es un blanco suave: 12 % arriba y hasta 32 % en la mitad baja,
+   donde va el texto. Medido sobre el render: con eso el texto oscuro da
+   ≥ 4,5:1 y el título ≥ 3:1 incluso sobre el 5 % más oscuro de esa zona.
+   Al final, un fundido corto empalma con la sección siguiente */
 .hero-veil {
   background: linear-gradient(
     to bottom,
-    oklch(0 0 0 / 0.5) 0%,
-    oklch(0 0 0 / 0.35) 22%,
-    oklch(0 0 0 / 0.72) 50%,
-    oklch(0 0 0 / 0.88) 100%
+    oklch(1 0 0 / 0.12) 0%,
+    oklch(1 0 0 / 0.12) 38%,
+    oklch(1 0 0 / 0.3) 58%,
+    oklch(1 0 0 / 0.34) 86%,
+    oklch(1 0 0) 100%
   );
-}
-
-@media (min-width: 1024px) {
-  .hero-veil::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      to right,
-      oklch(0 0 0 / 0.45) 0%,
-      oklch(0 0 0 / 0.15) 55%,
-      transparent 100%
-    );
-  }
 }
 
 /* Scrollbar de todo el proyecto: fina, sin flechas ni carril visible, con el

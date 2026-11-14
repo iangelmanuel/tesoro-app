@@ -13,8 +13,8 @@ const PROMISES = [
 ]
 
 // El slogan en dos tiempos: "Tus finanzas," y "claras desde el primer
-// registro." La segunda parte lleva el verde de marca (color sólido, no
-// degradado). Sin coma, va entero en blanco
+// registro." La segunda parte va en verde profundo (`.hero-accent`, color
+// sólido, no degradado). Sin coma, va entero en blanco
 const [SLOGAN_LEAD, SLOGAN_ACCENT] = (() => {
   const index = SITE.info.slogan.indexOf(", ")
   return index === -1
@@ -49,15 +49,17 @@ const delay = (ms: number) =>
   ({ "--hero-delay": `${ms}ms` }) as React.CSSProperties
 
 // Hero (SPEC 40): el video ocupa toda la pantalla, también detrás del
-// header (sube 4 rem con -mt-16), y el texto se apoya abajo a la izquierda,
-// como el pie de una foto. Banda oscura en los dos temas (clase dark). Todo
-// tamaño sale de CSS: ni el video ni la isla cambian el layout
+// header (sube 4 rem con -mt-16), y el texto oscuro se apoya abajo a la
+// izquierda directamente sobre el video, que viene claro (la landing va
+// siempre en claro). Bajada y promesas en el color de texto completo, no el
+// atenuado, para dar AA sobre el verde medio de las sombras del video. Todo tamaño sale de CSS: ni el video ni la isla
+// cambian el layout
 export function Hero() {
   return (
     <section
       id="hero"
       aria-labelledby="hero-title"
-      className="dark relative isolate -mt-16 flex min-h-[max(36rem,100svh)] flex-col overflow-hidden bg-background text-foreground"
+      className="relative isolate -mt-16 flex min-h-[max(36rem,100svh)] flex-col overflow-hidden bg-background text-foreground"
     >
       <div
         aria-hidden="true"
@@ -94,12 +96,12 @@ export function Hero() {
             {SLOGAN_ACCENT && (
               <>
                 {" "}
-                <span className="text-brand">{SLOGAN_ACCENT}</span>
+                <span className="hero-accent">{SLOGAN_ACCENT}</span>
               </>
             )}
           </h1>
           <p
-            className="hero-enter max-w-xl text-lg text-pretty text-muted sm:text-xl"
+            className="hero-enter max-w-xl text-lg text-pretty text-foreground sm:text-xl"
             style={delay(80)}
           >
             Anota lo que entra y lo que sale, en casa y en tu negocio.{" "}
@@ -125,7 +127,7 @@ export function Hero() {
                 href="#demo"
                 className={cn(
                   buttonVariants({ size: "lg", variant: "ghost" }),
-                  "bg-white/10 text-foreground backdrop-blur-md hover:bg-white/16"
+                  "bg-white/75 text-foreground shadow-(--surface-shadow) backdrop-blur-md hover:bg-white"
                 )}
               >
                 <PlayIcon className="size-4" />
@@ -137,7 +139,7 @@ export function Hero() {
 
         {/* Pie del hero: las promesas sobre una línea fina */}
         <ul
-          className="hero-enter flex flex-wrap gap-x-6 gap-y-2 border-t border-white/15 py-5 text-sm text-muted"
+          className="hero-enter flex flex-wrap gap-x-6 gap-y-2 border-t border-foreground/15 py-5 text-sm font-medium text-foreground"
           style={delay(240)}
         >
           {PROMISES.map((item) => (

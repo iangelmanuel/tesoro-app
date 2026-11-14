@@ -38,8 +38,8 @@ export function AppSidebarSkeleton() {
           ))}
         </div>
       </SidebarContent>
-      <SidebarFooter>
-        <Skeleton className="h-9 w-full rounded-xl" />
+      {/* Solo el menú de cuenta (Ayuda y tema viven dentro, SPEC 40) */}
+      <SidebarFooter aria-busy="true">
         <Skeleton className="h-12 w-full rounded-xl" />
       </SidebarFooter>
     </Sidebar>

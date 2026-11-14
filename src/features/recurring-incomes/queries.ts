@@ -4,7 +4,8 @@ import type { AppSupabase } from "@/libs/supabase/types"
 import type { Database } from "@/types/database"
 import {
   type IncomeOccurrenceStatus,
-  getIncomeOccurrenceStatus
+  getIncomeOccurrenceStatus,
+  occurrenceRemaining
 } from "./occurrences"
 import { type IncomeReceiptPeriods, incomeReceiptPeriods } from "./receipt"
 import type { IncomeFrequency } from "./schemas"
@@ -29,20 +30,31 @@ export type RecurringIncome = Omit<RecurringIncomeRow, "amount"> & {
   received: { month: number; year: number } | null
 }
 
+/** Una ocurrencia de un ingreso fijo con lo recibido y su estado */
 export interface UpcomingIncome {
   recurringIncomeId: string
   name: string
+  /** Monto esperado */
   amount: number
   category: CategorySummary
   /** Cuenta por defecto del ingreso fijo */
   accountId: string | null
   frequency: IncomeFrequency
   dueOn: string
-  transactionId: string | null
-  receivedAmount: number | null
-  /** Cuenta del ingreso recibido; null = fuera de las cuentas (o sin recibir) */
-  accountName: string | null
+  /** Suma de lo asignado a esta ocurrencia (0 sin cobros) */
+  receivedAmount: number
+  /** Lo que falta (0 si ya se recibió) */
+  remaining: number
   status: IncomeOccurrenceStatus
+}
+
+/** Ocurrencias de meses anteriores sin recibir completas */
+export interface IncomeOverdueSummary {
+  count: number
+  /** Lo que falta de todas ellas */
+  amount: number
+  /** Mes (YYYY-MM) de la más antigua; null sin atrasos */
+  oldestMonth: string | null
 }
 
 export interface IncomeSourceOption extends IncomeReceiptPeriods {
@@ -54,25 +66,33 @@ export interface IncomeSourceOption extends IncomeReceiptPeriods {
   frequency: IncomeFrequency
 }
 
-// Meses anteriores al actual cuyas ocurrencias no recibidas siguen en la lista
-const OVERDUE_MONTHS = 2
-
 const CATEGORY_COLUMNS = "id, name, icon, color, archived_at"
 
-/** Ventana de "Próximos ingresos": 2 meses atrás hasta el fin del mes actual */
-function upcomingWindow() {
-  const month = currentMonth()
-  return {
-    from: monthRange(shiftMonth(month, -OVERDUE_MONTHS)).from,
-    to: monthRange(month).to,
-    monthStart: monthRange(month).from
+/**
+ * Mes (YYYY-MM) del `starts_on` más antiguo de los ingresos fijos con
+ * calendario; null si no hay. Límite del navegador de mes.
+ */
+export async function getRecurringIncomeStartMonth(
+  workspaceId: string
+): Promise<string | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("recurring_incomes")
+    .select("starts_on")
+    .eq("workspace_id", workspaceId)
+    .neq("frequency", "none")
+    .order("starts_on", { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) {
+    throw new Error("No se pudieron cargar los ingresos fijos")
   }
+  return data ? data.starts_on.slice(0, 7) : null
 }
 
-// `client` permite usarla fuera de una request con cookies (MCP, SPEC 34)
-async function fetchOccurrences(workspaceId: string, client?: AppSupabase) {
-  const { from, to } = upcomingWindow()
-  const supabase = client ?? (await createClient())
+async function fetchOccurrences(workspaceId: string, from: string, to: string) {
+  const supabase = await createClient()
   const { data, error } = await supabase.rpc("recurring_income_occurrences", {
     p_workspace_id: workspaceId,
     p_from: from,
@@ -147,25 +167,19 @@ export async function getRecurringIncomes(
   }))
 }
 
-// Todas las ocurrencias del mes actual y las no recibidas de los 2 meses
-// anteriores, en orden de vencimiento (las atrasadas quedan primero)
-export async function getUpcomingIncomes(
-  workspaceId: string
-): Promise<UpcomingIncome[]> {
-  const { monthStart } = upcomingWindow()
-  const today = todayISO()
-  const data = await fetchOccurrences(workspaceId)
+type OccurrenceRow = Awaited<ReturnType<typeof fetchOccurrences>>[number]
 
-  const occurrences = data.filter(
-    (row) => row.due_on >= monthStart || row.transaction_id === null
-  )
-  if (occurrences.length === 0) {
+// Agrega categoría, frecuencia, lo que falta y el estado a cada ocurrencia
+async function toUpcomingIncomes(
+  rows: OccurrenceRow[]
+): Promise<UpcomingIncome[]> {
+  if (rows.length === 0) {
     return []
   }
 
   const supabase = await createClient()
-  const incomeIds = [...new Set(occurrences.map((r) => r.recurring_income_id))]
-  const categoryIds = [...new Set(occurrences.map((row) => row.category_id))]
+  const incomeIds = [...new Set(rows.map((row) => row.recurring_income_id))]
+  const categoryIds = [...new Set(rows.map((row) => row.category_id))]
 
   const [incomes, categories] = await Promise.all([
     supabase
@@ -183,52 +197,116 @@ export async function getUpcomingIncomes(
     incomes.data.map((row) => [row.id, row.frequency])
   )
   const categoryById = new Map(categories.data.map((row) => [row.id, row]))
+  const today = todayISO()
 
-  // Cuenta de cada ingreso recibido, desde su movimiento enlazado
-  const receivedIds = occurrences.flatMap((row) =>
-    row.transaction_id === null ? [] : [row.transaction_id]
-  )
-  const accountByTransaction = new Map<string, string | null>()
-  if (receivedIds.length > 0) {
-    const { data: received, error: receivedError } = await supabase
-      .from("transactions")
-      .select(
-        "id, account:accounts!transactions_account_id_workspace_id_fkey (name)"
-      )
-      .in("id", receivedIds)
-
-    if (receivedError) {
-      throw new Error("No se pudieron cargar los próximos ingresos")
-    }
-    for (const row of received) {
-      accountByTransaction.set(row.id, row.account?.name ?? null)
-    }
-  }
-
-  return occurrences.flatMap((row) => {
+  return rows.flatMap((row) => {
     const category = categoryById.get(row.category_id)
     const frequency = frequencyById.get(row.recurring_income_id)
     if (!category || !frequency) {
       return []
     }
+    const occurrence = {
+      due_on: row.due_on,
+      amount: Number(row.amount),
+      received_amount: Number(row.received_amount)
+    }
     return {
       recurringIncomeId: row.recurring_income_id,
       name: row.name,
-      amount: Number(row.amount),
+      amount: occurrence.amount,
       category,
       accountId: row.account_id,
       frequency,
       dueOn: row.due_on,
-      transactionId: row.transaction_id,
-      receivedAmount:
-        row.received_amount === null ? null : Number(row.received_amount),
-      accountName:
-        row.transaction_id === null
-          ? null
-          : (accountByTransaction.get(row.transaction_id) ?? null),
-      status: getIncomeOccurrenceStatus(row, today)
+      receivedAmount: occurrence.received_amount,
+      remaining: occurrenceRemaining(occurrence),
+      status: getIncomeOccurrenceStatus(occurrence, today)
     }
   })
+}
+
+/**
+ * Ocurrencias del mes elegido (YYYY-MM; por defecto el actual), en orden de
+ * vencimiento:
+ * - mes actual: las del mes y todas las no recibidas o abonadas de meses
+ *   anteriores, desde el inicio de cada ingreso fijo (sin tope de meses);
+ * - mes anterior: todas las de ese mes, con su estado.
+ */
+export async function getUpcomingIncomes(
+  workspaceId: string,
+  month: string = currentMonth()
+): Promise<UpcomingIncome[]> {
+  const range = monthRange(month)
+
+  if (month !== currentMonth()) {
+    return toUpcomingIncomes(
+      await fetchOccurrences(workspaceId, range.from, range.to)
+    )
+  }
+
+  const startMonth = await getRecurringIncomeStartMonth(workspaceId)
+  if (startMonth === null) {
+    return []
+  }
+
+  const rows = await fetchOccurrences(
+    workspaceId,
+    monthRange(startMonth < month ? startMonth : month).from,
+    range.to
+  )
+  return toUpcomingIncomes(
+    rows.filter(
+      (row) =>
+        row.due_on >= range.from ||
+        Number(row.received_amount) < Number(row.amount)
+    )
+  )
+}
+
+/**
+ * Ocurrencias de meses anteriores al actual sin recibir completas (atrasadas
+ * o abonadas): cuántas, cuánto falta y el mes de la más antigua.
+ */
+export async function getIncomeOverdueSummary(
+  workspaceId: string
+): Promise<IncomeOverdueSummary> {
+  const empty: IncomeOverdueSummary = {
+    count: 0,
+    amount: 0,
+    oldestMonth: null
+  }
+  const month = currentMonth()
+  const startMonth = await getRecurringIncomeStartMonth(workspaceId)
+  if (startMonth === null || startMonth >= month) {
+    return empty
+  }
+
+  const rows = await fetchOccurrences(
+    workspaceId,
+    monthRange(startMonth).from,
+    monthRange(shiftMonth(month, -1)).to
+  )
+  const open = rows.flatMap((row) => {
+    const remaining = occurrenceRemaining({
+      amount: Number(row.amount),
+      received_amount: Number(row.received_amount)
+    })
+    return remaining > 0 ? [{ dueOn: row.due_on, remaining }] : []
+  })
+  if (open.length === 0) {
+    return empty
+  }
+
+  const cents = open.reduce(
+    (total, row) => total + Math.round(row.remaining * 100),
+    0
+  )
+  return {
+    count: open.length,
+    amount: cents / 100,
+    // La RPC ordena por vencimiento
+    oldestMonth: open[0].dueOn.slice(0, 7)
+  }
 }
 
 /**

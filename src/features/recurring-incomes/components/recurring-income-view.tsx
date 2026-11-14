@@ -1,16 +1,25 @@
 import { Button, Card, CardContent, cn } from "@heroui/react"
-import { CalendarPlus, CircleCheck, Plus } from "lucide-react"
+import { CalendarClock, CalendarPlus, CircleCheck, Plus } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardEmpty, EmptyState } from "@/components/dashboard/empty-state"
+import { MonthNav } from "@/components/dashboard/month-nav"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import { SITE } from "@/config/site"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import { getCategories } from "@/features/categories/queries"
+import { OverdueIndicator } from "@/features/recurring-expenses/components/overdue-indicator"
+import { parseRecurringMonth } from "@/features/recurring-expenses/month"
 import type { PersonalWorkspace } from "@/features/workspaces/queries"
+import { todayISO } from "@/libs/dates"
+import { groupIncomeRows } from "../month-rows"
+import { incomeFrequencyLabel } from "../occurrences"
 import {
   type RecurringIncome,
+  getIncomeOverdueSummary,
   getIncomeSources,
+  getRecurringIncomeStartMonth,
   getRecurringIncomes,
   getUpcomingIncomes
 } from "../queries"
@@ -19,19 +28,32 @@ import { RecurringIncomeDialog } from "./recurring-income-dialog"
 import { RecurringIncomesList } from "./recurring-incomes-list"
 import { UpcomingIncomes } from "./upcoming-incomes"
 
-/** Contenido de Ingresos fijos: próximos ingresos, sin fecha fija y lista */
+/**
+ * Contenido de Ingresos fijos: ingresos del mes elegido (`?month`), sin fecha
+ * fija y lista. Misma estructura que Gastos fijos (SPEC 37).
+ */
 export async function RecurringIncomeView({
-  workspace
+  workspace,
+  month: monthParam
 }: {
   workspace: PersonalWorkspace
+  /** `?month` crudo; se acota entre el ingreso más antiguo y el mes actual */
+  month: string | string[] | undefined
 }) {
-  const [categories, incomes, upcoming, accounts, sources] = await Promise.all([
-    getCategories(workspace.id),
-    getRecurringIncomes(workspace.id),
-    getUpcomingIncomes(workspace.id),
-    getAccountBalances(workspace.id),
-    getIncomeSources(workspace.id)
-  ])
+  // Se parsea tras leer la sesión: el mes por defecto usa new Date()
+  const month = parseRecurringMonth(
+    monthParam,
+    await getRecurringIncomeStartMonth(workspace.id)
+  )
+  const [categories, incomes, upcoming, accounts, sources, overdue] =
+    await Promise.all([
+      getCategories(workspace.id),
+      getRecurringIncomes(workspace.id),
+      getUpcomingIncomes(workspace.id, month.month),
+      getAccountBalances(workspace.id),
+      getIncomeSources(workspace.id),
+      getIncomeOverdueSummary(workspace.id)
+    ])
 
   const createButton = (
     <RecurringIncomeDialog
@@ -59,60 +81,104 @@ export async function RecurringIncomeView({
     )
   }
 
-  const scheduled = incomes.filter(
-    (income) => income.frequency !== "none" && income.is_active
-  )
+  // Las fuentes con calendario siguen en el navegador aunque estén pausadas:
+  // sus meses pasados conservan lo recibido
+  const hasSchedule = incomes.some((income) => income.frequency !== "none")
   const withoutDate = incomes.filter(
     (income) => income.frequency === "none" && income.is_active
   )
-  const isUpToDate = upcoming.every((income) => income.transactionId !== null)
-  // "Marcar recibido" solo en la ocurrencia no recibida más antigua de cada
-  // ingreso fijo: es la que el servidor enlaza al guardar. La lista viene en
-  // orden de vencimiento
-  const receivable = new Set<string>()
-  const seen = new Set<string>()
-  for (const income of upcoming) {
-    if (income.transactionId === null && !seen.has(income.recurringIncomeId)) {
-      seen.add(income.recurringIncomeId)
-      receivable.add(`${income.recurringIncomeId}-${income.dueOn}`)
-    }
-  }
+  const today = todayISO()
+  const rows = groupIncomeRows(upcoming, month.month, today)
+  const frequencyLabels = new Map(
+    incomes.map((income) => [income.id, incomeFrequencyLabel(income)])
+  )
+  const isUpToDate = upcoming.every((income) => income.status === "received")
+  // Resumen del mes elegido: en el mes actual no cuentan los pendientes que
+  // vienen de meses anteriores. Un cobro de más no suma por encima de lo
+  // esperado de su ocurrencia
+  const monthIncomes = upcoming.filter((income) =>
+    income.dueOn.startsWith(month.month)
+  )
+  const expected = sumCents(monthIncomes.map((income) => income.amount))
+  const received = sumCents(
+    monthIncomes.map((income) => Math.min(income.receivedAmount, income.amount))
+  )
 
   return (
     <>
-      <div className="flex flex-wrap gap-2">{createButton}</div>
+      <div className="flex flex-wrap items-center gap-2">
+        {createButton}
+        {overdue.count > 0 && (
+          <div className="md:ml-auto">
+            <OverdueIndicator
+              summary={overdue}
+              currency={workspace.currency}
+              path={SITE.routes.personalRecurringIncome}
+            />
+          </div>
+        )}
+      </div>
 
-      {scheduled.length > 0 && (
+      {hasSchedule && (
         <Card>
           <CardHeading
-            title="Próximos ingresos"
+            title={
+              month.isCurrent
+                ? "Próximos ingresos"
+                : `Ingresos de ${month.label}`
+            }
             help="upcomingIncomes"
           />
           <CardContent className="flex flex-col gap-3">
-            {isUpToDate && (
+            <MonthNav
+              path={SITE.routes.personalRecurringIncome}
+              label={month.label}
+              prev={month.prev}
+              next={month.next}
+            />
+            {monthIncomes.length > 0 && (
+              <p className="text-sm text-muted">
+                Recibido{" "}
+                <Amount
+                  value={received}
+                  currency={workspace.currency}
+                  className="font-medium text-foreground"
+                />{" "}
+                de{" "}
+                <Amount
+                  value={expected}
+                  currency={workspace.currency}
+                />
+              </p>
+            )}
+            {upcoming.length === 0 && !month.isCurrent && (
+              <CardEmpty
+                icon={CalendarClock}
+                message="Sin ingresos en este mes"
+                hint="Tus ingresos fijos no llegaban en este mes."
+              />
+            )}
+            {isUpToDate && month.isCurrent && (
               <CardEmpty
                 icon={CircleCheck}
                 message="Ya recibiste todo lo de este mes"
               />
             )}
             {/* Los recibidos del mes siguen en la lista con su monto */}
-            {upcoming.length > 0 && (
+            {rows.length > 0 && (
               <UpcomingIncomes
-                incomes={upcoming}
+                rows={rows}
                 currency={workspace.currency}
-                renderAction={(income) =>
-                  receivable.has(
-                    `${income.recurringIncomeId}-${income.dueOn}`
-                  ) ? (
-                    <ReceiveIncomeButton
-                      workspaceId={workspace.id}
-                      income={income}
-                      categories={categories}
-                      accounts={accounts}
-                      incomeSources={sources}
-                    />
-                  ) : null
-                }
+                frequencyLabels={frequencyLabels}
+                renderAction={(income) => (
+                  <ReceiveIncomeButton
+                    workspaceId={workspace.id}
+                    income={income}
+                    categories={categories}
+                    accounts={accounts}
+                    incomeSources={sources}
+                  />
+                )}
               />
             )}
           </CardContent>
@@ -146,6 +212,9 @@ export async function RecurringIncomeView({
     </>
   )
 }
+
+const sumCents = (values: number[]) =>
+  values.reduce((total, value) => total + Math.round(value * 100), 0) / 100
 
 // Proyectos e inversiones: lo recibido en el mes y en el año, sin estados
 function NoFixedDateList({

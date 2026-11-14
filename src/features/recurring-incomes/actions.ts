@@ -32,6 +32,8 @@ const FIELDS = [
   "day_of_month",
   "second_day_of_month",
   "month_of_year",
+  "day_of_week",
+  "interval_days",
   "starts_on",
   "ends_on"
 ] as const

@@ -306,9 +306,32 @@ async function loadRecurringIncomes(
     throw new Error("No se pudieron cargar los ingresos fijos")
   }
 
+  // Un ingreso puede cubrir varias ocurrencias y una ocurrencia recibir
+  // varios ingresos (SPEC 38): la cuenta sale de los movimientos asignados
+  const allocations = await fetchAll(
+    (from, to) =>
+      supabase
+        .from("recurring_income_allocations")
+        .select("id, recurring_income_id, due_on, transaction_id")
+        .eq("workspace_id", workspaceId)
+        .gte("due_on", bounds.from)
+        .lte("due_on", bounds.to)
+        .order("id", { ascending: true })
+        .range(from, to),
+    "No se pudieron cargar los ingresos fijos"
+  )
   const accountByTransaction = new Map(
     movements.map((row) => [row.id, row.account])
   )
+  const accountsByOccurrence = new Map<string, Set<string>>()
+  for (const row of allocations) {
+    const account = accountByTransaction.get(row.transaction_id)
+    if (!account) continue
+    const key = `${row.recurring_income_id}:${row.due_on}`
+    const set = accountsByOccurrence.get(key) ?? new Set<string>()
+    set.add(account)
+    accountsByOccurrence.set(key, set)
+  }
   const byMonth = new Map<string, PersonalMonthData["recurringIncomes"]>()
   const push = (
     month: string,
@@ -320,21 +343,30 @@ async function loadRecurringIncomes(
   }
 
   for (const row of occurrences.data) {
-    const received =
-      row.received_amount === null ? 0 : Number(row.received_amount)
-    const account =
-      (row.transaction_id && accountByTransaction.get(row.transaction_id)) ||
-      (row.account_id ? (names.accounts.get(row.account_id) ?? null) : null)
+    const occurrence = {
+      due_on: row.due_on,
+      amount: Number(row.amount),
+      received_amount: Number(row.received_amount)
+    }
+    const received = accountsByOccurrence.get(
+      `${row.recurring_income_id}:${row.due_on}`
+    )
+    const account = received
+      ? [...received].join(", ")
+      : row.account_id
+        ? (names.accounts.get(row.account_id) ?? null)
+        : null
 
     push(row.due_on.slice(0, 7), {
       name: row.name,
       dueOn: row.due_on,
       category: names.categories.get(row.category_id) ?? "",
       account,
-      expected: Number(row.amount),
-      received,
+      expected: occurrence.amount,
+      received: occurrence.received_amount,
       status:
-        INCOME_OCCURRENCE_STATUS[getIncomeOccurrenceStatus(row, today)].label
+        INCOME_OCCURRENCE_STATUS[getIncomeOccurrenceStatus(occurrence, today)]
+          .label
     })
   }
 

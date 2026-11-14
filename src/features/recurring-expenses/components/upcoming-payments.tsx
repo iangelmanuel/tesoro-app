@@ -48,6 +48,22 @@ interface PayOccurrenceButtonProps {
   className?: string
 }
 
+/** Prellenado y enlace de TransactionDialog para pagar una ocurrencia */
+export function occurrencePaymentProps(payment: UpcomingPayment) {
+  return {
+    initialValues: {
+      amount: payment.amount,
+      category_id: payment.category.id,
+      occurred_on: payment.dueOn,
+      description: payment.name
+    },
+    recurring: {
+      recurringExpenseId: payment.recurringExpenseId,
+      dueOn: payment.dueOn
+    }
+  }
+}
+
 // Abre TransactionDialog prellenado con la ocurrencia y enlazado a ella. El
 // usuario confirma (y puede cambiar el monto) antes de crear el movimiento.
 export function PayOccurrenceButton({
@@ -62,16 +78,7 @@ export function PayOccurrenceButton({
       workspaceId={workspaceId}
       categories={categories}
       accounts={accounts}
-      initialValues={{
-        amount: payment.amount,
-        category_id: payment.category.id,
-        occurred_on: payment.dueOn,
-        description: payment.name
-      }}
-      recurring={{
-        recurringExpenseId: payment.recurringExpenseId,
-        dueOn: payment.dueOn
-      }}
+      {...occurrencePaymentProps(payment)}
       trigger={
         // key: el Modal de HeroUI recorre sus hijos como lista y, con el
         // botón creado en otro componente, React avisa de la falta de key

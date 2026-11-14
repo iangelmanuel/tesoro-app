@@ -158,6 +158,7 @@ export async function RecurringView({
         <RecurringExpensesList
           expenses={expenses}
           categories={categories}
+          accounts={accounts}
           currency={workspace.currency}
         />
       </div>

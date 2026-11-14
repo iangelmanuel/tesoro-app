@@ -1,16 +1,20 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Button, Chip, Drawer, Skeleton, cn } from "@heroui/react"
+import { Button, Chip, cn } from "@heroui/react"
 import { Check, Pause, Pencil, Play, Trash2 } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
+import {
+  DetailSection,
+  DetailSheet,
+  DetailStats
+} from "@/components/dashboard/detail-sheet"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
-import { useIsMobile } from "@/hooks/use-is-mobile"
 import { todayISO } from "@/libs/dates"
 import { formatDate, formatShortDate } from "@/libs/format"
 import { loadRecurringIncomeHistory } from "../actions"
@@ -66,7 +70,6 @@ export function RecurringIncomeSheet({
   const [deleting, setDeleting] = useState(false)
   const [receiving, setReceiving] = useState<IncomeHistoryRow | null>(null)
   const { pending, toggle, remove } = useRecurringIncomeActions(income)
-  const isMobile = useIsMobile()
   const hasSchedule = income.frequency !== "none"
   // Pausada o terminada: el servidor no acepta cobros nuevos para ella
   const canReceive = incomeSources.some((source) => source.id === income.id)
@@ -93,116 +96,165 @@ export function RecurringIncomeSheet({
     }
   }, [open, hasSchedule, income.id, income.updated_at, limit, version])
 
+  const year = todayISO().slice(0, 4)
+  // La ocurrencia abierta más antigua: las atrasadas primero (la lista va de
+  // la más reciente a la más antigua)
+  const nextOpen =
+    history?.occurrences.findLast((row) => row.status !== "received") ?? null
+
   return (
     <>
-      <Drawer
-        isOpen={open}
+      <DetailSheet
+        open={open}
         onOpenChange={onOpenChange}
-      >
-        <Drawer.Backdrop>
-          {/* < 768 px: hoja inferior con asa, como los demás Sheets móviles */}
-          <Drawer.Content placement={isMobile ? "bottom" : "right"}>
-            <Drawer.Dialog
-              className={
-                isMobile
-                  ? "max-h-[90dvh] pb-[env(safe-area-inset-bottom)]"
-                  : "w-full sm:max-w-md"
-              }
+        title={income.name}
+        status={
+          income.is_active ? (
+            <Chip size="sm">Activo</Chip>
+          ) : (
+            <Chip
+              size="sm"
+              variant="tertiary"
             >
-              {isMobile && <Drawer.Handle />}
-              <Drawer.CloseTrigger aria-label="Cerrar" />
-              <Drawer.Header>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Drawer.Heading className="truncate">
-                    {income.name}
-                  </Drawer.Heading>
-                  {income.is_active ? (
-                    <Chip size="sm">Activo</Chip>
-                  ) : (
-                    <Chip
-                      size="sm"
-                      variant="tertiary"
-                    >
-                      Pausado
-                    </Chip>
-                  )}
-                </div>
-                <p className="text-sm text-muted tabular-nums">
-                  <span className="font-medium text-foreground">
-                    <Amount
-                      value={income.amount}
-                      currency={currency}
-                    />
-                  </span>{" "}
-                  · {incomeFrequencyLabel(income)}
-                </p>
-              </Drawer.Header>
-              <Drawer.Body>
-                <div className="flex flex-col gap-6">
-                  <IncomeDetails income={income} />
-
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="max-md:min-h-11"
-                      onPress={() => setEditing(true)}
-                    >
-                      <Pencil />
-                      Editar
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="max-md:min-h-11"
-                      isDisabled={pending}
-                      onPress={toggle}
-                    >
-                      {income.is_active ? <Pause /> : <Play />}
-                      {income.is_active ? "Pausar" : "Reanudar"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="danger-soft"
-                      className="max-md:min-h-11"
-                      isDisabled={pending}
-                      onPress={() => setDeleting(true)}
-                    >
-                      <Trash2 />
-                      Eliminar
-                    </Button>
-                  </div>
-
-                  {hasSchedule && (
-                    <section
-                      aria-label="Ocurrencias"
-                      className="flex flex-col gap-3"
-                    >
-                      <h3 className="text-xs font-medium text-muted uppercase">
-                        Ocurrencias
-                      </h3>
-                      {error !== null ? (
-                        <p className="text-sm text-danger">{error}</p>
-                      ) : history === null ? (
-                        <HistorySkeleton />
-                      ) : (
-                        <HistoryList
-                          history={history}
+              Pausado
+            </Chip>
+          )
+        }
+        figure={
+          <Amount
+            value={income.amount}
+            currency={currency}
+          />
+        }
+        figureCaption={incomeFrequencyLabel(income)}
+        loading={hasSchedule && error === null && history === null}
+        summary={
+          hasSchedule &&
+          (error !== null ? (
+            <p className="text-sm text-danger">{error}</p>
+          ) : (
+            history && (
+              <DetailStats
+                items={[
+                  {
+                    label: `Recibido en ${year}`,
+                    value: (
+                      <Amount
+                        value={history.receivedThisYear}
+                        currency={currency}
+                      />
+                    ),
+                    className: "text-(--income)"
+                  },
+                  {
+                    label: "Por cobrar a la fecha",
+                    value: (
+                      <Amount
+                        value={history.dueToDate}
+                        currency={currency}
+                      />
+                    ),
+                    className:
+                      history.dueToDate > 0 ? "text-(--expense)" : undefined
+                  },
+                  {
+                    label: "Próximo por recibir",
+                    value: nextOpen ? (
+                      <>
+                        {shortOccurrenceDate(nextOpen.dueOn)} ·{" "}
+                        <Amount
+                          value={nextOpen.remaining}
                           currency={currency}
-                          onReceive={canReceive ? setReceiving : undefined}
-                          onShowMore={() =>
-                            setLimit((value) => value + pageSize)
-                          }
                         />
-                      )}
-                    </section>
-                  )}
-                </div>
-              </Drawer.Body>
-            </Drawer.Dialog>
-          </Drawer.Content>
-        </Drawer.Backdrop>
-      </Drawer>
+                      </>
+                    ) : (
+                      "Al día"
+                    )
+                  }
+                ]}
+              />
+            )
+          ))
+        }
+        action={
+          !income.is_active ? (
+            <Button
+              isDisabled={pending}
+              onPress={toggle}
+            >
+              <Play />
+              Reanudar
+            </Button>
+          ) : (
+            canReceive &&
+            nextOpen && (
+              <Button onPress={() => setReceiving(nextOpen)}>
+                <Check />
+                Recibir {shortOccurrenceDate(nextOpen.dueOn)}
+              </Button>
+            )
+          )
+        }
+        history={
+          hasSchedule &&
+          history && (
+            <DetailSection
+              title="Ocurrencias"
+              help="multipleReceipts"
+            >
+              <HistoryList
+                history={history}
+                currency={currency}
+                onReceive={canReceive ? setReceiving : undefined}
+                onShowMore={() => setLimit((value) => value + pageSize)}
+              />
+            </DetailSection>
+          )
+        }
+        details={
+          <DetailSection
+            title="Detalles"
+            help={hasSchedule ? "frequency" : "noFixedDate"}
+          >
+            <IncomeDetails income={income} />
+          </DetailSection>
+        }
+        footer={
+          <>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="max-md:min-h-11"
+              onPress={() => setEditing(true)}
+            >
+              <Pencil />
+              Editar
+            </Button>
+            {income.is_active && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="max-md:min-h-11"
+                isDisabled={pending}
+                onPress={toggle}
+              >
+                <Pause />
+                Pausar
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="danger-soft"
+              className="max-md:min-h-11"
+              isDisabled={pending}
+              onPress={() => setDeleting(true)}
+            >
+              <Trash2 />
+              Eliminar
+            </Button>
+          </>
+        }
+      />
 
       <RecurringIncomeDialog
         workspaceId={income.workspace_id}
@@ -296,37 +348,8 @@ function HistoryList({
   onReceive?: (row: IncomeHistoryRow) => void
   onShowMore: () => void
 }) {
-  // Mismo año que usa la query (America/Bogota)
-  const year = todayISO().slice(0, 4)
-
   return (
     <div className="flex flex-col gap-3">
-      <dl className="grid grid-cols-2 gap-3 text-sm">
-        <div className="flex flex-col gap-0.5">
-          <dt className="text-muted">Recibido en {year}</dt>
-          <dd className="font-medium text-(--income)">
-            <Amount
-              value={history.receivedThisYear}
-              currency={currency}
-            />
-          </dd>
-        </div>
-        <div className="flex flex-col gap-0.5">
-          <dt className="text-muted">Por cobrar a la fecha</dt>
-          <dd
-            className={cn(
-              "font-medium",
-              history.dueToDate > 0 && "text-(--expense)"
-            )}
-          >
-            <Amount
-              value={history.dueToDate}
-              currency={currency}
-            />
-          </dd>
-        </div>
-      </dl>
-
       {history.occurrences.length === 0 ? (
         <p className="text-sm text-muted">
           Aún no tiene ocurrencias: empieza más adelante.
@@ -433,15 +456,5 @@ function HistoryRow({
         </ul>
       )}
     </li>
-  )
-}
-
-function HistorySkeleton() {
-  return (
-    <div className="flex flex-col gap-3">
-      <Skeleton className="h-10 w-full rounded-xl" />
-      <Skeleton className="h-12 w-full rounded-xl" />
-      <Skeleton className="h-12 w-full rounded-xl" />
-    </div>
   )
 }

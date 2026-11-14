@@ -1,17 +1,21 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Button, Chip, Drawer, Skeleton, cn } from "@heroui/react"
+import { Button, Chip, cn } from "@heroui/react"
 import { Check, Pause, Pencil, Play, Trash2 } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
+import {
+  DetailSection,
+  DetailSheet,
+  DetailStats
+} from "@/components/dashboard/detail-sheet"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { formatMonthYear } from "@/features/debts/calculations"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
-import { useIsMobile } from "@/hooks/use-is-mobile"
 import { currentMonth } from "@/libs/dates"
 import { formatDate, formatShortDate } from "@/libs/format"
 import { loadRecurringExpenseHistory } from "../actions"
@@ -83,122 +87,163 @@ export function RecurringExpenseSheet({
   }, [open, expense.id, expense.is_active, expense.updated_at, limit, version])
 
   const isYearly = expense.frequency === "yearly"
-  const isMobile = useIsMobile()
+  const year = currentMonth().slice(0, 4)
+  // El periodo por pagar más antiguo: los atrasados primero (la lista va del
+  // más reciente al más antiguo)
+  const nextUnpaid =
+    history?.payments.findLast((payment) => payment.transactionId === null) ??
+    null
 
   return (
     <>
-      <Drawer
-        isOpen={open}
+      <DetailSheet
+        open={open}
         onOpenChange={onOpenChange}
-      >
-        <Drawer.Backdrop>
-          {/* < 768 px: hoja inferior con asa, como los demás Sheets móviles */}
-          <Drawer.Content placement={isMobile ? "bottom" : "right"}>
-            <Drawer.Dialog
-              className={
-                isMobile
-                  ? "max-h-[90dvh] pb-[env(safe-area-inset-bottom)]"
-                  : "w-full sm:max-w-md"
-              }
+        title={expense.name}
+        status={
+          expense.is_active ? (
+            <Chip size="sm">Activo</Chip>
+          ) : (
+            <Chip
+              size="sm"
+              variant="tertiary"
             >
-              {isMobile && <Drawer.Handle />}
-              <Drawer.CloseTrigger aria-label="Cerrar" />
-              <Drawer.Header>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Drawer.Heading className="truncate">
-                    {expense.name}
-                  </Drawer.Heading>
-                  {expense.is_active ? (
-                    <Chip size="sm">Activo</Chip>
-                  ) : (
-                    <Chip
-                      size="sm"
-                      variant="tertiary"
-                    >
-                      Pausado
-                    </Chip>
-                  )}
-                </div>
-                <p className="text-sm text-muted tabular-nums">
-                  <span className="font-medium text-foreground">
-                    <Amount
-                      value={expense.amount}
-                      currency={currency}
-                    />
-                  </span>{" "}
-                  · {frequencyLabel(expense)}
-                </p>
-              </Drawer.Header>
-              <Drawer.Body>
-                <div className="flex flex-col gap-6">
-                  <ExpenseDetails expense={expense} />
-
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="max-md:min-h-11"
-                      onPress={() => setEditing(true)}
-                    >
-                      <Pencil />
-                      Editar
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="max-md:min-h-11"
-                      isDisabled={pending}
-                      onPress={toggle}
-                    >
-                      {expense.is_active ? <Pause /> : <Play />}
-                      {expense.is_active ? "Pausar" : "Reanudar"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="danger-soft"
-                      className="max-md:min-h-11"
-                      isDisabled={pending}
-                      onPress={() => setDeleting(true)}
-                    >
-                      <Trash2 />
-                      Eliminar
-                    </Button>
-                  </div>
-
-                  <section
-                    aria-label="Pagos por periodo"
-                    className="flex flex-col gap-3"
-                  >
-                    <h3 className="text-xs font-medium text-muted uppercase">
-                      {isYearly ? "Pagos por año" : "Pagos mes a mes"}
-                    </h3>
-                    {!expense.is_active ? (
-                      <p className="text-sm text-muted">
-                        Este gasto está pausado: no genera pagos. Reanúdalo para
-                        ver su historial.
-                      </p>
-                    ) : error !== null ? (
-                      <p className="text-sm text-danger">{error}</p>
-                    ) : history === null ? (
-                      <HistorySkeleton />
-                    ) : (
-                      <HistoryList
-                        history={history}
-                        isYearly={isYearly}
+              Pausado
+            </Chip>
+          )
+        }
+        figure={
+          <Amount
+            value={expense.amount}
+            currency={currency}
+          />
+        }
+        figureCaption={frequencyLabel(expense)}
+        loading={expense.is_active && error === null && history === null}
+        summary={
+          !expense.is_active ? (
+            <p className="text-sm text-muted">
+              Este gasto está pausado: no genera pagos. Reanúdalo para ver su
+              historial.
+            </p>
+          ) : error !== null ? (
+            <p className="text-sm text-danger">{error}</p>
+          ) : (
+            history && (
+              <DetailStats
+                items={[
+                  {
+                    label: `Pagado en ${year}`,
+                    value: (
+                      <Amount
+                        value={history.paidThisYear}
                         currency={currency}
-                        onPay={setPaying}
-                        onShowMore={() =>
-                          setLimit((value) => value + HISTORY_PAGE_SIZE)
-                        }
                       />
-                    )}
-                  </section>
-                </div>
-              </Drawer.Body>
-            </Drawer.Dialog>
-          </Drawer.Content>
-        </Drawer.Backdrop>
-      </Drawer>
+                    ),
+                    className: "text-(--income)"
+                  },
+                  {
+                    label: "Atrasado a la fecha",
+                    value: (
+                      <Amount
+                        value={history.overdueAmount}
+                        currency={currency}
+                      />
+                    ),
+                    className:
+                      history.overdueAmount > 0 ? "text-(--expense)" : undefined
+                  },
+                  {
+                    label: "Próximo por pagar",
+                    value: nextUnpaid
+                      ? `${periodLabel(nextUnpaid, isYearly)} · vence el ${formatShortDate(nextUnpaid.dueOn)}`
+                      : "Al día"
+                  }
+                ]}
+              />
+            )
+          )
+        }
+        action={
+          !expense.is_active ? (
+            <Button
+              isDisabled={pending}
+              onPress={toggle}
+            >
+              <Play />
+              Reanudar
+            </Button>
+          ) : (
+            nextUnpaid && (
+              <Button onPress={() => setPaying(nextUnpaid)}>
+                <Check />
+                Marcar {periodLabel(nextUnpaid, isYearly)} como pagado
+              </Button>
+            )
+          )
+        }
+        history={
+          expense.is_active &&
+          history && (
+            <DetailSection
+              title={isYearly ? "Pagos por año" : "Pagos mes a mes"}
+            >
+              <HistoryList
+                history={history}
+                isYearly={isYearly}
+                currency={currency}
+                onPay={setPaying}
+                onShowMore={() =>
+                  setLimit((value) => value + HISTORY_PAGE_SIZE)
+                }
+              />
+            </DetailSection>
+          )
+        }
+        details={
+          <DetailSection
+            title="Detalles"
+            help="frequency"
+          >
+            <ExpenseDetails expense={expense} />
+          </DetailSection>
+        }
+        footer={
+          <>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="max-md:min-h-11"
+              onPress={() => setEditing(true)}
+            >
+              <Pencil />
+              Editar
+            </Button>
+            {expense.is_active && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="max-md:min-h-11"
+                isDisabled={pending}
+                onPress={toggle}
+              >
+                <Pause />
+                Pausar
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="danger-soft"
+              className="max-md:min-h-11"
+              isDisabled={pending}
+              onPress={() => setDeleting(true)}
+            >
+              <Trash2 />
+              Eliminar
+            </Button>
+          </>
+        }
+      />
 
       <RecurringExpenseDialog
         workspaceId={expense.workspace_id}
@@ -265,6 +310,13 @@ function ExpenseDetails({ expense }: { expense: RecurringExpense }) {
   )
 }
 
+/** "octubre 2026" o "2026" */
+function periodLabel(payment: UpcomingPayment, isYearly: boolean) {
+  return isYearly
+    ? payment.dueOn.slice(0, 4)
+    : formatMonthYear(payment.dueOn.slice(0, 7))
+}
+
 function HistoryList({
   history,
   isYearly,
@@ -278,37 +330,8 @@ function HistoryList({
   onPay: (payment: UpcomingPayment) => void
   onShowMore: () => void
 }) {
-  // Mismo año que usa la query (America/Bogota)
-  const year = currentMonth().slice(0, 4)
-
   return (
     <div className="flex flex-col gap-3">
-      <dl className="grid grid-cols-2 gap-3 text-sm">
-        <div className="flex flex-col gap-0.5">
-          <dt className="text-muted">Pagado en {year}</dt>
-          <dd className="font-medium text-(--income)">
-            <Amount
-              value={history.paidThisYear}
-              currency={currency}
-            />
-          </dd>
-        </div>
-        <div className="flex flex-col gap-0.5">
-          <dt className="text-muted">Atrasado a la fecha</dt>
-          <dd
-            className={cn(
-              "font-medium",
-              history.overdueAmount > 0 && "text-(--expense)"
-            )}
-          >
-            <Amount
-              value={history.overdueAmount}
-              currency={currency}
-            />
-          </dd>
-        </div>
-      </dl>
-
       {history.payments.length === 0 ? (
         <p className="text-sm text-muted">
           Aún no tiene periodos: empieza más adelante.
@@ -352,9 +375,7 @@ function HistoryRow({
   currency: string
   onPay: (payment: UpcomingPayment) => void
 }) {
-  const period = isYearly
-    ? payment.dueOn.slice(0, 4)
-    : formatMonthYear(payment.dueOn.slice(0, 7))
+  const period = periodLabel(payment, isYearly)
   const isPaid = payment.transactionId !== null
 
   return (
@@ -399,15 +420,5 @@ function HistoryRow({
         )}
       </div>
     </li>
-  )
-}
-
-function HistorySkeleton() {
-  return (
-    <div className="flex flex-col gap-3">
-      <Skeleton className="h-10 w-full rounded-xl" />
-      <Skeleton className="h-12 w-full rounded-xl" />
-      <Skeleton className="h-12 w-full rounded-xl" />
-    </div>
   )
 }

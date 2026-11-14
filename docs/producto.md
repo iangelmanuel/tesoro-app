@@ -718,59 +718,130 @@ Estado de una ocurrencia (fechas en `America/Bogota`):
 - Las RPC son `security invoker` y solo las ejecuta `authenticated`. Con un
   espacio ajeno devuelven vacío.
 
-## Ingresos fijos (SPEC 30)
+## Ingresos fijos (SPEC 30 y 38)
 
 Página `/dashboard/personal/recurring-income`, en el aside justo después de
 Gastos fijos (ícono `CalendarPlus`). Solo existe en Personal: Empresa ya
 tiene Ventas.
 
 - Un ingreso fijo es algo que entra a tus cuentas de forma repetida: salario,
-  arriendo recibido, un proyecto o una inversión.
+  arriendo recibido, el rendimiento semanal de una inversión, un proyecto.
 - Campos: nombre (1 a 60 caracteres), monto esperado (mismas reglas que
   movimientos), categoría de ingreso activa, cuenta por defecto opcional,
-  frecuencia, días de pago según la frecuencia, fecha de inicio y fecha de fin
+  frecuencia, los datos de esa frecuencia, fecha de inicio y fecha de fin
   opcional (≥ inicio).
+- El formulario pide solo los campos de la frecuencia elegida y muestra un
+  resumen en vivo: "Cada sábado · $ 50.000", "Cada 14 días desde el 3 nov",
+  "Los días 15 y 30 de cada mes" (más "hasta el …" con fecha de fin).
 - Se pueden pausar y reanudar. Uno pausado no aparece en **Próximos
   ingresos** ni en el select **Ingreso fijo**.
 - Al eliminarlo, sus ingresos se conservan en Movimientos con el enlace en
-  `null`. Si se borra la cuenta por defecto, queda en `null`.
+  `null` y sus asignaciones se borran. Si se borra la cuenta por defecto,
+  queda en `null`.
 
-| Frecuencia | Días que pide                          | Vencimiento                                    |
-| ---------- | -------------------------------------- | ---------------------------------------------- |
-| `monthly`  | `day_of_month`                         | ese día de cada mes                            |
-| `biweekly` | `day_of_month` y `second_day_of_month` | los dos días de cada mes (por defecto 15 y 30) |
-| `yearly`   | `day_of_month` y `month_of_year`       | ese día y mes de cada año                      |
-| `none`     | ninguno                                | sin ocurrencias (proyectos, inversiones)       |
+| Frecuencia     | Pide                                   | Vencimiento                                    |
+| -------------- | -------------------------------------- | ---------------------------------------------- |
+| `weekly`       | `day_of_week` (ISO: 1 lunes … 7 dom.)  | ese día de cada semana                         |
+| `biweekly`     | `day_of_month` y `second_day_of_month` | los dos días de cada mes (por defecto 15 y 30) |
+| `monthly`      | `day_of_month`                         | ese día de cada mes                            |
+| `yearly`       | `day_of_month` y `month_of_year`       | ese día y mes de cada año                      |
+| `daily`        | nada                                   | todos los días desde `starts_on`               |
+| `every_n_days` | `interval_days` (2 a 90)               | cada N días contados desde `starts_on`         |
+| `none`         | nada                                   | sin ocurrencias (proyectos, inversiones)       |
 
+- Al elegir **Semanal** se propone el día de la semana de la fecha de inicio.
 - El segundo día de un quincenal debe ser mayor que el primero.
-- Un día que no existe en el mes cae en el último día (30 → 28 o 29 de
+- Un día del mes que no existe cae en el último día (30 → 28 o 29 de
   febrero; 31 → 30 de abril). Si los dos días caen en la misma fecha, cuenta
   una sola ocurrencia.
-- Las ocurrencias no se guardan: las calcula la RPC
-  `recurring_income_occurrences(workspace, from, to)` (solo activos y con
-  calendario), con el ingreso recibido si existe. También devuelve las
-  ocurrencias recibidas cuya fecha ya no calza con el calendario actual
-  (cambió la frecuencia o los días): siguen saliendo como **Recibido**.
+- Las ocurrencias no se guardan: las calcula `recurring_income_dates` (y
+  `incomeDueDates` en TS, con la misma regla). La RPC
+  `recurring_income_occurrences(workspace, from, to)` las devuelve (solo
+  activos y con calendario) con `received_amount` = suma de sus
+  asignaciones. También devuelve las ocurrencias con asignaciones cuya fecha
+  ya no calza con el calendario actual (cambió la frecuencia o los días):
+  siguen saliendo en su fecha.
+
+### Cobros y asignaciones
+
+- Un cobro es **un solo** ingreso en la cuenta, aunque cubra varias
+  ocurrencias. Su monto se reparte en `recurring_income_allocations` (una
+  fila por ocurrencia cubierta, con lo asignado).
+- **Reparto:** desde la ocurrencia no recibida más antigua de la fuente; cada
+  ocurrencia recibe lo que le falta (lo esperado menos lo que otros cobros ya
+  le asignaron). Lo vencido va primero; si sobra, cubre ocurrencias futuras,
+  hasta 12 por delante, y nunca más allá de `ends_on`. Si aún sobra, el cobro
+  se rechaza con error en el campo del monto: "El monto cubre más de 12
+  ocurrencias futuras" o "El monto supera lo que falta por recibir de este
+  ingreso fijo".
+- El servidor reparte (`allocate_income_receipt`) y es el que manda. Un
+  trigger de `transactions` lo llama al crear un ingreso enlazado y al
+  cambiar su monto, tipo o fuente, en la misma transacción: si el reparto
+  falla, el movimiento no se guarda. Sirve igual para la app, el MCP y el
+  importador. `allocateOldestFirst` (`src/libs/allocate.ts`) aplica la misma
+  regla en el cliente solo para la vista previa.
+- `allocate_income_receipt` bloquea la fuente (`for update`): dos cobros a la
+  vez no reparten sobre lo mismo.
+- Fuentes **Sin fecha fija:** el ingreso se enlaza a la fuente, sin
+  asignaciones.
 
 Estado de una ocurrencia (fechas en `America/Bogota`):
 
-| Estado    | Condición                    | Tono    |
-| --------- | ---------------------------- | ------- |
-| Recibido  | tiene ingreso enlazado       | success |
-| Atrasado  | sin recibir y `due_on < hoy` | danger  |
-| De hoy    | sin recibir y `due_on = hoy` | warning |
-| Pendiente | sin recibir y `due_on > hoy` | neutro  |
+| Estado    | Condición                                 | Tono    |
+| --------- | ----------------------------------------- | ------- |
+| Recibido  | lo asignado suma lo esperado o más        | success |
+| Abonado   | algo asignado, pero menos que lo esperado | warning |
+| De hoy    | sin asignaciones y `due_on = hoy`         | warning |
+| Pendiente | sin asignaciones y `due_on > hoy`         | neutro  |
+| Atrasado  | sin asignaciones y `due_on < hoy`         | danger  |
 
-- **Próximos ingresos** muestra todas las ocurrencias del mes actual y las no
-  recibidas de los 2 meses anteriores, en orden de vencimiento.
-- **Marcar recibido** aparece solo en la ocurrencia no recibida más antigua
-  de cada ingreso fijo (es la que el servidor enlaza). Abre el diálogo de
-  movimiento en el tab Ingreso con el ingreso fijo, el monto esperado, la
-  categoría, la cuenta por defecto, la fecha de vencimiento y el nombre como
-  descripción. Todo es editable.
+Una ocurrencia abonada muestra "Recibió $ X de $ Y · Falta $ Z".
+
+### Página
+
+Misma estructura que Gastos fijos (SPEC 37):
+
+- **Navegador de mes** (`MonthNav`, `?month=YYYY-MM`): no va más allá del mes
+  actual ni antes del `starts_on` más antiguo de los ingresos con calendario.
+  El título es "Próximos ingresos" en el mes actual e "Ingresos de <mes>" en
+  los demás.
+- **Mes actual:** las ocurrencias del mes y todas las no recibidas o abonadas
+  de meses anteriores, desde el inicio de cada fuente (sin tope de meses).
+  **Mes anterior:** todas las ocurrencias de ese mes con su estado.
+- "Recibido $ X de $ Y" del mes elegido (lo recibido de más en una ocurrencia
+  no cuenta por encima de lo esperado).
+- "N atrasados · $ Z" (`OverdueIndicator`) en la cabecera: ocurrencias de
+  meses anteriores no recibidas o abonadas y lo que les falta. Lleva al mes
+  de la más antigua.
+- Las fuentes **Diaria** y **Cada N días** van en una fila resumen por fuente
+  ("Diario · 18 de 30 días · Falta $ Z", más "N pendientes de meses
+  anteriores" en el mes actual); su nombre abre el Sheet. Las demás van una
+  fila por ocurrencia.
+- **Recibir** aparece en toda ocurrencia no recibida o abonada (también en
+  la fila resumen). Abre el diálogo de movimiento en el tab Ingreso con la
+  fuente, su categoría, la cuenta por defecto (si sigue activa), el nombre
+  como descripción y, como monto, lo que falta de **todas** las ocurrencias
+  abiertas hasta la de la fila. Todo es editable; la fecha es hoy.
 - **Sin fecha fija** lista las fuentes `none` con lo recibido en el mes y en
   el año, sin estados.
-- Con cifras ocultas, los montos de la página muestran `***`.
+- Con cifras ocultas, los montos de la página, la vista previa y el Sheet
+  muestran `***`.
+
+### Sheet por ingreso fijo
+
+Un clic en la fila de la lista de fuentes (o en el nombre de una fila
+resumen) abre `RecurringIncomeSheet` (derecha en escritorio, hoja inferior en
+móvil):
+
+- datos (categoría, frecuencia, cuenta, vigencia) y **Editar**, **Pausar** /
+  **Reanudar** y **Eliminar**;
+- "Recibido en <año>" (asignado a ocurrencias de este año) y "Por cobrar a la
+  fecha" (lo que falta de las vencidas o de hoy);
+- ocurrencias desde `starts_on` hasta hoy más la próxima, la más reciente
+  primero: fecha, estado, lo recibido y los movimientos que la cubren
+  (descripción, fecha y lo asignado). **Recibir** en las abiertas (no en una
+  fuente pausada);
+- 12 por página (31 en la diaria) y **Ver más**.
 
 ### Select "Ingreso fijo"
 
@@ -779,37 +850,45 @@ Estado de una ocurrencia (fechas en `America/Bogota`):
   lista los ingresos fijos activos.
 - Al elegir uno se prellenan monto esperado, categoría y cuenta por defecto,
   solo en los campos vacíos o que aún tienen el valor prellenado antes.
-- El enlace lo resuelve el servidor (`resolveIncomeLink`); el cliente no
-  envía la fecha:
-  - con calendario, a la ocurrencia no recibida más antigua dentro de la
-    ventana de Próximos ingresos (atrasadas primero). Bajo el select se
-    anticipa: "Quincena del 15 nov", "Mes de noviembre" o "Año 2026";
-  - sin ocurrencias no recibidas, o `none`, a la fuente con
-    `recurring_income_due_on` en `null` (se pueden registrar varios).
-- Un índice único impide recibir dos veces la misma ocurrencia. Si dos
-  ingresos la toman a la vez, la action reintenta una vez con la siguiente no
-  recibida o responde "Este ingreso ya está registrado".
-- **Editar** desde Movimientos: sin cambiar el select se conserva el enlace
-  aunque cambien monto, fecha o cuenta; otro ingreso fijo re-enlaza a su
-  ocurrencia no recibida más antigua; **Otro ingreso** quita el enlace y la
-  ocurrencia vuelve a Pendiente o Atrasado. Pasar el movimiento a gasto
-  también quita el enlace. Borrar el movimiento devuelve la ocurrencia a su
-  estado calculado.
+- **Vista previa** bajo el monto, con el mismo reparto que hará el servidor:
+  "Cubre sáb 1 nov, sáb 8 nov · Abona $ 20.000 a sáb 15 nov" (con más de 3
+  fechas: "18 ocurrencias, del sáb 1 nov al mié 18 nov"), o el error si
+  sobra. Las ocurrencias que necesita llegan en `IncomeSourceOption`
+  (`periods`, `futureLimited`), también en el cargador de acciones rápidas.
+- Al guardar, el toast dice a qué ocurrencias se aplicó.
+- **Editar** desde Movimientos:
+  - sin cambiar el select se conserva el enlace; si cambia el monto, se
+    reparte de nuevo desde la ocurrencia no recibida más antigua, sin contar
+    lo que ya tenía asignado ese movimiento (la vista previa lo tiene en
+    cuenta);
+  - otro ingreso fijo re-enlaza y reparte en él;
+  - **Otro ingreso**, o pasar el movimiento a gasto, quita el enlace y borra
+    sus asignaciones: las ocurrencias vuelven a su estado calculado.
+- Borrar el movimiento borra sus asignaciones (cascada).
 - Los ingresos enlazados cuentan como cualquier ingreso: no cambian score,
   presupuestos ni reportes.
 
 ### Seguridad
 
-- RLS en `recurring_incomes`: `select` con `is_workspace_owner`;
-  `insert`, `update` y `delete` con `is_workspace_writable`.
+- RLS en `recurring_incomes` y `recurring_income_allocations`: `select` con
+  `is_workspace_owner`; `insert`, `update` y `delete` con
+  `is_workspace_writable`.
 - `check_recurring_income` exige espacio Personal, categoría de ingreso del
-  sistema o del mismo espacio y cuenta del mismo espacio.
+  sistema o del mismo espacio y cuenta del mismo espacio. Los checks de la
+  tabla exigen solo los campos de cada frecuencia.
 - `check_transaction_recurring_income` exige que el ingreso enlazado sea de
-  tipo `income` y del mismo espacio, y que `recurring_income_due_on` sea
-  `null` en fuentes `none` y una fecha de vencimiento real en las demás
-  (`is_recurring_income_due_date`). Si el enlace no cambia al editar, no
-  revalida la fecha. Un movimiento no puede enlazar a la vez un gasto fijo y
-  un ingreso fijo.
+  tipo `income` y del mismo espacio. Un movimiento no puede enlazar a la vez
+  un gasto fijo y un ingreso fijo.
+- `check_recurring_income_allocation` exige que el movimiento de una
+  asignación sea un ingreso del mismo espacio y de la misma fuente, que la
+  fuente tenga calendario y que `due_on` sea una fecha real suya
+  (`is_recurring_income_due_date`). La suma de las asignaciones de un
+  movimiento la cuadra `allocate_income_receipt`.
+- Las RPC son `security invoker`, con `search_path` vacío, y solo las ejecuta
+  `authenticated`.
+- **Migración desde SPEC 30:** cada ingreso con `recurring_income_due_on` pasó
+  a una asignación por su monto completo; luego se borraron esa columna y su
+  índice único.
 
 ## Metas de ahorro
 
@@ -2443,7 +2522,10 @@ La guía para el usuario está en `/mcp`; la técnica, en
   movimiento se actualiza con él; la nota va al movimiento. Tipo, categoría,
   cuenta y descripción no se cambian. Borrar el movimiento borra su abono.
 - Un pago de gasto fijo sigue siendo un gasto y conserva su ocurrencia; un
-  ingreso fijo conserva su enlace.
+  ingreso fijo conserva su enlace y, si cambia el monto, se reparte de nuevo
+  entre sus ocurrencias (SPEC 38). En los movimientos que lee el agente, el
+  vínculo `recurring_income` lleva `allocations` (`due_on` y monto) en vez de
+  una sola fecha.
 - Un espacio marcado para borrar no admite escrituras; sí lecturas.
 - Los pagos de tarjeta y la escritura de cuentas, fijos, presupuestos, metas,
   deudas y Me deben llegan en SPEC 35.

@@ -369,6 +369,12 @@ export function TransactionsTable({
                       <DescriptionCell
                         title={transaction.description}
                         note={transaction.note}
+                        // Ingreso de un avance de tarjeta (SPEC 36)
+                        icon={
+                          row.debt_entry?.kind === "advance"
+                            ? Banknote
+                            : undefined
+                        }
                       />
                       <Table.Cell className={NOWRAP}>
                         {category && (
@@ -655,7 +661,9 @@ function isAccountMovement(row: LedgerEntry): row is AccountMovementEntry {
 
 // Pago de tarjeta, avance o aporte con cuenta: gris, con signo según el saldo
 // de la cuenta. No suma a los totales. Se edita y elimina con el diálogo y
-// las actions de la deuda o la meta (SPEC 26), que recalculan su saldo.
+// las actions de la deuda o la meta (SPEC 26), que recalculan su saldo. Un
+// avance con cuenta ya es un ingreso (SPEC 36): aquí solo llegan los antiguos
+// que la migración no pudo convertir.
 function AccountMovementRow({
   workspaceId,
   showCounterparty,
@@ -754,9 +762,10 @@ function AccountMovementRow({
   )
 }
 
-// Movimiento de un pago de préstamo o un cobro de Me deben (SPEC 26). El
-// abono es la fuente de verdad: se edita con su diálogo y el trigger copia
-// monto, fecha y hora al movimiento; eliminarlo borra los dos juntos.
+// Movimiento de un pago de préstamo, un cobro de Me deben (SPEC 26) o un
+// avance de tarjeta (SPEC 36). El abono es la fuente de verdad: se edita con
+// su diálogo y el trigger copia monto, fecha y hora al movimiento; eliminarlo
+// borra los dos juntos.
 function LinkedPaymentActions({
   label,
   entry
@@ -764,14 +773,19 @@ function LinkedPaymentActions({
   label: string
   entry: LinkedDebtEntry
 }) {
-  const noun = entry.debt_kind === "receivable" ? "cobro" : "pago"
+  const noun =
+    entry.kind === "advance"
+      ? "avance"
+      : entry.debt_kind === "receivable"
+        ? "cobro"
+        : "pago"
 
   return (
     <EntryActions
       label={label}
       remove={{
         title: `¿Eliminar este ${noun}?`,
-        success: `${noun === "cobro" ? "Cobro" : "Pago"} eliminado`,
+        success: `${noun.charAt(0).toUpperCase()}${noun.slice(1)} eliminado`,
         onDelete: () => deleteEntry(entry.id)
       }}
       renderEdit={(dialog) => (

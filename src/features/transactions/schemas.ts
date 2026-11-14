@@ -136,8 +136,8 @@ export const transactionSchema = z.object({
     .max(40, { error: "El número de factura debe tener máximo 40 caracteres" })
     .transform((value) => value || null),
   // Select "Ingreso fijo" (solo ingresos de Personal). "Otro ingreso" o
-  // vacío = sin enlace. La ocurrencia (recurring_income_due_on) la resuelve
-  // el servidor; el cliente no la envía
+  // vacío = sin enlace. El reparto entre ocurrencias lo hace la BD
+  // (allocate_income_receipt, SPEC 38); el cliente no lo envía
   recurring_income_id: z.preprocess(
     (value) => (value === "" || value === OTHER_INCOME ? null : value),
     z.uuid({ error: "No se encontró el ingreso fijo" }).nullable()

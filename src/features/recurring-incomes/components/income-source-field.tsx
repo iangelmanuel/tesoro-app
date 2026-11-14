@@ -2,13 +2,11 @@
 
 import { Label, ListBox, Select } from "@heroui/react"
 import { OTHER_INCOME } from "../constants"
-import { occurrenceLabel } from "../occurrences"
 import type { IncomeSourceOption } from "../queries"
 
 /** Enlace actual del movimiento que se edita */
 export interface CurrentIncomeLink {
   id: string
-  dueOn: string | null
 }
 
 interface IncomeSourceFieldProps {
@@ -25,9 +23,8 @@ interface IncomeSourceFieldProps {
 const CURRENT_LABEL = "Ingreso fijo actual"
 
 /**
- * Select "Ingreso fijo" del tab Ingreso (solo Personal). Bajo el select, la
- * ocurrencia a la que se enlaza el movimiento. La resuelve el servidor: aquí
- * solo se anticipa con `nextDueOn`
+ * Select "Ingreso fijo" del tab Ingreso (solo Personal). El reparto entre
+ * ocurrencias se muestra bajo el monto (IncomeReceiptPreview)
  */
 export function IncomeSourceField({
   sources,
@@ -38,23 +35,10 @@ export function IncomeSourceField({
   const selected = sources.find((source) => source.id === value)
   const showCurrent =
     current != null && !sources.some((source) => source.id === current.id)
-
-  let hint: string | null = null
-  if (value === current?.id) {
-    // Sin cambiar el select se conserva el enlace guardado
-    hint =
-      current.dueOn !== null && selected
-        ? occurrenceLabel(selected.frequency, current.dueOn)
-        : null
-  } else if (selected) {
-    if (selected.frequency === "none") {
-      hint = "Sin fecha fija: suma a lo recibido del mes"
-    } else if (selected.nextDueOn !== null) {
-      hint = occurrenceLabel(selected.frequency, selected.nextDueOn)
-    } else {
-      hint = "No tiene ingresos pendientes: queda enlazado sin fecha"
-    }
-  }
+  const hint =
+    selected?.frequency === "none"
+      ? "Sin fecha fija: suma a lo recibido del mes"
+      : null
 
   return (
     <div className="flex flex-col gap-2">

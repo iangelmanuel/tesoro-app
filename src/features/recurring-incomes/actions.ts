@@ -10,6 +10,10 @@ import {
 } from "@/features/workspaces/queries"
 import { revalidatePersonalPages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
+import {
+  type RecurringIncomeHistory,
+  getRecurringIncomeHistory
+} from "./queries"
 import { recurringIncomeSchema } from "./schemas"
 import type {
   RecurringIncomeActionResult,
@@ -32,6 +36,8 @@ const FIELDS = [
   "day_of_month",
   "second_day_of_month",
   "month_of_year",
+  "day_of_week",
+  "interval_days",
   "starts_on",
   "ends_on"
 ] as const
@@ -260,4 +266,34 @@ export async function deleteRecurringIncome(
 
   revalidatePersonalPages()
   return {}
+}
+
+/** Tope de ocurrencias del historial: unos 5 años de un ingreso diario */
+const MAX_HISTORY_LIMIT = 2000
+
+export type RecurringIncomeHistoryResult =
+  | { data: RecurringIncomeHistory; error?: undefined }
+  | { data?: undefined; error: string }
+
+// Lectura para el Sheet de un ingreso fijo: se pide al abrirlo, con "Ver
+// más" y tras registrar un cobro desde él. RLS limita a los del usuario.
+export async function loadRecurringIncomeHistory(
+  id: string,
+  limit: number
+): Promise<RecurringIncomeHistoryResult> {
+  const parsedId = idSchema.safeParse(id)
+  const parsedLimit = z.int().min(1).max(MAX_HISTORY_LIMIT).safeParse(limit)
+
+  if (!parsedId.success || !parsedLimit.success) {
+    return { error: NOT_FOUND }
+  }
+
+  try {
+    const data = await getRecurringIncomeHistory(parsedId.data, {
+      limit: parsedLimit.data
+    })
+    return { data }
+  } catch {
+    return { error: "No se pudo cargar el historial. Intenta de nuevo" }
+  }
 }

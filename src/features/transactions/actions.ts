@@ -98,7 +98,7 @@ export async function createTransaction(
   }
 
   revalidateWorkspacePages(workspace)
-  return { ok: true }
+  return { ok: true, allocations: result.allocations }
 }
 
 export async function updateTransaction(
@@ -132,7 +132,7 @@ export async function updateTransaction(
   }
 
   revalidateWorkspacePages(workspace)
-  return { ok: true }
+  return { ok: true, allocations: result.allocations }
 }
 
 export async function deleteTransaction(

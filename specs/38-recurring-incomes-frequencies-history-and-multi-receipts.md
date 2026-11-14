@@ -1,6 +1,6 @@
 # SPEC 38 — Ingresos fijos: semanal, diario, cada N días, historial y cobros de varias ocurrencias
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 30, SPEC 37
 > **Fecha:** 2026-11-13
 > **Objetivo:** Que un ingreso fijo pueda ser semanal, diario o cada N días, que se vean todas sus ocurrencias pasadas con su estado (como **Gastos fijos**), y que un solo movimiento pueda cubrir varias ocurrencias o abonar una parte.
@@ -176,23 +176,23 @@ type IncomeOccurrenceStatus =
 
 ## Criterios de aceptación
 
-- [ ] Se crea un ingreso fijo **Semanal** de 50.000 cada sábado; el formulario solo pide el día de la semana.
-- [ ] Se crea uno **Diario** y uno **Cada 14 días**; el formulario pide solo lo que aplica.
-- [ ] Un semanal que empezó hace 4 sábados sin cobros muestra 4 ocurrencias **Atrasado** (o 3 y **De hoy** si hoy es sábado).
-- [ ] **Recibir** en la cuarta prellena 200.000; guardar crea un solo ingreso de 200.000 y las 4 pasan a **Recibido**.
-- [ ] Un ingreso de 120.000 con 4 sábados pendientes deja 2 **Recibido** y la tercera **Abonado** con "Falta 30.000"; la cuarta sigue **Atrasado**.
-- [ ] La vista previa bajo el monto describe el mismo reparto que se guarda.
-- [ ] Un monto que cubre más de 12 ocurrencias futuras es rechazado con error en el campo.
-- [ ] Editar el monto del ingreso de 120.000 a 200.000 deja las 4 ocurrencias **Recibido**.
-- [ ] Eliminar ese ingreso devuelve las 4 a **Atrasado** o **De hoy**.
-- [ ] Los ingresos registrados con SPEC 30 conservan su ocurrencia **Recibido** tras la migración.
-- [ ] El navegador de mes muestra un mes pasado con sus ocurrencias recibidas y atrasadas.
-- [ ] Una fuente **Diaria** aparece como una sola fila resumen por mes y abre su Sheet.
-- [ ] El Sheet de una fuente lista sus ocurrencias con estado y **Ver más**.
-- [ ] Las fuentes **Sin fecha fija** se comportan igual que en SPEC 30.
-- [ ] Un usuario no puede leer ni escribir asignaciones de otro (RLS).
-- [ ] Con cifras ocultas, montos nuevos muestran `***`; a 390 px no hay desplazamiento horizontal.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] Se crea un ingreso fijo **Semanal** de 50.000 cada sábado; el formulario solo pide el día de la semana.
+- [x] Se crea uno **Diario** y uno **Cada 14 días**; el formulario pide solo lo que aplica.
+- [x] Un semanal que empezó hace 4 sábados sin cobros muestra 4 ocurrencias **Atrasado** (o 3 y **De hoy** si hoy es sábado).
+- [x] **Recibir** en la cuarta prellena 200.000; guardar crea un solo ingreso de 200.000 y las 4 pasan a **Recibido**.
+- [x] Un ingreso de 120.000 con 4 sábados pendientes deja 2 **Recibido** y la tercera **Abonado** con "Falta 30.000"; la cuarta sigue **Atrasado**.
+- [x] La vista previa bajo el monto describe el mismo reparto que se guarda.
+- [x] Un monto que cubre más de 12 ocurrencias futuras es rechazado con error en el campo.
+- [x] Editar el monto del ingreso de 120.000 a 200.000 deja las 4 ocurrencias **Recibido**.
+- [x] Eliminar ese ingreso devuelve las 4 a **Atrasado** o **De hoy**.
+- [x] Los ingresos registrados con SPEC 30 conservan su ocurrencia **Recibido** tras la migración.
+- [x] El navegador de mes muestra un mes pasado con sus ocurrencias recibidas y atrasadas.
+- [x] Una fuente **Diaria** aparece como una sola fila resumen por mes y abre su Sheet.
+- [x] El Sheet de una fuente lista sus ocurrencias con estado y **Ver más**.
+- [x] Las fuentes **Sin fecha fija** se comportan igual que en SPEC 30.
+- [x] Un usuario no puede leer ni escribir asignaciones de otro (RLS).
+- [x] Con cifras ocultas, montos nuevos muestran `***`; a 390 px no hay desplazamiento horizontal.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
 
 ## Decisiones
 

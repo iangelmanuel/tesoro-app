@@ -19,7 +19,7 @@ export const listRecurring = defineTool({
   group: "read",
   title: "Listar gastos e ingresos fijos",
   description:
-    "Gastos e ingresos fijos del mes actual con su estado, igual que las páginas de Gastos fijos e Ingresos fijos (los gastos incluyen todos los sin pagar de meses anteriores; los ingresos, los sin recibir de los 2 meses anteriores). Gastos: Pagado, Hoy, Próximo o Atrasado. Ingresos: Recibido, De hoy, Pendiente o Atrasado. Solo Personal.",
+    "Gastos e ingresos fijos del mes actual con su estado, igual que las páginas de Gastos fijos e Ingresos fijos (ambos incluyen todos los sin pagar o sin recibir de meses anteriores). Gastos: Pagado, Hoy, Próximo o Atrasado. Ingresos: Recibido, Abonado (recibió una parte: ver remaining), De hoy, Pendiente o Atrasado. Un ingreso puede cubrir varias ocurrencias. Solo Personal.",
   input,
   annotations: { readOnlyHint: true },
   async run(ctx, { workspace_id }) {
@@ -56,9 +56,10 @@ export const listRecurring = defineTool({
       due_on: row.dueOn,
       status: row.status,
       status_label: INCOME_OCCURRENCE_STATUS[row.status].label,
+      // Suma de los ingresos asignados a la ocurrencia (SPEC 38): puede
+      // venir de varios movimientos, o ser parcial (status "partial")
       received_amount: row.receivedAmount,
-      transaction_id: row.transactionId,
-      account: row.accountName
+      remaining: row.remaining
     }))
 
     const pendingExpenses = expenses.filter((row) => row.status !== "paid")

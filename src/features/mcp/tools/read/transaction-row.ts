@@ -19,7 +19,7 @@ export const LINK_KINDS = [
 export type LinkFilter = (typeof LINK_KINDS)[number]
 
 const BASE_COLUMNS =
-  "id, type, amount, occurred_on, occurred_time, day_position, created_at, description, note, counterparty, invoice_ref, recurring_due_on, recurring_income_due_on, categories(id, name), accounts(id, name), recurring_expenses(id, name), recurring_incomes(id, name)"
+  "id, type, amount, occurred_on, occurred_time, day_position, created_at, description, note, counterparty, invoice_ref, recurring_due_on, categories(id, name), accounts(id, name), recurring_expenses(id, name), recurring_incomes(id, name), recurring_income_allocations(due_on, amount)"
 
 /** Columnas del select; con un filtro por abono, el embed es !inner */
 export function transactionColumns(innerDebt: boolean) {
@@ -41,7 +41,7 @@ export interface RawTransaction {
   counterparty: string | null
   invoice_ref: string | null
   recurring_due_on: string | null
-  recurring_income_due_on: string | null
+  recurring_income_allocations: { due_on: string; amount: number }[]
   categories: { id: string; name: string } | null
   accounts: { id: string; name: string } | null
   recurring_expenses: { id: string; name: string } | null
@@ -79,7 +79,14 @@ function toLink(row: RawTransaction) {
       kind: "recurring_income",
       id: row.recurring_incomes.id,
       name: row.recurring_incomes.name,
-      due_on: row.recurring_income_due_on
+      // Un ingreso puede cubrir varias ocurrencias o abonar una (SPEC 38).
+      // Vacío en las fuentes sin fecha fija
+      allocations: [...row.recurring_income_allocations]
+        .map((allocation) => ({
+          due_on: allocation.due_on,
+          amount: Number(allocation.amount)
+        }))
+        .sort((a, b) => a.due_on.localeCompare(b.due_on))
     }
   }
   return null

@@ -827,6 +827,58 @@ export type Database = {
           }
         ]
       }
+      recurring_income_allocations: {
+        Row: {
+          amount: number
+          created_at: string
+          due_on: string
+          id: string
+          recurring_income_id: string
+          transaction_id: string
+          workspace_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_on: string
+          id?: string
+          recurring_income_id: string
+          transaction_id: string
+          workspace_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_on?: string
+          id?: string
+          recurring_income_id?: string
+          transaction_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_income_allocations_recurring_income_id_fkey"
+            columns: ["recurring_income_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_incomes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_income_allocations_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_income_allocations_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       recurring_incomes: {
         Row: {
           account_id: string | null
@@ -834,9 +886,11 @@ export type Database = {
           category_id: string
           created_at: string
           day_of_month: number | null
+          day_of_week: number | null
           ends_on: string | null
           frequency: Database["public"]["Enums"]["income_frequency"]
           id: string
+          interval_days: number | null
           is_active: boolean
           month_of_year: number | null
           name: string
@@ -851,9 +905,11 @@ export type Database = {
           category_id: string
           created_at?: string
           day_of_month?: number | null
+          day_of_week?: number | null
           ends_on?: string | null
           frequency: Database["public"]["Enums"]["income_frequency"]
           id?: string
+          interval_days?: number | null
           is_active?: boolean
           month_of_year?: number | null
           name: string
@@ -868,9 +924,11 @@ export type Database = {
           category_id?: string
           created_at?: string
           day_of_month?: number | null
+          day_of_week?: number | null
           ends_on?: string | null
           frequency?: Database["public"]["Enums"]["income_frequency"]
           id?: string
+          interval_days?: number | null
           is_active?: boolean
           month_of_year?: number | null
           name?: string
@@ -970,7 +1028,6 @@ export type Database = {
           occurred_time: string | null
           recurring_due_on: string | null
           recurring_expense_id: string | null
-          recurring_income_due_on: string | null
           recurring_income_id: string | null
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at: string
@@ -992,7 +1049,6 @@ export type Database = {
           occurred_time?: string | null
           recurring_due_on?: string | null
           recurring_expense_id?: string | null
-          recurring_income_due_on?: string | null
           recurring_income_id?: string | null
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
@@ -1014,7 +1070,6 @@ export type Database = {
           occurred_time?: string | null
           recurring_due_on?: string | null
           recurring_expense_id?: string | null
-          recurring_income_due_on?: string | null
           recurring_income_id?: string | null
           type?: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
@@ -1250,6 +1305,13 @@ export type Database = {
           month: string
         }[]
       }
+      allocate_income_receipt: {
+        Args: { p_transaction_id: string }
+        Returns: {
+          amount: number
+          due_on: string
+        }[]
+      }
       budget_progress: {
         Args: { p_month: string; p_workspace_id: string }
         Returns: {
@@ -1430,8 +1492,10 @@ export type Database = {
         Args: {
           p_date: string
           p_day_of_month: number
+          p_day_of_week: number
           p_ends_on: string
           p_frequency: Database["public"]["Enums"]["income_frequency"]
+          p_interval_days: number
           p_month_of_year: number
           p_second_day_of_month: number
           p_starts_on: string
@@ -1536,6 +1600,21 @@ export type Database = {
         }
         Returns: string
       }
+      recurring_income_dates: {
+        Args: {
+          p_day_of_month: number
+          p_day_of_week: number
+          p_ends_on: string
+          p_frequency: Database["public"]["Enums"]["income_frequency"]
+          p_from: string
+          p_interval_days: number
+          p_month_of_year: number
+          p_second_day_of_month: number
+          p_starts_on: string
+          p_to: string
+        }
+        Returns: string[]
+      }
       recurring_income_occurrences: {
         Args: { p_from: string; p_to: string; p_workspace_id: string }
         Returns: {
@@ -1546,7 +1625,6 @@ export type Database = {
           name: string
           received_amount: number
           recurring_income_id: string
-          transaction_id: string
         }[]
       }
       recurring_occurrences: {
@@ -1637,7 +1715,14 @@ export type Database = {
         | "recurring_expenses"
         | "debt_entries"
         | "goal_contributions"
-      income_frequency: "monthly" | "biweekly" | "yearly" | "none"
+      income_frequency:
+        | "monthly"
+        | "biweekly"
+        | "yearly"
+        | "none"
+        | "weekly"
+        | "daily"
+        | "every_n_days"
       mcp_access: "read" | "write"
       mcp_operation_status: "applied" | "undone" | "failed"
       rate_type: "ea" | "mv"
@@ -1781,7 +1866,15 @@ export const Constants = {
         "debt_entries",
         "goal_contributions"
       ],
-      income_frequency: ["monthly", "biweekly", "yearly", "none"],
+      income_frequency: [
+        "monthly",
+        "biweekly",
+        "yearly",
+        "none",
+        "weekly",
+        "daily",
+        "every_n_days"
+      ],
       mcp_access: ["read", "write"],
       mcp_operation_status: ["applied", "undone", "failed"],
       rate_type: ["ea", "mv"],

@@ -13,6 +13,7 @@ import {
   toast
 } from "@heroui/react"
 import { X } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { AccountSelectField } from "@/components/forms/account-select-field"
 import { CategorySelectField } from "@/components/forms/category-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
@@ -22,13 +23,19 @@ import {
 } from "@/features/accounts/components/account-select"
 import type { Category } from "@/features/categories/queries"
 import { monthName } from "@/features/recurring-expenses/occurrences"
+import { parseAmount } from "@/features/transactions/schemas"
 import { todayISO } from "@/libs/dates"
+import { formatShortDate } from "@/libs/format"
 import { createRecurringIncome, updateRecurringIncome } from "../actions"
+import { isoWeekday, weekdayName } from "../occurrences"
 import type { RecurringIncome } from "../queries"
 import {
   BIWEEKLY_DEFAULT_DAYS,
   INCOME_FREQUENCIES,
-  type IncomeFrequency
+  INTERVAL_DAYS_MAX,
+  INTERVAL_DAYS_MIN,
+  type IncomeFrequency,
+  usesDayOfMonth
 } from "../schemas"
 import type { RecurringIncomeFormState } from "../types"
 
@@ -38,18 +45,95 @@ const AMOUNT_FORMAT = new Intl.NumberFormat("es-CO", {
 
 const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1)
 
+const WEEKDAYS = Array.from({ length: 7 }, (_, index) => index + 1)
+
 export const FREQUENCY_LABELS: Record<IncomeFrequency, string> = {
-  monthly: "Mensual",
+  weekly: "Semanal",
   biweekly: "Quincenal",
+  monthly: "Mensual",
   yearly: "Anual",
+  daily: "Diaria",
+  every_n_days: "Cada N días",
   none: "Sin fecha fija"
 }
 
 const FREQUENCY_HINTS: Record<IncomeFrequency, string> = {
-  monthly: "Llega una vez al mes, como un salario mensual o un arriendo.",
+  weekly: "Llega una vez por semana, como el rendimiento de una inversión.",
   biweekly: "Llega dos veces al mes, como la nómina por quincenas.",
+  monthly: "Llega una vez al mes, como un salario mensual o un arriendo.",
   yearly: "Llega una vez al año, como una prima o un dividendo anual.",
+  daily: "Llega todos los días, como las ventas diarias de un puesto.",
+  every_n_days: "Llega cada cierto número de días, contados desde el inicio.",
   none: "Para proyectos o inversiones sin fecha fija. Solo suma lo que recibes."
+}
+
+interface ScheduleDraft {
+  frequency: IncomeFrequency
+  dayOfMonth: string
+  secondDay: string
+  monthOfYear: string
+  dayOfWeek: string
+  intervalDays: string
+  startsOn: string
+  endsOn: string
+}
+
+const toNumber = (value: string) => (value === "" ? null : Number(value))
+
+/**
+ * Resumen en vivo del calendario: "Cada sábado", "Cada 14 días desde el
+ * 3 nov", "Los días 15 y 30 de cada mes"… null si faltan datos o es "Sin
+ * fecha fija".
+ */
+function scheduleSummary(draft: ScheduleDraft): string | null {
+  const day = toNumber(draft.dayOfMonth)
+  const second = toNumber(draft.secondDay)
+  const month = toNumber(draft.monthOfYear)
+  const weekday = toNumber(draft.dayOfWeek)
+  const interval = toNumber(draft.intervalDays)
+  const since = draft.startsOn ? formatShortDate(draft.startsOn) : null
+
+  let text: string | null = null
+  switch (draft.frequency) {
+    case "weekly":
+      text = weekday === null ? null : `Cada ${weekdayName(weekday)}`
+      break
+    case "daily":
+      text = since && `Todos los días desde el ${since}`
+      break
+    case "every_n_days":
+      text =
+        interval === null ||
+        !Number.isInteger(interval) ||
+        interval < INTERVAL_DAYS_MIN ||
+        interval > INTERVAL_DAYS_MAX ||
+        !since
+          ? null
+          : `Cada ${interval} días desde el ${since}`
+      break
+    case "monthly":
+      text = day === null ? null : `Cada mes, el día ${day}`
+      break
+    case "biweekly":
+      text =
+        day === null || second === null
+          ? null
+          : `Los días ${day} y ${second} de cada mes`
+      break
+    case "yearly":
+      text =
+        day === null || month === null
+          ? null
+          : `Cada ${day} de ${monthName(month)}`
+      break
+    case "none":
+      return null
+  }
+
+  if (text && draft.endsOn) {
+    text += ` hasta el ${formatShortDate(draft.endsOn)}`
+  }
+  return text
 }
 
 interface RecurringIncomeDialogProps {
@@ -165,6 +249,13 @@ function RecurringIncomeForm({
     dayText(income?.second_day_of_month)
   )
   const [monthOfYear, setMonthOfYear] = useState(dayText(income?.month_of_year))
+  const [dayOfWeek, setDayOfWeek] = useState(dayText(income?.day_of_week))
+  const [intervalDays, setIntervalDays] = useState(
+    dayText(income?.interval_days)
+  )
+  const [amount, setAmount] = useState(
+    income ? AMOUNT_FORMAT.format(income.amount) : ""
+  )
   const [startsOn, setStartsOn] = useState(
     () => income?.starts_on ?? todayISO()
   )
@@ -196,11 +287,26 @@ function RecurringIncomeForm({
       if (!dayOfMonth) setDayOfMonth(String(BIWEEKLY_DEFAULT_DAYS[0]))
       if (!secondDay) setSecondDay(String(BIWEEKLY_DEFAULT_DAYS[1]))
     }
+    // Semanal: propone el día de la semana de la fecha de inicio
+    if (next === "weekly" && !dayOfWeek && startsOn) {
+      setDayOfWeek(String(isoWeekday(startsOn)))
+    }
   }
 
   const errors = state.fieldErrors
   const values = state.values
-  const hasSchedule = frequency !== "none"
+  const hasMonthDay = usesDayOfMonth(frequency)
+  const summary = scheduleSummary({
+    frequency,
+    dayOfMonth,
+    secondDay,
+    monthOfYear,
+    dayOfWeek,
+    intervalDays,
+    startsOn,
+    endsOn
+  })
+  const summaryAmount = parseAmount(amount)
 
   return (
     <form
@@ -240,10 +346,8 @@ function RecurringIncomeForm({
           name="amount"
           inputMode="decimal"
           autoComplete="off"
-          defaultValue={
-            values?.amount ??
-            (income ? AMOUNT_FORMAT.format(income.amount) : "")
-          }
+          value={amount}
+          onChange={setAmount}
           isRequired
           isInvalid={Boolean(errors?.amount)}
           validationBehavior="aria"
@@ -314,8 +418,64 @@ function RecurringIncomeForm({
         <p className="text-sm text-muted">{FREQUENCY_HINTS[frequency]}</p>
       </div>
 
-      {/* Cada frecuencia pide solo los días que le aplican */}
-      {hasSchedule && (
+      {/* Cada frecuencia pide solo los datos que le aplican */}
+      {frequency === "weekly" && (
+        <Select
+          name="day_of_week"
+          fullWidth
+          placeholder="Elige un día"
+          value={dayOfWeek || null}
+          onChange={(key) => setDayOfWeek(key == null ? "" : String(key))}
+          isInvalid={Boolean(errors?.day_of_week)}
+          className="flex flex-col gap-2"
+        >
+          <Label>Día de la semana</Label>
+          <Select.Trigger className="capitalize">
+            <Select.Value />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox>
+              {WEEKDAYS.map((day) => (
+                <ListBox.Item
+                  key={day}
+                  id={String(day)}
+                  textValue={weekdayName(day)}
+                  className="capitalize"
+                >
+                  {weekdayName(day)}
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
+          <FieldError>{errors?.day_of_week?.[0]}</FieldError>
+        </Select>
+      )}
+
+      {frequency === "every_n_days" && (
+        <TextField
+          name="interval_days"
+          inputMode="numeric"
+          value={intervalDays}
+          onChange={setIntervalDays}
+          isRequired
+          isInvalid={Boolean(errors?.interval_days)}
+          validationBehavior="aria"
+          className="flex flex-col gap-2"
+        >
+          <Label>Cada cuántos días</Label>
+          <Input
+            type="number"
+            min={INTERVAL_DAYS_MIN}
+            max={INTERVAL_DAYS_MAX}
+            placeholder="14"
+          />
+          <FieldError>{errors?.interval_days?.[0]}</FieldError>
+        </TextField>
+      )}
+
+      {hasMonthDay && (
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField
             name="day_of_month"
@@ -396,7 +556,7 @@ function RecurringIncomeForm({
           )}
         </div>
       )}
-      {hasSchedule && (
+      {hasMonthDay && (
         <p className="-mt-2 text-sm text-muted">
           Si el mes no tiene ese día, cuenta el último día del mes.
         </p>
@@ -433,6 +593,21 @@ function RecurringIncomeForm({
           )}
         </div>
       </div>
+
+      {summary && (
+        <p
+          aria-live="polite"
+          className="rounded-2xl bg-default px-4 py-3 text-sm font-medium first-letter:uppercase"
+        >
+          {summary}
+          {summaryAmount > 0 && (
+            <>
+              {" · "}
+              <Amount value={summaryAmount} />
+            </>
+          )}
+        </p>
+      )}
 
       {state.error && (
         <p

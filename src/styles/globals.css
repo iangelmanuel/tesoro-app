@@ -389,6 +389,18 @@
   }
 }
 
+/* Video de fondo del hero (SPEC 40): con reduced motion o ahorro de datos
+   (data-paused, lo pone hero-video.tsx) solo se ve el póster de debajo */
+@media (prefers-reduced-motion: reduce) {
+  .hero-video {
+    display: none;
+  }
+}
+
+.hero-video[data-paused] {
+  display: none;
+}
+
 @keyframes hero-enter {
   from {
     transform: translateY(16px);

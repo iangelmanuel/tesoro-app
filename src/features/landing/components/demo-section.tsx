@@ -10,7 +10,7 @@ export function DemoSection() {
       aria-labelledby="demo-title"
       className="scroll-mt-16"
     >
-      <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 pb-20 sm:px-6 sm:pb-24">
+      <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-20 sm:px-6 sm:py-24">
         <SectionHeading
           id="demo-title"
           title="Así se ven tus finanzas en orden"

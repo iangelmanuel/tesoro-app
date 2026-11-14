@@ -1,9 +1,9 @@
+import { getImageProps } from "next/image"
 import Link from "next/link"
 import { buttonVariants } from "@heroui/react"
 import { ArrowRightIcon, PlayIcon } from "lucide-react"
 import { SITE } from "@/config/site"
-import { HeroSceneLoader } from "./hero-scene-loader"
-import { LandingHeroVisual } from "./hero-visual"
+import { HeroVideo } from "./hero-video"
 
 // Lo que más tranquiliza a quien llega: va arriba, junto a los CTA
 const PROMISES = [
@@ -12,14 +12,65 @@ const PROMISES = [
   `Código abierto (${SITE.info.license})`
 ]
 
+// Pósters del video (primer fotograma de cada variante). Van en un <picture>
+// debajo del video: son el primer pintado y el LCP, y lo único que se ve con
+// reduced motion, ahorro de datos o sin JS. El atributo poster del <video> no
+// sirve aquí porque no cambia con el ancho y en móvil saltaría al encuadre
+// vertical al arrancar
+const POSTER_COMMON = { alt: "", sizes: "100vw", unoptimized: true }
+const {
+  props: { srcSet: desktopPoster }
+} = getImageProps({
+  ...POSTER_COMMON,
+  src: "/videos/hero-poster.webp",
+  width: 1920,
+  height: 1080
+})
+const {
+  props: { srcSet: mobilePoster, ...posterProps }
+} = getImageProps({
+  ...POSTER_COMMON,
+  src: "/videos/hero-mobile-poster.webp",
+  width: 720,
+  height: 1280
+})
+
+// Hero (SPEC 40): banda oscura en los dos temas (clase dark), con el video de
+// ambiente de fondo, un velo y el texto encima. Sube bajo el header (-mt-16)
+// para que el header transparente quede sobre el video. Todo tamaño sale de
+// CSS: ni el video ni la isla cambian el layout
 export function Hero() {
   return (
     <section
       aria-labelledby="hero-title"
-      className="relative overflow-hidden"
+      className="dark relative isolate -mt-16 overflow-hidden bg-background text-foreground"
     >
-      <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.05fr_1fr]">
-        <div className="flex flex-col items-start gap-6">
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 -z-10"
+      >
+        <picture>
+          <source
+            media="(max-width: 767px)"
+            srcSet={mobilePoster}
+          />
+          <source srcSet={desktopPoster} />
+          <img
+            {...posterProps}
+            alt=""
+            fetchPriority="high"
+            className="absolute inset-0 size-full object-cover"
+          />
+        </picture>
+        <HeroVideo />
+        {/* Velo: ≥ 72 % de negro detrás del texto, para que el texto
+            atenuado dé AA (4.7:1) sobre el fotograma más claro del loop. En
+            escritorio se aclara hacia la derecha, donde no hay texto */}
+        <div className="absolute inset-0 bg-black/72 lg:bg-transparent lg:bg-linear-to-r lg:from-black/75 lg:via-black/72 lg:via-58% lg:to-black/30" />
+      </div>
+
+      <div className="mx-auto flex min-h-[min(88svh,52rem)] max-w-6xl flex-col justify-center px-4 pt-28 pb-16 sm:px-6 sm:pt-32 sm:pb-24">
+        <div className="flex max-w-2xl flex-col items-start gap-6">
           <div className="hero-enter">
             <h1
               id="hero-title"
@@ -33,9 +84,9 @@ export function Hero() {
             style={{ "--hero-delay": "80ms" } as React.CSSProperties}
           >
             <p className="max-w-xl text-lg text-pretty text-muted">
-              Anota lo que entra y lo que sale, en tu vida y en tu negocio.{" "}
-              {SITE.info.name} lo ordena en gráficas, un score de salud
-              financiera y recomendaciones concretas.
+              Anota lo que entra y lo que sale, en casa y en tu negocio.{" "}
+              {SITE.info.name} lo convierte en gráficas, un score y pasos
+              concretos.
             </p>
           </div>
           <div
@@ -82,9 +133,6 @@ export function Hero() {
             </ul>
           </div>
         </div>
-        <HeroSceneLoader>
-          <LandingHeroVisual />
-        </HeroSceneLoader>
       </div>
     </section>
   )

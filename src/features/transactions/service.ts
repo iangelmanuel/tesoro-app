@@ -1,6 +1,6 @@
 import type { PostgrestError } from "@supabase/supabase-js"
 import type { z } from "zod"
-import { getOldestUnreceivedOccurrences } from "@/features/recurring-incomes/queries"
+import type { IncomeAllocation } from "@/features/recurring-incomes/types"
 import type { WorkspaceType } from "@/features/workspaces/queries"
 import {
   type ServiceFailure,
@@ -45,7 +45,6 @@ const ARCHIVED_ACCOUNT = "La cuenta está archivada"
 const INVALID_ACCOUNT = "Elige una cuenta válida"
 const SAME_TRANSFER_ACCOUNT = "Elige una cuenta distinta a la que paga"
 const INCOME_NOT_FOUND = "No se encontró el ingreso fijo"
-const ALREADY_RECEIVED = "Este ingreso ya está registrado. Intenta de nuevo"
 export const LINKED_DEBT_ENTRY =
   "Este movimiento es un pago o avance de deuda: edítalo desde su diálogo de pago"
 const UNIQUE_VIOLATION = "23505"
@@ -60,7 +59,17 @@ const PG_ERROR_MESSAGES: Record<string, Omit<ServiceFailure, "ok">> = {
   "42501": { error: "No tienes permiso para modificar este movimiento" }
 }
 
+// allocate_income_receipt marca con `hint` por qué sobró monto al repartir
+// (SPEC 38); el mensaje va al campo del monto
+const ALLOCATION_HINTS = new Set([
+  "allocation_future_limit",
+  "allocation_exceeds_end"
+])
+
 function toServiceError(error: PostgrestError): ServiceFailure {
+  if (ALLOCATION_HINTS.has(error.hint)) {
+    return fail({ fieldErrors: { amount: [error.message] } })
+  }
   // Índice único por ocurrencia: el pago ya existe (p. ej. doble clic)
   if (error.code === UNIQUE_VIOLATION) {
     return fail({ error: ALREADY_PAID })
@@ -120,18 +129,14 @@ async function validateRecurring(
 
 interface IncomeLink {
   recurring_income_id: string | null
-  recurring_income_due_on: string | null
 }
 
-const NO_INCOME_LINK: IncomeLink = {
-  recurring_income_id: null,
-  recurring_income_due_on: null
-}
+const NO_INCOME_LINK: IncomeLink = { recurring_income_id: null }
 
-// Enlace de un ingreso a un ingreso fijo activo del espacio (SPEC 30): con
-// calendario, a su ocurrencia no recibida más antigua (las atrasadas
-// primero); sin ocurrencias no recibidas o "Sin fecha fija", a la fuente sin
-// ocurrencia. El cliente nunca elige la ocurrencia.
+// Enlace de un ingreso a un ingreso fijo activo del espacio (SPEC 30). El
+// reparto entre ocurrencias (SPEC 38) lo hace la BD: el trigger de
+// transactions llama a allocate_income_receipt en la misma transacción que
+// guarda el movimiento. El cliente nunca elige las ocurrencias.
 async function resolveIncomeLink(
   supabase: AppSupabase,
   workspaceId: string,
@@ -139,24 +144,31 @@ async function resolveIncomeLink(
 ): Promise<IncomeLink | { error: string }> {
   const { data: income } = await supabase
     .from("recurring_incomes")
-    .select("id, frequency")
+    .select("id")
     .eq("id", recurringIncomeId)
     .eq("workspace_id", workspaceId)
     .eq("is_active", true)
     .maybeSingle()
 
-  if (!income) {
-    return { error: INCOME_NOT_FOUND }
-  }
-  if (income.frequency === "none") {
-    return { recurring_income_id: income.id, recurring_income_due_on: null }
-  }
+  return income
+    ? { recurring_income_id: income.id }
+    : { error: INCOME_NOT_FOUND }
+}
 
-  const oldest = await getOldestUnreceivedOccurrences(workspaceId, supabase)
-  return {
-    recurring_income_id: income.id,
-    recurring_income_due_on: oldest.get(income.id) ?? null
+/** Reparto guardado de un ingreso, de la ocurrencia más antigua a la última */
+async function fetchAllocations(
+  supabase: AppSupabase,
+  transaction: TransactionRow
+): Promise<IncomeAllocation[]> {
+  if (transaction.recurring_income_id === null) {
+    return []
   }
+  const { data } = await supabase
+    .from("recurring_income_allocations")
+    .select("due_on, amount")
+    .eq("transaction_id", transaction.id)
+    .order("due_on")
+  return data ?? []
 }
 
 /**
@@ -205,7 +217,9 @@ export async function createTransactionRecord(
   supabase: AppSupabase,
   workspace: ServiceWorkspace,
   data: CreateTransactionData
-): Promise<ServiceResult<{ after: TransactionRow }>> {
+): Promise<
+  ServiceResult<{ after: TransactionRow; allocations: IncomeAllocation[] }>
+> {
   const { recurring_expense_id, recurring_due_on } = data
   if (recurring_expense_id !== null && data.type !== "expense") {
     return fail({ error: RECURRING_MUST_BE_EXPENSE })
@@ -255,13 +269,6 @@ export async function createTransactionRecord(
     incomeLink = resolved
   }
 
-  const insertRow = (link: IncomeLink) =>
-    supabase
-      .from("transactions")
-      .insert({ ...row, ...link, workspace_id: workspace.id })
-      .select("*")
-      .single()
-
   // Con traspaso, el traspaso y el movimiento se guardan juntos (RPC); sin
   // él basta el insert directo
   if (transfer_from !== null && row.account_id !== null) {
@@ -286,36 +293,27 @@ export async function createTransactionRecord(
       return toServiceError(error)
     }
     const after = await fetchRow(supabase, workspace.id, id)
-    return after ? { ok: true, after } : fail({ error: DEFAULT_ERROR })
+    return after
+      ? { ok: true, after, allocations: [] }
+      : fail({ error: DEFAULT_ERROR })
   }
 
-  let { data: inserted, error } = await insertRow(incomeLink)
-
-  // Otro movimiento recibió la misma ocurrencia a la vez: se reintenta una
-  // vez con la siguiente no recibida
-  if (
-    error?.code === UNIQUE_VIOLATION &&
-    incomeLink.recurring_income_due_on !== null &&
-    incomeLink.recurring_income_id !== null
-  ) {
-    const retry = await resolveIncomeLink(
-      supabase,
-      workspace.id,
-      incomeLink.recurring_income_id
-    )
-    if (
-      "error" in retry ||
-      retry.recurring_income_due_on === incomeLink.recurring_income_due_on
-    ) {
-      return fail({ error: ALREADY_RECEIVED })
-    }
-    ;({ data: inserted, error } = await insertRow(retry))
-  }
+  // Con ingreso fijo, el trigger reparte el monto; si sobra, el insert falla
+  // entero y el error llega al campo del monto
+  const { data: inserted, error } = await supabase
+    .from("transactions")
+    .insert({ ...row, ...incomeLink, workspace_id: workspace.id })
+    .select("*")
+    .single()
 
   if (error || !inserted) {
     return error ? toServiceError(error) : fail({ error: DEFAULT_ERROR })
   }
-  return { ok: true, after: inserted }
+  return {
+    ok: true,
+    after: inserted,
+    allocations: await fetchAllocations(supabase, inserted)
+  }
 }
 
 /**
@@ -328,7 +326,13 @@ export async function updateTransactionRecord(
   workspace: ServiceWorkspace,
   id: string,
   data: UpdateTransactionData
-): Promise<ServiceResult<{ before: TransactionRow; after: TransactionRow }>> {
+): Promise<
+  ServiceResult<{
+    before: TransactionRow
+    after: TransactionRow
+    allocations: IncomeAllocation[]
+  }>
+> {
   const { data: current } = await supabase
     .from("transactions")
     .select("*, debt_entries(id)")
@@ -361,10 +365,12 @@ export async function updateTransactionRecord(
 
   // Enlace al ingreso fijo:
   // - un gasto, o Empresa, no lleva enlace;
-  // - sin el campo o con la misma fuente, se conserva (aunque cambien monto,
-  //   fecha o cuenta);
-  // - "Otro ingreso" lo quita y la ocurrencia vuelve a su estado calculado;
-  // - otra fuente re-enlaza a su ocurrencia no recibida más antigua.
+  // - sin el campo o con la misma fuente, se conserva; si cambia el monto,
+  //   el trigger reparte de nuevo desde la ocurrencia no recibida más
+  //   antigua, sin contar lo que ya tenía asignado este movimiento;
+  // - "Otro ingreso" lo quita y el trigger borra sus asignaciones: las
+  //   ocurrencias vuelven a su estado calculado;
+  // - otra fuente re-enlaza y el trigger reparte en ella.
   const { recurring_income_id, ...fields } = data
   let incomeLink: IncomeLink | null = null
   if (data.type !== "income" || workspace.type !== "personal") {
@@ -405,7 +411,12 @@ export async function updateTransactionRecord(
   if (!after) {
     return fail({ error: NOT_FOUND })
   }
-  return { ok: true, before, after }
+  return {
+    ok: true,
+    before,
+    after,
+    allocations: await fetchAllocations(supabase, after)
+  }
 }
 
 /**

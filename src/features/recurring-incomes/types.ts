@@ -9,6 +9,12 @@ export interface RecurringIncomeFormState {
   values?: Record<string, string>
 }
 
+/** Lo que un ingreso cubrió de una ocurrencia de su ingreso fijo (SPEC 38) */
+export interface IncomeAllocation {
+  due_on: string
+  amount: number
+}
+
 export interface RecurringIncomeActionResult {
   error?: string
 }

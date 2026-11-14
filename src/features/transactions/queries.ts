@@ -2,6 +2,7 @@ import { NO_ACCOUNT } from "@/features/accounts/constants"
 import { TRANSACTION_TYPES } from "@/features/categories/constants"
 import type { DebtEntry } from "@/features/debts/queries"
 import type { DebtKind } from "@/features/debts/schemas"
+import type { IncomeAllocation } from "@/features/recurring-incomes/types"
 import { createClient } from "@/libs/supabase/server"
 import type { Database } from "@/types/database"
 import {
@@ -36,8 +37,10 @@ export type EditableTransaction = Pick<
   | "invoice_ref"
   | "recurring_expense_id"
   | "recurring_income_id"
-  | "recurring_income_due_on"
->
+> & {
+  /** Lo que este ingreso cubrió de cada ocurrencia de su ingreso fijo (SPEC 38) */
+  recurring_income_allocations: IncomeAllocation[]
+}
 
 /**
  * Abono enlazado a un movimiento: pago de préstamo o cobro de una cuenta por
@@ -241,7 +244,7 @@ export async function getTransactions(
 interface TransactionLinks {
   recurringExpenseId: string | null
   recurringIncomeId: string | null
-  recurringIncomeDueOn: string | null
+  recurringIncomeAllocations: IncomeAllocation[]
   debtEntry: LinkedDebtEntry | null
 }
 
@@ -256,7 +259,7 @@ async function getTransactionLinks(ids: string[]) {
   const { data, error } = await supabase
     .from("transactions")
     .select(
-      "id, recurring_expense_id, recurring_income_id, recurring_income_due_on, debt_entries(id, debt_id, workspace_id, kind, amount, occurred_on, occurred_time, note, transaction_id, is_extra_payment, debts(kind))"
+      "id, recurring_expense_id, recurring_income_id, recurring_income_allocations(due_on, amount), debt_entries(id, debt_id, workspace_id, kind, amount, occurred_on, occurred_time, note, transaction_id, is_extra_payment, debts(kind))"
     )
     .in("id", ids)
 
@@ -269,7 +272,12 @@ async function getTransactionLinks(ids: string[]) {
     links.set(link.id, {
       recurringExpenseId: link.recurring_expense_id,
       recurringIncomeId: link.recurring_income_id,
-      recurringIncomeDueOn: link.recurring_income_due_on,
+      recurringIncomeAllocations: link.recurring_income_allocations
+        .map((allocation) => ({
+          due_on: allocation.due_on,
+          amount: Number(allocation.amount)
+        }))
+        .sort((a, b) => a.due_on.localeCompare(b.due_on)),
       debtEntry: entry
         ? {
             id: entry.id,
@@ -412,7 +420,7 @@ function toLedgerEntry(
       invoice_ref: row.invoice_ref,
       recurring_expense_id: link?.recurringExpenseId ?? null,
       recurring_income_id: link?.recurringIncomeId ?? null,
-      recurring_income_due_on: link?.recurringIncomeDueOn ?? null
+      recurring_income_allocations: link?.recurringIncomeAllocations ?? []
     }
   }
 }

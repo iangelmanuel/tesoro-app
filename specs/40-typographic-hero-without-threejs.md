@@ -59,7 +59,8 @@ Es el quinto de cinco specs del mismo pedido (SPEC 36 a 40). Todo el diseño se 
 
 ### 3. Sección "Tu salud financiera, en un número de 0 a 100"
 
-- `score-section.tsx`, `score-visual.tsx` y `score-bands.ts` se rediseñan con `/impeccable shape` + `/impeccable critique`, con la **misma información** que hoy (qué mide el score, sus factores, las bandas y que se calcula con tus propios registros).
+- `score-section.tsx`, `score-visual.tsx` y `score-bands.ts` se rediseñan con `/impeccable shape` + `/impeccable critique`.
+- **Ampliado tras revisar la primera versión (pedido del usuario):** la sección se simplifica con `/impeccable distill`, porque con toda la información se leía llena y confusa. Queda solo: la cifra de ejemplo con su banda, una barra que suma 100 y los siete factores con su peso. Salen de la landing la descripción de cada factor, la escala de bandas con rangos, la frase de lectura y la nota final; ese detalle vive en el dashboard (ayuda del score) y en `docs/producto.md`.
 - Se quitan los patrones que Impeccable marca como plantilla de IA: rejilla de tarjetas iguales con icono + título + texto, iconos decorativos, gradientes, contadores animados sin propósito, simetría centrada por defecto.
 - Dirección inicial a validar en el shape: el número como protagonista (una cifra grande con su banda y una frase de lectura), y los factores como una lista o una barra compuesta con su peso, no como tarjetas. Las bandas como una escala única, no como chips sueltos.
 - Colores solo de tokens (`--income`, `--expense`, `--balance`, `--chart-*`, `tone.ts`).
@@ -125,12 +126,28 @@ Cada cambio de los puntos 6 a 8 actualiza su estado de carga en la misma tarea, 
 - `CLAUDE.md`: comando de render del hero y tope de 30 MB en `public/videos/`.
 - `CHANGELOG.md` en `[Unreleased]` (en inglés).
 
+### 11. Hero a pantalla completa (ampliación)
+
+- El video ocupa toda la primera pantalla (`100svh`, mínimo 36 rem), también detrás del header: el hero empieza en y = 0, sin la línea blanca de 1 px que dejaba el borde del header.
+- El texto se apoya abajo a la izquierda, como el pie de una foto: título más grande (hasta 4,5 rem) con la segunda parte del slogan en el verde de marca (color sólido), bajada, CTA principal y "Ver la demo" como botón de cristal, y las promesas en una franja inferior sobre una línea fina.
+- El velo pasa a un degradado vertical (claro arriba, denso abajo) más una capa lateral desde 1024 px; todo el texto sigue dando AA sobre el fotograma más claro.
+- Entrada: el video se asienta de 1.06 a 1 en 2,4 s (expo.out). Sin animación con reduced motion.
+
+### 12. Header de la landing minimalista (ampliación)
+
+- Una sola línea, sin pastilla ni divisores: logo, navegación como texto, GitHub con estrellas, tema, "Iniciar sesión" como texto y "Crear cuenta" compacto. Misma información que antes.
+- Tres estados: transparente arriba; cristal oscuro con scroll mientras sigue sobre el hero; fondo de la página translúcido con una línea fina al salir del hero. El tema solo cambia al cruzar el borde inferior del hero, y los colores se funden en 300 ms.
+- En móvil no cambia: menú en cajón con la sesión y GitHub.
+
+### 13. Scrollbar del proyecto (ampliación)
+
+- Scrollbar fina en todo el proyecto (`scrollbar-width: thin`, con respaldo `::-webkit-scrollbar` para Safari), sin carril visible, con los grises neutros del sistema (`--scrollbar` y `--scrollbar-hover`, matiz 264) en claro y oscuro.
+
 **Fuera de alcance (para otros specs):**
 
 - Otras secciones de la landing (demo, funciones, agentes, código abierto, CTA final), salvo heredar el fondo blanco en claro.
 - Grabar la app de nuevo o re-renderizar los clips existentes.
 - Cambios en metadata, Open Graph o la imagen OG.
-- Rediseño de la navegación de la landing.
 - Cambios de datos, queries o actions de Gastos fijos, Ingresos fijos, Deudas, Metas o Categorías.
 - Un tema "Sistema" en el selector de tema.
 
@@ -184,7 +201,8 @@ docs/producto.md, docs/ui.md, docs/creditos-media.md,
 7. **Dashboard.** `MonthSwitcher` y su uso en Movimientos, Gastos fijos, Ingresos fijos y Presupuestos; `DetailSheet` y los cinco paneles; menú de cuenta con Ayuda y tabs de tema. Cada pieza actualiza su skeleton en el mismo paso (punto 9 del alcance), no al final.
 8. **Pulido.** `/impeccable polish` y `/impeccable audit` sobre todo lo tocado, en claro y oscuro, escritorio y 390 px.
 9. **Docs y CHANGELOG.**
-10. **Verificación.** `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm build`; Lighthouse de `/` en móvil.
+10. **Ampliación.** Score simplificado (`/impeccable distill`), hero a pantalla completa, header minimalista y scrollbar (puntos 11 a 13), con su documentación.
+11. **Verificación.** `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm build`; Lighthouse de `/` en móvil.
 
 ## Criterios de aceptación
 
@@ -202,7 +220,10 @@ docs/producto.md, docs/ui.md, docs/creditos-media.md,
 - [ ] Con `prefers-reduced-motion: reduce` no hay animación de entrada y solo se ve el póster (el video no se reproduce).
 - [ ] Todo texto del hero da AA sobre el fotograma más claro del loop, en claro y oscuro.
 - [ ] En claro, el fondo de la landing y de las páginas legales es `#FFFFFF`; el dashboard conserva su gris.
-- [ ] Las secciones de score y espacios muestran la misma información que antes, sin rejillas de tarjetas iguales ni iconos decorativos, y pasan `/impeccable critique` sin antipatrones marcados.
+- [ ] La sección de espacios muestra la misma información que antes; la de score muestra la cifra con su banda y los siete factores con su peso. Ninguna usa rejillas de tarjetas iguales ni iconos decorativos.
+- [ ] El hero ocupa toda la primera pantalla, empieza en y = 0 (sin línea blanca arriba) y apoya el texto abajo a la izquierda.
+- [ ] El header de la landing no cambia de tema mientras está sobre el hero; al salir, el cambio se funde sin salto. Muestra logo, navegación, GitHub, tema y sesión.
+- [ ] La scrollbar es fina y gris en claro y oscuro, en la landing y en el dashboard.
 - [ ] El footer muestra el icono de cada red, con nombre accesible y objetivo de 44 px o más en móvil.
 
 **Dashboard**
@@ -235,6 +256,8 @@ docs/producto.md, docs/ui.md, docs/creditos-media.md,
 - **Sí:** Ayuda y tema dentro del menú de cuenta; el tema como tabs (decisión del usuario).
 - **Sí:** iconos de marca de Simple Icons (CC0) como SVG propios. Motivo: `lucide-react` ya no mantiene iconos de marca.
 - **Sí:** toda la dirección visual se define con Impeccable antes de codificar (pedido del usuario).
+- **Sí:** simplificar la sección de score aunque deje fuera las descripciones y los rangos (pedido del usuario tras ver la primera versión). Motivo: se leía llena y confusa.
+- **Sí:** hero a pantalla completa, header minimalista y scrollbar global dentro de este spec (pedido del usuario).
 
 ## Riesgos
 

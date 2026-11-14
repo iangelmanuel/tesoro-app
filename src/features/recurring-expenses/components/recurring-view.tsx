@@ -2,25 +2,43 @@ import { Button, Card, CardContent } from "@heroui/react"
 import { CalendarClock, CircleCheck, Plus } from "lucide-react"
 import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardEmpty, EmptyState } from "@/components/dashboard/empty-state"
+import { MonthNav } from "@/components/dashboard/month-nav"
 import { getAccountBalances } from "@/features/accounts/queries"
+import { RECURRING_PATH } from "@/features/budgets/tabs"
 import { getCategories } from "@/features/categories/queries"
 import { ImportButton } from "@/features/imports/components/import-button"
 import type { PersonalWorkspace } from "@/features/workspaces/queries"
-import { getRecurringExpenses, getUpcomingPayments } from "../queries"
+import { parseRecurringMonth } from "../month"
+import {
+  getRecurringExpenses,
+  getRecurringStartMonth,
+  getUpcomingPayments
+} from "../queries"
 import { RecurringExpenseDialog } from "./recurring-expense-dialog"
 import { RecurringExpensesList } from "./recurring-expenses-list"
 import { UpcomingPayments } from "./upcoming-payments"
 
-/** Contenido de Gastos fijos: próximos pagos y lista. Servidor, sin título */
+/**
+ * Contenido de Gastos fijos: pagos del mes elegido (`?month`) y lista.
+ * Servidor, sin título.
+ */
 export async function RecurringView({
-  workspace
+  workspace,
+  month: monthParam
 }: {
   workspace: PersonalWorkspace
+  /** `?month` crudo; se acota entre el gasto más antiguo y el mes actual */
+  month: string | string[] | undefined
 }) {
+  // Se parsea tras leer la sesión: el mes por defecto usa new Date()
+  const month = parseRecurringMonth(
+    monthParam,
+    await getRecurringStartMonth(workspace.id)
+  )
   const [categories, expenses, payments, accounts] = await Promise.all([
     getCategories(workspace.id),
     getRecurringExpenses(workspace.id),
-    getUpcomingPayments(workspace.id),
+    getUpcomingPayments(workspace.id, month.month),
     getAccountBalances(workspace.id)
   ])
 
@@ -60,8 +78,16 @@ export async function RecurringView({
       </div>
 
       <Card data-tour="recurring-upcoming">
-        <CardHeading title="Próximos pagos" />
+        <CardHeading
+          title={month.isCurrent ? "Próximos pagos" : `Pagos de ${month.label}`}
+        />
         <CardContent className="flex flex-col gap-3">
+          <MonthNav
+            path={RECURRING_PATH}
+            label={month.label}
+            prev={month.prev}
+            next={month.next}
+          />
           {isUpToDate && (
             <CardEmpty
               icon={CircleCheck}

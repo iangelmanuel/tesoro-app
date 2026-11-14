@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Landing hero with an ambient background video and dashboard polish (SPEC 40).
+  - The hero is a dark band in both themes over a 15 s seamless loop of royalty-free stock footage (Pexels: hands with cash, a notebook, receipts, a small business), graded to a brand-green duotone and edited in Hyperframes. No text, logo, faces or audio in the video; credits in `docs/creditos-media.md`. Desktop 1920 × 1080 and mobile 720 × 1280 variants in H.264 and VP9 plus WebP posters, 3.8 MB in total.
+  - The hero is a server component: the posters (`<picture>`) are the first paint and the LCP, the `<video>` autoplays muted, and a veil keeps all hero text at WCAG AA over the brightest frame. With reduced motion or Save-Data the small `hero-video.tsx` island stops the video and its download; it also pauses off-screen. No hero size depends on JavaScript. Over the hero, the public header uses the dark theme.
+  - Public pages (`app/(public)/`) use a pure white background in light mode (`data-surface="site"`); the dashboard and auth keep the grey.
+  - New score section: the example score as a large figure with its band and a one-line reading, the four bands as a single 0–100 scale with a marker, and the seven factors as a weighted list.
+  - New workspaces section: Personal and Business side by side in their real colors (`--workspace-personal`, `--workspace-business`) with their structure shown like the dashboard aside.
+  - Footer social links with brand icons (Simple Icons, CC0, in `social-icons.tsx`).
+  - `MonthSwitcher`: one pill month selector for Movements, Budgets, Recurring expenses and Recurring incomes, with a card variant. In Recurring expenses and incomes it moves to the card header (`CardHeading` `control`).
+  - `DetailSheet`: shared base for the recurring expense, recurring income, debt/receivable, goal and categories sheets. Right on desktop, bottom sheet on phones, same width, header with name, status and key figure, and a fixed order: summary, primary action, history, details, edit/delete. Recurring sheets get a full-width action for the oldest open period. New help texts for frequency, installments and multi-part receipts.
+  - The account menu now holds **Ayuda** and a Light/Dark theme selector that keeps the menu open.
+  - Skeletons for the month selector, detail sheets and aside match the new layouts.
+
 - Receivables quick tab and multi-month payments (SPEC 39).
   - The movement dialog in Personal gets a **Me deben** tab between **Deuda** and **Gasto fijo** (header **Registrar movimiento**, phone **Movimiento rápido**, and the new **Más → Cobro de Me deben**, which opens it on that tab through `initialPanel`). Without active receivables it links to Me deben.
   - One shared collection form (`ReceivableCollectForm`) for that tab and the receivable Sheet (`ReceivableCollectDialog`, **Registrar cobro**, and **Marcar pagada** / **Abonar** on each installment). One-time receivables offer **Abono** (up to the balance) or **Pago completo** (the balance, read-only; the receivable becomes paid). Monthly ones offer **Una cuota** (pick an unpaid installment, oldest by default, pre-filled with what is left) or **Varios meses**.
@@ -311,6 +323,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `public/videos/` budget raised from 25 MB to 30 MB to fit the hero video (SPEC 40).
+
 - Card advances into an account now count as income (SPEC 36), reverting the SPEC 16 decision for advances only.
   - `record_card_advance` (same signature) creates, in the same transaction, an income in the chosen account (new system category **Avance de tarjeta**, description "Avance <card>") and the `advance` entry linked by `transaction_id`. The account lives on the income, so the account balance counts it once. Advances without an account only raise the debt, as before.
   - The income shows up in the summary, reports, charts, exports and score like any income. Editing or deleting the advance from the card syncs or deletes its income (SPEC 26 rules); in Movimientos it is a regular income row with a banknote icon whose actions open the advance dialog.
@@ -403,6 +417,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The variation helpers of the summary cards moved to `src/features/reports/change.ts`.
 
 ### Removed
+
+- The 3D hero scene (`hero-scene.tsx`, `hero-scene-loader.tsx`), its mockup fallback (`hero-visual.tsx`) and the `three`, `@react-three/fiber` and `@types/three` dependencies (SPEC 40).
+- The aside row with **Ayuda** and the theme toggle, and `ThemeToggle` (SPEC 40).
 
 - `AccountSelect` (SPEC 25), replaced by `AccountSelectField`. `account-select.tsx` keeps `AccountOption`, `AccountLabel`, `accountName` and `selectableAccounts`.
 

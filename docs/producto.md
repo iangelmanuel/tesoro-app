@@ -54,10 +54,14 @@ SPEC 24:
 
 1. **Hero**: el slogan como `<h1>`, un texto corto, CTA "Crear cuenta" y "Ver
    la demo" (ancla a `#demo`) y la lista "Gratis · Sin conectar bancos ·
-   Código abierto (MIT)". A la derecha, la escena 3D "cada registro suma"
-   (`hero-scene.tsx`): bloques sueltos que se ordenan hasta formar el cofre del
-   isotipo. Solo carga en ≥ 768 px, sin reduced motion ni ahorro de datos
-   (`hero-scene-loader.tsx`); si no, queda el mockup `hero-visual.tsx`.
+   Código abierto (MIT)". Desde SPEC 40 es una banda oscura en los dos temas,
+   en una columna, sobre un video de ambiente (`public/videos/hero.*`): tomas
+   de stock con licencia libre (manos con billetes, una libreta, recibos, un
+   pequeño negocio) en un loop de 15 s con tinte verde de marca, sin texto ni
+   caras. El video vende la idea, no muestra la app (para eso está la
+   demo). El póster es el primer pintado; con reduced motion, ahorro de
+   datos o sin JS solo se ve el póster. Créditos en
+   [creditos-media.md](creditos-media.md).
 2. **Demo** (`#demo`): el video principal (`SITE.landing.demo`) en
    `demo-player.tsx`. Póster hasta que el usuario pulsa play, sin autoplay y
    con `preload="none"`. JSON-LD `VideoObject` con `buildVideoSchema()`.
@@ -65,21 +69,28 @@ SPEC 24:
    y el clip grande de la función elegida (`SITE.landing.clips`, unido a
    `SITE.features` por el título). "Código abierto" no tiene clip: lo cuenta su
    sección.
-4. **Score** (`#score`): una barra segmentada con el peso de los 7 factores
-   (suma 100), su leyenda, las 4 bandas y `LandingScoreVisual` (medidor con
-   las bandas como tramos del arco y dos recomendaciones). Los pesos son
+4. **Score** (`#score`, rediseñado en SPEC 40): a la izquierda
+   `LandingScoreVisual`, un score de ejemplo (78, "Bueno") como cifra grande
+   con una frase de lectura y las 4 bandas como una sola escala de 0 a 100
+   con un marcador; a la derecha los 7 factores como lista con su peso (suma 100) y una barra fina proporcional. Los pesos son
    constantes de presentación copiadas de [Factores y pesos](#factores-y-pesos);
    si cambian allí, se cambian en `score-section.tsx`. Las bandas viven en
    `score-bands.ts`.
-5. **Personal y Empresa**: `SITE.workspaces.types`, con lo propio de cada
-   espacio tomado de `SITE.navigation.personal` y `SITE.navigation.business`.
+5. **Personal y Empresa**: `SITE.workspaces.types` lado a lado, cada uno
+   con su color real (`--workspace-personal`, `--workspace-business`) y su
+   estructura como el aside del dashboard: los grupos de
+   `SITE.navigation.personal` y `SITE.navigation.business` (SPEC 40).
 6. **Código abierto** (`#open-source`): repositorio, issues y `CONTRIBUTING`
    como enlaces de texto, para no competir con "Crear cuenta".
 7. **Cierre**: isotipo, slogan y CTA, como el final del video.
 
 - Los videos (`public/videos/`) muestran la app real grabada con datos de
-  ejemplo y la nota "Datos de ejemplo". El mockup del hero y el del score
-  también usan datos ficticios y lo dicen.
+  ejemplo y la nota "Datos de ejemplo". El ejemplo del score también usa
+  datos ficticios y lo dice. El video del hero es material de stock, no la
+  app.
+- En claro, las páginas públicas (`app/(public)/`) van sobre blanco puro
+  (`data-surface="site"`); el gris de `--background` es del dashboard y la
+  auth.
 - **Header**: `Logo`, `SITE.navigation.main` en una pastilla al centro, el
   enlace a GitHub con sus estrellas, el toggle de tema y los botones de sesión.
   Es transparente arriba y gana fondo al hacer scroll. Los botones son una isla

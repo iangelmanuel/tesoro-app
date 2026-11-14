@@ -86,8 +86,10 @@ vistazo y sabe qué hacer después, sin aprender contabilidad.
   con un usuario demo y datos de ejemplo, en un escritorio estilo macOS propio
   (sin marcas de Apple), renderizados con Hyperframes. Un video principal de
   ~56 s y 5 clips de funciones, todos con la nota "Datos de ejemplo".
-- Mockups JSX con datos ficticios que lo dicen: `hero-visual.tsx` (fallback
-  del hero sin 3D) y `score-visual.tsx` (ejemplo del score).
+- Ejemplo del score con datos ficticios que lo dicen (`score-visual.tsx`).
+- Video de ambiente del hero (SPEC 40): tomas de stock con licencia libre
+  (Pexels), sin caras ni marcas, con tinte verde. No muestra la app; sus
+  créditos están en `docs/creditos-media.md`.
 - No hay testimonios, clientes, métricas de uso ni prensa. No se inventan.
 
 ## Product Principles

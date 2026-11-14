@@ -171,16 +171,17 @@ estos solo agregan lo que HeroUI no trae.
 
 | Pieza                                                                      | Qué hace                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app-sidebar.tsx`, `sidebar/`                                              | Aside: logo → tabs Personal/Empresa → navegación por grupos y ancho ajustable (SPEC 31); abajo Ayuda (issues de GitHub), tema y usuario                                                                                                                                                                                                                                                                                      |
+| `app-sidebar.tsx`, `sidebar/`                                              | Aside: logo → tabs Personal/Empresa → navegación por grupos y ancho ajustable (SPEC 31); abajo solo el menú de cuenta (`user-menu.tsx`, con Ayuda y tema dentro, SPEC 40)                                                                                                                                                                                                                                                    |
 | `dashboard-title.tsx`                                                      | Único `<h1>` de la página, en el header. Saludo según la hora de Bogotá en el Resumen de Personal                                                                                                                                                                                                                                                                                                                            |
 | `quick-actions.tsx`, `quick-actions-menu.tsx`, `quick-actions-context.tsx` | Accesos del header: "Registrar movimiento" (con tabs de pago, SPEC 25) + "Más" (aporte, pago, importar, Categorías y Verificar) en Personal; "Registrar operación" + "Más" (Categorías y Verificar) en Empresa                                                                                                                                                                                                               |
 | `stat-card.tsx`                                                            | KPI: etiqueta, valor y badge de variación con color por significado (`trend`); `<dl>` accesible                                                                                                                                                                                                                                                                                                                              |
-| `card-heading.tsx`                                                         | Cabecera de tarjeta: `<h2>`, ayuda (i) opcional y enlace discreto con chevron                                                                                                                                                                                                                                                                                                                                                |
+| `card-heading.tsx`                                                         | Cabecera de tarjeta: `<h2>`, ayuda (i) opcional y enlace discreto con chevron; `control` para el selector de mes                                                                                                                                                                                                                                                                                                             |
 | `help-hint.tsx`                                                            | Ícono (i) con `Popover`; los textos viven en `src/config/help.ts` (`HELP`)                                                                                                                                                                                                                                                                                                                                                   |
 | `empty-state.tsx`                                                          | `EmptyState` (página): ícono, qué falta, qué hacer y la acción. `CardEmpty` (dentro de una tarjeta)                                                                                                                                                                                                                                                                                                                          |
 | `card-skeleton.tsx`                                                        | Placeholder con el mismo contenedor de `Card`; todo bloque que carga usa este, no un `Skeleton` suelto                                                                                                                                                                                                                                                                                                                       |
 | `tone.ts`                                                                  | Clases de estado (chips, barras, texto) desde tokens                                                                                                                                                                                                                                                                                                                                                                         |
-| `month-nav.tsx`                                                            | `MonthNav` (SPEC 37): `‹ mes ›` que escribe `?month=YYYY-MM` con `router.replace` sin mover el scroll. `prev` / `next` en `null` deshabilitan la flecha (límites). Flechas `CONTROL_BUTTON`, 44 px en móvil. Lo usan Presupuestos (`BudgetMonthNav`, sin límites) , Próximos pagos de Gastos fijos y Próximos ingresos de Ingresos fijos (SPEC 38), del más antiguo al mes actual                                            |
+| `month-switcher.tsx`, `month-nav.tsx`                                      | `MonthSwitcher` (SPEC 40): píldora `‹ mes ›` única del dashboard, 44 px de alto, `on="page"` o `on="card"`, y su skeleton. `MonthNav` (SPEC 37) lo conecta a `?month=YYYY-MM` con `router.replace` sin mover el scroll; `prev` / `next` en `null` deshabilitan la flecha. Lo usan Movimientos, Presupuestos, Gastos fijos e Ingresos fijos                                                                                   |
+| `detail-sheet.tsx`                                                         | `DetailSheet`, `DetailSection`, `DetailStats` y `DetailSheetSkeleton` (SPEC 40): base de los cinco paneles laterales de detalle                                                                                                                                                                                                                                                                                              |
 | `row-actions.tsx`, `delete-dialog.tsx`, `scroll-table.tsx`                 | Acciones de fila (menú en escritorio, botones en móvil), confirmación de borrado controlada y contenedor de tabla con scroll horizontal y columna de acciones fija (SPEC 20)                                                                                                                                                                                                                                                 |
 | `surface.ts`                                                               | Clases de superficie sin borde: `SURFACE_LIST`/`SURFACE_ROW` (lista sobre el fondo), `CARD_LIST`/`CARD_ROW` (lista dentro de una `Card`), `SURFACE_ITEM` (tarjeta de una grilla) y `SURFACE_NOTE`. Nunca `rounded-xl border` ni `border-dashed`. También `CONTROL_SURFACE` y `CONTROL_BUTTON` (controles de barra, ver Móvil). `SURFACE_ITEM_CLICKABLE`, `CARD_LINK` y `CARD_OVER_LINK`: tarjeta clicable completa (SPEC 25) |
 
@@ -277,11 +278,7 @@ Reglas:
 - **Score** (`score-section.tsx`, `score-visual.tsx`, `score-bands.ts`):
   colores de estado desde `tone.ts`; la barra de factores usa un solo tono de
   `--income` con mezclas de opacidad.
-- **Escena 3D** (`hero-scene.tsx`): React Three Fiber sin `drei`, un
-  `InstancedMesh` con los bloques del cofre, colores leídos de `--brand` e
-  `--income` (oklch → sRGB con un canvas 2D) y releídos al cambiar el tema.
-  `dpr` máximo 2, sin sombras, `frameloop` en "never" fuera de pantalla. El
-  lienzo es más grande que su columna y se difumina con `mask-image`.
+- **Hero** (SPEC 40): ver [Hero, fondo de la landing…](#hero-fondo-de-la-landing-selector-de-mes-paneles-y-menú-de-cuenta-spec-40). La escena 3D y Three.js se quitaron.
 - **Header** (`site-header.tsx`, `site-header-shell.tsx`,
   `github-stars.tsx`): navegación en pastilla, GitHub con estrellas (servidor,
   cacheado), toggle de tema de 44 px y botones de sesión con flecha.
@@ -482,6 +479,66 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
     generados por `pnpm brand:assets` desde `assets/fonts/` y
     `assets/brand/mark.svg`.
 
+### Hero, fondo de la landing, selector de mes, paneles y menú de cuenta (SPEC 40)
+
+- **Ámbito `site`:** el layout de `app/(public)/` pinta `data-surface="site"`
+  y `globals.css` lo sube a `:root` con `:has()`. En claro, `--background`
+  pasa a `#FFFFFF` y `--surface` a `oklch(0.975 0.003 264)` (las tarjetas se
+  separan del blanco por tono y por `--surface-shadow`; `--muted` da 5,6:1
+  sobre ellas y 6:1 sobre el blanco). El dashboard y la auth conservan el
+  gris. El oscuro no cambia.
+- **Hero** (`hero.tsx`, componente de servidor, y `hero-video.tsx`): banda
+  oscura en los dos temas (clase `dark` en la sección), con `-mt-16` para
+  quedar bajo el header. Capas, de abajo arriba: pósters en `<picture>`
+  (`hero-poster.webp` / `hero-mobile-poster.webp`, `fetchPriority="high"`,
+  son el LCP), el `<video>` (autoplay, muted, loop, `preload="metadata"`,
+  WebM/MP4 por `media`) y el velo: `bg-black/72` en móvil y, desde 1024 px,
+  un degradado lineal de 75 % a 72 % (hasta el 58 % del ancho) y 30 % a la
+  derecha. Con 72 % detrás del texto, el texto atenuado da 4,7:1 y el título
+  11:1 sobre el fotograma más claro. Alto `min(88svh, 52rem)` por CSS.
+  `hero-video.tsx` solo pausa fuera de pantalla y, con reduced motion o
+  Save-Data, quita las fuentes y marca `data-paused` (CSS oculta el video y
+  queda el póster). Ningún tamaño depende de JS.
+- **Header sobre el hero** (`site-header-shell.tsx`): en `/` y sin scroll
+  lleva la clase `dark`, así su texto se lee sobre el video también en claro.
+  Al hacer scroll vuelve a su tema.
+- **Score** (`score-visual.tsx`, `score-section.tsx`): cifra de ejemplo
+  grande con su banda (`TONE_BADGE_CLASSES`) y una frase, escala única de
+  bandas (`score-bands.ts`, ancho por rango, marcador en el valor) y factores
+  como lista con peso y barra `--income` proporcional. Sin contador animado.
+- **Espacios** (`workspaces-section.tsx`): réplica estática del aside de cada
+  espacio con los grupos de `SITE.navigation`. Colores con
+  `--workspace-personal` y `--workspace-business` (tono 700 en claro,
+  brillante en oscuro), porque `--accent` solo puede ser uno por ruta.
+- **Footer** (`site-footer.tsx`, `social-icons.tsx`): redes con icono de
+  16 px (Simple Icons, CC0, en `currentColor`; `Globe` de lucide para el
+  sitio) y el nombre visible. Filas de 44 px en móvil.
+- **Selector de mes** (`month-switcher.tsx`): una sola píldora para todo el
+  dashboard. `on="page"` usa `CONTROL_SURFACE` (Movimientos, Presupuestos);
+  `on="card"` usa `bg-surface-secondary` para no perderse dentro de una
+  tarjeta (Gastos fijos e Ingresos fijos, en el hueco `control` de
+  `CardHeading`: a la derecha en escritorio, a todo el ancho bajo el título
+  en móvil). `MonthNav` es el selector conectado a `?month`.
+  `MonthSwitcherSkeleton` y `CardSkeleton withMonth` reservan su forma.
+- **Paneles de detalle** (`detail-sheet.tsx`): `DetailSheet` es la base de
+  `RecurringExpenseSheet`, `RecurringIncomeSheet`, `DebtSheet`, `GoalSheet` y
+  `CategoriesSheet`. Derecha en escritorio y abajo con asa en móvil, mismo
+  ancho (`sm:max-w-md`). Cabecera: nombre, estado y cifra clave. Cuerpo en
+  orden fijo: resumen (`DetailStats`) → acción del momento (a todo el ancho,
+  visible sin desplazar) → historial → detalles → editar, pausar y eliminar
+  tras un divisor. Cada bloque titulado usa `DetailSection` (con `HelpHint`
+  opcional: `frequency`, `installment`, `multipleReceipts`). `loading` pone
+  `DetailSheetSkeleton` con la misma forma y `aria-busy`.
+- **Menú de cuenta** (`user-menu.tsx`): Cuenta → Ayuda (issues de GitHub en
+  otra pestaña) → Tema → Cerrar sesión. El tema es una sección de selección
+  única del mismo menú, con aspecto de píldora (Claro / Oscuro) y
+  `shouldCloseOnSelect={false}`: no cierra el menú y se recorre con flechas
+  (unas `Tabs` aparte quedarían fuera del teclado, porque Tab cierra un menú
+  de React Aria). El pie del aside solo lleva `UserMenu`; `ThemeToggle` se
+  borró.
+- **Videos (`public/videos/`):** tope de 30 MB (antes 25) para dar cabida al
+  hero, que pesa ≤ 4 MB entre sus cuatro variantes y dos pósters.
+
 ## Dónde vive cada pantalla
 
 | Pantalla         | Ruta                                                           | Piezas                                                                                                                                                                                                                                                                                                                                         |
@@ -618,15 +675,15 @@ Piezas en `src/components/dashboard/mobile/`:
   `cubic-bezier(0.16, 1, 0.3, 1)`), 0,7 s con subida de 24 px, escalonado de
   80 ms, una vez por elemento. Lo que ya se ve al cargar no se oculta nunca
   (protege el LCP). El hero entra con `.hero-enter` (solo `translate`).
-- `ScrollWipe` (barra de factores) y `ScrollSettle` (clips) usan
-  `animation-timeline: view()` sin JS; el medidor del score se anima una vez
-  al verse. `.press` da el levante y la presión de los CTA.
+- `ScrollWipe` (escala de bandas del score) y `ScrollSettle` (clips) usan
+  `animation-timeline: view()` sin JS. `.press` da el levante y la presión
+  de los CTA.
 - **Motion solo en lo interactivo:** `motion-provider.tsx` (`LazyMotion`
   estricto con las funciones cargadas aparte desde `motion-features.ts` y
   `MotionConfig reducedMotion="user"`) cubre el reproductor de la demo y el
   recorrido de funciones.
 - **Reduced motion y sin JS:** no hay estado oculto; todo se ve en su estado
-  final y no se carga la escena 3D.
+  final y el hero se queda en el póster.
 - **Peso de la landing:** `ToastProvider` solo en `app/dashboard/layout.tsx`,
   enlaces a auth con `prefetch={false}`, cajón móvil del header cargado al
   abrirlo y `SiteThemeToggle` como botón nativo. Así la landing no carga

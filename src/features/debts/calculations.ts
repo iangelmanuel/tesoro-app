@@ -1,9 +1,13 @@
+import type { Route } from "next"
 import { SITE } from "@/config/site"
 import type { OccurrenceTone } from "@/features/recurring-expenses/occurrences"
 import { shiftMonth, todayISO } from "@/libs/dates"
 import type { DebtKind, RateType, ReceivableSchedule } from "./schemas"
 
 export const DEBTS_PATH = `${SITE.routes.dashboardPersonal}/debts` as const
+
+/** Tab Me deben de Deudas */
+export const RECEIVABLES_PATH = `${DEBTS_PATH}?tab=receivables` as Route
 
 export type DebtStatus = "active" | "paid" | "archived"
 

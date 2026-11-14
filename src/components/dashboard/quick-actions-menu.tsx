@@ -7,13 +7,14 @@ import {
   ChevronDown,
   CreditCard,
   FileUp,
+  HandCoins,
   ListChecks,
   Plus,
   Tags,
   Target
 } from "lucide-react"
 import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
-import { DEBTS_PATH } from "@/features/debts/calculations"
+import { DEBTS_PATH, RECEIVABLES_PATH } from "@/features/debts/calculations"
 import {
   type DebtOption,
   PaymentDialog
@@ -25,7 +26,10 @@ import {
 } from "@/features/goals/components/contribution-dialog"
 import { GOALS_PATH } from "@/features/goals/progress"
 import { IMPORT_PATH } from "@/features/imports/constants"
-import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
+import {
+  type PaymentTabsData,
+  TransactionDialog
+} from "@/features/transactions/components/transaction-dialog"
 import { VerifyMovementsDialog } from "@/features/transactions/components/verify-movements-dialog"
 import {
   type QuickActionsWorkspace,
@@ -34,13 +38,14 @@ import {
 import { useActiveWorkspace } from "./use-active-workspace"
 
 type MoreAction =
-  "contribution" | "payment" | "import" | "categories" | "verify"
+  "contribution" | "payment" | "receivable" | "import" | "categories" | "verify"
 
 // En /dashboard/personal/* registra en Personal y en
 // /dashboard/business/[id]/* en esa empresa. En otras rutas (cuenta, estado
 // vacío de Empresa) no hay accesos
 export function QuickActionsMenu() {
-  const { goals, debts, pendingPayments, incomeSources } = useQuickActions()
+  const { goals, debts, receivables, pendingPayments, incomeSources } =
+    useQuickActions()
   const workspace = useActiveWorkspace()
 
   if (!workspace) {
@@ -49,6 +54,9 @@ export function QuickActionsMenu() {
 
   const isPersonal = workspace.type === "personal"
   const label = isPersonal ? "Registrar movimiento" : "Registrar operación"
+  const paymentTabs = isPersonal
+    ? { debts, receivables, pendingPayments, goals, incomeSources }
+    : undefined
 
   return (
     <>
@@ -65,13 +73,9 @@ export function QuickActionsMenu() {
         workspaceType={workspace.type}
         categories={workspace.categories}
         accounts={workspace.accounts}
-        // Personal: tabs "Deuda", "Gasto fijo" y "Meta", y el select
-        // "Ingreso fijo" del tab Ingreso (SPEC 25 y 30)
-        paymentTabs={
-          isPersonal
-            ? { debts, pendingPayments, goals, incomeSources }
-            : undefined
-        }
+        // Personal: tabs "Deuda", "Me deben", "Gasto fijo" y "Meta", y el
+        // select "Ingreso fijo" del tab Ingreso (SPEC 25, 30 y 39)
+        paymentTabs={paymentTabs}
         trigger={
           <Button
             size="sm"
@@ -90,25 +94,31 @@ export function QuickActionsMenu() {
         workspace={workspace}
         goals={goals}
         debts={debts}
+        paymentTabs={paymentTabs}
       />
     </>
   )
 }
 
-// Personal: aporte, pago, importar, categorías y verificar. Empresa no tiene
-// metas, deudas ni importación: solo categorías y verificar
+// Personal: aporte, pago, cobro de Me deben, importar, categorías y
+// verificar. Empresa no tiene metas, deudas ni importación: solo categorías y
+// verificar
 function MoreMenu({
   workspace,
   goals,
-  debts
+  debts,
+  paymentTabs
 }: {
   workspace: QuickActionsWorkspace
   goals: GoalOption[]
   debts: DebtOption[]
+  /** Tabs de pago del diálogo de movimiento (solo Personal) */
+  paymentTabs?: PaymentTabsData
 }) {
   const router = useRouter()
   const [contributionOpen, setContributionOpen] = useState(false)
   const [paymentOpen, setPaymentOpen] = useState(false)
+  const [receivableOpen, setReceivableOpen] = useState(false)
   const [categoriesOpen, setCategoriesOpen] = useState(false)
   const [verifyOpen, setVerifyOpen] = useState(false)
   const { accounts } = workspace
@@ -124,6 +134,12 @@ function MoreMenu({
       case "payment":
         if (debts.length > 0) setPaymentOpen(true)
         else router.push(DEBTS_PATH)
+        break
+      // Abre el diálogo de movimiento en el tab "Me deben" (SPEC 39)
+      case "receivable":
+        if (paymentTabs && paymentTabs.receivables.length > 0) {
+          setReceivableOpen(true)
+        } else router.push(RECEIVABLES_PATH)
         break
       case "import":
         router.push(IMPORT_PATH)
@@ -181,6 +197,15 @@ function MoreMenu({
             )}
             {isPersonal && (
               <Dropdown.Item
+                id="receivable"
+                textValue="Cobro de Me deben"
+              >
+                <HandCoins className="size-4" />
+                <Label>Cobro de Me deben</Label>
+              </Dropdown.Item>
+            )}
+            {isPersonal && (
+              <Dropdown.Item
                 id="import"
                 textValue="Importar"
               >
@@ -222,6 +247,18 @@ function MoreMenu({
             open={paymentOpen}
             onOpenChange={setPaymentOpen}
           />
+          {receivableOpen && (
+            <TransactionDialog
+              workspaceId={workspace.id}
+              workspaceType={workspace.type}
+              categories={workspace.categories}
+              accounts={accounts}
+              paymentTabs={paymentTabs}
+              initialPanel="receivable"
+              open
+              onOpenChange={setReceivableOpen}
+            />
+          )}
         </>
       )}
       <CategoriesSheet

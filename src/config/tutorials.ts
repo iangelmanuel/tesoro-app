@@ -108,7 +108,7 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
       target: "header-quick-add",
       title: "Registra un movimiento",
       description:
-        "Gastos, ingresos, traspasos, pagos de deudas, gastos fijos y aportes a metas. Todo empieza aquí.",
+        "Gastos, ingresos, traspasos, pagos de deudas, cobros de Me deben, gastos fijos y aportes a metas. Todo empieza aquí.",
       viewport: "desktop"
     },
     {

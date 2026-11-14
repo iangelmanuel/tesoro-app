@@ -3,7 +3,8 @@ import { Skeleton } from "@heroui/react"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { getCategories } from "@/features/categories/queries"
 import { isActiveDebt } from "@/features/debts/calculations"
-import { getDebts } from "@/features/debts/queries"
+import { getDebtEntries, getDebts } from "@/features/debts/queries"
+import { toCollectableReceivable } from "@/features/debts/receivable-collect"
 import { getExportHistoryStart } from "@/features/exports/queries"
 import { getGoals } from "@/features/goals/queries"
 import { getUpcomingPayments } from "@/features/recurring-expenses/queries"
@@ -12,6 +13,7 @@ import {
   getBusinessWorkspaces,
   getPersonalWorkspace
 } from "@/features/workspaces/queries"
+import { todayISO } from "@/libs/dates"
 import { MobileShell } from "./mobile/mobile-shell"
 import {
   type QuickActionsData,
@@ -63,6 +65,22 @@ async function QuickActionsLoader() {
     ]
   )
 
+  // Cuentas por cobrar activas con sus abonos: las mensuales calculan sus
+  // cuotas con ellos (tab "Me deben"). Tras leer la sesión: todayISO usa
+  // new Date()
+  const today = todayISO()
+  const receivables = await Promise.all(
+    debts
+      .filter((debt) => debt.kind === "receivable" && debt.status === "active")
+      .map(async (debt) =>
+        toCollectableReceivable(
+          debt,
+          debt.entries_count > 0 ? await getDebtEntries(debt.id) : [],
+          today
+        )
+      )
+  )
+
   const data: QuickActionsData = {
     workspaces,
     goals: goals
@@ -71,6 +89,7 @@ async function QuickActionsLoader() {
     debts: debts
       .filter(isActiveDebt)
       .map(({ id, kind, name }) => ({ id, kind, name })),
+    receivables,
     // Ocurrencias sin pagar: las vencidas quedan primero (orden de vencimiento)
     pendingPayments: payments.filter(
       (payment) => payment.transactionId === null

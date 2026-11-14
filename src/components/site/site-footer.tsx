@@ -1,6 +1,8 @@
 import Link from "next/link"
+import { GlobeIcon } from "lucide-react"
 import { Logo } from "@/components/brand/logo"
 import { SITE, legalHref } from "@/config/site"
+import { GitHubIcon, LinkedInIcon, XIcon } from "./social-icons"
 
 const PROJECT_LINKS = [
   { name: "Repositorio", href: SITE.repository.url },
@@ -8,11 +10,13 @@ const PROJECT_LINKS = [
   { name: "Seguridad", href: SITE.repository.security }
 ]
 
+// Redes con su icono (SPEC 40). El nombre va visible: es la etiqueta del
+// enlace, así que el icono es decorativo
 const SOCIAL_LINKS = [
-  { name: "GitHub", href: SITE.social.github },
-  { name: "LinkedIn", href: SITE.social.linkedin },
-  { name: "X", href: SITE.social.x },
-  { name: "Sitio web", href: SITE.social.website }
+  { name: "GitHub", href: SITE.social.github, Icon: GitHubIcon },
+  { name: "LinkedIn", href: SITE.social.linkedin, Icon: LinkedInIcon },
+  { name: "X", href: SITE.social.x, Icon: XIcon },
+  { name: "Sitio web", href: SITE.social.website, Icon: GlobeIcon }
 ]
 
 function FooterColumn({
@@ -77,10 +81,27 @@ export function SiteFooter() {
           title="Proyecto"
           links={PROJECT_LINKS}
         />
-        <FooterColumn
-          title="Redes"
-          links={SOCIAL_LINKS}
-        />
+        <div className="flex flex-col gap-3">
+          <h2 className="text-sm font-medium">Redes</h2>
+          <ul className="flex flex-col gap-2 max-md:gap-0">
+            {SOCIAL_LINKS.map(({ name, href, Icon }) => (
+              <li key={href}>
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="-mx-1 flex w-fit items-center gap-2 rounded-md px-1 text-sm text-muted transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-focus focus-visible:outline-none max-md:min-h-11"
+                >
+                  <Icon
+                    aria-hidden="true"
+                    className="size-4 shrink-0"
+                  />
+                  {name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       <div className="border-t">

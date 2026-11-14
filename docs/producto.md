@@ -70,12 +70,12 @@ SPEC 24:
    `SITE.features` por el título). "Código abierto" no tiene clip: lo cuenta su
    sección.
 4. **Score** (`#score`, rediseñado en SPEC 40): a la izquierda
-   `LandingScoreVisual`, un score de ejemplo (78, "Bueno") como cifra grande
-   con una frase de lectura y las 4 bandas como una sola escala de 0 a 100
-   con un marcador; a la derecha los 7 factores como lista con su peso (suma 100) y una barra fina proporcional. Los pesos son
+   `LandingScoreVisual`, un score de ejemplo (78, "Bueno") como cifra grande;
+   a la derecha una barra que suma 100 y los 7 factores con su peso, sin
+   descripciones ni rangos (eso se explica en el dashboard). Los pesos son
    constantes de presentación copiadas de [Factores y pesos](#factores-y-pesos);
-   si cambian allí, se cambian en `score-section.tsx`. Las bandas viven en
-   `score-bands.ts`.
+   si cambian allí, se cambian en `score-section.tsx`. Las bandas (para el
+   chip del ejemplo) viven en `score-bands.ts`.
 5. **Personal y Empresa**: `SITE.workspaces.types` lado a lado, cada uno
    con su color real (`--workspace-personal`, `--workspace-business`) y su
    estructura como el aside del dashboard: los grupos de

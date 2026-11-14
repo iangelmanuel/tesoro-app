@@ -311,7 +311,7 @@ El video demo y los clips viven en un marco de 16:9 con radio de 24 px que es cl
 
 ### Score (landing)
 
-La cifra es la protagonista: un score de ejemplo en 6–8 rem, tabular, con su banda en chip de `tone.ts` y una frase de lectura. Debajo, las cuatro bandas (`score-bands.ts`: Débil `--danger`, Regular `--warning`, Bueno `--balance`, Excelente `--income`) como una sola escala pill de 10 px, cada tramo del ancho de su rango, con un marcador en el valor y las etiquetas bajo su tramo; se descubre con el scroll. Al lado, los siete factores como lista con divisores: nombre, descripción, peso en cifra grande a la derecha y una barra fina de `--income` proporcional al peso.
+Dos ideas y nada más. A la izquierda, la cifra: un score de ejemplo en 6 rem, tabular, "/ 100" atenuado y su banda en chip de `tone.ts` junto a "Datos de ejemplo", sin tarjeta. A la derecha, de qué está hecha: una barra pill de 12 px que suma 100, partida en siete tramos de `--income` (más intenso cuanto más pesa, del 100 al 50 %) que se descubre con el scroll, y debajo los siete factores en dos columnas, cada uno con su punto del mismo tono y su peso. Sin descripciones de factores ni rangos de bandas: ese detalle vive en el dashboard, junto al score real.
 
 ### Espacios (landing)
 

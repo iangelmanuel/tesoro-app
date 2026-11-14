@@ -502,10 +502,11 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
 - **Header sobre el hero** (`site-header-shell.tsx`): en `/` y sin scroll
   lleva la clase `dark`, así su texto se lee sobre el video también en claro.
   Al hacer scroll vuelve a su tema.
-- **Score** (`score-visual.tsx`, `score-section.tsx`): cifra de ejemplo
-  grande con su banda (`TONE_BADGE_CLASSES`) y una frase, escala única de
-  bandas (`score-bands.ts`, ancho por rango, marcador en el valor) y factores
-  como lista con peso y barra `--income` proporcional. Sin contador animado.
+- **Score** (`score-visual.tsx`, `score-section.tsx`): simplificado tras
+  `/impeccable distill`. Cifra de ejemplo grande con su banda
+  (`TONE_BADGE_CLASSES`) y, al lado, una barra que suma 100 (tramos de
+  `--income` del 100 al 50 %) con los factores y su peso en dos columnas. Sin
+  tarjeta, descripciones, rangos ni contador animado.
 - **Espacios** (`workspaces-section.tsx`): réplica estática del aside de cada
   espacio con los grupos de `SITE.navigation`. Colores con
   `--workspace-personal` y `--workspace-business` (tono 700 en claro,
@@ -675,7 +676,7 @@ Piezas en `src/components/dashboard/mobile/`:
   `cubic-bezier(0.16, 1, 0.3, 1)`), 0,7 s con subida de 24 px, escalonado de
   80 ms, una vez por elemento. Lo que ya se ve al cargar no se oculta nunca
   (protege el LCP). El hero entra con `.hero-enter` (solo `translate`).
-- `ScrollWipe` (escala de bandas del score) y `ScrollSettle` (clips) usan
+- `ScrollWipe` (barra de factores del score) y `ScrollSettle` (clips) usan
   `animation-timeline: view()` sin JS. `.press` da el levante y la presión
   de los CTA.
 - **Motion solo en lo interactivo:** `motion-provider.tsx` (`LazyMotion`

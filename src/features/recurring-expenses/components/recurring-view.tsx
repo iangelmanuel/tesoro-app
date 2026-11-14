@@ -1,28 +1,52 @@
 import { Button, Card, CardContent } from "@heroui/react"
 import { CalendarClock, CircleCheck, Plus } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardEmpty, EmptyState } from "@/components/dashboard/empty-state"
+import { MonthNav } from "@/components/dashboard/month-nav"
 import { getAccountBalances } from "@/features/accounts/queries"
+import { RECURRING_PATH } from "@/features/budgets/tabs"
 import { getCategories } from "@/features/categories/queries"
 import { ImportButton } from "@/features/imports/components/import-button"
 import type { PersonalWorkspace } from "@/features/workspaces/queries"
-import { getRecurringExpenses, getUpcomingPayments } from "../queries"
+import { parseRecurringMonth } from "../month"
+import {
+  getOverdueSummary,
+  getRecurringExpenses,
+  getRecurringStartMonth,
+  getUpcomingPayments
+} from "../queries"
+import { OverdueIndicator } from "./overdue-indicator"
 import { RecurringExpenseDialog } from "./recurring-expense-dialog"
 import { RecurringExpensesList } from "./recurring-expenses-list"
 import { UpcomingPayments } from "./upcoming-payments"
 
-/** Contenido de Gastos fijos: próximos pagos y lista. Servidor, sin título */
+/**
+ * Contenido de Gastos fijos: pagos del mes elegido (`?month`) y lista.
+ * Servidor, sin título.
+ */
 export async function RecurringView({
-  workspace
+  workspace,
+  month: monthParam
 }: {
   workspace: PersonalWorkspace
+  /** `?month` crudo; se acota entre el gasto más antiguo y el mes actual */
+  month: string | string[] | undefined
 }) {
-  const [categories, expenses, payments, accounts] = await Promise.all([
-    getCategories(workspace.id),
-    getRecurringExpenses(workspace.id),
-    getUpcomingPayments(workspace.id),
-    getAccountBalances(workspace.id)
-  ])
+  // Se parsea tras leer la sesión: el mes por defecto usa new Date()
+  const month = parseRecurringMonth(
+    monthParam,
+    await getRecurringStartMonth(workspace.id)
+  )
+  const [categories, expenses, payments, accounts, overdue] = await Promise.all(
+    [
+      getCategories(workspace.id),
+      getRecurringExpenses(workspace.id),
+      getUpcomingPayments(workspace.id, month.month),
+      getAccountBalances(workspace.id),
+      getOverdueSummary(workspace.id)
+    ]
+  )
 
   const createButton = (
     <RecurringExpenseDialog
@@ -51,18 +75,66 @@ export async function RecurringView({
   }
 
   const isUpToDate = payments.every((payment) => payment.transactionId !== null)
+  // Resumen del mes elegido: en el mes actual no cuentan los atrasados que
+  // vienen de meses anteriores
+  const monthPayments = payments.filter((payment) =>
+    payment.dueOn.startsWith(month.month)
+  )
+  const expected = monthPayments.reduce((sum, row) => sum + row.amount, 0)
+  const paid = monthPayments.reduce(
+    (sum, row) => sum + (row.paidAmount ?? 0),
+    0
+  )
 
   return (
     <>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {createButton}
         <ImportButton target="recurring_expenses" />
+        {overdue.count > 0 && (
+          <div className="md:ml-auto">
+            <OverdueIndicator
+              summary={overdue}
+              currency={workspace.currency}
+            />
+          </div>
+        )}
       </div>
 
       <Card data-tour="recurring-upcoming">
-        <CardHeading title="Próximos pagos" />
+        <CardHeading
+          title={month.isCurrent ? "Próximos pagos" : `Pagos de ${month.label}`}
+        />
         <CardContent className="flex flex-col gap-3">
-          {isUpToDate && (
+          <MonthNav
+            path={RECURRING_PATH}
+            label={month.label}
+            prev={month.prev}
+            next={month.next}
+          />
+          {monthPayments.length > 0 && (
+            <p className="text-sm text-muted">
+              Pagado{" "}
+              <Amount
+                value={paid}
+                currency={workspace.currency}
+                className="font-medium text-foreground"
+              />{" "}
+              de{" "}
+              <Amount
+                value={expected}
+                currency={workspace.currency}
+              />
+            </p>
+          )}
+          {payments.length === 0 && !month.isCurrent && (
+            <CardEmpty
+              icon={CalendarClock}
+              message="Sin pagos en este mes"
+              hint="Tus gastos fijos no vencían en este mes."
+            />
+          )}
+          {isUpToDate && month.isCurrent && (
             <CardEmpty
               icon={CircleCheck}
               message="Estás al día con tus pagos"
@@ -86,6 +158,7 @@ export async function RecurringView({
         <RecurringExpensesList
           expenses={expenses}
           categories={categories}
+          accounts={accounts}
           currency={workspace.currency}
         />
       </div>

@@ -1,18 +1,20 @@
 "use client"
 
-import { useState, useTransition } from "react"
-import { Chip, Table, cn, toast } from "@heroui/react"
+import { useState } from "react"
+import { Chip, Table, cn } from "@heroui/react"
 import { Pause, Pencil, Play, Trash2 } from "lucide-react"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { RowActions } from "@/components/dashboard/row-actions"
 import { ScrollTable } from "@/components/dashboard/scroll-table"
+import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { formatCurrency, formatDate } from "@/libs/format"
-import { deleteRecurringExpense, toggleRecurringExpense } from "../actions"
 import { frequencyLabel } from "../occurrences"
 import type { RecurringExpense } from "../queries"
 import { RecurringExpenseDialog } from "./recurring-expense-dialog"
+import { RecurringExpenseSheet } from "./recurring-expense-sheet"
+import { useRecurringExpenseActions } from "./use-recurring-expense-actions"
 
 const NOWRAP = "whitespace-nowrap"
 
@@ -26,16 +28,58 @@ function validityLabel(expense: RecurringExpense) {
 interface RecurringExpensesListProps {
   expenses: RecurringExpense[]
   categories: Category[]
+  /** Cuentas para "Marcar como pagado" desde el Sheet */
+  accounts: PaymentAccountOption[]
   currency: string
 }
 
-// Client: cada fila abre el diálogo de edición, y así las categorías viajan
-// una sola vez en vez de una por fila
+// Client: un clic en la fila abre el Sheet del gasto (SPEC 37) y el ⋮ abre
+// sus acciones. Las categorías y cuentas viajan una sola vez
 export function RecurringExpensesList({
   expenses,
   categories,
+  accounts,
   currency
 }: RecurringExpensesListProps) {
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [sheetOpen, setSheetOpen] = useState(false)
+  // Al eliminarlo desaparece de la lista: el Sheet se queda sin gasto
+  const selected = expenses.find((expense) => expense.id === selectedId)
+
+  return (
+    <>
+      <RecurringExpensesTable
+        expenses={expenses}
+        categories={categories}
+        currency={currency}
+        onOpen={(id) => {
+          setSelectedId(id)
+          setSheetOpen(true)
+        }}
+      />
+      {selected && (
+        <RecurringExpenseSheet
+          key={selected.id}
+          expense={selected}
+          categories={categories}
+          accounts={accounts}
+          currency={currency}
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+        />
+      )}
+    </>
+  )
+}
+
+function RecurringExpensesTable({
+  expenses,
+  categories,
+  currency,
+  onOpen
+}: Omit<RecurringExpensesListProps, "accounts"> & {
+  onOpen: (id: string) => void
+}) {
   return (
     <ScrollTable
       minWidth="56rem"
@@ -61,7 +105,13 @@ export function RecurringExpensesList({
               {expenses.map((expense) => (
                 <Table.Row
                   key={expense.id}
-                  className={cn(!expense.is_active && "text-muted")}
+                  id={expense.id}
+                  textValue={expense.name}
+                  onAction={() => onOpen(expense.id)}
+                  className={cn(
+                    "cursor-pointer",
+                    !expense.is_active && "text-muted"
+                  )}
                 >
                   <Table.Cell className="max-w-64 min-w-44">
                     <p
@@ -132,34 +182,7 @@ function ExpenseActions({
 }) {
   const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [, startTransition] = useTransition()
-
-  function handleToggle() {
-    startTransition(async () => {
-      const result = await toggleRecurringExpense(
-        expense.id,
-        !expense.is_active
-      )
-      if (result.error) {
-        toast.danger(result.error)
-      } else {
-        toast.success(
-          expense.is_active ? "Gasto fijo pausado" : "Gasto fijo reanudado"
-        )
-      }
-    })
-  }
-
-  function handleDelete() {
-    startTransition(async () => {
-      const result = await deleteRecurringExpense(expense.id)
-      if (result.error) {
-        toast.danger(result.error)
-      } else {
-        toast.success("Gasto fijo eliminado")
-      }
-    })
-  }
+  const { toggle: handleToggle, remove } = useRecurringExpenseActions(expense)
 
   return (
     <>
@@ -202,7 +225,7 @@ function ExpenseActions({
         open={deleting}
         onOpenChange={setDeleting}
         title="¿Eliminar este gasto fijo?"
-        onConfirm={handleDelete}
+        onConfirm={() => remove()}
       >
         <p className="text-sm text-muted">
           &ldquo;{expense.name}&rdquo; dejará de aparecer en tus próximos pagos.

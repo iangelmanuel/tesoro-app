@@ -1,12 +1,13 @@
 import { Button, Chip, cn } from "@heroui/react"
 import { Check } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import { TONE_BADGE_CLASSES as TONE_BADGE } from "@/components/dashboard/tone"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
-import { formatCurrency, formatDate } from "@/libs/format"
+import { formatDate, formatShortDate } from "@/libs/format"
 import {
   OCCURRENCE_STATUS,
   type OccurrenceStatus,
@@ -48,6 +49,22 @@ interface PayOccurrenceButtonProps {
   className?: string
 }
 
+/** Prellenado y enlace de TransactionDialog para pagar una ocurrencia */
+export function occurrencePaymentProps(payment: UpcomingPayment) {
+  return {
+    initialValues: {
+      amount: payment.amount,
+      category_id: payment.category.id,
+      occurred_on: payment.dueOn,
+      description: payment.name
+    },
+    recurring: {
+      recurringExpenseId: payment.recurringExpenseId,
+      dueOn: payment.dueOn
+    }
+  }
+}
+
 // Abre TransactionDialog prellenado con la ocurrencia y enlazado a ella. El
 // usuario confirma (y puede cambiar el monto) antes de crear el movimiento.
 export function PayOccurrenceButton({
@@ -62,16 +79,7 @@ export function PayOccurrenceButton({
       workspaceId={workspaceId}
       categories={categories}
       accounts={accounts}
-      initialValues={{
-        amount: payment.amount,
-        category_id: payment.category.id,
-        occurred_on: payment.dueOn,
-        description: payment.name
-      }}
-      recurring={{
-        recurringExpenseId: payment.recurringExpenseId,
-        dueOn: payment.dueOn
-      }}
+      {...occurrencePaymentProps(payment)}
       trigger={
         // key: el Modal de HeroUI recorre sus hijos como lista y, con el
         // botón creado en otro componente, React avisa de la falta de key
@@ -118,7 +126,10 @@ function AmountText({
         className
       )}
     >
-      {formatCurrency(payment.paidAmount ?? payment.amount, currency)}
+      <Amount
+        value={payment.paidAmount ?? payment.amount}
+        currency={currency}
+      />
     </p>
   )
 }
@@ -159,6 +170,11 @@ export function UpcomingPayments({
               <span className="whitespace-nowrap">
                 {formatDate(payment.dueOn)}
               </span>
+              {payment.paidOn !== null && (
+                <span className="whitespace-nowrap">
+                  Pagado el {formatShortDate(payment.paidOn)}
+                </span>
+              )}
               {payment.transactionId !== null && (
                 <span>
                   {payment.accountName

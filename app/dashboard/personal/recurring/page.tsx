@@ -13,25 +13,33 @@ export const metadata = buildMetadata({
   noindex: true
 })
 
-export default function RecurringPage() {
+type RecurringPageProps = PageProps<"/dashboard/personal/recurring">
+
+export default function RecurringPage({ searchParams }: RecurringPageProps) {
   return (
     <section
       aria-label="Gastos fijos"
       className="flex flex-1 flex-col gap-6"
     >
-      {/* La sesión es dinámica: va dentro de Suspense */}
+      {/* searchParams y la sesión son dinámicos: van dentro de Suspense */}
       <Suspense fallback={<RecurringSkeleton />}>
-        <RecurringContent />
+        <RecurringContent searchParams={searchParams} />
       </Suspense>
     </section>
   )
 }
 
-async function RecurringContent() {
+async function RecurringContent({
+  searchParams
+}: Pick<RecurringPageProps, "searchParams">) {
+  const query = await searchParams
   const workspace = await getPersonalWorkspace()
   return (
     <BudgetsAndRecurringTabs tab="recurring">
-      <RecurringView workspace={workspace} />
+      <RecurringView
+        workspace={workspace}
+        month={query.month}
+      />
     </BudgetsAndRecurringTabs>
   )
 }

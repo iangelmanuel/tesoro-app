@@ -1,6 +1,6 @@
 # SPEC 37 — Gastos fijos: navegar meses anteriores e historial por gasto
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 04, SPEC 16, SPEC 23, SPEC 28
 > **Fecha:** 2026-11-13
 > **Objetivo:** Que en **Gastos fijos** se pueda ir a meses anteriores para ver qué se pagó y qué no, pagar desde ese mes, y abrir cada gasto fijo con su lista mes a mes de pagos y atrasos.
@@ -92,15 +92,15 @@ export interface OverdueSummary {
 
 ## Criterios de aceptación
 
-- [ ] **Próximos pagos** tiene navegador de mes; el botón siguiente está deshabilitado en el mes actual.
-- [ ] El botón anterior está deshabilitado en el mes del gasto fijo más antiguo.
-- [ ] Un gasto mensual impago desde hace 5 meses aparece como **Atrasado** en el mes actual (antes desaparecía a los 2 meses).
-- [ ] En un mes pasado se ven las ocurrencias pagadas con fecha y monto, y las impagas como **Atrasado**.
-- [ ] **Marcar como pagado** en una ocurrencia de hace 3 meses crea el gasto enlazado a esa ocurrencia y la fila pasa a **Pagado**.
-- [ ] La cabecera muestra "N atrasados · $ Z" y lleva al mes del atraso más antiguo.
-- [ ] Clic en un gasto fijo abre su Sheet con una fila por periodo desde su inicio (últimos 12 y **Ver más**).
-- [ ] Un gasto anual muestra un periodo por año en el Sheet.
-- [ ] Con cifras ocultas, montos y totales nuevos muestran `***`.
+- [x] **Próximos pagos** tiene navegador de mes; el botón siguiente está deshabilitado en el mes actual.
+- [x] El botón anterior está deshabilitado en el mes del gasto fijo más antiguo.
+- [x] Un gasto mensual impago desde hace 5 meses aparece como **Atrasado** en el mes actual (antes desaparecía a los 2 meses).
+- [x] En un mes pasado se ven las ocurrencias pagadas con fecha y monto, y las impagas como **Atrasado**.
+- [x] **Marcar como pagado** en una ocurrencia de hace 3 meses crea el gasto enlazado a esa ocurrencia y la fila pasa a **Pagado**.
+- [x] La cabecera muestra "N atrasados · $ Z" y lleva al mes del atraso más antiguo.
+- [x] Clic en un gasto fijo abre su Sheet con una fila por periodo desde su inicio (últimos 12 y **Ver más**).
+- [x] Un gasto anual muestra un periodo por año en el Sheet.
+- [x] Con cifras ocultas, montos y totales nuevos muestran `***`.
 - [ ] A 390 px el navegador y el Sheet se usan sin desplazamiento horizontal.
 - [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
 
@@ -114,6 +114,13 @@ export interface OverdueSummary {
 - **No:** frecuencias nuevas en gastos fijos (decisión del usuario); van solo a ingresos fijos (SPEC 38).
 - **Sí:** estado calculado, no guardado, igual que SPEC 04 y 28.
 - **Sí:** no navegar a meses futuros. Motivo: el mes actual ya muestra lo próximo; meses futuros no tienen nada que pagar aún.
+- **Sí (al implementar):** la RPC `recurring_occurrences` se respeta tal cual (decisión del usuario): un gasto pausado no aparece en ningún mes ni en los atrasados, y su Sheet muestra un aviso en vez de periodos. Sin migración.
+- **Sí (al implementar):** sin migración ni índice nuevo. No se pudo medir con Supabase local (Docker apagado); la RPC genera un `generate_series` por gasto y el join usa el índice único `transactions_recurring_occurrence`.
+- **Sí (al implementar):** la etiqueta del estado `overdue` pasa de "Vencido" a "Atrasado" en toda la app (UI, exportes y MCP).
+- **Sí (al implementar):** `getRecurringExpenseHistory` devuelve `{ payments, hasMore, paidThisYear, overdueAmount }` en vez de un arreglo: el Sheet necesita saber si hay más y los totales sin pedir dos veces. El Sheet lo pide con la acción `loadRecurringExpenseHistory`.
+- **Sí (al implementar):** el Sheet no muestra "cuenta": `recurring_expenses` no tiene esa columna (la cuenta se elige en cada pago). Muestra la vigencia.
+- **Sí (al implementar):** el indicador de atrasados va en la fila de acciones de la vista, no en el header global (`DashboardTitle` vive en el layout). El navegador va dentro de la tarjeta, bajo el título.
+- **Sí (al implementar):** `MonthNav` (compartido) tiene flechas de 44 px en móvil, también en Presupuestos.
 
 ## Riesgos
 

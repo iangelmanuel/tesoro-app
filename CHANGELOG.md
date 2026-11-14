@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Recurring expenses month history (SPEC 37).
+  - **Próximos pagos** gets a month navigator (`?month=YYYY-MM`, shared `MonthNav` component extracted from the Budgets one without changing its API). It cannot go past the current month or before the month of the oldest recurring expense, and the title becomes "Pagos de <mes>" in other months. Arrows are 44 px on phones, in Budgets too.
+  - The current month now lists every unpaid occurrence since each expense started (the 2-month cap is gone); a past month lists all its occurrences, paid ones with "Pagado el <fecha>" and the paid amount, unpaid ones as **Atrasado**, each with **Marcar como pagado**. A "Pagado $ X de $ Y" line summarises the selected month.
+  - An "N atrasados · $ Z" indicator next to the page actions links to the month of the oldest unpaid occurrence.
+  - Clicking a recurring expense row opens its Sheet (bottom sheet on phones): amount, frequency, category, validity, **Editar** / **Pausar** / **Eliminar**, "Pagado en <año>" and "Atrasado a la fecha", and one row per period (month, or year for yearly expenses) from its start, newest first, with **Marcar como pagado**, the last 12 and **Ver más**. Paused expenses show a note instead of periods (the occurrences RPC only covers active ones).
+  - New queries `getUpcomingPayments(workspaceId, month)`, `getOverdueSummary`, `getRecurringStartMonth` and `getRecurringExpenseHistory`, and the read action `loadRecurringExpenseHistory`. `UpcomingPayment` gains `paidOn`. No schema changes.
+  - The overdue occurrence label changes from "Vencido" to "Atrasado" (UI, exports and the MCP `list_recurring` tool, whose description now says all unpaid expenses from previous months are included). Amounts in the payments list now honour **Ocultar montos**.
+
 - Money-in balance hint (SPEC 36). `PaymentAccountSection` gets a `direction` prop (`"out"` by default, `"in"` when money enters the account). Receivable collections and partial payments (including **Marcar pagada**), the card **Avance** tab and goal **Retiro** use `"in"`: they no longer warn "Faltan" or offer a transfer, and show "Nequi tiene $ X. Quedará en $ Y" in muted text instead. Card, loan and expense payments keep the shortfall warning and the transfer.
 
 - MCP server for AI agents (SPEC 34).

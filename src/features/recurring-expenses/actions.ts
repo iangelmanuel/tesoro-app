@@ -6,6 +6,10 @@ import { parseAmount } from "@/features/transactions/schemas"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { revalidatePersonalPages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
+import {
+  type RecurringExpenseHistory,
+  getRecurringExpenseHistory
+} from "./queries"
 import { recurringExpenseSchema } from "./schemas"
 import type {
   RecurringExpenseActionResult,
@@ -214,4 +218,34 @@ export async function deleteRecurringExpense(
 
   revalidatePersonalPages()
   return {}
+}
+
+/** Tope de periodos del historial: 50 años de un gasto mensual */
+const MAX_HISTORY_LIMIT = 600
+
+export type RecurringExpenseHistoryResult =
+  | { data: RecurringExpenseHistory; error?: undefined }
+  | { data?: undefined; error: string }
+
+// Lectura para el Sheet de un gasto fijo: se pide al abrirlo, con "Ver más"
+// y tras registrar un pago desde él. RLS limita a los gastos del usuario.
+export async function loadRecurringExpenseHistory(
+  id: string,
+  limit: number
+): Promise<RecurringExpenseHistoryResult> {
+  const parsedId = idSchema.safeParse(id)
+  const parsedLimit = z.int().min(1).max(MAX_HISTORY_LIMIT).safeParse(limit)
+
+  if (!parsedId.success || !parsedLimit.success) {
+    return { error: NOT_FOUND }
+  }
+
+  try {
+    const data = await getRecurringExpenseHistory(parsedId.data, {
+      limit: parsedLimit.data
+    })
+    return { data }
+  } catch {
+    return { error: "No se pudo cargar el historial. Intenta de nuevo" }
+  }
 }

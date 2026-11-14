@@ -19,7 +19,7 @@ export const listRecurring = defineTool({
   group: "read",
   title: "Listar gastos e ingresos fijos",
   description:
-    "Gastos e ingresos fijos del mes actual con su estado, igual que las páginas de Gastos fijos e Ingresos fijos (incluye los sin pagar o sin recibir de los 2 meses anteriores). Gastos: Pagado, Hoy, Próximo o Vencido. Ingresos: Recibido, De hoy, Pendiente o Atrasado. Solo Personal.",
+    "Gastos e ingresos fijos del mes actual con su estado, igual que las páginas de Gastos fijos e Ingresos fijos (los gastos incluyen todos los sin pagar de meses anteriores; los ingresos, los sin recibir de los 2 meses anteriores). Gastos: Pagado, Hoy, Próximo o Atrasado. Ingresos: Recibido, De hoy, Pendiente o Atrasado. Solo Personal.",
   input,
   annotations: { readOnlyHint: true },
   async run(ctx, { workspace_id }) {

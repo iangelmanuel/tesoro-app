@@ -46,10 +46,10 @@ colors:
 typography:
   display:
     fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "3.75rem"
+    fontSize: "4.5rem"
     fontWeight: 600
-    lineHeight: 1
-    letterSpacing: "-0.025em"
+    lineHeight: 0.95
+    letterSpacing: "-0.035em"
   headline:
     fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
     fontSize: "2.25rem"
@@ -212,7 +212,7 @@ Neutros fríos de un solo matiz (264), un primario por espacio y una familia sem
 
 ### Hierarchy
 
-- **Display** (600, 2.25rem → 3rem → 3.75rem, interlineado 1, tracking −0.025em): solo el H1 del hero y el título del cierre de la landing, que repiten el slogan. Con `text-balance`.
+- **Display** (600, `text-balance`): el H1 del hero (3rem → 3.75rem → 4.5rem, interlineado 0.95, tracking −0.035em) y el título del cierre de la landing (2.25rem → 3.75rem, interlineado 1, tracking −0.025em), que repiten el slogan.
 - **Headline** (600, 1.875rem → 2.25rem, tracking −0.025em): el `<h2>` de cada sección de la landing (`SectionHeading`), máximo 42 rem de ancho, con `text-balance`.
 - **Title** (600, 1.25rem): títulos de tarjeta en la landing; en el dashboard, el `<h1>` único del header y los `<h2>` de `CardHeading`.
 - **Body lead** (400, 1.125rem, atenuado): bajada del hero y descripción de sección, con `text-pretty`, máximo ~36 rem.
@@ -231,6 +231,8 @@ Neutros fríos de un solo matiz (264), un primario por espacio y una familia sem
 En la landing, cada sección es una franja de ancho completo con un contenedor centrado de 72 rem (`max-w-6xl`), márgenes de 16 px (24 px desde 640 px) y padding vertical de 80 px (96 px desde 640 px); el cierre sube a 96/128 px. El hero es una banda oscura de ancho completo, de `min(88svh, 52rem)`, con una sola columna de texto alineada a la izquierda (máx. 42 rem) sobre el video. Las secciones con contenido de apoyo usan una grilla de dos columnas desde 1024 px (score `26rem / 1fr`, con la tarjeta fija al hacer scroll; recorrido de funciones `21rem / 1fr`; espacios `1fr / 1fr`) y se apilan en móvil. La única franja tintada es la de los espacios (`--default` al 40 %); el resto va sobre el fondo. El ritmo interno se apoya en saltos de 24 y 40 px entre bloques.
 
 En el dashboard, aside a la izquierda y header con el único título y los accesos rápidos. Por debajo de 768 px el aside pasa a un Drawer, aparece la barra inferior con [+] al centro y la hoja de acciones rápidas, y todo control mide 44 px o más (56 px las acciones de la hoja). Las tablas se deslizan en horizontal dentro de `ScrollTable` en vez de convertirse en tarjetas.
+
+**Scrollbar.** Fina en todo el proyecto, sin carril, con el gris neutro de matiz 264 (`--scrollbar`, que se aclara u oscurece con el tema, y `--scrollbar-hover`).
 
 **La Regla del Pulgar.** Por debajo de 768 px ningún control táctil mide menos de 44 × 44 px.
 
@@ -288,8 +290,7 @@ Firmes y redondos; el color solo aparece en el principal.
 
 ### Navigation
 
-- **Header público:** sticky, transparente arriba de todo; tras 8 px de scroll toma el fondo al 80 % (60 % con soporte de blur), desenfoque y un divisor inferior, en 300 ms.
-- **Header público sobre el hero:** en `/` y sin scroll lleva la clase `dark`, así se lee sobre el video también en claro.
+- **Header público:** una sola línea, sin pastillas ni divisores: logo, navegación como texto atenuado, GitHub con estrellas, tema, "Iniciar sesión" como texto y "Crear cuenta" compacto (36 px). Sticky, con tres estados: transparente arriba; cristal oscuro (`background` al 45 % con desenfoque) mientras sigue sobre el hero; y, al salir del hero, el fondo de la página al 70–80 % con desenfoque y una línea de 1 px de `--separator` como sombra (no borde, para no sumar alto). Sobre el hero lleva la clase `dark`; el cambio de tema solo ocurre al cruzar el borde inferior del hero y todos los colores se funden en 300 ms.
 - **Aside del dashboard:** logo, pestañas Personal / Empresa, navegación con el ítem activo en `--default`; abajo solo el menú de cuenta. En móvil, Drawer más barra inferior de 4 destinos y [+].
 - **Menú de cuenta:** cabecera con avatar → Cuenta → Ayuda (↗, issues de GitHub) → Tema → Cerrar sesión. El tema es una píldora Claro / Oscuro dentro del mismo menú (selección única, no cierra el menú, se recorre con flechas); la opción activa va en superficie con sombra.
 
@@ -319,7 +320,7 @@ Personal y Empresa lado a lado, cada uno con un punto de su color real y, debajo
 
 ### Hero (landing)
 
-Banda oscura en los dos temas. De abajo arriba: el póster (primer fotograma, es el LCP y lo único que se ve con reduced motion, ahorro de datos o sin JS), el video de ambiente de 15 s en loop (stock libre, gradación duotono verde de marca con negros profundos, sin texto, logo ni caras, recorte vertical en móvil) y el velo. Encima, una columna: slogan en `display`, bajada atenuada, CTA neutro claro con flecha y "Ver la demo" en `outline`, y las promesas con punto `--income`. Nada en el hero depende de JS para su tamaño.
+Toda la primera pantalla (`100svh`, mínimo 36 rem), en los dos temas oscura, desde y = 0 y detrás del header. De abajo arriba: el póster (primer fotograma, es el LCP y lo único que se ve con reduced motion, ahorro de datos o sin JS), el video de ambiente de 15 s en loop (stock libre, gradación duotono verde de marca con negros profundos, sin texto, logo ni caras, recorte vertical en móvil), que entra asentándose de 1.06 a 1 en 2,4 s, y el velo (`.hero-veil`: 50 % arriba, 35 % al 22 %, 72 % a la mitad y 88 % abajo, más una capa lateral desde 1024 px). El texto se apoya abajo a la izquierda, como el pie de una foto: el slogan hasta 4,5 rem con tracking −0.035em e interlineado 0.95, con su segunda parte en `text-brand`; la bajada en 1.25 rem atenuada; "Crear cuenta" en neutro claro y "Ver la demo" como botón de cristal (blanco al 10 % con desenfoque); y, como pie, las promesas con punto `--income` sobre una línea blanca al 15 %. Nada en el hero depende de JS para su tamaño.
 
 ### Footer
 

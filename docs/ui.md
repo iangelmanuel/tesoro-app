@@ -487,21 +487,30 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
   separan del blanco por tono y por `--surface-shadow`; `--muted` da 5,6:1
   sobre ellas y 6:1 sobre el blanco). El dashboard y la auth conservan el
   gris. El oscuro no cambia.
-- **Hero** (`hero.tsx`, componente de servidor, y `hero-video.tsx`): banda
-  oscura en los dos temas (clase `dark` en la sección), con `-mt-16` para
-  quedar bajo el header. Capas, de abajo arriba: pósters en `<picture>`
+- **Hero** (`hero.tsx`, componente de servidor, y `hero-video.tsx`): toda
+  la primera pantalla (`min-h-[max(36rem,100svh)]`), oscura en los dos temas
+  (clase `dark` en la sección), con `-mt-16` para empezar en y = 0 bajo el
+  header y el texto apoyado abajo a la izquierda. Capas, de abajo arriba: pósters en `<picture>`
   (`hero-poster.webp` / `hero-mobile-poster.webp`, `fetchPriority="high"`,
   son el LCP), el `<video>` (autoplay, muted, loop, `preload="metadata"`,
-  WebM/MP4 por `media`) y el velo: `bg-black/72` en móvil y, desde 1024 px,
-  un degradado lineal de 75 % a 72 % (hasta el 58 % del ancho) y 30 % a la
-  derecha. Con 72 % detrás del texto, el texto atenuado da 4,7:1 y el título
-  11:1 sobre el fotograma más claro. Alto `min(88svh, 52rem)` por CSS.
+  WebM/MP4 por `media`), ambos dentro de `.hero-media` (entra de 1.06 a 1),
+  y el velo `.hero-veil` (`globals.css`): degradado vertical 50 → 35 → 72 →
+  88 % más una capa lateral desde 1024 px. El texto atenuado empieza por
+  debajo de la mitad (65–72 % del alto), donde el velo es ≥ 72 %: da 4,7:1
+  sobre el fotograma más claro.
   `hero-video.tsx` solo pausa fuera de pantalla y, con reduced motion o
   Save-Data, quita las fuentes y marca `data-paused` (CSS oculta el video y
   queda el póster). Ningún tamaño depende de JS.
-- **Header sobre el hero** (`site-header-shell.tsx`): en `/` y sin scroll
-  lleva la clase `dark`, así su texto se lee sobre el video también en claro.
-  Al hacer scroll vuelve a su tema.
+- **Header** (`site-header.tsx`, `site-header-shell.tsx`): una línea sin
+  pastillas ni divisores; "Iniciar sesión" como texto y "Crear cuenta"
+  compacto (`SiteHeaderSession size="compact"`; en el cajón móvil van los de
+  44 px). Estados: transparente arriba, cristal oscuro sobre el hero y fondo
+  translúcido con línea de `--separator` (sombra, no borde) al salir. Lleva
+  `dark` mientras el borde inferior del hero esté por debajo de él (se mide
+  en el scroll) y sus colores se funden en 300 ms.
+- **Scrollbar** (`globals.css`): `scrollbar-width: thin` y
+  `scrollbar-color: var(--scrollbar) transparent` en todo el proyecto, con
+  respaldo `::-webkit-scrollbar` (10 px, pulgar pill) para Safari.
 - **Score** (`score-visual.tsx`, `score-section.tsx`): simplificado tras
   `/impeccable distill`. Cifra de ejemplo grande con su banda
   (`TONE_BADGE_CLASSES`) y, al lado, una barra que suma 100 (tramos de

@@ -58,6 +58,8 @@ export function Hero() {
           <img
             {...posterProps}
             alt=""
+            // Es el LCP: getImageProps lo deja en lazy por defecto
+            loading="eager"
             fetchPriority="high"
             className="absolute inset-0 size-full object-cover"
           />

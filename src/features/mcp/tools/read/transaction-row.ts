@@ -2,8 +2,8 @@ import type { Database } from "@/types/database"
 import { formatTime } from "../shared"
 
 // Fila de movimiento tal como la ve el agente (SPEC 34), con su vínculo:
-// pago de préstamo o cobro de Me deben (debt_entries), pago de un gasto fijo
-// o ingreso fijo recibido.
+// pago de préstamo, avance de tarjeta (SPEC 36) o cobro de Me deben
+// (debt_entries), pago de un gasto fijo o ingreso fijo recibido.
 
 type DebtKind = Database["public"]["Enums"]["debt_kind"]
 
@@ -61,7 +61,9 @@ function toLink(row: RawTransaction) {
       debt_id: entry.debts.id,
       debt_name: entry.debts.name,
       debt_kind: entry.debts.kind,
-      entry_id: entry.id
+      entry_id: entry.id,
+      // "payment" o "advance": el ingreso de un avance de tarjeta
+      entry_kind: entry.kind
     }
   }
   if (row.recurring_expenses) {

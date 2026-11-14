@@ -101,9 +101,12 @@ export interface PaymentChange {
 }
 
 /**
- * Valida el cambio de monto o fecha de un pago con las reglas del diálogo de
- * pago: deuda activa y que el saldo sin este pago cubra el monto nuevo (salvo
- * una mensual indefinida, sin saldo total). Devuelve el mensaje o null.
+ * Valida el cambio de monto o fecha de un abono enlazado a un movimiento con
+ * las reglas del diálogo de pago: deuda activa y
+ * - en un pago, que el saldo sin él cubra el monto nuevo (salvo una mensual
+ *   indefinida, sin saldo total);
+ * - en un avance (SPEC 36), que bajarlo no deje el saldo negativo.
+ * Devuelve el mensaje o null.
  */
 export function validatePaymentChange(
   entry: LoadedEntry,
@@ -111,6 +114,11 @@ export function validatePaymentChange(
 ): string | null {
   if (entry.debt.status !== "active") {
     return DEBT_NOT_ACTIVE
+  }
+  if (entry.kind === "advance") {
+    return roundCents(entry.debt.balance - entry.amount + change.amount) < 0
+      ? NEGATIVE_BALANCE
+      : null
   }
   if (
     !entry.debt.openEnded &&
@@ -122,8 +130,8 @@ export function validatePaymentChange(
 }
 
 /**
- * Cambia monto, fecha y hora de un pago. El trigger
- * sync_debt_entry_transaction los copia a su movimiento enlazado.
+ * Cambia monto, fecha y hora de un pago o de un avance con ingreso (SPEC 36).
+ * El trigger sync_debt_entry_transaction los copia a su movimiento enlazado.
  */
 export async function updatePaymentEntry(
   supabase: AppSupabase,
@@ -146,7 +154,7 @@ export async function updatePaymentEntry(
     const failure = debtPgError(
       error,
       "amount",
-      OVER_PAYMENT,
+      entry.kind === "advance" ? NEGATIVE_BALANCE : OVER_PAYMENT,
       ENTRY_DEFAULT_ERROR
     )
     return fail({ error: failure.error, fieldErrors: failure.fieldErrors })
@@ -159,7 +167,8 @@ export async function updatePaymentEntry(
 }
 
 /**
- * Borra un abono. Si el pago tiene movimiento, el trigger también lo borra.
+ * Borra un abono. Si el pago o el avance (SPEC 36) tiene movimiento, el
+ * trigger también lo borra.
  * Borrar un ajuste, un avance o una cuota que subió el saldo lo baja: no
  * puede quedar negativo.
  */

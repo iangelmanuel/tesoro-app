@@ -15,6 +15,17 @@ export function paymentShortfall(balance: number, amount: number | null) {
   return Math.max(Math.round((amount - balance) * 100) / 100, 0)
 }
 
+/**
+ * Saldo que quedará tras recibir `amount` (SPEC 36), o null sin un monto
+ * válido
+ */
+export function balanceAfterIncome(balance: number, amount: number | null) {
+  if (amount === null || Number.isNaN(amount) || amount <= 0) {
+    return null
+  }
+  return Math.round((balance + amount) * 100) / 100
+}
+
 /** Cuentas activas distintas a la que paga, de mayor a menor saldo */
 export function transferSources<T extends BalanceAccount>(
   accounts: T[],

@@ -19,7 +19,7 @@ export const getTransaction = defineTool({
   group: "read",
   title: "Ver un movimiento",
   description:
-    "Un ingreso o gasto por id, con su categoría, cuenta y vínculo (pago de deuda, gasto fijo, ingreso fijo o cobro de Me deben).",
+    "Un ingreso o gasto por id, con su categoría, cuenta y vínculo (pago de deuda, avance de tarjeta, gasto fijo, ingreso fijo o cobro de Me deben).",
   input,
   annotations: { readOnlyHint: true },
   async run(ctx, { workspace_id, id }) {

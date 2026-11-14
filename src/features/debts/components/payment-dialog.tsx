@@ -284,7 +284,7 @@ const EXTRA_EFFECT =
 function cardEffect(mode: PaymentMode, accountName: string | null) {
   if (mode === "advance") {
     return accountName
-      ? `Entra dinero a ${accountName} y sube la deuda de la tarjeta. No cuenta como ingreso.`
+      ? `Entra dinero a ${accountName} como ingreso (Avance de tarjeta) y sube la deuda de la tarjeta.`
       : "El avance no toca tus cuentas: solo sube el saldo de la tarjeta."
   }
   const effect = accountName
@@ -527,7 +527,7 @@ function PaymentForm({
           label={
             isAdvance || isReceivable ? "Cuenta que recibe" : "Cuenta que paga"
           }
-          allowTransfer={!isAdvance && !isReceivable}
+          direction={isAdvance || isReceivable ? "in" : "out"}
           onAccountChange={setAccountId}
         />
       )}

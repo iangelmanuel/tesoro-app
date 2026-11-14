@@ -8,12 +8,16 @@ import { amountInput } from "@/features/debts/components/field"
 import { parseAmount } from "@/features/transactions/schemas"
 import { formatCurrency } from "@/libs/format"
 import {
+  balanceAfterIncome,
   paymentShortfall,
   resolveTransferSource,
   transferSources
 } from "../payment-account"
 import type { AccountWithBalance } from "../types"
 import { type AccountOption, selectableAccounts } from "./account-select"
+
+/** "out": el dinero sale de la cuenta; "in": entra a ella (SPEC 36) */
+export type MoneyDirection = "out" | "in"
 
 export type PaymentAccountOption = AccountOption &
   Pick<AccountWithBalance, "balance">
@@ -34,7 +38,12 @@ interface PaymentAccountSectionProps {
   errors?: PaymentAccountErrors
   /** Etiqueta del select de cuenta */
   label?: string
-  /** Sin traspaso: avances, retiros e ingresos */
+  /**
+   * Si el dinero sale ("out") o entra ("in") a la cuenta. En "in" no hay
+   * faltante ni traspaso: se muestra el saldo que quedará
+   */
+  direction?: MoneyDirection
+  /** Sin traspaso aunque el dinero salga */
   allowTransfer?: boolean
   /** Cuenta elegida al abrir */
   defaultAccountId?: string
@@ -51,6 +60,7 @@ export function PaymentAccountSection({
   amount,
   errors,
   label = "Cuenta",
+  direction = "out",
   allowTransfer = true,
   defaultAccountId = "",
   onAccountChange
@@ -65,10 +75,14 @@ export function PaymentAccountSection({
   const active = selectableAccounts(accounts)
   const selected = active.find((account) => account.id === accountId)
   const sources = transferSources(accounts, accountId)
+  const isIncoming = direction === "in"
   const canTransfer =
-    allowTransfer && selected !== undefined && sources.length > 0
+    !isIncoming && allowTransfer && selected !== undefined && sources.length > 0
 
-  const shortfall = selected ? paymentShortfall(selected.balance, amount) : 0
+  const shortfall =
+    selected && !isIncoming ? paymentShortfall(selected.balance, amount) : 0
+  const balanceAfter =
+    selected && isIncoming ? balanceAfterIncome(selected.balance, amount) : null
   const transferOn = canTransfer && (transferChoice ?? shortfall > 0)
   const sourceId = resolveTransferSource(accounts, accountId, sourceChoice)
   const transferValue = transferInput ?? amountInput(amount)
@@ -99,6 +113,17 @@ export function PaymentAccountSection({
               {selected.name} tiene {formatCurrency(selected.balance)}. Faltan{" "}
               {formatCurrency(shortfall)}
             </span>
+          ) : balanceAfter !== null ? (
+            <>
+              {selected.name} tiene{" "}
+              <span className="tabular-nums">
+                {formatCurrency(selected.balance)}
+              </span>
+              . Quedará en{" "}
+              <span className="tabular-nums">
+                {formatCurrency(balanceAfter)}
+              </span>
+            </>
           ) : (
             <>
               Saldo de {selected.name}:{" "}

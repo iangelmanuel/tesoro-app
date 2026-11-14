@@ -43,7 +43,7 @@ const input = z.object({
     .enum(LINK_KINDS)
     .default("any")
     .describe(
-      "Vínculo: any (todos), none (sin vínculo), debt (pago de deuda), recurring_expense (pago de gasto fijo), recurring_income (ingreso fijo) o receivable (cobro de Me deben)."
+      "Vínculo: any (todos), none (sin vínculo), debt (pago de deuda o avance de tarjeta), recurring_expense (pago de gasto fijo), recurring_income (ingreso fijo) o receivable (cobro de Me deben)."
     ),
   limit: limitSchema,
   cursor: cursorSchema

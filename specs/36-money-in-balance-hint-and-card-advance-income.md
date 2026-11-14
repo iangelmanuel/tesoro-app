@@ -1,6 +1,6 @@
 # SPEC 36 — Entradas de dinero: aviso de saldo y avances como ingreso
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 06, SPEC 08c, SPEC 16, SPEC 26
 > **Fecha:** 2026-11-13
 > **Objetivo:** Que los formularios donde entra dinero a una cuenta muestren el saldo que quedará en vez de "Faltan", y que un avance de tarjeta hacia una cuenta propia cuente como ingreso en el resumen.
@@ -100,7 +100,9 @@ export type MoneyDirection = "out" | "in"
 - [ ] Eliminar el avance elimina su ingreso y devuelve el saldo de la cuenta.
 - [ ] Tras la migración, cada avance antiguo con cuenta tiene su ingreso y los saldos de cuentas no cambian.
 - [ ] Movimientos ya no muestra avances como fila gris de capital.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+
+> **Verificación (2026-11-13):** solo el último criterio se comprobó en ejecución. Los demás se revisaron en el código, pero falta probarlos en la app y con Supabase local: Docker no pudo descargar la imagen de Postgres. Pendiente: `supabase db reset` sin errores (la migración avisa "Avances convertidos en ingreso: N, sin convertir: M"), el seed de un avance antiguo con cuenta para comprobar que los saldos no cambian, y regenerar `src/types/database.ts`, que no debería cambiar porque la firma de la RPC es la misma.
 
 ## Decisiones
 

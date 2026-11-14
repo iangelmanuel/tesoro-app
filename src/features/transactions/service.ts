@@ -47,7 +47,7 @@ const SAME_TRANSFER_ACCOUNT = "Elige una cuenta distinta a la que paga"
 const INCOME_NOT_FOUND = "No se encontró el ingreso fijo"
 const ALREADY_RECEIVED = "Este ingreso ya está registrado. Intenta de nuevo"
 export const LINKED_DEBT_ENTRY =
-  "Este movimiento es un pago de deuda: edítalo desde su diálogo de pago"
+  "Este movimiento es un pago o avance de deuda: edítalo desde su diálogo de pago"
 const UNIQUE_VIOLATION = "23505"
 
 // Códigos de Postgres que pueden llegar pese a la validación con Zod

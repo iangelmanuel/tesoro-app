@@ -45,7 +45,7 @@ import {
 } from "./transaction-input"
 
 const LINKED_ONLY_FIELDS =
-  "Este movimiento es un pago de deuda: solo se pueden cambiar monto, fecha, hora y nota."
+  "Este movimiento es un pago o avance de deuda: solo se pueden cambiar monto, fecha, hora y nota."
 
 const patchSchema = z
   .object({
@@ -116,7 +116,7 @@ export const updateTransactions = defineTool({
   group: "write",
   title: "Editar movimientos",
   description:
-    "Edita de 1 a 200 movimientos: cada elemento lleva el id y solo los campos que cambian (type, amount, category_id, account_id, occurred_on, time, description, note). Mismas reglas que la app. En un pago de deuda o cobro de Me deben (link.kind debt o receivable) solo cambian monto, fecha, hora y nota, y el abono se actualiza con él. Todo o nada, con dry_run. Devuelve un operation_id para revertir.",
+    "Edita de 1 a 200 movimientos: cada elemento lleva el id y solo los campos que cambian (type, amount, category_id, account_id, occurred_on, time, description, note). Mismas reglas que la app. En un pago de deuda, avance de tarjeta o cobro de Me deben (link.kind debt o receivable) solo cambian monto, fecha, hora y nota, y el abono se actualiza con él. Todo o nada, con dry_run. Devuelve un operation_id para revertir.",
   input,
   annotations: { readOnlyHint: false, destructiveHint: false },
   async run(ctx, args) {

@@ -699,6 +699,7 @@ function TransactionForm({
             transfer_from: errors?.transfer_from?.[0],
             transfer_amount: errors?.transfer_amount?.[0]
           }}
+          direction="out"
           defaultAccountId={accountId}
           onAccountChange={setAccountId}
         />

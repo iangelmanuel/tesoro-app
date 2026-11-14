@@ -8,6 +8,7 @@ import {
   Input,
   Label,
   ListBox,
+  Modal,
   Select,
   Tabs,
   TextField,
@@ -114,6 +115,68 @@ export function ReceivableCollectForm({
         />
       )}
     </div>
+  )
+}
+
+interface ReceivableCollectDialogProps {
+  workspaceId: string
+  receivable: CollectableReceivable
+  /** Cuota elegida al abrir (Una cuota) */
+  periodOn?: string
+  accounts: PaymentAccountOption[]
+  /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
+  trigger?: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}
+
+/** Cobro desde el Sheet de una cuenta por cobrar: el mismo formulario del tab */
+export function ReceivableCollectDialog({
+  workspaceId,
+  receivable,
+  periodOn,
+  accounts,
+  trigger,
+  open: controlledOpen,
+  onOpenChange
+}: ReceivableCollectDialogProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const open = controlledOpen ?? uncontrolledOpen
+  const setOpen = onOpenChange ?? setUncontrolledOpen
+
+  return (
+    <Modal
+      isOpen={open}
+      onOpenChange={setOpen}
+    >
+      {trigger}
+      <Modal.Backdrop>
+        <Modal.Container scroll="outside">
+          <Modal.Dialog className="sm:max-w-md">
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <Modal.Heading>Registrar cobro</Modal.Heading>
+              <p className="text-sm text-muted">
+                Lo que te pagaron de {receivable.name}.
+              </p>
+            </Modal.Header>
+            <Modal.Body>
+              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
+              <ReceivableCollectForm
+                workspaceId={workspaceId}
+                receivables={[receivable]}
+                receivableId={receivable.id}
+                fixed
+                periodOn={periodOn}
+                accounts={accounts}
+                onSaved={() => setOpen(false)}
+                onCancel={() => setOpen(false)}
+              />
+            </Modal.Body>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
   )
 }
 

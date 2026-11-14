@@ -39,7 +39,7 @@ interface ReceivableInstallmentsProps {
 }
 
 /**
- * Cuotas de una cuenta por cobrar mensual (SPEC 28 y 29), la más reciente
+ * Cuotas de una cuenta por cobrar mensual (SPEC 28, 29 y 39), la más reciente
  * primero: mes, fecha de pago, estado y lo cobrado. Una cuota abonada en
  * parte muestra cuánto falta. Muestra las últimas 12 y un "Ver más".
  */
@@ -105,6 +105,50 @@ function installmentDetail(installment: Installment, currency: string) {
   return `Vence el ${formatShortDate(installment.due_on)}`
 }
 
+/**
+ * Abonos que cubren la cuota (SPEC 39), solo si hay más de uno o alguno se
+ * reparte entre varias cuotas: "$ 4.700 · parte de un pago de $ 20.000 del
+ * 12 nov"
+ */
+function InstallmentEntries({
+  installment,
+  currency
+}: {
+  installment: Installment
+  currency: string
+}) {
+  const shared = installment.entries.some((entry) => entry.total > entry.amount)
+  if (!shared && installment.entries.length < 2) {
+    return null
+  }
+
+  return (
+    <ul className="flex flex-col gap-0.5 text-xs text-muted tabular-nums">
+      {installment.entries.map((entry) => (
+        <li key={entry.id}>
+          <Amount
+            value={entry.amount}
+            currency={currency}
+          />
+          {entry.total > entry.amount ? (
+            <>
+              {" "}
+              · parte de un pago de{" "}
+              <Amount
+                value={entry.total}
+                currency={currency}
+              />{" "}
+              del {formatShortDate(entry.occurred_on)}
+            </>
+          ) : (
+            <> el {formatShortDate(entry.occurred_on)}</>
+          )}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 function InstallmentRow({
   installment,
   currency,
@@ -133,6 +177,10 @@ function InstallmentRow({
         <p className="text-xs text-muted tabular-nums">
           {installmentDetail(installment, currency)}
         </p>
+        <InstallmentEntries
+          installment={installment}
+          currency={currency}
+        />
       </div>
 
       <div className="flex shrink-0 items-center gap-2">

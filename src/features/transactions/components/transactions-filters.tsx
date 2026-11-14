@@ -4,8 +4,9 @@ import { useEffect, useState, useTransition } from "react"
 import type { Route } from "next"
 import { useRouter } from "next/navigation"
 import { Button, Drawer, ListBox, SearchField, Select, cn } from "@heroui/react"
-import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from "lucide-react"
-import { CONTROL_BUTTON, CONTROL_SURFACE } from "@/components/dashboard/surface"
+import { SlidersHorizontal, X } from "lucide-react"
+import { MonthSwitcher } from "@/components/dashboard/month-switcher"
+import { CONTROL_BUTTON } from "@/components/dashboard/surface"
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import { NO_ACCOUNT } from "@/features/accounts/constants"
 import type { Category } from "@/features/categories/queries"
@@ -213,41 +214,18 @@ export function TransactionsFilters({
 
         {/* El mes es texto (no botón): las flechas lo cambian y el toggle
             alterna entre un mes y todos */}
-        <div
-          className={cn(
-            "flex min-h-11 min-w-0 flex-1 items-center gap-0.5 rounded-3xl p-0.5 md:flex-none",
-            CONTROL_SURFACE
-          )}
-        >
-          <Button
-            variant="ghost"
-            size="sm"
-            isIconOnly
-            className="size-11 md:size-10"
-            aria-label="Mes anterior"
-            isDisabled={isAllMonths}
-            onPress={() => navigate({ month: shiftMonth(month, -1) })}
-          >
-            <ChevronLeft />
-          </Button>
-          <span
-            aria-live="polite"
-            className="min-w-0 flex-1 truncate px-1 text-center text-sm font-medium md:min-w-32 md:flex-none"
-          >
-            {isAllMonths ? "Todos los meses" : formatMonth(month)}
-          </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            isIconOnly
-            className="size-11 md:size-10"
-            aria-label="Mes siguiente"
-            isDisabled={isAllMonths}
-            onPress={() => navigate({ month: shiftMonth(month, 1) })}
-          >
-            <ChevronRight />
-          </Button>
-        </div>
+        <MonthSwitcher
+          className="w-auto flex-1 md:flex-none"
+          label={isAllMonths ? "Todos los meses" : formatMonth(month)}
+          onPrev={
+            isAllMonths
+              ? null
+              : () => navigate({ month: shiftMonth(month, -1) })
+          }
+          onNext={
+            isAllMonths ? null : () => navigate({ month: shiftMonth(month, 1) })
+          }
+        />
 
         <Button
           variant="ghost"

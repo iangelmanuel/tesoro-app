@@ -48,7 +48,10 @@ function RecurringIncomeSkeleton() {
   return (
     <>
       <Skeleton className="h-10 w-48 rounded-3xl" />
-      <CardSkeleton className="h-48" />
+      <CardSkeleton
+        className="h-48"
+        withMonth
+      />
       <CardSkeleton className="h-96" />
     </>
   )

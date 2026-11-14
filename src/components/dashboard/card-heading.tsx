@@ -16,6 +16,9 @@ interface CardHeadingProps {
   linkContext?: string
   /** Acción extra a la derecha (un botón pequeño) */
   action?: React.ReactNode
+  /** Control de la tarjeta (el selector de mes): a la derecha desde 768 px;
+   *  en el teléfono baja bajo el título a todo el ancho */
+  control?: React.ReactNode
 }
 
 /**
@@ -29,14 +32,20 @@ export function CardHeading({
   href,
   linkLabel = "Ver todo",
   linkContext,
-  action
+  action,
+  control
 }: CardHeadingProps) {
   return (
-    <div className="flex min-h-7 items-center justify-between gap-3">
+    <div className="flex min-h-7 flex-wrap items-center justify-between gap-x-3 gap-y-3">
       <div className="flex min-w-0 items-center gap-1">
         <h2 className="truncate text-sm font-medium text-muted">{title}</h2>
         {help && <HelpHint topic={help} />}
       </div>
+      {control && (
+        <div className="order-last w-full md:order-none md:ml-auto md:w-auto">
+          {control}
+        </div>
+      )}
       <div className="flex shrink-0 items-center gap-2">
         {action}
         {href && (

@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { Button, Drawer, Tabs, cn, toast } from "@heroui/react"
+import { Button, Tabs, cn, toast } from "@heroui/react"
 import { Archive, ArchiveRestore, Pencil } from "lucide-react"
+import { DetailSection, DetailSheet } from "@/components/dashboard/detail-sheet"
 import { archiveCategory, restoreCategory } from "../actions"
 import type { Category } from "../queries"
 import { CategoryBadge } from "./category-badge"
@@ -46,73 +47,59 @@ export function CategoriesSheet({
   }
 
   return (
-    <Drawer
-      isOpen={open}
+    <DetailSheet
+      open={open}
       onOpenChange={onOpenChange}
-    >
-      <Drawer.Backdrop>
-        <Drawer.Content placement="right">
-          <Drawer.Dialog className="w-full sm:max-w-md">
-            <Drawer.CloseTrigger aria-label="Cerrar" />
-            <Drawer.Header>
-              <Drawer.Heading>Categorías</Drawer.Heading>
-              <p className="text-sm text-muted">
-                Las del sistema son fijas. Las tuyas se pueden editar, archivar
-                y restaurar.
-              </p>
-            </Drawer.Header>
+      title="Categorías"
+      description="Las del sistema son fijas. Las tuyas se pueden editar, archivar y restaurar."
+      action={
+        <Tabs
+          selectedKey={type}
+          onSelectionChange={handleTypeChange}
+        >
+          <Tabs.ListContainer>
+            <Tabs.List
+              aria-label="Tipo de categoría"
+              className="w-full"
+            >
+              {(["expense", "income"] as const).map((tabType) => (
+                <Tabs.Tab
+                  key={tabType}
+                  id={tabType}
+                  className="flex-1"
+                >
+                  {TYPE_LABELS[tabType]}
+                  <Tabs.Indicator />
+                </Tabs.Tab>
+              ))}
+            </Tabs.List>
+          </Tabs.ListContainer>
 
-            <Drawer.Body>
-              <Tabs
-                selectedKey={type}
-                onSelectionChange={handleTypeChange}
-              >
-                <Tabs.ListContainer>
-                  <Tabs.List
-                    aria-label="Tipo de categoría"
-                    className="w-full"
-                  >
-                    {(["expense", "income"] as const).map((tabType) => (
-                      <Tabs.Tab
-                        key={tabType}
-                        id={tabType}
-                        className="flex-1"
-                      >
-                        {TYPE_LABELS[tabType]}
-                        <Tabs.Indicator />
-                      </Tabs.Tab>
-                    ))}
-                  </Tabs.List>
-                </Tabs.ListContainer>
-
-                {(["expense", "income"] as const).map((tabType) => (
-                  <Tabs.Panel
-                    key={tabType}
-                    id={tabType}
-                    className="flex flex-col gap-6 pt-4"
-                  >
-                    <CategoryForm
-                      key={`${editing?.id ?? "new"}-${tabType}-${formVersion}`}
-                      workspaceId={workspaceId}
-                      type={tabType}
-                      category={editing}
-                      onSaved={handleSaved}
-                      onCancel={() => setEditing(null)}
-                    />
-                    <CategoryList
-                      workspaceId={workspaceId}
-                      categories={categories.filter((c) => c.type === tabType)}
-                      editingId={editing?.id}
-                      onEdit={setEditing}
-                    />
-                  </Tabs.Panel>
-                ))}
-              </Tabs>
-            </Drawer.Body>
-          </Drawer.Dialog>
-        </Drawer.Content>
-      </Drawer.Backdrop>
-    </Drawer>
+          {(["expense", "income"] as const).map((tabType) => (
+            <Tabs.Panel
+              key={tabType}
+              id={tabType}
+              className="flex flex-col gap-6 pt-4"
+            >
+              <CategoryForm
+                key={`${editing?.id ?? "new"}-${tabType}-${formVersion}`}
+                workspaceId={workspaceId}
+                type={tabType}
+                category={editing}
+                onSaved={handleSaved}
+                onCancel={() => setEditing(null)}
+              />
+              <CategoryList
+                workspaceId={workspaceId}
+                categories={categories.filter((c) => c.type === tabType)}
+                editingId={editing?.id}
+                onEdit={setEditing}
+              />
+            </Tabs.Panel>
+          ))}
+        </Tabs>
+      }
+    />
   )
 }
 
@@ -203,10 +190,9 @@ function CategoryGroup({
   children: React.ReactNode
 }) {
   return (
-    <section className="flex flex-col gap-2">
-      <h3 className="text-xs font-medium text-muted uppercase">{title}</h3>
+    <DetailSection title={title}>
       <ul className="flex flex-col gap-1">{children}</ul>
-    </section>
+    </DetailSection>
   )
 }
 

@@ -5,10 +5,11 @@ import { GitHubStars } from "./github-stars"
 import { MobileNav } from "./mobile-nav"
 import { SiteHeaderSession } from "./site-header-session"
 import { SiteHeaderShell } from "./site-header-shell"
-import { SiteThemeToggle } from "./site-theme-toggle"
 
-// Header público: logo, navegación en una pastilla al centro y, a la derecha,
-// el repositorio con sus estrellas, el tema y la sesión
+// Header público (SPEC 40): una sola línea, sin pastillas ni divisores. Logo,
+// la navegación como texto, y a la derecha el repositorio con sus estrellas
+// y la sesión. Sin selector de tema: las páginas públicas van siempre en
+// claro. En móvil, la navegación y la sesión van en el cajón
 export function SiteHeader() {
   return (
     <SiteHeaderShell>
@@ -25,12 +26,12 @@ export function SiteHeader() {
           aria-label="Principal"
           className="hidden md:block"
         >
-          <ul className="flex items-center gap-0.5 rounded-full bg-surface/70 p-1 shadow-(--surface-shadow) backdrop-blur">
+          <ul className="flex items-center gap-1">
             {SITE.navigation.main.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="flex h-9 items-center rounded-full px-4 text-sm text-muted transition-colors hover:bg-default hover:text-foreground focus-visible:ring-2 focus-visible:ring-focus focus-visible:outline-none"
+                  className="flex h-9 items-center rounded-full px-3 text-sm font-medium text-foreground outline-none hover:opacity-70 focus-visible:ring-2 focus-visible:ring-focus"
                 >
                   {item.name}
                 </Link>
@@ -40,15 +41,10 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center justify-end gap-1">
-          <GitHubStars className="hidden lg:inline-flex" />
-          <SiteThemeToggle />
-          <span
-            aria-hidden="true"
-            className="mx-1 hidden h-6 w-px bg-separator sm:block"
-          />
+          <GitHubStars className="hidden h-9 px-2.5 text-foreground lg:inline-flex" />
           {/* Ancho fijo: con o sin sesión la isla no desplaza el header */}
-          <div className="hidden w-68 items-center justify-end gap-1 sm:flex">
-            <SiteHeaderSession />
+          <div className="hidden w-64 items-center justify-end gap-1 sm:flex">
+            <SiteHeaderSession size="compact" />
           </div>
           <MobileNav>
             <SiteHeaderSession />

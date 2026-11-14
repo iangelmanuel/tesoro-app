@@ -62,7 +62,8 @@ Videos de la landing (SPEC 24). Solo en local: `video/` (proyecto
 Hyperframes) y los scripts `scripts/seed-demo.mjs`, `record-demo.mjs`,
 `prepare-demo-video.mjs` y `scripts/demo/` están git-ignorados, igual que
 las skills de Hyperframes. Al repo solo llega el resultado en `public/videos/`
-(MP4 + WebM + póster, ≤ 25 MB en total). Requiere FFmpeg y Docker.
+(MP4 + WebM + póster, ≤ 30 MB en total; el hero, ≤ 4 MB). Requiere FFmpeg
+y Docker.
 
 ```bash
 supabase start                         # Supabase local (el seed se niega con otra URL)
@@ -78,6 +79,21 @@ El clip de agentes (SPEC 34) no graba la app: es HTML en
 `npx hyperframes render -c clips/agentes.html -q delivery` y se codifica
 a 864 × 960 (H.264 `-tune animation` CRF 27 y VP9 CRF 40, sin audio) más el
 póster WebP del segundo 12,9.
+
+El video del hero (SPEC 40) tampoco graba la app: es un proyecto aparte en
+`video/hero/` con tomas de stock (Pexels, créditos en
+`docs/creditos-media.md`) en color natural, aclaradas con `adjust` de
+`hyperframes media-treatment` (sin LUT ni viñeta).
+
+```bash
+cd video/hero
+npx hyperframes render -q delivery --video-frame-format png -o renders/hero-master.mp4
+npx hyperframes render -c clips/mobile.html -q delivery --video-frame-format png -o renders/hero-mobile-master.mp4
+```
+
+Se codifica sin audio: H.264 `-tune film` CRF 32 (escritorio) y 31 (móvil)
+con `+faststart`, VP9 CRF 42, y el póster WebP del primer fotograma de
+cada uno, a `public/videos/hero*`.
 
 Las variables (`DEMO_EMAIL`, `DEMO_PASSWORD`, `SUPABASE_SERVICE_ROLE_KEY`
 local) van en el entorno o en `.env.local`, nunca en el repo. Al
@@ -147,8 +163,12 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
 - **`docs/ui.md`** es la guía de la interfaz: tokens, contraste verificado,
   componentes propios, dónde vive cada pantalla y cómo usar los comandos de
   Impeccable (`teach`, `audit`, `critique`, `polish`, `distill`, `animate`).
-- **Tema**: Inter (`next/font/google`, `--font-sans`) y oscuro por defecto
-  (`defaultTheme="dark"`; el toggle del aside cambia a claro). Fondo casi
+- **Tema**: las páginas públicas (`/`, `/legal/*`, `/mcp`) van siempre en
+  claro: `app/(public)/layout.tsx` monta `ThemeProvider` con
+  `forcedTheme="light"` y cada otro grupo de rutas monta el suyo (nunca en el
+  layout raíz, SPEC 40). En el resto,
+  Inter (`next/font/google`, `--font-sans`) y oscuro por defecto
+  (`defaultTheme="dark"`; el tema se cambia en el menú de cuenta). Fondo casi
   negro y tarjetas gris oscuro **sin borde**; radios grandes en tarjetas y
   pill en botones, tabs y selects. Montos con `tabular-nums`.
 - **Un solo título por pantalla**: lo pone el header (`DashboardTitle`); las

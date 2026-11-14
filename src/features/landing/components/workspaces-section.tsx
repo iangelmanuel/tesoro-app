@@ -1,27 +1,28 @@
-import { CheckIcon } from "lucide-react"
-import { flattenNav } from "@/components/dashboard/nav"
+import { NAV_ICONS } from "@/components/dashboard/nav"
 import { SITE } from "@/config/site"
 import { RevealItem, RevealList } from "./reveal"
 import { SectionHeading } from "./section-heading"
-
-// Lo propio de cada espacio sale de su menú del dashboard: sin el resumen,
-// los ajustes ni lo que ambos comparten (movimientos y cuentas)
-const SHARED = ["Resumen", "Ajustes", "Movimientos", "Cuentas"]
-
-const HIGHLIGHTS = {
-  personal: flattenNav(SITE.navigation.personal)
-    .map((item) => item.name)
-    .filter((name) => !SHARED.includes(name)),
-  business: flattenNav(SITE.navigation.business)
-    .map((item) => item.name)
-    .filter((name) => !SHARED.includes(name))
-}
 
 const NOTES = {
   personal: "Incluido desde que creas tu cuenta.",
   business: "Opcional: lo creas cuando tengas un negocio."
 }
 
+// Color de cada espacio (tokens --workspace-*, los mismos del dashboard)
+const COLORS = {
+  personal: "var(--workspace-personal)",
+  business: "var(--workspace-business)"
+}
+
+const NAV = {
+  personal: SITE.navigation.personal,
+  business: SITE.navigation.business
+}
+
+// Espacios (SPEC 40): Personal y Empresa lado a lado, cada uno con su color
+// real y su estructura tal como la muestra el aside del dashboard (los grupos
+// de SPEC 31), en vez de dos tarjetas con viñetas. Réplica estática: sin
+// enlaces, porque el dashboard pide sesión
 export function WorkspacesSection() {
   return (
     <section
@@ -34,35 +35,70 @@ export function WorkspacesSection() {
           title="Tu casa y tu negocio, cada uno en su lugar"
           description="Dos espacios en la misma cuenta. Cambias de uno a otro en un clic y sus cifras nunca se mezclan. Ambos llevan movimientos y cuentas."
         />
-        <RevealList className="grid gap-4 md:grid-cols-2">
+        <RevealList className="grid gap-10 md:grid-cols-2 md:gap-6">
           {SITE.workspaces.types.map((workspace) => (
             <RevealItem
               key={workspace.id}
-              className="flex flex-col gap-5 rounded-3xl bg-surface p-6 shadow-(--surface-shadow) sm:p-8"
+              className="flex flex-col gap-5"
             >
-              <div className="flex flex-col gap-1">
-                <h3 className="text-xl font-semibold tracking-tight">
+              <div className="flex flex-col gap-1.5">
+                <h3 className="flex items-center gap-2.5 text-xl font-semibold tracking-tight">
+                  <span
+                    aria-hidden="true"
+                    className="size-2.5 rounded-full"
+                    style={{ backgroundColor: COLORS[workspace.id] }}
+                  />
                   {workspace.name}
                 </h3>
-                <p className="text-sm text-pretty text-muted">
-                  {NOTES[workspace.id]}
+                <p className="text-pretty text-muted">
+                  {workspace.description} {NOTES[workspace.id]}
                 </p>
               </div>
-              <p className="text-pretty text-muted">{workspace.description}</p>
-              <ul className="flex flex-wrap gap-2 text-sm">
-                {HIGHLIGHTS[workspace.id].map((name) => (
-                  <li
-                    key={name}
-                    className="flex items-center gap-1.5 rounded-full bg-default px-3 py-1.5"
+
+              <div className="flex flex-col gap-5 rounded-3xl bg-surface p-5 shadow-(--surface-shadow)">
+                {NAV[workspace.id].map((group) => (
+                  <div
+                    key={group.label}
+                    className="flex flex-col gap-1"
                   >
-                    <CheckIcon
-                      aria-hidden="true"
-                      className="size-3.5 text-(--income)"
-                    />
-                    {name}
-                  </li>
+                    <h4 className="px-3 text-xs font-medium text-muted">
+                      {group.label}
+                    </h4>
+                    <ul className="flex flex-col">
+                      {group.items.map((item, index) => {
+                        const Icon = NAV_ICONS[item.icon]
+                        // El primer ítem (Resumen) va activo, como al entrar
+                        const active =
+                          group === NAV[workspace.id][0] && index === 0
+                        return (
+                          <li
+                            key={item.name}
+                            className="flex h-9 items-center gap-2.5 rounded-xl px-3 text-sm"
+                            style={
+                              active
+                                ? {
+                                    backgroundColor: `color-mix(in oklab, ${COLORS[workspace.id]} 14%, transparent)`
+                                  }
+                                : undefined
+                            }
+                          >
+                            <Icon
+                              aria-hidden="true"
+                              className="size-4 shrink-0"
+                              style={{
+                                color: active ? COLORS[workspace.id] : undefined
+                              }}
+                            />
+                            <span className={active ? "font-medium" : ""}>
+                              {item.name}
+                            </span>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </RevealItem>
           ))}
         </RevealList>

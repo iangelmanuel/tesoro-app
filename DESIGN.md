@@ -7,6 +7,10 @@ colors:
   accent-personal-bright: "oklch(72% 0.15 162.5)"
   accent-business: "oklch(55.3% 0.195 38.402)"
   accent-business-bright: "oklch(74% 0.17 48)"
+  workspace-personal: "{colors.accent-personal}"
+  workspace-business: "{colors.accent-business}"
+  hero-veil: "oklch(1 0 0 / 0.12–0.34)"
+  hero-accent: "oklch(37.8% 0.077 168.94)"
   accent-neutral-dark: "oklch(0.985 0 0)"
   accent-neutral-light: "oklch(0.21 0.016 265)"
   on-accent: "oklch(0.99 0 0)"
@@ -19,6 +23,8 @@ colors:
   night-foreground: "oklch(0.985 0 0)"
   night-muted: "oklch(0.72 0.012 264)"
   day-background: "oklch(0.962 0.004 264)"
+  site-background-day: "oklch(1 0 0)"
+  site-surface-day: "oklch(0.975 0.003 264)"
   day-surface: "oklch(1 0 0)"
   day-surface-secondary: "oklch(0.967 0.004 264)"
   day-default: "oklch(0.93 0.006 264)"
@@ -41,10 +47,10 @@ colors:
 typography:
   display:
     fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "3.75rem"
+    fontSize: "4.5rem"
     fontWeight: 600
-    lineHeight: 1
-    letterSpacing: "-0.025em"
+    lineHeight: 0.95
+    letterSpacing: "-0.035em"
   headline:
     fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
     fontSize: "2.25rem"
@@ -145,7 +151,7 @@ components:
 
 Tesoro se ve como lo que promete: registros sueltos que, uno a uno, quedan ordenados. Es un sistema oscuro por defecto, sobre una base casi negra, donde las cifras son las protagonistas y todo lo demás se retira. Las superficies no llevan borde; se separan por el contraste entre fondo y tarjeta y por una elevación muy contenida (una sombra difusa en claro, un brillo superior de 1 px en oscuro). La densidad es media: pocas métricas, bien explicadas, con aire entre bloques.
 
-El color es escaso y significa algo. Fuera de los espacios el primario es neutro; dentro, un solo acento por espacio (emerald en Personal, naranja en Empresa) que cambia por ruta y nunca por props. Ingresos, gastos y balance tienen tokens propios que sirven a la vez de texto y de serie de gráfica. La landing lleva el mismo mundo a una escala mayor: titulares grandes y apretados en Inter, el cofre del isotipo armándose con bloques en 3D ("cada registro suma"), y videos reales de la app en marcos claros.
+El color es escaso y significa algo. Fuera de los espacios el primario es neutro; dentro, un solo acento por espacio (emerald en Personal, naranja en Empresa) que cambia por ruta y nunca por props. Ingresos, gastos y balance tienen tokens propios que sirven a la vez de texto y de serie de gráfica. La landing lleva el mismo mundo a una escala mayor, siempre en claro y sobre blanco puro: abre con un video de ambiente (manos, billetes, una libreta, un pequeño negocio) en verde claro de marca que se funde con el blanco de la página, con el titular grande y apretado en Inter encima; más abajo, videos reales de la app en marcos claros. El selector de tema solo existe en el dashboard.
 
 El movimiento llega lento y sin rebote. Una sola curva (expo.out) gobierna la landing; el dashboard se mueve poco y rápido. Todo respeta `prefers-reduced-motion`.
 
@@ -167,6 +173,7 @@ Neutros fríos de un solo matiz (264), un primario por espacio y una familia sem
 - **Emerald de Personal** (`accent-personal`, emerald-700): relleno de botones primarios, pestaña activa y acentos del espacio Personal, con texto blanco (5.22:1). Es el tono 700 a propósito: el primero que da AA con blanco.
 - **Emerald brillante** (`accent-personal-bright`): solo en oscuro, para el anillo de foco y el texto suave del acento, porque el 700 no contrasta con el fondo casi negro.
 - **Naranja de Empresa** (`accent-business`, orange-700) y **Naranja brillante** (`accent-business-bright`): los mismos papeles en el espacio Empresa.
+- **Color de espacio fuera del dashboard** (`--workspace-personal`, `--workspace-business`): el 700 en claro y el brillante en oscuro, como marca gráfica (≥ 3:1). Solo para la landing, donde Personal y Empresa se muestran a la vez y `--accent` no sirve.
 - **Primario neutro** (`accent-neutral-dark` / `accent-neutral-light`): el primario fuera de los espacios (landing, auth, cuenta). En oscuro es casi blanco con texto oscuro; en claro, casi negro con texto claro.
 
 ### Secondary
@@ -185,7 +192,9 @@ Neutros fríos de un solo matiz (264), un primario por espacio y una familia sem
 - **Tarjeta grafito** (`night-surface`, ≈ `#16171a`), **grafito medio** (`night-surface-secondary`) y **overlay** (`night-overlay`): tarjetas, niveles internos y diálogos/menús, escalonados para que cada nivel se lea sin borde.
 - **Gris de control** (`night-default`) y **relleno de campo** (`night-field`): ítem activo del aside, chips neutros y hover de filas; los campos van más claros que la tarjeta y el modal.
 - **Texto** (`night-foreground`) y **texto atenuado** (`night-muted`, 7.06:1 sobre la tarjeta).
-- **Papel gris** (`day-background`, `#f1f2f5`), **tarjeta blanca** (`day-surface`), y sus equivalentes `day-*`: la misma estructura en claro.
+- **Papel gris** (`day-background`, `#f1f2f5`), **tarjeta blanca** (`day-surface`), y sus equivalentes `day-*`: la misma estructura en claro, en el dashboard y la auth.
+- **Blanco de sitio** (`site-background-day`, `#FFFFFF`) y **tarjeta de sitio** (`site-surface-day`): las páginas públicas en claro (`data-surface="site"`). La tarjeta baja a un gris muy suave para seguir separándose del blanco, sin borde y con la misma sombra.
+- **Velo del hero** (`hero-veil`): blanco suave, 12 % arriba y hasta 34 % en la mitad baja, donde va el texto, más un fundido corto que empalma con la sección siguiente. Se midió sobre el render: con él, el texto oscuro da ≥ 4,5:1 incluso sobre el 5 % más oscuro de esa zona. **Verde del hero** (`hero-accent`, emerald-900): la segunda parte del slogan, porque `--brand` no llega a 3:1 sobre el video.
 
 ### Named Rules
 
@@ -204,7 +213,7 @@ Neutros fríos de un solo matiz (264), un primario por espacio y una familia sem
 
 ### Hierarchy
 
-- **Display** (600, 2.25rem → 3rem → 3.75rem, interlineado 1, tracking −0.025em): solo el H1 del hero y el título del cierre de la landing, que repiten el slogan. Con `text-balance`.
+- **Display** (600, `text-balance`): el H1 del hero (3rem → 3.75rem → 4.5rem, interlineado 0.95, tracking −0.035em) y el título del cierre de la landing (2.25rem → 3.75rem, interlineado 1, tracking −0.025em), que repiten el slogan.
 - **Headline** (600, 1.875rem → 2.25rem, tracking −0.025em): el `<h2>` de cada sección de la landing (`SectionHeading`), máximo 42 rem de ancho, con `text-balance`.
 - **Title** (600, 1.25rem): títulos de tarjeta en la landing; en el dashboard, el `<h1>` único del header y los `<h2>` de `CardHeading`.
 - **Body lead** (400, 1.125rem, atenuado): bajada del hero y descripción de sección, con `text-pretty`, máximo ~36 rem.
@@ -220,9 +229,11 @@ Neutros fríos de un solo matiz (264), un primario por espacio y una familia sem
 
 ## Layout
 
-En la landing, cada sección es una franja de ancho completo con un contenedor centrado de 72 rem (`max-w-6xl`), márgenes de 16 px (24 px desde 640 px) y padding vertical de 80 px (96 px desde 640 px); el cierre sube a 96/128 px. Las secciones con contenido de apoyo usan una grilla de dos columnas desde 1024 px (texto + visual: hero `1.05fr / 1fr`, score `1fr / 26rem`, recorrido de funciones `21rem / 1fr`) y se apilan en móvil con el visual primero. La única franja tintada es la de los espacios (`--default` al 40 %); el resto va sobre el fondo. El ritmo interno se apoya en saltos de 24 y 40 px entre bloques.
+En la landing, cada sección es una franja de ancho completo con un contenedor centrado de 72 rem (`max-w-6xl`), márgenes de 16 px (24 px desde 640 px) y padding vertical de 80 px (96 px desde 640 px); el cierre sube a 96/128 px. El hero ocupa toda la primera pantalla, con el texto abajo a la izquierda (máx. 56 rem) y el video detrás, fundido con el blanco. Las secciones con contenido de apoyo usan una grilla de dos columnas desde 1024 px (score `26rem / 1fr`, con la tarjeta fija al hacer scroll; recorrido de funciones `21rem / 1fr`; espacios `1fr / 1fr`) y se apilan en móvil. La única franja tintada es la de los espacios (`--default` al 40 %); el resto va sobre el fondo. El ritmo interno se apoya en saltos de 24 y 40 px entre bloques.
 
 En el dashboard, aside a la izquierda y header con el único título y los accesos rápidos. Por debajo de 768 px el aside pasa a un Drawer, aparece la barra inferior con [+] al centro y la hoja de acciones rápidas, y todo control mide 44 px o más (56 px las acciones de la hoja). Las tablas se deslizan en horizontal dentro de `ScrollTable` en vez de convertirse en tarjetas.
+
+**Scrollbar.** Fina en todo el proyecto, sin carril, con el gris neutro de matiz 264 (`--scrollbar`, que se aclara u oscurece con el tema, y `--scrollbar-hover`).
 
 **La Regla del Pulgar.** Por debajo de 768 px ningún control táctil mide menos de 44 × 44 px.
 
@@ -243,7 +254,7 @@ Sistema híbrido y muy contenido: la profundidad la da primero el escalón tonal
 
 ## Shapes
 
-Formas amplias y amables, sin aristas duras. Las tarjetas y paneles usan un radio grande (24 px), igual que el marco de los videos y la pestaña activa del recorrido. Botones, pestañas, selects, filtros, chips y la barra de factores del score son pill (9999 px). Los campos de formulario van a 20 px, que a su altura de 36–40 px se lee como pill. Las barras de las gráficas redondean solo su borde superior (4 px). Los puntos (viñetas, leyendas, factores) son círculos de 6–10 px. El isotipo, un cofre sobre un cuadro redondeado, es la única silueta recurrente; la escena 3D del hero lo reconstruye en bloques.
+Formas amplias y amables, sin aristas duras. Las tarjetas y paneles usan un radio grande (24 px), igual que el marco de los videos y la pestaña activa del recorrido. Botones, pestañas, selects, filtros, chips y la barra de factores del score son pill (9999 px). Los campos de formulario van a 20 px, que a su altura de 36–40 px se lee como pill. Las barras de las gráficas redondean solo su borde superior (4 px). Los puntos (viñetas, leyendas, factores) son círculos de 6–10 px. El isotipo, un cofre sobre un cuadro redondeado, es la única silueta recurrente.
 
 ## Components
 
@@ -280,8 +291,17 @@ Firmes y redondos; el color solo aparece en el principal.
 
 ### Navigation
 
-- **Header público:** sticky, transparente arriba de todo; tras 8 px de scroll toma el fondo al 80 % (60 % con soporte de blur), desenfoque y un divisor inferior, en 300 ms.
-- **Aside del dashboard:** logo, pestañas Personal / Empresa, navegación con el ítem activo en `--default`; tema y usuario abajo. En móvil, Drawer más barra inferior de 4 destinos y [+].
+- **Header público:** una sola línea, sin pastillas ni divisores: logo, navegación como texto atenuado, GitHub con estrellas, "Iniciar sesión" como texto y "Crear cuenta" compacto (36 px). Sin selector de tema: las páginas públicas van siempre en claro. Sticky: transparente arriba (la franja blanca del velo del hero le da fondo) y, con scroll, el fondo de la página al 70–80 % con desenfoque y una línea de 1 px de `--separator` como sombra (no borde, para no sumar alto), en 300 ms.
+- **Aside del dashboard:** logo, pestañas Personal / Empresa, navegación con el ítem activo en `--default`; abajo solo el menú de cuenta. En móvil, Drawer más barra inferior de 4 destinos y [+].
+- **Menú de cuenta:** cabecera con avatar → Cuenta → Ayuda (↗, issues de GitHub) → Tema → Cerrar sesión. El tema es una píldora Claro / Oscuro dentro del mismo menú (selección única, no cierra el menú, se recorre con flechas); la opción activa va en superficie con sombra.
+
+### Selector de mes
+
+Una sola píldora `‹ mes ›` (`MonthSwitcher`) en todo el dashboard: 44 px de alto, flechas de 44 px en el teléfono y 40 px en escritorio, mes en texto con `aria-live`. Sobre la página va en `--surface`; dentro de una tarjeta, un nivel más (`surface-secondary`) para no perderse, a la derecha de la cabecera y a todo el ancho bajo el título en el teléfono.
+
+### Paneles de detalle
+
+`DetailSheet`: a la derecha en escritorio y abajo con asa en el teléfono, mismo ancho en todos. Cabecera con nombre, estado (chip de `tone.ts`) y la cifra clave (1.5rem, tabular). Cuerpo en un orden fijo: resumen (cifras sobre `surface-secondary`) → la acción del momento a todo el ancho → historial → detalles → editar, pausar y eliminar tras un divisor. Los títulos de sección son `label` (0.875rem, 500), sin mayúsculas.
 
 ### Recorrido de funciones (landing)
 
@@ -293,15 +313,23 @@ El video demo y los clips viven en un marco de 16:9 con radio de 24 px que es cl
 
 ### Score (landing)
 
-Una barra única de 12 px en pill que suma 100, partida en siete tramos de `--income` en opacidad decreciente según el peso, que se descubre de izquierda a derecha con el scroll sin deformarse. Al lado, un medidor dividido en las cuatro bandas del score (`score-bands.ts`: Débil `--danger`, Regular `--warning`, Bueno `--balance`, Excelente `--income`), con su leyenda en chips de `tone.ts`.
+Dos ideas y nada más. A la izquierda, la cifra: un score de ejemplo en 6 rem, tabular, "/ 100" atenuado y su banda en chip de `tone.ts` junto a "Datos de ejemplo", sin tarjeta. A la derecha, de qué está hecha: una barra pill de 12 px que suma 100, partida en siete tramos de `--income` (más intenso cuanto más pesa, del 100 al 50 %) que se descubre con el scroll, y debajo los siete factores en dos columnas, cada uno con su punto del mismo tono y su peso. Sin descripciones de factores ni rangos de bandas: ese detalle vive en el dashboard, junto al score real.
 
-### Escena del hero
+### Espacios (landing)
 
-Un cofre en bloques (el isotipo) que se arma desde una nube de bloques sueltos, con colores leídos de `--brand` e `--income`, sin sombras ni postproceso. Se carga solo si el equipo lo permite (`hero-scene-loader.tsx`) y deja de renderizar fuera de pantalla; si no, queda el mockup del panel (`hero-visual.tsx`).
+Personal y Empresa lado a lado, cada uno con un punto de su color real y, debajo, una réplica estática de su aside (grupos e íconos reales, "Resumen" activo en su color al 14 %). Sin checks ni chips.
+
+### Hero (landing)
+
+Toda la primera pantalla (`100svh`, mínimo 36 rem), clara como el resto de la landing, desde y = 0 y detrás del header. De abajo arriba: el póster (primer fotograma, es el LCP y lo único que se ve con reduced motion, ahorro de datos o sin JS), el video de ambiente de 15 s en loop (stock libre en color natural, solo más luminoso: sombras levantadas, menos contraste y un poco menos de saturación, sin tinte ni viñeta; sin texto, logo ni caras; recorte vertical en móvil), que entra asentándose de 1.06 a 1 en 2,4 s, y el velo blanco suave. El video se ve completo. Encima, el texto oscuro apoyado abajo a la izquierda: el slogan hasta 4,5 rem con tracking −0.035em e interlineado 0.95, con su segunda parte en verde profundo (`hero-accent`); la bajada en 1.25 rem y las promesas en el color de texto completo (no el atenuado, para dar AA sobre el video); "Crear cuenta" en el primario neutro y "Ver la demo" en blanco translúcido con la sombra de tarjeta. Nada en el hero depende de JS para su tamaño.
+
+### Footer
+
+Cuatro columnas: marca, Legal, Proyecto y Redes. Las redes llevan su icono de marca (Simple Icons, `currentColor`) de 16 px junto al nombre visible; 44 px por fila en el teléfono.
 
 ### Movimiento
 
-- **Landing:** una sola curva, expo.out `cubic-bezier(0.16, 1, 0.3, 1)`. Revelado al entrar en pantalla: 0.7 s desde 24 px abajo y opacidad 0; listas escalonadas cada 80 ms; una vez por elemento. Los revelados son CSS con un único `IntersectionObserver` (`data-reveal`, `data-pending`); lo visible al cargar nunca se oculta. Motion (`LazyMotion` estricto, `MotionConfig reducedMotion="user"`) queda solo para el reproductor y el recorrido de funciones. Con reduced motion o sin JS, todo aparece en su estado final.
+- **Landing:** una sola curva, expo.out `cubic-bezier(0.16, 1, 0.3, 1)`. Revelado al entrar en pantalla: 0.7 s desde 24 px abajo y opacidad 0; listas escalonadas cada 80 ms; una vez por elemento. Los revelados son CSS con un único `IntersectionObserver` (`data-reveal`, `data-pending`); lo visible al cargar nunca se oculta. Motion (`LazyMotion` estricto, `MotionConfig reducedMotion="user"`) queda solo para el reproductor y el recorrido de funciones. El video del hero es ambiente, no animación de la interfaz: se pausa fuera de pantalla. Con reduced motion o sin JS, todo aparece en su estado final y el hero queda en el póster.
 - **Dashboard:** tarjetas en 180 ms desde casi visibles, hover de 150 ms, gráficas en 400 ms; nada con `prefers-reduced-motion: reduce`.
 
 ## Do's and Don'ts

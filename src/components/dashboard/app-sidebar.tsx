@@ -4,7 +4,6 @@ import { useId } from "react"
 import type { Route } from "next"
 import Link from "next/link"
 import { useParams, usePathname } from "next/navigation"
-import { ArrowUpRight, CircleHelp } from "lucide-react"
 import { Logo } from "@/components/brand/logo"
 import {
   Sidebar,
@@ -15,7 +14,6 @@ import {
   SidebarNavLink,
   useCloseSidebarOnNavigate
 } from "@/components/dashboard/sidebar"
-import { ThemeToggle } from "@/components/theme/theme-toggle"
 import { SITE } from "@/config/site"
 import {
   type BusinessOption,
@@ -154,23 +152,6 @@ export function AppSidebar({ user, businesses, width }: AppSidebarProps) {
         )}
       </SidebarContent>
       <SidebarFooter>
-        <div className="flex items-center gap-1">
-          <a
-            href={SITE.repository.issues}
-            target="_blank"
-            rel="noreferrer"
-            className="flex h-9 min-w-0 flex-1 items-center gap-2.5 rounded-xl px-2.5 text-sm text-muted transition-colors duration-150 outline-none hover:bg-default hover:text-foreground focus-visible:ring-2 focus-visible:ring-focus motion-reduce:transition-none"
-          >
-            <CircleHelp className="size-4 shrink-0" />
-            <span className="truncate">Ayuda</span>
-            <ArrowUpRight
-              aria-hidden="true"
-              className="ml-auto size-3.5 shrink-0"
-            />
-            <span className="sr-only">(abre GitHub en otra pestaña)</span>
-          </a>
-          <ThemeToggle size="sm" />
-        </div>
         <UserMenu user={user} />
       </SidebarFooter>
     </Sidebar>

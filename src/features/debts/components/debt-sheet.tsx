@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Button, Drawer, Input, Label, TextField } from "@heroui/react"
+import { Button, Input, Label, TextField } from "@heroui/react"
 import { Plus, RefreshCw } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
+import { DetailSection, DetailSheet } from "@/components/dashboard/detail-sheet"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { parseAmount } from "@/features/transactions/schemas"
 import { formatCurrency, formatDate } from "@/libs/format"
@@ -73,208 +74,201 @@ export function DebtSheet({
   const collectable = toCollectableReceivable(debt, entries, today)
 
   return (
-    <Drawer
-      isOpen={open}
-      onOpenChange={onOpenChange}
-    >
-      <Drawer.Backdrop>
-        <Drawer.Content placement="right">
-          <Drawer.Dialog className="w-full sm:max-w-md">
-            <Drawer.CloseTrigger aria-label="Cerrar" />
-            <Drawer.Header>
-              <div className="flex flex-wrap items-center gap-2">
-                <Drawer.Heading className="truncate">
-                  {debt.name}
-                </Drawer.Heading>
-                {status && (
-                  <ToneBadge tone={status.tone}>{status.label}</ToneBadge>
-                )}
-                {isReceivableOverdue(debt, today) && (
-                  <ToneBadge tone="warning">Vencida</ToneBadge>
-                )}
-              </div>
+    <>
+      <DetailSheet
+        open={open}
+        onOpenChange={onOpenChange}
+        title={debt.name}
+        status={
+          <>
+            {status && <ToneBadge tone={status.tone}>{status.label}</ToneBadge>}
+            {isReceivableOverdue(debt, today) && (
+              <ToneBadge tone="warning">Vencida</ToneBadge>
+            )}
+          </>
+        }
+        figure={
+          <Amount
+            value={isOpenEnded ? (debt.installment ?? 0) : debt.balance}
+            currency={currency}
+          />
+        }
+        figureCaption={
+          isOpenEnded
+            ? "Mensual"
+            : isReceivable
+              ? "Por cobrar"
+              : "Saldo pendiente"
+        }
+        summary={
+          <div className="flex flex-col gap-3">
+            {isOpenEnded ? (
+              <CollectedThisYear
+                entries={entries}
+                today={today}
+                currency={currency}
+              />
+            ) : isReceivable ? (
+              <ReceivableProgress debt={debt} />
+            ) : (
+              <DebtProgress debt={debt} />
+            )}
+            {isMonthly && debt.term_months !== null && (
               <p className="text-sm text-muted tabular-nums">
-                {isOpenEnded ? "Mensual" : "Saldo"}{" "}
-                <span className="font-medium text-foreground">
-                  <Amount
-                    value={isOpenEnded ? (debt.installment ?? 0) : debt.balance}
-                    currency={currency}
-                  />
-                </span>
+                {
+                  receivableInstallments(debt, entries, today).filter(
+                    (installment) => installment.status === "paid"
+                  ).length
+                }{" "}
+                de {debt.term_months} cuotas cobradas
               </p>
-            </Drawer.Header>
-            <Drawer.Body>
-              <div className="flex flex-col gap-6">
-                <div className="flex flex-col gap-4">
-                  {isOpenEnded ? (
-                    <CollectedThisYear
-                      entries={entries}
-                      today={today}
-                      currency={currency}
-                    />
-                  ) : isReceivable ? (
-                    <ReceivableProgress debt={debt} />
-                  ) : (
-                    <DebtProgress debt={debt} />
-                  )}
-                  {isMonthly && debt.term_months !== null && (
-                    <p className="text-sm text-muted tabular-nums">
-                      {
-                        receivableInstallments(debt, entries, today).filter(
-                          (installment) => installment.status === "paid"
-                        ).length
-                      }{" "}
-                      de {debt.term_months} cuotas cobradas
-                    </p>
-                  )}
-                  <DebtDetails
-                    debt={debt}
-                    currency={currency}
-                  />
-                  <NextFee
-                    debt={debt}
-                    today={today}
-                    currency={currency}
-                  />
-                </div>
-
-                {isActiveDebt(debt) && debt.balance > 0 && (
-                  <section className="flex flex-col gap-3">
-                    <h3 className="text-xs font-medium text-muted uppercase">
-                      Proyección
-                    </h3>
-                    <ProjectionDetails
-                      projection={debtProjection(debt)}
-                      currency={currency}
-                    />
-                    <PaymentSimulator
-                      debt={debt}
-                      currency={currency}
-                    />
-                  </section>
-                )}
-
-                {isMonthly && (
-                  <section className="flex flex-col gap-2">
-                    <h3 className="text-xs font-medium text-muted uppercase">
-                      Cuotas
-                    </h3>
-                    <ReceivableInstallments
-                      debt={debt}
-                      entries={entries}
-                      today={today}
-                      currency={currency}
-                      readOnly={!isActive}
-                      onCollect={setCollecting}
-                    />
-                  </section>
-                )}
-
-                {/* Cuentas por cobrar: el formulario de cobro compartido con
-                    el tab Me deben (SPEC 39). Mes a mes no lleva ajustes */}
-                {isActive && isReceivable ? (
-                  <div
-                    className={
-                      isMonthly ? "grid gap-2" : "grid grid-cols-2 gap-2"
-                    }
-                  >
-                    <ReceivableCollectDialog
-                      workspaceId={debt.workspace_id}
-                      receivable={collectable}
-                      accounts={accounts ?? []}
-                      trigger={
-                        <Button isDisabled={!isOpenEnded && debt.balance <= 0}>
-                          <Plus />
-                          Registrar cobro
-                        </Button>
-                      }
-                    />
-                    {!isMonthly && (
-                      <AdjustBalanceDialog
-                        debt={debt}
-                        currency={currency}
-                        trigger={
-                          <Button variant="outline">
-                            <RefreshCw />
-                            Actualizar saldo
-                          </Button>
-                        }
-                      />
-                    )}
-                  </div>
-                ) : isActive ? (
-                  <div className="grid grid-cols-2 gap-2">
-                    <PaymentDialog
-                      workspaceId={debt.workspace_id}
-                      debt={debt}
-                      accounts={accounts}
-                      trigger={
-                        <Button isDisabled={debt.balance <= 0}>
-                          <Plus />
-                          Registrar pago
-                        </Button>
-                      }
-                    />
-                    <AdjustBalanceDialog
-                      debt={debt}
-                      currency={currency}
-                      trigger={
-                        <Button variant="outline">
-                          <RefreshCw />
-                          Actualizar saldo
-                        </Button>
-                      }
-                    />
-                  </div>
-                ) : (
-                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed p-3">
-                    <p className="text-sm text-muted">
-                      {status?.label}. Reactívala para registrar{" "}
-                      {isReceivable ? "abonos" : "pagos"}.
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      isDisabled={pending}
-                      onPress={() => run("reactivate")}
-                    >
-                      Reactivar
+            )}
+            <NextFee
+              debt={debt}
+              today={today}
+              currency={currency}
+            />
+          </div>
+        }
+        action={
+          // Cuentas por cobrar: el formulario de cobro compartido con el tab
+          // Me deben (SPEC 39). Mes a mes no lleva ajustes
+          isActive && isReceivable ? (
+            <div
+              className={isMonthly ? "grid gap-2" : "grid grid-cols-2 gap-2"}
+            >
+              <ReceivableCollectDialog
+                workspaceId={debt.workspace_id}
+                receivable={collectable}
+                accounts={accounts ?? []}
+                trigger={
+                  <Button isDisabled={!isOpenEnded && debt.balance <= 0}>
+                    <Plus />
+                    Registrar cobro
+                  </Button>
+                }
+              />
+              {!isMonthly && (
+                <AdjustBalanceDialog
+                  debt={debt}
+                  currency={currency}
+                  trigger={
+                    <Button variant="secondary">
+                      <RefreshCw />
+                      Actualizar saldo
                     </Button>
-                  </div>
-                )}
+                  }
+                />
+              )}
+            </div>
+          ) : isActive ? (
+            <div className="grid grid-cols-2 gap-2">
+              <PaymentDialog
+                workspaceId={debt.workspace_id}
+                debt={debt}
+                accounts={accounts}
+                trigger={
+                  <Button isDisabled={debt.balance <= 0}>
+                    <Plus />
+                    Registrar pago
+                  </Button>
+                }
+              />
+              <AdjustBalanceDialog
+                debt={debt}
+                currency={currency}
+                trigger={
+                  <Button variant="secondary">
+                    <RefreshCw />
+                    Actualizar saldo
+                  </Button>
+                }
+              />
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-surface-secondary p-4">
+              <p className="text-sm text-muted">
+                {status?.label}. Reactívala para registrar{" "}
+                {isReceivable ? "abonos" : "pagos"}.
+              </p>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="max-md:min-h-11"
+                isDisabled={pending}
+                onPress={() => run("reactivate")}
+              >
+                Reactivar
+              </Button>
+            </div>
+          )
+        }
+        history={
+          <>
+            {isMonthly && (
+              <DetailSection
+                title="Cuotas"
+                help="installment"
+              >
+                <ReceivableInstallments
+                  debt={debt}
+                  entries={entries}
+                  today={today}
+                  currency={currency}
+                  readOnly={!isActive}
+                  onCollect={setCollecting}
+                />
+              </DetailSection>
+            )}
+            <DetailSection title="Historial">
+              <DebtEntriesList
+                debt={debt}
+                entries={entries}
+                currency={currency}
+                readOnly={!isActive}
+              />
+            </DetailSection>
+          </>
+        }
+        details={
+          <>
+            <DetailSection title="Detalles">
+              <DebtDetails
+                debt={debt}
+                currency={currency}
+              />
+            </DetailSection>
+            {isActiveDebt(debt) && debt.balance > 0 && (
+              <DetailSection title="Proyección">
+                <ProjectionDetails
+                  projection={debtProjection(debt)}
+                  currency={currency}
+                />
+                <PaymentSimulator
+                  debt={debt}
+                  currency={currency}
+                />
+              </DetailSection>
+            )}
+          </>
+        }
+      />
 
-                {/* Cobro de una cuota: "Una cuota" con esa cuota y lo que le
-                    falta prellenado (SPEC 28, 29 y 39) */}
-                {collecting && (
-                  <ReceivableCollectDialog
-                    workspaceId={debt.workspace_id}
-                    receivable={collectable}
-                    periodOn={collecting.period_on}
-                    accounts={accounts ?? []}
-                    open
-                    onOpenChange={(open) => {
-                      if (!open) setCollecting(null)
-                    }}
-                  />
-                )}
-
-                <section className="flex flex-col gap-2">
-                  <h3 className="text-xs font-medium text-muted uppercase">
-                    Historial
-                  </h3>
-                  <DebtEntriesList
-                    debt={debt}
-                    entries={entries}
-                    currency={currency}
-                    readOnly={!isActive}
-                  />
-                </section>
-              </div>
-            </Drawer.Body>
-          </Drawer.Dialog>
-        </Drawer.Content>
-      </Drawer.Backdrop>
-    </Drawer>
+      {/* Cobro de una cuota: "Una cuota" con esa cuota y lo que le falta
+          prellenado (SPEC 28, 29 y 39) */}
+      {collecting && (
+        <ReceivableCollectDialog
+          workspaceId={debt.workspace_id}
+          receivable={collectable}
+          periodOn={collecting.period_on}
+          accounts={accounts ?? []}
+          open
+          onOpenChange={(open) => {
+            if (!open) setCollecting(null)
+          }}
+        />
+      )}
+    </>
   )
 }
 

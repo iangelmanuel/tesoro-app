@@ -149,6 +149,32 @@
   --balance: oklch(67% 0.16 255);
 }
 
+/* Páginas públicas (landing, legales, /mcp) en claro (SPEC 40): fondo blanco
+   puro. El layout de (public) pinta data-surface="site" y :has() lo sube a
+   :root para que también body y el área de overscroll queden en blanco. Las
+   tarjetas bajan a un gris muy suave (sin borde, misma sombra) para seguir
+   distinguiéndose del fondo; --muted da 5.6:1 sobre esa superficie y 6:1 sobre el blanco. El gris
+   hueso de --background queda para el dashboard y la auth. El oscuro no
+   cambia */
+/* Color de cada espacio fuera del dashboard (SPEC 40): la landing muestra
+   Personal y Empresa lado a lado, así que no puede usar --accent (uno por
+   ruta). Son marcas gráficas (≥ 3:1 sobre la superficie): tono 700 en
+   claro y el brillante en oscuro, los mismos del primario de cada espacio */
+:root {
+  --workspace-personal: oklch(50.8% 0.118 165.612);
+  --workspace-business: oklch(55.3% 0.195 38.402);
+}
+
+.dark {
+  --workspace-personal: oklch(72% 0.15 162.5);
+  --workspace-business: oklch(74% 0.17 48);
+}
+
+:root:not(.dark):has([data-surface="site"]) {
+  --background: oklch(1 0 0);
+  --surface: oklch(0.975 0.003 264);
+}
+
 /* Primario por espacio. WorkspaceThemeRoot pinta un marcador oculto con
    data-workspace como hijo directo del contenedor del dashboard; :has() pone
    el primario en ese contenedor, así sidebar, header y contenido cambian
@@ -377,11 +403,110 @@
   }
 }
 
+/* Video de fondo del hero (SPEC 40): con reduced motion o ahorro de datos
+   (data-paused, lo pone hero-video.tsx) solo se ve el póster de debajo */
+@media (prefers-reduced-motion: reduce) {
+  .hero-video {
+    display: none;
+  }
+}
+
+.hero-video[data-paused] {
+  display: none;
+}
+
 @keyframes hero-enter {
   from {
     transform: translateY(16px);
   }
   to {
     transform: none;
+  }
+}
+
+/* Entrada del video del hero: se asienta de 1.06 a 1 en 2,4 s, la misma
+   curva expo.out. Es el único momento de movimiento de la landing al cargar;
+   el póster ya está en su encuadre final, así que no tapa nada */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-media {
+    animation: hero-media 2.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes hero-media {
+  from {
+    scale: 1.06;
+  }
+  to {
+    scale: 1;
+  }
+}
+
+/* Velo del hero (SPEC 40): el video ya viene claro (gradación duotono de
+   verde medio a casi blanco, sin negros ni viñeta), así que el velo no lo
+   tapa: solo un blanco muy leve encima, que sube un poco el contraste del
+   texto oscuro, y un fundido corto abajo que empalma con la sección
+   siguiente */
+/* Verde del slogan en el hero: emerald-900, que da 3:1 (texto grande) sobre
+   las zonas más oscuras del video con su velo; --brand se pierde encima */
+.hero-accent {
+  color: oklch(37.8% 0.077 168.94);
+}
+
+/* Velo del hero (SPEC 40): el video va en color natural, solo más luminoso
+   (sombras levantadas, menos contraste y saturación, sin tinte ni viñeta).
+   El velo es un blanco suave: 12 % arriba y hasta 32 % en la mitad baja,
+   donde va el texto. Medido sobre el render: con eso el texto oscuro da
+   ≥ 4,5:1 y el título ≥ 3:1 incluso sobre el 5 % más oscuro de esa zona.
+   Al final, un fundido corto empalma con la sección siguiente */
+.hero-veil {
+  background: linear-gradient(
+    to bottom,
+    oklch(1 0 0 / 0.12) 0%,
+    oklch(1 0 0 / 0.12) 38%,
+    oklch(1 0 0 / 0.3) 58%,
+    oklch(1 0 0 / 0.34) 86%,
+    oklch(1 0 0) 100%
+  );
+}
+
+/* Scrollbar de todo el proyecto: fina, sin flechas ni carril visible, con el
+   gris neutro del sistema (matiz 264). Se aclara al pasar el mouse */
+:root {
+  --scrollbar: oklch(0.83 0.006 264);
+  --scrollbar-hover: oklch(0.7 0.01 264);
+}
+
+.dark {
+  --scrollbar: oklch(0.34 0.005 264);
+  --scrollbar-hover: oklch(0.46 0.006 264);
+}
+
+@supports (scrollbar-color: auto) {
+  * {
+    scrollbar-color: var(--scrollbar) transparent;
+    scrollbar-width: thin;
+  }
+}
+
+/* Safari todavía no tiene scrollbar-color */
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 9999px;
+    background: var(--scrollbar) padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-hover) padding-box;
   }
 }

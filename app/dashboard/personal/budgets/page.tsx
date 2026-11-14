@@ -1,9 +1,10 @@
 import { Suspense } from "react"
 import { redirect } from "next/navigation"
-import { Button, Skeleton } from "@heroui/react"
+import { Button } from "@heroui/react"
 import { PiggyBank, Plus } from "lucide-react"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { EmptyState } from "@/components/dashboard/empty-state"
+import { MonthSwitcherSkeleton } from "@/components/dashboard/month-switcher"
 import { SURFACE_LIST } from "@/components/dashboard/surface"
 import { BudgetDialog } from "@/features/budgets/components/budget-dialog"
 import { BudgetMonthNav } from "@/features/budgets/components/budget-month-nav"
@@ -184,7 +185,7 @@ async function BudgetsView({
 function BudgetsSkeleton() {
   return (
     <>
-      <Skeleton className="h-8 w-56 rounded-3xl" />
+      <MonthSwitcherSkeleton />
       <div className="grid gap-4 sm:grid-cols-3">
         <CardSkeleton className="h-24" />
         <CardSkeleton className="h-24" />

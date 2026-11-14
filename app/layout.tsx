@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import { cn } from "@heroui/react"
 import { JsonLd } from "@/components/seo/JsonLd"
-import { ThemeProvider } from "@/components/theme/theme-provider"
 import { SITE } from "@/config/site"
 import {
   buildApplicationSchema,
@@ -70,7 +69,7 @@ export default function RootLayout({
             buildAuthorSchema()
           ]}
         />
-        <ThemeProvider>{children}</ThemeProvider>
+        {children}
       </body>
     </html>
   )

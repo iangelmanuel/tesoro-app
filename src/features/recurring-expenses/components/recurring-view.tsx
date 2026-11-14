@@ -104,14 +104,17 @@ export async function RecurringView({
       <Card data-tour="recurring-upcoming">
         <CardHeading
           title={month.isCurrent ? "Próximos pagos" : `Pagos de ${month.label}`}
+          control={
+            <MonthNav
+              path={RECURRING_PATH}
+              label={month.label}
+              prev={month.prev}
+              next={month.next}
+              on="card"
+            />
+          }
         />
         <CardContent className="flex flex-col gap-3">
-          <MonthNav
-            path={RECURRING_PATH}
-            label={month.label}
-            prev={month.prev}
-            next={month.next}
-          />
           {monthPayments.length > 0 && (
             <p className="text-sm text-muted">
               Pagado{" "}

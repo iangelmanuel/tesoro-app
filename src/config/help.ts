@@ -17,7 +17,13 @@ export const HELP = {
   upcomingIncomes:
     "Lo que esperas recibir este mes, más lo que no te llegó en los dos meses anteriores. Atrasado quiere decir que ya pasó el día de pago y no has registrado el ingreso.",
   noFixedDate:
-    "Para proyectos o inversiones que pagan cuando pagan. No tienen fechas ni estados: Tesoro suma lo que registras con ellos en el mes y en el año."
+    "Para proyectos o inversiones que pagan cuando pagan. No tienen fechas ni estados: Tesoro suma lo que registras con ellos en el mes y en el año.",
+  frequency:
+    "Cada cuánto se repite. Tesoro crea un periodo por cada vez (cada mes, cada quincena, cada año…) para que marques si ya se pagó o se recibió.",
+  installment:
+    "La parte fija que pagas o cobras cada periodo. Al marcar una cuota, Tesoro registra el movimiento y baja el saldo pendiente.",
+  multipleReceipts:
+    "Un ingreso puede llegarte en varias partes. Cada movimiento que registras suma a su periodo hasta completarlo; mientras falte algo, queda como parcial."
 } as const
 
 export type HelpKey = keyof typeof HELP
@@ -31,5 +37,8 @@ export const HELP_LABELS: Record<HelpKey, string> = {
   maintenanceFee: "la cuota de manejo",
   reconciliation: "la conciliación",
   upcomingIncomes: "los próximos ingresos",
-  noFixedDate: "los ingresos sin fecha fija"
+  noFixedDate: "los ingresos sin fecha fija",
+  frequency: "la frecuencia",
+  installment: "la cuota",
+  multipleReceipts: "los cobros en varias partes"
 }

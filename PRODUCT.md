@@ -72,7 +72,9 @@ vistazo y sabe qué hacer después, sin aprender contabilidad.
 - Restricciones visuales fijadas por SPEC 14 (se registran aquí, el detalle
   vive en DESIGN.md / `docs/ui.md`):
   - tema HeroUI v3 con los tokens de `src/styles/globals.css`;
-  - oscuro por defecto sobre una base casi negra, con claro disponible;
+  - en el dashboard, oscuro por defecto sobre una base casi negra, con
+    claro disponible; las páginas públicas (landing, legales) siempre en
+    claro sobre blanco (SPEC 40);
   - un solo acento por espacio: neutro fuera de los espacios, emerald en
     Personal y naranja en Empresa, aplicado por ruta y nunca por props;
   - simplicidad y densidad media;
@@ -86,8 +88,10 @@ vistazo y sabe qué hacer después, sin aprender contabilidad.
   con un usuario demo y datos de ejemplo, en un escritorio estilo macOS propio
   (sin marcas de Apple), renderizados con Hyperframes. Un video principal de
   ~56 s y 5 clips de funciones, todos con la nota "Datos de ejemplo".
-- Mockups JSX con datos ficticios que lo dicen: `hero-visual.tsx` (fallback
-  del hero sin 3D) y `score-visual.tsx` (ejemplo del score).
+- Ejemplo del score con datos ficticios que lo dicen (`score-visual.tsx`).
+- Video de ambiente del hero (SPEC 40): tomas de stock con licencia libre
+  (Pexels), sin caras ni marcas, con tinte verde. No muestra la app; sus
+  créditos están en `docs/creditos-media.md`.
 - No hay testimonios, clientes, métricas de uso ni prensa. No se inventan.
 
 ## Product Principles

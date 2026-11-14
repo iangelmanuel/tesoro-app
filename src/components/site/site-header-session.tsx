@@ -16,13 +16,31 @@ const PRIMARY = cn(
   "group h-11 gap-1.5 pr-4 pl-5 [&_svg]:transition-transform hover:[&_svg]:translate-x-0.5 motion-reduce:[&_svg]:transition-none"
 )
 
-export function SessionButtons({ signedIn }: { signedIn: boolean }) {
+// Versión compacta del header de escritorio (SPEC 40): "Iniciar sesión" como
+// texto y el primario más bajo. En el cajón móvil van los de 44 px
+const COMPACT_PRIMARY = cn(
+  buttonVariants({ size: "sm" }),
+  "group h-9 gap-1 pr-3 pl-4 whitespace-nowrap [&_svg]:transition-transform hover:[&_svg]:translate-x-0.5 motion-reduce:[&_svg]:transition-none"
+)
+const COMPACT_SECONDARY =
+  "flex h-9 items-center rounded-full px-3 text-sm font-medium whitespace-nowrap text-foreground outline-none hover:opacity-70 focus-visible:ring-2 focus-visible:ring-focus"
+
+export type SessionSize = "default" | "compact"
+
+export function SessionButtons({
+  signedIn,
+  size = "default"
+}: {
+  signedIn: boolean
+  size?: SessionSize
+}) {
+  const primary = size === "compact" ? COMPACT_PRIMARY : PRIMARY
   if (signedIn) {
     return (
       <Link
         href={SITE.routes.dashboard}
         prefetch={false}
-        className={PRIMARY}
+        className={primary}
       >
         Abrir Tesoro
         <ArrowRightIcon className="size-4" />
@@ -35,14 +53,18 @@ export function SessionButtons({ signedIn }: { signedIn: boolean }) {
       <Link
         href={SITE.navigation.secondary.href}
         prefetch={false}
-        className={cn(buttonVariants({ variant: "ghost" }), "h-11 px-4")}
+        className={
+          size === "compact"
+            ? COMPACT_SECONDARY
+            : cn(buttonVariants({ variant: "ghost" }), "h-11 px-4")
+        }
       >
         {SITE.navigation.secondary.label}
       </Link>
       <Link
         href={SITE.navigation.cta.href}
         prefetch={false}
-        className={PRIMARY}
+        className={primary}
       >
         {SITE.navigation.cta.label}
         <ArrowRightIcon className="size-4" />
@@ -53,17 +75,33 @@ export function SessionButtons({ signedIn }: { signedIn: boolean }) {
 
 // Solo esta parte lee cookies: `createClient` llama a `connection()`, así
 // que el resto de la página sigue siendo estática (PPR)
-async function SessionIsland() {
+async function SessionIsland({ size }: { size: SessionSize }) {
   const supabase = await createClient()
   const { data } = await supabase.auth.getClaims()
 
-  return <SessionButtons signedIn={Boolean(data?.claims)} />
+  return (
+    <SessionButtons
+      signedIn={Boolean(data?.claims)}
+      size={size}
+    />
+  )
 }
 
-export function SiteHeaderSession() {
+export function SiteHeaderSession({
+  size = "default"
+}: {
+  size?: SessionSize
+}) {
   return (
-    <Suspense fallback={<SessionButtons signedIn={false} />}>
-      <SessionIsland />
+    <Suspense
+      fallback={
+        <SessionButtons
+          signedIn={false}
+          size={size}
+        />
+      }
+    >
+      <SessionIsland size={size} />
     </Suspense>
   )
 }

@@ -57,7 +57,7 @@ export const deleteTransactions = defineTool({
   group: "write",
   title: "Borrar movimientos",
   description:
-    "Borra de 1 a 200 movimientos por id. Un pago de deuda o cobro de Me deben se borra con su abono, como en la app. Todo o nada, con dry_run. Se puede deshacer con undo_operation durante 30 días: los movimientos vuelven con sus mismos ids y vínculos.",
+    "Borra de 1 a 200 movimientos por id. Un pago de deuda, avance de tarjeta o cobro de Me deben se borra con su abono, como en la app. Todo o nada, con dry_run. Se puede deshacer con undo_operation durante 30 días: los movimientos vuelven con sus mismos ids y vínculos.",
   input,
   annotations: { readOnlyHint: false, destructiveHint: true },
   async run(ctx, args) {

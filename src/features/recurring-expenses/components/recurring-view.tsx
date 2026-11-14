@@ -11,10 +11,12 @@ import { ImportButton } from "@/features/imports/components/import-button"
 import type { PersonalWorkspace } from "@/features/workspaces/queries"
 import { parseRecurringMonth } from "../month"
 import {
+  getOverdueSummary,
   getRecurringExpenses,
   getRecurringStartMonth,
   getUpcomingPayments
 } from "../queries"
+import { OverdueIndicator } from "./overdue-indicator"
 import { RecurringExpenseDialog } from "./recurring-expense-dialog"
 import { RecurringExpensesList } from "./recurring-expenses-list"
 import { UpcomingPayments } from "./upcoming-payments"
@@ -36,12 +38,15 @@ export async function RecurringView({
     monthParam,
     await getRecurringStartMonth(workspace.id)
   )
-  const [categories, expenses, payments, accounts] = await Promise.all([
-    getCategories(workspace.id),
-    getRecurringExpenses(workspace.id),
-    getUpcomingPayments(workspace.id, month.month),
-    getAccountBalances(workspace.id)
-  ])
+  const [categories, expenses, payments, accounts, overdue] = await Promise.all(
+    [
+      getCategories(workspace.id),
+      getRecurringExpenses(workspace.id),
+      getUpcomingPayments(workspace.id, month.month),
+      getAccountBalances(workspace.id),
+      getOverdueSummary(workspace.id)
+    ]
+  )
 
   const createButton = (
     <RecurringExpenseDialog
@@ -83,9 +88,17 @@ export async function RecurringView({
 
   return (
     <>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {createButton}
         <ImportButton target="recurring_expenses" />
+        {overdue.count > 0 && (
+          <div className="md:ml-auto">
+            <OverdueIndicator
+              summary={overdue}
+              currency={workspace.currency}
+            />
+          </div>
+        )}
       </div>
 
       <Card data-tour="recurring-upcoming">

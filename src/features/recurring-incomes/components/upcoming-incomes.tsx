@@ -1,41 +1,13 @@
-import { Chip, cn } from "@heroui/react"
+import { cn } from "@heroui/react"
 import { Amount } from "@/components/dashboard/amount"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
-import { TONE_BADGE_CLASSES as TONE_BADGE } from "@/components/dashboard/tone"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import { formatDate } from "@/libs/format"
 import type { IncomeMonthRow, IncomeSummaryRow } from "../month-rows"
-import {
-  INCOME_OCCURRENCE_STATUS,
-  type IncomeOccurrenceStatus,
-  type IncomeOccurrenceTone
-} from "../occurrences"
+import type { IncomeOccurrenceStatus } from "../occurrences"
 import type { UpcomingIncome } from "../queries"
-
-const TONE_CLASSES: Record<IncomeOccurrenceTone, string> = {
-  success: TONE_BADGE.success,
-  danger: TONE_BADGE.danger,
-  warning: TONE_BADGE.warning,
-  neutral: "bg-default text-muted"
-}
-
-export function IncomeStatusBadge({
-  status
-}: {
-  status: IncomeOccurrenceStatus
-}) {
-  const { label, tone } = INCOME_OCCURRENCE_STATUS[status]
-  return (
-    <Chip
-      size="sm"
-      className={TONE_CLASSES[tone]}
-      color="accent"
-      variant="primary"
-    >
-      {label}
-    </Chip>
-  )
-}
+import { OpenIncomeSheetButton } from "./income-sheet-context"
+import { IncomeStatusBadge, PartialDetail } from "./income-status"
 
 /**
  * Monto de la fila: lo recibido (verde) si ya se cubrió; si no, lo que falta
@@ -72,41 +44,8 @@ function RowAmount({
   )
 }
 
-/** "Recibió $ 20.000 de $ 50.000 · Falta $ 30.000" */
-export function PartialDetail({
-  received,
-  expected,
-  remaining,
-  currency
-}: {
-  received: number
-  expected: number
-  remaining: number
-  currency: string
-}) {
-  return (
-    <span className="tabular-nums">
-      Recibió{" "}
-      <Amount
-        value={received}
-        currency={currency}
-      />{" "}
-      de{" "}
-      <Amount
-        value={expected}
-        currency={currency}
-      />{" "}
-      · Falta{" "}
-      <Amount
-        value={remaining}
-        currency={currency}
-      />
-    </span>
-  )
-}
-
 interface RowLayoutProps {
-  name: string
+  name: React.ReactNode
   status: IncomeOccurrenceStatus
   amount: React.ReactNode
   meta: React.ReactNode
@@ -121,7 +60,7 @@ function RowLayout({ name, status, amount, meta, action }: RowLayoutProps) {
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <p className="min-w-0 font-medium break-words">{name}</p>
+            <div className="min-w-0 font-medium break-words">{name}</div>
             <IncomeStatusBadge status={status} />
           </div>
           {/* < 768 px: el monto va junto al nombre */}
@@ -207,7 +146,11 @@ function SummaryRow({
 }) {
   return (
     <RowLayout
-      name={row.first.name}
+      name={
+        <OpenIncomeSheetButton incomeId={row.recurringIncomeId}>
+          {row.first.name}
+        </OpenIncomeSheetButton>
+      }
       status={row.status}
       amount={
         <RowAmount

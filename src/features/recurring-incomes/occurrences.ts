@@ -258,3 +258,11 @@ export function incomeFrequencyLabel(income: {
       return "Sin fecha fija"
   }
 }
+
+/**
+ * Ocurrencias por página del Sheet de un ingreso fijo: 31 en la diaria (un
+ * mes), 12 en las demás. "Ver más" suma otra página.
+ */
+export function incomeHistoryPageSize(frequency: IncomeFrequency) {
+  return frequency === "daily" ? 31 : 12
+}

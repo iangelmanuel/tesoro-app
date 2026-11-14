@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useTransition } from "react"
-import { Chip, Table, cn, toast } from "@heroui/react"
+import { useState } from "react"
+import { Chip, Table, cn } from "@heroui/react"
 import { Pause, Pencil, Play, Trash2 } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
@@ -11,10 +11,11 @@ import type { AccountOption } from "@/features/accounts/components/account-selec
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { formatDate } from "@/libs/format"
-import { deleteRecurringIncome, toggleRecurringIncome } from "../actions"
 import { incomeFrequencyLabel } from "../occurrences"
 import type { RecurringIncome } from "../queries"
+import { useOpenIncomeSheet } from "./income-sheet-context"
 import { RecurringIncomeDialog } from "./recurring-income-dialog"
+import { useRecurringIncomeActions } from "./use-recurring-income-actions"
 
 const NOWRAP = "whitespace-nowrap"
 
@@ -32,14 +33,16 @@ interface RecurringIncomesListProps {
   currency: string
 }
 
-// Client: cada fila abre el diálogo de edición, y así las categorías y
-// cuentas viajan una sola vez en vez de una por fila
+// Client: un clic en la fila abre el Sheet del ingreso fijo (SPEC 38) y el ⋮
+// abre sus acciones. Las categorías y cuentas viajan una sola vez
 export function RecurringIncomesList({
   incomes,
   categories,
   accounts,
   currency
 }: RecurringIncomesListProps) {
+  const openSheet = useOpenIncomeSheet()
+
   return (
     <ScrollTable minWidth="60rem">
       <Table>
@@ -63,7 +66,13 @@ export function RecurringIncomesList({
               {incomes.map((income) => (
                 <Table.Row
                   key={income.id}
-                  className={cn(!income.is_active && "text-muted")}
+                  id={income.id}
+                  textValue={income.name}
+                  onAction={() => openSheet(income.id)}
+                  className={cn(
+                    "cursor-pointer",
+                    !income.is_active && "text-muted"
+                  )}
                 >
                   <Table.Cell className="max-w-64 min-w-44">
                     <p
@@ -141,31 +150,7 @@ function IncomeActions({
 }) {
   const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [, startTransition] = useTransition()
-
-  function handleToggle() {
-    startTransition(async () => {
-      const result = await toggleRecurringIncome(income.id, !income.is_active)
-      if (result.error) {
-        toast.danger(result.error)
-      } else {
-        toast.success(
-          income.is_active ? "Ingreso fijo pausado" : "Ingreso fijo reanudado"
-        )
-      }
-    })
-  }
-
-  function handleDelete() {
-    startTransition(async () => {
-      const result = await deleteRecurringIncome(income.id)
-      if (result.error) {
-        toast.danger(result.error)
-      } else {
-        toast.success("Ingreso fijo eliminado")
-      }
-    })
-  }
+  const { toggle: handleToggle, remove } = useRecurringIncomeActions(income)
 
   return (
     <>
@@ -209,7 +194,7 @@ function IncomeActions({
         open={deleting}
         onOpenChange={setDeleting}
         title="¿Eliminar este ingreso fijo?"
-        onConfirm={handleDelete}
+        onConfirm={() => remove()}
       >
         <p className="text-sm text-muted">
           &ldquo;{income.name}&rdquo; dejará de aparecer en tus próximos

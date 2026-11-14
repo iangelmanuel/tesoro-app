@@ -49,7 +49,7 @@ export interface IncomeReceiptPeriods {
   futureLimited: boolean
 }
 
-const addDays = (date: string, days: number) =>
+export const addDays = (date: string, days: number) =>
   new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000)
     .toISOString()
     .slice(0, 10)
@@ -64,7 +64,7 @@ const addMonths = (date: string, months: number) => {
  * Fin de la ventana que alcanza para FUTURE_OCCURRENCE_LIMIT + 1 ocurrencias
  * futuras de cada frecuencia (la misma de allocate_income_receipt)
  */
-function futureWindowEnd(income: IncomeSchedule, today: string) {
+export function futureWindowEnd(income: IncomeSchedule, today: string) {
   switch (income.frequency) {
     case "yearly":
       return addMonths(today, 13 * 12)

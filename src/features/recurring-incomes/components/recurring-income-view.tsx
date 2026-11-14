@@ -23,6 +23,7 @@ import {
   getRecurringIncomes,
   getUpcomingIncomes
 } from "../queries"
+import { IncomeSheetProvider } from "./income-sheet-context"
 import { ReceiveIncomeButton } from "./receive-income-button"
 import { RecurringIncomeDialog } from "./recurring-income-dialog"
 import { RecurringIncomesList } from "./recurring-incomes-list"
@@ -105,7 +106,13 @@ export async function RecurringIncomeView({
   )
 
   return (
-    <>
+    <IncomeSheetProvider
+      incomes={incomes}
+      categories={categories}
+      accounts={accounts}
+      incomeSources={sources}
+      currency={workspace.currency}
+    >
       <div className="flex flex-wrap items-center gap-2">
         {createButton}
         {overdue.count > 0 && (
@@ -173,7 +180,14 @@ export async function RecurringIncomeView({
                 renderAction={(income) => (
                   <ReceiveIncomeButton
                     workspaceId={workspace.id}
-                    income={income}
+                    target={{
+                      recurringIncomeId: income.recurringIncomeId,
+                      name: income.name,
+                      amount: income.amount,
+                      categoryId: income.category.id,
+                      accountId: income.accountId,
+                      dueOn: income.dueOn
+                    }}
                     categories={categories}
                     accounts={accounts}
                     incomeSources={sources}
@@ -209,7 +223,7 @@ export async function RecurringIncomeView({
           currency={workspace.currency}
         />
       </div>
-    </>
+    </IncomeSheetProvider>
   )
 }
 

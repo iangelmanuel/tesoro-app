@@ -453,9 +453,9 @@ function TransactionForm({
     </ToggleButton>
   )
 
-  // Orden de los tabs (SPEC 30 y 39). Personal: Gasto, Ingreso, Traspaso,
-  // Deuda, Me deben, Gasto fijo y Meta. Empresa: Venta, Costo o gasto y
-  // Traspaso
+  // Orden de los tabs (SPEC 30, 39 y 41). Personal: Gasto, Ingreso,
+  // Traspaso, Gasto fijo, Deuda, Me deben y Meta. Empresa: Venta, Costo o
+  // gasto y Traspaso
   const typeToggle = hideTypeToggle ? null : (
     // Con los tabs de pago son 7 opciones. Desde sm caben en el diálogo; en
     // un teléfono angosto se desplazan en horizontal, sin barra visible
@@ -488,6 +488,14 @@ function TransactionForm({
         )}
         {paymentTabs && (
           <ToggleButton
+            id="recurring"
+            className="flex-1 whitespace-nowrap"
+          >
+            Gasto fijo
+          </ToggleButton>
+        )}
+        {paymentTabs && (
+          <ToggleButton
             id="debt_payment"
             className="flex-1 whitespace-nowrap"
           >
@@ -500,14 +508,6 @@ function TransactionForm({
             className="flex-1 whitespace-nowrap"
           >
             Me deben
-          </ToggleButton>
-        )}
-        {paymentTabs && (
-          <ToggleButton
-            id="recurring"
-            className="flex-1 whitespace-nowrap"
-          >
-            Gasto fijo
           </ToggleButton>
         )}
         {paymentTabs && (

@@ -173,7 +173,7 @@ estos solo agregan lo que HeroUI no trae.
 | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `app-sidebar.tsx`, `sidebar/`                                              | Aside: logo → tabs Personal/Empresa → navegación por grupos y ancho ajustable (SPEC 31); abajo solo el menú de cuenta (`user-menu.tsx`, con Ayuda y tema dentro, SPEC 40)                                                                                                                                                                                                                                                    |
 | `dashboard-title.tsx`                                                      | Único `<h1>` de la página, en el header. Saludo según la hora de Bogotá en el Resumen de Personal                                                                                                                                                                                                                                                                                                                            |
-| `quick-actions.tsx`, `quick-actions-menu.tsx`, `quick-actions-context.tsx` | Accesos del header: "Registrar movimiento" (con tabs de pago, SPEC 25) + "Más" (aporte, pago, importar, Categorías y Verificar) en Personal; "Registrar operación" + "Más" (Categorías y Verificar) en Empresa                                                                                                                                                                                                               |
+| `quick-actions.tsx`, `quick-actions-menu.tsx`, `quick-actions-context.tsx` | Accesos del header: "Registrar movimiento" (tabs Gasto, Ingreso, Traspaso, Gasto fijo, Deuda, Me deben y Meta, SPEC 41) + "Más" (aporte, pago, importar, Categorías y Verificar) en Personal; "Registrar operación" + "Más" (Categorías y Verificar) en Empresa                                                                                                                                                              |
 | `stat-card.tsx`                                                            | KPI: etiqueta, valor y badge de variación con color por significado (`trend`); `<dl>` accesible                                                                                                                                                                                                                                                                                                                              |
 | `card-heading.tsx`                                                         | Cabecera de tarjeta: `<h2>`, ayuda (i) opcional y enlace discreto con chevron; `control` para el selector de mes                                                                                                                                                                                                                                                                                                             |
 | `help-hint.tsx`                                                            | Ícono (i) con `Popover`; los textos viven en `src/config/help.ts` (`HELP`)                                                                                                                                                                                                                                                                                                                                                   |
@@ -552,12 +552,16 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
   opcional: `frequency`, `installment`, `multipleReceipts`). `loading` pone
   `DetailSheetSkeleton` con la misma forma y `aria-busy`.
 - **Menú de cuenta** (`user-menu.tsx`): Cuenta → Ayuda (issues de GitHub en
-  otra pestaña) → Tema → Cerrar sesión. El tema es una sección de selección
-  única del mismo menú, con aspecto de píldora (Claro / Oscuro) y
-  `shouldCloseOnSelect={false}`: no cierra el menú y se recorre con flechas
-  (unas `Tabs` aparte quedarían fuera del teclado, porque Tab cierra un menú
-  de React Aria). El pie del aside solo lleva `UserMenu`; `ThemeToggle` se
-  borró.
+  otra pestaña) → Modo oscuro → Cerrar sesión. El pie del aside solo lleva
+  `UserMenu`; `ThemeToggle` se borró.
+- **Modo oscuro** (SPEC 41): un ítem como Cuenta y Ayuda (icono `Moon`,
+  mismo alto y padding, sin pastilla) con un `Switch` pequeño a la derecha
+  que refleja `resolvedTheme`. Va en una `Dropdown.Section` de
+  `selectionMode="multiple"` con `shouldCloseOnSelect={false}`: el ítem es
+  `menuitemcheckbox` con `aria-checked`, Enter/Espacio alternan
+  claro ↔ oscuro y el menú no se cierra. El switch es decorativo
+  (`aria-hidden`, `inert`, `pointer-events-none`): el ítem maneja el clic,
+  así no se dispara dos veces.
 - **Videos (`public/videos/`):** tope de 30 MB (antes 25) para dar cabida al
   hero, que pesa ≤ 4 MB entre sus cuatro variantes y dos pósters.
 

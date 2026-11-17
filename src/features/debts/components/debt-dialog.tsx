@@ -13,6 +13,11 @@ import {
   toast
 } from "@heroui/react"
 import { HelpHint } from "@/components/dashboard/help-hint"
+import { AccountSelectField } from "@/components/forms/account-select-field"
+import {
+  type AccountOption,
+  selectableAccounts
+} from "@/features/accounts/components/account-select"
 import { createDebt, updateDebt } from "../actions"
 import type { Debt } from "../queries"
 import type { RateType } from "../schemas"
@@ -22,6 +27,10 @@ import { amountInput, rateInput } from "./field"
 type PayableKind = "credit_card" | "loan"
 
 interface DebtDialogProps {
+  /** Espacio de la deuda (para crear una cuenta desde el select) */
+  workspaceId: string
+  /** Cuentas del espacio (cuenta habitual); solo se ofrecen las activas */
+  accounts: AccountOption[]
   /** Si llega, el diálogo edita esta tarjeta o préstamo */
   debt?: Debt
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
@@ -31,6 +40,8 @@ interface DebtDialogProps {
 }
 
 export function DebtDialog({
+  workspaceId,
+  accounts,
   debt,
   trigger,
   open: controlledOpen,
@@ -64,6 +75,8 @@ export function DebtDialog({
             <Modal.Body>
               {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
               <DebtForm
+                workspaceId={workspaceId}
+                accounts={accounts}
                 debt={debt}
                 onSaved={() => setOpen(false)}
                 onCancel={() => setOpen(false)}
@@ -77,13 +90,28 @@ export function DebtDialog({
 }
 
 interface DebtFormProps {
+  workspaceId: string
+  accounts: AccountOption[]
   debt?: Debt
   onSaved: () => void
   onCancel: () => void
 }
 
-function DebtForm({ debt, onSaved, onCancel }: DebtFormProps) {
+function DebtForm({
+  workspaceId,
+  accounts,
+  debt,
+  onSaved,
+  onCancel
+}: DebtFormProps) {
   const isEditing = debt !== undefined
+  // Cuenta habitual (SPEC 41): solo activas; una archivada se vacía
+  const accountOptions = selectableAccounts(accounts)
+  const [accountId, setAccountId] = useState(() =>
+    accountOptions.some((account) => account.id === debt?.account_id)
+      ? (debt?.account_id ?? "")
+      : ""
+  )
 
   const [state, formAction, pending] = useActionState<DebtFormState, FormData>(
     async (prevState, formData) => {
@@ -198,6 +226,17 @@ function DebtForm({ debt, onSaved, onCancel }: DebtFormProps) {
           <FieldError>{errors?.counterparty?.[0]}</FieldError>
         </TextField>
       </div>
+
+      <AccountSelectField
+        name="account_id"
+        label="Cuenta habitual (opcional)"
+        value={accountId}
+        onChange={setAccountId}
+        accounts={accountOptions}
+        workspaceId={workspaceId}
+        allowNone
+        error={errors?.account_id?.[0]}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <AmountField

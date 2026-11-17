@@ -16,6 +16,7 @@ import {
 } from "@heroui/react"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { TimePickerField } from "@/components/forms/time-picker-field"
+import { activeAccountId } from "@/features/accounts/active-account"
 import {
   type PaymentAccountOption,
   PaymentAccountSection,
@@ -23,11 +24,17 @@ import {
 } from "@/features/accounts/components/payment-account-section"
 import { todayISO } from "@/libs/dates"
 import { recordAdvance, recordPayment, updateEntry } from "../actions"
+import type { DebtPaymentDescriptions } from "../payment-description"
 import type { Debt, DebtEntry } from "../queries"
 import type { PaymentFormState } from "../types"
 import { amountInput } from "./field"
 
-type PaymentDebt = Pick<Debt, "id" | "kind">
+type PaymentDebt = Pick<Debt, "id" | "kind"> & {
+  /** Cuenta habitual (SPEC 41): se prellena al registrar si sigue activa */
+  account_id?: string | null
+  /** Descripción prellenada del movimiento (SPEC 41); sin ella, vacía */
+  descriptions?: DebtPaymentDescriptions
+}
 
 /**
  * Campos de un pago o avance que el diálogo edita. Movimientos (SPEC 26) los
@@ -49,7 +56,9 @@ export type EditableDebtEntry = Pick<
 type PaymentMode = "payment" | "extra" | "advance"
 
 /** Deuda que se puede elegir en el diálogo (acceso rápido del header) */
-export type DebtOption = Pick<Debt, "id" | "kind" | "name">
+export type DebtOption = Pick<Debt, "id" | "kind" | "name" | "account_id"> & {
+  descriptions: DebtPaymentDescriptions
+}
 
 interface PaymentDialogProps {
   /** Espacio de la deuda (para crear una cuenta desde el select) */
@@ -335,7 +344,29 @@ function PaymentForm({
   const [createTransaction, setCreateTransaction] = useState(
     () => !values || values.create_transaction === "on"
   )
-  const [accountId, setAccountId] = useState("")
+  // Cuenta habitual de la deuda al registrar, si sigue activa (SPEC 41)
+  const defaultAccountId = isEditing
+    ? ""
+    : (activeAccountId(accounts, debt.account_id) ?? "")
+  const [accountId, setAccountId] = useState(defaultAccountId)
+  // Descripción del movimiento (SPEC 41): se prellena según Pago o Abono y
+  // se respeta lo que el usuario escriba
+  const [description, setDescription] = useState(
+    () =>
+      values?.description ??
+      debt.descriptions?.[isExtra ? "extra" : "payment"] ??
+      ""
+  )
+  const [prefilledDescription, setPrefilledDescription] = useState(description)
+  function changeMode(next: PaymentMode) {
+    setMode(next)
+    if (description === "" || description === prefilledDescription) {
+      const text = debt.descriptions?.[next === "extra" ? "extra" : "payment"]
+      if (text === undefined) return
+      setDescription(text)
+      setPrefilledDescription(text)
+    }
+  }
   const accountName =
     accounts.find((account) => account.id === accountId)?.name ?? null
 
@@ -365,7 +396,7 @@ function PaymentForm({
       {canBeExtra && (
         <Tabs
           selectedKey={mode}
-          onSelectionChange={(key) => setMode(key as PaymentMode)}
+          onSelectionChange={(key) => changeMode(key as PaymentMode)}
         >
           <Tabs.ListContainer>
             <Tabs.List
@@ -476,6 +507,23 @@ function PaymentForm({
         </Checkbox>
       )}
 
+      {/* Solo con movimiento: una tarjeta o un avance no crean uno */}
+      {!isEditing && !isCard && createTransaction && (
+        <TextField
+          name="description"
+          maxLength={120}
+          value={description}
+          onChange={setDescription}
+          isInvalid={Boolean(errors?.description)}
+          validationBehavior="aria"
+          className="flex flex-col gap-2"
+        >
+          <Label>Descripción</Label>
+          <Input placeholder={isReceivable ? "Cobro" : "Pago de la cuota"} />
+          <FieldError>{errors?.description?.[0]}</FieldError>
+        </TextField>
+      )}
+
       {/* En préstamos y cuentas por cobrar la cuenta es la del movimiento: sin
           él no aplica. El avance no lleva traspaso y un abono es un ingreso */}
       {showAccount && (
@@ -492,6 +540,7 @@ function PaymentForm({
             isAdvance || isReceivable ? "Cuenta que recibe" : "Cuenta que paga"
           }
           direction={isAdvance || isReceivable ? "in" : "out"}
+          defaultAccountId={defaultAccountId}
           onAccountChange={setAccountId}
         />
       )}

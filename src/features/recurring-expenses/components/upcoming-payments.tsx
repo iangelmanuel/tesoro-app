@@ -3,6 +3,7 @@ import { Check } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import { TONE_BADGE_CLASSES as TONE_BADGE } from "@/components/dashboard/tone"
+import { activeAccountId } from "@/features/accounts/active-account"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
@@ -11,7 +12,8 @@ import { formatDate, formatShortDate } from "@/libs/format"
 import {
   OCCURRENCE_STATUS,
   type OccurrenceStatus,
-  type OccurrenceTone
+  type OccurrenceTone,
+  occurrenceDescription
 } from "../occurrences"
 import type { UpcomingPayment } from "../queries"
 
@@ -49,14 +51,22 @@ interface PayOccurrenceButtonProps {
   className?: string
 }
 
-/** Prellenado y enlace de TransactionDialog para pagar una ocurrencia */
-export function occurrencePaymentProps(payment: UpcomingPayment) {
+/**
+ * Prellenado y enlace de TransactionDialog para pagar una ocurrencia. Sin
+ * `occurred_on`: el diálogo toma la fecha de hoy (SPEC 41); la cuota pagada
+ * conserva su vencimiento en `recurring.dueOn`
+ */
+export function occurrencePaymentProps(
+  payment: UpcomingPayment,
+  accounts: PaymentAccountOption[]
+) {
   return {
     initialValues: {
       amount: payment.amount,
       category_id: payment.category.id,
-      occurred_on: payment.dueOn,
-      description: payment.name
+      // Cuenta habitual si sigue activa (SPEC 41); si no, la elige el usuario
+      account_id: activeAccountId(accounts, payment.accountId),
+      description: occurrenceDescription(payment)
     },
     recurring: {
       recurringExpenseId: payment.recurringExpenseId,
@@ -79,7 +89,7 @@ export function PayOccurrenceButton({
       workspaceId={workspaceId}
       categories={categories}
       accounts={accounts}
-      {...occurrencePaymentProps(payment)}
+      {...occurrencePaymentProps(payment, accounts)}
       trigger={
         // key: el Modal de HeroUI recorre sus hijos como lista y, con el
         // botón creado en otro componente, React avisa de la falta de key

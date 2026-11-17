@@ -101,6 +101,22 @@ const noteField = z
   .max(120, { error: "La nota debe tener máximo 120 caracteres" })
   .transform((value) => value || null)
 
+// Descripción del movimiento que crea un pago o cobro (SPEC 41). Vacía o
+// ausente: la RPC usa su texto ("Pago {nombre}" / "Abono {nombre}")
+const paymentDescriptionField = z
+  .string()
+  .trim()
+  .max(120, { error: "La descripción debe tener máximo 120 caracteres" })
+  .transform((value) => value || null)
+  .optional()
+
+// Cuenta habitual de la deuda (SPEC 41): prellena la cuenta al pagar. Vacía
+// = ninguna. Va aparte de los esquemas por tipo: aplica a todos
+export const habitualAccountSchema = z.preprocess(
+  emptyToNull,
+  z.uuid({ error: "Elige una cuenta válida" }).nullable()
+)
+
 const pastDateField = z.iso
   .date({ error: "Elige una fecha válida" })
   .refine((value) => value <= todayISO(), {
@@ -347,6 +363,7 @@ export const paymentSchema = z
     occurred_on: pastDateField,
     occurred_time: timeSchema,
     note: noteField,
+    description: paymentDescriptionField,
     create_transaction: checkboxField,
     is_extra_payment: checkboxField,
     ...paymentAccountSchema.shape
@@ -387,6 +404,7 @@ const periodField = z.iso
 const collectBase = {
   occurred_on: pastDateField,
   note: noteField,
+  description: paymentDescriptionField,
   create_transaction: checkboxField,
   account_id: paymentAccountSchema.shape.account_id
 }

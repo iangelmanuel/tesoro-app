@@ -1,6 +1,6 @@
 # SPEC 41 — Switch de tema, orden de tabs, fecha de hoy y autollenado de pagos
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 04, SPEC 06, SPEC 16, SPEC 28, SPEC 30, SPEC 38, SPEC 39, SPEC 40
 > **Fecha:** 2026-11-17
 > **Objetivo:** Que registrar un pago de gasto fijo, deuda, ingreso fijo o cobro de Me deben tome la fecha de hoy, prellene descripción y cuenta, y que el diálogo de movimiento y el menú de cuenta se vean ordenados.
@@ -37,18 +37,20 @@ Es el primero de cuatro specs del mismo pedido (SPEC 41 a 44).
   - formato `{Verbo} {nombre} · {periodo}`;
   - verbo: **Pago** (gasto fijo y deuda), **Ingreso** (ingreso fijo), **Cobro** (Me deben);
   - periodo según la frecuencia de la cuota que se paga, no de hoy:
-    - mensual: `noviembre 2026`;
-    - quincenal: `1.ª quincena de noviembre 2026` / `2.ª quincena de noviembre 2026`;
-    - anual: `2026`;
+    - sin año (decisión del usuario tras implementar): la fecha del movimiento ya lo dice y el mes basta para distinguir cada cuota;
+    - mensual: `noviembre`;
+    - quincenal: `1.ª quincena de noviembre` / `2.ª quincena de noviembre`;
+    - anual: el mes de la cuota (`marzo`);
     - sin frecuencia (`none`, cobro único, abono libre a tarjeta o préstamo): sin periodo, solo `{Verbo} {nombre}`;
-    - varios meses (SPEC 38/39): `{Verbo} {nombre} · septiembre a noviembre 2026` (o `nov 2026 a ene 2027` si cruza año).
+    - varios meses (SPEC 38/39): `{Verbo} {nombre} · septiembre a noviembre` (o `noviembre a enero` si cruza año).
   - El campo **Descripción** queda editable. Si el usuario lo cambia, se guarda lo que escribió.
 - **Cuenta por defecto por origen**:
   - columna opcional `account_id` en `recurring_expenses` y `debts` (los ingresos fijos ya la tienen);
   - se elige en el diálogo de crear/editar gasto fijo y deuda con `PaymentAccountSection` o un `Select` "Cuenta habitual (opcional)";
   - al pagar, la cuenta se prellena con la del origen. Sin cuenta configurada, el campo queda vacío y lo elige el usuario;
   - si la cuenta está archivada o borrada, no se prellena.
-- **Descripción en el pago de deuda**: las RPC de pago (`create_payment_transfer` y la del pago de deuda) aceptan `p_description` opcional. Si llega nula, mantienen el texto actual (`Pago {nombre}` / `Abono {nombre}`).
+- **Descripción en el pago de deuda y el cobro de Me deben**: `record_debt_payment` y `record_receivable_collection` aceptan `p_description` opcional. Si llega nula, mantienen el texto actual (`Pago {nombre}` / `Abono {nombre}`). `create_payment_transfer` no cambia: `transfers` no tiene descripción y un pago de tarjeta no crea movimiento (decisión del usuario en la implementación).
+- **Me deben** tiene campo **Descripción** en el formulario de cobro (antes no lo tenía).
 - Ocultar cifras, móvil a 390 px y AA en claro y oscuro.
 - **Documentación:** `docs/ui.md` (menú de cuenta, orden de tabs), `docs/producto.md` (fecha y autollenado), `CHANGELOG.md` en `[Unreleased]` (en inglés).
 
@@ -59,7 +61,7 @@ Es el primero de cuatro specs del mismo pedido (SPEC 41 a 44).
 - Una cuenta predeterminada global del espacio.
 - Prellenar con la última cuenta usada.
 - Opción "Sistema" en el tema.
-- Frecuencias semanales o diarias (no existen hoy en gastos ni ingresos fijos).
+- Frecuencias semanales o diarias en gastos fijos (no existen). Los ingresos fijos sí tienen semanal, diaria y cada N días: su periodo es la fecha de la cuota (`8 nov`).
 - Autollenar la nota.
 
 ## Modelo de datos
@@ -83,7 +85,8 @@ alter table public.debts
 ```
 
 - RLS: no cambia; las políticas de las dos tablas ya filtran por espacio.
-- Las RPC de pago de deuda y de traspaso de pago reciben `p_description text default null`.
+- `record_debt_payment` y `record_receivable_collection` reciben `p_description text default null`.
+- `debt_overview` devuelve `account_id` (el tipo `Debt` sale de esa RPC).
 
 Helper nuevo `src/libs/payment-description.ts`:
 
@@ -93,7 +96,8 @@ type PaymentPeriod =
   | { kind: "month"; on: string } // YYYY-MM-DD de la cuota
   | { kind: "biweekly"; on: string }
   | { kind: "year"; on: string }
-  | { kind: "range"; from: string; to: string }
+  | { kind: "day"; on: string } // ingreso semanal, diario o cada N días
+  | { kind: "range"; from: string; to: string; unit?: "month" | "day" | "year" }
   | { kind: "none" }
 
 buildPaymentDescription(verb, name, period): string
@@ -116,22 +120,22 @@ Tras la migración se regeneran `src/types/database.ts` y se pasa Prettier.
 
 ## Criterios de aceptación
 
-- [ ] El menú de cuenta muestra un ítem "Modo oscuro" con switch, alineado con Cuenta y Ayuda, sin pastilla gris.
-- [ ] Pulsar el ítem cambia el tema y el menú sigue abierto.
-- [ ] Con Tab y Espacio se alterna el tema; un lector de pantalla anuncia el estado del switch.
-- [ ] El diálogo de movimiento en Personal muestra Gasto, Ingreso, Traspaso, Gasto fijo, Deuda, Me deben y Meta, en ese orden, en escritorio y a 390 px.
-- [ ] Pagar el 17 nov un gasto fijo que vencía el 5 nov prellena la fecha con 17 nov y marca pagada la cuota del 5 nov.
-- [ ] Recibir el 17 nov un ingreso fijo esperado el 15 nov prellena 17 nov.
-- [ ] Pagar la cuota mensual de una deuda y cobrar una cuota de Me deben prellenan la fecha de hoy.
-- [ ] Editar un pago guardado el 5 nov sigue mostrando 5 nov.
-- [ ] Pagar el gasto fijo mensual "Arriendo" de noviembre prellena la descripción "Pago Arriendo · noviembre 2026" y la nota vacía.
-- [ ] Recibir la 1.ª quincena de noviembre del ingreso "Salario" prellena "Ingreso Salario · 1.ª quincena de noviembre 2026".
-- [ ] Un cobro de varios meses de sep a nov prellena "Cobro {nombre} · septiembre a noviembre 2026".
-- [ ] Cambiar la descripción a mano guarda el texto escrito, también en el movimiento de un pago de deuda.
-- [ ] Un gasto fijo con cuenta habitual "Nequi" prellena "Nequi" al pagarlo; uno sin cuenta deja el campo vacío.
-- [ ] Una deuda con cuenta habitual prellena esa cuenta al registrar el pago.
-- [ ] Archivar la cuenta habitual deja de prellenarla; borrarla deja `account_id` nulo sin borrar el gasto fijo ni la deuda.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] El menú de cuenta muestra un ítem "Modo oscuro" con switch, alineado con Cuenta y Ayuda, sin pastilla gris.
+- [x] Pulsar el ítem cambia el tema y el menú sigue abierto.
+- [x] Con Tab y Espacio se alterna el tema; un lector de pantalla anuncia el estado del switch.
+- [x] El diálogo de movimiento en Personal muestra Gasto, Ingreso, Traspaso, Gasto fijo, Deuda, Me deben y Meta, en ese orden, en escritorio y a 390 px.
+- [x] Pagar el 17 nov un gasto fijo que vencía el 5 nov prellena la fecha con 17 nov y marca pagada la cuota del 5 nov.
+- [x] Recibir el 17 nov un ingreso fijo esperado el 15 nov prellena 17 nov.
+- [x] Pagar la cuota mensual de una deuda y cobrar una cuota de Me deben prellenan la fecha de hoy.
+- [x] Editar un pago guardado el 5 nov sigue mostrando 5 nov.
+- [x] Pagar el gasto fijo mensual "Arriendo" de noviembre prellena la descripción "Pago Arriendo · noviembre" y la nota vacía.
+- [x] Recibir la 1.ª quincena de noviembre del ingreso "Salario" prellena "Ingreso Salario · 1.ª quincena de noviembre".
+- [x] Un cobro de varios meses de sep a nov prellena "Cobro {nombre} · septiembre a noviembre".
+- [x] Cambiar la descripción a mano guarda el texto escrito, también en el movimiento de un pago de deuda.
+- [x] Un gasto fijo con cuenta habitual "Nequi" prellena "Nequi" al pagarlo; uno sin cuenta deja el campo vacío.
+- [x] Una deuda con cuenta habitual prellena esa cuenta al registrar el pago.
+- [x] Archivar la cuenta habitual deja de prellenarla; borrarla deja `account_id` nulo sin borrar el gasto fijo ni la deuda.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
 
 ## Decisiones
 
@@ -145,6 +149,10 @@ Tras la migración se regeneran `src/types/database.ts` y se pasa Prettier.
 - **No:** cuenta global predeterminada ni última usada. Menos predecible y no distingue tarjeta de nómina.
 - **Sí:** `p_description` opcional en las RPC con el texto actual de respaldo. No rompe el MCP ni llamadas existentes.
 - **Sí:** `on delete set null (account_id)`. Borrar una cuenta no debe borrar el gasto fijo ni la deuda.
+- **Sí:** ingresos semanales, diarios o cada N días con la fecha de la cuota como periodo (decisión del usuario en la implementación).
+- **Sí:** **Recibir** que cubre varias ocurrencias usa el rango desde la más antigua abierta hasta la fila (decisión del usuario en la implementación).
+- **Sí:** campo Descripción en el cobro de Me deben y `p_description` en `record_receivable_collection` (decisión del usuario en la implementación).
+- **No:** `p_description` en `create_payment_transfer` (decisión del usuario en la implementación): `transfers` no tiene descripción.
 
 ## Riesgos
 

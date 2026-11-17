@@ -4,6 +4,10 @@ import {
   allocateOldestFirst
 } from "@/libs/allocate"
 import {
+  type PaymentPeriod,
+  buildPaymentDescription
+} from "@/libs/payment-description"
+import {
   incomeDueDates,
   occurrenceRemaining,
   shortOccurrenceDate
@@ -215,4 +219,57 @@ export function describeSavedReceipt(allocations: IncomeAllocation[]) {
     return null
   }
   return `Se aplicó a ${describeOccurrences(allocations.map((item) => item.due_on))}`
+}
+
+/** Periodo de una o varias ocurrencias según la frecuencia (SPEC 41) */
+function incomePeriod(
+  frequency: IncomeFrequency,
+  dates: string[]
+): PaymentPeriod {
+  const [from] = dates
+  const to = dates[dates.length - 1]
+  if (frequency === "none" || from === undefined) {
+    return { kind: "none" }
+  }
+  const byDay =
+    frequency === "weekly" ||
+    frequency === "daily" ||
+    frequency === "every_n_days"
+  if (dates.length > 1) {
+    return {
+      kind: "range",
+      from,
+      to,
+      unit: byDay ? "day" : frequency === "yearly" ? "year" : "month"
+    }
+  }
+  if (byDay) return { kind: "day", on: from }
+  if (frequency === "biweekly") return { kind: "biweekly", on: from }
+  if (frequency === "yearly") return { kind: "year", on: from }
+  return { kind: "month", on: from }
+}
+
+/**
+ * Descripción prellenada al recibir un ingreso fijo (SPEC 41):
+ * "Ingreso Salario · 1.ª quincena de noviembre". Con `dueOn` (botón
+ * Recibir) cubre las ocurrencias abiertas hasta esa fila; sin él (tab
+ * Ingreso), la más antigua abierta, que es la que recibe el monto esperado
+ */
+export function incomeReceiptDescription(
+  source: IncomeReceiptPeriods & { name: string; frequency: IncomeFrequency },
+  dueOn?: string
+) {
+  const open = source.periods
+    .filter((period) => period.due > 0)
+    .map((period) => period.key)
+  const dates =
+    dueOn === undefined ? open.slice(0, 1) : open.filter((key) => key <= dueOn)
+  return buildPaymentDescription(
+    "Ingreso",
+    source.name,
+    incomePeriod(
+      source.frequency,
+      dates.length > 0 || dueOn === undefined ? dates : [dueOn]
+    )
+  )
 }

@@ -248,6 +248,7 @@ export function RecurringExpenseSheet({
       <RecurringExpenseDialog
         workspaceId={expense.workspace_id}
         categories={categories}
+        accounts={accounts}
         expense={expense}
         open={editing}
         onOpenChange={setEditing}
@@ -269,7 +270,7 @@ export function RecurringExpenseSheet({
           workspaceId={expense.workspace_id}
           categories={categories}
           accounts={accounts}
-          {...occurrencePaymentProps(paying)}
+          {...occurrencePaymentProps(paying, accounts)}
           open
           onOpenChange={(isOpen) => {
             if (!isOpen) {

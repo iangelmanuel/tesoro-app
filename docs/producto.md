@@ -367,9 +367,10 @@ de gráficas, presupuestos, metas, deudas y score.
 - El botón "Registrar movimiento" del header abre el mismo diálogo desde
   cualquier página del espacio, y **Movimiento rápido** de la hoja **+** del
   teléfono abre el mismo (SPEC 30). En Personal, al registrar, los tabs son
-  **Gasto**, **Ingreso**, **Traspaso**, **Deuda** (pagos y avances),
-  **Me deben** (cobros, SPEC 39), **Gasto fijo** y **Meta** (aportes y
-  retiros), en ese orden. En Empresa:
+  **Gasto**, **Ingreso**, **Traspaso**, **Gasto fijo**, **Deuda** (pagos y
+  avances), **Me deben** (cobros, SPEC 39) y **Meta** (aportes y retiros),
+  en ese orden (SPEC 41: el gasto fijo se registra más que la deuda). En
+  Empresa:
   **Venta**, **Costo o gasto** y **Traspaso**. Traspaso solo aparece con dos
   cuentas o más. El tab Ingreso de Personal empieza con el select
   [Ingreso fijo](#select-ingreso-fijo). Aporte a meta sigue también en el
@@ -409,6 +410,48 @@ su origen, que valida igual que al registrar y recalcula el saldo:
 - Una fila que no se puede arrastrar (sola en su día o con búsqueda) no se
   registra en dnd-kit: deshabilitada, recibía `aria-disabled` y HeroUI le
   quitaba los clics, así que su menú no abría.
+
+### Fecha, descripción y cuenta al pagar (SPEC 41)
+
+Aplica al pagar un gasto fijo (tab Gasto fijo, **Marcar como pagado** de
+Próximos pagos y del Sheet), al recibir un ingreso fijo (**Recibir** y el
+select del tab Ingreso), al pagar una tarjeta o préstamo (tab Deuda, Sheet y
+**Más → Pago de deuda**) y al cobrar Me deben.
+
+- **Fecha:** hoy (`America/Bogota`), no el vencimiento. El pago real ocurre
+  hoy; la ocurrencia o cuota que se paga sigue siendo la elegida y guarda su
+  vencimiento aparte (`recurring_due_on`, asignaciones). Se puede cambiar.
+  Editar un pago guardado conserva su fecha.
+- **Descripción:** `{Verbo} {nombre} · {periodo}`, editable y con la nota
+  vacía. Verbo: **Pago** (gasto fijo y deuda), **Ingreso** (ingreso fijo) y
+  **Cobro** (Me deben). El periodo es el de la cuota que se paga, no el de
+  hoy, y sin año: la fecha del movimiento ya lo dice y el mes basta para
+  distinguir cada cuota (`src/libs/payment-description.ts`):
+
+  | Cuota                                    | Periodo                                                                       |
+  | ---------------------------------------- | ----------------------------------------------------------------------------- |
+  | Mensual                                  | `noviembre`                                                                   |
+  | Quincenal (día ≤ 15 / ≥ 16)              | `1.ª quincena de noviembre` / `2.ª quincena de noviembre`                     |
+  | Anual                                    | el mes de la cuota: `marzo`                                                   |
+  | Semanal, diaria o cada N días            | `8 nov`                                                                       |
+  | Varias cuotas                            | `septiembre a noviembre`, `noviembre a enero`, `1 a 29 nov`, `29 dic a 5 ene` |
+  | Sin frecuencia, cobro único, abono extra | sin periodo: `Pago {nombre}`                                                  |
+  - **Recibir** describe las ocurrencias abiertas hasta la fila; el select
+    del tab Ingreso, la más antigua abierta.
+  - **Me deben:** Una cuota usa su mes; Varios meses, el rango de la vista
+    previa; un cobro único, sin periodo.
+  - **Deuda:** el pago del ciclo usa el mes de la cuota vencida o de la
+    próxima sin cubrir; un abono extra o un ciclo ya cubierto, sin periodo.
+    Una tarjeta no crea movimiento, así que no lleva descripción.
+  - Si el usuario cambia la descripción, se guarda lo que escribió. Las RPC
+    `record_debt_payment` y `record_receivable_collection` reciben
+    `p_description` (null = texto de siempre).
+
+- **Cuenta habitual:** gastos fijos y deudas tienen `account_id` opcional
+  ("Cuenta habitual (opcional)"), como la cuenta por defecto de los ingresos
+  fijos. Al pagar se prellena si sigue activa; archivada no se prellena y
+  borrada queda en null (`on delete set null (account_id)`) sin borrar el
+  origen. Sin cuenta, el campo queda vacío.
 
 ### Categorías
 
@@ -679,7 +722,10 @@ Estado de una ocurrencia (fechas en `America/Bogota`):
   y **Ver más** suma 12. Se recarga tras registrar un pago desde él. En el
   teléfono es una hoja inferior. El estado se calcula, no se guarda.
 - **Marcar como pagado** abre el diálogo de movimiento prellenado (gasto,
-  monto, categoría, fecha = vencimiento, descripción = nombre). El monto se
+  monto, categoría, fecha de hoy, descripción "Pago {nombre} · {periodo}" y
+  cuenta habitual; ver
+  [Fecha, descripción y cuenta al pagar](#fecha-descripción-y-cuenta-al-pagar-spec-41)).
+  La ocurrencia pagada sigue siendo la elegida. El monto se
   puede cambiar antes de guardar; si la categoría está archivada queda vacía
   con un aviso. Nada se crea sin confirmar.
 - El pago es un movimiento con `recurring_expense_id` y `recurring_due_on`.
@@ -863,8 +909,10 @@ móvil):
 - Es el primer campo del tab Ingreso del diálogo de movimiento, solo en
   Personal. Vale **Otro ingreso** por defecto (sin enlace, como antes) y
   lista los ingresos fijos activos.
-- Al elegir uno se prellenan monto esperado, categoría y cuenta por defecto,
-  solo en los campos vacíos o que aún tienen el valor prellenado antes.
+- Al elegir uno se prellenan monto esperado, categoría, cuenta por defecto y
+  descripción ("Ingreso {nombre} · {periodo}" de la ocurrencia abierta más
+  antigua, SPEC 41), solo en los campos vacíos o que aún tienen el valor
+  prellenado antes.
 - **Vista previa** bajo el monto, con el mismo reparto que hará el servidor:
   "Cubre sáb 1 nov, sáb 8 nov · Abona $ 20.000 a sáb 15 nov" (con más de 3
   fechas: "18 ocurrencias, del sáb 1 nov al mié 18 nov"), o el error si
@@ -1024,9 +1072,13 @@ inválido de `tab` cae a Debo.
   veces. El diálogo de pago de tarjeta lo dice. Con cuenta, el pago mueve
   capital entre la cuenta y la tarjeta (ver "Pagos desde cuentas").
 - Un pago de préstamo puede crear un gasto en la categoría de sistema
-  "Deudas" ("Pago <nombre>"), y un abono de cuenta por cobrar un ingreso en
-  "Cobros" ("Abono <nombre>"). La casilla viene marcada por defecto; se
-  desmarca para cargar pagos antiguos sin inflar los gastos.
+  "Deudas", y un abono de cuenta por cobrar un ingreso en "Cobros". La
+  descripción del movimiento se prellena y es editable (SPEC 41); si llega
+  vacía, la RPC usa "Pago <nombre>" / "Abono <nombre>". La casilla viene
+  marcada por defecto; se desmarca para cargar pagos antiguos sin inflar los
+  gastos.
+- Tarjetas y préstamos tienen una **cuenta habitual** opcional
+  (`debts.account_id`, SPEC 41) que se prellena al registrar un pago.
 - Las deudas no se eliminan: se marcan como pagadas, se archivan y se
   reactivan. La historia de pagos no se pierde.
 

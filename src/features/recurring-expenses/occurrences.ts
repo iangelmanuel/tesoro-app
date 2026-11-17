@@ -1,3 +1,4 @@
+import { buildPaymentDescription } from "@/libs/payment-description"
 import type { RecurringFrequency } from "./schemas"
 
 export type OccurrenceStatus = "paid" | "overdue" | "today" | "upcoming"
@@ -60,3 +61,18 @@ export function frequencyLabel(expense: {
  * el cliente de Supabase del servidor.
  */
 export const HISTORY_PAGE_SIZE = 12
+
+/**
+ * "Pago {nombre} · {periodo}" de la cuota que se paga, no de hoy (SPEC 41):
+ * el mes de la cuota ("noviembre"), también en los anuales
+ */
+export function occurrenceDescription(payment: {
+  name: string
+  frequency: RecurringFrequency
+  dueOn: string
+}) {
+  return buildPaymentDescription("Pago", payment.name, {
+    kind: payment.frequency === "yearly" ? "year" : "month",
+    on: payment.dueOn
+  })
+}

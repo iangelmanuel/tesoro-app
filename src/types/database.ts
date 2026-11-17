@@ -362,6 +362,7 @@ export type Database = {
       }
       debts: {
         Row: {
+          account_id: string | null
           closed_at: string | null
           closing_day: number | null
           counterparty: string | null
@@ -389,6 +390,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          account_id?: string | null
           closed_at?: string | null
           closing_day?: number | null
           counterparty?: string | null
@@ -416,6 +418,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          account_id?: string | null
           closed_at?: string | null
           closing_day?: number | null
           counterparty?: string | null
@@ -443,6 +446,13 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "debts_account_id_workspace_id_fkey"
+            columns: ["account_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "workspace_id"]
+          },
           {
             foreignKeyName: "debts_workspace_id_fkey"
             columns: ["workspace_id"]
@@ -795,6 +805,7 @@ export type Database = {
       }
       recurring_expenses: {
         Row: {
+          account_id: string | null
           amount: number
           category_id: string
           created_at: string
@@ -811,6 +822,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          account_id?: string | null
           amount: number
           category_id: string
           created_at?: string
@@ -827,6 +839,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          account_id?: string | null
           amount?: number
           category_id?: string
           created_at?: string
@@ -843,6 +856,13 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "recurring_expenses_account_id_workspace_id_fkey"
+            columns: ["account_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id", "workspace_id"]
+          },
           {
             foreignKeyName: "recurring_expenses_category_id_fkey"
             columns: ["category_id"]
@@ -1438,6 +1458,7 @@ export type Database = {
       debt_overview: {
         Args: { p_workspace_id: string }
         Returns: {
+          account_id: string
           balance: number
           closed_at: string
           closing_day: number
@@ -1614,6 +1635,7 @@ export type Database = {
           p_amount: number
           p_create_transaction: boolean
           p_debt_id: string
+          p_description?: string
           p_is_extra_payment?: boolean
           p_note: string
           p_occurred_on: string
@@ -1642,6 +1664,7 @@ export type Database = {
           p_amount: number
           p_create_transaction: boolean
           p_debt_id: string
+          p_description?: string
           p_mode?: string
           p_note: string
           p_occurred_on: string

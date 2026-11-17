@@ -15,8 +15,13 @@ import {
   toast
 } from "@heroui/react"
 import { X } from "lucide-react"
+import { AccountSelectField } from "@/components/forms/account-select-field"
 import { CategorySelectField } from "@/components/forms/category-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import {
+  type AccountOption,
+  selectableAccounts
+} from "@/features/accounts/components/account-select"
 import type { Category } from "@/features/categories/queries"
 import { todayISO } from "@/libs/dates"
 import { createRecurringExpense, updateRecurringExpense } from "../actions"
@@ -36,6 +41,8 @@ interface RecurringExpenseDialogProps {
   workspaceId: string
   /** Categorías del sistema y propias, activas y archivadas */
   categories: Category[]
+  /** Cuentas del espacio, activas y archivadas (cuenta habitual) */
+  accounts: AccountOption[]
   /** Si llega, el diálogo edita este gasto fijo */
   expense?: RecurringExpense
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
@@ -47,6 +54,7 @@ interface RecurringExpenseDialogProps {
 export function RecurringExpenseDialog({
   workspaceId,
   categories,
+  accounts,
   expense,
   trigger,
   open: controlledOpen,
@@ -82,6 +90,7 @@ export function RecurringExpenseDialog({
               <RecurringExpenseForm
                 workspaceId={workspaceId}
                 categories={categories}
+                accounts={accounts}
                 expense={expense}
                 onSaved={() => setOpen(false)}
                 onCancel={() => setOpen(false)}
@@ -97,6 +106,7 @@ export function RecurringExpenseDialog({
 interface RecurringExpenseFormProps {
   workspaceId: string
   categories: Category[]
+  accounts: AccountOption[]
   expense?: RecurringExpense
   onSaved: () => void
   onCancel: () => void
@@ -105,6 +115,7 @@ interface RecurringExpenseFormProps {
 function RecurringExpenseForm({
   workspaceId,
   categories,
+  accounts,
   expense,
   onSaved,
   onCancel
@@ -116,12 +127,20 @@ function RecurringExpenseForm({
   )
   const currentCategoryArchived =
     expense !== undefined && expense.category.archived_at !== null
+  // Cuenta habitual (SPEC 41): solo activas; una archivada se vacía
+  const accountOptions = selectableAccounts(accounts)
+  const currentAccountArchived =
+    expense?.account_id != null &&
+    !accountOptions.some((account) => account.id === expense.account_id)
 
   const [frequency, setFrequency] = useState<RecurringFrequency>(
     expense?.frequency ?? "monthly"
   )
   const [categoryId, setCategoryId] = useState(
     currentCategoryArchived ? "" : (expense?.category_id ?? "")
+  )
+  const [accountId, setAccountId] = useState(
+    currentAccountArchived ? "" : (expense?.account_id ?? "")
   )
   const [monthOfYear, setMonthOfYear] = useState(
     expense?.month_of_year ? String(expense.month_of_year) : ""
@@ -225,6 +244,17 @@ function RecurringExpenseForm({
           )}
         </CategorySelectField>
       </div>
+
+      <AccountSelectField
+        name="account_id"
+        label="Cuenta habitual (opcional)"
+        value={accountId}
+        onChange={setAccountId}
+        accounts={accountOptions}
+        workspaceId={workspaceId}
+        allowNone
+        error={errors?.account_id?.[0]}
+      />
 
       <div className="flex flex-col gap-2">
         <Label id="frequency-label">Frecuencia</Label>

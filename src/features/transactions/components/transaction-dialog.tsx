@@ -21,6 +21,7 @@ import { AccountSelectField } from "@/components/forms/account-select-field"
 import { CategorySelectField } from "@/components/forms/category-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { TimePickerField } from "@/components/forms/time-picker-field"
+import { activeAccountId } from "@/features/accounts/active-account"
 import { selectableAccounts } from "@/features/accounts/components/account-select"
 import {
   type PaymentAccountOption,
@@ -47,12 +48,16 @@ import {
   paymentKey,
   selectedPayment
 } from "@/features/recurring-expenses/components/occurrence-select"
+import { occurrenceDescription } from "@/features/recurring-expenses/occurrences"
 import type { UpcomingPayment } from "@/features/recurring-expenses/queries"
 import { IncomeReceiptPreview } from "@/features/recurring-incomes/components/income-receipt-preview"
 import { IncomeSourceField } from "@/features/recurring-incomes/components/income-source-field"
 import { OTHER_INCOME } from "@/features/recurring-incomes/constants"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
-import { describeSavedReceipt } from "@/features/recurring-incomes/receipt"
+import {
+  describeSavedReceipt,
+  incomeReceiptDescription
+} from "@/features/recurring-incomes/receipt"
 import type { WorkspaceType } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
 import { createTransaction, updateTransaction } from "../actions"
@@ -320,10 +325,20 @@ function TransactionForm({
       initialValues?.recurring_income_id ??
       OTHER_INCOME
   )
+  // Controlada para prellenar "Ingreso {nombre} · {periodo}" al elegir un
+  // ingreso fijo (SPEC 41); lo que el usuario escriba se respeta
+  const [description, setDescription] = useState(
+    () => transaction?.description ?? initialValues?.description ?? ""
+  )
   const [prefilled, setPrefilled] = useState(() =>
     initialValues?.recurring_income_id
-      ? { amount: amountText, category: categoryId, account: accountId }
-      : { amount: "", category: "", account: "" }
+      ? {
+          amount: amountText,
+          category: categoryId,
+          account: accountId,
+          description
+        }
+      : { amount: "", category: "", account: "", description: "" }
   )
   // Un movimiento nuevo y suelto también puede ser un traspaso entre dos
   // cuentas propias (se guarda en transfers y no cuenta como ingreso ni
@@ -401,7 +416,8 @@ function TransactionForm({
     const next = {
       amount: AMOUNT_FORMAT.format(source.amount),
       category: category?.id ?? "",
-      account: account?.id ?? ""
+      account: account?.id ?? "",
+      description: incomeReceiptDescription(source)
     }
 
     if (amountText === "" || amountText === prefilled.amount) {
@@ -412,6 +428,9 @@ function TransactionForm({
     }
     if (accountId === "" || accountId === prefilled.account) {
       setAccountId(next.account)
+    }
+    if (description === "" || description === prefilled.description) {
+      setDescription(next.description)
     }
     setPrefilled(next)
   }
@@ -453,9 +472,9 @@ function TransactionForm({
     </ToggleButton>
   )
 
-  // Orden de los tabs (SPEC 30 y 39). Personal: Gasto, Ingreso, Traspaso,
-  // Deuda, Me deben, Gasto fijo y Meta. Empresa: Venta, Costo o gasto y
-  // Traspaso
+  // Orden de los tabs (SPEC 30, 39 y 41). Personal: Gasto, Ingreso,
+  // Traspaso, Gasto fijo, Deuda, Me deben y Meta. Empresa: Venta, Costo o
+  // gasto y Traspaso
   const typeToggle = hideTypeToggle ? null : (
     // Con los tabs de pago son 7 opciones. Desde sm caben en el diálogo; en
     // un teléfono angosto se desplazan en horizontal, sin barra visible
@@ -488,6 +507,14 @@ function TransactionForm({
         )}
         {paymentTabs && (
           <ToggleButton
+            id="recurring"
+            className="flex-1 whitespace-nowrap"
+          >
+            Gasto fijo
+          </ToggleButton>
+        )}
+        {paymentTabs && (
+          <ToggleButton
             id="debt_payment"
             className="flex-1 whitespace-nowrap"
           >
@@ -500,14 +527,6 @@ function TransactionForm({
             className="flex-1 whitespace-nowrap"
           >
             Me deben
-          </ToggleButton>
-        )}
-        {paymentTabs && (
-          <ToggleButton
-            id="recurring"
-            className="flex-1 whitespace-nowrap"
-          >
-            Gasto fijo
           </ToggleButton>
         )}
         {paymentTabs && (
@@ -786,11 +805,8 @@ function TransactionForm({
       <TextField
         name="description"
         maxLength={120}
-        defaultValue={
-          values?.description ??
-          transaction?.description ??
-          initialValues?.description
-        }
+        value={description}
+        onChange={setDescription}
         isInvalid={Boolean(errors?.description)}
         isRequired
         validationBehavior="aria"
@@ -919,11 +935,13 @@ function RecurringPaymentPanel({
           workspaceType="personal"
           categories={categories}
           accounts={accounts}
+          // Sin occurred_on: el pago ocurre hoy (SPEC 41); la cuota elegida
+          // conserva su vencimiento en recurring.dueOn
           initialValues={{
             amount: selected.amount,
             category_id: selected.category.id,
-            occurred_on: selected.dueOn,
-            description: selected.name
+            account_id: activeAccountId(accounts, selected.accountId),
+            description: occurrenceDescription(selected)
           }}
           recurring={{
             recurringExpenseId: selected.recurringExpenseId,

@@ -2,25 +2,18 @@
 
 import { useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Avatar, Dropdown, Label, Separator } from "@heroui/react"
+import { Avatar, Dropdown, Label, Separator, Switch } from "@heroui/react"
 import {
   ArrowUpRight,
   ChevronsUpDown,
   CircleHelp,
   LogOut,
-  MoonIcon,
-  SunIcon,
+  Moon,
   UserRound
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { SITE } from "@/config/site"
 import { signOut } from "@/features/auth/actions"
-
-// Tema dentro del menú de cuenta (SPEC 40): Claro y Oscuro, sin "Sistema"
-const THEMES = [
-  { id: "light", label: "Claro", Icon: SunIcon },
-  { id: "dark", label: "Oscuro", Icon: MoonIcon }
-] as const
 
 export interface DashboardUser {
   name: string
@@ -69,6 +62,7 @@ export function UserMenu({ user }: { user: DashboardUser }) {
   const router = useRouter()
   const [isSigningOut, startSignOut] = useTransition()
   const { resolvedTheme, setTheme } = useTheme()
+  const isDark = resolvedTheme === "dark"
 
   function onAction(key: React.Key) {
     if (key === "account") {
@@ -90,14 +84,16 @@ export function UserMenu({ user }: { user: DashboardUser }) {
       </Dropdown.Trigger>
       <Dropdown.Popover
         placement="top start"
-        className="min-w-60"
+        // Mismo ancho que el botón del pie del aside: se lee como parte de él
+        // (--trigger-width lo pone el Popover de React Aria)
+        className="w-(--trigger-width) min-w-0"
       >
         <div className="flex items-center gap-2 px-3 pt-3 pb-2">
           <UserAvatar user={user} />
           <UserInfo user={user} />
         </div>
-        {/* Un solo menú (teclado: flechas de arriba abajo). El tema es una
-            sección de selección única que no cierra el menú (SPEC 40) */}
+        {/* Un solo menú (teclado: flechas de arriba abajo). El tema es un
+            ítem con switch que no cierra el menú (SPEC 41) */}
         <Dropdown.Menu
           aria-label="Opciones de la cuenta"
           disabledKeys={isSigningOut ? ["sign-out"] : []}
@@ -128,27 +124,38 @@ export function UserMenu({ user }: { user: DashboardUser }) {
           <Separator />
           <Dropdown.Section
             aria-label="Tema"
-            selectionMode="single"
-            disallowEmptySelection
+            selectionMode="multiple"
             shouldCloseOnSelect={false}
-            selectedKeys={resolvedTheme ? [resolvedTheme] : []}
-            onSelectionChange={(keys) => {
-              const [theme] = [...keys]
-              if (typeof theme === "string") setTheme(theme)
-            }}
-            className="mx-1 my-1 flex gap-1 rounded-full bg-default p-1"
+            selectedKeys={isDark ? ["dark"] : []}
+            onSelectionChange={(keys) =>
+              setTheme([...keys].includes("dark") ? "dark" : "light")
+            }
           >
-            {THEMES.map(({ id, label, Icon }) => (
-              <Dropdown.Item
-                key={id}
-                id={id}
-                textValue={`Tema ${label.toLowerCase()}`}
-                className="min-h-8 flex-1 justify-center rounded-full text-muted data-[selected=true]:bg-surface data-[selected=true]:text-foreground data-[selected=true]:shadow-(--surface-shadow) max-md:min-h-11"
+            <Dropdown.Item
+              id="dark"
+              textValue="Modo oscuro"
+            >
+              <Moon className="size-4" />
+              <Label>Modo oscuro</Label>
+              {/* Decorativo: el ítem (menuitemcheckbox con aria-checked)
+                  maneja el clic y el teclado; el switch solo muestra el estado */}
+              <span
+                aria-hidden="true"
+                inert
+                className="pointer-events-none ml-auto flex"
               >
-                <Icon className="size-4" />
-                <Label>{label}</Label>
-              </Dropdown.Item>
-            ))}
+                <Switch
+                  size="sm"
+                  isSelected={isDark}
+                  isReadOnly
+                  aria-label="Modo oscuro"
+                >
+                  <Switch.Control>
+                    <Switch.Thumb />
+                  </Switch.Control>
+                </Switch>
+              </span>
+            </Dropdown.Item>
           </Dropdown.Section>
           <Separator />
           <Dropdown.Item

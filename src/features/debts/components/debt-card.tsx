@@ -153,6 +153,8 @@ export function DebtCard({
           </Dropdown.Popover>
         </Dropdown>
         <DebtDialog
+          workspaceId={debt.workspace_id}
+          accounts={accounts}
           debt={debt}
           open={editing}
           onOpenChange={setEditing}

@@ -47,12 +47,16 @@ import {
   paymentKey,
   selectedPayment
 } from "@/features/recurring-expenses/components/occurrence-select"
+import { occurrenceDescription } from "@/features/recurring-expenses/occurrences"
 import type { UpcomingPayment } from "@/features/recurring-expenses/queries"
 import { IncomeReceiptPreview } from "@/features/recurring-incomes/components/income-receipt-preview"
 import { IncomeSourceField } from "@/features/recurring-incomes/components/income-source-field"
 import { OTHER_INCOME } from "@/features/recurring-incomes/constants"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
-import { describeSavedReceipt } from "@/features/recurring-incomes/receipt"
+import {
+  describeSavedReceipt,
+  incomeReceiptDescription
+} from "@/features/recurring-incomes/receipt"
 import type { WorkspaceType } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
 import { createTransaction, updateTransaction } from "../actions"
@@ -320,10 +324,20 @@ function TransactionForm({
       initialValues?.recurring_income_id ??
       OTHER_INCOME
   )
+  // Controlada para prellenar "Ingreso {nombre} · {periodo}" al elegir un
+  // ingreso fijo (SPEC 41); lo que el usuario escriba se respeta
+  const [description, setDescription] = useState(
+    () => transaction?.description ?? initialValues?.description ?? ""
+  )
   const [prefilled, setPrefilled] = useState(() =>
     initialValues?.recurring_income_id
-      ? { amount: amountText, category: categoryId, account: accountId }
-      : { amount: "", category: "", account: "" }
+      ? {
+          amount: amountText,
+          category: categoryId,
+          account: accountId,
+          description
+        }
+      : { amount: "", category: "", account: "", description: "" }
   )
   // Un movimiento nuevo y suelto también puede ser un traspaso entre dos
   // cuentas propias (se guarda en transfers y no cuenta como ingreso ni
@@ -401,7 +415,8 @@ function TransactionForm({
     const next = {
       amount: AMOUNT_FORMAT.format(source.amount),
       category: category?.id ?? "",
-      account: account?.id ?? ""
+      account: account?.id ?? "",
+      description: incomeReceiptDescription(source)
     }
 
     if (amountText === "" || amountText === prefilled.amount) {
@@ -412,6 +427,9 @@ function TransactionForm({
     }
     if (accountId === "" || accountId === prefilled.account) {
       setAccountId(next.account)
+    }
+    if (description === "" || description === prefilled.description) {
+      setDescription(next.description)
     }
     setPrefilled(next)
   }
@@ -786,11 +804,8 @@ function TransactionForm({
       <TextField
         name="description"
         maxLength={120}
-        defaultValue={
-          values?.description ??
-          transaction?.description ??
-          initialValues?.description
-        }
+        value={description}
+        onChange={setDescription}
         isInvalid={Boolean(errors?.description)}
         isRequired
         validationBehavior="aria"
@@ -924,7 +939,7 @@ function RecurringPaymentPanel({
           initialValues={{
             amount: selected.amount,
             category_id: selected.category.id,
-            description: selected.name
+            description: occurrenceDescription(selected)
           }}
           recurring={{
             recurringExpenseId: selected.recurringExpenseId,

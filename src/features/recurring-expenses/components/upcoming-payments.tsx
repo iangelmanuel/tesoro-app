@@ -11,7 +11,8 @@ import { formatDate, formatShortDate } from "@/libs/format"
 import {
   OCCURRENCE_STATUS,
   type OccurrenceStatus,
-  type OccurrenceTone
+  type OccurrenceTone,
+  occurrenceDescription
 } from "../occurrences"
 import type { UpcomingPayment } from "../queries"
 
@@ -59,7 +60,7 @@ export function occurrencePaymentProps(payment: UpcomingPayment) {
     initialValues: {
       amount: payment.amount,
       category_id: payment.category.id,
-      description: payment.name
+      description: occurrenceDescription(payment)
     },
     recurring: {
       recurringExpenseId: payment.recurringExpenseId,

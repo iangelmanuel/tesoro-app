@@ -10,8 +10,13 @@ export type PaymentPeriod =
   /** Cuota quincenal: día 1–15 es la 1.ª quincena, 16 en adelante la 2.ª */
   | { kind: "biweekly"; on: string }
   | { kind: "year"; on: string }
-  /** Varios meses (SPEC 38/39): de la primera a la última cuota */
-  | { kind: "range"; from: string; to: string }
+  /** Ingreso semanal, diario o cada N días: la fecha de la cuota */
+  | { kind: "day"; on: string }
+  /**
+   * Varias cuotas (SPEC 38/39), de la primera a la última. `unit` dice cómo
+   * se nombran: meses (por defecto), días o años
+   */
+  | { kind: "range"; from: string; to: string; unit?: "month" | "day" | "year" }
   /** Sin frecuencia: cobro único o abono libre a tarjeta o préstamo */
   | { kind: "none" }
 
@@ -54,9 +59,33 @@ function periodLabel(period: PaymentPeriod): string | null {
     case "year": {
       return String(parts(period.on).year)
     }
+    case "day": {
+      const { year, day } = parts(period.on)
+      return `${day} ${monthName(period.on, true)} ${year}`
+    }
     case "range": {
       const from = parts(period.from)
       const to = parts(period.to)
+      if (period.unit === "year") {
+        return from.year === to.year
+          ? String(from.year)
+          : `${from.year} a ${to.year}`
+      }
+      if (period.unit === "day") {
+        if (period.from === period.to) {
+          return periodLabel({ kind: "day", on: period.from })
+        }
+        // `1 a 29 nov 2026`, `29 nov a 6 dic 2026` o, si cruza de año,
+        // `29 dic 2026 a 5 ene 2027`
+        if (from.year !== to.year) {
+          return `${periodLabel({ kind: "day", on: period.from })} a ${periodLabel({ kind: "day", on: period.to })}`
+        }
+        const start =
+          from.monthIndex === to.monthIndex
+            ? String(from.day)
+            : `${from.day} ${monthName(period.from, true)}`
+        return `${start} a ${periodLabel({ kind: "day", on: period.to })}`
+      }
       if (from.year === to.year && from.monthIndex === to.monthIndex) {
         return periodLabel({ kind: "month", on: period.from })
       }

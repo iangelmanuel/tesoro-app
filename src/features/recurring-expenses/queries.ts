@@ -6,6 +6,7 @@ import {
   type OccurrenceStatus,
   getOccurrenceStatus
 } from "./occurrences"
+import type { RecurringFrequency } from "./schemas"
 
 type RecurringExpenseRow =
   Database["public"]["Tables"]["recurring_expenses"]["Row"]
@@ -28,6 +29,8 @@ export type RecurringExpense = Omit<RecurringExpenseRow, "amount"> & {
 export interface UpcomingPayment {
   recurringExpenseId: string
   name: string
+  /** Frecuencia del gasto fijo: da el periodo de la descripción (SPEC 41) */
+  frequency: RecurringFrequency
   amount: number
   category: CategorySummary
   dueOn: string
@@ -142,6 +145,20 @@ async function toUpcomingPayments(
 
   const categoryById = new Map(categories.map((row) => [row.id, row]))
 
+  const expenseIds = [
+    ...new Set(occurrences.map((row) => row.recurring_expense_id))
+  ]
+  const { data: expenses, error: expensesError } = await supabase
+    .from("recurring_expenses")
+    .select("id, frequency")
+    .in("id", expenseIds)
+
+  if (expensesError) {
+    throw new Error("No se pudieron cargar los pagos de los gastos fijos")
+  }
+
+  const expenseById = new Map(expenses.map((row) => [row.id, row]))
+
   // Cuenta y fecha de cada pago, desde su movimiento enlazado
   const paidIds = occurrences.flatMap((row) =>
     row.transaction_id === null ? [] : [row.transaction_id]
@@ -171,7 +188,8 @@ async function toUpcomingPayments(
 
   return occurrences.flatMap((row) => {
     const category = categoryById.get(row.category_id)
-    if (!category) {
+    const expense = expenseById.get(row.recurring_expense_id)
+    if (!category || !expense) {
       return []
     }
     const paid =
@@ -181,6 +199,7 @@ async function toUpcomingPayments(
     return {
       recurringExpenseId: row.recurring_expense_id,
       name: row.name,
+      frequency: expense.frequency as RecurringFrequency,
       amount: Number(row.amount),
       category,
       dueOn: row.due_on,

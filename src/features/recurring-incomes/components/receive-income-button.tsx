@@ -6,7 +6,7 @@ import type { PaymentAccountOption } from "@/features/accounts/components/paymen
 import type { Category } from "@/features/categories/queries"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
 import type { IncomeSourceOption } from "../queries"
-import { amountDueUntil } from "../receipt"
+import { amountDueUntil, incomeReceiptDescription } from "../receipt"
 
 /** Lo que **Recibir** necesita de la ocurrencia y su ingreso fijo */
 export interface ReceiveTarget {
@@ -25,7 +25,8 @@ export interface ReceiveTarget {
  * Valores iniciales del tab Ingreso para recibir hasta `target.dueOn`: la
  * fuente, su categoría y su cuenta por defecto (si sigue activa), y lo que
  * falta de todas las ocurrencias abiertas hasta esa fila. El servidor reparte
- * desde la más antigua; la vista previa bajo el monto lo anticipa.
+ * desde la más antigua; la vista previa bajo el monto lo anticipa. Sin
+ * fecha: el diálogo toma la de hoy (SPEC 41).
  */
 export function receiveIncomeInitialValues(
   target: ReceiveTarget,
@@ -47,7 +48,10 @@ export function receiveIncomeInitialValues(
     amount: dueUntilRow > 0 ? dueUntilRow : target.amount,
     category_id: target.categoryId,
     account_id: accountId,
-    description: target.name,
+    // "Ingreso {nombre} · {periodo}" de lo que cubre (SPEC 41)
+    description: source
+      ? incomeReceiptDescription(source, target.dueOn)
+      : target.name,
     recurring_income_id: target.recurringIncomeId
   }
 }

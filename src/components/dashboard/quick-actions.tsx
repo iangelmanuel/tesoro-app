@@ -3,6 +3,7 @@ import { Skeleton } from "@heroui/react"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { getCategories } from "@/features/categories/queries"
 import { isActiveDebt } from "@/features/debts/calculations"
+import { debtPaymentDescriptions } from "@/features/debts/payment-description"
 import { getDebtEntries, getDebts } from "@/features/debts/queries"
 import { toCollectableReceivable } from "@/features/debts/receivable-collect"
 import { getExportHistoryStart } from "@/features/exports/queries"
@@ -86,9 +87,12 @@ async function QuickActionsLoader() {
     goals: goals
       .filter((goal) => goal.status === "active")
       .map(({ id, name }) => ({ id, name })),
-    debts: debts
-      .filter(isActiveDebt)
-      .map(({ id, kind, name }) => ({ id, kind, name })),
+    debts: debts.filter(isActiveDebt).map((debt) => ({
+      id: debt.id,
+      kind: debt.kind,
+      name: debt.name,
+      descriptions: debtPaymentDescriptions(debt, today)
+    })),
     receivables,
     // Ocurrencias sin pagar: las vencidas quedan primero (orden de vencimiento)
     pendingPayments: payments.filter(

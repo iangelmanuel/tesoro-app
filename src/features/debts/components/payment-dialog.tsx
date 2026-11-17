@@ -23,11 +23,15 @@ import {
 } from "@/features/accounts/components/payment-account-section"
 import { todayISO } from "@/libs/dates"
 import { recordAdvance, recordPayment, updateEntry } from "../actions"
+import type { DebtPaymentDescriptions } from "../payment-description"
 import type { Debt, DebtEntry } from "../queries"
 import type { PaymentFormState } from "../types"
 import { amountInput } from "./field"
 
-type PaymentDebt = Pick<Debt, "id" | "kind">
+type PaymentDebt = Pick<Debt, "id" | "kind"> & {
+  /** Descripción prellenada del movimiento (SPEC 41); sin ella, vacía */
+  descriptions?: DebtPaymentDescriptions
+}
 
 /**
  * Campos de un pago o avance que el diálogo edita. Movimientos (SPEC 26) los
@@ -49,7 +53,9 @@ export type EditableDebtEntry = Pick<
 type PaymentMode = "payment" | "extra" | "advance"
 
 /** Deuda que se puede elegir en el diálogo (acceso rápido del header) */
-export type DebtOption = Pick<Debt, "id" | "kind" | "name">
+export type DebtOption = Pick<Debt, "id" | "kind" | "name"> & {
+  descriptions: DebtPaymentDescriptions
+}
 
 interface PaymentDialogProps {
   /** Espacio de la deuda (para crear una cuenta desde el select) */
@@ -336,6 +342,24 @@ function PaymentForm({
     () => !values || values.create_transaction === "on"
   )
   const [accountId, setAccountId] = useState("")
+  // Descripción del movimiento (SPEC 41): se prellena según Pago o Abono y
+  // se respeta lo que el usuario escriba
+  const [description, setDescription] = useState(
+    () =>
+      values?.description ??
+      debt.descriptions?.[isExtra ? "extra" : "payment"] ??
+      ""
+  )
+  const [prefilledDescription, setPrefilledDescription] = useState(description)
+  function changeMode(next: PaymentMode) {
+    setMode(next)
+    if (description === "" || description === prefilledDescription) {
+      const text = debt.descriptions?.[next === "extra" ? "extra" : "payment"]
+      if (text === undefined) return
+      setDescription(text)
+      setPrefilledDescription(text)
+    }
+  }
   const accountName =
     accounts.find((account) => account.id === accountId)?.name ?? null
 
@@ -365,7 +389,7 @@ function PaymentForm({
       {canBeExtra && (
         <Tabs
           selectedKey={mode}
-          onSelectionChange={(key) => setMode(key as PaymentMode)}
+          onSelectionChange={(key) => changeMode(key as PaymentMode)}
         >
           <Tabs.ListContainer>
             <Tabs.List
@@ -474,6 +498,23 @@ function PaymentForm({
             {isReceivable ? "Registrar como ingreso" : "Registrar como gasto"}
           </Checkbox.Content>
         </Checkbox>
+      )}
+
+      {/* Solo con movimiento: una tarjeta o un avance no crean uno */}
+      {!isEditing && !isCard && createTransaction && (
+        <TextField
+          name="description"
+          maxLength={120}
+          value={description}
+          onChange={setDescription}
+          isInvalid={Boolean(errors?.description)}
+          validationBehavior="aria"
+          className="flex flex-col gap-2"
+        >
+          <Label>Descripción</Label>
+          <Input placeholder={isReceivable ? "Cobro" : "Pago de la cuota"} />
+          <FieldError>{errors?.description?.[0]}</FieldError>
+        </TextField>
       )}
 
       {/* En préstamos y cuentas por cobrar la cuenta es la del movimiento: sin

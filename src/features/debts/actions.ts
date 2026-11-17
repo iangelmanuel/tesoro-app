@@ -95,6 +95,7 @@ const PAYMENT_FIELDS = [
   "occurred_on",
   "occurred_time",
   "note",
+  "description",
   "create_transaction",
   "is_extra_payment",
   "account_id",
@@ -108,6 +109,7 @@ const COLLECT_FIELDS = [
   "period_on",
   "occurred_on",
   "note",
+  "description",
   "create_transaction",
   "account_id"
 ] as const
@@ -519,7 +521,11 @@ export async function recordPayment(
     p_transfer_amount: hasTransfer
       ? (parsed.data.transfer_amount ?? undefined)
       : undefined,
-    p_is_extra_payment: parsed.data.is_extra_payment
+    p_is_extra_payment: parsed.data.is_extra_payment,
+    // Solo con movimiento; null = texto de la RPC (SPEC 41)
+    p_description: parsed.data.create_transaction
+      ? (parsed.data.description ?? undefined)
+      : undefined
   })
 
   if (error) {

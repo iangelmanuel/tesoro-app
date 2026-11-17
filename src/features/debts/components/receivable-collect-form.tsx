@@ -24,6 +24,10 @@ import {
 } from "@/features/accounts/components/payment-account-section"
 import { todayISO } from "@/libs/dates"
 import { AMOUNT_MASK, formatCurrency } from "@/libs/format"
+import {
+  type PaymentPeriod,
+  buildPaymentDescription
+} from "@/libs/payment-description"
 import { collectReceivable } from "../actions"
 import { formatMonthYear } from "../calculations"
 import {
@@ -308,6 +312,35 @@ function CollectFields({
   // El error del servidor manda; si no hay, el de la vista previa
   const amountError = errors?.amount?.[0] ?? preview?.error ?? undefined
 
+  // Descripción del ingreso (SPEC 41): "Cobro {nombre} · {cuotas}". Sigue al
+  // modo, la cuota y el monto mientras el usuario no la cambie
+  const coveredPeriods =
+    mode === "single"
+      ? [period].filter(Boolean)
+      : preview && !preview.error
+        ? [
+            ...preview.covered,
+            ...(preview.partial ? [preview.partial.key] : [])
+          ].sort()
+        : []
+  const collectPeriod: PaymentPeriod =
+    coveredPeriods.length === 0
+      ? { kind: "none" }
+      : {
+          kind: "range",
+          from: coveredPeriods[0],
+          to: coveredPeriods[coveredPeriods.length - 1]
+        }
+  const suggestedDescription = buildPaymentDescription(
+    "Cobro",
+    receivable.name,
+    collectPeriod
+  )
+  const [typedDescription, setTypedDescription] = useState<string | null>(
+    () => state.values?.description ?? null
+  )
+  const description = typedDescription ?? suggestedDescription
+
   const changeMode = (next: ReceivableCollectMode) => {
     setMode(next)
     // Una cuota vuelve a prellenar con lo que falta de la cuota elegida
@@ -511,6 +544,22 @@ function CollectFields({
           Registrar como ingreso
         </Checkbox.Content>
       </Checkbox>
+
+      {createTransaction && (
+        <TextField
+          name="description"
+          maxLength={120}
+          value={description}
+          onChange={setTypedDescription}
+          isInvalid={Boolean(errors?.description)}
+          validationBehavior="aria"
+          className="flex flex-col gap-2"
+        >
+          <Label>Descripción</Label>
+          <Input placeholder="Cobro" />
+          <FieldError>{errors?.description?.[0]}</FieldError>
+        </TextField>
+      )}
 
       {/* La cuenta es la del ingreso: sin él no aplica. Muestra "Quedará en" */}
       {createTransaction && (

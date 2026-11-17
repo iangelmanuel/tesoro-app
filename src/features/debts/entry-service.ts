@@ -287,7 +287,11 @@ export async function recordReceivableCollection(
       ? (input.account_id ?? undefined)
       : undefined,
     p_mode: input.mode,
-    p_period_on: input.mode === "single" ? input.period_on : undefined
+    p_period_on: input.mode === "single" ? input.period_on : undefined,
+    // null = "Abono {nombre}" de la RPC (SPEC 41)
+    p_description: input.create_transaction
+      ? (input.description ?? undefined)
+      : undefined
   })
 
   if (error) {

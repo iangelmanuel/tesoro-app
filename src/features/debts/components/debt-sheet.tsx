@@ -19,6 +19,7 @@ import {
   isReceivableOverdue,
   nextFeeDate
 } from "../calculations"
+import { debtPaymentDescriptions } from "../payment-description"
 import type { Debt, DebtEntry } from "../queries"
 import { toCollectableReceivable } from "../receivable-collect"
 import {
@@ -165,7 +166,10 @@ export function DebtSheet({
             <div className="grid grid-cols-2 gap-2">
               <PaymentDialog
                 workspaceId={debt.workspace_id}
-                debt={debt}
+                debt={{
+                  ...debt,
+                  descriptions: debtPaymentDescriptions(debt)
+                }}
                 accounts={accounts}
                 trigger={
                   <Button isDisabled={debt.balance <= 0}>

@@ -79,6 +79,7 @@ export async function getDebts(workspaceId: string): Promise<Debt[]> {
   return data.map((row) => ({
     installment_history: historyByDebt.get(row.id) ?? [],
     ...row,
+    account_id: row.account_id ?? null,
     counterparty: row.counterparty ?? null,
     closing_day: row.closing_day ?? null,
     term_months: row.term_months ?? null,

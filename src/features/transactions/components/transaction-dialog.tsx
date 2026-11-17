@@ -919,10 +919,11 @@ function RecurringPaymentPanel({
           workspaceType="personal"
           categories={categories}
           accounts={accounts}
+          // Sin occurred_on: el pago ocurre hoy (SPEC 41); la cuota elegida
+          // conserva su vencimiento en recurring.dueOn
           initialValues={{
             amount: selected.amount,
             category_id: selected.category.id,
-            occurred_on: selected.dueOn,
             description: selected.name
           }}
           recurring={{

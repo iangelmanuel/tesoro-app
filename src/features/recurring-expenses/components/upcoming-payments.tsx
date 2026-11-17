@@ -49,13 +49,16 @@ interface PayOccurrenceButtonProps {
   className?: string
 }
 
-/** Prellenado y enlace de TransactionDialog para pagar una ocurrencia */
+/**
+ * Prellenado y enlace de TransactionDialog para pagar una ocurrencia. Sin
+ * `occurred_on`: el diálogo toma la fecha de hoy (SPEC 41); la cuota pagada
+ * conserva su vencimiento en `recurring.dueOn`
+ */
 export function occurrencePaymentProps(payment: UpcomingPayment) {
   return {
     initialValues: {
       amount: payment.amount,
       category_id: payment.category.id,
-      occurred_on: payment.dueOn,
       description: payment.name
     },
     recurring: {

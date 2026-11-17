@@ -302,10 +302,17 @@ export const updateTransactions = defineTool({
       void _link
 
       if (plan.entryChanged) {
+        // Cuenta, descripción y categoría no cambian desde aquí; la nota
+        // nueva va al abono y al movimiento (SPEC 42)
         const result = await updatePaymentEntry(ctx.supabase, plan.entry, {
           amount: plan.amount,
           occurred_on: plan.occurred_on,
-          occurred_time: plan.occurred_time
+          occurred_time: plan.occurred_time,
+          account_id: txBefore.account_id,
+          description: txBefore.description,
+          note: plan.note,
+          category_id: txBefore.category_id,
+          is_extra_payment: plan.entry.is_extra_payment
         })
         if (!result.ok) {
           return midwayError(

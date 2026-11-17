@@ -372,6 +372,25 @@ export const paymentSchema = z
 
 export type PaymentInput = z.infer<typeof paymentSchema>
 
+// Editar un pago o un avance (SPEC 42). Sin traspaso ni casilla de
+// movimiento: el movimiento ya existe o no. Cuenta vacía = fuera de las
+// cuentas; descripción o categoría vacías conservan las del movimiento.
+export const paymentEditSchema = z.object({
+  amount: amountField,
+  occurred_on: pastDateField,
+  occurred_time: timeSchema,
+  note: noteField,
+  description: paymentDescriptionField,
+  is_extra_payment: checkboxField,
+  account_id: paymentAccountSchema.shape.account_id,
+  category_id: z.preprocess(
+    emptyToNull,
+    z.uuid({ error: "Elige una categoría válida" }).nullable()
+  )
+})
+
+export type PaymentEditInput = z.infer<typeof paymentEditSchema>
+
 // Cobro de una cuenta por cobrar (SPEC 39). El modo depende del tipo de
 // cobro: Abono o Pago completo en una de cobro único; Una cuota o Varios
 // meses en una mensual.

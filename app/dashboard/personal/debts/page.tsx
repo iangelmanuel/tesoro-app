@@ -15,6 +15,7 @@ import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { EmptyState } from "@/components/dashboard/empty-state"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { getAccountBalances } from "@/features/accounts/queries"
+import { type Category, getCategories } from "@/features/categories/queries"
 import {
   DEBTS_PATH,
   compareByExpectedOn,
@@ -74,9 +75,10 @@ async function DebtsContent({
   const query = await searchParams
   const workspace = await getPersonalWorkspace()
   const tab = parseDebtsTab(query.tab)
-  const [debts, accounts] = await Promise.all([
+  const [debts, accounts, categories] = await Promise.all([
     getDebts(workspace.id),
-    getAccountBalances(workspace.id)
+    getAccountBalances(workspace.id),
+    getCategories(workspace.id)
   ])
   const activeAccounts = accounts.filter((account) => !account.archived_at)
   // Tras leer la sesión: todayISO usa new Date()
@@ -103,6 +105,7 @@ async function DebtsContent({
           debts={tabDebts}
           entries={entries}
           accounts={activeAccounts}
+          categories={categories}
           workspace={workspace}
           today={today}
         />
@@ -111,6 +114,7 @@ async function DebtsContent({
           receivables={tabDebts}
           entries={entries}
           accounts={activeAccounts}
+          categories={categories}
           workspace={workspace}
           today={today}
         />
@@ -123,6 +127,7 @@ function ReceivablesTab({
   receivables,
   entries,
   accounts,
+  categories,
   workspace,
   today
 }: {
@@ -132,6 +137,8 @@ function ReceivablesTab({
   entries: Record<string, DebtEntry[]>
   /** Cuentas activas, para el movimiento de un abono */
   accounts: PaymentAccountOption[]
+  /** Categorías del espacio, para editar el movimiento de un abono */
+  categories: Category[]
   workspace: PersonalWorkspace
   today: string
 }) {
@@ -210,6 +217,7 @@ function ReceivablesTab({
               receivable={receivable}
               entries={entries[receivable.id] ?? []}
               accounts={accounts}
+              categories={categories}
               today={today}
               currency={workspace.currency}
             />
@@ -233,6 +241,7 @@ function PayablesTab({
   debts,
   entries,
   accounts,
+  categories,
   workspace,
   today
 }: {
@@ -242,6 +251,8 @@ function PayablesTab({
   entries: Record<string, DebtEntry[]>
   /** Cuentas activas, para el movimiento de un pago */
   accounts: PaymentAccountOption[]
+  /** Categorías del espacio, para editar el movimiento de un pago */
+  categories: Category[]
   workspace: PersonalWorkspace
   today: string
 }) {
@@ -319,6 +330,7 @@ function PayablesTab({
                   debt={debt}
                   entries={entries[debt.id] ?? []}
                   accounts={accounts}
+                  categories={categories}
                   today={today}
                   currency={workspace.currency}
                 />

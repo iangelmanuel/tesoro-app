@@ -7,10 +7,13 @@ import { revalidatePersonalPages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import type { DebtStatus } from "./calculations"
 import {
+  type LoadedEntry,
+  currentPaymentAccount,
   deleteEntryRecord,
   loadDebt,
   loadEntry,
-  recordReceivableCollection
+  recordReceivableCollection,
+  updatePaymentEntry
 } from "./entry-service"
 import {
   ADVANCE_ONLY_CARD,
@@ -33,6 +36,7 @@ import {
   advanceSchema,
   habitualAccountSchema,
   monthlyReceivableSchema,
+  paymentEditSchema,
   paymentSchema,
   receivableCollectSchema,
   receivableScheduleSchema
@@ -113,6 +117,18 @@ const COLLECT_FIELDS = [
   "description",
   "create_transaction",
   "account_id"
+] as const
+
+// Editar un pago o un avance (SPEC 42)
+const PAYMENT_EDIT_FIELDS = [
+  "amount",
+  "occurred_on",
+  "occurred_time",
+  "note",
+  "description",
+  "is_extra_payment",
+  "account_id",
+  "category_id"
 ] as const
 
 const ADVANCE_FIELDS = [
@@ -677,12 +693,48 @@ export async function recordAdvance(
   return { ok: true }
 }
 
-// Edita un pago, un avance, una cuota de manejo o un ajuste. En un pago se
-// cambian monto, fecha, nota y si es un abono extra; en un pago o un avance
-// con movimiento, el trigger copia monto, fecha y hora a él. En un ajuste, el
-// formulario
-// pide el saldo real como en "Actualizar saldo" y el ajuste se recalcula
-// sobre el saldo sin él.
+// Edita un pago o un avance con el servicio compartido (SPEC 42): monto,
+// fecha, hora, nota, abono extra, cuenta y, si hay movimiento, descripción y
+// categoría. Una cuenta que el formulario no envía se conserva.
+async function updatePaymentFromForm(
+  entry: LoadedEntry,
+  formData: FormData
+): Promise<PaymentFormState> {
+  const values = readValues(formData, PAYMENT_EDIT_FIELDS)
+  const parsed = paymentEditSchema.safeParse(values)
+
+  if (!parsed.success) {
+    return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
+  }
+
+  const supabase = await createClient()
+  const account_id = formData.has("account_id")
+    ? parsed.data.account_id
+    : await currentPaymentAccount(supabase, entry)
+  const result = await updatePaymentEntry(supabase, entry, {
+    amount: parsed.data.amount,
+    occurred_on: parsed.data.occurred_on,
+    occurred_time: parsed.data.occurred_time,
+    account_id,
+    description: parsed.data.description ?? null,
+    note: parsed.data.note,
+    category_id: parsed.data.category_id,
+    // Un avance no es un abono extra: el formulario no envía la casilla
+    is_extra_payment: entry.kind === "payment" && parsed.data.is_extra_payment
+  })
+
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
+  }
+
+  revalidatePersonalPages()
+  return { ok: true }
+}
+
+// Edita un pago, un avance, una cuota de manejo o un ajuste. El pago y el
+// avance van por updatePaymentFromForm. En un ajuste, el formulario pide el
+// saldo real como en "Actualizar saldo" y el ajuste se recalcula sobre el
+// saldo sin él.
 export async function updateEntry(
   _prevState: PaymentFormState,
   formData: FormData
@@ -700,57 +752,34 @@ export async function updateEntry(
   if (entry.debt.status !== "active") {
     return { error: DEBT_NOT_ACTIVE }
   }
+  if (entry.kind === "payment" || entry.kind === "advance") {
+    return updatePaymentFromForm(entry, formData)
+  }
 
   let update: {
     amount: number
     occurred_on: string
     occurred_time: string | null
     note: string | null
-    is_extra_payment?: boolean
   }
   let values: Record<string, string>
 
-  // La cuota de manejo (SPEC 17) cambia monto, fecha y nota como un avance:
-  // sube el saldo y no lleva cuenta
-  if (entry.kind === "advance" || entry.kind === "fee") {
+  // La cuota de manejo (SPEC 17) cambia monto, fecha y nota: sube el saldo y
+  // no lleva cuenta
+  if (entry.kind === "fee") {
     values = readValues(formData, ADVANCE_FIELDS)
     const parsed = advanceSchema.safeParse(values)
 
     if (!parsed.success) {
       return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
     }
-    // Bajar un avance o una cuota baja el saldo: no puede quedar negativo
+    // Bajar una cuota baja el saldo: no puede quedar negativo
     if (entry.debt.balance - entry.amount + parsed.data.amount < 0) {
       return { fieldErrors: { amount: [NEGATIVE_BALANCE] }, values }
     }
 
     const { amount, occurred_on, occurred_time, note } = parsed.data
     update = { amount, occurred_on, occurred_time, note }
-  } else if (entry.kind === "payment") {
-    const payment = parsePayment(formData)
-    values = payment.values
-
-    if (!payment.parsed.success) {
-      return {
-        fieldErrors: z.flattenError(payment.parsed.error).fieldErrors,
-        values
-      }
-    }
-    // El saldo sin este pago debe cubrir el monto nuevo (salvo en una
-    // mensual indefinida, sin saldo total)
-    if (
-      !entry.debt.openEnded &&
-      payment.parsed.data.amount > entry.debt.balance + entry.amount
-    ) {
-      return { fieldErrors: { amount: [OVER_PAYMENT] }, values }
-    }
-
-    const { amount, occurred_on, occurred_time, note, is_extra_payment } =
-      payment.parsed.data
-    if (entry.debt.kind === "receivable" && is_extra_payment) {
-      return { error: RECEIVABLE_EXTRA, values }
-    }
-    update = { amount, occurred_on, occurred_time, note, is_extra_payment }
   } else {
     values = readValues(formData, ADJUST_FIELDS)
     const parsed = adjustBalanceSchema.safeParse(values)
@@ -791,7 +820,7 @@ export async function updateEntry(
       ...debtPgError(
         error,
         entry.kind === "adjustment" ? "balance" : "amount",
-        entry.kind === "payment" ? OVER_PAYMENT : NEGATIVE_BALANCE,
+        NEGATIVE_BALANCE,
         ENTRY_DEFAULT_ERROR
       ),
       values

@@ -43,6 +43,14 @@ export type DebtEntry = Omit<DebtEntryRow, "amount"> & {
    * enlazado en préstamos y cuentas por cobrar. null = fuera de las cuentas.
    */
   account_name: string | null
+  /**
+   * id de esa cuenta (SPEC 42): prellena la cuenta al editar el pago. null =
+   * fuera de las cuentas
+   */
+  payment_account_id: string | null
+  /** Descripción y categoría del movimiento enlazado; null sin movimiento */
+  description: string | null
+  category_id: string | null
   /** Cuotas que cubre un abono de una mensual (SPEC 39); vacío en el resto */
   allocations: EntryAllocation[]
 }
@@ -115,7 +123,7 @@ export async function getDebtEntries(debtId: string): Promise<DebtEntry[]> {
   const { data, error } = await supabase
     .from("debt_entries")
     .select(
-      "*, account:accounts!debt_entries_account_id_workspace_id_fkey (name), transaction:transactions!debt_entries_transaction_id_fkey (account:accounts!transactions_account_id_workspace_id_fkey (name)), allocations:debt_entry_allocations (period_on, amount)"
+      "*, account:accounts!debt_entries_account_id_workspace_id_fkey (name), transaction:transactions!debt_entries_transaction_id_fkey (account_id, description, category_id, account:accounts!transactions_account_id_workspace_id_fkey (name)), allocations:debt_entry_allocations (period_on, amount)"
     )
     .eq("debt_id", debtId)
     .order("occurred_on", { ascending: false })
@@ -129,6 +137,9 @@ export async function getDebtEntries(debtId: string): Promise<DebtEntry[]> {
     ...row,
     amount: Number(row.amount),
     account_name: account?.name ?? transaction?.account?.name ?? null,
+    payment_account_id: row.account_id ?? transaction?.account_id ?? null,
+    description: transaction?.description ?? null,
+    category_id: transaction?.category_id ?? null,
     allocations: allocations
       .map((allocation) => ({
         period_on: allocation.period_on,

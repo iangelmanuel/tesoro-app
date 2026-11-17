@@ -6,6 +6,7 @@ import { Plus, RefreshCw } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { DetailSection, DetailSheet } from "@/components/dashboard/detail-sheet"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
+import type { Category } from "@/features/categories/queries"
 import { parseAmount } from "@/features/transactions/schemas"
 import { formatCurrency, formatDate } from "@/libs/format"
 import {
@@ -41,6 +42,8 @@ interface DebtSheetProps {
   entries: DebtEntry[]
   /** Cuentas para el movimiento de un pago nuevo; solo en deudas activas */
   accounts?: PaymentAccountOption[]
+  /** Categorías del espacio, para editar el movimiento de un pago */
+  categories?: Category[]
   /** Hoy en America/Bogota, calculado en el servidor */
   today: string
   currency: string
@@ -57,6 +60,7 @@ export function DebtSheet({
   debt,
   entries,
   accounts,
+  categories,
   today,
   currency,
   open,
@@ -228,6 +232,8 @@ export function DebtSheet({
               <DebtEntriesList
                 debt={debt}
                 entries={entries}
+                accounts={accounts}
+                categories={categories}
                 currency={currency}
                 readOnly={!isActive}
               />

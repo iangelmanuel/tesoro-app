@@ -14,14 +14,18 @@ import {
   TextField,
   toast
 } from "@heroui/react"
+import { AccountSelectField } from "@/components/forms/account-select-field"
+import { CategorySelectField } from "@/components/forms/category-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { TimePickerField } from "@/components/forms/time-picker-field"
 import { activeAccountId } from "@/features/accounts/active-account"
+import { selectableAccounts } from "@/features/accounts/components/account-select"
 import {
   type PaymentAccountOption,
   PaymentAccountSection,
   parsePaymentAmount
 } from "@/features/accounts/components/payment-account-section"
+import type { Category } from "@/features/categories/queries"
 import { todayISO } from "@/libs/dates"
 import { recordAdvance, recordPayment, updateEntry } from "../actions"
 import type { DebtPaymentDescriptions } from "../payment-description"
@@ -38,7 +42,9 @@ type PaymentDebt = Pick<Debt, "id" | "kind"> & {
 
 /**
  * Campos de un pago o avance que el diálogo edita. Movimientos (SPEC 26) los
- * arma desde su fila sin cargar el abono completo
+ * arma desde su fila sin cargar el abono completo. Cuenta, descripción y
+ * categoría (SPEC 42) son opcionales: sin ellas el campo no se muestra y el
+ * servidor conserva lo que hay
  */
 export type EditableDebtEntry = Pick<
   DebtEntry,
@@ -50,7 +56,8 @@ export type EditableDebtEntry = Pick<
   | "note"
   | "transaction_id"
   | "is_extra_payment"
->
+> &
+  Partial<Pick<DebtEntry, "payment_account_id" | "description" | "category_id">>
 
 /** Pago del ciclo, abono extra o avance (solo tarjeta) */
 type PaymentMode = "payment" | "extra" | "advance"
@@ -69,8 +76,10 @@ interface PaymentDialogProps {
   debts?: DebtOption[]
   /** Si llega, el diálogo edita este pago o avance */
   entry?: EditableDebtEntry
-  /** Cuentas con saldo para la cuenta del pago; solo al registrar */
+  /** Cuentas con saldo para la cuenta del pago, al registrar y al editar */
   accounts?: PaymentAccountOption[]
+  /** Categorías del espacio, para el movimiento de un pago editado */
+  categories?: Category[]
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
   trigger?: React.ReactNode
   open?: boolean
@@ -87,6 +96,7 @@ export function PaymentDialog({
   debts,
   entry,
   accounts = [],
+  categories = [],
   trigger,
   open: controlledOpen,
   onOpenChange
@@ -130,7 +140,7 @@ export function PaymentDialog({
                 {isFeeEntry
                   ? "Lo que el banco cobró a la tarjeta. No toca tus cuentas."
                   : isEditing && entry.transaction_id
-                    ? "El movimiento enlazado se actualiza con el monto y la fecha."
+                    ? "El movimiento enlazado se actualiza con estos cambios."
                     : kind === "receivable"
                       ? "Lo que te pagaron de esta cuenta por cobrar."
                       : "Lo que pagaste de esta deuda."}
@@ -153,6 +163,7 @@ export function PaymentDialog({
                   debt={debt}
                   entry={entry}
                   accounts={accounts}
+                  categories={categories}
                   onSaved={() => setOpen(false)}
                   onCancel={() => setOpen(false)}
                 />
@@ -256,6 +267,7 @@ interface PaymentFormProps {
   debt: PaymentDebt
   entry?: EditableDebtEntry
   accounts: PaymentAccountOption[]
+  categories?: Category[]
   onSaved: () => void
   onCancel: () => void
 }
@@ -287,6 +299,7 @@ function PaymentForm({
   debt,
   entry,
   accounts,
+  categories = [],
   onSaved,
   onCancel
 }: PaymentFormProps) {
@@ -370,8 +383,39 @@ function PaymentForm({
   const accountName =
     accounts.find((account) => account.id === accountId)?.name ?? null
 
-  // La cuenta se elige al registrar; al editar solo cambian monto, fecha y nota
+  // Al registrar, la cuenta va con el traspaso previo
   const showAccount = !isEditing && (isCard || createTransaction)
+
+  // Al editar (SPEC 42): la cuenta vive en el pago de una tarjeta o en el
+  // movimiento; descripción y categoría solo existen con movimiento. Sin el
+  // dato del abono, el campo no se muestra y se conserva
+  const hasTransaction = Boolean(entry?.transaction_id)
+  const editsPayment =
+    isEditing && (entry.kind === "payment" || entry.kind === "advance")
+  const showEditAccount =
+    editsPayment &&
+    entry.payment_account_id !== undefined &&
+    ((isCard && entry.kind === "payment") || hasTransaction)
+  const showEditDescription =
+    editsPayment && hasTransaction && entry.description !== undefined
+  const showEditCategory =
+    editsPayment && hasTransaction && entry.category_id !== undefined
+  const [editAccountId, setEditAccountId] = useState(
+    () => values?.account_id ?? entry?.payment_account_id ?? ""
+  )
+  const [categoryId, setCategoryId] = useState(
+    () => values?.category_id ?? entry?.category_id ?? ""
+  )
+  // Préstamo: gasto. Cobro de Me deben y avance de tarjeta: ingreso
+  const transactionType: Category["type"] =
+    isReceivable || isAdvance ? "income" : "expense"
+  const categoryOptions = categories.filter(
+    (category) =>
+      category.type === transactionType &&
+      (category.archived_at === null || category.id === entry?.category_id)
+  )
+  const editAccountName =
+    accounts.find((account) => account.id === editAccountId)?.name ?? null
 
   return (
     <form
@@ -507,6 +551,48 @@ function PaymentForm({
         </Checkbox>
       )}
 
+      {showEditDescription && (
+        <TextField
+          name="description"
+          maxLength={120}
+          defaultValue={values?.description ?? entry?.description ?? ""}
+          isInvalid={Boolean(errors?.description)}
+          validationBehavior="aria"
+          className="flex flex-col gap-2"
+        >
+          <Label>Descripción</Label>
+          <Input placeholder={isReceivable ? "Cobro" : "Pago de la cuota"} />
+          <FieldError>{errors?.description?.[0]}</FieldError>
+        </TextField>
+      )}
+
+      {showEditCategory && (
+        <CategorySelectField
+          name="category_id"
+          value={categoryId}
+          onChange={setCategoryId}
+          categories={categoryOptions}
+          workspaceId={workspaceId}
+          type={transactionType}
+          error={errors?.category_id?.[0]}
+        />
+      )}
+
+      {showEditAccount && (
+        <AccountSelectField
+          workspaceId={workspaceId}
+          name="account_id"
+          label={
+            isAdvance || isReceivable ? "Cuenta que recibe" : "Cuenta que paga"
+          }
+          value={editAccountId}
+          onChange={setEditAccountId}
+          accounts={selectableAccounts(accounts, entry?.payment_account_id)}
+          allowNone
+          error={errors?.account_id?.[0]}
+        />
+      )}
+
       {/* Solo con movimiento: una tarjeta o un avance no crean uno */}
       {!isEditing && !isCard && createTransaction && (
         <TextField
@@ -551,7 +637,14 @@ function PaymentForm({
         </p>
       )}
 
-      {(isEditing || !isCard) && isExtra && (
+      {isCard && showEditAccount && (
+        <p className="rounded-lg bg-default p-3 text-sm text-muted">
+          {cardEffect(mode, editAccountName)}
+        </p>
+      )}
+
+      {/* Con cuenta, el texto de la tarjeta ya explica el abono */}
+      {isExtra && (!isCard || (isEditing && !showEditAccount)) && (
         <p className="rounded-lg bg-default p-3 text-sm text-muted">
           Baja el saldo de la deuda. {EXTRA_EFFECT}
         </p>

@@ -18,6 +18,7 @@ import {
 } from "@/components/dashboard/surface"
 import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
+import type { Category } from "@/features/categories/queries"
 import { formatDate, formatShortDate } from "@/libs/format"
 import { hasZeroBalance, isReceivableOverdue } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
@@ -41,6 +42,8 @@ interface ReceivableCardProps {
   entries: DebtEntry[]
   /** Cuentas activas, para el movimiento de un abono */
   accounts: PaymentAccountOption[]
+  /** Categorías del espacio, para editar el movimiento de un abono */
+  categories: Category[]
   /** Hoy en America/Bogota, calculado en el servidor */
   today: string
   currency: string
@@ -50,6 +53,7 @@ export function ReceivableCard({
   receivable,
   entries,
   accounts,
+  categories,
   today,
   currency
 }: ReceivableCardProps) {
@@ -188,6 +192,7 @@ export function ReceivableCard({
           debt={receivable}
           entries={entries}
           accounts={accounts}
+          categories={categories}
           today={today}
           currency={currency}
           open={detailOpen}

@@ -6,6 +6,8 @@ import { Link2, Pencil, Receipt, Trash2 } from "lucide-react"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import { RowActions } from "@/components/dashboard/row-actions"
+import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
+import type { Category } from "@/features/categories/queries"
 import { formatCurrency, formatDate, formatTime } from "@/libs/format"
 import { deleteEntry } from "../actions"
 import type { Debt, DebtEntry } from "../queries"
@@ -15,6 +17,10 @@ import { PaymentDialog } from "./payment-dialog"
 interface DebtEntriesListProps {
   debt: Pick<Debt, "id" | "kind" | "balance">
   entries: DebtEntry[]
+  /** Cuentas activas, para cambiar la cuenta de un pago (SPEC 42) */
+  accounts?: PaymentAccountOption[]
+  /** Categorías del espacio, para el movimiento de un pago (SPEC 42) */
+  categories?: Category[]
   currency: string
   /** Deudas pagadas, cobradas o archivadas: sin editar ni eliminar */
   readOnly?: boolean
@@ -23,6 +29,8 @@ interface DebtEntriesListProps {
 export function DebtEntriesList({
   debt,
   entries,
+  accounts,
+  categories,
   currency,
   readOnly
 }: DebtEntriesListProps) {
@@ -42,6 +50,8 @@ export function DebtEntriesList({
           key={entry.id}
           debt={debt}
           entry={entry}
+          accounts={accounts}
+          categories={categories}
           currency={currency}
           readOnly={readOnly}
         />
@@ -53,11 +63,15 @@ export function DebtEntriesList({
 function EntryRow({
   debt,
   entry,
+  accounts,
+  categories,
   currency,
   readOnly
 }: {
   debt: Pick<Debt, "id" | "kind" | "balance">
   entry: DebtEntry
+  accounts?: PaymentAccountOption[]
+  categories?: Category[]
   currency: string
   readOnly?: boolean
 }) {
@@ -167,6 +181,8 @@ function EntryRow({
               workspaceId={entry.workspace_id}
               debt={debt}
               entry={entry}
+              accounts={accounts}
+              categories={categories}
               open={editing}
               onOpenChange={setEditing}
             />

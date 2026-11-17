@@ -176,6 +176,26 @@ export function validatePaymentChange(
   return null
 }
 
+/**
+ * Cuenta actual de un pago o avance: la del abono en una tarjeta o la de su
+ * movimiento. null = fuera de las cuentas. Sirve para conservarla cuando un
+ * formulario no la envía.
+ */
+export async function currentPaymentAccount(
+  supabase: AppSupabase,
+  entry: LoadedEntry
+): Promise<string | null> {
+  if (!entry.transaction_id) {
+    return entry.account_id
+  }
+  const { data } = await supabase
+    .from("transactions")
+    .select("account_id")
+    .eq("id", entry.transaction_id)
+    .maybeSingle()
+  return data?.account_id ?? null
+}
+
 type TransactionPatch = Partial<
   Pick<
     Database["public"]["Tables"]["transactions"]["Update"],

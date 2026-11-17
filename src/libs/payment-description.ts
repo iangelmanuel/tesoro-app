@@ -1,6 +1,7 @@
 // Descripción prellenada de un pago (SPEC 41): `{Verbo} {nombre} · {periodo}`.
 // El periodo sale de la frecuencia de la cuota que se paga, no de hoy: un pago
-// tardío de octubre dice "octubre"
+// tardío de octubre dice "octubre". Sin año: la fecha del movimiento ya lo dice;
+// el mes basta para distinguir cada cuota
 
 export type PaymentVerb = "Pago" | "Ingreso" | "Cobro"
 
@@ -9,6 +10,7 @@ export type PaymentPeriod =
   | { kind: "month"; on: string }
   /** Cuota quincenal: día 1–15 es la 1.ª quincena, 16 en adelante la 2.ª */
   | { kind: "biweekly"; on: string }
+  /** Cuota anual: se nombra por su mes */
   | { kind: "year"; on: string }
   /** Ingreso semanal, diario o cada N días: la fecha de la cuota */
   | { kind: "day"; on: string }
@@ -46,54 +48,46 @@ function monthName(value: string, short = false) {
   return short ? name.slice(0, 3) : name
 }
 
+function dayLabel(value: string) {
+  return `${parts(value).day} ${monthName(value, true)}`
+}
+
 function periodLabel(period: PaymentPeriod): string | null {
   switch (period.kind) {
-    case "month": {
-      return `${monthName(period.on)} ${parts(period.on).year}`
+    // Una anual también se nombra por su mes
+    case "month":
+    case "year": {
+      return monthName(period.on)
     }
     case "biweekly": {
-      const { year, day } = parts(period.on)
-      const half = day <= 15 ? "1.ª" : "2.ª"
-      return `${half} quincena de ${monthName(period.on)} ${year}`
-    }
-    case "year": {
-      return String(parts(period.on).year)
+      const half = parts(period.on).day <= 15 ? "1.ª" : "2.ª"
+      return `${half} quincena de ${monthName(period.on)}`
     }
     case "day": {
-      const { year, day } = parts(period.on)
-      return `${day} ${monthName(period.on, true)} ${year}`
+      return dayLabel(period.on)
     }
     case "range": {
       const from = parts(period.from)
       const to = parts(period.to)
-      if (period.unit === "year") {
-        return from.year === to.year
-          ? String(from.year)
-          : `${from.year} a ${to.year}`
-      }
+      const sameMonth =
+        from.year === to.year && from.monthIndex === to.monthIndex
       if (period.unit === "day") {
         if (period.from === period.to) {
-          return periodLabel({ kind: "day", on: period.from })
+          return dayLabel(period.from)
         }
-        // `1 a 29 nov 2026`, `29 nov a 6 dic 2026` o, si cruza de año,
-        // `29 dic 2026 a 5 ene 2027`
-        if (from.year !== to.year) {
-          return `${periodLabel({ kind: "day", on: period.from })} a ${periodLabel({ kind: "day", on: period.to })}`
-        }
-        const start =
-          from.monthIndex === to.monthIndex
-            ? String(from.day)
-            : `${from.day} ${monthName(period.from, true)}`
-        return `${start} a ${periodLabel({ kind: "day", on: period.to })}`
+        // `1 a 29 nov` o `29 nov a 6 dic`
+        const start = sameMonth ? String(from.day) : dayLabel(period.from)
+        return `${start} a ${dayLabel(period.to)}`
       }
-      if (from.year === to.year && from.monthIndex === to.monthIndex) {
-        return periodLabel({ kind: "month", on: period.from })
+      // Meses o años: `septiembre a noviembre`, `noviembre a enero`
+      // Anuales de varios años caen en el mismo mes: `junio`
+      if (
+        sameMonth ||
+        (period.unit === "year" && from.monthIndex === to.monthIndex)
+      ) {
+        return monthName(period.from)
       }
-      if (from.year === to.year) {
-        return `${monthName(period.from)} a ${monthName(period.to)} ${to.year}`
-      }
-      // Cruza de año: meses cortos con su año (`nov 2026 a ene 2027`)
-      return `${monthName(period.from, true)} ${from.year} a ${monthName(period.to, true)} ${to.year}`
+      return `${monthName(period.from)} a ${monthName(period.to)}`
     }
     case "none": {
       return null

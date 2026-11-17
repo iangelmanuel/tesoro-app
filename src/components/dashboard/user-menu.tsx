@@ -84,7 +84,9 @@ export function UserMenu({ user }: { user: DashboardUser }) {
       </Dropdown.Trigger>
       <Dropdown.Popover
         placement="top start"
-        className="min-w-60"
+        // Mismo ancho que el botón del pie del aside: se lee como parte de él
+        // (--trigger-width lo pone el Popover de React Aria)
+        className="w-(--trigger-width) min-w-0"
       >
         <div className="flex items-center gap-2 px-3 pt-3 pb-2">
           <UserAvatar user={user} />

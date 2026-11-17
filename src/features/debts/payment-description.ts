@@ -4,7 +4,7 @@ import { type DebtCalcInput, nextPayment } from "./calculations"
 
 /** Descripción prellenada del movimiento según el tipo de pago (SPEC 41) */
 export interface DebtPaymentDescriptions {
-  /** Pago del ciclo: "Pago {nombre} · noviembre 2026" */
+  /** Pago del ciclo: "Pago {nombre} · noviembre" */
   payment: string
   /** Abono extra, sin cuota: "Pago {nombre}" */
   extra: string

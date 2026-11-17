@@ -64,7 +64,7 @@ export const HISTORY_PAGE_SIZE = 12
 
 /**
  * "Pago {nombre} · {periodo}" de la cuota que se paga, no de hoy (SPEC 41):
- * mensual "noviembre 2026", anual "2026"
+ * el mes de la cuota ("noviembre"), también en los anuales
  */
 export function occurrenceDescription(payment: {
   name: string

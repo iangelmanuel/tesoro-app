@@ -251,7 +251,7 @@ function incomePeriod(
 
 /**
  * Descripción prellenada al recibir un ingreso fijo (SPEC 41):
- * "Ingreso Salario · 1.ª quincena de noviembre 2026". Con `dueOn` (botón
+ * "Ingreso Salario · 1.ª quincena de noviembre". Con `dueOn` (botón
  * Recibir) cubre las ocurrencias abiertas hasta esa fila; sin él (tab
  * Ingreso), la más antigua abierta, que es la que recibe el monto esperado
  */

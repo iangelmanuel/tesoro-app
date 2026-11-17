@@ -91,6 +91,7 @@ async function QuickActionsLoader() {
       id: debt.id,
       kind: debt.kind,
       name: debt.name,
+      account_id: debt.account_id,
       descriptions: debtPaymentDescriptions(debt, today)
     })),
     receivables,

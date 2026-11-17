@@ -31,6 +31,7 @@ import {
   type ReceivableSchedule,
   adjustBalanceSchema,
   advanceSchema,
+  habitualAccountSchema,
   monthlyReceivableSchema,
   paymentSchema,
   receivableCollectSchema,
@@ -180,13 +181,46 @@ function readDebtForm(
   const result = (
     monthly ? monthlyReceivableSchema : DEBT_SCHEMAS[kind]
   ).safeParse(values)
-  const parsed = result.success
-    ? ({ success: true, data: result.data } as const)
-    : ({
-        success: false,
-        fieldErrors: z.flattenError(result.error as z.ZodError).fieldErrors
-      } as const)
-  return { values, parsed }
+  const accountValue = readValues(formData, ["account_id"]).account_id
+  const account = habitualAccountSchema.safeParse(accountValue)
+  const parsed =
+    result.success && account.success
+      ? ({
+          success: true,
+          data: { ...result.data, account_id: account.data }
+        } as const)
+      : ({
+          success: false,
+          fieldErrors: {
+            ...(result.success
+              ? {}
+              : z.flattenError(result.error as z.ZodError).fieldErrors),
+            ...(account.success
+              ? {}
+              : { account_id: z.flattenError(account.error).formErrors })
+          }
+        } as const)
+  return { values: { ...values, account_id: accountValue }, parsed }
+}
+
+// La cuenta habitual, si llega, debe ser del espacio y estar activa (SPEC 41)
+async function validateHabitualAccount(
+  workspaceId: string,
+  accountId: string | null
+): Promise<string | null> {
+  if (accountId === null) return null
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from("accounts")
+    .select("archived_at")
+    .eq("id", accountId)
+    .eq("workspace_id", workspaceId)
+    .maybeSingle()
+  if (!data) return "Elige una cuenta de tu espacio"
+  if (data.archived_at !== null) {
+    return "Esta cuenta está archivada. Elige otra"
+  }
+  return null
 }
 
 export async function createDebt(
@@ -218,6 +252,14 @@ export async function createDebt(
   }
 
   const workspace = await getPersonalWorkspace()
+  const accountError = await validateHabitualAccount(
+    workspace.id,
+    parsed.data.account_id
+  )
+  if (accountError) {
+    return { fieldErrors: { account_id: [accountError] }, values }
+  }
+
   const supabase = await createClient()
   const { error } = await supabase.from("debts").insert({
     ...parsed.data,
@@ -262,6 +304,14 @@ export async function updateDebt(
 
   if (!parsed.success) {
     return { fieldErrors: parsed.fieldErrors, values }
+  }
+
+  const accountError = await validateHabitualAccount(
+    debt.workspace_id,
+    parsed.data.account_id
+  )
+  if (accountError) {
+    return { fieldErrors: { account_id: [accountError] }, values }
   }
 
   // Cobro mensual: los cobros ya hechos deben seguir dentro de las cuotas

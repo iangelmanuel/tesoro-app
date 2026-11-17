@@ -16,6 +16,7 @@ import {
 } from "@heroui/react"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { TimePickerField } from "@/components/forms/time-picker-field"
+import { activeAccountId } from "@/features/accounts/active-account"
 import {
   type PaymentAccountOption,
   PaymentAccountSection,
@@ -29,6 +30,8 @@ import type { PaymentFormState } from "../types"
 import { amountInput } from "./field"
 
 type PaymentDebt = Pick<Debt, "id" | "kind"> & {
+  /** Cuenta habitual (SPEC 41): se prellena al registrar si sigue activa */
+  account_id?: string | null
   /** Descripción prellenada del movimiento (SPEC 41); sin ella, vacía */
   descriptions?: DebtPaymentDescriptions
 }
@@ -53,7 +56,7 @@ export type EditableDebtEntry = Pick<
 type PaymentMode = "payment" | "extra" | "advance"
 
 /** Deuda que se puede elegir en el diálogo (acceso rápido del header) */
-export type DebtOption = Pick<Debt, "id" | "kind" | "name"> & {
+export type DebtOption = Pick<Debt, "id" | "kind" | "name" | "account_id"> & {
   descriptions: DebtPaymentDescriptions
 }
 
@@ -341,7 +344,11 @@ function PaymentForm({
   const [createTransaction, setCreateTransaction] = useState(
     () => !values || values.create_transaction === "on"
   )
-  const [accountId, setAccountId] = useState("")
+  // Cuenta habitual de la deuda al registrar, si sigue activa (SPEC 41)
+  const defaultAccountId = isEditing
+    ? ""
+    : (activeAccountId(accounts, debt.account_id) ?? "")
+  const [accountId, setAccountId] = useState(defaultAccountId)
   // Descripción del movimiento (SPEC 41): se prellena según Pago o Abono y
   // se respeta lo que el usuario escriba
   const [description, setDescription] = useState(
@@ -533,6 +540,7 @@ function PaymentForm({
             isAdvance || isReceivable ? "Cuenta que recibe" : "Cuenta que paga"
           }
           direction={isAdvance || isReceivable ? "in" : "out"}
+          defaultAccountId={defaultAccountId}
           onAccountChange={setAccountId}
         />
       )}

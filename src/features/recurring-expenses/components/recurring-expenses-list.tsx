@@ -51,6 +51,7 @@ export function RecurringExpensesList({
       <RecurringExpensesTable
         expenses={expenses}
         categories={categories}
+        accounts={accounts}
         currency={currency}
         onOpen={(id) => {
           setSelectedId(id)
@@ -75,9 +76,10 @@ export function RecurringExpensesList({
 function RecurringExpensesTable({
   expenses,
   categories,
+  accounts,
   currency,
   onOpen
-}: Omit<RecurringExpensesListProps, "accounts"> & {
+}: RecurringExpensesListProps & {
   onOpen: (id: string) => void
 }) {
   return (
@@ -159,6 +161,7 @@ function RecurringExpensesTable({
                     <ExpenseActions
                       expense={expense}
                       categories={categories}
+                      accounts={accounts}
                     />
                   </Table.Cell>
                 </Table.Row>
@@ -175,10 +178,12 @@ function RecurringExpensesTable({
 // porque el menú de escritorio no puede alojar sus triggers
 function ExpenseActions({
   expense,
-  categories
+  categories,
+  accounts
 }: {
   expense: RecurringExpense
   categories: Category[]
+  accounts: PaymentAccountOption[]
 }) {
   const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -217,6 +222,7 @@ function ExpenseActions({
       <RecurringExpenseDialog
         workspaceId={expense.workspace_id}
         categories={categories}
+        accounts={accounts}
         expense={expense}
         open={editing}
         onOpenChange={setEditing}

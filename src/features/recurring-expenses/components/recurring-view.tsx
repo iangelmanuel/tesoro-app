@@ -52,6 +52,7 @@ export async function RecurringView({
     <RecurringExpenseDialog
       workspaceId={workspace.id}
       categories={categories}
+      accounts={accounts}
       trigger={
         <Button data-tour="recurring-create">
           <Plus />

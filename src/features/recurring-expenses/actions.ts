@@ -20,11 +20,14 @@ const NOT_FOUND = "No se encontró el gasto fijo"
 const DEFAULT_ERROR = "No se pudo guardar el gasto fijo. Intenta de nuevo"
 const INVALID_CATEGORY = "Elige una categoría de gasto"
 const ARCHIVED_CATEGORY = "Esta categoría está archivada. Elige otra"
+const INVALID_ACCOUNT = "Elige una cuenta de tu espacio"
+const ARCHIVED_ACCOUNT = "Esta cuenta está archivada. Elige otra"
 
 const FIELDS = [
   "name",
   "amount",
   "category_id",
+  "account_id",
   "frequency",
   "day_of_month",
   "month_of_year",
@@ -38,8 +41,8 @@ const idSchema = z.uuid()
 const PG_ERROR_MESSAGES: Record<string, RecurringExpenseFormState> = {
   // check_expense_category y los check de la tabla
   "23514": { fieldErrors: { category_id: [INVALID_CATEGORY] } },
-  // FK de category_id
-  "23503": { fieldErrors: { category_id: [INVALID_CATEGORY] } },
+  // FK de category_id o account_id
+  "23503": { error: DEFAULT_ERROR },
   // RLS
   "42501": { error: "No tienes permiso para modificar este gasto fijo" }
 }
@@ -73,20 +76,43 @@ function parseForm(formData: FormData) {
 }
 
 // La categoría debe existir, ser visible para el usuario (RLS), ser de gasto
-// y estar activa
-async function validateCategory(categoryId: string): Promise<string | null> {
+// y estar activa. La cuenta habitual, si llega, debe ser del espacio y estar
+// activa (SPEC 41)
+async function validateReferences(
+  workspaceId: string,
+  categoryId: string,
+  accountId: string | null
+): Promise<RecurringExpenseFormState["fieldErrors"] | null> {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from("categories")
-    .select("type, archived_at")
-    .eq("id", categoryId)
-    .maybeSingle()
+  const [{ data: category }, account] = await Promise.all([
+    supabase
+      .from("categories")
+      .select("type, archived_at")
+      .eq("id", categoryId)
+      .maybeSingle(),
+    accountId === null
+      ? Promise.resolve(null)
+      : supabase
+          .from("accounts")
+          .select("archived_at")
+          .eq("id", accountId)
+          .eq("workspace_id", workspaceId)
+          .maybeSingle()
+  ])
 
-  if (!data || data.type !== "expense") {
-    return INVALID_CATEGORY
+  if (!category || category.type !== "expense") {
+    return { category_id: [INVALID_CATEGORY] }
   }
-  if (data.archived_at !== null) {
-    return ARCHIVED_CATEGORY
+  if (category.archived_at !== null) {
+    return { category_id: [ARCHIVED_CATEGORY] }
+  }
+  if (account !== null) {
+    if (!account.data) {
+      return { account_id: [INVALID_ACCOUNT] }
+    }
+    if (account.data.archived_at !== null) {
+      return { account_id: [ARCHIVED_ACCOUNT] }
+    }
   }
   return null
 }
@@ -101,12 +127,16 @@ export async function createRecurringExpense(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
   }
 
-  const categoryError = await validateCategory(parsed.data.category_id)
-  if (categoryError) {
-    return { fieldErrors: { category_id: [categoryError] }, values }
+  const workspace = await getPersonalWorkspace()
+  const referenceErrors = await validateReferences(
+    workspace.id,
+    parsed.data.category_id,
+    parsed.data.account_id
+  )
+  if (referenceErrors) {
+    return { fieldErrors: referenceErrors, values }
   }
 
-  const workspace = await getPersonalWorkspace()
   const supabase = await createClient()
   const { error } = await supabase
     .from("recurring_expenses")
@@ -134,12 +164,16 @@ export async function updateRecurringExpense(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
   }
 
-  const categoryError = await validateCategory(parsed.data.category_id)
-  if (categoryError) {
-    return { fieldErrors: { category_id: [categoryError] }, values }
+  const workspace = await getPersonalWorkspace()
+  const referenceErrors = await validateReferences(
+    workspace.id,
+    parsed.data.category_id,
+    parsed.data.account_id
+  )
+  if (referenceErrors) {
+    return { fieldErrors: referenceErrors, values }
   }
 
-  const workspace = await getPersonalWorkspace()
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("recurring_expenses")

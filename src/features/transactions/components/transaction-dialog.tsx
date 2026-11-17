@@ -21,6 +21,7 @@ import { AccountSelectField } from "@/components/forms/account-select-field"
 import { CategorySelectField } from "@/components/forms/category-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { TimePickerField } from "@/components/forms/time-picker-field"
+import { activeAccountId } from "@/features/accounts/active-account"
 import { selectableAccounts } from "@/features/accounts/components/account-select"
 import {
   type PaymentAccountOption,
@@ -939,6 +940,7 @@ function RecurringPaymentPanel({
           initialValues={{
             amount: selected.amount,
             category_id: selected.category.id,
+            account_id: activeAccountId(accounts, selected.accountId),
             description: occurrenceDescription(selected)
           }}
           recurring={{

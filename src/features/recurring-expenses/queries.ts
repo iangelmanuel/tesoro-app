@@ -31,6 +31,8 @@ export interface UpcomingPayment {
   name: string
   /** Frecuencia del gasto fijo: da el periodo de la descripción (SPEC 41) */
   frequency: RecurringFrequency
+  /** Cuenta habitual del gasto fijo; null sin ella (SPEC 41) */
+  accountId: string | null
   amount: number
   category: CategorySummary
   dueOn: string
@@ -150,7 +152,7 @@ async function toUpcomingPayments(
   ]
   const { data: expenses, error: expensesError } = await supabase
     .from("recurring_expenses")
-    .select("id, frequency")
+    .select("id, frequency, account_id")
     .in("id", expenseIds)
 
   if (expensesError) {
@@ -200,6 +202,7 @@ async function toUpcomingPayments(
       recurringExpenseId: row.recurring_expense_id,
       name: row.name,
       frequency: expense.frequency as RecurringFrequency,
+      accountId: expense.account_id,
       amount: Number(row.amount),
       category,
       dueOn: row.due_on,

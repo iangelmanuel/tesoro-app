@@ -110,6 +110,13 @@ const paymentDescriptionField = z
   .transform((value) => value || null)
   .optional()
 
+// Cuenta habitual de la deuda (SPEC 41): prellena la cuenta al pagar. Vacía
+// = ninguna. Va aparte de los esquemas por tipo: aplica a todos
+export const habitualAccountSchema = z.preprocess(
+  emptyToNull,
+  z.uuid({ error: "Elige una cuenta válida" }).nullable()
+)
+
 const pastDateField = z.iso
   .date({ error: "Elige una fecha válida" })
   .refine((value) => value <= todayISO(), {

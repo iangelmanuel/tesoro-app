@@ -45,8 +45,9 @@ export type EditableTransaction = Pick<
 /**
  * Abono enlazado a un movimiento: pago de préstamo o cobro de una cuenta por
  * cobrar (SPEC 26). Es la fuente de verdad: el movimiento se edita y elimina
- * desde el diálogo del pago. Trae lo que ese diálogo prellena (la nota del
- * abono no se sincroniza con la del movimiento).
+ * desde el diálogo del pago. Trae lo que ese diálogo prellena del abono; la
+ * cuenta, la descripción y la categoría salen del movimiento. Al guardar, la
+ * nota del abono pasa también al movimiento (SPEC 42).
  */
 export type LinkedDebtEntry = Pick<
   DebtEntry,

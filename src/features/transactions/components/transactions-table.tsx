@@ -28,7 +28,10 @@ import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { deleteEntry } from "@/features/debts/actions"
-import { PaymentDialog } from "@/features/debts/components/payment-dialog"
+import {
+  type EditableDebtEntry,
+  PaymentDialog
+} from "@/features/debts/components/payment-dialog"
 import { deleteContribution } from "@/features/goals/actions"
 import { ContributionDialog } from "@/features/goals/components/contribution-dialog"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
@@ -332,6 +335,7 @@ export function TransactionsTable({
                         entry={row}
                         reorder={reorderFor(index)}
                         account={accountsById.get(row.account_id)}
+                        accounts={accounts}
                         currency={currency}
                       />
                     )
@@ -414,7 +418,16 @@ export function TransactionsTable({
                         {row.debt_entry ? (
                           <LinkedPaymentActions
                             label={transaction.description}
-                            entry={row.debt_entry}
+                            entry={{
+                              ...row.debt_entry,
+                              // El movimiento trae lo que el diálogo edita
+                              // además del abono (SPEC 42)
+                              payment_account_id: transaction.account_id,
+                              description: transaction.description,
+                              category_id: transaction.category_id
+                            }}
+                            accounts={accounts}
+                            categories={categories}
                           />
                         ) : (
                           <EntryActions
@@ -669,6 +682,7 @@ function AccountMovementRow({
   showCounterparty,
   entry,
   account,
+  accounts,
   currency,
   reorder
 }: {
@@ -676,6 +690,8 @@ function AccountMovementRow({
   showCounterparty: boolean
   entry: AccountMovementEntry
   account: PaymentAccountOption | undefined
+  /** Cuentas para cambiar la cuenta de un pago de tarjeta (SPEC 42) */
+  accounts: PaymentAccountOption[]
   currency: string
   reorder: Reorder | undefined
 }) {
@@ -749,8 +765,13 @@ function AccountMovementRow({
                   occurred_time: entry.occurred_time,
                   note: entry.note,
                   transaction_id: null,
-                  is_extra_payment: entry.is_extra_payment
+                  is_extra_payment: entry.is_extra_payment,
+                  // Solo el pago de tarjeta lleva cuenta propia (SPEC 42)
+                  ...(entry.kind === "debt_payment" && {
+                    payment_account_id: entry.account_id
+                  })
                 }}
+                accounts={accounts}
                 open={dialog.open}
                 onOpenChange={dialog.onOpenChange}
               />
@@ -768,10 +789,18 @@ function AccountMovementRow({
 // borra los dos juntos.
 function LinkedPaymentActions({
   label,
-  entry
+  entry,
+  accounts,
+  categories
 }: {
   label: string
-  entry: LinkedDebtEntry
+  entry: LinkedDebtEntry &
+    Pick<
+      EditableDebtEntry,
+      "payment_account_id" | "description" | "category_id"
+    >
+  accounts: PaymentAccountOption[]
+  categories: Category[]
 }) {
   const noun =
     entry.kind === "advance"
@@ -793,6 +822,8 @@ function LinkedPaymentActions({
           workspaceId={entry.workspace_id}
           debt={{ id: entry.debt_id, kind: entry.debt_kind }}
           entry={entry}
+          accounts={accounts}
+          categories={categories}
           open={dialog.open}
           onOpenChange={dialog.onOpenChange}
         />

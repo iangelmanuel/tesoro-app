@@ -21,12 +21,18 @@ import type {
   ScoreResult
 } from "@/features/score/types"
 import { todayISO } from "@/libs/dates"
+import type { McpContext } from "../../types"
 import { toolError, toolResult } from "../result"
-import { defineTool, resolveWorkspace, workspaceIdSchema } from "../shared"
+import {
+  type McpWorkspace,
+  defineTool,
+  resolveWorkspace,
+  workspaceIdSchema
+} from "../shared"
 
 const input = z.object({ workspace_id: workspaceIdSchema })
 
-function toFactor(
+export function toFactor(
   factor: FactorResult<string>,
   labels: Record<string, string>
 ) {
@@ -40,7 +46,10 @@ function toFactor(
     : { ...base, value: factor.value, points: Math.round(factor.points) }
 }
 
-function toScore(result: ScoreResult<string>, labels: Record<string, string>) {
+export function toScore(
+  result: ScoreResult<string>,
+  labels: Record<string, string>
+) {
   if ("insufficient" in result) {
     return {
       month: result.month,
@@ -57,7 +66,7 @@ function toScore(result: ScoreResult<string>, labels: Record<string, string>) {
   }
 }
 
-function toRecommendation(item: Recommendation<string>) {
+export function toRecommendation(item: Recommendation<string>) {
   return {
     rule: item.rule,
     severity: item.severity,
@@ -65,6 +74,38 @@ function toRecommendation(item: Recommendation<string>) {
     title: item.title,
     evidence: item.evidence
   }
+}
+
+/**
+ * Score, historia y recomendaciones activas del espacio: el mismo cálculo
+ * que las páginas de Recomendaciones (SPEC 07 y 11)
+ */
+export async function loadScore(ctx: McpContext, workspace: McpWorkspace) {
+  const today = todayISO()
+  const month = today.slice(0, 7)
+
+  let history: ScoreResult<string>[]
+  let recommendations: Recommendation<string>[]
+  let labels: Record<string, string>
+
+  if (workspace.type === "business") {
+    const score = await getBusinessScoreHistory(workspace.id, today)
+    history = score.history
+    recommendations = await getBusinessRecommendations(
+      { id: workspace.id, type: workspace.type, currency: ctx.currency },
+      score.inputs
+    )
+    labels = BUSINESS_FACTOR_LABELS
+  } else {
+    const score = await getScoreHistory(workspace.id, today)
+    history = score.history
+    recommendations = await getRecommendations(workspace.id, score.inputs)
+    labels = FACTOR_LABELS
+  }
+
+  const dismissed = await getDismissedRecommendations(workspace.id, month)
+  const { active } = splitDismissed(recommendations, dismissed)
+  return { month, history, active, labels }
 }
 
 export const getScore = defineTool({
@@ -81,31 +122,7 @@ export const getScore = defineTool({
       return toolError(workspace.error)
     }
 
-    const today = todayISO()
-    const month = today.slice(0, 7)
-
-    // Mismo cálculo que las páginas de Recomendaciones (SPEC 07 y 11)
-    let history: ScoreResult<string>[]
-    let recommendations: Recommendation<string>[]
-    let labels: Record<string, string>
-
-    if (workspace.type === "business") {
-      const score = await getBusinessScoreHistory(workspace.id, today)
-      history = score.history
-      recommendations = await getBusinessRecommendations(
-        { id: workspace.id, type: workspace.type, currency: ctx.currency },
-        score.inputs
-      )
-      labels = BUSINESS_FACTOR_LABELS
-    } else {
-      const score = await getScoreHistory(workspace.id, today)
-      history = score.history
-      recommendations = await getRecommendations(workspace.id, score.inputs)
-      labels = FACTOR_LABELS
-    }
-
-    const dismissed = await getDismissedRecommendations(workspace.id, month)
-    const { active } = splitDismissed(recommendations, dismissed)
+    const { month, history, active, labels } = await loadScore(ctx, workspace)
     const current = history.at(-1)
     const currentScore = current ? toScore(current, labels) : null
 

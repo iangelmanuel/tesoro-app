@@ -1,6 +1,10 @@
 import { z } from "zod"
 import type { ServiceFailure } from "@/libs/service-result"
-import { type SnapshotTable, commitOperation } from "../../operations"
+import {
+  type RowChange,
+  type SnapshotTable,
+  commitOperation
+} from "../../operations"
 import type { McpContext } from "../../types"
 import { toolError } from "../result"
 import type { McpWorkspace, MissingField } from "../shared"
@@ -139,7 +143,8 @@ export async function commitEntity(
     table,
     summary,
     before,
-    after
+    after,
+    related = []
   }: {
     workspace: McpWorkspace
     tool: string
@@ -147,13 +152,15 @@ export async function commitEntity(
     summary: string
     before: object | null
     after: { id: string }
+    /** Otras filas que tocó la escritura; undo las revierte después */
+    related?: RowChange[]
   }
 ) {
   const operationId = await commitOperation(ctx, {
     workspaceId: workspace.id,
     tool,
     summary,
-    changes: [{ table, rowId: after.id, before, after }]
+    changes: [...related, { table, rowId: after.id, before, after }]
   })
   return writeResult(ctx, { operationId, summary, ids: [after.id] })
 }

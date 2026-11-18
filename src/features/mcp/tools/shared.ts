@@ -1,6 +1,7 @@
 import { z } from "zod"
 import type { WorkspaceType } from "@/features/workspaces/queries"
 import type { McpContext, McpTool } from "../types"
+import { toolResult } from "./result"
 
 // Piezas comunes de las tools (SPEC 34): esquemas de entrada, el espacio y
 // el paginado por cursor.
@@ -144,3 +145,40 @@ export function afterCursorFilter({ d, p, c, i }: LedgerCursor) {
 
 export const INVALID_CURSOR =
   "El cursor no es válido. Repite la consulta sin cursor."
+
+// Respuesta guiada de datos faltantes (SPEC 43). Si falta un dato
+// obligatorio o es ambiguo, la tool no escribe y devuelve las preguntas para
+// el usuario, cada una con sus opciones. No es un error: el agente pregunta
+// y vuelve a llamar.
+
+export interface MissingField {
+  field: string
+  /** Índice de la fila (desde 0), si la tool recibe una lista */
+  row?: number
+  question: string
+  options?: { id: string; label: string }[]
+}
+
+export interface NeedsInput {
+  status: "needs_input"
+  missing: MissingField[]
+}
+
+/** Frase para las descripciones de las tools de escritura */
+export const NEEDS_INPUT_HINT =
+  "Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos."
+
+export function needsInput(missing: MissingField[]) {
+  const data: NeedsInput = { status: "needs_input", missing }
+  const questions = missing
+    .map((item) =>
+      item.row === undefined
+        ? `- ${item.question}`
+        : `- Fila ${item.row}: ${item.question}`
+    )
+    .join("\n")
+  return toolResult(
+    `No se guardó nada. Faltan datos; pregúntale al usuario:\n${questions}`,
+    { ...data }
+  )
+}

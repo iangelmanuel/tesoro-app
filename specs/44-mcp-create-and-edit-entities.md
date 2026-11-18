@@ -16,7 +16,7 @@ Es el cuarto de cuatro specs del mismo pedido (SPEC 41 a 44).
 **Entra:**
 
 - **Tools de escritura**, una por entidad y acción, en `src/features/mcp/tools/write/`:
-  - `create_account` / `update_account`: nombre, tipo, saldo inicial y su fecha (SPEC 21), moneda;
+  - `create_account` / `update_account`: nombre, tipo, saldo inicial y su fecha (SPEC 21), icono y color. La moneda es la del perfil: las cuentas no tienen moneda propia;
   - `create_debt` / `update_debt`: tarjeta o préstamo con los campos de `debt-dialog.tsx` (cupo, corte, pago, tasa, cuota, plazo, cuota de manejo) y cuenta habitual (SPEC 41);
   - `create_receivable` / `update_receivable`: Me deben, único o mensual (SPEC 28);
   - `create_recurring_expense` / `update_recurring_expense`: con frecuencia, día, categoría y cuenta habitual;
@@ -29,8 +29,8 @@ Es el cuarto de cuatro specs del mismo pedido (SPEC 41 a 44).
 - **Editar** solo cambia los campos enviados; los omitidos quedan igual.
 - **Revertir**: cada create y update deja filas en `mcp_operation_rows` y se revierte con `undo_operation`.
   - Revertir un create borra la entidad.
-  - Si la entidad ya tiene movimientos, pagos o aportes, revertir falla con un mensaje claro y no borra nada.
-- **Empresa**: solo `create_account` / `update_account`, `set_budget` y lo que exista en Empresa hoy. Las demás responden error claro.
+  - Si la entidad ya tiene movimientos, pagos o aportes, revertir falla con un mensaje claro, no borra nada y la operación sigue `applied` (se puede reintentar).
+- **Empresa**: solo `create_account` / `update_account`, lo único de estas entidades que existe hoy en Empresa (los presupuestos solo existen en Personal). Las demás responden error claro.
 - **Catálogo y docs**: `catalog.ts`, página `/mcp`, `docs/mcp.md` con ejemplos; `CHANGELOG.md` en `[Unreleased]` (en inglés).
 
 **Fuera de alcance (para otros specs):**
@@ -48,7 +48,8 @@ No hay tablas nuevas.
 Migración `supabase/migrations/<timestamp>_mcp_entity_operation_tables.sql`:
 
 - amplía el `check` de `mcp_operation_rows.table_name` con `accounts`, `debts`, `recurring_expenses`, `recurring_incomes`, `savings_goals` y `budgets`;
-- ajusta la función de revertir: un create revertido se borra solo si no hay filas que lo referencien; si las hay, la operación queda `failed` con el motivo.
+- ajusta la función de revertir: un create revertido se borra solo si no hay filas que lo referencien (`mcp_row_references`, por llaves foráneas); si las hay, falla con el motivo, no borra nada y la operación sigue `applied`;
+- agrega políticas de `delete` a `accounts`, `debts` y `savings_goals` que solo dejan borrar entidades sin datos que se irían en cascada.
 
 Servicios nuevos o extraídos (según lo que ya exista):
 

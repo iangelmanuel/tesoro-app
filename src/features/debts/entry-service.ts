@@ -9,6 +9,7 @@ import type { Database } from "@/types/database"
 import { entryKindOf, entryTypesFor } from "./entry-types"
 import {
   ACCOUNT_REQUIRED,
+  CARD_TRANSACTION,
   COLLECT_MODE_INVALID,
   COLLECT_OVER_BALANCE,
   DEBT_NOT_ACTIVE,
@@ -23,6 +24,7 @@ import {
 import {
   COLLECT_MODES_BY_SCHEDULE,
   type DebtEntryEditInput,
+  type PaymentInput,
   type ReceivableCollectInput,
   type ReceivableSchedule
 } from "./schemas"
@@ -584,6 +586,75 @@ export async function deleteEntryRecord(
     return fail({ error: ENTRY_NOT_FOUND })
   }
   return { ok: true, before }
+}
+
+const RECEIVABLE_TRANSFER = "Un abono no admite traspaso"
+
+/**
+ * Pago de tarjeta o préstamo, o abono de cuenta por cobrar, con
+ * record_debt_payment. El movimiento, si se pide, se crea en la misma
+ * transacción. La cuenta es la del abono en una tarjeta y la del movimiento
+ * en un préstamo o una cuenta por cobrar; sin movimiento no aplica.
+ */
+export async function recordDebtPaymentRecord(
+  supabase: AppSupabase,
+  debt: LoadedDebt,
+  data: PaymentInput
+): Promise<ServiceResult<{ entryId: string }>> {
+  if (debt.status !== "active") {
+    return fail({ error: DEBT_NOT_ACTIVE })
+  }
+  if (debt.kind === "credit_card" && data.create_transaction) {
+    return fail({ error: CARD_TRANSACTION })
+  }
+  if (!debt.openEnded && data.amount > debt.balance) {
+    return fail({ fieldErrors: { amount: [OVER_PAYMENT] } })
+  }
+  if (debt.kind === "receivable" && data.transfer_from) {
+    return fail({ fieldErrors: { transfer_from: [RECEIVABLE_TRANSFER] } })
+  }
+  if (debt.kind === "receivable" && data.is_extra_payment) {
+    return fail({ error: RECEIVABLE_EXTRA })
+  }
+
+  const accountId =
+    debt.kind === "credit_card" || data.create_transaction
+      ? (data.account_id ?? undefined)
+      : undefined
+  const hasTransfer = accountId !== undefined && data.transfer_from
+
+  const { data: entryId, error } = await supabase.rpc("record_debt_payment", {
+    p_debt_id: debt.id,
+    p_amount: data.amount,
+    p_occurred_on: data.occurred_on,
+    p_occurred_time: data.occurred_time ?? undefined,
+    // Los tipos generados no marcan el parámetro como nullable
+    p_note: data.note as string,
+    p_create_transaction: data.create_transaction,
+    p_account_id: accountId,
+    p_transfer_from: hasTransfer
+      ? (data.transfer_from ?? undefined)
+      : undefined,
+    p_transfer_amount: hasTransfer
+      ? (data.transfer_amount ?? undefined)
+      : undefined,
+    p_is_extra_payment: data.is_extra_payment,
+    // Solo con movimiento; null = texto de la RPC (SPEC 41)
+    p_description: data.create_transaction
+      ? (data.description ?? undefined)
+      : undefined
+  })
+
+  if (error) {
+    const failure = debtPgError(
+      error,
+      "amount",
+      OVER_PAYMENT,
+      ENTRY_DEFAULT_ERROR
+    )
+    return fail({ error: failure.error, fieldErrors: failure.fieldErrors })
+  }
+  return { ok: true, entryId }
 }
 
 const COLLECT_DEFAULT_ERROR = "No se pudo guardar el cobro. Intenta de nuevo"

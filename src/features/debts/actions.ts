@@ -11,18 +11,17 @@ import {
   deleteEntryRecord,
   loadDebt,
   loadEntry,
+  recordDebtPaymentRecord,
   recordReceivableCollection,
   updateDebtEntryRecord
 } from "./entry-service"
 import { type EntryType, entryKindOf } from "./entry-types"
 import {
   ADVANCE_ONLY_CARD,
-  CARD_TRANSACTION,
   DEBT_NOT_ACTIVE,
   DEBT_NOT_FOUND,
   ENTRY_NOT_FOUND,
   NEGATIVE_BALANCE,
-  OVER_PAYMENT,
   RECEIVABLE_NOT_FOUND,
   debtPgError
 } from "./errors"
@@ -58,8 +57,6 @@ const DEBT_DEFAULT_ERROR = "No se pudo guardar la deuda. Intenta de nuevo"
 const ENTRY_DEFAULT_ERROR = "No se pudo guardar el pago. Intenta de nuevo"
 const HAS_BALANCE = "La deuda aún tiene saldo"
 const SAME_BALANCE = "El saldo ya es ese"
-const RECEIVABLE_TRANSFER = "Un abono no admite traspaso"
-const RECEIVABLE_EXTRA = "Una cuenta por cobrar no tiene abonos extra"
 const ENTRIES_OUT_OF_RANGE =
   "Hay cobros de cuotas fuera de estas fechas. Elimínalos primero"
 
@@ -557,59 +554,14 @@ export async function recordPayment(
   if (!debt) {
     return { error: DEBT_NOT_FOUND, values }
   }
-  if (debt.status !== "active") {
-    return { error: DEBT_NOT_ACTIVE, values }
-  }
-  if (debt.kind === "credit_card" && parsed.data.create_transaction) {
-    return { error: CARD_TRANSACTION, values }
-  }
-  if (!debt.openEnded && parsed.data.amount > debt.balance) {
-    return { fieldErrors: { amount: [OVER_PAYMENT] }, values }
-  }
 
-  if (debt.kind === "receivable" && parsed.data.transfer_from) {
-    return { fieldErrors: { transfer_from: [RECEIVABLE_TRANSFER] }, values }
-  }
-  if (debt.kind === "receivable" && parsed.data.is_extra_payment) {
-    return { error: RECEIVABLE_EXTRA, values }
-  }
-
-  // Cuenta del pago: la de la entrada en una tarjeta y la del movimiento en
-  // un préstamo o una cuenta por cobrar. Sin movimiento no aplica.
-  const accountId =
-    debt.kind === "credit_card" || parsed.data.create_transaction
-      ? (parsed.data.account_id ?? undefined)
-      : undefined
-  const hasTransfer = accountId !== undefined && parsed.data.transfer_from
-
-  const supabase = await createClient()
-  const { error } = await supabase.rpc("record_debt_payment", {
-    p_debt_id: debt.id,
-    p_amount: parsed.data.amount,
-    p_occurred_on: parsed.data.occurred_on,
-    p_occurred_time: parsed.data.occurred_time ?? undefined,
-    // Los tipos generados no marcan el parámetro como nullable
-    p_note: parsed.data.note as string,
-    p_create_transaction: parsed.data.create_transaction,
-    p_account_id: accountId,
-    p_transfer_from: hasTransfer
-      ? (parsed.data.transfer_from ?? undefined)
-      : undefined,
-    p_transfer_amount: hasTransfer
-      ? (parsed.data.transfer_amount ?? undefined)
-      : undefined,
-    p_is_extra_payment: parsed.data.is_extra_payment,
-    // Solo con movimiento; null = texto de la RPC (SPEC 41)
-    p_description: parsed.data.create_transaction
-      ? (parsed.data.description ?? undefined)
-      : undefined
-  })
-
-  if (error) {
-    return {
-      ...debtPgError(error, "amount", OVER_PAYMENT, ENTRY_DEFAULT_ERROR),
-      values
-    }
+  const result = await recordDebtPaymentRecord(
+    await createClient(),
+    debt,
+    parsed.data
+  )
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
   }
 
   revalidatePersonalPages()

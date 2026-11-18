@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useId, useState } from "react"
-import { Radio, RadioGroup, Skeleton } from "@heroui/react"
+import { FieldError, Radio, RadioGroup, Skeleton } from "@heroui/react"
 import { Amount } from "@/components/dashboard/amount"
 import { formatDate, formatTime } from "@/libs/format"
 import { listLinkableTransactions } from "../actions"
@@ -20,6 +20,8 @@ interface LinkableTransactionsFieldProps {
   value: string
   /** Avisa el candidato elegido (null = crear uno nuevo) */
   onChange: (candidate: LinkableTransaction | null) => void
+  /** Error del servidor (el candidato ya no se puede enlazar) */
+  error?: string
 }
 
 /**
@@ -32,7 +34,8 @@ export function LinkableTransactionsField({
   currency,
   noun,
   value,
-  onChange
+  onChange,
+  error
 }: LinkableTransactionsFieldProps) {
   const labelId = useId()
   const [candidates, setCandidates] = useState<LinkableTransaction[] | null>(
@@ -97,6 +100,7 @@ export function LinkableTransactionsField({
             aria-labelledby={labelId}
             value={value}
             onChange={handleChange}
+            isInvalid={Boolean(error)}
             className="flex flex-col gap-2"
           >
             {candidates.map((row) => (
@@ -126,6 +130,7 @@ export function LinkableTransactionsField({
                 Crear movimiento nuevo
               </span>
             </CandidateOption>
+            <FieldError>{error}</FieldError>
           </RadioGroup>
         </>
       )}

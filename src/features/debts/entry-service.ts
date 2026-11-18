@@ -7,17 +7,20 @@ import {
 import type { AppSupabase } from "@/libs/supabase/types"
 import type { Database } from "@/types/database"
 import {
+  ACCOUNT_REQUIRED,
   COLLECT_MODE_INVALID,
   COLLECT_OVER_BALANCE,
   DEBT_NOT_ACTIVE,
   ENTRY_NOT_FOUND,
   NEGATIVE_BALANCE,
+  NOT_CONVERTIBLE,
   OVER_PAYMENT,
   RECEIVABLE_NOT_FOUND,
   debtPgError
 } from "./errors"
 import {
   COLLECT_MODES_BY_SCHEDULE,
+  type ConvertAdjustmentInput,
   type ReceivableCollectInput,
   type ReceivableSchedule
 } from "./schemas"
@@ -358,6 +361,57 @@ export async function updatePaymentEntry(
     }
   }
   return { ok: true, before, after }
+}
+
+/**
+ * Convierte en pago un ajuste que bajó el saldo (SPEC 42) con
+ * convert_debt_adjustment: en una sola transacción enlaza el movimiento
+ * elegido o crea uno nuevo (préstamo y Me deben), o guarda la cuenta en el
+ * pago y borra el gasto suelto elegido (tarjeta). El saldo de la deuda no
+ * cambia. Devuelve el id del abono.
+ */
+export async function convertAdjustmentEntry(
+  supabase: AppSupabase,
+  entry: LoadedEntry,
+  input: ConvertAdjustmentInput
+): Promise<ServiceResult<{ entryId: string }>> {
+  if (entry.debt.status !== "active") {
+    return fail({ error: DEBT_NOT_ACTIVE })
+  }
+  if (entry.kind !== "adjustment" || entry.amount >= 0) {
+    return fail({ error: NOT_CONVERTIBLE })
+  }
+  if (!input.account_id) {
+    return fail({ fieldErrors: { account_id: [ACCOUNT_REQUIRED] } })
+  }
+
+  const isCard = entry.debt.kind === "credit_card"
+  // Los tipos generados no marcan los parámetros como nullable
+  const { data, error } = await supabase.rpc("convert_debt_adjustment", {
+    p_entry_id: entry.id,
+    p_account_id: input.account_id,
+    p_occurred_on: input.occurred_on,
+    p_occurred_time: input.occurred_time as string,
+    // Una tarjeta no crea movimiento: sin descripción ni categoría
+    p_description: (isCard ? null : (input.description ?? null)) as string,
+    p_note: input.note as string,
+    p_category_id: (isCard ? null : input.category_id) as string,
+    p_link_transaction_id: input.link_transaction_id as string
+  })
+
+  if (error) {
+    if (error.hint === "not_convertible") {
+      return fail({ error: NOT_CONVERTIBLE })
+    }
+    const failure = debtPgError(
+      error,
+      "amount",
+      NEGATIVE_BALANCE,
+      ENTRY_DEFAULT_ERROR
+    )
+    return fail({ error: failure.error, fieldErrors: failure.fieldErrors })
+  }
+  return { ok: true, entryId: data }
 }
 
 /**

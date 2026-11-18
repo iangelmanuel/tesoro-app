@@ -15,7 +15,7 @@ import { AdjustBalanceDialog } from "./adjust-balance-dialog"
 import { PaymentDialog } from "./payment-dialog"
 
 interface DebtEntriesListProps {
-  debt: Pick<Debt, "id" | "kind" | "balance">
+  debt: Pick<Debt, "id" | "kind" | "balance" | "name">
   entries: DebtEntry[]
   /** Cuentas activas, para cambiar la cuenta de un pago (SPEC 42) */
   accounts?: PaymentAccountOption[]
@@ -68,7 +68,7 @@ function EntryRow({
   currency,
   readOnly
 }: {
-  debt: Pick<Debt, "id" | "kind" | "balance">
+  debt: Pick<Debt, "id" | "kind" | "balance" | "name">
   entry: DebtEntry
   accounts?: PaymentAccountOption[]
   categories?: Category[]
@@ -191,6 +191,17 @@ function EntryRow({
               debt={debt}
               entry={entry}
               currency={currency}
+              // Fue un pago (SPEC 42): solo con las cuentas a mano
+              convert={
+                accounts
+                  ? {
+                      debt,
+                      workspaceId: entry.workspace_id,
+                      accounts,
+                      categories: categories ?? []
+                    }
+                  : undefined
+              }
               open={editing}
               onOpenChange={setEditing}
             />

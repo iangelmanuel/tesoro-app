@@ -8,6 +8,7 @@ import { createClient } from "@/libs/supabase/server"
 import type { DebtStatus } from "./calculations"
 import {
   type LoadedEntry,
+  convertAdjustmentEntry,
   currentPaymentAccount,
   deleteEntryRecord,
   loadDebt,
@@ -35,6 +36,7 @@ import {
   type ReceivableSchedule,
   adjustBalanceSchema,
   advanceSchema,
+  convertAdjustmentSchema,
   habitualAccountSchema,
   monthlyReceivableSchema,
   paymentEditSchema,
@@ -130,6 +132,17 @@ const PAYMENT_EDIT_FIELDS = [
   "is_extra_payment",
   "account_id",
   "category_id"
+] as const
+
+// Convertir un ajuste en pago (SPEC 42)
+const CONVERT_FIELDS = [
+  "occurred_on",
+  "occurred_time",
+  "note",
+  "description",
+  "account_id",
+  "category_id",
+  "link_transaction_id"
 ] as const
 
 const ADVANCE_FIELDS = [
@@ -860,6 +873,43 @@ export async function listLinkableTransactions(
     -entry.amount,
     entry.occurred_on
   )
+}
+
+// Convierte en pago (o cobro en Me deben) un ajuste que bajó el saldo
+// (SPEC 42). Todo pasa en convert_debt_adjustment; el saldo de la deuda no
+// cambia y el de la cuenta sí.
+export async function convertAdjustment(
+  _prevState: PaymentFormState,
+  formData: FormData
+): Promise<PaymentFormState> {
+  const values = readValues(formData, CONVERT_FIELDS)
+  const id = idSchema.safeParse(formData.get("id"))
+
+  if (!id.success) {
+    return { error: ENTRY_NOT_FOUND, values }
+  }
+
+  const parsed = convertAdjustmentSchema.safeParse(values)
+  if (!parsed.success) {
+    return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
+  }
+
+  const entry = await findEntry(id.data)
+  if (!entry) {
+    return { error: ENTRY_NOT_FOUND, values }
+  }
+
+  const result = await convertAdjustmentEntry(
+    await createClient(),
+    entry,
+    parsed.data
+  )
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
+  }
+
+  revalidatePersonalPages()
+  return { ok: true }
 }
 
 // Borra un pago, un avance, una cuota o un ajuste. Si el pago o el avance

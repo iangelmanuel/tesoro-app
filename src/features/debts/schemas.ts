@@ -391,6 +391,28 @@ export const paymentEditSchema = z.object({
 
 export type PaymentEditInput = z.infer<typeof paymentEditSchema>
 
+// Convertir en pago un ajuste que bajó el saldo (SPEC 42). El monto es el
+// del ajuste: no se envía. La cuenta es obligatoria. link_transaction_id
+// vacío = crear un movimiento nuevo; descripción y categoría vacías usan las
+// de siempre ("Pago {nombre}" / "Abono {nombre}", Deudas / Cobros).
+export const convertAdjustmentSchema = z.object({
+  occurred_on: pastDateField,
+  occurred_time: timeSchema,
+  note: noteField,
+  description: paymentDescriptionField,
+  account_id: z.uuid({ error: "Elige la cuenta del pago" }),
+  category_id: z.preprocess(
+    emptyToNull,
+    z.uuid({ error: "Elige una categoría válida" }).nullable()
+  ),
+  link_transaction_id: z.preprocess(
+    emptyToNull,
+    z.uuid({ error: "Elige un movimiento válido" }).nullable()
+  )
+})
+
+export type ConvertAdjustmentInput = z.infer<typeof convertAdjustmentSchema>
+
 // Cobro de una cuenta por cobrar (SPEC 39). El modo depende del tipo de
 // cobro: Abono o Pago completo en una de cobro único; Una cuota o Varios
 // meses en una mensual.

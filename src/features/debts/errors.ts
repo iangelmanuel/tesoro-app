@@ -26,6 +26,11 @@ export const INSTALLMENT_EXCEEDS = "El monto supera lo que falta de la cuota"
 export const ALLOCATION_EXCEEDS_END = "El monto supera lo que falta por cobrar"
 export const ALLOCATION_FUTURE_LIMIT =
   "El monto cubre más de 12 meses por delante"
+export const NOT_CONVERTIBLE =
+  "Solo un ajuste que bajó el saldo se puede convertir en pago"
+export const ACCOUNT_REQUIRED = "Elige la cuenta del pago"
+export const LINK_INVALID =
+  "Ese movimiento ya no se puede enlazar. Elige otro o crea uno nuevo"
 
 // Errores del reparto entre cuotas (SPEC 39): llegan con un hint fijo
 const ALLOCATION_HINTS: Record<string, { field: string; message: string }> = {
@@ -38,6 +43,9 @@ const ALLOCATION_HINTS: Record<string, { field: string; message: string }> = {
     message: ALLOCATION_FUTURE_LIMIT
   },
   installment_required: { field: "period_on", message: INSTALLMENT_REQUIRED },
+  // Convertir un ajuste en pago (SPEC 42)
+  account_required: { field: "account_id", message: ACCOUNT_REQUIRED },
+  link_invalid: { field: "link_transaction_id", message: LINK_INVALID },
   installment_out_of_range: {
     field: "period_on",
     message: INSTALLMENT_OUT_OF_RANGE

@@ -7,23 +7,46 @@ import {
   Input,
   Label,
   Modal,
+  Tabs,
   TextField,
   toast
 } from "@heroui/react"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { TimePickerField } from "@/components/forms/time-picker-field"
+import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
+import type { Category } from "@/features/categories/queries"
 import { todayISO } from "@/libs/dates"
 import { formatCurrency } from "@/libs/format"
 import { adjustBalance, updateEntry } from "../actions"
 import type { Debt, DebtEntry } from "../queries"
 import type { AdjustBalanceFormState } from "../types"
+import { ConvertAdjustmentForm } from "./convert-adjustment-form"
 import { amountInput } from "./field"
+
+/**
+ * Lo que necesita "Fue un pago" (SPEC 42). Sin él, el diálogo solo edita el
+ * ajuste
+ */
+export interface ConvertAdjustmentOptions {
+  debt: Pick<Debt, "kind" | "name">
+  workspaceId: string
+  accounts: PaymentAccountOption[]
+  categories: Category[]
+}
+
+/** Editar el ajuste o convertirlo en pago */
+type AdjustMode = "adjust" | "convert"
 
 interface AdjustBalanceDialogProps {
   debt: Pick<Debt, "id" | "balance">
   /** Si llega, el diálogo edita este ajuste */
   entry?: DebtEntry
   currency: string
+  /**
+   * Convertir en pago (SPEC 42): con él, editar un ajuste que bajó el saldo
+   * muestra el selector Ajuste | Fue un pago
+   */
+  convert?: ConvertAdjustmentOptions
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
   trigger?: React.ReactNode
   open?: boolean
@@ -38,14 +61,25 @@ export function AdjustBalanceDialog({
   debt,
   entry,
   currency,
+  convert,
   trigger,
   open: controlledOpen,
   onOpenChange
 }: AdjustBalanceDialogProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
   const open = controlledOpen ?? uncontrolledOpen
-  const setOpen = onOpenChange ?? setUncontrolledOpen
+  const setOpenState = onOpenChange ?? setUncontrolledOpen
   const isEditing = entry !== undefined
+  // Cada apertura arranca en "Ajuste"
+  function setOpen(next: boolean) {
+    if (!next) setMode("adjust")
+    setOpenState(next)
+  }
+  // Solo un ajuste que bajó el saldo pudo ser un pago
+  const canConvert = isEditing && entry.amount < 0 && convert !== undefined
+  const [mode, setMode] = useState<AdjustMode>("adjust")
+  const isConverting = canConvert && mode === "convert"
+  const isReceivable = convert?.debt.kind === "receivable"
 
   return (
     <Modal
@@ -62,19 +96,53 @@ export function AdjustBalanceDialog({
                 {isEditing ? "Editar ajuste" : "Actualizar saldo"}
               </Modal.Heading>
               <p className="text-sm text-muted">
-                Saldo actual: {formatCurrency(debt.balance, currency)}. Escribe
-                el saldo real, por ejemplo el de tu extracto. No crea un
-                movimiento.
+                {isConverting
+                  ? isReceivable
+                    ? "Si este ajuste fue un cobro, registra la cuenta a la que entró el dinero."
+                    : "Si este ajuste fue un pago, registra la cuenta de la que salió el dinero."
+                  : `Saldo actual: ${formatCurrency(debt.balance, currency)}. Escribe el saldo real, por ejemplo el de tu extracto. No crea un movimiento.`}
               </p>
             </Modal.Header>
-            <Modal.Body>
+            <Modal.Body className="flex flex-col gap-4">
+              {canConvert && (
+                <Tabs
+                  selectedKey={mode}
+                  onSelectionChange={(key) => setMode(key as AdjustMode)}
+                >
+                  <Tabs.ListContainer>
+                    <Tabs.List aria-label="Qué fue este ajuste">
+                      <Tabs.Tab id="adjust">
+                        Ajuste
+                        <Tabs.Indicator />
+                      </Tabs.Tab>
+                      <Tabs.Tab id="convert">
+                        {isReceivable ? "Fue un cobro" : "Fue un pago"}
+                        <Tabs.Indicator />
+                      </Tabs.Tab>
+                    </Tabs.List>
+                  </Tabs.ListContainer>
+                </Tabs>
+              )}
               {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-              <AdjustBalanceForm
-                debt={debt}
-                entry={entry}
-                onSaved={() => setOpen(false)}
-                onCancel={() => setOpen(false)}
-              />
+              {isConverting ? (
+                <ConvertAdjustmentForm
+                  debt={convert.debt}
+                  entry={entry}
+                  workspaceId={convert.workspaceId}
+                  accounts={convert.accounts}
+                  categories={convert.categories}
+                  currency={currency}
+                  onSaved={() => setOpen(false)}
+                  onCancel={() => setOpen(false)}
+                />
+              ) : (
+                <AdjustBalanceForm
+                  debt={debt}
+                  entry={entry}
+                  onSaved={() => setOpen(false)}
+                  onCancel={() => setOpen(false)}
+                />
+              )}
             </Modal.Body>
           </Modal.Dialog>
         </Modal.Container>

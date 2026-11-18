@@ -273,3 +273,42 @@ export function incomeReceiptDescription(
     )
   )
 }
+
+/**
+ * Valores del ingreso al recibir un ingreso fijo (SPEC 41 y 43): el monto
+ * esperado, su categoría si sigue activa, la cuenta habitual si sigue activa
+ * y la descripción de la ocurrencia más antigua abierta. Lo usan el tab
+ * Ingreso del diálogo de movimiento y la tool receive_recurring_income.
+ */
+export function incomeReceiptValues(
+  source: IncomeReceiptPeriods & {
+    name: string
+    frequency: IncomeFrequency
+    amount: number
+    category_id: string
+    account_id: string | null
+  },
+  {
+    categories,
+    accounts
+  }: {
+    categories: { id: string; type: string; archived_at: string | null }[]
+    accounts: { id: string; archived_at: string | null }[]
+  }
+) {
+  const category = categories.find(
+    (option) =>
+      option.id === source.category_id &&
+      option.type === "income" &&
+      option.archived_at === null
+  )
+  const account = accounts.find(
+    (option) => option.id === source.account_id && !option.archived_at
+  )
+  return {
+    amount: source.amount,
+    category_id: category?.id ?? null,
+    account_id: account?.id ?? null,
+    description: incomeReceiptDescription(source)
+  }
+}

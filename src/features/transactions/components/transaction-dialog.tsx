@@ -21,7 +21,6 @@ import { AccountSelectField } from "@/components/forms/account-select-field"
 import { CategorySelectField } from "@/components/forms/category-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { TimePickerField } from "@/components/forms/time-picker-field"
-import { activeAccountId } from "@/features/accounts/active-account"
 import { selectableAccounts } from "@/features/accounts/components/account-select"
 import {
   type PaymentAccountOption,
@@ -48,7 +47,7 @@ import {
   paymentKey,
   selectedPayment
 } from "@/features/recurring-expenses/components/occurrence-select"
-import { occurrenceDescription } from "@/features/recurring-expenses/occurrences"
+import { recurringPaymentValues } from "@/features/recurring-expenses/payment"
 import type { UpcomingPayment } from "@/features/recurring-expenses/queries"
 import { IncomeReceiptPreview } from "@/features/recurring-incomes/components/income-receipt-preview"
 import { IncomeSourceField } from "@/features/recurring-incomes/components/income-source-field"
@@ -56,7 +55,7 @@ import { OTHER_INCOME } from "@/features/recurring-incomes/constants"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
 import {
   describeSavedReceipt,
-  incomeReceiptDescription
+  incomeReceiptValues
 } from "@/features/recurring-incomes/receipt"
 import type { WorkspaceType } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
@@ -404,20 +403,12 @@ function TransactionForm({
     const source = incomeSources?.find((option) => option.id === value)
     if (!source) return
 
-    const category = categories.find(
-      (option) =>
-        option.id === source.category_id &&
-        option.type === "income" &&
-        option.archived_at === null
-    )
-    const account = selectableAccounts(accounts).find(
-      (option) => option.id === source.account_id
-    )
+    const values = incomeReceiptValues(source, { categories, accounts })
     const next = {
-      amount: AMOUNT_FORMAT.format(source.amount),
-      category: category?.id ?? "",
-      account: account?.id ?? "",
-      description: incomeReceiptDescription(source)
+      amount: AMOUNT_FORMAT.format(values.amount),
+      category: values.category_id ?? "",
+      account: values.account_id ?? "",
+      description: values.description
     }
 
     if (amountText === "" || amountText === prefilled.amount) {
@@ -937,12 +928,7 @@ function RecurringPaymentPanel({
           accounts={accounts}
           // Sin occurred_on: el pago ocurre hoy (SPEC 41); la cuota elegida
           // conserva su vencimiento en recurring.dueOn
-          initialValues={{
-            amount: selected.amount,
-            category_id: selected.category.id,
-            account_id: activeAccountId(accounts, selected.accountId),
-            description: occurrenceDescription(selected)
-          }}
+          initialValues={recurringPaymentValues(selected, accounts)}
           recurring={{
             recurringExpenseId: selected.recurringExpenseId,
             dueOn: selected.dueOn

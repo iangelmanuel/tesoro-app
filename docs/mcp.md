@@ -46,15 +46,15 @@ app/api/mcp/route.ts
   presupuestos…) sin cambiarlas. Dentro **no** sirven las funciones que leen
   la sesión con `auth.getUser()` sin token, como `getPersonalWorkspace`.
 - **Acceso.** `mcp_connections.access` (`read` o `write`) por agente. Sin
-  fila, se crea una con `read`. Con `read`, las tools de grupo `write` y
-  `undo` se registran deshabilitadas (fuera de `tools/list`) y la ruta
-  responde el error de solo lectura si se llaman.
+  fila, se crea una con `read`. Con `read`, las tools de grupo `write`,
+  `manage` y `undo` se registran deshabilitadas (fuera de `tools/list`) y la
+  ruta responde el error de solo lectura si se llaman.
 - **Escrituras.** Usan los servicios que comparten las Server Actions
   (`transactions/service.ts`, `accounts/transfer-service.ts`,
   `debts/entry-service.ts`, `goals/contribution-service.ts`,
-  `categories/service.ts`) y los mismos prellenados del diálogo de
-  movimiento (`recurring-expenses/payment.ts`,
-  `recurring-incomes/receipt.ts`), nunca tablas o RPC directo. Todo o nada:
+  `categories/service.ts` y los de crear y editar entidades de SPEC 44) y
+  los mismos prellenados del diálogo de movimiento
+  (`recurring-expenses/payment.ts`, `recurring-incomes/receipt.ts`), nunca tablas o RPC directo. Todo o nada:
   se valida todo antes de escribir. La excepción es `import_statement`, que
   inserta las filas ya validadas en bloque (un insert por tabla).
 - **Datos faltantes.** Si falta un dato obligatorio o es ambiguo, la tool no
@@ -163,6 +163,86 @@ movimientos y sus asignaciones (`tools/write/debt-snapshots.ts`), en el
 orden que necesita `undo_mcp_operation`. Las asignaciones de cobros mensuales
 e ingresos fijos se restauran al final, por abono o por movimiento
 (migración `mcp_more_operation_tables`).
+
+## Crear y editar entidades
+
+[SPEC 44](../specs/44-mcp-create-and-edit-entities.md) suma una tool por
+entidad y acción (grupo `manage`, "Crear y editar" en `/mcp`):
+
+| Tool                                                    | Entidad                                | Espacio            |
+| ------------------------------------------------------- | -------------------------------------- | ------------------ |
+| `create_account` / `update_account`                     | Cuentas                                | Personal y Empresa |
+| `create_debt` / `update_debt`                           | Tarjetas y préstamos                   | Personal           |
+| `create_receivable` / `update_receivable`               | Me deben (único o mensual)             | Personal           |
+| `create_recurring_expense` / `update_recurring_expense` | Gastos fijos                           | Personal           |
+| `create_recurring_income` / `update_recurring_income`   | Ingresos fijos (SPEC 38)               | Personal           |
+| `create_goal` / `update_goal`                           | Metas de ahorro                        | Personal           |
+| `set_budget`                                            | Presupuesto de una categoría en un mes | Personal           |
+
+- **Mismas reglas que la UI.** Cada tool valida con el esquema Zod de su
+  feature y escribe con el servicio que usa la action:
+  `accounts/service.ts`, `debts/service.ts`,
+  `recurring-expenses/service.ts`, `recurring-incomes/service.ts`,
+  `goals/service.ts` y `budgets/service.ts`. Cada servicio devuelve `before`
+  y `after` para el log.
+- **Editar** solo cambia los campos enviados: la tool mezcla lo guardado con
+  lo enviado y valida la entidad completa. El tipo de una deuda y el tipo de
+  cobro de Me deben no cambian.
+- **`needs_input`** cuando falta un dato obligatorio, cuando un campo no
+  aplica al tipo (`closing_day` en un préstamo) o cuando un nombre de cuenta,
+  categoría o entidad es ambiguo. Cada frecuencia de un ingreso fijo pide sus
+  días.
+- **Duplicados.** Crear con el nombre (sin mayúsculas ni tildes) de otra
+  entidad activa del mismo tipo responde `needs_input` en
+  `confirm_duplicate`. Con `confirm_duplicate: true` se crea igual. En
+  cuentas el índice único `accounts_unique_name` no lo permite.
+- **Empresa.** Solo cuentas. Las demás entidades existen solo en Personal y
+  responden `PERSONAL_ONLY`.
+- **Revertir.** Cada create y update deja su fila en el log. Revertir un
+  create borra la entidad solo si nada la referencia. Si ya tiene
+  movimientos, traspasos, abonos, aportes, ajustes o fijos que la usan como
+  cuenta habitual, `undo_mcp_operation` falla con el motivo y no borra nada
+  (`mcp_row_references` revisa las llaves foráneas). La operación sigue
+  `applied` y se puede revertir después. Revertir un update restaura solo los
+  campos de la entidad: los pagos no se tocan.
+
+Piezas comunes en `tools/write/entities.ts`: `parsePatch`, `resolveEntity`,
+`duplicateName`, `habitualAccount`, `entityCategory` y `commitEntity`.
+
+### Crear un gasto fijo
+
+```json
+{
+  "workspace_id": "…",
+  "name": "Netflix",
+  "amount": 44900,
+  "category": "Suscripciones",
+  "day_of_month": 5
+}
+```
+
+Mensual por defecto, desde hoy. Si ya hay un "netflix" activo:
+
+```json
+{
+  "status": "needs_input",
+  "missing": [
+    {
+      "field": "confirm_duplicate",
+      "question": "Ya existe un gasto fijo activo con ese nombre: \"Netflix\". ¿Es otro distinto? …",
+      "options": [{ "id": "…", "label": "Netflix" }]
+    }
+  ]
+}
+```
+
+### Editar una meta
+
+```json
+{ "workspace_id": "…", "goal": "Viaje", "target_amount": 6000000 }
+```
+
+Cambia el objetivo; el nombre y la fecha quedan igual.
 
 ## Probar en local
 

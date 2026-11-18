@@ -1587,11 +1587,19 @@ export type Database = {
         Args: { p_workspace_id: string }
         Returns: boolean
       }
+      mcp_entity_label: { Args: { p_table: string }; Returns: string }
       mcp_hit_rate_limit: {
         Args: never
         Returns: {
           allowed: boolean
           retry_after: number
+        }[]
+      }
+      mcp_row_references: {
+        Args: { p_exclude?: string[]; p_id: string; p_table: string }
+        Returns: {
+          child_table: string
+          total: number
         }[]
       }
       mcp_snapshot_columns: {

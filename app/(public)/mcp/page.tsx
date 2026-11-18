@@ -69,8 +69,8 @@ const CAPABILITIES = [
   },
   {
     icon: WalletIcon,
-    title: "Leer todo tu plan",
-    text: "Cuentas, presupuestos, metas, deudas, fijos y lo que te deben, en Personal y en Empresa. Lo que vence pronto y en qué se va tu dinero."
+    title: "Armar y leer tu plan",
+    text: "Crea y edita cuentas, deudas, fijos, metas y presupuestos. Lee todo tu plan en Personal y en Empresa: lo que vence pronto y en qué se va tu dinero."
   },
   {
     icon: MessageCircleQuestionIcon,
@@ -84,7 +84,7 @@ const IDEAS = [
   "¿Cuánto gasté en comida este mes comparado con octubre?",
   "Pasa a Transporte todos los movimientos de Uber de noviembre.",
   "¿Cómo va mi score y qué me recomienda Tesoro?",
-  "¿Qué gastos fijos me faltan por pagar este mes?",
+  "Agrega Netflix como gasto fijo: 44.900 cada mes, el día 5.",
   "Pon al día mi cuenta de Bancolombia con este extracto. Muéstrame primero la vista previa.",
   "Paga la cuota de la tarjeta Visa desde Nequi.",
   "¿Qué pagos y cobros vencen en los próximos 15 días?"
@@ -101,7 +101,7 @@ const SECURITY = [
   },
   {
     icon: Undo2Icon,
-    text: `Toda escritura queda en el historial y se revierte durante ${SITE.mcp.undoWindowDays} días.`
+    text: `Toda escritura queda en el historial y se revierte durante ${SITE.mcp.undoWindowDays} días. Lo que el agente creó no se borra si ya tiene movimientos, pagos o aportes.`
   },
   {
     icon: ShieldOffIcon,
@@ -320,7 +320,7 @@ export default function McpPage() {
 
           <Section
             id="herramientas"
-            description={`Lo que el agente puede usar. Las de escritura aceptan hasta ${SITE.mcp.bulkLimit} filas por llamada, todo o nada, con vista previa sin guardar. Con Solo lectura, el agente solo ve las de lectura.`}
+            description={`Lo que el agente puede usar. Las de escritura en lote aceptan hasta ${SITE.mcp.bulkLimit} filas por llamada, todo o nada, con vista previa sin guardar; las de crear y editar trabajan con una cuenta, deuda, fijo, meta o presupuesto a la vez. Con Solo lectura, el agente solo ve las de lectura.`}
           >
             <ToolCatalog />
           </Section>

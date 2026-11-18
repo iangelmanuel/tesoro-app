@@ -24,7 +24,8 @@ export interface McpToolDefinition<
 > {
   /** snake_case en inglés: 'create_transactions' */
   name: string
-  group: "read" | "write" | "undo"
+  /** manage: crear y editar entidades (SPEC 44); escribe como write */
+  group: "read" | "write" | "manage" | "undo"
   /** En español: 'Crear movimientos' */
   title: string
   description: string

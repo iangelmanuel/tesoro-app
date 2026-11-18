@@ -18,6 +18,8 @@ import { listTransactions } from "./tools/read/list-transactions"
 import { listTransfers } from "./tools/read/list-transfers"
 import { listUpcomingPayments } from "./tools/read/list-upcoming-payments"
 import { listWorkspaces } from "./tools/read/list-workspaces"
+import { createAccountTool, updateAccountTool } from "./tools/write/accounts"
+import { setBudgetTool } from "./tools/write/budgets"
 import { createCategory } from "./tools/write/create-category"
 import { createTransactions } from "./tools/write/create-transactions"
 import {
@@ -26,6 +28,12 @@ import {
   recordDebtPayment,
   updateDebtEntry
 } from "./tools/write/debt-entries"
+import {
+  createDebtTool,
+  createReceivableTool,
+  updateDebtTool,
+  updateReceivableTool
+} from "./tools/write/debts"
 import { deleteTransactions } from "./tools/write/delete-transactions"
 import { recordGoalContribution } from "./tools/write/goals"
 import { importStatement } from "./tools/write/import-statement"
@@ -33,6 +41,15 @@ import {
   payRecurringExpense,
   receiveRecurringIncome
 } from "./tools/write/recurring"
+import {
+  createRecurringExpenseTool,
+  updateRecurringExpenseTool
+} from "./tools/write/recurring-expenses"
+import {
+  createRecurringIncomeTool,
+  updateRecurringIncomeTool
+} from "./tools/write/recurring-incomes"
+import { createGoalTool, updateGoalTool } from "./tools/write/savings-goals"
 import {
   createTransfers,
   deleteTransfers,
@@ -82,12 +99,27 @@ export const MCP_TOOLS: readonly McpTool[] = [
   payRecurringExpense,
   receiveRecurringIncome,
   recordGoalContribution,
+  // Crear y editar entidades (SPEC 44), por entidad
+  createAccountTool,
+  updateAccountTool,
+  createDebtTool,
+  updateDebtTool,
+  createReceivableTool,
+  updateReceivableTool,
+  createRecurringExpenseTool,
+  updateRecurringExpenseTool,
+  createRecurringIncomeTool,
+  updateRecurringIncomeTool,
+  createGoalTool,
+  updateGoalTool,
+  setBudgetTool,
   undoOperation
 ]
 
 export const MCP_GROUP_LABELS: Record<McpToolDefinition["group"], string> = {
   read: "Lectura",
   write: "Escritura",
+  manage: "Crear y editar",
   undo: "Revertir"
 }
 

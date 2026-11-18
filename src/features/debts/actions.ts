@@ -2,7 +2,6 @@
 
 import { z } from "zod"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
-import { shiftMonth, todayISO } from "@/libs/dates"
 import { revalidatePersonalPages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import type { DebtStatus } from "./calculations"
@@ -31,21 +30,23 @@ import {
   findLinkableTransactions,
   getDebtEntry
 } from "./queries"
-import { lastPeriodOn, periodOf } from "./receivable-schedule"
 import {
   DEBT_KINDS,
-  DEBT_SCHEMAS,
   type DebtKind,
   type ReceivableSchedule,
   adjustBalanceSchema,
   advanceSchema,
   debtEntryEditSchema,
-  habitualAccountSchema,
-  monthlyReceivableSchema,
   paymentSchema,
   receivableCollectSchema,
   receivableScheduleSchema
 } from "./schemas"
+import {
+  createDebtRecord,
+  debtFieldsFor,
+  parseDebtInput,
+  updateDebtRecord
+} from "./service"
 import type {
   AdjustBalanceFormState,
   DebtActionResult,
@@ -53,50 +54,9 @@ import type {
   PaymentFormState
 } from "./types"
 
-const DEBT_DEFAULT_ERROR = "No se pudo guardar la deuda. Intenta de nuevo"
 const ENTRY_DEFAULT_ERROR = "No se pudo guardar el pago. Intenta de nuevo"
 const HAS_BALANCE = "La deuda aún tiene saldo"
 const SAME_BALANCE = "El saldo ya es ese"
-const ENTRIES_OUT_OF_RANGE =
-  "Hay cobros de cuotas fuera de estas fechas. Elimínalos primero"
-
-const DEBT_FIELDS: Record<DebtKind, readonly string[]> = {
-  credit_card: [
-    "name",
-    "counterparty",
-    "opening_balance",
-    "credit_limit",
-    "due_day",
-    "interest_rate",
-    "rate_type",
-    "min_payment",
-    "closing_day",
-    "fee_amount",
-    "fee_day"
-  ],
-  loan: [
-    "name",
-    "counterparty",
-    "opening_balance",
-    "installment",
-    "interest_rate",
-    "rate_type",
-    "due_day",
-    "original_amount",
-    "term_months"
-  ],
-  receivable: ["name", "counterparty", "opening_balance", "expected_on"]
-}
-
-// Cuenta por cobrar mensual (SPEC 28): el saldo inicial se calcula
-const MONTHLY_RECEIVABLE_FIELDS = [
-  "name",
-  "counterparty",
-  "installment",
-  "due_day",
-  "starts_on",
-  "term_months"
-] as const
 
 const PAYMENT_FIELDS = [
   "amount",
@@ -186,65 +146,18 @@ async function findEntry(entryId: string) {
 }
 
 // Valida con el esquema del tipo (y, en una cuenta por cobrar, del tipo de
-// cobro). Los errores se aplanan aquí porque cada tipo tiene su propio
-// esquema.
+// cobro) más la cuenta habitual
 function readDebtForm(
   formData: FormData,
   kind: DebtKind,
   schedule: ReceivableSchedule | null
 ) {
-  const monthly = kind === "receivable" && schedule === "monthly"
   const values = {
-    ...readValues(
-      formData,
-      monthly ? MONTHLY_RECEIVABLE_FIELDS : DEBT_FIELDS[kind]
-    ),
+    ...readValues(formData, [...debtFieldsFor(kind, schedule), "account_id"]),
     kind,
     ...(schedule ? { schedule } : {})
   }
-  const result = (
-    monthly ? monthlyReceivableSchema : DEBT_SCHEMAS[kind]
-  ).safeParse(values)
-  const accountValue = readValues(formData, ["account_id"]).account_id
-  const account = habitualAccountSchema.safeParse(accountValue)
-  const parsed =
-    result.success && account.success
-      ? ({
-          success: true,
-          data: { ...result.data, account_id: account.data }
-        } as const)
-      : ({
-          success: false,
-          fieldErrors: {
-            ...(result.success
-              ? {}
-              : z.flattenError(result.error as z.ZodError).fieldErrors),
-            ...(account.success
-              ? {}
-              : { account_id: z.flattenError(account.error).formErrors })
-          }
-        } as const)
-  return { values: { ...values, account_id: accountValue }, parsed }
-}
-
-// La cuenta habitual, si llega, debe ser del espacio y estar activa (SPEC 41)
-async function validateHabitualAccount(
-  workspaceId: string,
-  accountId: string | null
-): Promise<string | null> {
-  if (accountId === null) return null
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from("accounts")
-    .select("archived_at")
-    .eq("id", accountId)
-    .eq("workspace_id", workspaceId)
-    .maybeSingle()
-  if (!data) return "Elige una cuenta de tu espacio"
-  if (data.archived_at !== null) {
-    return "Esta cuenta está archivada. Elige otra"
-  }
-  return null
+  return { values, parsed: parseDebtInput(kind, schedule, values) }
 }
 
 export async function createDebt(
@@ -276,31 +189,15 @@ export async function createDebt(
   }
 
   const workspace = await getPersonalWorkspace()
-  const accountError = await validateHabitualAccount(
-    workspace.id,
-    parsed.data.account_id
+  const result = await createDebtRecord(
+    await createClient(),
+    workspace,
+    kind.data,
+    parsed.data
   )
-  if (accountError) {
-    return { fieldErrors: { account_id: [accountError] }, values }
-  }
 
-  const supabase = await createClient()
-  const { error } = await supabase.from("debts").insert({
-    ...parsed.data,
-    kind: kind.data,
-    workspace_id: workspace.id
-  })
-
-  if (error) {
-    return {
-      ...debtPgError(
-        error,
-        "opening_balance",
-        NEGATIVE_BALANCE,
-        DEBT_DEFAULT_ERROR
-      ),
-      values
-    }
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
   }
 
   revalidatePersonalPages()
@@ -330,132 +227,14 @@ export async function updateDebt(
     return { fieldErrors: parsed.fieldErrors, values }
   }
 
-  const accountError = await validateHabitualAccount(
-    debt.workspace_id,
-    parsed.data.account_id
-  )
-  if (accountError) {
-    return { fieldErrors: { account_id: [accountError] }, values }
-  }
+  const result = await updateDebtRecord(await createClient(), debt, parsed.data)
 
-  // Cobro mensual: los cobros ya hechos deben seguir dentro de las cuotas
-  if ("starts_on" in parsed.data) {
-    const first = periodOf(parsed.data.starts_on)
-    const last = lastPeriodOn(parsed.data)
-    const outside = debt.entries.some((entry) =>
-      entry.allocations.some(
-        ({ period_on }) =>
-          period_on < first || (last !== null && period_on > last)
-      )
-    )
-    if (outside) {
-      return { fieldErrors: { starts_on: [ENTRIES_OUT_OF_RANGE] }, values }
-    }
-  }
-
-  // El saldo cambia lo mismo que el saldo inicial. Una mensual indefinida no
-  // tiene saldo total. En una mensual con cuotas el saldo inicial sale de las
-  // cuotas, así que el error va en ellas.
-  const monthlyForm = "starts_on" in parsed.data
-  const newBalance =
-    debt.balance - Number(debt.opening_balance) + parsed.data.opening_balance
-  if (newBalance < 0 && !(monthlyForm && parsed.data.term_months === null)) {
-    return {
-      fieldErrors: {
-        [monthlyForm ? "term_months" : "opening_balance"]: [
-          "Con este saldo inicial la deuda queda en negativo"
-        ]
-      },
-      values
-    }
-  }
-
-  const supabase = await createClient()
-
-  // Mensual indefinida con un valor nuevo (SPEC 29): los meses ya corridos
-  // conservan el valor anterior, así sus abonos no quedan cortos
-  if (monthlyForm && debt.openEnded && debt.installment !== null) {
-    const previousValue = Number(debt.installment)
-    const historyError = await keepPreviousInstallment(
-      debt.id,
-      debt.workspace_id,
-      parsed.data.starts_on,
-      previousValue,
-      parsed.data.installment
-    )
-    if (historyError) {
-      return { error: DEBT_DEFAULT_ERROR, values }
-    }
-  }
-
-  const { data, error } = await supabase
-    .from("debts")
-    .update(parsed.data)
-    .eq("id", debt.id)
-    .eq("workspace_id", debt.workspace_id)
-    .select("id")
-
-  if (error) {
-    return {
-      ...debtPgError(
-        error,
-        "opening_balance",
-        "Con este saldo inicial la deuda queda en negativo",
-        DEBT_DEFAULT_ERROR
-      ),
-      values
-    }
-  }
-  if (data.length === 0) {
-    return { error: DEBT_NOT_FOUND, values }
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
   }
 
   revalidatePersonalPages()
   return { ok: true }
-}
-
-/**
- * Al cambiar el valor de una mensual indefinida, guarda el anterior hasta el
- * mes pasado (SPEC 29). No hace nada si el valor no cambia, si el cobro
- * empieza este mes o después, o si el historial ya cubre el mes pasado.
- * Devuelve true si falló.
- */
-async function keepPreviousInstallment(
-  debtId: string,
-  workspaceId: string,
-  startsOn: string,
-  previousValue: number,
-  newValue: number
-) {
-  const lastMonth = `${shiftMonth(todayISO().slice(0, 7), -1)}-01`
-  if (previousValue === newValue || periodOf(startsOn) > lastMonth) {
-    return false
-  }
-
-  const supabase = await createClient()
-  const { data: covered, error: readError } = await supabase
-    .from("receivable_installment_history")
-    .select("id")
-    .eq("debt_id", debtId)
-    .gte("through_period", lastMonth)
-    .limit(1)
-
-  if (readError) {
-    return true
-  }
-  if (covered.length > 0) {
-    return false
-  }
-
-  const { error } = await supabase
-    .from("receivable_installment_history")
-    .insert({
-      workspace_id: workspaceId,
-      debt_id: debtId,
-      through_period: lastMonth,
-      amount: previousValue
-    })
-  return error !== null
 }
 
 // Cambia el estado solo si la deuda está en uno de los estados `from`

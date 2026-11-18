@@ -1,6 +1,5 @@
 "use server"
 
-import type { PostgrestError } from "@supabase/supabase-js"
 import { z } from "zod"
 import { parseAmount } from "@/features/transactions/schemas"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
@@ -11,17 +10,17 @@ import {
   getRecurringExpenseHistory
 } from "./queries"
 import { recurringExpenseSchema } from "./schemas"
+import {
+  RECURRING_EXPENSE_NOT_FOUND,
+  createRecurringExpenseRecord,
+  updateRecurringExpenseRecord
+} from "./service"
 import type {
   RecurringExpenseActionResult,
   RecurringExpenseFormState
 } from "./types"
 
-const NOT_FOUND = "No se encontró el gasto fijo"
-const DEFAULT_ERROR = "No se pudo guardar el gasto fijo. Intenta de nuevo"
-const INVALID_CATEGORY = "Elige una categoría de gasto"
-const ARCHIVED_CATEGORY = "Esta categoría está archivada. Elige otra"
-const INVALID_ACCOUNT = "Elige una cuenta de tu espacio"
-const ARCHIVED_ACCOUNT = "Esta cuenta está archivada. Elige otra"
+const NOT_FOUND = RECURRING_EXPENSE_NOT_FOUND
 
 const FIELDS = [
   "name",
@@ -37,16 +36,6 @@ const FIELDS = [
 
 const idSchema = z.uuid()
 
-// Códigos de Postgres que pueden llegar pese a la validación con Zod
-const PG_ERROR_MESSAGES: Record<string, RecurringExpenseFormState> = {
-  // check_expense_category y los check de la tabla
-  "23514": { fieldErrors: { category_id: [INVALID_CATEGORY] } },
-  // FK de category_id o account_id
-  "23503": { error: DEFAULT_ERROR },
-  // RLS
-  "42501": { error: "No tienes permiso para modificar este gasto fijo" }
-}
-
 function readValues(formData: FormData) {
   return Object.fromEntries(
     FIELDS.map((key) => {
@@ -56,16 +45,6 @@ function readValues(formData: FormData) {
   ) as Record<(typeof FIELDS)[number], string>
 }
 
-function toFormError(
-  error: PostgrestError,
-  values: Record<string, string>
-): RecurringExpenseFormState {
-  return {
-    ...(PG_ERROR_MESSAGES[error.code] ?? { error: DEFAULT_ERROR }),
-    values
-  }
-}
-
 function parseForm(formData: FormData) {
   const values = readValues(formData)
   const parsed = recurringExpenseSchema.safeParse({
@@ -73,48 +52,6 @@ function parseForm(formData: FormData) {
     amount: parseAmount(values.amount)
   })
   return { values, parsed }
-}
-
-// La categoría debe existir, ser visible para el usuario (RLS), ser de gasto
-// y estar activa. La cuenta habitual, si llega, debe ser del espacio y estar
-// activa (SPEC 41)
-async function validateReferences(
-  workspaceId: string,
-  categoryId: string,
-  accountId: string | null
-): Promise<RecurringExpenseFormState["fieldErrors"] | null> {
-  const supabase = await createClient()
-  const [{ data: category }, account] = await Promise.all([
-    supabase
-      .from("categories")
-      .select("type, archived_at")
-      .eq("id", categoryId)
-      .maybeSingle(),
-    accountId === null
-      ? Promise.resolve(null)
-      : supabase
-          .from("accounts")
-          .select("archived_at")
-          .eq("id", accountId)
-          .eq("workspace_id", workspaceId)
-          .maybeSingle()
-  ])
-
-  if (!category || category.type !== "expense") {
-    return { category_id: [INVALID_CATEGORY] }
-  }
-  if (category.archived_at !== null) {
-    return { category_id: [ARCHIVED_CATEGORY] }
-  }
-  if (account !== null) {
-    if (!account.data) {
-      return { account_id: [INVALID_ACCOUNT] }
-    }
-    if (account.data.archived_at !== null) {
-      return { account_id: [ARCHIVED_ACCOUNT] }
-    }
-  }
-  return null
 }
 
 export async function createRecurringExpense(
@@ -128,22 +65,14 @@ export async function createRecurringExpense(
   }
 
   const workspace = await getPersonalWorkspace()
-  const referenceErrors = await validateReferences(
-    workspace.id,
-    parsed.data.category_id,
-    parsed.data.account_id
+  const result = await createRecurringExpenseRecord(
+    await createClient(),
+    workspace,
+    parsed.data
   )
-  if (referenceErrors) {
-    return { fieldErrors: referenceErrors, values }
-  }
 
-  const supabase = await createClient()
-  const { error } = await supabase
-    .from("recurring_expenses")
-    .insert({ ...parsed.data, workspace_id: workspace.id })
-
-  if (error) {
-    return toFormError(error, values)
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
   }
 
   revalidatePersonalPages()
@@ -165,28 +94,15 @@ export async function updateRecurringExpense(
   }
 
   const workspace = await getPersonalWorkspace()
-  const referenceErrors = await validateReferences(
-    workspace.id,
-    parsed.data.category_id,
-    parsed.data.account_id
+  const result = await updateRecurringExpenseRecord(
+    await createClient(),
+    workspace,
+    id.data,
+    parsed.data
   )
-  if (referenceErrors) {
-    return { fieldErrors: referenceErrors, values }
-  }
 
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("recurring_expenses")
-    .update(parsed.data)
-    .eq("id", id.data)
-    .eq("workspace_id", workspace.id)
-    .select("id")
-
-  if (error) {
-    return toFormError(error, values)
-  }
-  if (data.length === 0) {
-    return { error: NOT_FOUND, values }
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
   }
 
   revalidatePersonalPages()

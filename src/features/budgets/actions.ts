@@ -1,6 +1,5 @@
 "use server"
 
-import type { PostgrestError } from "@supabase/supabase-js"
 import { z } from "zod"
 import { parseAmount } from "@/features/transactions/schemas"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
@@ -9,6 +8,7 @@ import { revalidatePersonalPages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import { monthParamSchema, monthStart } from "./month"
 import { budgetSchema } from "./schemas"
+import { setBudgetRecord } from "./service"
 import type {
   BudgetActionResult,
   BudgetFormState,
@@ -16,23 +16,10 @@ import type {
 } from "./types"
 
 const NOT_FOUND = "No se encontró el presupuesto"
-const DEFAULT_ERROR = "No se pudo guardar el presupuesto. Intenta de nuevo"
-const INVALID_CATEGORY = "Elige una categoría de gasto"
-const ARCHIVED_CATEGORY = "Esta categoría está archivada. Elige otra"
 
 const FIELDS = ["category_id", "month", "amount"] as const
 
 const idSchema = z.uuid()
-
-// Códigos de Postgres que pueden llegar pese a la validación con Zod
-const PG_ERROR_MESSAGES: Record<string, BudgetFormState> = {
-  // check_expense_category y los check de la tabla
-  "23514": { fieldErrors: { category_id: [INVALID_CATEGORY] } },
-  // FK de category_id
-  "23503": { fieldErrors: { category_id: [INVALID_CATEGORY] } },
-  // RLS
-  "42501": { error: "No tienes permiso para modificar este presupuesto" }
-}
 
 function readValues(formData: FormData) {
   return Object.fromEntries(
@@ -41,35 +28,6 @@ function readValues(formData: FormData) {
       return [key, typeof value === "string" ? value : ""]
     })
   ) as Record<(typeof FIELDS)[number], string>
-}
-
-function toFormError(
-  error: PostgrestError,
-  values: Record<string, string>
-): BudgetFormState {
-  return {
-    ...(PG_ERROR_MESSAGES[error.code] ?? { error: DEFAULT_ERROR }),
-    values
-  }
-}
-
-// La categoría debe existir, ser visible para el usuario (RLS), ser de gasto
-// y estar activa
-async function validateCategory(categoryId: string): Promise<string | null> {
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from("categories")
-    .select("type, archived_at")
-    .eq("id", categoryId)
-    .maybeSingle()
-
-  if (!data || data.type !== "expense") {
-    return INVALID_CATEGORY
-  }
-  if (data.archived_at !== null) {
-    return ARCHIVED_CATEGORY
-  }
-  return null
 }
 
 // Crea el presupuesto de la categoría en el mes o, si ya existe, cambia su
@@ -88,22 +46,15 @@ export async function upsertBudget(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
   }
 
-  const categoryError = await validateCategory(parsed.data.category_id)
-  if (categoryError) {
-    return { fieldErrors: { category_id: [categoryError] }, values }
-  }
-
   const workspace = await getPersonalWorkspace()
-  const supabase = await createClient()
-  const { error } = await supabase
-    .from("budgets")
-    .upsert(
-      { ...parsed.data, workspace_id: workspace.id },
-      { onConflict: "workspace_id,category_id,month" }
-    )
+  const result = await setBudgetRecord(
+    await createClient(),
+    workspace,
+    parsed.data
+  )
 
-  if (error) {
-    return toFormError(error, values)
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
   }
 
   revalidatePersonalPages()

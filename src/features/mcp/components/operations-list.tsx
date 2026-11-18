@@ -74,8 +74,9 @@ function OperationRow({ operation }: { operation: AgentOperation }) {
       >
         <p>
           {operation.summary}. Se borra lo que creó, vuelve lo que borró y lo
-          editado regresa a como estaba. Si algo cambió después, no se revierte
-          nada. No se puede rehacer.
+          editado regresa a como estaba. Si algo cambió después, o si lo que
+          creó (una cuenta, una deuda, un fijo…) ya tiene movimientos, pagos o
+          aportes, no se revierte nada. No se puede rehacer.
         </p>
       </DeleteDialog>
     </li>

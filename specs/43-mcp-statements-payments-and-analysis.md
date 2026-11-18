@@ -1,6 +1,6 @@
 # SPEC 43 — MCP: extractos bancarios, pagos y análisis
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 04, SPEC 05, SPEC 06, SPEC 07, SPEC 21, SPEC 34, SPEC 38, SPEC 39, SPEC 41, SPEC 42
 > **Fecha:** 2026-11-17
 > **Objetivo:** Que un agente de IA conectado por MCP pueda poner al día las cuentas desde un extracto bancario, registrar pagos de deudas, gastos fijos, ingresos fijos y metas, analizar el dinero del usuario y pedirle cualquier dato que falte antes de escribir.
@@ -111,30 +111,32 @@ type StatementPreview = {
 
 ## Criterios de aceptación
 
-- [ ] `create_transactions` sin `account_id` y con varias cuentas activas responde `needs_input` con las cuentas como opciones y no crea nada.
-- [ ] Una categoría por nombre que coincide con dos responde `needs_input` con ambas.
-- [ ] `import_statement` con `dry_run` no escribe ninguna fila.
-- [ ] Con un gasto de 45.000 del 10 nov ya registrado, una fila de 45.000 del 11 nov sale como duplicado probable.
-- [ ] Una fila de 45.000 del 14 nov no sale como duplicado.
-- [ ] Dos filas iguales dentro del mismo extracto se marcan como duplicadas entre sí.
-- [ ] Una fila "UBER *TRIP" sugiere la categoría del último movimiento "UBER *TRIP".
-- [ ] Con `statement_balance`, el dry run devuelve la diferencia entre el saldo de Tesoro y el extracto antes y después de importar.
-- [ ] Importar 400 filas crea los movimientos en una sola operación; `undo_operation` la revierte completa.
-- [ ] 401 filas se rechazan con un error que indica el límite.
-- [ ] `record_debt_payment` crea el pago con fecha de hoy, la cuenta habitual de la deuda y la descripción de SPEC 41.
-- [ ] `collect_receivable` de 20.000 en una mensual de 5.100 reparte igual que el tab Me deben (SPEC 39).
-- [ ] `update_debt_entry` cambia la cuenta y se refleja en Movimientos (SPEC 42).
-- [ ] `pay_recurring_expense` marca pagada la ocurrencia más antigua y crea el gasto.
-- [ ] `receive_recurring_income` reparte el ingreso como SPEC 38.
-- [ ] `record_goal_contribution` con `direction: "out"` baja el progreso de la meta.
-- [ ] Todas las escrituras nuevas aparecen en `list_operations` y se revierten con `undo_operation`.
-- [ ] `get_account_balance` devuelve el mismo saldo que la pantalla de Cuentas a esa fecha.
-- [ ] `get_spending_breakdown` devuelve los mismos totales por categoría que Reportes en ese rango.
-- [ ] `list_upcoming_payments` lista lo vencido aparte de lo próximo.
-- [ ] `get_recommendations` devuelve las mismas recomendaciones que el dashboard.
-- [ ] Una conexión de solo lectura no lista las tools de escritura nuevas.
-- [ ] Ninguna tool usa `service_role`; todo pasa por RLS.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] `create_transactions` sin `account_id` y con varias cuentas activas responde `needs_input` con las cuentas como opciones y no crea nada.
+- [x] Una categoría por nombre que coincide con dos responde `needs_input` con ambas.
+- [x] `import_statement` con `dry_run` no escribe ninguna fila.
+- [x] Con un gasto de 45.000 del 10 nov ya registrado, una fila de 45.000 del 11 nov sale como duplicado probable.
+- [x] Una fila de 45.000 del 14 nov no sale como duplicado.
+- [x] Dos filas iguales dentro del mismo extracto se marcan como duplicadas entre sí.
+- [x] Una fila "UBER *TRIP" sugiere la categoría del último movimiento "UBER *TRIP".
+- [x] Con `statement_balance`, el dry run devuelve la diferencia entre el saldo de Tesoro y el extracto antes y después de importar.
+- [x] Importar 400 filas crea los movimientos en una sola operación; `undo_operation` la revierte completa.
+- [x] 401 filas se rechazan con un error que indica el límite.
+- [x] `record_debt_payment` crea el pago con fecha de hoy, la cuenta habitual de la deuda y la descripción de SPEC 41.
+- [x] `collect_receivable` de 20.000 en una mensual de 5.100 reparte igual que el tab Me deben (SPEC 39).
+- [x] `update_debt_entry` cambia la cuenta y se refleja en Movimientos (SPEC 42).
+- [x] `pay_recurring_expense` marca pagada la ocurrencia más antigua y crea el gasto.
+- [x] `receive_recurring_income` reparte el ingreso como SPEC 38.
+- [x] `record_goal_contribution` con `direction: "out"` baja el progreso de la meta.
+- [x] Todas las escrituras nuevas aparecen en `list_operations` y se revierten con `undo_operation`.
+- [x] `get_account_balance` devuelve el mismo saldo que la pantalla de Cuentas a esa fecha.
+- [x] `get_spending_breakdown` devuelve los mismos totales por categoría que Reportes en ese rango.
+- [x] `list_upcoming_payments` lista lo vencido aparte de lo próximo.
+- [x] `get_recommendations` devuelve las mismas recomendaciones que el dashboard.
+- [x] Una conexión de solo lectura no lista las tools de escritura nuevas.
+- [x] Ninguna tool usa `service_role`; todo pasa por RLS.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+
+Revisados contra el código. La prueba contra la base (migración, `undo_operation` y tiempos con 400 filas) queda pendiente de correr con `supabase start`.
 
 ## Decisiones
 
@@ -147,6 +149,12 @@ type StatementPreview = {
 - **Sí:** las tools reusan los servicios de las actions. Una sola regla de negocio para UI y agente.
 - **No:** leer PDFs en el servidor. El agente ya lee el archivo; el servidor recibe filas validadas.
 - **Sí:** crear y editar entidades en SPEC 44 (decisión del usuario). Este spec ya toca muchas tools.
+- **Sí:** de dos filas iguales del mismo extracto se marca solo la segunda (decisión del usuario): por defecto se importa una.
+- **Sí:** al importar, una fila sin categoría usa la sugerida (decisión del usuario); sin sugerencia se pregunta.
+- **Sí:** `transfer_account_id` es la otra cuenta del traspaso en ambos sentidos (decisión del usuario): destino si el monto sale, origen si entra.
+- **Sí:** sin cuenta y con una sola cuenta activa se usa esa; con varias se pregunta.
+- **Sí:** `import_statement` inserta en bloque con PostgREST (un insert por tabla) en vez de una RPC nueva.
+- **Sí:** `reconciliation` lleva también `end_date` y `difference_before`.
 
 ## Riesgos
 

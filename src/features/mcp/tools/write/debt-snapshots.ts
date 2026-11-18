@@ -4,12 +4,13 @@ import type { McpContext } from "../../types"
 // Antes y después de una escritura sobre una deuda (SPEC 43), para el log de
 // operaciones. El orden de las filas importa: undo_mcp_operation restaura
 // de la última a la primera, así que
-//   1. la deuda (su estado al saldarse);
-//   2. los movimientos creados (se borran al final, ya sin abono que los use);
-//   3. los movimientos editados;
-//   4. el abono;
-//   5. los movimientos borrados (se recrean antes que el abono que los usa);
-//   6. las asignaciones de una mensual (undo las restaura al final, por abono).
+//   1. los movimientos creados (se borran al final, ya sin abono que los use);
+//   2. los movimientos editados;
+//   3. el abono;
+//   4. los movimientos borrados (se recrean antes que el abono que los usa);
+//   5. las asignaciones de una mensual (undo las restaura al final, por abono);
+//   6. la deuda (su estado al saldarse): se restaura primero, para que el
+//      abono de una deuda saldada se pueda borrar.
 
 type Row = { id: string; updated_at?: string } & Record<string, unknown>
 
@@ -80,15 +81,6 @@ export function debtChanges(
 ): RowChange[] {
   const changes: RowChange[] = []
 
-  if (before.debt && after.debt && changed(before.debt, after.debt)) {
-    changes.push({
-      table: "debts",
-      rowId: before.debt.id,
-      before: before.debt,
-      after: after.debt
-    })
-  }
-
   const ids = new Set([
     ...before.transactions.keys(),
     ...after.transactions.keys()
@@ -143,6 +135,17 @@ export function debtChanges(
         after: row
       })
     }
+  }
+
+  // Al final: undo la restaura primero. check_debt_entry no deja tocar los
+  // abonos de una deuda que no está activa (p. ej. saldada por un cobro)
+  if (before.debt && after.debt && changed(before.debt, after.debt)) {
+    changes.push({
+      table: "debts",
+      rowId: before.debt.id,
+      before: before.debt,
+      after: after.debt
+    })
   }
 
   return changes

@@ -148,9 +148,19 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   también la página `/mcp`). Las escrituras usan los servicios compartidos
   con las actions (`transactions/service.ts`,
   `accounts/transfer-service.ts`, `debts/entry-service.ts`,
-  `categories/service.ts`), validan todo antes de escribir y dejan log en
-  `mcp_operations` para revertir con `undo_mcp_operation`. `/api/mcp` y
-  `/.well-known/*` no pasan por `updateSession` (matcher de `proxy.ts`).
+  `goals/contribution-service.ts`, `categories/service.ts`) y los
+  prellenados del diálogo de movimiento (`recurring-expenses/payment.ts`,
+  `incomeReceiptValues` en `recurring-incomes/receipt.ts`), validan todo
+  antes de escribir y dejan log en `mcp_operations` para revertir con
+  `undo_mcp_operation`. La excepción es `import_statement` (SPEC 43): valida
+  con los esquemas de la UI y luego inserta en bloque. Si falta un dato o es
+  ambiguo, la tool no escribe y responde `needs_input` (`needsInput` en
+  `tools/shared.ts`; cuenta y categoría por id o nombre en
+  `tools/write/references.ts`). Una tabla nueva en el log va en
+  `SNAPSHOT_TABLES` y en el `check` de `mcp_operation_rows.table_name`; las
+  asignaciones (`debt_entry_allocations`, `recurring_income_allocations`) las
+  restaura undo al final, por padre. `/api/mcp` y `/.well-known/*` no pasan
+  por `updateSession` (matcher de `proxy.ts`).
 - `app/` contiene solo rutas. El resto del código vive en `src/` (alias
   `@/*` → `./src/*`). Estilos globales en `src/styles/globals.css` (Tailwind
   4, cargado vía `@tailwindcss/turbopack` en `next.config.ts`).

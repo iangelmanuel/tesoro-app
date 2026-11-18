@@ -16,7 +16,11 @@ export const SNAPSHOT_TABLES = [
   "categories",
   "debt_entries",
   "goal_contributions",
-  "receivable_installment_history"
+  "receivable_installment_history",
+  // SPEC 43: estado de la deuda y repartos (se restauran al final, por padre)
+  "debts",
+  "debt_entry_allocations",
+  "recurring_income_allocations"
 ] as const
 
 export type SnapshotTable = (typeof SNAPSHOT_TABLES)[number]

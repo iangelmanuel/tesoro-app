@@ -182,3 +182,25 @@ export function needsInput(missing: MissingField[]) {
     { ...data }
   )
 }
+
+/** Vista previa de import_statement (SPEC 43) */
+export interface StatementPreview {
+  status: "preview"
+  /** Filas que se crearían */
+  ready: number[]
+  /** Duplicados probables: ids existentes o "row:N" del mismo extracto */
+  duplicates: { row: number; matches: string[] }[]
+  needsInput: MissingField[]
+  suggestions: { row: number; category_id: string }[]
+  /** Saldo de la cuenta al cierre del extracto, antes y después de importar */
+  reconciliation?: {
+    end_date: string
+    before: number
+    after: number
+    statement: number
+    /** Extracto − saldo después de importar; 0 = cuadra */
+    difference: number
+    /** Extracto − saldo antes de importar */
+    difference_before: number
+  }
+}

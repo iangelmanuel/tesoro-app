@@ -242,6 +242,7 @@ export type Database = {
           generated: boolean
           id: string
           import_id: string | null
+          installments: number | null
           is_extra_payment: boolean
           kind: Database["public"]["Enums"]["debt_entry_kind"]
           note: string | null
@@ -260,6 +261,7 @@ export type Database = {
           generated?: boolean
           id?: string
           import_id?: string | null
+          installments?: number | null
           is_extra_payment?: boolean
           kind: Database["public"]["Enums"]["debt_entry_kind"]
           note?: string | null
@@ -278,6 +280,7 @@ export type Database = {
           generated?: boolean
           id?: string
           import_id?: string | null
+          installments?: number | null
           is_extra_payment?: boolean
           kind?: Database["public"]["Enums"]["debt_entry_kind"]
           note?: string | null
@@ -1398,6 +1401,14 @@ export type Database = {
         Args: { p_workspace_id: string }
         Returns: undefined
       }
+      card_installment_start: {
+        Args: {
+          p_closing_day: number
+          p_due_day: number
+          p_occurred_on: string
+        }
+        Returns: string
+      }
       category_totals: {
         Args: {
           p_from: string
@@ -1428,19 +1439,6 @@ export type Database = {
           total: number
           tx_count: number
         }[]
-      }
-      convert_debt_adjustment: {
-        Args: {
-          p_account_id: string
-          p_category_id: string
-          p_description: string
-          p_entry_id: string
-          p_link_transaction_id: string
-          p_note: string
-          p_occurred_on: string
-          p_occurred_time: string
-        }
-        Returns: string
       }
       create_business: {
         Args: { p_name: string; p_sector: string; p_tax_id: string }
@@ -1486,6 +1484,8 @@ export type Database = {
           fee_day: number
           id: string
           installment: number
+          installments_due_current: number
+          installments_due_previous: number
           interest_rate: number
           kind: Database["public"]["Enums"]["debt_kind"]
           last_payment_on: string
@@ -1636,6 +1636,7 @@ export type Database = {
           p_account_id?: string
           p_amount: number
           p_debt_id: string
+          p_installments?: number
           p_note: string
           p_occurred_on: string
           p_occurred_time?: string
@@ -1805,6 +1806,38 @@ export type Database = {
       undo_mcp_operation: {
         Args: { p_operation_id: string }
         Returns: undefined
+      }
+      update_card_advance: {
+        Args: {
+          p_account_id: string
+          p_amount: number
+          p_category_id: string
+          p_description: string
+          p_entry_id: string
+          p_installments: number
+          p_note: string
+          p_occurred_on: string
+          p_occurred_time: string
+        }
+        Returns: string
+      }
+      update_debt_entry: {
+        Args: {
+          p_account_id: string
+          p_amount: number
+          p_category_id: string
+          p_create_transaction: boolean
+          p_description: string
+          p_entry_id: string
+          p_installments: number
+          p_is_extra_payment: boolean
+          p_kind: string
+          p_link_transaction_id: string
+          p_note: string
+          p_occurred_on: string
+          p_occurred_time: string
+        }
+        Returns: string
       }
       workspace_balance: { Args: { p_workspace_id: string }; Returns: number }
     }

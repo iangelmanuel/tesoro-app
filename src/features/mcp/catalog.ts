@@ -1,7 +1,10 @@
+import { getAccountBalance } from "./tools/read/get-account-balance"
 import { getCashFlow } from "./tools/read/get-cash-flow"
 import { getMonthSummary } from "./tools/read/get-month-summary"
 import { getPeriodReport } from "./tools/read/get-period-report"
+import { getRecommendationsTool } from "./tools/read/get-recommendations"
 import { getScore } from "./tools/read/get-score"
+import { getSpendingBreakdown } from "./tools/read/get-spending-breakdown"
 import { getTransaction } from "./tools/read/get-transaction"
 import { listAccounts } from "./tools/read/list-accounts"
 import { listBudgets } from "./tools/read/list-budgets"
@@ -13,10 +16,23 @@ import { listReceivables } from "./tools/read/list-receivables"
 import { listRecurring } from "./tools/read/list-recurring"
 import { listTransactions } from "./tools/read/list-transactions"
 import { listTransfers } from "./tools/read/list-transfers"
+import { listUpcomingPayments } from "./tools/read/list-upcoming-payments"
 import { listWorkspaces } from "./tools/read/list-workspaces"
 import { createCategory } from "./tools/write/create-category"
 import { createTransactions } from "./tools/write/create-transactions"
+import {
+  collectReceivable,
+  deleteDebtEntry,
+  recordDebtPayment,
+  updateDebtEntry
+} from "./tools/write/debt-entries"
 import { deleteTransactions } from "./tools/write/delete-transactions"
+import { recordGoalContribution } from "./tools/write/goals"
+import { importStatement } from "./tools/write/import-statement"
+import {
+  payRecurringExpense,
+  receiveRecurringIncome
+} from "./tools/write/recurring"
 import {
   createTransfers,
   deleteTransfers,
@@ -41,6 +57,10 @@ export const MCP_TOOLS: readonly McpTool[] = [
   getPeriodReport,
   getCashFlow,
   getScore,
+  getRecommendationsTool,
+  getSpendingBreakdown,
+  getAccountBalance,
+  listUpcomingPayments,
   listBudgets,
   listGoals,
   listDebts,
@@ -54,6 +74,14 @@ export const MCP_TOOLS: readonly McpTool[] = [
   updateTransfers,
   deleteTransfers,
   createCategory,
+  importStatement,
+  recordDebtPayment,
+  collectReceivable,
+  updateDebtEntry,
+  deleteDebtEntry,
+  payRecurringExpense,
+  receiveRecurringIncome,
+  recordGoalContribution,
   undoOperation
 ]
 

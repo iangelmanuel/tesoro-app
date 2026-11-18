@@ -45,8 +45,9 @@ export type EditableTransaction = Pick<
 /**
  * Abono enlazado a un movimiento: pago de préstamo o cobro de una cuenta por
  * cobrar (SPEC 26). Es la fuente de verdad: el movimiento se edita y elimina
- * desde el diálogo del pago. Trae lo que ese diálogo prellena (la nota del
- * abono no se sincroniza con la del movimiento).
+ * desde el diálogo del pago. Trae lo que ese diálogo prellena del abono; la
+ * cuenta, la descripción y la categoría salen del movimiento. Al guardar, la
+ * nota del abono pasa también al movimiento (SPEC 42).
  */
 export type LinkedDebtEntry = Pick<
   DebtEntry,
@@ -422,6 +423,43 @@ function toLedgerEntry(
       recurring_income_id: link?.recurringIncomeId ?? null,
       recurring_income_allocations: link?.recurringIncomeAllocations ?? []
     }
+  }
+}
+
+/**
+ * Un movimiento del espacio listo para el diálogo de edición, o null si no
+ * existe o es ajeno (RLS). Lo usan los Sheets de gastos e ingresos fijos para
+ * editar un pago ya registrado (SPEC 42)
+ */
+export async function getEditableTransaction(
+  workspaceId: string,
+  id: string
+): Promise<EditableTransaction | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("transactions")
+    .select(
+      "id, type, amount, occurred_on, occurred_time, category_id, description, note, account_id, counterparty, invoice_ref, recurring_expense_id, recurring_income_id, recurring_income_allocations (due_on, amount)"
+    )
+    .eq("id", id)
+    .eq("workspace_id", workspaceId)
+    .maybeSingle()
+
+  if (error) {
+    throw new Error("No se pudo cargar el movimiento")
+  }
+  if (!data) {
+    return null
+  }
+  return {
+    ...data,
+    amount: Number(data.amount),
+    recurring_income_allocations: data.recurring_income_allocations.map(
+      (allocation) => ({
+        due_on: allocation.due_on,
+        amount: Number(allocation.amount)
+      })
+    )
   }
 }
 

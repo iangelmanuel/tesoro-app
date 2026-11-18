@@ -1112,6 +1112,88 @@ inválido de `tab` cae a Debo.
   Movimientos, ese movimiento abre el diálogo del pago y eliminarlo borra los
   dos (SPEC 26). `updateTransaction` y `deleteTransaction` lo rechazan.
 
+### Editar movimientos de una deuda (SPEC 42)
+
+- **Un solo editor** (`DebtEntryDialog`, título **Editar movimiento**) para
+  cualquier movimiento de una deuda, desde el Sheet de la deuda y desde
+  Movimientos. Se guarda **como si se registrara de nuevo**: también cambia
+  el tipo.
+- **Tipo** (selector con una línea de ayuda por opción):
+  - Tarjeta: **Pago**, **Abono** (pago extra a capital), **Compra**,
+    **Avance**, **Cuota de manejo** y **Ajuste**.
+  - Préstamo: **Pago**, **Abono** y **Ajuste**.
+  - Me deben: **Cobro** y **Ajuste**. Una mensual solo **Cobro** (un ajuste
+    viejo conserva la opción).
+- **Campos según el tipo** (los que no aplican no se muestran ni se
+  guardan):
+  - Todos: monto, fecha, hora y nota.
+  - Ajuste: **Sube | Baja** el saldo; el monto va sin signo.
+  - Pago o abono de tarjeta: cuenta que paga (opcional; vive en el abono).
+  - Pago o abono de préstamo, cobro de Me deben: **Registrar como gasto /
+    ingreso**; con él, cuenta (obligatoria), descripción y categoría.
+  - Compra: cuotas. Avance: cuenta que recibe (obligatoria), cuotas,
+    descripción y categoría del ingreso.
+  - Si al cambiar de tipo falta un dato obligatorio, el formulario lo dice
+    ("Para guardar como avance, completa la cuenta") y el servidor marca el
+    campo.
+- **¿Ya lo registraste?** Si el tipo nuevo lleva movimiento (o es un pago de
+  tarjeta que antes no era pago), se buscan gastos o ingresos sueltos del
+  mismo monto a ±7 días (`findLinkableTransactions`). Elegir uno adopta su
+  cuenta, fecha y descripción: un préstamo, Me deben o avance lo enlaza; un
+  pago de tarjeta lo borra (el pago ya descuenta de la cuenta) y pasa su
+  descripción a la nota. Sin candidatos no se muestra.
+- Debajo, el efecto: **Saldo de la deuda: antes → después** y qué pasa con
+  la cuenta (sale, entra, no toca tus cuentas o "su movimiento se elimina").
+- RPC `update_debt_entry` (`security invoker`, todo por RLS) en una sola
+  transacción: valida tipo, monto y cuenta; crea, reutiliza (si sigue siendo
+  del mismo tipo), enlaza o borra el movimiento; guarda la cuenta del pago
+  de tarjeta en el abono; las cuotas solo en compras y avances; una cuota de
+  manejo automática deja de serlo al cambiar de tipo; en una mensual de Me
+  deben el cobro se reparte de nuevo (SPEC 39). `check_debt_entry` ya no
+  restringe el cambio de tipo: el resultado pasa por las mismas reglas y
+  `check_debt_balance` revisa el saldo.
+- Registrar sigue igual: **Registrar pago** (Pago | Abono | Compra) y
+  **Actualizar saldo** (el saldo real crea un ajuste por la diferencia).
+- Una deuda pagada o archivada no permite editar. No hay edición en lote ni
+  buscador libre de movimientos. El MCP edita pagos con
+  `updatePaymentEntry` (sin cambio de tipo).
+
+### Compras a cuotas y ajustes de tarjeta (SPEC 42, parte 2)
+
+- **Compra o avance** (`kind = 'advance'`): sube el saldo de la tarjeta. Sin
+  cuenta es una **compra**; con cuenta es un **avance** y entra a la cuenta
+  como ingreso "Avance de tarjeta" (SPEC 36). El historial dice "Compra" o
+  "Avance" según tenga cuenta. Se registra desde **Registrar pago → Compra**.
+- **Cuotas** (`debt_entries.installments`, opcional, 1 a 48; vacío = sin
+  cuotas). Solo compras y avances de tarjeta.
+  - Cada compra a N cuotas aporta `monto / N` (redondeado a centavos) al
+    pago de cada uno de los N ciclos siguientes a su fecha. El primer ciclo
+    es el primer vencimiento posterior a la compra; con día de corte, el
+    primer vencimiento posterior al primer corte que la incluye
+    (`card_installment_start`, misma regla en `installmentStartMonth`).
+  - **Pago del mes** de una tarjeta: `max(pago mínimo, Σ cuotas del ciclo)`;
+    sin mínimo ni cuotas no hay pago del mes. `debt_overview` devuelve
+    `installments_due_current` (próximo vencimiento) e
+    `installments_due_previous` (el anterior, para "Vencido"). Sin compras a
+    cuotas todo sigue igual. Sin intereses por cuota: la proyección usa el
+    pago del mes resultante.
+  - El historial muestra "a 3 cuotas · 2 de 3" (la cuota del próximo
+    vencimiento) o "a 3 cuotas · pagada"; el Sheet, "Pago del mes · $ X de
+    compras a cuotas".
+- Editar una compra o avance (monto, fecha, hora, nota, cuotas y cuenta) o
+  pasar un ajuste a compra, avance o cuota de manejo se hace en el editor
+  único de arriba. `update_card_advance` sigue disponible para el MCP: con
+  cuenta y sin ingreso lo crea y lo enlaza (también en los avances anteriores
+  a SPEC 36); sin cuenta, la compra pierde su ingreso.
+- **Gastos e ingresos fijos:** en el historial de su Sheet, cada pago o cobro
+  registrado tiene **Editar** (`TransactionDialog` de ese movimiento) y
+  **Eliminar** (el periodo vuelve a por pagar, o a parcial en un ingreso con
+  varios cobros, SPEC 38). Es el mismo movimiento que en Movimientos.
+- El check `debt_entries_transaction_kind` deja enlazar movimiento a pagos y
+  avances. El de SPEC 06 solo lo permitía en pagos, así que el avance con
+  ingreso de SPEC 36 no se podía guardar: la migración lo corrige y vuelve a
+  convertir los avances con la cuenta en el abono.
+
 ### Ciclo de pago
 
 Tarjetas y préstamos. Fechas en `America/Bogota`. El vencimiento de cada mes

@@ -32,6 +32,9 @@ export type Debt = Omit<
   prev_due_on: string | null
   paid_current_cycle: number | null
   paid_previous_cycle: number | null
+  /** Σ cuotas de compras del próximo vencimiento y del anterior (SPEC 42) */
+  installments_due_current: number | null
+  installments_due_previous: number | null
   /** Valores anteriores de la cuota de una mensual indefinida (SPEC 29) */
   installment_history: InstallmentRate[]
 }
@@ -43,6 +46,14 @@ export type DebtEntry = Omit<DebtEntryRow, "amount"> & {
    * enlazado en préstamos y cuentas por cobrar. null = fuera de las cuentas.
    */
   account_name: string | null
+  /**
+   * id de esa cuenta (SPEC 42): prellena la cuenta al editar el pago. null =
+   * fuera de las cuentas
+   */
+  payment_account_id: string | null
+  /** Descripción y categoría del movimiento enlazado; null sin movimiento */
+  description: string | null
+  category_id: string | null
   /** Cuotas que cubre un abono de una mensual (SPEC 39); vacío en el resto */
   allocations: EntryAllocation[]
 }
@@ -105,18 +116,21 @@ export async function getDebts(workspaceId: string): Promise<Debt[]> {
     paid_total: Number(row.paid_total),
     entries_count: Number(row.entries_count),
     paid_current_cycle: toNumber(row.paid_current_cycle),
-    paid_previous_cycle: toNumber(row.paid_previous_cycle)
+    paid_previous_cycle: toNumber(row.paid_previous_cycle),
+    installments_due_current: toNumber(row.installments_due_current ?? null),
+    installments_due_previous: toNumber(row.installments_due_previous ?? null)
   }))
 }
+
+const ENTRY_COLUMNS =
+  "*, account:accounts!debt_entries_account_id_workspace_id_fkey (name), transaction:transactions!debt_entries_transaction_id_fkey (account_id, description, category_id, account:accounts!transactions_account_id_workspace_id_fkey (name)), allocations:debt_entry_allocations (period_on, amount)"
 
 // Pagos, avances y ajustes de una deuda, el más reciente primero
 export async function getDebtEntries(debtId: string): Promise<DebtEntry[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("debt_entries")
-    .select(
-      "*, account:accounts!debt_entries_account_id_workspace_id_fkey (name), transaction:transactions!debt_entries_transaction_id_fkey (account:accounts!transactions_account_id_workspace_id_fkey (name)), allocations:debt_entry_allocations (period_on, amount)"
-    )
+    .select(ENTRY_COLUMNS)
     .eq("debt_id", debtId)
     .order("occurred_on", { ascending: false })
     .order("created_at", { ascending: false })
@@ -125,15 +139,133 @@ export async function getDebtEntries(debtId: string): Promise<DebtEntry[]> {
     throw new Error("No se pudieron cargar los pagos")
   }
 
-  return data.map(({ account, transaction, allocations, ...row }) => ({
+  return data.map(toDebtEntry)
+}
+
+/** Un movimiento de una deuda, o null si no existe o es ajeno (RLS) */
+export async function getDebtEntry(entryId: string): Promise<DebtEntry | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("debt_entries")
+    .select(ENTRY_COLUMNS)
+    .eq("id", entryId)
+    .maybeSingle()
+
+  if (error) {
+    throw new Error("No se pudo cargar el movimiento")
+  }
+  return data ? toDebtEntry(data) : null
+}
+
+type EntryRowWithLinks = {
+  account: { name: string } | null
+  transaction: {
+    account_id: string | null
+    description: string
+    category_id: string
+    account: { name: string } | null
+  } | null
+  allocations: { period_on: string; amount: number | string }[]
+} & DebtEntryRow
+
+function toDebtEntry({
+  account,
+  transaction,
+  allocations,
+  ...row
+}: EntryRowWithLinks): DebtEntry {
+  return {
     ...row,
     amount: Number(row.amount),
     account_name: account?.name ?? transaction?.account?.name ?? null,
+    payment_account_id: row.account_id ?? transaction?.account_id ?? null,
+    description: transaction?.description ?? null,
+    category_id: transaction?.category_id ?? null,
     allocations: allocations
       .map((allocation) => ({
         period_on: allocation.period_on,
         amount: Number(allocation.amount)
       }))
       .sort((a, b) => a.period_on.localeCompare(b.period_on))
-  }))
+  }
+}
+
+/** Movimiento suelto que puede ser el pago real de un ajuste (SPEC 42) */
+export interface LinkableTransaction {
+  id: string
+  occurred_on: string
+  occurred_time: string | null
+  description: string
+  note: string | null
+  account_id: string | null
+  /** null = fuera de las cuentas */
+  account_name: string | null
+  amount: number
+}
+
+/** Días de margen alrededor de la fecha del ajuste para sugerir candidatos */
+export const LINKABLE_DAYS = 7
+
+/** Fecha YYYY-MM-DD desplazada `days` días, sin pasar por la zona local */
+function shiftDay(date: string, days: number) {
+  const [year, month, day] = date.split("-").map(Number)
+  return new Date(Date.UTC(year, month - 1, day + days))
+    .toISOString()
+    .slice(0, 10)
+}
+
+/**
+ * Movimientos ya registrados que pueden ser el de un pago, cobro o avance
+ * (SPEC 42): del espacio de la deuda, del tipo dado, con el mismo monto y
+ * fecha a ±7 días, sin enlazar a un abono ni a un gasto o ingreso fijo. Los
+ * más cercanos a la fecha primero.
+ */
+export async function findLinkableTransactions(
+  debtId: string,
+  amount: number,
+  occurredOn: string,
+  type: "income" | "expense"
+): Promise<LinkableTransaction[]> {
+  const supabase = await createClient()
+  const { data: debt } = await supabase
+    .from("debts")
+    .select("workspace_id")
+    .eq("id", debtId)
+    .maybeSingle()
+
+  if (!debt) {
+    return []
+  }
+
+  const { data, error } = await supabase
+    .from("transactions")
+    .select(
+      "id, occurred_on, occurred_time, description, note, account_id, amount, account:accounts!transactions_account_id_workspace_id_fkey (name), debt_entries (id)"
+    )
+    .eq("workspace_id", debt.workspace_id)
+    .eq("type", type)
+    .eq("amount", amount)
+    .gte("occurred_on", shiftDay(occurredOn, -LINKABLE_DAYS))
+    .lte("occurred_on", shiftDay(occurredOn, LINKABLE_DAYS))
+    .is("recurring_expense_id", null)
+    .is("recurring_income_id", null)
+
+  if (error) {
+    throw new Error("No se pudieron cargar los movimientos")
+  }
+
+  const distance = (date: string) =>
+    Math.abs(Date.parse(date) - Date.parse(occurredOn))
+
+  return data
+    .filter((row) => row.debt_entries === null)
+    .map(({ account, debt_entries: _link, ...row }) => {
+      void _link
+      return {
+        ...row,
+        amount: Number(row.amount),
+        account_name: account?.name ?? null
+      }
+    })
+    .sort((a, b) => distance(a.occurred_on) - distance(b.occurred_on))
 }

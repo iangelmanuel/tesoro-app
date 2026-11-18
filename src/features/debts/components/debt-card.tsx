@@ -17,6 +17,7 @@ import {
   SURFACE_ITEM_CLICKABLE
 } from "@/components/dashboard/surface"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
+import type { Category } from "@/features/categories/queries"
 import { formatCurrency, formatDate } from "@/libs/format"
 import {
   debtProjection,
@@ -42,6 +43,8 @@ interface DebtCardProps {
   entries: DebtEntry[]
   /** Cuentas activas, para el movimiento de un pago */
   accounts: PaymentAccountOption[]
+  /** Categorías del espacio, para editar el movimiento de un pago */
+  categories: Category[]
   /** Hoy en America/Bogota, calculado en el servidor */
   today: string
   currency: string
@@ -51,6 +54,7 @@ export function DebtCard({
   debt,
   entries,
   accounts,
+  categories,
   today,
   currency
 }: DebtCardProps) {
@@ -175,6 +179,7 @@ export function DebtCard({
           debt={debt}
           entries={entries}
           accounts={accounts}
+          categories={categories}
           today={today}
           currency={currency}
           open={detailOpen}

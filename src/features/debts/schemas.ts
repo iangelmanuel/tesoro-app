@@ -8,6 +8,8 @@ import {
   timeSchema
 } from "@/features/transactions/schemas"
 import { todayISO } from "@/libs/dates"
+import { ADJUSTMENT_DIRECTIONS, ENTRY_TYPES } from "./entry-types"
+import { MAX_INSTALLMENTS } from "./installments"
 
 export const DEBT_KINDS = ["credit_card", "loan", "receivable"] as const
 export const RATE_TYPES = ["ea", "mv"] as const
@@ -345,6 +347,20 @@ export type LoanInput = z.infer<typeof loanSchema>
 export type ReceivableInput = z.infer<typeof receivableSchema>
 export type MonthlyReceivableInput = z.infer<typeof monthlyReceivableSchema>
 
+// Cuotas de una compra o avance de tarjeta (SPEC 42): de 1 a 48. Vacío =
+// sin cuotas (no cambia el pago del mes)
+const INSTALLMENTS_ERROR = `Ingresa entre 1 y ${MAX_INSTALLMENTS} cuotas`
+
+export const installmentsField = z.preprocess(
+  emptyToNull,
+  z.coerce
+    .number({ error: INSTALLMENTS_ERROR })
+    .int({ error: INSTALLMENTS_ERROR })
+    .min(1, { error: INSTALLMENTS_ERROR })
+    .max(MAX_INSTALLMENTS, { error: INSTALLMENTS_ERROR })
+    .nullable()
+)
+
 // Casilla o campo oculto: "on" o "true" = marcado
 const checkboxField = z.preprocess(
   (value) => value === "on" || value === "true" || value === true,
@@ -371,6 +387,62 @@ export const paymentSchema = z
   .superRefine(refinePaymentAccount)
 
 export type PaymentInput = z.infer<typeof paymentSchema>
+
+// Editar cualquier movimiento de una deuda (SPEC 42, parte 3), como si se
+// registrara de nuevo. El tipo decide qué campos aplican:
+// - ajuste: monto positivo + dirección (sube o baja el saldo);
+// - avance: cuenta obligatoria (la que recibe el dinero);
+// - pago o abono de préstamo o Me deben: con movimiento, la cuenta es
+//   obligatoria (lo valida el servicio, que conoce la deuda).
+// Cuenta vacía = sin cuenta; descripción y categoría vacías conservan las
+// del movimiento o usan las de siempre. link_transaction_id: un gasto o
+// ingreso ya registrado que se enlaza en vez de crear uno nuevo.
+export const debtEntryEditSchema = z
+  .object({
+    type: z.enum(ENTRY_TYPES, { error: "Elige el tipo de movimiento" }),
+    amount: amountField,
+    direction: z.preprocess(
+      emptyToNull,
+      z
+        .enum(ADJUSTMENT_DIRECTIONS, {
+          error: "Elige si el ajuste sube o baja el saldo"
+        })
+        .nullable()
+    ),
+    occurred_on: pastDateField,
+    occurred_time: timeSchema,
+    note: noteField,
+    account_id: paymentAccountSchema.shape.account_id,
+    create_transaction: checkboxField,
+    description: paymentDescriptionField,
+    category_id: z.preprocess(
+      emptyToNull,
+      z.uuid({ error: "Elige una categoría válida" }).nullable()
+    ),
+    installments: installmentsField,
+    link_transaction_id: z.preprocess(
+      emptyToNull,
+      z.uuid({ error: "Elige un movimiento válido" }).nullable()
+    )
+  })
+  .superRefine((data, ctx) => {
+    if (data.type === "adjustment" && data.direction === null) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["direction"],
+        message: "Elige si el ajuste sube o baja el saldo"
+      })
+    }
+    if (data.type === "advance" && data.account_id === null) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["account_id"],
+        message: "Elige la cuenta a la que entró el avance"
+      })
+    }
+  })
+
+export type DebtEntryEditInput = z.infer<typeof debtEntryEditSchema>
 
 // Cobro de una cuenta por cobrar (SPEC 39). El modo depende del tipo de
 // cobro: Abono o Pago completo en una de cobro único; Una cuota o Varios
@@ -443,7 +515,8 @@ export const advanceSchema = z.object({
   occurred_on: pastDateField,
   occurred_time: timeSchema,
   note: noteField,
-  account_id: paymentAccountSchema.shape.account_id
+  account_id: paymentAccountSchema.shape.account_id,
+  installments: installmentsField
 })
 
 export type AdvanceInput = z.infer<typeof advanceSchema>

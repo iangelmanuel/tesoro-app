@@ -1,3 +1,4 @@
+import { validateCategory } from "@/features/transactions/service"
 import {
   type ServiceFailure,
   type ServiceResult,
@@ -5,11 +6,15 @@ import {
 } from "@/libs/service-result"
 import type { AppSupabase } from "@/libs/supabase/types"
 import type { Database } from "@/types/database"
+import { entryKindOf, entryTypesFor } from "./entry-types"
 import {
+  ACCOUNT_REQUIRED,
   COLLECT_MODE_INVALID,
   COLLECT_OVER_BALANCE,
   DEBT_NOT_ACTIVE,
   ENTRY_NOT_FOUND,
+  ENTRY_TYPE_INVALID,
+  INSTALLMENTS_ONLY_ADVANCE,
   NEGATIVE_BALANCE,
   OVER_PAYMENT,
   RECEIVABLE_NOT_FOUND,
@@ -17,6 +22,7 @@ import {
 } from "./errors"
 import {
   COLLECT_MODES_BY_SCHEDULE,
+  type DebtEntryEditInput,
   type ReceivableCollectInput,
   type ReceivableSchedule
 } from "./schemas"
@@ -106,26 +112,66 @@ export function entryRecord(entry: LoadedEntry): DebtEntryRecord {
   return row
 }
 
+/**
+ * Cambio completo de un pago o de un avance con ingreso (SPEC 42).
+ * - account_id: en una tarjeta, la cuenta del pago (debt_entries.account_id);
+ *   con movimiento, la cuenta del movimiento; null = fuera de las cuentas.
+ * - description: la del movimiento; null o vacía conserva la actual.
+ * - note: la del abono y la de su movimiento.
+ * - category_id: la del movimiento; null conserva la actual.
+ * - is_extra_payment: solo en pagos de préstamos y tarjetas.
+ * - installments: cuotas de una compra o avance (SPEC 42, parte 2); ausente
+ *   conserva las actuales.
+ */
 export interface PaymentChange {
   amount: number
   occurred_on: string
   occurred_time: string | null
+  account_id: string | null
+  description: string | null
+  note: string | null
+  category_id: string | null
+  is_extra_payment: boolean
+  installments?: number | null
 }
 
+const NOT_EDITABLE = "Este movimiento se edita desde Actualizar saldo"
+const RECEIVABLE_EXTRA = "Una cuenta por cobrar no tiene abonos extra"
+const ADVANCE_EXTRA = "Un avance no es un abono extra"
+const NO_TRANSACTION_ACCOUNT =
+  "Este pago no tiene movimiento: no se le puede asignar una cuenta"
+const TRANSACTION_ERROR = "No se pudo guardar el movimiento. Intenta de nuevo"
+
 /**
- * Valida el cambio de monto o fecha de un abono enlazado a un movimiento con
- * las reglas del diálogo de pago: deuda activa y
+ * Valida el cambio de un pago o de un avance con las reglas del diálogo de
+ * pago: deuda activa y
  * - en un pago, que el saldo sin él cubra el monto nuevo (salvo una mensual
  *   indefinida, sin saldo total);
- * - en un avance (SPEC 36), que bajarlo no deje el saldo negativo.
+ * - en un avance (SPEC 36), que bajarlo no deje el saldo negativo;
+ * - abono extra solo en pagos de préstamos y tarjetas.
  * Devuelve el mensaje o null.
  */
 export function validatePaymentChange(
   entry: LoadedEntry,
-  change: Pick<PaymentChange, "amount">
+  change: Pick<PaymentChange, "amount"> &
+    Partial<Pick<PaymentChange, "is_extra_payment" | "installments">>
 ): string | null {
   if (entry.debt.status !== "active") {
     return DEBT_NOT_ACTIVE
+  }
+  if (entry.kind !== "payment" && entry.kind !== "advance") {
+    return NOT_EDITABLE
+  }
+  if (entry.kind !== "advance" && change.installments != null) {
+    return INSTALLMENTS_ONLY_ADVANCE
+  }
+  if (change.is_extra_payment) {
+    if (entry.kind === "advance") {
+      return ADVANCE_EXTRA
+    }
+    if (entry.debt.kind === "receivable") {
+      return RECEIVABLE_EXTRA
+    }
   }
   if (entry.kind === "advance") {
     return roundCents(entry.debt.balance - entry.amount + change.amount) < 0
@@ -141,9 +187,75 @@ export function validatePaymentChange(
   return null
 }
 
+type TransactionPatch = Partial<
+  Pick<
+    Database["public"]["Tables"]["transactions"]["Update"],
+    "account_id" | "description" | "note" | "category_id"
+  >
+>
+
 /**
- * Cambia monto, fecha y hora de un pago o de un avance con ingreso (SPEC 36).
- * El trigger sync_debt_entry_transaction los copia a su movimiento enlazado.
+ * Campos del movimiento enlazado que cambian: cuenta, descripción, nota y
+ * categoría. Solo los distintos, así un cambio que no los toca no escribe.
+ * Devuelve el parche o el fallo de la categoría.
+ */
+async function transactionPatch(
+  supabase: AppSupabase,
+  transactionId: string,
+  change: PaymentChange
+): Promise<
+  | { ok: true; patch: TransactionPatch }
+  | { ok: false; failure: Omit<ServiceFailure, "ok"> }
+> {
+  const { data: current } = await supabase
+    .from("transactions")
+    .select("type, account_id, description, note, category_id")
+    .eq("id", transactionId)
+    .maybeSingle()
+
+  if (!current) {
+    return { ok: false, failure: { error: ENTRY_NOT_FOUND } }
+  }
+
+  const patch: TransactionPatch = {}
+  if (change.account_id !== current.account_id) {
+    patch.account_id = change.account_id
+  }
+  const description = change.description?.trim()
+  if (description && description !== current.description) {
+    patch.description = description
+  }
+  if (change.note !== current.note) {
+    patch.note = change.note
+  }
+  if (change.category_id && change.category_id !== current.category_id) {
+    // Los pagos de deuda solo existen en Personal
+    const categoryError = await validateCategory(
+      supabase,
+      change.category_id,
+      current.type,
+      "personal",
+      current.category_id
+    )
+    if (categoryError) {
+      return {
+        ok: false,
+        failure: { fieldErrors: { category_id: [categoryError] } }
+      }
+    }
+    patch.category_id = change.category_id
+  }
+  return { ok: true, patch }
+}
+
+/**
+ * Edita un pago (SPEC 42). Las compras y avances van por updateCardAdvance.
+ * - El abono guarda monto, fecha, hora, nota, abono extra y, en una tarjeta,
+ *   la cuenta. El trigger sync_debt_entry_transaction copia monto, fecha y
+ *   hora al movimiento; en una mensual, cambiar el monto reparte de nuevo
+ *   las cuotas (SPEC 39).
+ * - Si hay movimiento, aquí se le cambian cuenta, descripción, nota y
+ *   categoría. Si eso falla, el abono vuelve a como estaba.
  */
 export async function updatePaymentEntry(
   supabase: AppSupabase,
@@ -154,11 +266,41 @@ export async function updatePaymentEntry(
   if (invalid) {
     return fail({ error: invalid })
   }
+  if (entry.kind === "advance") {
+    return updateCardAdvance(supabase, entry, change)
+  }
+
+  const isCardPayment =
+    entry.kind === "payment" && entry.debt.kind === "credit_card"
+  if (!isCardPayment && !entry.transaction_id && change.account_id) {
+    return fail({ fieldErrors: { account_id: [NO_TRANSACTION_ACCOUNT] } })
+  }
+
+  // Se valida el movimiento antes de escribir nada
+  let patch: TransactionPatch = {}
+  if (entry.transaction_id) {
+    const result = await transactionPatch(
+      supabase,
+      entry.transaction_id,
+      change
+    )
+    if (!result.ok) {
+      return fail(result.failure)
+    }
+    patch = result.patch
+  }
 
   const before = entryRecord(entry)
   const { data, error } = await supabase
     .from("debt_entries")
-    .update(change)
+    .update({
+      amount: change.amount,
+      occurred_on: change.occurred_on,
+      occurred_time: change.occurred_time,
+      note: change.note,
+      is_extra_payment: change.is_extra_payment,
+      ...(isCardPayment ? { account_id: change.account_id } : {})
+    })
     .eq("id", entry.id)
     .select("*")
 
@@ -166,12 +308,239 @@ export async function updatePaymentEntry(
     const failure = debtPgError(
       error,
       "amount",
-      entry.kind === "advance" ? NEGATIVE_BALANCE : OVER_PAYMENT,
+      OVER_PAYMENT,
       ENTRY_DEFAULT_ERROR
     )
     return fail({ error: failure.error, fieldErrors: failure.fieldErrors })
   }
   const after = data[0]
+  if (!after) {
+    return fail({ error: ENTRY_NOT_FOUND })
+  }
+
+  if (entry.transaction_id && Object.keys(patch).length > 0) {
+    const { data: updated, error: txError } = await supabase
+      .from("transactions")
+      .update(patch)
+      .eq("id", entry.transaction_id)
+      .select("id")
+
+    if (txError || updated.length === 0) {
+      // Deshace el abono: el trigger devuelve también monto y fecha al
+      // movimiento
+      await supabase
+        .from("debt_entries")
+        .update({
+          amount: before.amount,
+          occurred_on: before.occurred_on,
+          occurred_time: before.occurred_time,
+          note: before.note,
+          is_extra_payment: before.is_extra_payment
+        })
+        .eq("id", entry.id)
+
+      if (!txError) {
+        return fail({ error: ENTRY_NOT_FOUND })
+      }
+      const failure = debtPgError(
+        txError,
+        "amount",
+        OVER_PAYMENT,
+        TRANSACTION_ERROR
+      )
+      return fail({ error: failure.error, fieldErrors: failure.fieldErrors })
+    }
+  }
+  return { ok: true, before, after }
+}
+
+/**
+ * Edita una compra o avance de tarjeta con update_card_advance (SPEC 42,
+ * parte 2), en una sola transacción. La cuenta decide qué es: con cuenta es
+ * un avance con su ingreso (lo crea si no lo tenía, también en los avances
+ * anteriores a SPEC 36 con la cuenta en el abono); sin cuenta es una compra
+ * y su ingreso, si lo tenía, se borra.
+ */
+async function updateCardAdvance(
+  supabase: AppSupabase,
+  entry: LoadedEntry,
+  change: PaymentChange
+): Promise<ServiceResult<{ before: DebtEntryRecord; after: DebtEntryRecord }>> {
+  // Categoría elegida para el ingreso: se valida antes de escribir
+  const categoryId =
+    change.account_id && change.category_id ? change.category_id : null
+  if (categoryId) {
+    const { data: current } = entry.transaction_id
+      ? await supabase
+          .from("transactions")
+          .select("category_id")
+          .eq("id", entry.transaction_id)
+          .maybeSingle()
+      : { data: null }
+    if (categoryId !== current?.category_id) {
+      const categoryError = await validateCategory(
+        supabase,
+        categoryId,
+        "income",
+        "personal",
+        current?.category_id ?? undefined
+      )
+      if (categoryError) {
+        return fail({ fieldErrors: { category_id: [categoryError] } })
+      }
+    }
+  }
+
+  const before = entryRecord(entry)
+  // Los tipos generados no marcan los parámetros como nullable
+  const { error } = await supabase.rpc("update_card_advance", {
+    p_entry_id: entry.id,
+    p_amount: change.amount,
+    p_occurred_on: change.occurred_on,
+    p_occurred_time: change.occurred_time as string,
+    p_note: change.note as string,
+    p_account_id: change.account_id as string,
+    p_installments: (change.installments === undefined
+      ? entry.installments
+      : change.installments) as number,
+    p_description: (change.description?.trim() || null) as string,
+    p_category_id: categoryId as string
+  })
+
+  if (error) {
+    const failure = debtPgError(
+      error,
+      "amount",
+      NEGATIVE_BALANCE,
+      ENTRY_DEFAULT_ERROR
+    )
+    return fail({ error: failure.error, fieldErrors: failure.fieldErrors })
+  }
+
+  const { data: after } = await supabase
+    .from("debt_entries")
+    .select("*")
+    .eq("id", entry.id)
+    .maybeSingle()
+  if (!after) {
+    return fail({ error: ENTRY_NOT_FOUND })
+  }
+  return { ok: true, before, after }
+}
+
+/**
+ * Reescribe cualquier movimiento de una deuda como si se registrara de nuevo
+ * (SPEC 42, parte 3) con update_debt_entry, en una sola transacción: tipo,
+ * monto, fecha, hora, nota, cuenta, movimiento enlazado (lo crea, lo
+ * reutiliza, lo enlaza a uno ya registrado o lo borra), abono extra y
+ * cuotas. Valida el tipo según la deuda, la cuenta de un pago con
+ * movimiento y la categoría antes de escribir.
+ */
+export async function updateDebtEntryRecord(
+  supabase: AppSupabase,
+  entry: LoadedEntry,
+  input: DebtEntryEditInput
+): Promise<ServiceResult<{ before: DebtEntryRecord; after: DebtEntryRecord }>> {
+  const debt = entry.debt
+  if (debt.status !== "active") {
+    return fail({ error: DEBT_NOT_ACTIVE })
+  }
+
+  const current =
+    entry.kind === "adjustment" ? ("adjustment" as const) : undefined
+  if (
+    !entryTypesFor(
+      { kind: debt.kind, schedule: debt.schedule },
+      current
+    ).includes(input.type)
+  ) {
+    return fail({ fieldErrors: { type: [ENTRY_TYPE_INVALID] } })
+  }
+
+  const kind = entryKindOf(input.type)
+  const isCard = debt.kind === "credit_card"
+  const amount =
+    input.type === "adjustment" && input.direction === "down"
+      ? -input.amount
+      : input.amount
+  // Préstamo y Me deben: el pago crea (o conserva) su gasto o ingreso
+  const createTransaction =
+    kind === "payment" && !isCard && input.create_transaction
+  const accountId =
+    input.type === "purchase" ||
+    input.type === "fee" ||
+    input.type === "adjustment"
+      ? null
+      : kind === "payment" && !isCard && !createTransaction
+        ? null
+        : input.account_id
+  if (createTransaction && !accountId && !input.link_transaction_id) {
+    return fail({ fieldErrors: { account_id: [ACCOUNT_REQUIRED] } })
+  }
+
+  // Categoría del movimiento: se valida antes de escribir
+  const transactionType =
+    kind === "advance" || debt.kind === "receivable" ? "income" : "expense"
+  const usesTransaction =
+    createTransaction || (input.type === "advance" && accountId !== null)
+  const categoryId = usesTransaction ? input.category_id : null
+  if (categoryId) {
+    const { data: currentTx } = entry.transaction_id
+      ? await supabase
+          .from("transactions")
+          .select("category_id")
+          .eq("id", entry.transaction_id)
+          .maybeSingle()
+      : { data: null }
+    if (categoryId !== currentTx?.category_id) {
+      const categoryError = await validateCategory(
+        supabase,
+        categoryId,
+        transactionType,
+        "personal",
+        currentTx?.category_id ?? undefined
+      )
+      if (categoryError) {
+        return fail({ fieldErrors: { category_id: [categoryError] } })
+      }
+    }
+  }
+
+  const before = entryRecord(entry)
+  // Los tipos generados no marcan los parámetros como nullable
+  const { error } = await supabase.rpc("update_debt_entry", {
+    p_entry_id: entry.id,
+    p_kind: kind,
+    p_amount: amount,
+    p_occurred_on: input.occurred_on,
+    p_occurred_time: input.occurred_time as string,
+    p_note: input.note as string,
+    p_account_id: accountId as string,
+    p_create_transaction: createTransaction,
+    p_is_extra_payment: input.type === "extra",
+    p_installments: (kind === "advance" ? input.installments : null) as number,
+    p_description: (usesTransaction
+      ? input.description?.trim() || null
+      : null) as string,
+    p_category_id: categoryId as string,
+    p_link_transaction_id: input.link_transaction_id as string
+  })
+
+  if (error) {
+    const failure = debtPgError(
+      error,
+      "amount",
+      kind === "payment" ? OVER_PAYMENT : NEGATIVE_BALANCE,
+      ENTRY_DEFAULT_ERROR
+    )
+    return fail({ error: failure.error, fieldErrors: failure.fieldErrors })
+  }
+
+  const { data: after } = await supabase
+    .from("debt_entries")
+    .select("*")
+    .eq("id", entry.id)
+    .maybeSingle()
   if (!after) {
     return fail({ error: ENTRY_NOT_FOUND })
   }

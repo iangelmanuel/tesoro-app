@@ -1,0 +1,125 @@
+"use client"
+
+import { useState, useTransition } from "react"
+import { toast } from "@heroui/react"
+import { Pencil, Trash2 } from "lucide-react"
+import { DeleteDialog } from "@/components/dashboard/delete-dialog"
+import { RowActions } from "@/components/dashboard/row-actions"
+import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
+import type { Category } from "@/features/categories/queries"
+import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
+import { deleteTransaction, loadEditableTransaction } from "../actions"
+import type { EditableTransaction } from "../queries"
+import { TransactionDialog } from "./transaction-dialog"
+
+interface RecordedPaymentActionsProps {
+  workspaceId: string
+  /** Movimiento del pago o cobro */
+  transactionId: string
+  /** "pago" o "cobro": nombre de la fila y de los avisos */
+  noun: "pago" | "cobro"
+  /** Qué pasa con el periodo al eliminar ("octubre vuelve a pendiente") */
+  deleteEffect: string
+  categories: Category[]
+  accounts: PaymentAccountOption[]
+  incomeSources?: IncomeSourceOption[]
+  /** Tras editar o eliminar: vuelve a pedir el historial */
+  onChanged: () => void
+}
+
+/**
+ * Editar y Eliminar un pago o cobro ya registrado desde el Sheet de su gasto
+ * o ingreso fijo (SPEC 42). Es el mismo movimiento que en Movimientos: se
+ * edita con TransactionDialog y se borra con deleteTransaction.
+ */
+export function RecordedPaymentActions({
+  workspaceId,
+  transactionId,
+  noun,
+  deleteEffect,
+  categories,
+  accounts,
+  incomeSources,
+  onChanged
+}: RecordedPaymentActionsProps) {
+  const [transaction, setTransaction] = useState<EditableTransaction | null>(
+    null
+  )
+  const [deleting, setDeleting] = useState(false)
+  const [pending, startTransition] = useTransition()
+
+  function edit() {
+    startTransition(async () => {
+      const result = await loadEditableTransaction(workspaceId, transactionId)
+      if ("error" in result) {
+        toast.danger(result.error)
+      } else {
+        setTransaction(result.transaction)
+      }
+    })
+  }
+
+  function remove() {
+    startTransition(async () => {
+      const result = await deleteTransaction(workspaceId, transactionId)
+      if (result.error) {
+        toast.danger(result.error)
+      } else {
+        toast.success(noun === "pago" ? "Pago eliminado" : "Cobro eliminado")
+        onChanged()
+      }
+    })
+  }
+
+  return (
+    <>
+      <RowActions
+        label={noun}
+        actions={[
+          {
+            id: "edit",
+            label: "Editar",
+            icon: <Pencil className="size-4" />,
+            isDisabled: pending,
+            onAction: edit
+          },
+          {
+            id: "delete",
+            label: "Eliminar",
+            icon: <Trash2 className="size-4" />,
+            destructive: true,
+            isDisabled: pending,
+            onAction: () => setDeleting(true)
+          }
+        ]}
+      />
+      {transaction && (
+        <TransactionDialog
+          workspaceId={workspaceId}
+          categories={categories}
+          accounts={accounts}
+          incomeSources={incomeSources}
+          transaction={transaction}
+          open
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setTransaction(null)
+              onChanged()
+            }
+          }}
+        />
+      )}
+      <DeleteDialog
+        open={deleting}
+        onOpenChange={setDeleting}
+        title={`¿Eliminar este ${noun}?`}
+        onConfirm={remove}
+      >
+        <p className="text-sm text-muted">
+          También se elimina de Movimientos y {deleteEffect}. Esta acción no se
+          puede deshacer.
+        </p>
+      </DeleteDialog>
+    </>
+  )
+}

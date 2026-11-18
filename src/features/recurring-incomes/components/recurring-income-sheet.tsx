@@ -14,6 +14,7 @@ import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
+import { RecordedPaymentActions } from "@/features/transactions/components/recorded-payment-actions"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
 import { todayISO } from "@/libs/dates"
 import { formatDate, formatShortDate } from "@/libs/format"
@@ -205,6 +206,13 @@ export function RecurringIncomeSheet({
               <HistoryList
                 history={history}
                 currency={currency}
+                receipts={{
+                  workspaceId: income.workspace_id,
+                  categories,
+                  accounts,
+                  incomeSources,
+                  onChanged: () => setVersion((value) => value + 1)
+                }}
                 onReceive={canReceive ? setReceiving : undefined}
                 onShowMore={() => setLimit((value) => value + pageSize)}
               />
@@ -336,14 +344,25 @@ function IncomeDetails({ income }: { income: RecurringIncome }) {
   )
 }
 
+/** Lo que necesitan Editar y Eliminar de un cobro registrado (SPEC 42) */
+interface ReceiptEditing {
+  workspaceId: string
+  categories: Category[]
+  accounts: PaymentAccountOption[]
+  incomeSources: IncomeSourceOption[]
+  onChanged: () => void
+}
+
 function HistoryList({
   history,
   currency,
+  receipts,
   onReceive,
   onShowMore
 }: {
   history: RecurringIncomeHistory
   currency: string
+  receipts: ReceiptEditing
   /** Sin él (fuente pausada) no se muestra **Recibir** */
   onReceive?: (row: IncomeHistoryRow) => void
   onShowMore: () => void
@@ -361,6 +380,7 @@ function HistoryList({
               key={row.dueOn}
               row={row}
               currency={currency}
+              editing={receipts}
               onReceive={onReceive}
             />
           ))}
@@ -384,10 +404,12 @@ function HistoryList({
 function HistoryRow({
   row,
   currency,
+  editing,
   onReceive
 }: {
   row: IncomeHistoryRow
   currency: string
+  editing: ReceiptEditing
   onReceive?: (row: IncomeHistoryRow) => void
 }) {
   const isReceived = row.status === "received"
@@ -438,18 +460,31 @@ function HistoryRow({
         </div>
       </div>
 
-      {/* Movimientos que cubren la ocurrencia (un cobro puede cubrir varias) */}
+      {/* Movimientos que cubren la ocurrencia (un cobro puede cubrir
+          varias). Cada uno se edita o elimina aparte (SPEC 42) */}
       {row.receipts.length > 0 && (
-        <ul className="flex flex-col gap-0.5 text-xs text-muted">
+        <ul className="flex flex-col gap-1 text-xs text-muted">
           {row.receipts.map((receipt) => (
             <li
               key={receipt.transactionId}
-              className="tabular-nums"
+              className="flex items-center justify-between gap-2 tabular-nums"
             >
-              {receipt.description} · {formatShortDate(receipt.occurredOn)} ·{" "}
-              <Amount
-                value={receipt.amount}
-                currency={currency}
+              <span className="min-w-0">
+                {receipt.description} · {formatShortDate(receipt.occurredOn)} ·{" "}
+                <Amount
+                  value={receipt.amount}
+                  currency={currency}
+                />
+              </span>
+              <RecordedPaymentActions
+                {...editing}
+                transactionId={receipt.transactionId}
+                noun="cobro"
+                deleteEffect={
+                  row.receipts.length > 1
+                    ? "la ocurrencia queda parcial con los demás cobros"
+                    : "la ocurrencia vuelve a quedar por recibir"
+                }
               />
             </li>
           ))}

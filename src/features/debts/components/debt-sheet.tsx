@@ -5,16 +5,20 @@ import { Button, Input, Label, TextField } from "@heroui/react"
 import { Plus, RefreshCw } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { DetailSection, DetailSheet } from "@/components/dashboard/detail-sheet"
+import { HelpHint } from "@/components/dashboard/help-hint"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
+import type { Category } from "@/features/categories/queries"
 import { parseAmount } from "@/features/transactions/schemas"
 import { formatCurrency, formatDate } from "@/libs/format"
 import {
   type DebtProjection,
+  cardMonthlyPayment,
   debtProjection,
   debtStatusLabel,
   formatDayMonth,
   formatMonthYear,
   formatRate,
+  installmentsShare,
   isActiveDebt,
   isReceivableOverdue,
   nextFeeDate
@@ -41,6 +45,8 @@ interface DebtSheetProps {
   entries: DebtEntry[]
   /** Cuentas para el movimiento de un pago nuevo; solo en deudas activas */
   accounts?: PaymentAccountOption[]
+  /** Categorías del espacio, para editar el movimiento de un pago */
+  categories?: Category[]
   /** Hoy en America/Bogota, calculado en el servidor */
   today: string
   currency: string
@@ -57,6 +63,7 @@ export function DebtSheet({
   debt,
   entries,
   accounts,
+  categories,
   today,
   currency,
   open,
@@ -129,6 +136,12 @@ export function DebtSheet({
               today={today}
               currency={currency}
             />
+            {isActive && (
+              <InstallmentsDue
+                debt={debt}
+                currency={currency}
+              />
+            )}
           </div>
         }
         action={
@@ -228,6 +241,8 @@ export function DebtSheet({
               <DebtEntriesList
                 debt={debt}
                 entries={entries}
+                accounts={accounts}
+                categories={categories}
                 currency={currency}
                 readOnly={!isActive}
               />
@@ -300,6 +315,38 @@ function CollectedThisYear({
           currency={currency}
         />
       </span>
+    </p>
+  )
+}
+
+/**
+ * "Pago del mes: $ 200.000 · $ 200.000 de compras a cuotas", solo en
+ * tarjetas con cuotas en el ciclo (SPEC 42)
+ */
+function InstallmentsDue({ debt, currency }: { debt: Debt; currency: string }) {
+  const share = installmentsShare(debt)
+  const payment = cardMonthlyPayment(debt)
+
+  if (share === null || payment === null) {
+    return null
+  }
+
+  return (
+    <p className="flex flex-wrap items-center gap-x-1 text-sm text-muted tabular-nums">
+      Pago del mes:{" "}
+      <span className="font-medium text-foreground">
+        <Amount
+          value={payment}
+          currency={currency}
+        />
+      </span>{" "}
+      ·{" "}
+      <Amount
+        value={share}
+        currency={currency}
+      />{" "}
+      de compras a cuotas
+      <HelpHint topic="cardInstallments" />
     </p>
   )
 }

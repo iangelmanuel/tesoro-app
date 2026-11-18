@@ -1,6 +1,6 @@
 # SPEC 42 — Editar movimientos de deuda y convertir ajustes en pagos
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 06, SPEC 08b, SPEC 16, SPEC 26, SPEC 29, SPEC 36, SPEC 39, SPEC 41
 > **Fecha:** 2026-11-17
 > **Objetivo:** Que desde el Sheet de una deuda se pueda editar por completo cada pago o abono, y convertir en pago un ajuste que en realidad fue un pago, reflejando todo en Movimientos y en el saldo de la cuenta.
@@ -109,22 +109,24 @@ Query nueva `findLinkableTransactions(debtId, amount, occurredOn)` en `src/featu
 
 ## Criterios de aceptación
 
-- [ ] Editar un pago de préstamo de 200.000 desde Nequi a Bancolombia mueve el gasto en Movimientos a Bancolombia y ajusta los dos saldos.
-- [ ] Editar la descripción, nota y categoría de ese pago las cambia también en Movimientos.
-- [ ] Editar un pago de tarjeta cambia la cuenta de origen y los saldos de ambas cuentas.
-- [ ] Marcar un pago como abono extra lo muestra como "Abono" en el Sheet.
-- [ ] Editar un abono de Me deben mensual de 20.000 a 10.200 reparte de nuevo las cuotas (SPEC 39).
-- [ ] Un ajuste de −150.000 en un préstamo muestra **Ajuste | Fue un pago** al editarlo.
-- [ ] Un ajuste de +50.000 abre **Actualizar saldo** sin opción de convertir.
-- [ ] Con un gasto suelto de 150.000 en Movimientos a 3 días del ajuste, aparece como candidato.
-- [ ] Un gasto de 150.000 a 10 días o de 149.000 no aparece como candidato.
-- [ ] Enlazar el candidato deja un solo gasto de 150.000 en Movimientos, ahora con el ícono de pago enlazado, y el saldo de la deuda no cambia.
-- [ ] **Crear movimiento nuevo** crea un gasto de 150.000 en la cuenta elegida, con descripción "Pago {deuda}".
-- [ ] Convertir un ajuste de tarjeta con candidato borra el gasto suelto y deja el pago con su cuenta; el saldo de la cuenta baja una sola vez.
-- [ ] Convertir un ajuste de Me deben crea o enlaza un **ingreso** y sube el saldo de la cuenta.
-- [ ] Una deuda pagada o archivada no permite editar ni convertir.
-- [ ] Un usuario no puede convertir ajustes ni enlazar movimientos de otro (RLS).
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] Editar un pago de préstamo de 200.000 desde Nequi a Bancolombia mueve el gasto en Movimientos a Bancolombia y ajusta los dos saldos.
+- [ ] Editar la descripción, nota y categoría de ese pago las cambia también en Movimientos. _(revisado en código; falta probar en la app)_
+- [ ] Editar un pago de tarjeta cambia la cuenta de origen y los saldos de ambas cuentas. _(revisado en código; falta probar en la app)_
+- [x] Marcar un pago como abono extra lo muestra como "Abono" en el Sheet.
+- [x] Editar un abono de Me deben mensual de 20.000 a 10.200 reparte de nuevo las cuotas (SPEC 39).
+- [ ] Un ajuste de −150.000 en un préstamo muestra **Ajuste | Fue un pago** al editarlo. _(revisado en código; falta probar en la app)_
+- [x] Un ajuste de +50.000 abre **Actualizar saldo** sin opción de convertir.
+- [ ] Con un gasto suelto de 150.000 en Movimientos a 3 días del ajuste, aparece como candidato. _(revisado en código; falta probar en la app)_
+- [ ] Un gasto de 150.000 a 10 días o de 149.000 no aparece como candidato. _(revisado en código; la RPC rechaza enlazar el de 149.000)_
+- [x] Enlazar el candidato deja un solo gasto de 150.000 en Movimientos, ahora con el ícono de pago enlazado, y el saldo de la deuda no cambia.
+- [x] **Crear movimiento nuevo** crea un gasto de 150.000 en la cuenta elegida, con descripción "Pago {deuda}".
+- [x] Convertir un ajuste de tarjeta con candidato borra el gasto suelto y deja el pago con su cuenta; el saldo de la cuenta baja una sola vez.
+- [x] Convertir un ajuste de Me deben crea o enlaza un **ingreso** y sube el saldo de la cuenta.
+- [x] Una deuda pagada o archivada no permite editar ni convertir.
+- [x] Un usuario no puede convertir ajustes ni enlazar movimientos de otro (RLS).
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+
+**Verificación (2026-11-17):** la migración se probó en el proyecto remoto dentro de una transacción revertida (14 casos con RLS: enlazar, crear, tarjeta, Me deben, mensual, archivada, ajuste positivo, monto distinto, sin cuenta, movimiento ya enlazado y de otro usuario, cambio de tipo inválido y edición de un pago enlazado). `typegen`, `check`, `eslint`, `prettier:check` y `build` pasan. Pendiente: `supabase db push`, regenerar `src/types/database.ts` y probar en la app los criterios sin marcar, más ocultar cifras, móvil a 390 px y AA en claro y oscuro.
 
 ## Decisiones
 

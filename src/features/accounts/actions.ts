@@ -1,6 +1,5 @@
 "use server"
 
-import type { PostgrestError } from "@supabase/supabase-js"
 import { z } from "zod"
 import { SITE } from "@/config/site"
 import { requireWritableWorkspace } from "@/features/workspaces/queries"
@@ -15,6 +14,11 @@ import {
   transferSchema
 } from "./schemas"
 import {
+  ACCOUNT_NOT_FOUND,
+  createAccountRecord,
+  updateAccountRecord
+} from "./service"
+import {
   TRANSFER_NOT_FOUND,
   createTransferRecord,
   deleteTransferRecord,
@@ -28,11 +32,8 @@ import type {
   TransferFormState
 } from "./types"
 
-const ACCOUNT_NOT_FOUND = "No se encontró la cuenta"
 const ADJUSTMENT_NOT_FOUND = "No se encontró el ajuste"
-const ACCOUNT_DEFAULT_ERROR = "No se pudo guardar la cuenta. Intenta de nuevo"
 const ADJUST_DEFAULT_ERROR = "No se pudo actualizar el saldo. Intenta de nuevo"
-const DUPLICATE_NAME = "Ya existe una cuenta con ese nombre"
 const ACCOUNT_ARCHIVED = "La cuenta está archivada"
 const SAME_BALANCE = "El saldo ya coincide"
 const ALREADY_RECONCILED = "La cuenta ya cuadra"
@@ -67,17 +68,6 @@ const idSchema = z.uuid()
 // de punto flotante
 const roundCents = (value: number) => Math.round(value * 100) / 100
 
-function accountPgError(error: PostgrestError): AccountFormState {
-  // Índice único accounts_unique_name
-  if (error.code === "23505") {
-    return { fieldErrors: { name: [DUPLICATE_NAME] } }
-  }
-  if (error.code === "42501") {
-    return { error: "No tienes permiso para modificar esta cuenta" }
-  }
-  return { error: ACCOUNT_DEFAULT_ERROR }
-}
-
 function readValues<const T extends readonly string[]>(
   formData: FormData,
   fields: T
@@ -103,18 +93,14 @@ export async function createAccount(
 
   const workspace = await requireWritableWorkspace(formData.get("workspace_id"))
   const supabase = await createClient()
-  const { data: account, error } = await supabase
-    .from("accounts")
-    .insert({ ...parsed.data, workspace_id: workspace.id })
-    .select("*")
-    .single()
+  const result = await createAccountRecord(supabase, workspace, parsed.data)
 
-  if (error) {
-    return { ...accountPgError(error), values }
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
   }
 
   revalidateWorkspacePages(workspace)
-  return { ok: true, account }
+  return { ok: true, account: result.after }
 }
 
 export async function updateAccount(
@@ -135,18 +121,15 @@ export async function updateAccount(
 
   const workspace = await requireWritableWorkspace(formData.get("workspace_id"))
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("accounts")
-    .update(parsed.data)
-    .eq("id", id.data)
-    .eq("workspace_id", workspace.id)
-    .select("id")
+  const result = await updateAccountRecord(
+    supabase,
+    workspace,
+    id.data,
+    parsed.data
+  )
 
-  if (error) {
-    return { ...accountPgError(error), values }
-  }
-  if (data.length === 0) {
-    return { error: ACCOUNT_NOT_FOUND, values }
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
   }
 
   revalidateWorkspacePages(workspace)

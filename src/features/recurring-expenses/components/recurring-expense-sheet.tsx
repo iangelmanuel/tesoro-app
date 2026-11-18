@@ -15,6 +15,7 @@ import type { PaymentAccountOption } from "@/features/accounts/components/paymen
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { formatMonthYear } from "@/features/debts/calculations"
+import { RecordedPaymentActions } from "@/features/transactions/components/recorded-payment-actions"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
 import { currentMonth } from "@/libs/dates"
 import { formatDate, formatShortDate } from "@/libs/format"
@@ -192,6 +193,12 @@ export function RecurringExpenseSheet({
                 history={history}
                 isYearly={isYearly}
                 currency={currency}
+                payments={{
+                  workspaceId: expense.workspace_id,
+                  categories,
+                  accounts,
+                  onChanged: () => setVersion((value) => value + 1)
+                }}
                 onPay={setPaying}
                 onShowMore={() =>
                   setLimit((value) => value + HISTORY_PAGE_SIZE)
@@ -318,16 +325,26 @@ function periodLabel(payment: UpcomingPayment, isYearly: boolean) {
     : formatMonthYear(payment.dueOn.slice(0, 7))
 }
 
+/** Lo que necesitan Editar y Eliminar de un pago registrado (SPEC 42) */
+interface PaymentEditing {
+  workspaceId: string
+  categories: Category[]
+  accounts: PaymentAccountOption[]
+  onChanged: () => void
+}
+
 function HistoryList({
   history,
   isYearly,
   currency,
+  payments,
   onPay,
   onShowMore
 }: {
   history: RecurringExpenseHistory
   isYearly: boolean
   currency: string
+  payments: PaymentEditing
   onPay: (payment: UpcomingPayment) => void
   onShowMore: () => void
 }) {
@@ -345,6 +362,7 @@ function HistoryList({
               payment={payment}
               isYearly={isYearly}
               currency={currency}
+              editing={payments}
               onPay={onPay}
             />
           ))}
@@ -369,11 +387,13 @@ function HistoryRow({
   payment,
   isYearly,
   currency,
+  editing,
   onPay
 }: {
   payment: UpcomingPayment
   isYearly: boolean
   currency: string
+  editing: PaymentEditing
   onPay: (payment: UpcomingPayment) => void
 }) {
   const period = periodLabel(payment, isYearly)
@@ -401,13 +421,22 @@ function HistoryRow({
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
-        {isPaid ? (
-          <span className="text-sm font-medium text-(--income)">
-            <Amount
-              value={payment.paidAmount ?? payment.amount}
-              currency={currency}
+        {isPaid && payment.transactionId !== null ? (
+          <>
+            <span className="text-sm font-medium text-(--income)">
+              <Amount
+                value={payment.paidAmount ?? payment.amount}
+                currency={currency}
+              />
+            </span>
+            {/* El mismo movimiento que en Movimientos (SPEC 42) */}
+            <RecordedPaymentActions
+              {...editing}
+              transactionId={payment.transactionId}
+              noun="pago"
+              deleteEffect={`${period} vuelve a quedar por pagar`}
             />
-          </span>
+          </>
         ) : (
           <Button
             size="sm"

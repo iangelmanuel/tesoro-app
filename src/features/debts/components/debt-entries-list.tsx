@@ -10,12 +10,29 @@ import type { PaymentAccountOption } from "@/features/accounts/components/paymen
 import type { Category } from "@/features/categories/queries"
 import { formatCurrency, formatDate, formatTime } from "@/libs/format"
 import { deleteEntry } from "../actions"
+import { installmentLabel, installmentProgress } from "../installments"
 import type { Debt, DebtEntry } from "../queries"
-import { AdjustBalanceDialog } from "./adjust-balance-dialog"
-import { PaymentDialog } from "./payment-dialog"
+import { DebtEntryDialog } from "./debt-entry-dialog"
+
+/**
+ * Lo que el historial usa de la deuda. Día de pago, corte y próximo
+ * vencimiento ubican la cuota en curso de una compra (SPEC 42)
+ */
+type EntriesDebt = Pick<
+  Debt,
+  | "id"
+  | "kind"
+  | "balance"
+  | "name"
+  | "status"
+  | "schedule"
+  | "due_day"
+  | "closing_day"
+  | "next_due_on"
+>
 
 interface DebtEntriesListProps {
-  debt: Pick<Debt, "id" | "kind" | "balance" | "name">
+  debt: EntriesDebt
   entries: DebtEntry[]
   /** Cuentas activas, para cambiar la cuenta de un pago (SPEC 42) */
   accounts?: PaymentAccountOption[]
@@ -68,7 +85,7 @@ function EntryRow({
   currency,
   readOnly
 }: {
-  debt: Pick<Debt, "id" | "kind" | "balance" | "name">
+  debt: EntriesDebt
   entry: DebtEntry
   accounts?: PaymentAccountOption[]
   categories?: Category[]
@@ -81,10 +98,14 @@ function EntryRow({
   const isPayment = entry.kind === "payment"
   const isAdvance = entry.kind === "advance"
   const isFee = entry.kind === "fee"
+  // Compra o avance (SPEC 42): con cuenta es un avance; sin ella, una compra
+  const isPurchase = isAdvance && entry.payment_account_id === null
   const label = isFee
     ? "Cuota de manejo"
     : isAdvance
-      ? "Avance"
+      ? isPurchase
+        ? "Compra"
+        : "Avance"
       : isPayment
         ? debt.kind === "receivable" || entry.is_extra_payment
           ? "Abono"
@@ -92,17 +113,26 @@ function EntryRow({
         : "Ajuste"
   // Los ajustes no mueven cuentas. El abono de una cuenta por cobrar y el
   // avance entran a la cuenta; el resto sale de ella.
-  const accountText = isAdvance
-    ? accountPhrase("A", entry.account_name)
-    : isPayment
-      ? accountPhrase(
-          debt.kind === "receivable" ? "A" : "Desde",
-          entry.account_name
-        )
-      : null
+  const accountText = isPurchase
+    ? null
+    : isAdvance
+      ? accountPhrase("A", entry.account_name)
+      : isPayment
+        ? accountPhrase(
+            debt.kind === "receivable" ? "A" : "Desde",
+            entry.account_name
+          )
+        : null
   // Un pago baja el saldo; un ajuste lo sube o lo baja según su signo
   const lowersBalance = isPayment || entry.amount < 0
-  const feminine = isFee
+  const feminine = isFee || isPurchase
+  const installmentsText =
+    isAdvance && entry.installments !== null
+      ? installmentLabel(
+          entry.installments,
+          installmentProgress(entry, debt, debt.next_due_on)
+        )
+      : null
 
   function handleDelete() {
     startTransition(async () => {
@@ -148,6 +178,7 @@ function EntryRow({
           {formatDate(entry.occurred_on)}
           {entry.occurred_time && ` · ${formatTime(entry.occurred_time)}`}
           {accountText && ` · ${accountText}`}
+          {installmentsText && ` · ${installmentsText}`}
         </span>
         {entry.note && (
           <span className="line-clamp-3 text-sm break-words text-muted">
@@ -176,33 +207,16 @@ function EntryRow({
               }
             ]}
           />
-          {isPayment || isAdvance || isFee ? (
-            <PaymentDialog
+          {/* Un solo editor para cualquier tipo (SPEC 42, parte 3) */}
+          {editing && (
+            <DebtEntryDialog
               workspaceId={entry.workspace_id}
-              debt={debt}
-              entry={entry}
-              accounts={accounts}
-              categories={categories}
-              open={editing}
-              onOpenChange={setEditing}
-            />
-          ) : (
-            <AdjustBalanceDialog
-              debt={debt}
-              entry={entry}
+              entryId={entry.id}
+              initial={{ entry, debt }}
+              accounts={accounts ?? []}
+              categories={categories ?? []}
               currency={currency}
-              // Fue un pago (SPEC 42): solo con las cuentas a mano
-              convert={
-                accounts
-                  ? {
-                      debt,
-                      workspaceId: entry.workspace_id,
-                      accounts,
-                      categories: categories ?? []
-                    }
-                  : undefined
-              }
-              open={editing}
+              open
               onOpenChange={setEditing}
             />
           )}
@@ -214,7 +228,7 @@ function EntryRow({
           >
             <p className="text-sm text-muted">
               El saldo se recalcula sin {feminine ? "ella" : "él"}.
-              {feminine && " No se vuelve a generar."}
+              {isFee && " No se vuelve a generar."}
               {entry.transaction_id &&
                 " También se elimina su movimiento en Movimientos."}{" "}
               Esta acción no se puede deshacer.

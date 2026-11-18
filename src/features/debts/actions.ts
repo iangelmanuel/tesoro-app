@@ -8,14 +8,13 @@ import { createClient } from "@/libs/supabase/server"
 import type { DebtStatus } from "./calculations"
 import {
   type LoadedEntry,
-  convertAdjustmentEntry,
-  currentPaymentAccount,
   deleteEntryRecord,
   loadDebt,
   loadEntry,
   recordReceivableCollection,
-  updatePaymentEntry
+  updateDebtEntryRecord
 } from "./entry-service"
+import { type EntryType, entryKindOf } from "./entry-types"
 import {
   ADVANCE_ONLY_CARD,
   CARD_TRANSACTION,
@@ -27,7 +26,12 @@ import {
   RECEIVABLE_NOT_FOUND,
   debtPgError
 } from "./errors"
-import { type LinkableTransaction, findLinkableTransactions } from "./queries"
+import {
+  type DebtEntry,
+  type LinkableTransaction,
+  findLinkableTransactions,
+  getDebtEntry
+} from "./queries"
 import { lastPeriodOn, periodOf } from "./receivable-schedule"
 import {
   DEBT_KINDS,
@@ -36,10 +40,9 @@ import {
   type ReceivableSchedule,
   adjustBalanceSchema,
   advanceSchema,
-  convertAdjustmentSchema,
+  debtEntryEditSchema,
   habitualAccountSchema,
   monthlyReceivableSchema,
-  paymentEditSchema,
   paymentSchema,
   receivableCollectSchema,
   receivableScheduleSchema
@@ -122,26 +125,19 @@ const COLLECT_FIELDS = [
   "account_id"
 ] as const
 
-// Editar un pago o un avance (SPEC 42)
-const PAYMENT_EDIT_FIELDS = [
+// Editar cualquier movimiento de una deuda (SPEC 42, parte 3)
+const ENTRY_EDIT_FIELDS = [
+  "type",
   "amount",
+  "direction",
   "occurred_on",
   "occurred_time",
   "note",
-  "description",
-  "is_extra_payment",
   "account_id",
-  "category_id"
-] as const
-
-// Convertir un ajuste en pago (SPEC 42)
-const CONVERT_FIELDS = [
-  "occurred_on",
-  "occurred_time",
-  "note",
+  "create_transaction",
   "description",
-  "account_id",
   "category_id",
+  "installments",
   "link_transaction_id"
 ] as const
 
@@ -150,7 +146,8 @@ const ADVANCE_FIELDS = [
   "occurred_on",
   "occurred_time",
   "note",
-  "account_id"
+  "account_id",
+  "installments"
 ] as const
 
 const ADJUST_FIELDS = [
@@ -693,7 +690,8 @@ export async function recordAdvance(
     p_occurred_time: parsed.data.occurred_time ?? undefined,
     // Los tipos generados no marcan el parámetro como nullable
     p_note: parsed.data.note as string,
-    p_account_id: parsed.data.account_id ?? undefined
+    p_account_id: parsed.data.account_id ?? undefined,
+    p_installments: parsed.data.installments ?? undefined
   })
 
   if (error) {
@@ -707,189 +705,21 @@ export async function recordAdvance(
   return { ok: true }
 }
 
-// Edita un pago o un avance con el servicio compartido (SPEC 42): monto,
-// fecha, hora, nota, abono extra, cuenta y, si hay movimiento, descripción y
-// categoría. Una cuenta que el formulario no envía se conserva.
-async function updatePaymentFromForm(
-  entry: LoadedEntry,
-  formData: FormData
-): Promise<PaymentFormState> {
-  const values = readValues(formData, PAYMENT_EDIT_FIELDS)
-  const parsed = paymentEditSchema.safeParse(values)
-
-  if (!parsed.success) {
-    return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
-  }
-
-  const supabase = await createClient()
-  const account_id = formData.has("account_id")
-    ? parsed.data.account_id
-    : await currentPaymentAccount(supabase, entry)
-  const result = await updatePaymentEntry(supabase, entry, {
-    amount: parsed.data.amount,
-    occurred_on: parsed.data.occurred_on,
-    occurred_time: parsed.data.occurred_time,
-    account_id,
-    description: parsed.data.description ?? null,
-    note: parsed.data.note,
-    category_id: parsed.data.category_id,
-    // Un avance no es un abono extra: el formulario no envía la casilla
-    is_extra_payment: entry.kind === "payment" && parsed.data.is_extra_payment
-  })
-
-  if (!result.ok) {
-    return { error: result.error, fieldErrors: result.fieldErrors, values }
-  }
-
-  revalidatePersonalPages()
-  return { ok: true }
-}
-
-// Edita un pago, un avance, una cuota de manejo o un ajuste. El pago y el
-// avance van por updatePaymentFromForm. En un ajuste, el formulario pide el
-// saldo real como en "Actualizar saldo" y el ajuste se recalcula sobre el
-// saldo sin él.
-export async function updateEntry(
+// Edita cualquier movimiento de una deuda como si se registrara de nuevo
+// (SPEC 42, parte 3): tipo, monto, fecha, hora, nota, cuenta, movimiento,
+// abono extra y cuotas. Todo pasa en update_debt_entry.
+export async function updateDebtEntry(
   _prevState: PaymentFormState,
   formData: FormData
 ): Promise<PaymentFormState> {
-  const id = idSchema.safeParse(formData.get("id"))
-
-  if (!id.success) {
-    return { error: ENTRY_NOT_FOUND }
-  }
-
-  const entry = await findEntry(id.data)
-  if (!entry) {
-    return { error: ENTRY_NOT_FOUND }
-  }
-  if (entry.debt.status !== "active") {
-    return { error: DEBT_NOT_ACTIVE }
-  }
-  if (entry.kind === "payment" || entry.kind === "advance") {
-    return updatePaymentFromForm(entry, formData)
-  }
-
-  let update: {
-    amount: number
-    occurred_on: string
-    occurred_time: string | null
-    note: string | null
-  }
-  let values: Record<string, string>
-
-  // La cuota de manejo (SPEC 17) cambia monto, fecha y nota: sube el saldo y
-  // no lleva cuenta
-  if (entry.kind === "fee") {
-    values = readValues(formData, ADVANCE_FIELDS)
-    const parsed = advanceSchema.safeParse(values)
-
-    if (!parsed.success) {
-      return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
-    }
-    // Bajar una cuota baja el saldo: no puede quedar negativo
-    if (entry.debt.balance - entry.amount + parsed.data.amount < 0) {
-      return { fieldErrors: { amount: [NEGATIVE_BALANCE] }, values }
-    }
-
-    const { amount, occurred_on, occurred_time, note } = parsed.data
-    update = { amount, occurred_on, occurred_time, note }
-  } else {
-    values = readValues(formData, ADJUST_FIELDS)
-    const parsed = adjustBalanceSchema.safeParse(values)
-
-    if (!parsed.success) {
-      return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
-    }
-
-    const amount = roundCents(
-      parsed.data.balance - (entry.debt.balance - entry.amount)
-    )
-    if (amount === 0) {
-      return {
-        fieldErrors: {
-          balance: ["Sin este ajuste el saldo ya es ese. Elimínalo"]
-        },
-        values
-      }
-    }
-
-    update = {
-      amount,
-      occurred_on: parsed.data.occurred_on,
-      occurred_time: parsed.data.occurred_time,
-      note: parsed.data.note
-    }
-  }
-
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("debt_entries")
-    .update(update)
-    .eq("id", entry.id)
-    .select("id")
-
-  if (error) {
-    return {
-      ...debtPgError(
-        error,
-        entry.kind === "adjustment" ? "balance" : "amount",
-        NEGATIVE_BALANCE,
-        ENTRY_DEFAULT_ERROR
-      ),
-      values
-    }
-  }
-  if (data.length === 0) {
-    return { error: ENTRY_NOT_FOUND, values }
-  }
-
-  revalidatePersonalPages()
-  return { ok: true }
-}
-
-// Candidatos para convertir un ajuste en pago (SPEC 42): movimientos sueltos
-// del mismo monto a ±7 días de la fecha del ajuste. Vacío si el abono no es
-// un ajuste que bajó el saldo de una deuda activa.
-export async function listLinkableTransactions(
-  entryId: string
-): Promise<LinkableTransaction[]> {
-  const id = idSchema.safeParse(entryId)
-  if (!id.success) {
-    return []
-  }
-
-  const entry = await findEntry(id.data)
-  if (
-    !entry ||
-    entry.kind !== "adjustment" ||
-    entry.amount >= 0 ||
-    entry.debt.status !== "active"
-  ) {
-    return []
-  }
-  return findLinkableTransactions(
-    entry.debt_id,
-    -entry.amount,
-    entry.occurred_on
-  )
-}
-
-// Convierte en pago (o cobro en Me deben) un ajuste que bajó el saldo
-// (SPEC 42). Todo pasa en convert_debt_adjustment; el saldo de la deuda no
-// cambia y el de la cuenta sí.
-export async function convertAdjustment(
-  _prevState: PaymentFormState,
-  formData: FormData
-): Promise<PaymentFormState> {
-  const values = readValues(formData, CONVERT_FIELDS)
+  const values = readValues(formData, ENTRY_EDIT_FIELDS)
   const id = idSchema.safeParse(formData.get("id"))
 
   if (!id.success) {
     return { error: ENTRY_NOT_FOUND, values }
   }
 
-  const parsed = convertAdjustmentSchema.safeParse(values)
+  const parsed = debtEntryEditSchema.safeParse(values)
   if (!parsed.success) {
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
   }
@@ -899,7 +729,7 @@ export async function convertAdjustment(
     return { error: ENTRY_NOT_FOUND, values }
   }
 
-  const result = await convertAdjustmentEntry(
+  const result = await updateDebtEntryRecord(
     await createClient(),
     entry,
     parsed.data
@@ -910,6 +740,75 @@ export async function convertAdjustment(
 
   revalidatePersonalPages()
   return { ok: true }
+}
+
+/** Lo que el editor de un movimiento necesita de su deuda */
+export type EntryEditorDebt = Pick<
+  LoadedEntry["debt"],
+  "id" | "kind" | "name" | "status" | "schedule" | "balance"
+>
+
+// Movimiento y deuda para el editor (SPEC 42, parte 3). Lo usa Movimientos,
+// que no tiene el abono completo; el Sheet de la deuda ya los tiene.
+export async function loadDebtEntryEditor(
+  entryId: string
+): Promise<{ entry: DebtEntry; debt: EntryEditorDebt } | { error: string }> {
+  const id = idSchema.safeParse(entryId)
+  if (!id.success) {
+    return { error: ENTRY_NOT_FOUND }
+  }
+
+  try {
+    const [loaded, entry] = await Promise.all([
+      findEntry(id.data),
+      getDebtEntry(id.data)
+    ])
+    if (!loaded || !entry) {
+      return { error: ENTRY_NOT_FOUND }
+    }
+    const { id: debtId, kind, name, status, schedule, balance } = loaded.debt
+    return {
+      entry,
+      debt: { id: debtId, kind, name, status, schedule, balance }
+    }
+  } catch {
+    return { error: "No se pudo cargar el movimiento. Intenta de nuevo" }
+  }
+}
+
+// Movimientos ya registrados que pueden ser el de este pago, cobro o avance
+// (SPEC 42): sueltos, del mismo monto, a ±7 días de la fecha. Vacío si el
+// tipo no lleva movimiento o la deuda no está activa.
+export async function listLinkableTransactions(
+  entryId: string,
+  type: EntryType,
+  amount: number,
+  occurredOn: string
+): Promise<LinkableTransaction[]> {
+  const id = idSchema.safeParse(entryId)
+  const date = z.iso.date().safeParse(occurredOn)
+  if (!id.success || !date.success || !(amount > 0)) {
+    return []
+  }
+
+  const entry = await findEntry(id.data)
+  if (!entry || entry.debt.status !== "active") {
+    return []
+  }
+
+  const kind = entryKindOf(type)
+  // Pago de tarjeta y préstamo: gasto. Cobro de Me deben y avance: ingreso
+  const txType =
+    type === "advance" ||
+    (kind === "payment" && entry.debt.kind === "receivable")
+      ? "income"
+      : kind === "payment"
+        ? "expense"
+        : null
+  if (!txType) {
+    return []
+  }
+  return findLinkableTransactions(entry.debt_id, amount, date.data, txType)
 }
 
 // Borra un pago, un avance, una cuota o un ajuste. Si el pago o el avance

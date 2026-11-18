@@ -31,6 +31,12 @@ export interface DebtCalcInput {
   prev_due_on: string | null
   paid_current_cycle: number | null
   paid_previous_cycle: number | null
+  /**
+   * Σ cuotas de compras y avances que caen en el próximo vencimiento y en el
+   * anterior (SPEC 42). Solo tarjetas; sin ellas, 0 o ausente
+   */
+  installments_due_current?: number | null
+  installments_due_previous?: number | null
 }
 
 export const RATE_TYPE_LABELS: Record<RateType, string> = {
@@ -116,21 +122,69 @@ export function monthlyRate(rate: number | null, rateType: RateType | null) {
   return rateType === "ea" ? (1 + rate / 100) ** (1 / 12) - 1 : rate / 100
 }
 
+type PaymentFields = Pick<
+  DebtCalcInput,
+  | "kind"
+  | "installment"
+  | "min_payment"
+  | "balance"
+  | "installments_due_current"
+  | "installments_due_previous"
+>
+
+/** Ciclo de pago: el del próximo vencimiento o el anterior */
+export type PaymentCycle = "current" | "previous"
+
 /**
- * Cuota del préstamo o pago mínimo de la tarjeta, con tope en el saldo. null
- * en una tarjeta sin pago mínimo o en una cuenta por cobrar.
+ * Pago del mes de una tarjeta sin tope (SPEC 42): el mayor entre el pago
+ * mínimo y la suma de las cuotas del ciclo. null sin mínimo ni cuotas.
+ */
+export function cardMonthlyPayment(
+  debt: Pick<
+    DebtCalcInput,
+    "min_payment" | "installments_due_current" | "installments_due_previous"
+  >,
+  cycle: PaymentCycle = "current"
+) {
+  const installments =
+    (cycle === "current"
+      ? debt.installments_due_current
+      : debt.installments_due_previous) ?? 0
+
+  if (debt.min_payment === null && installments <= 0) {
+    return null
+  }
+  return Math.max(debt.min_payment ?? 0, installments)
+}
+
+/**
+ * Cuota del préstamo o pago del mes de la tarjeta (mínimo o cuotas, el
+ * mayor), con tope en el saldo. null en una tarjeta sin mínimo ni cuotas o en
+ * una cuenta por cobrar.
  */
 export function requiredPayment(
-  debt: Pick<DebtCalcInput, "kind" | "installment" | "min_payment" | "balance">
+  debt: PaymentFields,
+  cycle: PaymentCycle = "current"
 ) {
   const payment =
     debt.kind === "loan"
       ? debt.installment
       : debt.kind === "credit_card"
-        ? debt.min_payment
+        ? cardMonthlyPayment(debt, cycle)
         : null
 
   return payment === null ? null : Math.min(payment, debt.balance)
+}
+
+/**
+ * Parte del pago del mes de una tarjeta que viene de compras a cuotas, o null
+ * si no hay cuotas en el ciclo
+ */
+export function installmentsShare(
+  debt: Pick<DebtCalcInput, "kind" | "installments_due_current">
+) {
+  const due = debt.installments_due_current ?? 0
+  return debt.kind === "credit_card" && due > 0 ? due : null
 }
 
 /** Saldo / cupo en porcentaje entero, truncado. Puede pasar de 100. */
@@ -329,7 +383,7 @@ export function debtProjection(
 
   const monthlyPayment =
     payment ??
-    (debt.kind === "loan" ? debt.installment : debt.min_payment) ??
+    (debt.kind === "loan" ? debt.installment : cardMonthlyPayment(debt)) ??
     null
 
   if (monthlyPayment === null) {
@@ -377,11 +431,8 @@ export function nextPayment(
   }
 
   const required = requiredPayment(debt)
-
-  if (required === null) {
-    return { status: null, dueOn: debt.next_due_on, amount: null }
-  }
-
+  // En una tarjeta con cuotas el pago del ciclo anterior puede ser otro
+  const requiredBefore = requiredPayment(debt, "previous")
   const current = debt.paid_current_cycle ?? 0
   const previous = debt.paid_previous_cycle ?? 0
   const prevDueOn = debt.prev_due_on
@@ -389,8 +440,16 @@ export function nextPayment(
   const existedAtPrevDue =
     prevDueOn !== null && todayISO(new Date(debt.created_at)) <= prevDueOn
 
-  if (previous < required && current < required && existedAtPrevDue) {
-    return { status: "overdue", dueOn: prevDueOn, amount: required }
+  if (
+    requiredBefore !== null &&
+    previous < requiredBefore &&
+    current < requiredBefore &&
+    existedAtPrevDue
+  ) {
+    return { status: "overdue", dueOn: prevDueOn, amount: requiredBefore }
+  }
+  if (required === null) {
+    return { status: null, dueOn: debt.next_due_on, amount: null }
   }
   if (current >= required) {
     return { status: "paid", dueOn: debt.next_due_on, amount: required }

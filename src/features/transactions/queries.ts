@@ -426,6 +426,43 @@ function toLedgerEntry(
   }
 }
 
+/**
+ * Un movimiento del espacio listo para el diálogo de edición, o null si no
+ * existe o es ajeno (RLS). Lo usan los Sheets de gastos e ingresos fijos para
+ * editar un pago ya registrado (SPEC 42)
+ */
+export async function getEditableTransaction(
+  workspaceId: string,
+  id: string
+): Promise<EditableTransaction | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("transactions")
+    .select(
+      "id, type, amount, occurred_on, occurred_time, category_id, description, note, account_id, counterparty, invoice_ref, recurring_expense_id, recurring_income_id, recurring_income_allocations (due_on, amount)"
+    )
+    .eq("id", id)
+    .eq("workspace_id", workspaceId)
+    .maybeSingle()
+
+  if (error) {
+    throw new Error("No se pudo cargar el movimiento")
+  }
+  if (!data) {
+    return null
+  }
+  return {
+    ...data,
+    amount: Number(data.amount),
+    recurring_income_allocations: data.recurring_income_allocations.map(
+      (allocation) => ({
+        due_on: allocation.due_on,
+        amount: Number(allocation.amount)
+      })
+    )
+  }
+}
+
 function isAccountMovementKind(
   kind: string | null
 ): kind is AccountMovementKind {

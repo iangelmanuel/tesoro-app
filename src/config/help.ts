@@ -23,7 +23,9 @@ export const HELP = {
   installment:
     "La parte fija que pagas o cobras cada periodo. Al marcar una cuota, Tesoro registra el movimiento y baja el saldo pendiente.",
   multipleReceipts:
-    "Un ingreso puede llegarte en varias partes. Cada movimiento que registras suma a su periodo hasta completarlo; mientras falte algo, queda como parcial."
+    "Un ingreso puede llegarte en varias partes. Cada movimiento que registras suma a su periodo hasta completarlo; mientras falte algo, queda como parcial.",
+  cardInstallments:
+    "Cada compra a cuotas suma su parte (monto entre cuotas) a los pagos de los meses siguientes. El pago del mes es el mayor entre tu pago mínimo y esa suma. Es una estimación sin intereses: si tu extracto dice otra cosa, sube el pago mínimo."
 } as const
 
 export type HelpKey = keyof typeof HELP
@@ -40,5 +42,6 @@ export const HELP_LABELS: Record<HelpKey, string> = {
   noFixedDate: "los ingresos sin fecha fija",
   frequency: "la frecuencia",
   installment: "la cuota",
-  multipleReceipts: "los cobros en varias partes"
+  multipleReceipts: "los cobros en varias partes",
+  cardInstallments: "las compras a cuotas"
 }

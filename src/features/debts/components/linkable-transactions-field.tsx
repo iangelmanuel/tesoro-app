@@ -1,100 +1,98 @@
 "use client"
 
 import { useEffect, useId, useState } from "react"
-import { FieldError, Radio, RadioGroup, Skeleton } from "@heroui/react"
+import { FieldError, Radio, RadioGroup } from "@heroui/react"
 import { Amount } from "@/components/dashboard/amount"
 import { formatDate, formatTime } from "@/libs/format"
 import { listLinkableTransactions } from "../actions"
+import type { EntryType } from "../entry-types"
 import type { LinkableTransaction } from "../queries"
 
-/** "Crear movimiento nuevo": el valor vacío del campo */
+/** "No está registrado": el valor vacío del campo */
 const CREATE_NEW = ""
 
 interface LinkableTransactionsFieldProps {
-  /** Ajuste que se convierte en pago */
+  /** Movimiento de la deuda que se edita */
   entryId: string
+  /** Tipo elegido: decide si se buscan gastos o ingresos */
+  type: EntryType
+  /** Monto y fecha del formulario: los candidatos tienen el mismo monto */
+  amount: number
+  occurredOn: string
   currency: string
-  /** Gasto (tarjetas y préstamos) o ingreso (Me deben) */
+  /** "gasto" o "ingreso", para los textos */
   noun: "gasto" | "ingreso"
-  /** id del candidato elegido, o "" para crear uno nuevo */
+  /** Texto de la opción sin enlazar ("Crear uno nuevo", "No está registrado") */
+  noneLabel: string
+  /** id del candidato elegido, o "" para no enlazar */
   value: string
-  /** Avisa el candidato elegido (null = crear uno nuevo) */
+  /** Avisa el candidato elegido (null = no enlazar) */
   onChange: (candidate: LinkableTransaction | null) => void
   /** Error del servidor (el candidato ya no se puede enlazar) */
   error?: string
 }
 
 /**
- * "Movimiento ya registrado" (SPEC 42): movimientos sueltos del mismo monto a
- * ±7 días del ajuste, con la opción final "Crear movimiento nuevo". Envía
- * link_transaction_id ("" = crear uno nuevo).
+ * "¿Ya lo registraste?" (SPEC 42): gastos o ingresos sueltos del mismo monto
+ * a ±7 días, para enlazarlos en vez de contar dos veces el dinero. Sin
+ * candidatos no se muestra. Envía link_transaction_id ("" = no enlazar).
  */
 export function LinkableTransactionsField({
   entryId,
+  type,
+  amount,
+  occurredOn,
   currency,
   noun,
+  noneLabel,
   value,
   onChange,
   error
 }: LinkableTransactionsFieldProps) {
   const labelId = useId()
-  const [candidates, setCandidates] = useState<LinkableTransaction[] | null>(
-    null
-  )
-  const [failed, setFailed] = useState(false)
+  const [candidates, setCandidates] = useState<LinkableTransaction[]>([])
 
   useEffect(() => {
     let active = true
-    listLinkableTransactions(entryId)
+    listLinkableTransactions(entryId, type, amount, occurredOn)
       .then((rows) => {
-        if (active) setCandidates(rows)
+        if (!active) return
+        setCandidates(rows)
+        // El elegido ya no calza con el monto o la fecha
+        if (value && !rows.some((row) => row.id === value)) onChange(null)
       })
       .catch(() => {
-        if (active) {
-          setFailed(true)
-          setCandidates([])
-        }
+        if (active) setCandidates([])
       })
     return () => {
       active = false
     }
-  }, [entryId])
+    // value y onChange no disparan una búsqueda nueva
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entryId, type, amount, occurredOn])
 
   function handleChange(next: string) {
-    onChange(candidates?.find((row) => row.id === next) ?? null)
+    onChange(candidates.find((row) => row.id === next) ?? null)
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <p
-        id={labelId}
-        className="text-sm font-medium"
-      >
-        Movimiento ya registrado
-      </p>
+    <>
       <input
         type="hidden"
         name="link_transaction_id"
         value={value}
       />
-
-      {candidates === null ? (
-        <div
-          role="status"
-          aria-label="Buscando movimientos"
-          className="flex flex-col gap-2"
-        >
-          <Skeleton className="h-14 rounded-xl" />
-          <Skeleton className="h-14 rounded-xl" />
-        </div>
-      ) : (
-        <>
+      {candidates.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <p
+            id={labelId}
+            className="text-sm font-medium"
+          >
+            ¿Ya lo registraste?
+          </p>
           <p className="text-sm text-muted">
-            {failed
-              ? "No se pudieron buscar movimientos. Puedes crear uno nuevo."
-              : candidates.length === 0
-                ? `No hay un ${noun} del mismo monto a ±7 días. Se crea uno nuevo.`
-                : `Si ya registraste este ${noun}, elígelo para no contarlo dos veces.`}
+            Hay un {noun} del mismo monto en esas fechas. Elígelo para no contar
+            el dinero dos veces.
           </p>
           <RadioGroup
             aria-labelledby={labelId}
@@ -126,15 +124,13 @@ export function LinkableTransactionsField({
               </CandidateOption>
             ))}
             <CandidateOption value={CREATE_NEW}>
-              <span className="text-sm font-medium">
-                Crear movimiento nuevo
-              </span>
+              <span className="text-sm font-medium">{noneLabel}</span>
             </CandidateOption>
             <FieldError>{error}</FieldError>
           </RadioGroup>
-        </>
+        </div>
       )}
-    </div>
+    </>
   )
 }
 

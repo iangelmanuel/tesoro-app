@@ -28,10 +28,7 @@ import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { deleteEntry } from "@/features/debts/actions"
-import {
-  type EditableDebtEntry,
-  PaymentDialog
-} from "@/features/debts/components/payment-dialog"
+import { DebtEntryDialog } from "@/features/debts/components/debt-entry-dialog"
 import { deleteContribution } from "@/features/goals/actions"
 import { ContributionDialog } from "@/features/goals/components/contribution-dialog"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
@@ -336,6 +333,7 @@ export function TransactionsTable({
                         reorder={reorderFor(index)}
                         account={accountsById.get(row.account_id)}
                         accounts={accounts}
+                        categories={categories}
                         currency={currency}
                       />
                     )
@@ -418,16 +416,10 @@ export function TransactionsTable({
                         {row.debt_entry ? (
                           <LinkedPaymentActions
                             label={transaction.description}
-                            entry={{
-                              ...row.debt_entry,
-                              // El movimiento trae lo que el diálogo edita
-                              // además del abono (SPEC 42)
-                              payment_account_id: transaction.account_id,
-                              description: transaction.description,
-                              category_id: transaction.category_id
-                            }}
+                            entry={row.debt_entry}
                             accounts={accounts}
                             categories={categories}
+                            currency={currency}
                           />
                         ) : (
                           <EntryActions
@@ -683,6 +675,7 @@ function AccountMovementRow({
   entry,
   account,
   accounts,
+  categories,
   currency,
   reorder
 }: {
@@ -690,8 +683,9 @@ function AccountMovementRow({
   showCounterparty: boolean
   entry: AccountMovementEntry
   account: PaymentAccountOption | undefined
-  /** Cuentas para cambiar la cuenta de un pago de tarjeta (SPEC 42) */
+  /** Cuentas y categorías del editor del movimiento de la deuda (SPEC 42) */
   accounts: PaymentAccountOption[]
+  categories: Category[]
   currency: string
   reorder: Reorder | undefined
 }) {
@@ -752,30 +746,20 @@ function AccountMovementRow({
               success: `${entry.kind === "debt_advance" ? "Avance" : entry.is_extra_payment ? "Abono" : "Pago"} eliminado`,
               onDelete: () => deleteEntry(entry.id)
             }}
-            renderEdit={(dialog) => (
-              <PaymentDialog
-                workspaceId={workspaceId}
-                // Solo una tarjeta lleva cuenta en sus pagos y avances
-                debt={{ id: entry.parent_id, kind: "credit_card" }}
-                entry={{
-                  id: entry.id,
-                  kind: entry.kind === "debt_advance" ? "advance" : "payment",
-                  amount: entry.amount,
-                  occurred_on: entry.occurred_on,
-                  occurred_time: entry.occurred_time,
-                  note: entry.note,
-                  transaction_id: null,
-                  is_extra_payment: entry.is_extra_payment,
-                  // Solo el pago de tarjeta lleva cuenta propia (SPEC 42)
-                  ...(entry.kind === "debt_payment" && {
-                    payment_account_id: entry.account_id
-                  })
-                }}
-                accounts={accounts}
-                open={dialog.open}
-                onOpenChange={dialog.onOpenChange}
-              />
-            )}
+            renderEdit={(dialog) =>
+              // El mismo editor que el Sheet de la deuda (SPEC 42)
+              dialog.open && (
+                <DebtEntryDialog
+                  workspaceId={workspaceId}
+                  entryId={entry.id}
+                  accounts={accounts}
+                  categories={categories}
+                  currency={currency}
+                  open
+                  onOpenChange={dialog.onOpenChange}
+                />
+              )
+            }
           />
         )}
       </Table.Cell>
@@ -791,16 +775,14 @@ function LinkedPaymentActions({
   label,
   entry,
   accounts,
-  categories
+  categories,
+  currency
 }: {
   label: string
-  entry: LinkedDebtEntry &
-    Pick<
-      EditableDebtEntry,
-      "payment_account_id" | "description" | "category_id"
-    >
+  entry: LinkedDebtEntry
   accounts: PaymentAccountOption[]
   categories: Category[]
+  currency: string
 }) {
   const noun =
     entry.kind === "advance"
@@ -817,17 +799,20 @@ function LinkedPaymentActions({
         success: `${noun.charAt(0).toUpperCase()}${noun.slice(1)} eliminado`,
         onDelete: () => deleteEntry(entry.id)
       }}
-      renderEdit={(dialog) => (
-        <PaymentDialog
-          workspaceId={entry.workspace_id}
-          debt={{ id: entry.debt_id, kind: entry.debt_kind }}
-          entry={entry}
-          accounts={accounts}
-          categories={categories}
-          open={dialog.open}
-          onOpenChange={dialog.onOpenChange}
-        />
-      )}
+      renderEdit={(dialog) =>
+        // El mismo editor que el Sheet de la deuda (SPEC 42)
+        dialog.open && (
+          <DebtEntryDialog
+            workspaceId={entry.workspace_id}
+            entryId={entry.id}
+            accounts={accounts}
+            categories={categories}
+            currency={currency}
+            open
+            onOpenChange={dialog.onOpenChange}
+          />
+        )
+      }
     />
   )
 }

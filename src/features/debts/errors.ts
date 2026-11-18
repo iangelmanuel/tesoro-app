@@ -26,9 +26,12 @@ export const INSTALLMENT_EXCEEDS = "El monto supera lo que falta de la cuota"
 export const ALLOCATION_EXCEEDS_END = "El monto supera lo que falta por cobrar"
 export const ALLOCATION_FUTURE_LIMIT =
   "El monto cubre más de 12 meses por delante"
-export const NOT_CONVERTIBLE =
-  "Solo un ajuste que bajó el saldo se puede convertir en pago"
 export const ACCOUNT_REQUIRED = "Elige la cuenta del pago"
+export const ENTRY_TYPE_INVALID =
+  "Este tipo de movimiento no aplica a esta deuda"
+export const AMOUNT_NOT_POSITIVE = "El monto debe ser mayor que cero"
+export const INSTALLMENTS_ONLY_ADVANCE =
+  "Solo las compras y avances de una tarjeta van a cuotas"
 export const LINK_INVALID =
   "Ese movimiento ya no se puede enlazar. Elige otro o crea uno nuevo"
 
@@ -43,9 +46,12 @@ const ALLOCATION_HINTS: Record<string, { field: string; message: string }> = {
     message: ALLOCATION_FUTURE_LIMIT
   },
   installment_required: { field: "period_on", message: INSTALLMENT_REQUIRED },
-  // Convertir un ajuste en pago (SPEC 42)
+  // Pago con movimiento sin cuenta, o movimiento que no se puede enlazar
   account_required: { field: "account_id", message: ACCOUNT_REQUIRED },
   link_invalid: { field: "link_transaction_id", message: LINK_INVALID },
+  // Editar un movimiento de una deuda (SPEC 42, parte 3)
+  kind_invalid: { field: "type", message: ENTRY_TYPE_INVALID },
+  amount_not_positive: { field: "amount", message: AMOUNT_NOT_POSITIVE },
   installment_out_of_range: {
     field: "period_on",
     message: INSTALLMENT_OUT_OF_RANGE
@@ -80,6 +86,10 @@ export function debtPgError(
   }
   if (error.message.includes(ADVANCE_ONLY_CARD)) {
     return { error: ADVANCE_ONLY_CARD }
+  }
+  // Cuotas de una compra (SPEC 42): checks de debt_entries
+  if (error.message.includes("debt_entries_installments")) {
+    return { fieldErrors: { installments: [INSTALLMENTS_ONLY_ADVANCE] } }
   }
   // Cuotas del cobro mensual: reglas de check_debt_entry_allocation
   if (error.message.includes("La cuota es")) {

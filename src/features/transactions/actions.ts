@@ -5,7 +5,12 @@ import { requireWritableWorkspace } from "@/features/workspaces/queries"
 import { revalidateWorkspacePages } from "@/libs/revalidate"
 import type { ServiceFailure } from "@/libs/service-result"
 import { createClient } from "@/libs/supabase/server"
-import { type VerifyEntry, getVerifyEntries } from "./queries"
+import {
+  type EditableTransaction,
+  type VerifyEntry,
+  getEditableTransaction,
+  getVerifyEntries
+} from "./queries"
 import {
   createTransactionSchema,
   parseAmount,
@@ -227,6 +232,30 @@ const verifySchema = z.object({
   accountId: z.uuid().nullable(),
   offset: z.number().int().min(0).max(100_000)
 })
+
+// Un pago o cobro ya registrado para editarlo desde el Sheet de su gasto o
+// ingreso fijo (SPEC 42). Solo lectura: RLS limita las filas al dueño.
+export async function loadEditableTransaction(
+  workspaceId: string,
+  id: string
+): Promise<{ transaction: EditableTransaction } | { error: string }> {
+  const parsedWorkspace = idSchema.safeParse(workspaceId)
+  const parsedId = idSchema.safeParse(id)
+
+  if (!parsedWorkspace.success || !parsedId.success) {
+    return { error: NOT_FOUND }
+  }
+
+  try {
+    const transaction = await getEditableTransaction(
+      parsedWorkspace.data,
+      parsedId.data
+    )
+    return transaction ? { transaction } : { error: NOT_FOUND }
+  } catch {
+    return { error: "No se pudo cargar el movimiento. Intenta de nuevo" }
+  }
+}
 
 // Página de Verificar movimientos. Solo lectura: RLS limita las filas al dueño
 // del espacio, así que no hace falta resolver el espacio con permiso de

@@ -4,8 +4,10 @@ import {
   ArrowRightIcon,
   ChartColumnIcon,
   EyeIcon,
+  FileSpreadsheetIcon,
   KeyRoundIcon,
   ListChecksIcon,
+  MessageCircleQuestionIcon,
   MessageSquareWarningIcon,
   PencilLineIcon,
   ShieldOffIcon,
@@ -48,7 +50,12 @@ const CAPABILITIES = [
   {
     icon: PencilLineIcon,
     title: "Registrar",
-    text: "Ingresos, gastos y traspasos, de uno en uno o hasta 200 a la vez."
+    text: "Ingresos, gastos y traspasos, de uno en uno o hasta 200 a la vez. Pagos de deudas, gastos e ingresos fijos, cobros y aportes a metas."
+  },
+  {
+    icon: FileSpreadsheetIcon,
+    title: "Poner al día con el extracto",
+    text: "Hasta 400 filas del extracto del banco, con vista previa, duplicados probables, categorías sugeridas y el saldo contra el banco."
   },
   {
     icon: ChartColumnIcon,
@@ -63,7 +70,12 @@ const CAPABILITIES = [
   {
     icon: WalletIcon,
     title: "Leer todo tu plan",
-    text: "Cuentas, presupuestos, metas, deudas, fijos y lo que te deben, en Personal y en Empresa."
+    text: "Cuentas, presupuestos, metas, deudas, fijos y lo que te deben, en Personal y en Empresa. Lo que vence pronto y en qué se va tu dinero."
+  },
+  {
+    icon: MessageCircleQuestionIcon,
+    title: "Preguntarte lo que falta",
+    text: "Si falta la cuenta o la categoría, o un nombre coincide con varias, el agente te pregunta antes de guardar."
   }
 ]
 
@@ -72,7 +84,10 @@ const IDEAS = [
   "¿Cuánto gasté en comida este mes comparado con octubre?",
   "Pasa a Transporte todos los movimientos de Uber de noviembre.",
   "¿Cómo va mi score y qué me recomienda Tesoro?",
-  "¿Qué gastos fijos me faltan por pagar este mes?"
+  "¿Qué gastos fijos me faltan por pagar este mes?",
+  "Pon al día mi cuenta de Bancolombia con este extracto. Muéstrame primero la vista previa.",
+  "Paga la cuota de la tarjeta Visa desde Nequi.",
+  "¿Qué pagos y cobros vencen en los próximos 15 días?"
 ]
 
 const SECURITY = [

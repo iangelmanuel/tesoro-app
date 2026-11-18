@@ -10,7 +10,14 @@ import {
   compensateOperation
 } from "../../operations"
 import { toolError, toolResult } from "../result"
-import { defineTool, resolveWorkspace, workspaceIdSchema } from "../shared"
+import {
+  type MissingField,
+  NEEDS_INPUT_HINT,
+  defineTool,
+  needsInput,
+  resolveWorkspace,
+  workspaceIdSchema
+} from "../shared"
 import {
   type RowError,
   accountErrors,
@@ -22,6 +29,14 @@ import {
   zodRowErrors
 } from "./batch"
 import {
+  accountNameSchema,
+  activeAccounts,
+  activeCategories,
+  categoryNameSchema,
+  resolveAccount,
+  resolveCategory
+} from "./references"
+import {
   type TransactionValues,
   categoryErrors,
   previewOf,
@@ -31,7 +46,14 @@ import {
 
 const newTransaction = z.object({
   ...transactionFields,
-  account_id: transactionFields.account_id.optional(),
+  category_id: transactionFields.category_id.optional(),
+  category: categoryNameSchema.optional(),
+  account_id: transactionFields.account_id
+    .optional()
+    .describe(
+      "Cuenta (de list_accounts), o null fuera de las cuentas. Sin account_id ni account: con una sola cuenta activa se usa esa y con varias se pregunta."
+    ),
+  account: accountNameSchema.optional(),
   time: transactionFields.time.optional(),
   note: transactionFields.note.optional()
 })
@@ -51,7 +73,8 @@ export const createTransactions = defineTool({
   group: "write",
   title: "Registrar movimientos",
   description:
-    "Registra de 1 a 200 ingresos o gastos en un espacio, con las mismas reglas que la app: categoría del mismo tipo, cuenta activa, monto > 0, descripción de 1 a 120 caracteres y nota de hasta 500. Todo o nada: si una fila tiene un error no se guarda ninguna y la respuesta lista los errores por índice. Usa dry_run para revisar antes. Devuelve un operation_id para revertir con undo_operation.",
+    "Registra de 1 a 200 ingresos o gastos en un espacio, con las mismas reglas que la app: categoría del mismo tipo, cuenta activa, monto > 0, descripción de 1 a 120 caracteres y nota de hasta 500. Todo o nada: si una fila tiene un error no se guarda ninguna y la respuesta lista los errores por índice. Categoría y cuenta van por id o por nombre (category, account). Usa dry_run para revisar antes. Devuelve un operation_id para revertir con undo_operation. " +
+    NEEDS_INPUT_HINT,
   input,
   annotations: { readOnlyHint: false, destructiveHint: false },
   async run(ctx, args) {
@@ -62,15 +85,50 @@ export const createTransactions = defineTool({
       return toolError(workspace.error)
     }
 
-    // 1. Validar todas las filas con los esquemas de la UI
+    // 1. Cuenta y categoría por id o nombre; lo que falte se pregunta
+    const [accounts, categories] = await Promise.all([
+      activeAccounts(ctx, workspace.id),
+      activeCategories(ctx, workspace)
+    ])
+    const missing: MissingField[] = []
+    const refs = args.transactions.map((row, index) => {
+      const account = resolveAccount(accounts, {
+        id: row.account_id,
+        name: row.account,
+        field: "account_id",
+        row: index,
+        label: "la cuenta",
+        nullable: true
+      })
+      const category = resolveCategory(categories, {
+        id: row.category_id,
+        name: row.category,
+        type: row.type,
+        row: index
+      })
+      if ("missing" in account) missing.push(account.missing)
+      if ("missing" in category) missing.push(category.missing)
+      return {
+        account_id: "value" in account ? account.value : null,
+        category_id: "value" in category ? (category.value ?? "") : ""
+      }
+    })
+    if (missing.length > 0) {
+      return needsInput(missing)
+    }
+
+    // 2. Validar todas las filas con los esquemas de la UI
     const errors: RowError[] = []
     const rows: { values: TransactionValues; data: CreateTransactionData }[] =
       []
 
     args.transactions.forEach((row, index) => {
       const values: TransactionValues = {
-        ...row,
-        account_id: row.account_id ?? null,
+        type: row.type,
+        amount: row.amount,
+        ...refs[index],
+        occurred_on: row.occurred_on,
+        description: row.description,
         time: row.time ?? null,
         note: row.note ?? null,
         counterparty: null,
@@ -90,7 +148,7 @@ export const createTransactions = defineTool({
       }
     })
 
-    // 2. Categoría y cuenta, contra la BD
+    // 3. Categoría y cuenta, contra la BD
     const valid = rows.flatMap((row, index) => (row ? [{ ...row, index }] : []))
     errors.push(
       ...(await categoryErrors(
@@ -132,7 +190,7 @@ export const createTransactions = defineTool({
       )
     }
 
-    // 3. Escribir en orden; si una falla, se deshacen las anteriores
+    // 4. Escribir en orden; si una falla, se deshacen las anteriores
     const summary = `${rows.length} ${plural(rows.length)} en ${workspace.name}`
     const changes: RowChange[] = []
 

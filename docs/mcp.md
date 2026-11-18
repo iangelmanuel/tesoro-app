@@ -51,13 +51,118 @@ app/api/mcp/route.ts
   responde el error de solo lectura si se llaman.
 - **Escrituras.** Usan los servicios que comparten las Server Actions
   (`transactions/service.ts`, `accounts/transfer-service.ts`,
-  `debts/entry-service.ts`, `categories/service.ts`), nunca tablas o RPC
-  directo. Todo o nada: se valida todo antes de escribir.
+  `debts/entry-service.ts`, `goals/contribution-service.ts`,
+  `categories/service.ts`) y los mismos prellenados del diálogo de
+  movimiento (`recurring-expenses/payment.ts`,
+  `recurring-incomes/receipt.ts`), nunca tablas o RPC directo. Todo o nada:
+  se valida todo antes de escribir. La excepción es `import_statement`, que
+  inserta las filas ya validadas en bloque (un insert por tabla).
+- **Datos faltantes.** Si falta un dato obligatorio o es ambiguo, la tool no
+  escribe y responde `status: "needs_input"` (ver abajo).
 - **Log y revertir.** `operations.ts` guarda cada escritura en
   `mcp_operations` y `mcp_operation_rows` (snapshot antes y después). La RPC
   `undo_mcp_operation` restaura en una transacción y aborta si una fila
   cambió después. Si una escritura falla a mitad, se guarda como `failed` y se
   compensa con la misma RPC.
+
+## Extractos, pagos y datos faltantes
+
+[SPEC 43](../specs/43-mcp-statements-payments-and-analysis.md) suma estas
+tools:
+
+| Tool                       | Qué hace                                                       |
+| -------------------------- | -------------------------------------------------------------- |
+| `import_statement`         | Pone al día una cuenta con hasta 400 filas de un extracto      |
+| `record_debt_payment`      | Pago o abono extra a una tarjeta o un préstamo                 |
+| `collect_receivable`       | Cobro de Me deben, único o mensual (reparto de SPEC 39)        |
+| `update_debt_entry`        | Edita un movimiento de una deuda (reglas de SPEC 42)           |
+| `delete_debt_entry`        | Borra un movimiento de una deuda                               |
+| `pay_recurring_expense`    | Paga la ocurrencia más antigua sin pagar de un gasto fijo      |
+| `receive_recurring_income` | Recibe un ingreso fijo (reparto de SPEC 38)                    |
+| `record_goal_contribution` | Aporte (`in`) o retiro (`out`) de una meta                     |
+| `get_account_balance`      | Saldo de una cuenta a una fecha y diferencia para conciliar    |
+| `get_spending_breakdown`   | Totales por categoría y contraparte contra el periodo anterior |
+| `list_upcoming_payments`   | Lo que vence en los próximos N días y lo vencido, aparte       |
+| `get_recommendations`      | Recomendaciones activas y desglose del score por factor        |
+
+Las de pagos, fijos y metas son solo de Personal. Todas las escrituras
+dejan su log y se revierten con `undo_operation`.
+
+### `needs_input`
+
+Lo devuelven las tools de escritura (y `get_account_balance`) cuando falta
+un dato obligatorio o es ambiguo: no se guarda nada y cada campo trae la
+pregunta para el usuario y sus opciones.
+
+```json
+{
+  "status": "needs_input",
+  "missing": [
+    {
+      "field": "account_id",
+      "row": 0,
+      "question": "¿Cuál es la cuenta?",
+      "options": [
+        { "id": "…", "label": "Efectivo" },
+        { "id": "…", "label": "Nequi" }
+      ]
+    }
+  ]
+}
+```
+
+- Cuenta y categoría van por id o por nombre (`account`, `category`). Un
+  nombre que coincide con varias, o con ninguna, se pregunta.
+- Sin cuenta: con una sola cuenta activa se usa esa; con varias se pregunta.
+  En pagos y fijos primero se usa la cuenta habitual (SPEC 41).
+- Las piezas viven en `tools/shared.ts` (`needsInput`, `NEEDS_INPUT_HINT`) y
+  `tools/write/references.ts` (`resolveAccount`, `resolveCategory`).
+
+### Extracto bancario
+
+El agente lee el extracto (PDF, imagen o CSV) y envía filas: monto negativo
+sale de la cuenta, positivo entra; `transfer_account_id` lo vuelve traspaso
+con otra cuenta propia.
+
+1. Vista previa (`dry_run` es `true` por defecto):
+
+   ```json
+   {
+     "workspace_id": "…",
+     "account": "Bancolombia",
+     "statement_balance": 1250000,
+     "statement_end_date": "2026-11-30",
+     "rows": [
+       { "date": "2026-11-11", "description": "UBER *TRIP", "amount": -45000 },
+       { "date": "2026-11-15", "description": "Nómina", "amount": 3200000 }
+     ]
+   }
+   ```
+
+   Responde `ready`, `duplicates` (misma cuenta, tipo y monto a ±2 días,
+   contra lo registrado o contra otra fila anterior del extracto),
+   `needsInput`, `suggestions` (categoría del último movimiento con la misma
+   descripción en 180 días) y `reconciliation` (saldo antes y después contra
+   el extracto).
+
+2. Con `dry_run: false` crea todo en una sola operación. Los duplicados se
+   omiten salvo los índices de `include_rows`; una fila sin categoría usa la
+   sugerida.
+
+El análisis vive en `tools/write/statement.ts`.
+
+### Pagar una deuda
+
+```json
+{ "workspace_id": "…", "debt_id": "…", "amount": 350000 }
+```
+
+Fecha de hoy, cuenta habitual de la deuda y descripción "Pago {deuda} ·
+{mes}". Las tools de deuda guardan en el log la deuda, el abono, sus
+movimientos y sus asignaciones (`tools/write/debt-snapshots.ts`), en el
+orden que necesita `undo_mcp_operation`. Las asignaciones de cobros mensuales
+e ingresos fijos se restauran al final, por abono o por movimiento
+(migración `mcp_more_operation_tables`).
 
 ## Probar en local
 
@@ -110,6 +215,8 @@ app/api/mcp/route.ts
    - valida todas las filas antes de escribir y responde los errores con
      `batchError` (`tools/write/batch.ts`);
    - acepta `dry_run`;
+   - si falta un dato obligatorio o es ambiguo, responde `needsInput` y
+     agrega `NEEDS_INPUT_HINT` a la descripción;
    - registra cada fila tocada en `changes` y cierra con `commitOperation`; si
      falla a mitad, `compensateOperation`;
    - si toca una tabla nueva, agrégala a `SNAPSHOT_TABLES` y al `check` de

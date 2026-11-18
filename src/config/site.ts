@@ -173,6 +173,8 @@ export const SITE = {
     path: "/api/mcp",
     docsPath: "/mcp",
     bulkLimit: 200,
+    // Filas por import_statement (SPEC 43), igual al tope de row_count del log
+    statementLimit: 400,
     rateLimitPerMinute: 120,
     undoWindowDays: 30
   },

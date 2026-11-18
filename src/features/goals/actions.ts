@@ -1,11 +1,18 @@
 "use server"
 
-import type { PostgrestError } from "@supabase/supabase-js"
 import { z } from "zod"
 import { parseAmount } from "@/features/transactions/schemas"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { revalidatePersonalPages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
+import {
+  GOAL_NOT_ACTIVE,
+  GOAL_NOT_FOUND,
+  OVER_WITHDRAWAL,
+  contributionPgError,
+  goalSaved,
+  recordGoalContributionRecord
+} from "./contribution-service"
 import { contributionSchema, goalSchema } from "./schemas"
 import type {
   ContributionFormState,
@@ -15,16 +22,8 @@ import type {
 
 type GoalStatus = "active" | "completed" | "archived"
 
-const GOAL_NOT_FOUND = "No se encontró la meta"
 const CONTRIBUTION_NOT_FOUND = "No se encontró el aporte"
 const GOAL_DEFAULT_ERROR = "No se pudo guardar la meta. Intenta de nuevo"
-const CONTRIBUTION_DEFAULT_ERROR =
-  "No se pudo guardar el aporte. Intenta de nuevo"
-const GOAL_NOT_ACTIVE = "Reactiva la meta para registrar aportes"
-const OVER_WITHDRAWAL = "No puedes retirar más de lo ahorrado"
-const FUTURE_DATE = "La fecha no puede ser futura"
-const ARCHIVED_ACCOUNT = "La cuenta está archivada"
-const SAME_TRANSFER_ACCOUNT = "Elige una cuenta distinta a la que paga"
 
 const GOAL_FIELDS = [
   "name",
@@ -55,36 +54,6 @@ const GOAL_PG_ERRORS: Record<string, GoalFormState> = {
   "42501": { error: "No tienes permiso para modificar esta meta" }
 }
 
-// Los triggers de goal_contributions lanzan check_violation con su mensaje
-function contributionPgError(error: PostgrestError): ContributionFormState {
-  if (error.message.includes(OVER_WITHDRAWAL)) {
-    return { fieldErrors: { amount: [OVER_WITHDRAWAL] } }
-  }
-  if (error.message.includes(GOAL_NOT_ACTIVE)) {
-    return { error: GOAL_NOT_ACTIVE }
-  }
-  if (error.message.includes("fecha del aporte")) {
-    return { fieldErrors: { occurred_on: [FUTURE_DATE] } }
-  }
-  if (error.message.includes(ARCHIVED_ACCOUNT)) {
-    return { fieldErrors: { account_id: [ARCHIVED_ACCOUNT] } }
-  }
-  // El traspaso desde la misma cuenta que paga lo frena transfers_check
-  if (error.message.includes("transfers_check")) {
-    return { fieldErrors: { transfer_from: [SAME_TRANSFER_ACCOUNT] } }
-  }
-  if (error.code === "23503" && error.message.includes("account_id")) {
-    return { fieldErrors: { account_id: ["Elige una cuenta válida"] } }
-  }
-  if (error.code === "23503") {
-    return { error: GOAL_NOT_FOUND }
-  }
-  if (error.code === "42501") {
-    return { error: "No tienes permiso para modificar este aporte" }
-  }
-  return { error: CONTRIBUTION_DEFAULT_ERROR }
-}
-
 function readValues<const T extends readonly string[]>(
   formData: FormData,
   fields: T
@@ -109,20 +78,6 @@ async function findGoal(goalId: string) {
     .maybeSingle()
 
   return data
-}
-
-// Suma de aportes y retiros de la meta
-async function goalSaved(goalId: string) {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("goal_contributions")
-    .select("amount")
-    .eq("goal_id", goalId)
-
-  if (error) {
-    throw new Error("No se pudieron cargar los aportes")
-  }
-  return data.reduce((sum, row) => sum + Number(row.amount), 0)
 }
 
 export async function createGoal(
@@ -278,36 +233,13 @@ export async function createContribution(
   if (!goal) {
     return { error: GOAL_NOT_FOUND, values }
   }
-  if (goal.status !== "active") {
-    return { error: GOAL_NOT_ACTIVE, values }
-  }
-  if ((await goalSaved(goal.id)) + parsed.data.amount < 0) {
-    return { fieldErrors: { amount: [OVER_WITHDRAWAL] }, values }
-  }
-
-  // Aporte (o retiro) y traspaso previo en una sola transacción
-  const { amount, occurred_on, occurred_time, note, account_id } = parsed.data
-  const hasTransfer = account_id !== null && parsed.data.transfer_from !== null
-
-  const supabase = await createClient()
-  const { error } = await supabase.rpc("record_goal_contribution", {
-    p_goal_id: goal.id,
-    p_amount: amount,
-    p_occurred_on: occurred_on,
-    p_occurred_time: occurred_time ?? undefined,
-    // Los tipos generados no marcan el parámetro como nullable
-    p_note: note as string,
-    p_account_id: account_id ?? undefined,
-    p_transfer_from: hasTransfer
-      ? (parsed.data.transfer_from ?? undefined)
-      : undefined,
-    p_transfer_amount: hasTransfer
-      ? (parsed.data.transfer_amount ?? undefined)
-      : undefined
-  })
-
-  if (error) {
-    return { ...contributionPgError(error), values }
+  const result = await recordGoalContributionRecord(
+    await createClient(),
+    goal,
+    parsed.data
+  )
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
   }
 
   revalidatePersonalPages()
@@ -350,7 +282,7 @@ export async function updateContribution(
     return { error: GOAL_NOT_ACTIVE, values }
   }
 
-  const saved = await goalSaved(contribution.goal_id)
+  const saved = await goalSaved(await createClient(), contribution.goal_id)
   if (saved - Number(contribution.amount) + parsed.data.amount < 0) {
     return { fieldErrors: { amount: [OVER_WITHDRAWAL] }, values }
   }
@@ -393,7 +325,7 @@ export async function deleteContribution(
     return { error: GOAL_NOT_ACTIVE }
   }
 
-  const saved = await goalSaved(contribution.goal_id)
+  const saved = await goalSaved(await createClient(), contribution.goal_id)
   if (saved - Number(contribution.amount) < 0) {
     return { error: OVER_WITHDRAWAL }
   }

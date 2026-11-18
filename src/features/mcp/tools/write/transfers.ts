@@ -17,7 +17,10 @@ import type { McpContext } from "../../types"
 import { toolError, toolResult } from "../result"
 import {
   type McpWorkspace,
+  type MissingField,
+  NEEDS_INPUT_HINT,
   defineTool,
+  needsInput,
   resolveWorkspace,
   workspaceIdSchema
 } from "../shared"
@@ -32,6 +35,7 @@ import {
   writeResult,
   zodRowErrors
 } from "./batch"
+import { accountNameSchema, activeAccounts, resolveAccount } from "./references"
 import {
   type TransferValues,
   toTransferInput,
@@ -83,6 +87,14 @@ async function loadTransfers(
 
 const newTransfer = z.object({
   ...transferFields,
+  from_account_id: transferFields.from_account_id.optional(),
+  from_account: accountNameSchema
+    .optional()
+    .describe("Nombre de la cuenta de origen, si no tienes el id."),
+  to_account_id: transferFields.to_account_id.optional(),
+  to_account: accountNameSchema
+    .optional()
+    .describe("Nombre de la cuenta de destino, si no tienes el id."),
   time: transferFields.time.optional(),
   note: transferFields.note.optional()
 })
@@ -98,13 +110,43 @@ export const createTransfers = defineTool({
   group: "write",
   title: "Registrar traspasos",
   description:
-    "Registra de 1 a 200 traspasos entre dos cuentas activas del espacio (origen distinto de destino, monto > 0). No cuentan como ingreso ni gasto. Todo o nada, con dry_run. Devuelve un operation_id para revertir.",
+    "Registra de 1 a 200 traspasos entre dos cuentas activas del espacio (origen distinto de destino, monto > 0). No cuentan como ingreso ni gasto. Las cuentas van por id o por nombre (from_account, to_account). Todo o nada, con dry_run. Devuelve un operation_id para revertir. " +
+    NEEDS_INPUT_HINT,
   input: createInput,
   annotations: { readOnlyHint: false, destructiveHint: false },
   async run(ctx, args) {
     const workspace = await writableWorkspace(ctx, args.workspace_id)
     if ("error" in workspace) {
       return toolError(workspace.error)
+    }
+
+    // Cuentas por id o nombre; lo que falte se pregunta
+    const accounts = await activeAccounts(ctx, workspace.id)
+    const missing: MissingField[] = []
+    const refs = args.transfers.map((row, index) => {
+      const sides = [
+        ["from", row.from_account_id, row.from_account, "la cuenta de origen"],
+        ["to", row.to_account_id, row.to_account, "la cuenta de destino"]
+      ] as const
+      const [from, to] = sides.map(([side, id, name, label]) => {
+        const resolved = resolveAccount(accounts, {
+          id,
+          name,
+          field: `${side}_account_id`,
+          row: index,
+          label,
+          nullable: false
+        })
+        if ("missing" in resolved) {
+          missing.push(resolved.missing)
+          return ""
+        }
+        return resolved.value ?? ""
+      })
+      return { from_account_id: from, to_account_id: to }
+    })
+    if (missing.length > 0) {
+      return needsInput(missing)
     }
 
     const errors: RowError[] = []
@@ -115,7 +157,9 @@ export const createTransfers = defineTool({
     }[] = []
     args.transfers.forEach((row, index) => {
       const values: TransferValues = {
-        ...row,
+        ...refs[index],
+        amount: row.amount,
+        occurred_on: row.occurred_on,
         time: row.time ?? null,
         note: row.note ?? null
       }

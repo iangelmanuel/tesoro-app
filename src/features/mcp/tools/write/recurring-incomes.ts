@@ -27,7 +27,9 @@ import {
 import {
   NO_CHANGES,
   commitEntity,
+  confirmDuplicateSchema,
   definedKeys,
+  duplicateName,
   entityCategory,
   enumOptions,
   habitualAccount,
@@ -164,7 +166,8 @@ const fields = {
 const createInput = z.object({
   workspace_id: workspaceIdSchema,
   ...z.object(fields).partial().shape,
-  starts_on: fields.starts_on.optional().describe("Por defecto hoy.")
+  starts_on: fields.starts_on.optional().describe("Por defecto hoy."),
+  confirm_duplicate: confirmDuplicateSchema
 })
 
 export const createRecurringIncomeTool = defineTool({
@@ -217,6 +220,18 @@ export const createRecurringIncomeTool = defineTool({
     }
     if ("missing" in account) {
       missing.push(account.missing)
+    }
+    const { data: active } = await ctx.supabase
+      .from("recurring_incomes")
+      .select("id, name")
+      .eq("workspace_id", workspace.id)
+      .eq("is_active", true)
+    const duplicate = duplicateName(active ?? [], args.name, {
+      label: "un ingreso fijo activo",
+      confirmed: args.confirm_duplicate
+    })
+    if (duplicate) {
+      missing.push(duplicate)
     }
     if (
       missing.length > 0 ||

@@ -22,7 +22,9 @@ import {
 import {
   NO_CHANGES,
   commitEntity,
+  confirmDuplicateSchema,
   definedKeys,
+  duplicateName,
   missingField,
   personalWorkspace,
   resolveEntity,
@@ -50,7 +52,8 @@ const fields = {
 
 const createInput = z.object({
   workspace_id: workspaceIdSchema,
-  ...z.object(fields).partial().shape
+  ...z.object(fields).partial().shape,
+  confirm_duplicate: confirmDuplicateSchema
 })
 
 export const createGoalTool = defineTool({
@@ -75,6 +78,18 @@ export const createGoalTool = defineTool({
       missing.push(
         missingField("target_amount", "¿Cuánto quieres ahorrar en total?")
       )
+    }
+    const { data: active } = await ctx.supabase
+      .from("savings_goals")
+      .select("id, name")
+      .eq("workspace_id", workspace.id)
+      .eq("status", "active")
+    const duplicate = duplicateName(active ?? [], args.name, {
+      label: "una meta activa",
+      confirmed: args.confirm_duplicate
+    })
+    if (duplicate) {
+      missing.push(duplicate)
     }
     if (missing.length > 0) {
       return needsInput(missing)

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { normalizeText } from "@/features/imports/detect"
 import type { ServiceFailure } from "@/libs/service-result"
 import {
   type RowChange,
@@ -232,4 +233,43 @@ export async function entityCategory(
   return resolved.value === null
     ? { missing: missingField("category_id", "¿En qué categoría va?") }
     : { value: resolved.value }
+}
+
+// Duplicados de nombre (SPEC 44): un agente que reintenta puede crear dos
+// veces lo mismo. Si ya hay una entidad activa del mismo tipo con el mismo
+// nombre (sin mayúsculas ni tildes), se pregunta antes de crear.
+
+export const confirmDuplicateSchema = z
+  .boolean()
+  .optional()
+  .describe(
+    "true para crear aunque ya exista otra activa con el mismo nombre (solo después de preguntarle al usuario)."
+  )
+
+/** Pregunta de needs_input si `name` repite el de una entidad activa */
+export function duplicateName(
+  active: RefOption[],
+  name: string | undefined,
+  {
+    label,
+    confirmed
+  }: {
+    /** Con género y estado: "una cuenta activa", "un gasto fijo activo" */
+    label: string
+    confirmed: boolean | undefined
+  }
+): MissingField | null {
+  if (confirmed || !name?.trim()) {
+    return null
+  }
+  const target = normalizeText(name)
+  const matches = active.filter((item) => normalizeText(item.name) === target)
+  if (matches.length === 0) {
+    return null
+  }
+  return missingField(
+    "confirm_duplicate",
+    `Ya existe ${label} con ese nombre: "${matches[0].name}". ¿Es otro distinto? Si el usuario confirma, vuelve a llamar con confirm_duplicate: true; si no, usa la existente.`,
+    matches.map((item) => ({ id: item.id, label: item.name }))
+  )
 }

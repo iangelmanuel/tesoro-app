@@ -22,7 +22,9 @@ import {
 import {
   NO_CHANGES,
   commitEntity,
+  confirmDuplicateSchema,
   definedKeys,
+  duplicateName,
   entityCategory,
   habitualAccount,
   missingField,
@@ -77,7 +79,8 @@ const createInput = z.object({
   workspace_id: workspaceIdSchema,
   ...z.object(fields).partial().shape,
   frequency: fields.frequency.optional().describe("Por defecto monthly."),
-  starts_on: fields.starts_on.optional().describe("Por defecto hoy.")
+  starts_on: fields.starts_on.optional().describe("Por defecto hoy."),
+  confirm_duplicate: confirmDuplicateSchema
 })
 
 export const createRecurringExpenseTool = defineTool({
@@ -119,6 +122,18 @@ export const createRecurringExpenseTool = defineTool({
     }
     if ("missing" in account) {
       missing.push(account.missing)
+    }
+    const { data: active } = await ctx.supabase
+      .from("recurring_expenses")
+      .select("id, name")
+      .eq("workspace_id", workspace.id)
+      .eq("is_active", true)
+    const duplicate = duplicateName(active ?? [], args.name, {
+      label: "un gasto fijo activo",
+      confirmed: args.confirm_duplicate
+    })
+    if (duplicate) {
+      missing.push(duplicate)
     }
     if (missing.length > 0 || "missing" in category || "missing" in account) {
       return needsInput(missing)

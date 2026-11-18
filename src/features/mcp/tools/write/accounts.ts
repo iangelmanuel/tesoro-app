@@ -24,7 +24,9 @@ import {
 import {
   NO_CHANGES,
   commitEntity,
+  confirmDuplicateSchema,
   definedKeys,
+  duplicateName,
   enumOptions,
   missingField,
   parsePatch,
@@ -32,7 +34,7 @@ import {
   schemaError,
   serviceError
 } from "./entities"
-import { accountNameSchema } from "./references"
+import { accountNameSchema, activeAccounts } from "./references"
 
 // Crear y editar cuentas desde el MCP (SPEC 44), con el servicio de las
 // actions (accounts/service.ts). Existen en Personal y en Empresa. La moneda
@@ -70,14 +72,15 @@ const createInput = z.object({
     .describe("Saldo inicial; por defecto 0. Puede ser negativo."),
   opening_balance_on: fields.opening_balance_on.optional(),
   icon: fields.icon.optional().describe("Opcional; por defecto el del tipo."),
-  color: fields.color.optional().describe("Opcional; por defecto el del tipo.")
+  color: fields.color.optional().describe("Opcional; por defecto el del tipo."),
+  confirm_duplicate: confirmDuplicateSchema
 })
 
 export const createAccountTool = defineTool({
   name: "create_account",
   group: "write",
   title: "Crear cuenta",
-  description: `Crea una cuenta (efectivo, banco, billetera u otra) con su saldo inicial y la fecha desde la que cuenta. Úsala cuando el usuario mencione una cuenta que no está en list_accounts. Personal y Empresa. Devuelve el id y un operation_id para revertir. ${NEEDS_INPUT_HINT}`,
+  description: `Crea una cuenta (efectivo, banco, billetera u otra) con su saldo inicial y la fecha desde la que cuenta. Úsala cuando el usuario mencione una cuenta que no está en list_accounts; el nombre no puede repetirse. Personal y Empresa. Devuelve el id y un operation_id para revertir. ${NEEDS_INPUT_HINT}`,
   input: createInput,
   annotations: { readOnlyHint: false, destructiveHint: false },
   async run(ctx, args) {
@@ -100,6 +103,16 @@ export const createAccountTool = defineTool({
           enumOptions(KIND_LABELS)
         )
       )
+    }
+    // Dos cuentas no pueden llamarse igual (sin mayúsculas): esa regla de
+    // la tabla no se salta con confirm_duplicate
+    const duplicate = duplicateName(
+      await activeAccounts(ctx, workspace.id),
+      args.name,
+      { label: "una cuenta activa", confirmed: args.confirm_duplicate }
+    )
+    if (duplicate) {
+      missing.push(duplicate)
     }
     if (missing.length > 0 || !args.kind) {
       return needsInput(missing)

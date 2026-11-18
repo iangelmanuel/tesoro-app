@@ -27,7 +27,9 @@ import {
 import {
   NO_CHANGES,
   commitEntity,
+  confirmDuplicateSchema,
   definedKeys,
+  duplicateName,
   enumOptions,
   habitualAccount,
   missingField,
@@ -225,7 +227,8 @@ async function createEntity(
     schedule,
     values,
     account,
-    tool
+    tool,
+    confirmDuplicate
   }: {
     workspace: McpWorkspace
     kind: DebtKind
@@ -233,6 +236,7 @@ async function createEntity(
     values: Record<string, unknown>
     account: { account_id?: string | null; account?: string }
     tool: string
+    confirmDuplicate: boolean | undefined
   }
 ) {
   const required = REQUIRED[requiredKey(kind, schedule)]
@@ -253,6 +257,30 @@ async function createEntity(
   const habitual = await habitualAccount(ctx, workspace, account)
   if ("missing" in habitual) {
     missing.push(habitual.missing)
+  }
+
+  // Duplicados entre las activas del mismo tipo: deudas o Me deben
+  const query = ctx.supabase
+    .from("debts")
+    .select("id, name")
+    .eq("workspace_id", workspace.id)
+    .eq("status", "active")
+  const { data: active } = await (kind === "receivable"
+    ? query.eq("kind", "receivable")
+    : query.neq("kind", "receivable"))
+  const duplicate = duplicateName(
+    active ?? [],
+    typeof values.name === "string" ? values.name : undefined,
+    {
+      label:
+        kind === "receivable"
+          ? "una cuenta por cobrar activa"
+          : "una deuda activa",
+      confirmed: confirmDuplicate
+    }
+  )
+  if (duplicate) {
+    missing.push(duplicate)
   }
   if (missing.length > 0 || "missing" in habitual) {
     return needsInput(missing)
@@ -417,7 +445,8 @@ const createDebtInput = z.object({
     .optional()
     .describe("credit_card (tarjeta de crédito) o loan (préstamo)."),
   ...z.object(debtFields).partial().shape,
-  ...accountFields
+  ...accountFields,
+  confirm_duplicate: confirmDuplicateSchema
 })
 
 export const createDebtTool = defineTool({
@@ -448,7 +477,8 @@ export const createDebtTool = defineTool({
       schedule: null,
       values: valuesOf(args, debtFields),
       account: args,
-      tool: "create_debt"
+      tool: "create_debt",
+      confirmDuplicate: args.confirm_duplicate
     })
   }
 })
@@ -505,7 +535,8 @@ const createReceivableInput = z.object({
       "once: te pagan una vez (o por abonos). monthly: te pagan una cuota cada mes. Por defecto once."
     ),
   ...z.object(receivableFields).partial().shape,
-  ...accountFields
+  ...accountFields,
+  confirm_duplicate: confirmDuplicateSchema
 })
 
 export const createReceivableTool = defineTool({
@@ -527,7 +558,8 @@ export const createReceivableTool = defineTool({
       schedule: args.schedule ?? "once",
       values: valuesOf(args, receivableFields),
       account: args,
-      tool: "create_receivable"
+      tool: "create_receivable",
+      confirmDuplicate: args.confirm_duplicate
     })
   }
 })

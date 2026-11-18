@@ -148,3 +148,82 @@ export async function getDebtEntries(debtId: string): Promise<DebtEntry[]> {
       .sort((a, b) => a.period_on.localeCompare(b.period_on))
   }))
 }
+
+/** Movimiento suelto que puede ser el pago real de un ajuste (SPEC 42) */
+export interface LinkableTransaction {
+  id: string
+  occurred_on: string
+  occurred_time: string | null
+  description: string
+  note: string | null
+  account_id: string | null
+  /** null = fuera de las cuentas */
+  account_name: string | null
+  amount: number
+}
+
+/** Días de margen alrededor de la fecha del ajuste para sugerir candidatos */
+export const LINKABLE_DAYS = 7
+
+/** Fecha YYYY-MM-DD desplazada `days` días, sin pasar por la zona local */
+function shiftDay(date: string, days: number) {
+  const [year, month, day] = date.split("-").map(Number)
+  return new Date(Date.UTC(year, month - 1, day + days))
+    .toISOString()
+    .slice(0, 10)
+}
+
+/**
+ * Candidatos para convertir un ajuste en pago (SPEC 42): movimientos del
+ * espacio de la deuda con el mismo monto y fecha a ±7 días, sin enlazar a un
+ * abono ni a un gasto o ingreso fijo. Gastos para tarjetas y préstamos,
+ * ingresos para Me deben. Los más cercanos a la fecha primero.
+ */
+export async function findLinkableTransactions(
+  debtId: string,
+  amount: number,
+  occurredOn: string
+): Promise<LinkableTransaction[]> {
+  const supabase = await createClient()
+  const { data: debt } = await supabase
+    .from("debts")
+    .select("workspace_id, kind")
+    .eq("id", debtId)
+    .maybeSingle()
+
+  if (!debt) {
+    return []
+  }
+
+  const { data, error } = await supabase
+    .from("transactions")
+    .select(
+      "id, occurred_on, occurred_time, description, note, account_id, amount, account:accounts!transactions_account_id_workspace_id_fkey (name), debt_entries (id)"
+    )
+    .eq("workspace_id", debt.workspace_id)
+    .eq("type", debt.kind === "receivable" ? "income" : "expense")
+    .eq("amount", amount)
+    .gte("occurred_on", shiftDay(occurredOn, -LINKABLE_DAYS))
+    .lte("occurred_on", shiftDay(occurredOn, LINKABLE_DAYS))
+    .is("recurring_expense_id", null)
+    .is("recurring_income_id", null)
+
+  if (error) {
+    throw new Error("No se pudieron cargar los movimientos")
+  }
+
+  const distance = (date: string) =>
+    Math.abs(Date.parse(date) - Date.parse(occurredOn))
+
+  return data
+    .filter((row) => row.debt_entries === null)
+    .map(({ account, debt_entries: _link, ...row }) => {
+      void _link
+      return {
+        ...row,
+        amount: Number(row.amount),
+        account_name: account?.name ?? null
+      }
+    })
+    .sort((a, b) => distance(a.occurred_on) - distance(b.occurred_on))
+}

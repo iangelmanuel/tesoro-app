@@ -26,6 +26,7 @@ import {
   RECEIVABLE_NOT_FOUND,
   debtPgError
 } from "./errors"
+import { type LinkableTransaction, findLinkableTransactions } from "./queries"
 import { lastPeriodOn, periodOf } from "./receivable-schedule"
 import {
   DEBT_KINDS,
@@ -832,6 +833,33 @@ export async function updateEntry(
 
   revalidatePersonalPages()
   return { ok: true }
+}
+
+// Candidatos para convertir un ajuste en pago (SPEC 42): movimientos sueltos
+// del mismo monto a ±7 días de la fecha del ajuste. Vacío si el abono no es
+// un ajuste que bajó el saldo de una deuda activa.
+export async function listLinkableTransactions(
+  entryId: string
+): Promise<LinkableTransaction[]> {
+  const id = idSchema.safeParse(entryId)
+  if (!id.success) {
+    return []
+  }
+
+  const entry = await findEntry(id.data)
+  if (
+    !entry ||
+    entry.kind !== "adjustment" ||
+    entry.amount >= 0 ||
+    entry.debt.status !== "active"
+  ) {
+    return []
+  }
+  return findLinkableTransactions(
+    entry.debt_id,
+    -entry.amount,
+    entry.occurred_on
+  )
 }
 
 // Borra un pago, un avance, una cuota o un ajuste. Si el pago o el avance

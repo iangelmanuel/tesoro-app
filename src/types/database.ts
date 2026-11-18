@@ -1429,6 +1429,19 @@ export type Database = {
           tx_count: number
         }[]
       }
+      convert_debt_adjustment: {
+        Args: {
+          p_account_id: string
+          p_category_id: string
+          p_description: string
+          p_entry_id: string
+          p_link_transaction_id: string
+          p_note: string
+          p_occurred_on: string
+          p_occurred_time: string
+        }
+        Returns: string
+      }
       create_business: {
         Args: { p_name: string; p_sector: string; p_tax_id: string }
         Returns: string

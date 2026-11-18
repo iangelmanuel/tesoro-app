@@ -78,7 +78,7 @@ const createInput = z.object({
 
 export const createAccountTool = defineTool({
   name: "create_account",
-  group: "write",
+  group: "manage",
   title: "Crear cuenta",
   description: `Crea una cuenta (efectivo, banco, billetera u otra) con su saldo inicial y la fecha desde la que cuenta. Úsala cuando el usuario mencione una cuenta que no está en list_accounts; el nombre no puede repetirse. Personal y Empresa. Devuelve el id y un operation_id para revertir. ${NEEDS_INPUT_HINT}`,
   input: createInput,
@@ -167,7 +167,7 @@ const updateInput = z.object({
 
 export const updateAccountTool = defineTool({
   name: "update_account",
-  group: "write",
+  group: "manage",
   title: "Editar cuenta",
   description: `Cambia nombre, tipo, saldo inicial, su fecha, icono o color de una cuenta. Solo cambia los campos que envíes; los demás quedan igual. Para el saldo real de hoy usa los movimientos, no el saldo inicial. Devuelve un operation_id para revertir. ${NEEDS_INPUT_HINT}`,
   input: updateInput,

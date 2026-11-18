@@ -58,7 +58,7 @@ const createInput = z.object({
 
 export const createGoalTool = defineTool({
   name: "create_goal",
-  group: "write",
+  group: "manage",
   title: "Crear meta",
   description: `Crea una meta de ahorro con su monto objetivo y fecha opcional (posterior a hoy). Para aportar o retirar usa record_goal_contribution. Solo Personal. ${NEEDS_INPUT_HINT}`,
   input: createInput,
@@ -139,7 +139,7 @@ const updateInput = z.object({
 
 export const updateGoalTool = defineTool({
   name: "update_goal",
-  group: "write",
+  group: "manage",
   title: "Editar meta",
   description: `Cambia nombre, monto objetivo, fecha, icono o color de una meta de ahorro. Solo cambia los campos que envíes; los demás quedan igual. Una fecha nueva debe ser posterior a hoy. Lo ahorrado no cambia. Solo Personal. ${NEEDS_INPUT_HINT}`,
   input: updateInput,

@@ -37,7 +37,7 @@ const input = z.object({
 
 export const setBudgetTool = defineTool({
   name: "set_budget",
-  group: "write",
+  group: "manage",
   title: "Fijar presupuesto",
   description: `Crea el presupuesto de una categoría de gasto para un mes o, si ya existe, cambia su monto (nunca duplica). Revisa list_budgets para ver los del mes. Solo Personal. Devuelve un operation_id para revertir. ${NEEDS_INPUT_HINT}`,
   input,

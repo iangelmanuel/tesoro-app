@@ -172,7 +172,7 @@ const createInput = z.object({
 
 export const createRecurringIncomeTool = defineTool({
   name: "create_recurring_income",
-  group: "write",
+  group: "manage",
   title: "Crear ingreso fijo",
   description: `Crea un ingreso fijo (salario, arriendo que recibe, rendimiento) con su frecuencia, categoría de ingreso y cuenta por defecto opcional. Cada frecuencia pide sus días: weekly el día de la semana, biweekly dos días del mes, monthly y yearly el día (yearly también el mes), every_n_days el intervalo. Para registrar lo que llegó usa receive_recurring_income. Solo Personal. ${NEEDS_INPUT_HINT}`,
   input: createInput,
@@ -292,7 +292,7 @@ const updateInput = z.object({
 
 export const updateRecurringIncomeTool = defineTool({
   name: "update_recurring_income",
-  group: "write",
+  group: "manage",
   title: "Editar ingreso fijo",
   description: `Cambia nombre, monto, categoría, frecuencia, días, fechas o cuenta por defecto de un ingreso fijo. Solo cambia los campos que envíes; los demás quedan igual. Al cambiar la frecuencia envía los días que pide la nueva. Lo ya recibido no cambia. Solo Personal. ${NEEDS_INPUT_HINT}`,
   input: updateInput,

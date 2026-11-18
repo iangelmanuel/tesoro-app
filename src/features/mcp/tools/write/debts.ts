@@ -451,7 +451,7 @@ const createDebtInput = z.object({
 
 export const createDebtTool = defineTool({
   name: "create_debt",
-  group: "write",
+  group: "manage",
   title: "Crear deuda",
   description: `Crea una tarjeta de crédito o un préstamo en Deudas, con los campos del formulario de la app. Tarjeta: nombre, saldo de hoy, cupo, día de corte y día de pago (tasa, pago mínimo y cuota de manejo opcionales). Préstamo: nombre, saldo, cuota, tasa (0 si no tiene) y día de pago (monto original y plazo opcionales). Para lo que le deben al usuario usa create_receivable. Solo Personal. ${NEEDS_INPUT_HINT}`,
   input: createDebtInput,
@@ -501,7 +501,7 @@ const updateDebtInput = z.object({
 
 export const updateDebtTool = defineTool({
   name: "update_debt",
-  group: "write",
+  group: "manage",
   title: "Editar deuda",
   description: `Cambia los datos de una tarjeta o un préstamo: nombre, cupo, corte, pago, tasa, cuota, plazo, cuota de manejo o cuenta habitual. Solo cambia los campos que envíes; el tipo no cambia. Para registrar pagos usa record_debt_payment. Solo Personal. ${NEEDS_INPUT_HINT}`,
   input: updateDebtInput,
@@ -541,7 +541,7 @@ const createReceivableInput = z.object({
 
 export const createReceivableTool = defineTool({
   name: "create_receivable",
-  group: "write",
+  group: "manage",
   title: "Crear cuenta por cobrar",
   description: `Crea una cuenta por cobrar en Me deben: dinero que le deben al usuario. Cobro único (schedule once): nombre y monto, fecha esperada opcional. Mes a mes (monthly): nombre, monto mensual, día de pago y fecha de inicio; número de cuotas opcional (sin él es indefinida). El tipo de cobro no se puede cambiar después. Solo Personal. ${NEEDS_INPUT_HINT}`,
   input: createReceivableInput,
@@ -582,7 +582,7 @@ const updateReceivableInput = z.object({
 
 export const updateReceivableTool = defineTool({
   name: "update_receivable",
-  group: "write",
+  group: "manage",
   title: "Editar cuenta por cobrar",
   description: `Cambia los datos de una cuenta por cobrar de Me deben. Solo cambia los campos que envíes. No cambia el tipo de cobro (único o mes a mes): envía solo los campos de su tipo. En una mensual indefinida, un monto nuevo deja los meses ya corridos con el anterior, como la app. Para registrar cobros usa collect_receivable. Solo Personal. ${NEEDS_INPUT_HINT}`,
   input: updateReceivableInput,

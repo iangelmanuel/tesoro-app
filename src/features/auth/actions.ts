@@ -111,7 +111,9 @@ export async function signInWithOAuth(
 
 export async function signOut() {
   const supabase = await createClient()
-  await supabase.auth.signOut()
+  // Solo esta sesión: el scope por defecto ('global') también borra las
+  // sesiones OAuth de los agentes MCP y los deja sin refresh token
+  await supabase.auth.signOut({ scope: "local" })
 
   redirect(SITE.routes.signIn)
 }

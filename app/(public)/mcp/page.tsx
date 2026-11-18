@@ -101,7 +101,7 @@ const SECURITY = [
   },
   {
     icon: Undo2Icon,
-    text: `Toda escritura queda en el historial y se revierte durante ${SITE.mcp.undoWindowDays} días.`
+    text: `Toda escritura queda en el historial y se revierte durante ${SITE.mcp.undoWindowDays} días. Lo que el agente creó no se borra si ya tiene movimientos, pagos o aportes.`
   },
   {
     icon: ShieldOffIcon,
@@ -320,7 +320,7 @@ export default function McpPage() {
 
           <Section
             id="herramientas"
-            description={`Lo que el agente puede usar. Las de escritura aceptan hasta ${SITE.mcp.bulkLimit} filas por llamada, todo o nada, con vista previa sin guardar. Con Solo lectura, el agente solo ve las de lectura.`}
+            description={`Lo que el agente puede usar. Las de escritura en lote aceptan hasta ${SITE.mcp.bulkLimit} filas por llamada, todo o nada, con vista previa sin guardar; las de crear y editar trabajan con una cuenta, deuda, fijo, meta o presupuesto a la vez. Con Solo lectura, el agente solo ve las de lectura.`}
           >
             <ToolCatalog />
           </Section>

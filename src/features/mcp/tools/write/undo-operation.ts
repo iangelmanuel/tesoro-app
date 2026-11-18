@@ -14,7 +14,7 @@ export const undoOperation = defineTool({
   name: "undo_operation",
   group: "undo",
   title: "Revertir una operación",
-  description: `Revierte una escritura del MCP por su operation_id: borra lo creado, recrea lo borrado con sus mismos ids y devuelve lo editado. Todo o nada: si alguna fila cambió después (p. ej. desde la app), no revierte ninguna. Se revierte una sola vez y hasta ${SITE.mcp.undoWindowDays} días después; no hay rehacer.`,
+  description: `Revierte una escritura del MCP por su operation_id: borra lo creado, recrea lo borrado con sus mismos ids y devuelve lo editado. Todo o nada: si alguna fila cambió después (p. ej. desde la app), o si una cuenta, deuda, fijo, meta o presupuesto creado ya tiene datos vinculados (movimientos, pagos, aportes), no revierte ninguna y dice el motivo. Se revierte una sola vez y hasta ${SITE.mcp.undoWindowDays} días después; no hay rehacer.`,
   input,
   annotations: { destructiveHint: true },
   async run(ctx, { operation_id }) {

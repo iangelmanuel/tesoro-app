@@ -26,7 +26,7 @@ export const metadata = buildMetadata({
 
 const CAPABILITIES = [
   "Ver tus espacios, cuentas, movimientos, presupuestos, metas, deudas, reportes y score.",
-  "Con Leer y escribir: registrar, editar, borrar y revertir movimientos y traspasos.",
+  "Con Leer y escribir: registrar, editar, borrar y revertir movimientos, pagos y traspasos, y crear y editar cuentas, deudas, fijos, metas y presupuestos.",
   "Puedes cambiar el acceso o revocarlo cuando quieras en Cuenta → Agentes IA."
 ]
 

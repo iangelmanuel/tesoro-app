@@ -17,7 +17,7 @@ export const MCP_ACCESS_OPTIONS: Record<
   write: {
     label: "Leer y escribir",
     description:
-      "Ve tus datos y puede registrar, editar, borrar y revertir movimientos y traspasos."
+      "Ve tus datos y puede registrar, editar, borrar y revertir movimientos, pagos y traspasos, y crear y editar cuentas, deudas, fijos, metas y presupuestos."
   },
   read: {
     label: "Solo lectura",

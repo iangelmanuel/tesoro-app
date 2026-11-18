@@ -2695,7 +2695,12 @@ La guía para el usuario está en `/mcp`; la técnica, en
   fijos, lo que te deben e historial de operaciones. Presupuestos, metas,
   deudas, fijos y Me deben solo existen en Personal.
 - **Escribir** (solo con **Leer y escribir**): crear, editar y borrar de 1 a
-  200 movimientos o traspasos por llamada, y crear categorías.
+  200 movimientos o traspasos por llamada, crear categorías, poner al día una
+  cuenta con un extracto y registrar pagos de deudas, cobros, gastos e
+  ingresos fijos y aportes a metas (SPEC 43).
+- **Crear y editar** (solo con **Leer y escribir**, SPEC 44): cuentas (en
+  Personal y Empresa), deudas, Me deben, gastos e ingresos fijos, metas y
+  presupuestos (solo Personal). Una entidad por llamada.
 - **Revertir** una operación por su id.
 - El agente ve los montos reales aunque **Ocultar montos** esté activo: es
   una preferencia visual de la app, como en la exportación.
@@ -2720,8 +2725,11 @@ La guía para el usuario está en `/mcp`; la técnica, en
   vínculo `recurring_income` lleva `allocations` (`due_on` y monto) en vez de
   una sola fecha.
 - Un espacio marcado para borrar no admite escrituras; sí lecturas.
-- Los pagos de tarjeta y la escritura de cuentas, fijos, presupuestos, metas,
-  deudas y Me deben llegan en SPEC 35.
+- **Crear y editar entidades** (SPEC 44): mismas reglas que sus diálogos.
+  Editar solo cambia los campos que el agente envía. Si falta un dato, un
+  campo no aplica al tipo (p. ej. día de corte en un préstamo) o el nombre
+  repite el de otra activa del mismo tipo, el agente pregunta antes de
+  guardar. El agente no borra ni archiva entidades.
 
 ### Revertir
 
@@ -2730,6 +2738,11 @@ La guía para el usuario está en `/mcp`; la técnica, en
 - Revertir borra lo creado, recrea lo borrado con sus mismos ids y vínculos y
   devuelve lo editado. Es todo o nada: si una fila cambió después (p. ej.
   desde la app), no revierte nada y dice cuántas cambiaron.
+- Revertir la creación de una cuenta, deuda, fijo, meta o presupuesto falla
+  si ya tiene datos vinculados (movimientos, traspasos, pagos, aportes o
+  fijos que la usan como cuenta habitual): no borra nada y la operación
+  sigue **Aplicada** para intentarlo después. Revertir una edición devuelve
+  solo los campos de la entidad; sus pagos no cambian.
 - Una operación se revierte una sola vez, hasta 30 días después. No hay
   rehacer. El job `purge-mcp-operations` borra las operaciones más viejas.
 

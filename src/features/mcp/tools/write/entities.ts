@@ -7,9 +7,21 @@ import {
 } from "../../operations"
 import type { McpContext } from "../../types"
 import { toolError } from "../result"
-import type { McpWorkspace, MissingField } from "../shared"
+import {
+  type McpWorkspace,
+  type MissingField,
+  PERSONAL_ONLY,
+  resolveWorkspace
+} from "../shared"
 import { failureRowErrors, writeResult } from "./batch"
-import { type RefOption, matchByName } from "./references"
+import {
+  type RefOption,
+  activeAccounts,
+  activeCategories,
+  matchByName,
+  resolveAccount,
+  resolveCategory
+} from "./references"
 
 // Piezas de las tools que crean y editan entidades (SPEC 44): cuentas,
 // deudas, Me deben, fijos, metas y presupuestos. Una entidad por llamada;
@@ -163,4 +175,61 @@ export async function commitEntity(
     changes: [...related, { table, rowId: after.id, before, after }]
   })
   return writeResult(ctx, { operationId, summary, ids: [after.id] })
+}
+
+type ToolResult = ReturnType<typeof toolError>
+
+/** Cuenta habitual: solo se resuelve si llega por id o por nombre */
+export async function habitualAccount(
+  ctx: McpContext,
+  workspace: McpWorkspace,
+  args: { account_id?: string | null; account?: string }
+): Promise<{ value: string | null | undefined } | { missing: MissingField }> {
+  if (args.account === undefined && args.account_id === undefined) {
+    return { value: undefined }
+  }
+  return resolveAccount(await activeAccounts(ctx, workspace.id), {
+    id: args.account_id,
+    name: args.account,
+    field: "account_id",
+    label: "la cuenta habitual",
+    nullable: true
+  })
+}
+
+export async function personalWorkspace(
+  ctx: McpContext,
+  id: string
+): Promise<{ error: ToolResult } | { workspace: McpWorkspace }> {
+  const workspace = await resolveWorkspace(ctx, id, { writable: true })
+  if ("error" in workspace) {
+    return { error: toolError(workspace.error) }
+  }
+  if (workspace.type !== "personal") {
+    return { error: toolError(PERSONAL_ONLY) }
+  }
+  return { workspace }
+}
+
+/** Categoría obligatoria de un tipo, por id o por nombre */
+export async function entityCategory(
+  ctx: McpContext,
+  workspace: McpWorkspace,
+  args: { category_id?: string; category?: string },
+  type: "income" | "expense"
+): Promise<{ value: string } | { missing: MissingField }> {
+  if (args.category_id !== undefined) {
+    return { value: args.category_id }
+  }
+  const resolved = resolveCategory(await activeCategories(ctx, workspace), {
+    id: undefined,
+    name: args.category,
+    type
+  })
+  if ("missing" in resolved) {
+    return resolved
+  }
+  return resolved.value === null
+    ? { missing: missingField("category_id", "¿En qué categoría va?") }
+    : { value: resolved.value }
 }

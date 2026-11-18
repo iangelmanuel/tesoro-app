@@ -19,11 +19,9 @@ import {
   type McpWorkspace,
   type MissingField,
   NEEDS_INPUT_HINT,
-  PERSONAL_ONLY,
   dateSchema,
   defineTool,
   needsInput,
-  resolveWorkspace,
   workspaceIdSchema
 } from "../shared"
 import {
@@ -31,11 +29,13 @@ import {
   commitEntity,
   definedKeys,
   enumOptions,
+  habitualAccount,
   missingField,
+  personalWorkspace,
   resolveEntity,
   serviceError
 } from "./entities"
-import { accountNameSchema, activeAccounts, resolveAccount } from "./references"
+import { accountNameSchema } from "./references"
 
 // Crear y editar deudas (tarjetas y préstamos) y cuentas por cobrar (Me
 // deben) desde el MCP (SPEC 44), con el servicio de las actions
@@ -215,38 +215,6 @@ function pickFields(
         : values[key]
     ])
   )
-}
-
-/** Cuenta habitual: solo se resuelve si llega por id o por nombre */
-async function habitualAccount(
-  ctx: McpContext,
-  workspace: McpWorkspace,
-  args: { account_id?: string | null; account?: string }
-): Promise<{ value: string | null | undefined } | { missing: MissingField }> {
-  if (args.account === undefined && args.account_id === undefined) {
-    return { value: undefined }
-  }
-  return resolveAccount(await activeAccounts(ctx, workspace.id), {
-    id: args.account_id,
-    name: args.account,
-    field: "account_id",
-    label: "la cuenta habitual",
-    nullable: true
-  })
-}
-
-async function personalWorkspace(
-  ctx: McpContext,
-  id: string
-): Promise<{ error: ToolResult } | { workspace: McpWorkspace }> {
-  const workspace = await resolveWorkspace(ctx, id, { writable: true })
-  if ("error" in workspace) {
-    return { error: toolError(workspace.error) }
-  }
-  if (workspace.type !== "personal") {
-    return { error: toolError(PERSONAL_ONLY) }
-  }
-  return { workspace }
 }
 
 async function createEntity(
@@ -434,8 +402,6 @@ async function updateEntity(
       : []
   })
 }
-
-type ToolResult = ReturnType<typeof toolError>
 
 // Deudas: tarjetas y préstamos
 

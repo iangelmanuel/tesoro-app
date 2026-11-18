@@ -14,6 +14,7 @@ import {
   recordGoalContributionRecord
 } from "./contribution-service"
 import { contributionSchema, goalSchema } from "./schemas"
+import { createGoalRecord, updateGoalRecord } from "./service"
 import type {
   ContributionFormState,
   GoalActionResult,
@@ -23,7 +24,6 @@ import type {
 type GoalStatus = "active" | "completed" | "archived"
 
 const CONTRIBUTION_NOT_FOUND = "No se encontró el aporte"
-const GOAL_DEFAULT_ERROR = "No se pudo guardar la meta. Intenta de nuevo"
 
 const GOAL_FIELDS = [
   "name",
@@ -45,14 +45,6 @@ const CONTRIBUTION_FIELDS = [
 ] as const
 
 const idSchema = z.uuid()
-
-// Errores de Postgres que pueden llegar pese a la validación con Zod
-const GOAL_PG_ERRORS: Record<string, GoalFormState> = {
-  // check de la tabla
-  "23514": { error: GOAL_DEFAULT_ERROR },
-  // RLS
-  "42501": { error: "No tienes permiso para modificar esta meta" }
-}
 
 function readValues<const T extends readonly string[]>(
   formData: FormData,
@@ -95,16 +87,14 @@ export async function createGoal(
   }
 
   const workspace = await getPersonalWorkspace()
-  const supabase = await createClient()
-  const { error } = await supabase
-    .from("savings_goals")
-    .insert({ ...parsed.data, workspace_id: workspace.id })
+  const result = await createGoalRecord(
+    await createClient(),
+    workspace,
+    parsed.data
+  )
 
-  if (error) {
-    return {
-      ...(GOAL_PG_ERRORS[error.code] ?? { error: GOAL_DEFAULT_ERROR }),
-      values
-    }
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
   }
 
   revalidatePersonalPages()
@@ -136,22 +126,15 @@ export async function updateGoal(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
   }
 
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("savings_goals")
-    .update(parsed.data)
-    .eq("id", goal.id)
-    .eq("workspace_id", goal.workspace_id)
-    .select("id")
+  const result = await updateGoalRecord(
+    await createClient(),
+    { id: goal.workspace_id },
+    goal.id,
+    parsed.data
+  )
 
-  if (error) {
-    return {
-      ...(GOAL_PG_ERRORS[error.code] ?? { error: GOAL_DEFAULT_ERROR }),
-      values
-    }
-  }
-  if (data.length === 0) {
-    return { error: GOAL_NOT_FOUND, values }
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
   }
 
   revalidatePersonalPages()

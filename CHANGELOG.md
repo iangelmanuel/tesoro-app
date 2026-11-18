@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Edit debt entries and convert adjustments to payments (SPEC 42).
+  - Editing a debt payment or receivable collection (debt Sheet and Movements) now changes the **account**, **description**, **note**, **category** of the linked movement and the **Pago | Abono** (extra payment) flag, besides amount, date and time. Card payments keep their account on the entry; loans, receivables and card advances keep it on the movement. Both screens use the shared `updatePaymentEntry` service, which validates the category before writing and restores the entry if the movement update fails. The MCP `update_transactions` tool now also writes its note to the entry.
+  - A debt adjustment that lowered the balance shows **Ajuste | Fue un pago** (**Fue un cobro** for receivables) when edited. The form suggests movements already registered with the same amount within ±7 days that are not linked to a debt entry or a recurring expense/income (`findLinkableTransactions`), plus **Crear movimiento nuevo**; picking one adopts its account, date and description. Positive adjustments still open **Actualizar saldo**.
+  - New RPC `convert_debt_adjustment` turns the adjustment into a positive payment in one transaction: it links or creates the expense/income for loans and receivables, or stores the account on card payments and deletes the chosen loose expense so the outflow is not counted twice. Monthly receivables re-split through the existing triggers. The debt balance does not change; the account balance does. `check_debt_entry` now allows only the adjustment → payment kind change with the opposite amount.
+
 - Theme switch, tab order, today's date and payment autofill (SPEC 41).
   - The account menu replaces the Light/Dark pill with a **Modo oscuro** item that matches **Cuenta** and **Ayuda** (`Moon` icon, same height and padding) and shows a small switch on the right. The item is a `menuitemcheckbox` with `aria-checked`; clicking it or pressing Enter/Space toggles light ↔ dark without closing the menu. The switch is decorative, so a click never fires twice.
   - The Personal movement dialog tabs now read **Gasto, Ingreso, Traspaso, Gasto fijo, Deuda, Me deben, Meta** (recurring expenses are logged more often than debt payments). Business does not change.

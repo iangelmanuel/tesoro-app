@@ -1112,6 +1112,45 @@ inválido de `tab` cae a Debo.
   Movimientos, ese movimiento abre el diálogo del pago y eliminarlo borra los
   dos (SPEC 26). `updateTransaction` y `deleteTransaction` lo rechazan.
 
+### Editar pagos y convertir ajustes (SPEC 42)
+
+- **Editar un pago o abono** (Sheet de la deuda y Movimientos, mismo
+  servicio `updatePaymentEntry`): monto, fecha, hora, nota, **cuenta**,
+  **descripción** y **categoría** del movimiento enlazado y **Pago | Abono**
+  (abono extra, solo préstamos y tarjetas).
+  - En una tarjeta la cuenta vive en el pago (`debt_entries.account_id`);
+    en préstamos, Me deben y avances con ingreso, en su movimiento.
+  - La nota del pago pasa también al movimiento. Descripción o categoría
+    vacías conservan las del movimiento; una cuenta que el formulario no
+    envía se conserva.
+  - Cambiar la cuenta mueve el gasto o ingreso a la otra cuenta y ajusta los
+    dos saldos. En una mensual de Me deben, cambiar el monto reparte de
+    nuevo las cuotas (SPEC 39).
+- **Convertir un ajuste en pago:** un ajuste que **bajó** el saldo de una
+  deuda activa (`amount < 0`) muestra al editarlo **Ajuste | Fue un pago**
+  (en Me deben, **Fue un cobro**). Un ajuste que subió el saldo solo abre
+  "Actualizar saldo".
+  - Monto: el del ajuste en positivo (no se edita). Fecha y hora: las del
+    ajuste. Cuenta obligatoria, nota y, salvo en tarjetas, descripción
+    (`Pago {deuda}` / `Abono {deuda}`) y categoría (Deudas / Cobros).
+  - **Movimiento ya registrado:** gastos (tarjetas y préstamos) o ingresos
+    (Me deben) del mismo espacio, mismo monto exacto, fecha a ±7 días del
+    ajuste, sin abono ni gasto o ingreso fijo enlazado
+    (`findLinkableTransactions`), del más cercano al más lejano, más **Crear
+    movimiento nuevo**. Elegir uno adopta su cuenta, fecha, hora y
+    descripción.
+  - RPC `convert_debt_adjustment` (`security invoker`, todo por RLS) en una
+    sola transacción: el ajuste pasa a `kind = 'payment'` con monto
+    positivo. Préstamo o Me deben: se enlaza al movimiento elegido o se crea
+    uno nuevo. Tarjeta: el pago guarda la cuenta y, si se eligió un gasto
+    suelto, ese gasto se borra (contaría la salida dos veces); su
+    descripción pasa a la nota.
+  - El saldo de la deuda no cambia; el de la cuenta baja (o sube en Me
+    deben). `check_debt_entry` solo permite cambiar de tipo de ajuste
+    negativo a pago con el monto opuesto.
+- Una deuda pagada o archivada no permite editar ni convertir. No hay
+  conversión en lote, buscador libre ni camino inverso (pago → ajuste).
+
 ### Ciclo de pago
 
 Tarjetas y préstamos. Fechas en `America/Bogota`. El vencimiento de cada mes

@@ -70,11 +70,15 @@ export const FIELD_HELP = {
   "transaction.type":
     "Entrada: dinero que te llega. Salida: dinero que sale. Traspaso: mueves dinero entre tus cuentas.",
   "transaction.invoice": "Número de la factura, si quieres buscarla después.",
+  "transaction.counterparty":
+    "A quién le vendiste o a quién le pagaste. Opcional.",
 
   // Traspaso
   "transfer.from": "La cuenta de donde sale el dinero.",
   "transfer.to": "La cuenta a donde llega.",
   "transfer.amount": "Cuánto mueves. No cuenta como entrada ni salida.",
+  "transfer.before":
+    "Si a la cuenta no le alcanza, mueve primero dinero desde otra de tus cuentas.",
 
   // Cuenta
   "account.name": "Cómo la reconoces. Ej.: Ahorros Banco, Efectivo.",

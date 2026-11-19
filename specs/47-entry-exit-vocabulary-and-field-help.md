@@ -71,7 +71,8 @@ No hay tablas ni migraciones nuevas. Solo hay configuración nueva en `src/confi
 // con ejemplo si ayuda. Clave: "<formulario>.<campo>" o "common.<campo>"
 export const FIELD_HELP = {
   "common.amount": "El valor, sin signo de pesos. Ej.: 150.000.",
-  "debt.creditLimit": "Lo máximo que el banco te deja gastar con la tarjeta. Aparece en tu extracto o en la app del banco."
+  "debt.creditLimit":
+    "Lo máximo que el banco te deja gastar con la tarjeta. Aparece en tu extracto o en la app del banco."
   // …
 } as const
 
@@ -88,6 +89,7 @@ Componente nuevo `src/components/forms/field-label.tsx`:
 
 - Color del ícono: `text-muted/80` en reposo y `text-muted` al pasar el mouse o con foco. Debe dar al menos 3:1 sobre `--surface` y `--overlay`, en claro y en oscuro (contraste mínimo de un gráfico, WCAG 1.4.11). Si `/80` no llega, se usa `text-muted` sin opacidad.
 - El botón mide 24 px (`size-6`) y va en línea con la etiqueta. No cambia la altura del campo.
+- `FieldHelp` es el (?) suelto, para etiquetas que no son un `Label` (el texto de un `Switch`). `FieldLabel` lo usa por dentro.
 - `Field` (deudas), `AmountField`, `DayField`, `AccountSelectField`, `CategorySelectField`, `DatePickerField`, `TimePickerField` y `form-field.tsx` (auth) reciben una prop `help?: FieldHelpKey` y usan `FieldLabel`.
 
 ## Textos de ayuda (inventario)
@@ -110,9 +112,9 @@ Las claves `common.*` se reusan cuando el campo significa lo mismo. Si un formul
 | `common.frequency`      | Cada cuánto se repite.                                               |
 | `common.defaultAccount` | La cuenta que se elige sola al registrar. Puedes cambiarla cada vez. |
 
-**Movimiento** (`transaction-dialog.tsx`): `transaction.type` "Entrada: dinero que te llega. Salida: dinero que sale. Traspaso: mueves dinero entre tus cuentas." · `transaction.invoice` "Número de la factura, si quieres buscarla después." Además usa amount, date, time, account, category, description y note.
+**Movimiento** (`transaction-dialog.tsx`): `transaction.type` "Entrada: dinero que te llega. Salida: dinero que sale. Traspaso: mueves dinero entre tus cuentas." (va en una etiqueta visible **Tipo** sobre el selector, que pasa de `aria-label` a `aria-labelledby`) · `transaction.invoice` "Número de la factura, si quieres buscarla después." · `transaction.counterparty` (Cliente / Proveedor en Empresa) "A quién le vendiste o a quién le pagaste. Opcional." Además usa amount, date, time, account, category, description y note.
 
-**Traspaso** (`transfer-dialog.tsx`, `payment-account-section.tsx`): `transfer.from` "La cuenta de donde sale el dinero." · `transfer.to` "La cuenta a donde llega." · `transfer.amount` "Cuánto mueves. No cuenta como entrada ni salida."
+**Traspaso** (`transfer-dialog.tsx`, `payment-account-section.tsx`): `transfer.from` "La cuenta de donde sale el dinero." · `transfer.to` "La cuenta a donde llega." · `transfer.amount` "Cuánto mueves. No cuenta como entrada ni salida." · `transfer.before` (Switch **Traspasar fondos antes**) "Si a la cuenta no le alcanza, mueve primero dinero desde otra de tus cuentas."
 
 **Cuenta** (`account-dialog.tsx`): `account.name` "Cómo la reconoces. Ej.: Ahorros Banco, Efectivo." · `account.type` "Banco, efectivo o billetera digital. Solo cambia el ícono y cómo se agrupa." · `account.openingBalance` "El dinero que tenía la cuenta cuando empezaste a usar Tesoro." · `account.openingBalanceDate` "El día de ese saldo. Los movimientos anteriores no lo cambian."
 

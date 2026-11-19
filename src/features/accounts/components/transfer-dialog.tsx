@@ -5,13 +5,13 @@ import {
   Button,
   FieldError,
   Input,
-  Label,
   Modal,
   TextField,
   toast
 } from "@heroui/react"
 import { AccountSelectField } from "@/components/forms/account-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import { FieldLabel } from "@/components/forms/field-label"
 import { TimePickerField } from "@/components/forms/time-picker-field"
 import { amountInput } from "@/features/debts/components/field"
 import { todayISO } from "@/libs/dates"
@@ -158,6 +158,7 @@ export function TransferForm({
           workspaceId={workspaceId}
           name="from_account_id"
           label="Desde"
+          help="transfer.from"
           value={fromId}
           onChange={setFromId}
           accounts={selectableAccounts(accounts, transfer?.from_account_id)}
@@ -169,6 +170,7 @@ export function TransferForm({
           workspaceId={workspaceId}
           name="to_account_id"
           label="Hacia"
+          help="transfer.to"
           value={toId}
           onChange={setToId}
           accounts={selectableAccounts(accounts, transfer?.to_account_id)}
@@ -187,7 +189,7 @@ export function TransferForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Monto</Label>
+        <FieldLabel help="transfer.amount">Monto</FieldLabel>
         <Input placeholder="0" />
         <FieldError>{errors?.amount?.[0]}</FieldError>
       </TextField>
@@ -196,6 +198,7 @@ export function TransferForm({
         <DatePickerField
           name="occurred_on"
           label="Fecha"
+          help="common.date"
           value={occurredOn}
           onChange={setOccurredOn}
           error={errors?.occurred_on?.[0]}
@@ -204,6 +207,7 @@ export function TransferForm({
 
         <TimePickerField
           name="occurred_time"
+          help="common.time"
           value={time}
           onChange={setTime}
           error={errors?.occurred_time?.[0]}
@@ -218,7 +222,7 @@ export function TransferForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Nota (opcional)</Label>
+        <FieldLabel help="common.note">Nota (opcional)</FieldLabel>
         <Input placeholder="Retiro en cajero" />
         <FieldError>{errors?.note?.[0]}</FieldError>
       </TextField>

@@ -173,6 +173,8 @@ export const FIELD_HELP = {
   // Ingreso fijo
   "recurringIncome.name": "De dónde viene. Ej.: Salario, Arriendo.",
   "recurringIncome.expected": "Lo que esperas recibir cada vez.",
+  "recurringIncome.day": "El día del mes en que te pagan.",
+  "recurringIncome.month": "El mes en que te pagan, si es anual.",
   "recurringIncome.secondDay":
     "Para quincenas: el otro día del mes en que te pagan.",
   "recurringIncome.weekday": "El día de la semana en que te pagan.",

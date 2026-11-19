@@ -5,7 +5,6 @@ import {
   Button,
   FieldError,
   Input,
-  Label,
   ListBox,
   Modal,
   Select,
@@ -18,6 +17,7 @@ import { X } from "lucide-react"
 import { AccountSelectField } from "@/components/forms/account-select-field"
 import { CategorySelectField } from "@/components/forms/category-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import { FieldLabel } from "@/components/forms/field-label"
 import {
   type AccountOption,
   selectableAccounts
@@ -204,7 +204,7 @@ function RecurringExpenseForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Nombre</Label>
+        <FieldLabel help="recurringExpense.name">Nombre</FieldLabel>
         <Input placeholder="Arriendo" />
         <FieldError>{errors?.name?.[0]}</FieldError>
       </TextField>
@@ -223,7 +223,7 @@ function RecurringExpenseForm({
           validationBehavior="aria"
           className="flex flex-col gap-2"
         >
-          <Label>Monto</Label>
+          <FieldLabel help="recurringExpense.amount">Monto</FieldLabel>
           <Input placeholder="0" />
           <FieldError>{errors?.amount?.[0]}</FieldError>
         </TextField>
@@ -235,6 +235,7 @@ function RecurringExpenseForm({
           categories={options}
           workspaceId={workspaceId}
           type="expense"
+          help="common.category"
           error={errors?.category_id?.[0]}
         >
           {currentCategoryArchived && !categoryId && (
@@ -248,6 +249,7 @@ function RecurringExpenseForm({
       <AccountSelectField
         name="account_id"
         label="Cuenta habitual (opcional)"
+        help="common.defaultAccount"
         value={accountId}
         onChange={setAccountId}
         accounts={accountOptions}
@@ -257,7 +259,12 @@ function RecurringExpenseForm({
       />
 
       <div className="flex flex-col gap-2">
-        <Label id="frequency-label">Frecuencia</Label>
+        <FieldLabel
+          id="frequency-label"
+          help="common.frequency"
+        >
+          Frecuencia
+        </FieldLabel>
         <ToggleButtonGroup
           aria-labelledby="frequency-label"
           selectionMode="single"
@@ -294,7 +301,7 @@ function RecurringExpenseForm({
           validationBehavior="aria"
           className="flex flex-col gap-2"
         >
-          <Label>Día de pago</Label>
+          <FieldLabel help="recurringExpense.day">Día de pago</FieldLabel>
           <Input
             type="number"
             min={1}
@@ -315,7 +322,7 @@ function RecurringExpenseForm({
             isInvalid={Boolean(errors?.month_of_year)}
             className="flex flex-col gap-2"
           >
-            <Label>Mes de pago</Label>
+            <FieldLabel help="recurringExpense.month">Mes de pago</FieldLabel>
             <Select.Trigger className="capitalize">
               <Select.Value />
               <Select.Indicator />
@@ -344,6 +351,7 @@ function RecurringExpenseForm({
         <DatePickerField
           name="starts_on"
           label="Desde"
+          help="common.from"
           value={startsOn}
           onChange={setStartsOn}
           error={errors?.starts_on?.[0]}
@@ -354,6 +362,7 @@ function RecurringExpenseForm({
           <DatePickerField
             name="ends_on"
             label="Hasta (opcional)"
+            help="common.until"
             value={endsOn}
             onChange={setEndsOn}
             error={errors?.ends_on?.[0]}

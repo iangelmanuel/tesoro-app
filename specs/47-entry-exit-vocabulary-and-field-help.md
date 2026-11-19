@@ -172,7 +172,7 @@ Los grupos de tabs sin etiqueta visible (tipo de tasa E.A./M.V., tipo de cobro d
 
 **Gasto fijo** (`recurring-expense-dialog.tsx`): `recurringExpense.name` "Qué pagas. Ej.: Arriendo, Internet." · `recurringExpense.amount` "Lo que pagas cada vez." · `recurringExpense.day` "El día en que vence cada mes." · `recurringExpense.month` "El mes en que vence, si es anual."
 
-**Ingreso fijo** (`recurring-income-dialog.tsx`, `income-source-field.tsx`): `recurringIncome.name` "De dónde viene. Ej.: Salario, Arriendo." · `recurringIncome.expected` "Lo que esperas recibir cada vez." · `recurringIncome.secondDay` "Para quincenas: el otro día del mes en que te pagan." · `recurringIncome.weekday` "El día de la semana en que te pagan." · `recurringIncome.everyDays` "Cada cuántos días llega. Ej.: 10." · `recurringIncome.source` "El ingreso fijo al que corresponde esta entrada, si aplica."
+**Ingreso fijo** (`recurring-income-dialog.tsx`, `income-source-field.tsx`): `recurringIncome.name` "De dónde viene. Ej.: Salario, Arriendo." · `recurringIncome.expected` "Lo que esperas recibir cada vez." · `recurringIncome.day` (Día de pago / Primer día de pago) "El día del mes en que te pagan." · `recurringIncome.month` "El mes en que te pagan, si es anual." · `recurringIncome.secondDay` "Para quincenas: el otro día del mes en que te pagan." · `recurringIncome.weekday` "El día de la semana en que te pagan." · `recurringIncome.everyDays` "Cada cuántos días llega. Ej.: 10." · `recurringIncome.source` "El ingreso fijo al que corresponde esta entrada, si aplica."
 
 **Empresa** (`business-dialog.tsx`): `business.name` "El nombre de tu negocio." · `business.taxId` "El NIT de la empresa. Opcional." · `business.sector` "A qué se dedica. Ajusta las recomendaciones."
 

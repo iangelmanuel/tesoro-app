@@ -45,3 +45,168 @@ export const HELP_LABELS: Record<HelpKey, string> = {
   multipleReceipts: "los cobros en varias partes",
   cardInstallments: "las compras a cuotas"
 }
+
+// Ayuda de cada campo (ícono ? de FieldLabel). Una frase corta en tuteo,
+// con ejemplo si ayuda. Clave: "<formulario>.<campo>" o "common.<campo>".
+// Los mínimos y formatos se verifican contra los esquemas de Zod
+export const FIELD_HELP = {
+  // Comunes
+  "common.amount": "El valor, sin signo de pesos. Ej.: 150.000.",
+  "common.date": "El día en que pasó. Por defecto, hoy.",
+  "common.time": "Opcional. Ordena los movimientos de un mismo día.",
+  "common.note": "Un detalle para recordar después. Solo lo ves tú.",
+  "common.description":
+    "El texto que verás en la lista de movimientos. Ej.: Mercado del mes.",
+  "common.account": "La cuenta de donde sale o a donde entra el dinero.",
+  "common.category": "Agrupa el movimiento en reportes y presupuestos.",
+  "common.from": "Primer día que se tiene en cuenta.",
+  "common.until": "Último día. Déjalo vacío si no tiene fin.",
+  "common.frequency": "Cada cuánto se repite.",
+  "common.defaultAccount":
+    "La cuenta que se elige sola al registrar. Puedes cambiarla cada vez.",
+  "common.period": "El rango de fechas que se muestra.",
+
+  // Movimiento
+  "transaction.type":
+    "Entrada: dinero que te llega. Salida: dinero que sale. Traspaso: mueves dinero entre tus cuentas.",
+  "transaction.invoice": "Número de la factura, si quieres buscarla después.",
+
+  // Traspaso
+  "transfer.from": "La cuenta de donde sale el dinero.",
+  "transfer.to": "La cuenta a donde llega.",
+  "transfer.amount": "Cuánto mueves. No cuenta como entrada ni salida.",
+
+  // Cuenta
+  "account.name": "Cómo la reconoces. Ej.: Ahorros Banco, Efectivo.",
+  "account.type":
+    "Banco, efectivo o billetera digital. Solo cambia el ícono y cómo se agrupa.",
+  "account.openingBalance":
+    "El dinero que tenía la cuenta cuando empezaste a usar Tesoro.",
+  "account.openingBalanceDate":
+    "El día de ese saldo. Los movimientos anteriores no lo cambian.",
+
+  // Conciliar y actualizar saldo
+  "balance.real": "El saldo que ves hoy en tu banco, billetera o extracto.",
+  "balance.date":
+    "El día de ese saldo. Tesoro crea un ajuste por la diferencia.",
+
+  // Deuda
+  "debt.kind":
+    "Tarjeta: tiene cupo y la usas para comprar. Préstamo: recibiste un monto y lo pagas en cuotas.",
+  "debt.name": "Cómo la reconoces. Ej.: Tarjeta Visa, Crédito del carro.",
+  "debt.institution": "El banco o la persona a quien le debes.",
+  "debt.currentBalance":
+    "Lo que debes hoy. Aparece en tu extracto o en la app del banco.",
+  "debt.creditLimit":
+    "Lo máximo que el banco te deja gastar con la tarjeta. Aparece en tu extracto o en la app del banco.",
+  "debt.monthlyInstallment": "Lo que pagas cada mes por el préstamo.",
+  "debt.interestRate":
+    "La tasa que cobra el banco. Escríbela como sale en el contrato o el extracto. Ej.: 28,5.",
+  "debt.rateType":
+    "E.A.: efectiva anual. M.V.: mes vencido (mensual). Elige la que diga tu banco.",
+  "debt.dueDay": "El último día del mes para pagar sin mora.",
+  "debt.minimumPayment":
+    "Lo mínimo que debes pagar en el mes para no quedar en mora. Aparece en tu extracto.",
+  "debt.cutoffDay":
+    "El día en que el banco cierra el extracto. Lo que compres después pasa al mes siguiente.",
+  "debt.feeAmount": "Lo que cobra el banco cada mes por tener la tarjeta.",
+  "debt.feeDay": "El día del mes en que el banco cobra la cuota de manejo.",
+  "debt.originalAmount":
+    "El monto que te prestaron al inicio. Sirve para ver cuánto llevas pagado.",
+  "debt.termMonths": "En cuántos meses lo pagas en total.",
+  "debt.defaultAccount":
+    "La cuenta de donde sueles pagar esta deuda. Se elige sola al registrar.",
+
+  // Movimiento de deuda
+  "debtEntry.debt": "La tarjeta o el préstamo al que pertenece.",
+  "debtEntry.type": "Elige qué pasó. Debajo ves si sube o baja el saldo.",
+  "debtEntry.installments":
+    "En cuántas cuotas difieres la compra o el avance. Vacío: una sola.",
+  "debtEntry.direction":
+    "Sube: el saldo aumenta (intereses, cargos). Baja: el saldo disminuye.",
+
+  // Me deben
+  "receivable.name": "Qué te deben. Ej.: Préstamo a Ana.",
+  "receivable.debtor": "Quién te debe.",
+  "receivable.mode":
+    "Único: te pagan todo de una vez. Mensual: te pagan una cuota cada mes.",
+  "receivable.amount": "Lo que te deben en total.",
+  "receivable.monthlyAmount": "Lo que te pagan cada mes.",
+  "receivable.installments": "Cuántas cuotas faltan por cobrar.",
+  "receivable.expectedDate": "Cuándo esperas que te paguen. Opcional.",
+  "receivable.collectAccount": "La cuenta donde recibes el dinero.",
+  "receivable.collectHow":
+    "Cuota: cobras un mes. Varios meses: llenas varias cuotas de una vez.",
+
+  // Meta y aporte
+  "goal.name": "Para qué ahorras. Ej.: Viaje, Fondo de emergencia.",
+  "goal.target": "Cuánto quieres juntar.",
+  "goal.targetDate": "Para cuándo. Opcional: sin fecha no hay ritmo sugerido.",
+  "contribution.type": "Aporte: sumas a la meta. Retiro: sacas de ella.",
+
+  // Presupuesto
+  "budget.category": "La categoría de salida que quieres limitar.",
+  "budget.amount": "Lo máximo que quieres gastar en el mes en esa categoría.",
+
+  // Gasto fijo
+  "recurringExpense.name": "Qué pagas. Ej.: Arriendo, Internet.",
+  "recurringExpense.amount": "Lo que pagas cada vez.",
+  "recurringExpense.day": "El día en que vence cada mes.",
+  "recurringExpense.month": "El mes en que vence, si es anual.",
+
+  // Ingreso fijo
+  "recurringIncome.name": "De dónde viene. Ej.: Salario, Arriendo.",
+  "recurringIncome.expected": "Lo que esperas recibir cada vez.",
+  "recurringIncome.secondDay":
+    "Para quincenas: el otro día del mes en que te pagan.",
+  "recurringIncome.weekday": "El día de la semana en que te pagan.",
+  "recurringIncome.everyDays": "Cada cuántos días llega. Ej.: 10.",
+  "recurringIncome.source":
+    "El ingreso fijo al que corresponde esta entrada, si aplica.",
+
+  // Empresa
+  "business.name": "El nombre de tu negocio.",
+  "business.taxId": "El NIT de la empresa. Opcional.",
+  "business.sector": "A qué se dedica. Ajusta las recomendaciones.",
+
+  // Importar
+  "import.file": "Un .xlsx o .csv exportado de tu banco o de otra app.",
+  "import.headerRow": "La fila donde están los nombres de las columnas.",
+  "import.firstColumn": "Desde y hasta qué columna leer.",
+  "import.lastColumn": "Desde y hasta qué columna leer.",
+  "import.dateFormat": "Cómo vienen las fechas en el archivo.",
+  "import.amountSign":
+    "Una columna: el signo dice si es entrada o salida. Dos columnas: una para cada una.",
+  "import.alsoRegister":
+    "Además de la deuda o la meta, crea el movimiento en tus cuentas.",
+
+  // Exportar
+  "export.format": "Excel o CSV para tus datos; PDF para leer o imprimir.",
+  "export.period": "Qué rango de fechas incluye.",
+  "export.inkSaver": "Fondo blanco y menos color para imprimir.",
+  "export.orientation": "Cómo se imprime la hoja.",
+  "export.size": "Cómo se imprime la hoja.",
+
+  // Cuenta de usuario y auth
+  "profile.name": "Cómo te saluda Tesoro.",
+  "password.current": "La que usas hoy para entrar.",
+  "password.new": "Mínimo 8 caracteres.",
+  "currency.code":
+    "Solo cambia cómo se muestran los montos. No convierte valores.",
+  "confirm.typeToDelete":
+    "Escríbelo igual para confirmar. No se puede deshacer.",
+  "auth.email": "El correo con el que entras.",
+  "auth.password": "Mínimo 8 caracteres.",
+
+  // Filtros y periodos
+  "filters.search": "Busca en la descripción y la nota.",
+  "filters.type": "Muestra solo entradas, salidas o traspasos.",
+  "verify.account": "La cuenta cuyos movimientos vas a revisar.",
+  "occurrence.select": "El periodo del gasto fijo que estás pagando.",
+
+  // MCP (conexiones)
+  "mcp.access":
+    "Qué puede hacer el agente: solo leer, o también registrar y editar."
+} as const
+
+export type FieldHelpKey = keyof typeof FIELD_HELP

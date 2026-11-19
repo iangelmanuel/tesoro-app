@@ -65,6 +65,12 @@ export const FIELD_HELP = {
   "common.defaultAccount":
     "La cuenta que se elige sola al registrar. Puedes cambiarla cada vez.",
   "common.period": "El rango de fechas que se muestra.",
+  "common.icon": "Cómo la reconoces de un vistazo en listas y gráficas.",
+  "common.color": "El color con que aparece en listas y gráficas.",
+
+  // Categoría
+  "category.name":
+    "Cómo la verás en movimientos y reportes. Ej.: Mercado, Transporte.",
 
   // Movimiento
   "transaction.type":

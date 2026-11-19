@@ -87,6 +87,7 @@ export function CategoryForm({
       <FormField
         name="name"
         label="Nombre"
+        help="category.name"
         maxLength={40}
         placeholder={type === "expense" ? "Mascotas" : "Arriendos"}
         defaultValue={

@@ -110,6 +110,8 @@ Las claves `common.*` se reusan cuando el campo significa lo mismo. Si un formul
 | `common.from`           | Primer día que se tiene en cuenta.                                   |
 | `common.until`          | Último día. Déjalo vacío si no tiene fin.                            |
 | `common.frequency`      | Cada cuánto se repite.                                               |
+| `common.icon`           | Cómo la reconoces de un vistazo en listas y gráficas.                |
+| `common.color`          | El color con que aparece en listas y gráficas.                       |
 | `common.defaultAccount` | La cuenta que se elige sola al registrar. Puedes cambiarla cada vez. |
 
 **Movimiento** (`transaction-dialog.tsx`): `transaction.type` "Entrada: dinero que te llega. Salida: dinero que sale. Traspaso: mueves dinero entre tus cuentas." (va en una etiqueta visible **Tipo** sobre el selector, que pasa de `aria-label` a `aria-labelledby`) · `transaction.invoice` "Número de la factura, si quieres buscarla después." · `transaction.counterparty` (Cliente / Proveedor en Empresa) "A quién le vendiste o a quién le pagaste. Opcional." Además usa amount, date, time, account, category, description y note.
@@ -117,6 +119,8 @@ Las claves `common.*` se reusan cuando el campo significa lo mismo. Si un formul
 **Traspaso** (`transfer-dialog.tsx`, `payment-account-section.tsx`): `transfer.from` "La cuenta de donde sale el dinero." · `transfer.to` "La cuenta a donde llega." · `transfer.amount` "Cuánto mueves. No cuenta como entrada ni salida." · `transfer.before` (Switch **Traspasar fondos antes**) "Si a la cuenta no le alcanza, mueve primero dinero desde otra de tus cuentas."
 
 **Cuenta** (`account-dialog.tsx`): `account.name` "Cómo la reconoces. Ej.: Ahorros Banco, Efectivo." · `account.type` "Banco, efectivo o billetera digital. Solo cambia el ícono y cómo se agrupa." · `account.openingBalance` "El dinero que tenía la cuenta cuando empezaste a usar Tesoro." · `account.openingBalanceDate` "El día de ese saldo. Los movimientos anteriores no lo cambian."
+
+**Categoría** (`category-form.tsx`): `category.name` "Cómo la verás en movimientos y reportes. Ej.: Mercado, Transporte." Icono y Color (`icon-color-picker.tsx`, también en Cuenta y Meta) usan `common.icon` y `common.color`.
 
 **Conciliar y actualizar saldo** (`reconcile-dialog.tsx` y los `adjust-balance-dialog.tsx` de cuentas y deudas): `balance.real` "El saldo que ves hoy en tu banco, billetera o extracto." · `balance.date` "El día de ese saldo. Tesoro crea un ajuste por la diferencia."
 

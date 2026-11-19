@@ -56,7 +56,7 @@ export function NoTransactions({
           trigger={
             <Button>
               <Plus />
-              {isBusiness ? "Registrar operación" : "Registrar movimiento"}
+              Registrar movimiento
             </Button>
           }
         />

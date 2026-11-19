@@ -57,7 +57,7 @@ import type {
   PaymentFormState
 } from "./types"
 
-const ENTRY_DEFAULT_ERROR = "No se pudo guardar el pago. Intenta de nuevo"
+const ENTRY_DEFAULT_ERROR = "No se pudo guardar el movimiento. Intenta de nuevo"
 const HAS_BALANCE = "La deuda aún tiene saldo"
 const SAME_BALANCE = "El saldo ya es ese"
 

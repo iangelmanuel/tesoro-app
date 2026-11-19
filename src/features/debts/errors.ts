@@ -7,7 +7,12 @@ import type { DebtFormState } from "./types"
 
 export const DEBT_NOT_FOUND = "No se encontró la deuda"
 export const ENTRY_NOT_FOUND = "No se encontró el pago"
-export const DEBT_NOT_ACTIVE = "Reactiva la deuda para registrar pagos"
+/**
+ * Texto que lanzan los triggers y las RPC de deudas. Cambiarlo exige una
+ * migración: la app lo reconoce y muestra DEBT_NOT_ACTIVE (SPEC 47)
+ */
+export const DEBT_NOT_ACTIVE_DB = "Reactiva la deuda para registrar pagos"
+export const DEBT_NOT_ACTIVE = "Reactiva la deuda para registrar movimientos"
 export const OVER_PAYMENT = "El pago supera el saldo"
 export const NEGATIVE_BALANCE = "El saldo de la deuda no puede quedar negativo"
 export const FUTURE_DATE = "La fecha no puede ser futura"
@@ -75,7 +80,7 @@ export function debtPgError(
   if (error.message.includes(NEGATIVE_BALANCE)) {
     return { fieldErrors: { [balanceField]: [balanceMessage] } }
   }
-  if (error.message.includes(DEBT_NOT_ACTIVE)) {
+  if (error.message.includes(DEBT_NOT_ACTIVE_DB)) {
     return { error: DEBT_NOT_ACTIVE }
   }
   if (error.message.includes(FUTURE_DATE)) {

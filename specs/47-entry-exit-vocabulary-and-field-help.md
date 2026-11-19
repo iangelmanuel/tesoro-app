@@ -60,7 +60,9 @@ Solo cambia el texto visible. Las mayúsculas siguen el contexto (título, opci�
 | Reactiva la deuda para registrar pagos            | Reactiva la deuda para registrar movimientos        |
 | No se pudo guardar el pago. Intenta de nuevo      | No se pudo guardar el movimiento. Intenta de nuevo  |
 
-Se mantienen: "Gasto fijo", "Ingreso fijo", "Día de pago", "Mes de pago", "Marcar como pagada", los tipos Pago y Abono de una deuda, "Pago de tarjeta" y los textos ligados a un gasto fijo ("Pago {nombre} · {periodo}"). En esos casos "pago" significa pagar algo concreto, no registrar un movimiento cualquiera.
+Se mantienen: "Gasto fijo", "Ingreso fijo", "Día de pago", "Mes de pago", "Marcar como pagada", los tipos Pago y Abono de una deuda, "Pago de tarjeta" y los textos ligados a un gasto fijo ("Pago {nombre} · {periodo}"; el diálogo de movimiento abierto desde un gasto fijo pendiente sigue diciendo "Registrar pago" y "Pago registrado"). En esos casos "pago" significa pagar algo concreto, no registrar un movimiento cualquiera.
+
+La base de datos sigue lanzando "Reactiva la deuda para registrar pagos" (triggers y RPC, sin migración): `DEBT_NOT_ACTIVE_DB` lo reconoce en `debts/errors.ts` e Importar lo traduce al texto nuevo antes de mostrarlo. Los nombres de las categorías del sistema "Otros ingresos" / "Otros gastos", los sinónimos de encabezados del importador y el verbo "Ingreso" de las descripciones automáticas son datos y no cambian.
 
 ## Modelo de datos
 

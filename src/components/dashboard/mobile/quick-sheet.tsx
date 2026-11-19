@@ -101,7 +101,7 @@ export function QuickSheet({
               <Drawer.Handle />
               <Drawer.Header>
                 <Drawer.Heading>
-                  {isPersonal ? "Registrar" : "Registrar operación"}
+                  {isPersonal ? "Registrar" : "Registrar movimiento"}
                 </Drawer.Heading>
               </Drawer.Header>
               <Drawer.Body className="flex flex-col gap-2">

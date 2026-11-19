@@ -36,7 +36,7 @@ import {
 export type DebtEntryRecord =
   Database["public"]["Tables"]["debt_entries"]["Row"]
 
-const ENTRY_DEFAULT_ERROR = "No se pudo guardar el pago. Intenta de nuevo"
+const ENTRY_DEFAULT_ERROR = "No se pudo guardar el movimiento. Intenta de nuevo"
 const DELETE_ERROR = "No se pudo eliminar. Intenta de nuevo"
 
 // Los montos se suman en JS: se redondean a centavos para no arrastrar error

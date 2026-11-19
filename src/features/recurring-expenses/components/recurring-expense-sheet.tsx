@@ -17,7 +17,7 @@ import type { Category } from "@/features/categories/queries"
 import { formatMonthYear } from "@/features/debts/calculations"
 import { RecordedPaymentActions } from "@/features/transactions/components/recorded-payment-actions"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
-import { currentMonth } from "@/libs/dates"
+import { currentMonth, monthRange } from "@/libs/dates"
 import { formatDate, formatShortDate } from "@/libs/format"
 import { loadRecurringExpenseHistory } from "../actions"
 import { HISTORY_PAGE_SIZE, frequencyLabel } from "../occurrences"
@@ -94,6 +94,10 @@ export function RecurringExpenseSheet({
   const nextUnpaid =
     history?.payments.findLast((payment) => payment.transactionId === null) ??
     null
+  // El historial llega hasta el mes actual: sin fin, o con fin después de
+  // este mes, aún quedan ocurrencias futuras por pagar (Duplicar, SPEC 49)
+  const hasFutureOccurrences =
+    expense.ends_on === null || expense.ends_on > monthRange(currentMonth()).to
 
   return (
     <>
@@ -193,6 +197,7 @@ export function RecurringExpenseSheet({
                 history={history}
                 isYearly={isYearly}
                 currency={currency}
+                hasFutureOccurrences={hasFutureOccurrences}
                 payments={{
                   workspaceId: expense.workspace_id,
                   categories,
@@ -337,6 +342,7 @@ function HistoryList({
   history,
   isYearly,
   currency,
+  hasFutureOccurrences,
   payments,
   onPay,
   onShowMore
@@ -344,6 +350,8 @@ function HistoryList({
   history: RecurringExpenseHistory
   isYearly: boolean
   currency: string
+  /** Quedan ocurrencias después del mes actual */
+  hasFutureOccurrences: boolean
   payments: PaymentEditing
   onPay: (payment: UpcomingPayment) => void
   onShowMore: () => void
@@ -362,6 +370,15 @@ function HistoryList({
               payment={payment}
               isYearly={isYearly}
               currency={currency}
+              // Duplicar paga la siguiente ocurrencia sin pagar: se oculta si
+              // no queda ninguna después de esta
+              canDuplicate={
+                hasFutureOccurrences ||
+                history.payments.some(
+                  (other) =>
+                    other.transactionId === null && other.dueOn > payment.dueOn
+                )
+              }
               editing={payments}
               onPay={onPay}
             />
@@ -387,12 +404,14 @@ function HistoryRow({
   payment,
   isYearly,
   currency,
+  canDuplicate,
   editing,
   onPay
 }: {
   payment: UpcomingPayment
   isYearly: boolean
   currency: string
+  canDuplicate: boolean
   editing: PaymentEditing
   onPay: (payment: UpcomingPayment) => void
 }) {
@@ -434,6 +453,7 @@ function HistoryRow({
               {...editing}
               transactionId={payment.transactionId}
               noun="pago"
+              canDuplicate={canDuplicate}
               deleteEffect={`${period} vuelve a quedar por pagar`}
             />
           </>

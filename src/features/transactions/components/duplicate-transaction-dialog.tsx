@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useEffectEvent, useState } from "react"
 import { toast } from "@heroui/react"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
@@ -46,14 +46,18 @@ export function DuplicateTransactionDialog({
   onOpenChange
 }: DuplicateTransactionDialogProps) {
   const [duplicate, setDuplicate] = useState<Duplicate | null>(null)
+  // Sin periodo pendiente u otro error: toast y se cierra sin abrir nada
+  const onLoadError = useEffectEvent((message: string) => {
+    toast.danger(message)
+    onOpenChange(false)
+  })
 
   useEffect(() => {
     let active = true
     loadTransactionDuplicate(workspaceId, transactionId).then((result) => {
       if (!active) return
       if ("error" in result) {
-        toast.danger(result.error)
-        onOpenChange(false)
+        onLoadError(result.error)
       } else {
         setDuplicate(result)
       }
@@ -61,7 +65,7 @@ export function DuplicateTransactionDialog({
     return () => {
       active = false
     }
-  }, [workspaceId, transactionId, onOpenChange])
+  }, [workspaceId, transactionId])
 
   if (!duplicate) return null
 

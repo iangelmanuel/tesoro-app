@@ -328,8 +328,8 @@ Los espacios están definidos en `SITE.workspaces`.
 
 ### Espacio Personal
 
-- Resumen: balance, ingresos vs. gastos del mes, score
-- Movimientos: ingresos y gastos con categorías, más traspasos y ajustes
+- Resumen: balance, entradas vs. salidas del mes, score
+- Movimientos: entradas y salidas con categorías, más traspasos y ajustes
 - Cuentas: saldo de efectivo, bancos y billeteras
 - Presupuestos por categoría y gastos fijos
 - Metas de ahorro
@@ -339,10 +339,9 @@ Los espacios están definidos en `SITE.workspaces`.
 
 ### Espacio Empresa
 
-- Resumen: ventas, costos y gastos, y utilidad del mes, más los últimos 5
+- Resumen: entradas, salidas y utilidad del mes, más los últimos 5
   movimientos
-- Movimientos: ventas (ingresos) y costos o gastos (egresos), con cliente o
-  proveedor y factura
+- Movimientos: entradas y salidas, con cliente o proveedor y factura
 - Cuentas: las mismas de Personal, dentro de la empresa
 - Flujo de caja, Reportes y Recomendaciones (próximamente, SPEC 11)
 - Ajustes: nombre, NIT, sector y eliminar la empresa
@@ -351,6 +350,17 @@ Los espacios están definidos en `SITE.workspaces`.
 
 Página `/dashboard/personal/transactions`. Los movimientos son la materia prima
 de gráficas, presupuestos, metas, deudas y score.
+
+### Vocabulario (SPEC 47)
+
+Un solo vocabulario en Personal y Empresa: **Entrada** (dinero que llega) y
+**Salida** (dinero que sale), más **Traspaso** entre cuentas propias. En la
+base de datos siguen siendo `income` y `expense`. No cambian **Gasto fijo** e
+**Ingreso fijo** (módulos y entidades), los tipos **Pago** y **Abono** de una
+deuda ni los textos de pagar algo concreto ("Pago de tarjeta", "Día de
+pago", pagar un gasto fijo). Los botones genéricos dicen **Registrar
+movimiento**. El MCP sigue con income/expense e ingreso/gasto. Cada campo de
+formulario lleva un (?) con su ayuda (`FIELD_HELP`, ver `docs/ui.md`).
 
 ### Movimientos
 
@@ -367,12 +377,12 @@ de gráficas, presupuestos, metas, deudas y score.
 - El botón "Registrar movimiento" del header abre el mismo diálogo desde
   cualquier página del espacio, y **Movimiento rápido** de la hoja **+** del
   teléfono abre el mismo (SPEC 30). En Personal, al registrar, los tabs son
-  **Gasto**, **Ingreso**, **Traspaso**, **Gasto fijo**, **Deuda** (pagos y
+  **Salida**, **Entrada**, **Traspaso**, **Gasto fijo**, **Deuda** (pagos y
   avances), **Me deben** (cobros, SPEC 39) y **Meta** (aportes y retiros),
   en ese orden (SPEC 41: el gasto fijo se registra más que la deuda). En
   Empresa:
-  **Venta**, **Costo o gasto** y **Traspaso**. Traspaso solo aparece con dos
-  cuentas o más. El tab Ingreso de Personal empieza con el select
+  **Entrada**, **Salida** y **Traspaso**. Traspaso solo aparece con dos
+  cuentas o más. El tab Entrada de Personal empieza con el select
   [Ingreso fijo](#select-ingreso-fijo). Aporte a meta sigue también en el
   menú Más, igual que **Cobro de Me deben**, que abre el diálogo en el tab
   **Me deben**.
@@ -540,7 +550,7 @@ Para que el historial de Tesoro se pueda cuadrar contra el extracto del banco
   - En Personal tiene un selector de cuenta; con una cuenta elegida, un
     traspaso muestra su signo respecto de esa cuenta.
   - Cada fila lleva fecha y hora, cuenta, monto, descripción y nota. Flecha verde
-    ↑: ingreso, avance de tarjeta y retiro de meta. Flecha roja ↓: gasto, pago
+    ↑: entrada, avance de tarjeta y retiro de meta. Flecha roja ↓: salida, pago
     de tarjeta y aporte a meta. Flecha gris ⇄: traspaso y ajuste.
   - No marca filas como verificadas ni importa extractos.
 
@@ -548,7 +558,7 @@ Para que el historial de Tesoro se pueda cuadrar contra el extracto del banco
 
 - Tabla paginada por URL, 20 por página, ordenada por `occurred_on desc,
 day_position asc, created_at desc, id`.
-- Totales (ingresos, gastos y balance) de todo el periodo filtrado, calculados
+- Totales (entradas, salidas y balance) de todo el periodo filtrado, calculados
   en Postgres con la RPC `transaction_totals` (`security invoker`).
 - Filtros en la URL; cambiar uno vuelve a la página 1:
 

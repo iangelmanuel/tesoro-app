@@ -1,6 +1,6 @@
 # SPEC 47 — Vocabulario Entrada / Salida y ayuda (?) en cada campo
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 13, SPEC 14, SPEC 46
 > **Fecha:** 2026-11-18
 > **Objetivo:** Que la app hable de entradas y salidas y que cada campo de formulario explique qué poner con un ícono (?) al pasar el mouse.
@@ -203,19 +203,19 @@ Los grupos de tabs sin etiqueta visible (tipo de tasa E.A./M.V., tipo de cobro d
 
 ## Criterios de aceptación
 
-- [ ] El diálogo de movimiento muestra los tipos **Entrada**, **Salida** y **Traspaso**.
-- [ ] En Empresa no aparece "Ventas" ni "Costos y gastos" en el aside, los títulos, los reportes ni el flujo de caja. Dice "Entradas" y "Salidas".
-- [ ] El aside sigue diciendo "Gastos fijos" e "Ingresos fijos".
-- [ ] Los tipos de un movimiento de deuda siguen siendo Pago y Abono.
-- [ ] Ningún botón ni toast genérico dice "Registrar pago" o "Pago registrado".
-- [ ] El `.xlsx`, el `.csv` y el `.pdf` usan Entradas / Salidas en encabezados y totales.
-- [ ] Las descripciones de las tools del MCP no cambian (`git diff src/features/mcp/tools` vacío).
-- [ ] Cada campo con etiqueta visible de los formularios del inventario tiene el ícono (?) a la derecha de la etiqueta.
-- [ ] Al pasar el mouse por el (?) de **Cupo**, aparece "Lo máximo que el banco te deja gastar con la tarjeta…".
-- [ ] Con Tab, el (?) recibe foco y muestra el tooltip.
-- [ ] El ícono da ≥ 3:1 sobre `--surface` y `--overlay` en claro y en oscuro.
-- [ ] `FIELD_HELP` no tiene claves sin usar (`grep` por cada clave).
-- [ ] `pnpm check`, `pnpm eslint` y `pnpm prettier:check` pasan.
+- [x] El diálogo de movimiento muestra los tipos **Entrada**, **Salida** y **Traspaso**.
+- [x] En Empresa no aparece "Ventas" ni "Costos y gastos" en el aside, los títulos, los reportes ni el flujo de caja. Dice "Entradas" y "Salidas".
+- [x] El aside sigue diciendo "Gastos fijos" e "Ingresos fijos".
+- [x] Los tipos de un movimiento de deuda siguen siendo Pago y Abono.
+- [x] Ningún botón ni toast genérico dice "Registrar pago" o "Pago registrado".
+- [x] El `.xlsx`, el `.csv` y el `.pdf` usan Entradas / Salidas en encabezados y totales.
+- [x] Las descripciones de las tools del MCP no cambian (`git diff src/features/mcp/tools` vacío).
+- [x] Cada campo con etiqueta visible de los formularios del inventario tiene el ícono (?) a la derecha de la etiqueta.
+- [x] Al pasar el mouse por el (?) de **Cupo**, aparece "Lo máximo que el banco te deja gastar con la tarjeta…".
+- [x] Con Tab, el (?) recibe foco y muestra el tooltip.
+- [x] El ícono da ≥ 3:1 sobre `--surface` y `--overlay` en claro y en oscuro.
+- [x] `FIELD_HELP` no tiene claves sin usar (`grep` por cada clave).
+- [x] `pnpm check`, `pnpm eslint` y `pnpm prettier:check` pasan.
 
 ## Decisiones
 

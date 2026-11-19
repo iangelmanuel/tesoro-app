@@ -4,6 +4,8 @@ import { z } from "zod"
 import { occurrenceDescription } from "@/features/recurring-expenses/occurrences"
 import { nextUnpaidOccurrence } from "@/features/recurring-expenses/payment"
 import { getRecurringExpenseOccurrences } from "@/features/recurring-expenses/queries"
+import { getIncomeSources } from "@/features/recurring-incomes/queries"
+import { incomeReceiptDescription } from "@/features/recurring-incomes/receipt"
 import { requireWritableWorkspace } from "@/features/workspaces/queries"
 import { monthRange, shiftMonth } from "@/libs/dates"
 import { revalidateWorkspacePages } from "@/libs/revalidate"
@@ -273,6 +275,44 @@ const NO_PENDING_OCCURRENCE =
 // periodo de un gasto anual aunque ya esté pagado el de después
 const DUPLICATE_HORIZON_MONTHS = 24
 
+const NO_OPEN_INCOME_PERIOD =
+  "Este ingreso fijo no tiene periodos pendientes de cobro"
+
+/**
+ * Cobro de ingreso fijo: el duplicado lleva el mismo ingreso fijo y la BD lo
+ * reparte con la regla de SPEC 38 (periodo abierto más antiguo). Sin periodo
+ * abierto, o si el ingreso fijo ya no está activo, no se duplica. "Sin fecha
+ * fija" no tiene periodos: se enlaza tal cual
+ */
+async function incomeDuplicate(
+  workspaceId: string,
+  recurringIncomeId: string,
+  initialValues: TransactionInitialValues
+) {
+  const sources = await getIncomeSources(workspaceId)
+  const source = sources.find((option) => option.id === recurringIncomeId)
+
+  if (!source) {
+    return { error: NO_OPEN_INCOME_PERIOD }
+  }
+
+  const values = { ...initialValues, recurring_income_id: source.id }
+  if (source.frequency === "none") {
+    return { initialValues: values }
+  }
+  if (!source.periods.some((period) => period.due > 0)) {
+    return { error: NO_OPEN_INCOME_PERIOD }
+  }
+
+  // La descripción nombra el periodo que se cubre, no el del original
+  return {
+    initialValues: {
+      ...values,
+      description: incomeReceiptDescription(source)
+    }
+  }
+}
+
 async function nextRecurringOccurrence(
   supabase: Awaited<ReturnType<typeof createClient>>,
   transactionId: string,
@@ -360,6 +400,14 @@ export async function loadTransactionDuplicate(
       description: original.description,
       note: original.note ?? "",
       counterparty: original.counterparty
+    }
+
+    if (original.recurring_income_id !== null) {
+      return incomeDuplicate(
+        parsedWorkspace.data,
+        original.recurring_income_id,
+        initialValues
+      )
     }
 
     if (original.recurring_expense_id === null) {

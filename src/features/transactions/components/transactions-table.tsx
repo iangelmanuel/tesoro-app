@@ -11,6 +11,7 @@ import { Table, cn, toast } from "@heroui/react"
 import {
   ArrowLeftRight,
   Banknote,
+  Copy,
   CreditCard,
   GripVertical,
   Pencil,
@@ -873,21 +874,28 @@ interface RemoveConfig {
   onDelete: () => Promise<{ error?: string }>
 }
 
-// Acciones de una fila: Editar (si hay diálogo) y Eliminar. Los diálogos se
-// controlan desde aquí porque el menú de escritorio no puede alojar triggers
+interface RowDialogControl {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+// Acciones de una fila: Editar y Duplicar (si hay diálogo) y Eliminar. Los
+// diálogos se controlan desde aquí porque el menú de escritorio no puede
+// alojar triggers
 function EntryActions({
   label,
   remove,
-  renderEdit
+  renderEdit,
+  renderDuplicate
 }: {
   label: string
   remove: RemoveConfig
-  renderEdit?: (dialog: {
-    open: boolean
-    onOpenChange: (open: boolean) => void
-  }) => React.ReactNode
+  renderEdit?: (dialog: RowDialogControl) => React.ReactNode
+  /** Diálogo de crear prellenado con los datos de la fila (SPEC 49) */
+  renderDuplicate?: (dialog: RowDialogControl) => React.ReactNode
 }) {
   const [editing, setEditing] = useState(false)
+  const [duplicating, setDuplicating] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
   return (
@@ -905,6 +913,16 @@ function EntryActions({
                 }
               ]
             : []),
+          ...(renderDuplicate
+            ? [
+                {
+                  id: "duplicate",
+                  label: "Duplicar",
+                  icon: <Copy className="size-4" />,
+                  onAction: () => setDuplicating(true)
+                }
+              ]
+            : []),
           {
             id: "delete",
             label: "Eliminar",
@@ -915,6 +933,7 @@ function EntryActions({
         ]}
       />
       {renderEdit?.({ open: editing, onOpenChange: setEditing })}
+      {renderDuplicate?.({ open: duplicating, onOpenChange: setDuplicating })}
       <DeleteEntryDialog
         label={label}
         {...remove}

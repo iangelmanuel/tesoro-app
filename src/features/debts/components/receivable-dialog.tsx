@@ -38,7 +38,7 @@ import { amountInput } from "./field"
 interface ReceivableDialogProps {
   /** Espacio (para crear una cuenta desde el select) */
   workspaceId: string
-  /** Cuentas del espacio (cuenta habitual); solo se ofrecen las activas */
+  /** Cuentas del espacio (cuenta por defecto); solo se ofrecen las activas */
   accounts: AccountOption[]
   /** Si llega, el diálogo edita esta cuenta por cobrar */
   receivable?: Debt

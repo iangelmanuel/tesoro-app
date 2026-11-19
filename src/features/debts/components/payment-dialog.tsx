@@ -37,7 +37,7 @@ import type { PaymentFormState } from "../types"
 import { amountInput } from "./field"
 
 type PaymentDebt = Pick<Debt, "id" | "kind"> & {
-  /** Cuenta habitual (SPEC 41): se prellena al registrar si sigue activa */
+  /** Cuenta por defecto (SPEC 41): se prellena al registrar si sigue activa */
   account_id?: string | null
   /** Descripción prellenada del movimiento (SPEC 41); sin ella, vacía */
   descriptions?: DebtPaymentDescriptions
@@ -327,7 +327,7 @@ function PaymentForm({
   const [createTransaction, setCreateTransaction] = useState(
     () => !values || values.create_transaction === "on"
   )
-  // Cuenta habitual de la deuda, si sigue activa (SPEC 41)
+  // Cuenta por defecto de la deuda, si sigue activa (SPEC 41)
   const defaultAccountId = activeAccountId(accounts, debt.account_id) ?? ""
   const [accountId, setAccountId] = useState(defaultAccountId)
   // Descripción del movimiento (SPEC 41): se prellena según Pago o Abono y
@@ -347,7 +347,7 @@ function PaymentForm({
   const [prefilledNote, setPrefilledNote] = useState(note)
   function changeMode(next: PaymentMode) {
     setMode(next)
-    // El avance arranca sin cuenta: la cuenta habitual es la que paga la
+    // El avance arranca sin cuenta: la cuenta por defecto es la que paga la
     // tarjeta, no la que recibe un avance
     if ((next === "advance") !== (mode === "advance")) {
       setAccountId(next === "advance" ? "" : defaultAccountId)

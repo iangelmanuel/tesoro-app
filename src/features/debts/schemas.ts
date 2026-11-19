@@ -112,7 +112,7 @@ const paymentDescriptionField = z
   .transform((value) => value || null)
   .optional()
 
-// Cuenta habitual de la deuda (SPEC 41): prellena la cuenta al pagar. Vacía
+// Cuenta por defecto de la deuda (SPEC 41): prellena la cuenta al pagar. Vacía
 // = ninguna. Va aparte de los esquemas por tipo: aplica a todos
 export const habitualAccountSchema = z.preprocess(
   emptyToNull,

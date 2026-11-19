@@ -594,7 +594,7 @@ function CollectFields({
           label="Cuenta que recibe"
           accountHelp="receivable.collectAccount"
           direction="in"
-          // Cuenta habitual de la cuenta por cobrar, si sigue activa
+          // Cuenta por defecto de la cuenta por cobrar, si sigue activa
           defaultAccountId={
             activeAccountId(accounts, receivable.accountId) ?? ""
           }

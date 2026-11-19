@@ -35,7 +35,7 @@ export interface CollectPeriod {
 export interface CollectableReceivable {
   id: string
   name: string
-  /** Cuenta habitual que recibe los cobros (SPEC 41); se prellena si sigue activa */
+  /** Cuenta por defecto que recibe los cobros (SPEC 41); se prellena si sigue activa */
   accountId: string | null
   schedule: ReceivableSchedule
   /** Lo que falta en total; null en una mensual indefinida (sin saldo total) */

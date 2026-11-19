@@ -30,7 +30,7 @@ type PayableKind = "credit_card" | "loan"
 interface DebtDialogProps {
   /** Espacio de la deuda (para crear una cuenta desde el select) */
   workspaceId: string
-  /** Cuentas del espacio (cuenta habitual); solo se ofrecen las activas */
+  /** Cuentas del espacio (cuenta por defecto); solo se ofrecen las activas */
   accounts: AccountOption[]
   /** Si llega, el diálogo edita esta tarjeta o préstamo */
   debt?: Debt

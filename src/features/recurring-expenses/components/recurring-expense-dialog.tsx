@@ -41,7 +41,7 @@ interface RecurringExpenseDialogProps {
   workspaceId: string
   /** Categorías del sistema y propias, activas y archivadas */
   categories: Category[]
-  /** Cuentas del espacio, activas y archivadas (cuenta habitual) */
+  /** Cuentas del espacio, activas y archivadas (cuenta por defecto) */
   accounts: AccountOption[]
   /** Si llega, el diálogo edita este gasto fijo */
   expense?: RecurringExpense
@@ -127,7 +127,7 @@ function RecurringExpenseForm({
   )
   const currentCategoryArchived =
     expense !== undefined && expense.category.archived_at !== null
-  // Cuenta habitual (SPEC 41): solo activas; una archivada se vacía
+  // Cuenta por defecto (SPEC 41): solo activas; una archivada se vacía
   const accountOptions = selectableAccounts(accounts)
   const currentAccountArchived =
     expense?.account_id != null &&
@@ -248,7 +248,7 @@ function RecurringExpenseForm({
 
       <AccountSelectField
         name="account_id"
-        label="Cuenta habitual (opcional)"
+        label="Cuenta por defecto (opcional)"
         help="common.defaultAccount"
         value={accountId}
         onChange={setAccountId}

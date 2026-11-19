@@ -91,7 +91,7 @@ async function personalWorkspace(ctx: McpContext, id: string) {
 
 /**
  * Cuenta y categoría del movimiento: lo que llega o lo prellenado. Sin
- * cuenta habitual ni cuenta se pregunta; sin categoría activa, también.
+ * cuenta por defecto ni cuenta se pregunta; sin categoría activa, también.
  */
 async function resolveMovement(
   ctx: McpContext,
@@ -194,7 +194,7 @@ export const payRecurringExpense = defineTool({
   name: "pay_recurring_expense",
   group: "write",
   title: "Pagar un gasto fijo",
-  description: `Paga una ocurrencia de un gasto fijo como el tab Gasto fijo: por defecto la más antigua sin pagar (hasta el mes actual), con su monto, su categoría, la cuenta habitual, fecha de hoy y "Pago {nombre} · {mes}". Crea el gasto y marca la ocurrencia como pagada. Solo Personal. Devuelve un operation_id para revertir con undo_operation. ${NEEDS_INPUT_HINT}`,
+  description: `Paga una ocurrencia de un gasto fijo como el tab Gasto fijo: por defecto la más antigua sin pagar (hasta el mes actual), con su monto, su categoría, la cuenta por defecto, fecha de hoy y "Pago {nombre} · {mes}". Crea el gasto y marca la ocurrencia como pagada. Solo Personal. Devuelve un operation_id para revertir con undo_operation. ${NEEDS_INPUT_HINT}`,
   input: payInput,
   annotations: { readOnlyHint: false, destructiveHint: false },
   async run(ctx, args) {
@@ -290,7 +290,7 @@ export const receiveRecurringIncome = defineTool({
   name: "receive_recurring_income",
   group: "write",
   title: "Recibir un ingreso fijo",
-  description: `Recibe un ingreso fijo como el tab Ingreso: crea el ingreso (por defecto el monto esperado, su categoría, la cuenta habitual, fecha de hoy y "Ingreso {nombre} · {periodo}") y la app lo reparte entre las ocurrencias desde la más antigua abierta, hasta 12 futuras (SPEC 38). Solo Personal. Devuelve un operation_id para revertir con undo_operation. ${NEEDS_INPUT_HINT}`,
+  description: `Recibe un ingreso fijo como el tab Ingreso: crea el ingreso (por defecto el monto esperado, su categoría, la cuenta por defecto, fecha de hoy y "Ingreso {nombre} · {periodo}") y la app lo reparte entre las ocurrencias desde la más antigua abierta, hasta 12 futuras (SPEC 38). Solo Personal. Devuelve un operation_id para revertir con undo_operation. ${NEEDS_INPUT_HINT}`,
   input: receiveInput,
   annotations: { readOnlyHint: false, destructiveHint: false },
   async run(ctx, args) {

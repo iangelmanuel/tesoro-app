@@ -208,7 +208,7 @@ export function RecurringIncomeSheet({
           hasSchedule &&
           history && (
             <DetailSection
-              title="Ocurrencias"
+              title="Periodos"
               help="multipleReceipts"
             >
               <HistoryList
@@ -379,7 +379,7 @@ function HistoryList({
     <div className="flex flex-col gap-3">
       {history.occurrences.length === 0 ? (
         <p className="text-sm text-muted">
-          Aún no tiene ocurrencias: empieza más adelante.
+          Aún no tiene periodos: empieza más adelante.
         </p>
       ) : (
         <ul className={CARD_LIST}>
@@ -552,8 +552,8 @@ function ReceiptsList({
                   noun="cobro"
                   deleteEffect={
                     receipts.length > 1
-                      ? "la ocurrencia queda parcial con los demás cobros"
-                      : "la ocurrencia vuelve a quedar por recibir"
+                      ? "el periodo queda parcial con los demás cobros"
+                      : "el periodo vuelve a quedar por recibir"
                   }
                 />
               </>

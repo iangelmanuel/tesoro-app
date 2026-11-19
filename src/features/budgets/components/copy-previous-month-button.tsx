@@ -22,7 +22,11 @@ export function CopyPreviousMonthButton({
       if (result.error) {
         toast.danger(result.error)
       } else if (result.copied) {
-        toast.success(`Se copiaron ${result.copied} presupuestos`)
+        toast.success(
+          result.copied === 1
+            ? "1 presupuesto copiado"
+            : `${result.copied} presupuestos copiados`
+        )
       } else {
         toast.info("No hay presupuestos nuevos para copiar")
       }

@@ -38,7 +38,7 @@ function pgError(error: PostgrestError): ServiceFailure {
 
 /**
  * La categoría debe existir, ser visible para el usuario (RLS), ser de gasto
- * y estar activa. La cuenta habitual, si llega, debe ser del espacio y estar
+ * y estar activa. La cuenta por defecto, si llega, debe ser del espacio y estar
  * activa (SPEC 41).
  */
 async function referenceErrors(

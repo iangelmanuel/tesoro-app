@@ -24,6 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Copy audit for clarity (SPEC 48). New **Voz** section in `docs/ui.md` with 8 checkable rules (buttons, titles, toasts, errors, empty states, one word per concept, sentences of 20 words or fewer). Ambiguous or technical wording is renamed:
+  - Budgets: "Avance" becomes **Progreso** (Avance is only the card cash advance).
+  - Habitual account becomes **Cuenta por defecto** in debts, receivables and recurring expenses, matching recurring incomes; the MCP tool descriptions follow.
+  - "Saldo real" becomes **Saldo en tu banco**, and "Conciliar" / "Cuenta conciliada" become **Cuadrar saldo** / **Saldo cuadrado**. New reconcile adjustments get the note "Saldo cuadrado con tu banco"; existing ones keep theirs.
+  - Recurring income "Ocurrencias" become **Periodos**; the debt simulator reads **Simula un pago mensual**; the debts upcoming card reads **Próximos vencimientos**.
+  - Import: the type groups read "Cómo distinguir entradas y salidas" (and pagos y cargos, aportes y retiros), and "Ajuste a la baja" reads "Ajuste que baja el saldo". Export: the PDF theme "Ahorro de tinta" reads **Para imprimir**.
+  - Cuenta → Agentes IA: "Revertir operación" becomes **Deshacer cambio** (button, confirmation, toast, statuses and errors).
+  - Toasts never end with a period or start with "¡", success toasts read object + participle ("N presupuestos copiados", "Tutoriales reiniciados", "Oculta hasta el próximo mes"), and long help sentences are split. `HELP`, `HELP_LABELS` and the guided tours use the new names.
 - Entry/exit vocabulary across the UI (SPEC 47): Ingreso / Gasto become **Entrada** / **Salida** in Personal, and Ventas / Costos y gastos become **Entradas** / **Salidas** in Business (movement dialog, filters, tables, summary, reports, business score, imports, tours, landing, SEO texts, terms and the `.xlsx`, `.csv` and `.pdf` exports, whose Tipo column now reads Entrada / Salida / Traspaso in both workspaces). Generic buttons read **Registrar movimiento** (Business no longer says "Registrar operación"), and the generic debt errors say "movimiento". **Gasto fijo**, **Ingreso fijo**, the debt types Pago and Abono, stored data and the MCP keep their wording. The database still raises "Reactiva la deuda para registrar pagos"; the app recognizes it (`DEBT_NOT_ACTIVE_DB`) and shows the new text.
 
 ### Fixed

@@ -26,7 +26,7 @@ export function unpaidOccurrence(
 
 /**
  * Valores del gasto que paga una ocurrencia: su monto, su categoría, la
- * cuenta habitual si sigue activa y "Pago {nombre} · {periodo}". Sin fecha:
+ * cuenta por defecto si sigue activa y "Pago {nombre} · {periodo}". Sin fecha:
  * el pago ocurre hoy y la ocurrencia conserva su vencimiento.
  */
 export function recurringPaymentValues(

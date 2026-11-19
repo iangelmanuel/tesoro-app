@@ -149,7 +149,7 @@ async function findEntry(entryId: string) {
 }
 
 // Valida con el esquema del tipo (y, en una cuenta por cobrar, del tipo de
-// cobro) más la cuenta habitual
+// cobro) más la cuenta por defecto
 function readDebtForm(
   formData: FormData,
   kind: DebtKind,

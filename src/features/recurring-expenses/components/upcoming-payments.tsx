@@ -64,7 +64,7 @@ export function occurrencePaymentProps(
     initialValues: {
       amount: payment.amount,
       category_id: payment.category.id,
-      // Cuenta habitual si sigue activa (SPEC 41); si no, la elige el usuario
+      // Cuenta por defecto si sigue activa (SPEC 41); si no, la elige el usuario
       account_id: activeAccountId(accounts, payment.accountId),
       description: occurrenceDescription(payment)
     },

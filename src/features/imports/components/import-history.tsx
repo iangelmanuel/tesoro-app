@@ -30,7 +30,7 @@ function undoNotes(target: ImportTarget, linkedTransactions: number) {
     case "transactions":
       return "Las categorías creadas se conservan. Si alguno quedó enlazado a un pago de deuda, el pago se queda sin movimiento."
     case "recurring_expenses":
-      return "Las categorías creadas se conservan. Los movimientos que pagaban sus ocurrencias se quedan, sin enlace al gasto fijo."
+      return "Las categorías creadas se conservan. Los movimientos que pagaban sus periodos se quedan, sin enlace al gasto fijo."
     case "debt_entries":
       return linkedTransactions > 0
         ? `También se borrarán ${plural(linkedTransactions, "movimiento creado", "movimientos creados")} con los pagos.`

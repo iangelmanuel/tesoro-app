@@ -49,7 +49,7 @@ export interface OperationInput {
   changes: RowChange[]
 }
 
-const UNDO_DEFAULT_ERROR = "No se pudo revertir la operación. Intenta de nuevo."
+const UNDO_DEFAULT_ERROR = "No se pudo deshacer el cambio. Intenta de nuevo"
 
 // Los mensajes de la RPC ya están en español y se muestran tal cual
 const UNDO_KNOWN_MESSAGES = [
@@ -65,7 +65,7 @@ function undoErrorMessage(error: PostgrestError) {
   }
   // Un trigger rechazó el snapshot restaurado (p. ej. una cuenta archivada)
   if (error.code === "23514" || error.code === "P0001") {
-    return `No se pudo revertir: ${error.message}`
+    return `No se pudo deshacer: ${error.message}`
   }
   return UNDO_DEFAULT_ERROR
 }

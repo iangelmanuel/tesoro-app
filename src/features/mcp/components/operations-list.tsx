@@ -11,9 +11,9 @@ import { formatTimestamp } from "./connections-list"
 
 const STATUS: Record<AgentOperation["status"], { label: string; tone: Tone }> =
   {
-    applied: { label: "Aplicada", tone: "success" },
-    undone: { label: "Revertida", tone: "neutral" },
-    failed: { label: "Fallida", tone: "danger" }
+    applied: { label: "Aplicado", tone: "success" },
+    undone: { label: "Deshecho", tone: "neutral" },
+    failed: { label: "Fallido", tone: "danger" }
   }
 
 function OperationRow({ operation }: { operation: AgentOperation }) {
@@ -27,7 +27,7 @@ function OperationRow({ operation }: { operation: AgentOperation }) {
       if (result.error) {
         toast.danger(result.error)
       } else {
-        toast.success("Operación revertida")
+        toast.success("Cambio deshecho")
       }
     })
   }
@@ -61,22 +61,22 @@ function OperationRow({ operation }: { operation: AgentOperation }) {
           isDisabled={pending}
           onPress={() => setConfirming(true)}
         >
-          {pending ? "Revirtiendo..." : "Revertir"}
+          {pending ? "Deshaciendo..." : "Deshacer"}
         </Button>
       )}
 
       <DeleteDialog
         open={confirming}
         onOpenChange={setConfirming}
-        title="¿Revertir esta operación?"
-        confirmLabel="Revertir"
+        title="¿Deshacer este cambio?"
+        confirmLabel="Deshacer"
         onConfirm={undo}
       >
         <p>
           {operation.summary}. Se borra lo que creó, vuelve lo que borró y lo
           editado regresa a como estaba. Si algo cambió después, o si lo que
           creó (una cuenta, una deuda, un fijo…) ya tiene movimientos, pagos o
-          aportes, no se revierte nada. No se puede rehacer.
+          aportes, no se deshace nada. No se puede rehacer.
         </p>
       </DeleteDialog>
     </li>

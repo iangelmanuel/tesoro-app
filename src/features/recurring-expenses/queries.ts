@@ -31,7 +31,7 @@ export interface UpcomingPayment {
   name: string
   /** Frecuencia del gasto fijo: da el periodo de la descripción (SPEC 41) */
   frequency: RecurringFrequency
-  /** Cuenta habitual del gasto fijo; null sin ella (SPEC 41) */
+  /** Cuenta por defecto del gasto fijo; null sin ella (SPEC 41) */
   accountId: string | null
   amount: number
   category: CategorySummary

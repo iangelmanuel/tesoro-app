@@ -166,7 +166,7 @@ const accountFields = {
     .nullable()
     .optional()
     .describe(
-      "Cuenta habitual de los pagos (prellena la cuenta al pagar). null = ninguna."
+      "Cuenta por defecto de los pagos (prellena la cuenta al pagar). null = ninguna."
     ),
   account: accountNameSchema.optional()
 }
@@ -503,7 +503,7 @@ export const updateDebtTool = defineTool({
   name: "update_debt",
   group: "manage",
   title: "Editar deuda",
-  description: `Cambia los datos de una tarjeta o un préstamo: nombre, cupo, corte, pago, tasa, cuota, plazo, cuota de manejo o cuenta habitual. Solo cambia los campos que envíes; el tipo no cambia. Para registrar pagos usa record_debt_payment. Solo Personal. ${NEEDS_INPUT_HINT}`,
+  description: `Cambia los datos de una tarjeta o un préstamo: nombre, cupo, corte, pago, tasa, cuota, plazo, cuota de manejo o cuenta por defecto. Solo cambia los campos que envíes; el tipo no cambia. Para registrar pagos usa record_debt_payment. Solo Personal. ${NEEDS_INPUT_HINT}`,
   input: updateDebtInput,
   annotations: { readOnlyHint: false, destructiveHint: false },
   async run(ctx, args) {

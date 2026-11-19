@@ -19,7 +19,7 @@ export const exportMonthSchema = z
   .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "El mes debe tener el formato AAAA-MM.")
 
 export const exportFormatSchema = z.enum(EXPORT_FORMATS, {
-  error: "El formato debe ser xlsx, csv o pdf."
+  error: "El formato debe ser xlsx, csv o pdf"
 })
 
 export const PDF_MONTHS_ERROR = `El PDF admite hasta ${MAX_PDF_MONTHS} meses.`
@@ -52,7 +52,7 @@ export function parsePdfOptions(raw: {
   if (!parsed.success) {
     return {
       success: false,
-      error: "Las opciones del PDF no son válidas."
+      error: "Las opciones del PDF no son válidas"
     }
   }
 
@@ -98,7 +98,7 @@ export function parseExportRange(
   const parsedTo = exportMonthSchema.safeParse(to)
 
   if (!parsedFrom.success || !parsedTo.success) {
-    return { success: false, error: "Los meses del periodo no son válidos." }
+    return { success: false, error: "Los meses del periodo no son válidos" }
   }
 
   const fromMonth = parsedFrom.data
@@ -108,13 +108,13 @@ export function parseExportRange(
   if (fromMonth > toMonth) {
     return {
       success: false,
-      error: "El mes inicial es posterior al mes final."
+      error: "El mes inicial es posterior al mes final"
     }
   }
   if (toMonth > current) {
     return {
       success: false,
-      error: "El periodo no puede terminar después del mes actual."
+      error: "El periodo no puede terminar después del mes actual"
     }
   }
   if (format === "pdf" && monthsSpanned(fromMonth, toMonth) > MAX_PDF_MONTHS) {

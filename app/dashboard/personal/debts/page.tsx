@@ -307,7 +307,7 @@ function PayablesTab({
           />
 
           <Card data-tour="debts-upcoming">
-            <CardHeading title="Próximos pagos" />
+            <CardHeading title="Próximos vencimientos" />
             <CardContent>
               <UpcomingDebtPayments
                 debts={active}

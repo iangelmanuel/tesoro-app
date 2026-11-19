@@ -263,13 +263,13 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
       target: "accounts-update-balance",
       title: "Actualiza el saldo",
       description:
-        "Corrige el saldo con la cifra real de tu banco o billetera. No crea un movimiento."
+        "Corrige el saldo con la cifra de tu banco o billetera. No crea un movimiento."
     },
     {
       target: "accounts-reconcile",
-      title: "Concilia",
+      title: "Cuadra el saldo",
       description:
-        "Escribe el saldo real y su fecha. Tesoro crea un ajuste por la diferencia, para que tus cifras cuadren con el banco."
+        "Escribe el saldo de tu banco y su fecha. Tesoro crea un ajuste por la diferencia, para que tus cifras cuadren con el banco."
     },
     {
       target: "accounts-transactions",
@@ -356,7 +356,7 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
     {
       title: "Tus presupuestos",
       description:
-        "Define cuánto quieres gastar como máximo en cada categoría y sigue tu avance durante el mes."
+        "Define cuánto quieres gastar como máximo en cada categoría y sigue tu progreso durante el mes."
     },
     {
       target: "budgets-recurring-tabs",
@@ -390,7 +390,7 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
     },
     {
       target: "budgets-list",
-      title: "Avance por categoría",
+      title: "Progreso por categoría",
       description:
         "La barra muestra lo gastado y lo que ya está comprometido en gastos fijos pendientes. Cambia de color al acercarte al límite."
     },
@@ -473,7 +473,7 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
     },
     {
       target: "debts-upcoming",
-      title: "Próximos pagos",
+      title: "Próximos vencimientos",
       description:
         "Lo que vence pronto en tus tarjetas y préstamos, con el pago mínimo o la cuota."
     },

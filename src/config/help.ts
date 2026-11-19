@@ -5,21 +5,21 @@ export const HELP = {
   score:
     "Un puntaje de 0 a 100 que resume la salud de tus finanzas. Mira tu ahorro, tus deudas, tu colchón, tus presupuestos, tus metas y qué tan seguido registras. Desde 60 es Bueno y desde 80, Excelente.",
   utilization:
-    "Cuánto de tu cupo de tarjetas estás usando. Por debajo del 30 % está bien; cerca del 100 % pesa en tu score.",
+    "Qué parte del cupo de tus tarjetas estás usando. Por debajo del 30 % está bien; cerca del 100 % pesa en tu score.",
   savingsRate:
     "La parte de tus entradas que te quedó después de gastar. Si es negativa, gastaste más de lo que entró. Un 20 % o más es una meta sana.",
   accumulatedBalance:
-    "Todo lo que te ha entrado menos todo lo que has gastado desde tu primer registro. No es el saldo de tus cuentas: no cuenta traspasos ni saldos iniciales.",
+    "Todas tus entradas menos todas tus salidas desde tu primer registro. No es el saldo de tus cuentas: no cuenta traspasos ni saldos iniciales.",
   maintenanceFee:
     "Lo que el banco le suma cada mes al saldo de tu tarjeta. Tesoro lo registra solo el día de cobro y no toca tus cuentas: lo pagas dentro del pago de la tarjeta.",
   reconciliation:
-    "Compara el saldo que ves en tu banco o billetera con el que calcula Tesoro en esa fecha y crea un ajuste por la diferencia. Con una fecha pasada, el saldo de hoy también cambia por los movimientos posteriores.",
+    "Compara el saldo de tu banco o billetera con el que calcula Tesoro en esa fecha. Si no cuadran, crea un ajuste por la diferencia. Con una fecha pasada, el saldo de hoy también cambia por los movimientos posteriores.",
   upcomingIncomes:
     "Lo que esperas recibir este mes, más lo que no te llegó en los dos meses anteriores. Atrasado quiere decir que ya pasó el día de pago y no has registrado la entrada.",
   noFixedDate:
     "Para proyectos o inversiones que pagan cuando pagan. No tienen fechas ni estados: Tesoro suma lo que registras con ellos en el mes y en el año.",
   frequency:
-    "Cada cuánto se repite. Tesoro crea un periodo por cada vez (cada mes, cada quincena, cada año…) para que marques si ya se pagó o se recibió.",
+    "Cada cuánto se repite. Tesoro crea un periodo por cada vez: cada mes, cada quincena o cada año. Así marcas si ya se pagó o se recibió.",
   installment:
     "La parte fija que pagas o cobras cada periodo. Al marcar una cuota, Tesoro registra el movimiento y baja el saldo pendiente.",
   multipleReceipts:
@@ -37,7 +37,7 @@ export const HELP_LABELS: Record<HelpKey, string> = {
   savingsRate: "la tasa de ahorro",
   accumulatedBalance: "el balance acumulado",
   maintenanceFee: "la cuota de manejo",
-  reconciliation: "la conciliación",
+  reconciliation: "cuadrar el saldo",
   upcomingIncomes: "los próximos ingresos",
   noFixedDate: "los ingresos sin fecha fija",
   frequency: "la frecuencia",
@@ -95,7 +95,7 @@ export const FIELD_HELP = {
   "account.openingBalanceDate":
     "El día de ese saldo. Los movimientos anteriores no lo cambian.",
 
-  // Conciliar y actualizar saldo
+  // Cuadrar y actualizar saldo
   "balance.real": "El saldo que ves hoy en tu banco, billetera o extracto.",
   "balance.date":
     "El día de ese saldo. Tesoro crea un ajuste por la diferencia.",

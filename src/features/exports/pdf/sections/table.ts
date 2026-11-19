@@ -25,7 +25,7 @@ export interface PdfColumn<T> {
   value: (row: T) => string | number | null | undefined
   /** Tipo de una celda cuando cambia por fila (p. ej. una tasa en % entre montos) */
   kindOf?: (row: T) => ColumnKind
-  /** Color (tema Color) o signo (Ahorro de tinta) del monto según la fila */
+  /** Color (tema Color) o signo (Para imprimir) del monto según la fila */
   tone?: (row: T) => AmountTone | null
   /** Ancho propio; por defecto fijo en montos, fechas y horas, y "*" en texto */
   width?: number | "*" | "auto"
@@ -215,7 +215,7 @@ export function pdfTable<T>(
           alignment: index === 0 ? "left" : ALIGNMENT[column.kind],
           noWrap: column.kind === "money",
           // Texto oscuro, como en el Excel: verde y rojo sobre el tinte del
-          // total bajan de 4.5:1. El tono solo pone el signo (Ahorro de tinta)
+          // total bajan de 4.5:1. El tono solo pone el signo (Para imprimir)
           fillColor: theme.filled ? theme.totalTint : undefined
         }
       })

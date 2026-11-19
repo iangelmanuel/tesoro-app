@@ -143,10 +143,10 @@ export function recurringColumns(
   ]
 }
 
-/** Pago, Cargo (ajuste > 0) o Ajuste a la baja (ajuste < 0) */
+/** Pago, Cargo (ajuste > 0) o Ajuste que baja el saldo (ajuste < 0) */
 function debtEntryLabel(value: DebtEntryValue) {
   if (value.kind === "payment") return "Pago"
-  return value.amount > 0 ? "Cargo" : "Ajuste a la baja"
+  return value.amount > 0 ? "Cargo" : "Ajuste que baja el saldo"
 }
 
 export function debtEntryColumns(
@@ -516,8 +516,8 @@ export function CreateTransactionsField({
         <Checkbox.Content>
           <Label>Registrar también como salida/entrada</Label>
           <Description>
-            Cada pago de préstamo crea una salida en «Deudas» y cada abono de
-            una cuenta por cobrar, una entrada en «Cobros». Desmárcala si ya
+            Cada pago de préstamo crea una salida en «Deudas». Cada abono de una
+            cuenta por cobrar crea una entrada en «Cobros». Desmárcala si ya
             importaste estos pagos como movimientos.
           </Description>
         </Checkbox.Content>

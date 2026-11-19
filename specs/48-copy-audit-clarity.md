@@ -1,6 +1,6 @@
 # SPEC 48 — Auditoría de textos: claridad en toda la app
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 47
 > **Fecha:** 2026-11-18
 > **Objetivo:** Reescribir los textos ambiguos, técnicos o inconsistentes que quedan después de SPEC 47 con una guía de voz corta y verificable.
@@ -45,24 +45,32 @@ Este spec fija una guía de voz y aplica los cambios encontrados en el análisis
 
 ## Hallazgos y cambios
 
-| Dónde                                                         | Antes                                                  | Ahora                                                      | Por qué                                      |
-| ------------------------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------- | -------------------------------------------- |
-| Presupuestos (`budgets/`)                                     | Avance por categoría; "sigue tu avance durante el mes" | Progreso por categoría; "sigue tu progreso durante el mes" | "Avance" ya es un retiro con tarjeta         |
-| Deudas, Me deben (`debt-dialog`, `receivable-dialog`)         | Cuenta habitual (opcional)                             | Cuenta por defecto (opcional)                              | Ingresos fijos ya dice "Cuenta por defecto"  |
-| Gastos fijos (`recurring-expense-dialog`)                     | Cuenta habitual (opcional)                             | Cuenta por defecto (opcional)                              | Mismo concepto, mismo nombre                 |
-| Cuentas, Deudas (`adjust-balance-dialog`, `reconcile-dialog`) | Saldo real                                             | Saldo en tu banco                                          | "Real" sugiere que el de Tesoro es falso     |
-| Cuentas (`reconcile-dialog`, `HELP.reconciliation`, toast)    | Conciliar / Cuenta conciliada                          | Cuadrar saldo / Saldo cuadrado                             | Término contable; "cuadrar" es el uso común  |
-| Gastos fijos, Ingresos fijos                                  | Ocurrencias; "5 ocurrencias, del…"                     | Periodos; "5 periodos, del…"                               | `HELP.frequency` ya habla de periodos        |
-| Deudas (`debt-sheet`)                                         | Si pagaras al mes                                      | Simula un pago mensual                                     | Condicional confuso como etiqueta            |
-| Importar (`columns-step`)                                     | Ajuste a la baja                                       | Ajuste que baja el saldo                                   | Explícito, igual que "Cargo (sube el saldo)" |
-| Importar (`columns-step`)                                     | Signo del monto                                        | Cómo distinguir entradas y salidas                         | Dice qué se decide, no el mecanismo          |
-| Exportar (`export-dialog`)                                    | Ahorro de tinta                                        | Para imprimir                                              | Dice el uso                                  |
-| Recomendaciones (toast)                                       | Recomendación oculta este mes                          | Oculta hasta el próximo mes                                | Dice cuándo vuelve                           |
-| Cuenta → Agentes IA (`mcp/components`)                        | ¿Revertir esta operación? / Operación revertida        | ¿Deshacer este cambio? / Cambio deshecho                   | "Revertir operación" es jerga técnica        |
-| Resumen (`upcoming-debt-payments`)                            | Próximos pagos                                         | Próximos vencimientos                                      | Son fechas límite, no pagos hechos           |
-| Toasts de error con punto final vs. sin él                    | Mezcla ("Intenta de nuevo" / "…conexión.")             | Sin punto final en toasts                                  | Consistencia (regla 4/5)                     |
-| `HELP.utilization`                                            | "Cuánto de tu cupo de tarjetas estás usando"           | "Qué parte del cupo de tus tarjetas estás usando"          | Más claro; enlaza con la ayuda de Cupo       |
-| `HELP.accumulatedBalance`                                     | "…no cuenta traspasos ni saldos iniciales."            | Igual, y "entrado / gastado" pasa a "entradas / salidas"   | Vocabulario de SPEC 47                       |
+| Dónde                                                         | Antes                                                                                         | Ahora                                                                          | Por qué                                           |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------- |
+| Presupuestos (`budgets/`)                                     | Avance por categoría; "sigue tu avance durante el mes"                                        | Progreso por categoría; "sigue tu progreso durante el mes"                     | "Avance" ya es un retiro con tarjeta              |
+| Deudas, Me deben (`debt-dialog`, `receivable-dialog`)         | Cuenta habitual (opcional)                                                                    | Cuenta por defecto (opcional)                                                  | Ingresos fijos ya dice "Cuenta por defecto"       |
+| Gastos fijos (`recurring-expense-dialog`)                     | Cuenta habitual (opcional)                                                                    | Cuenta por defecto (opcional)                                                  | Mismo concepto, mismo nombre                      |
+| Cuentas, Deudas (`adjust-balance-dialog`, `reconcile-dialog`) | Saldo real                                                                                    | Saldo en tu banco                                                              | "Real" sugiere que el de Tesoro es falso          |
+| Cuentas (`reconcile-dialog`, `HELP.reconciliation`, toast)    | Conciliar / Cuenta conciliada                                                                 | Cuadrar saldo / Saldo cuadrado                                                 | Término contable; "cuadrar" es el uso común       |
+| Gastos fijos, Ingresos fijos                                  | Ocurrencias; "5 ocurrencias, del…"                                                            | Periodos; "5 periodos, del…"                                                   | `HELP.frequency` ya habla de periodos             |
+| Deudas (`debt-sheet`)                                         | Si pagaras al mes                                                                             | Simula un pago mensual                                                         | Condicional confuso como etiqueta                 |
+| Importar (`columns-step`)                                     | Ajuste a la baja                                                                              | Ajuste que baja el saldo                                                       | Explícito, igual que "Cargo (sube el saldo)"      |
+| Importar (`columns-step`)                                     | ¿Cómo se sabe si es entrada o salida? (título del grupo; "Signo del monto" queda como opción) | Cómo distinguir entradas y salidas (y "…pagos y cargos", "…aportes y retiros") | Dice qué se decide; título sin signos (regla 3)   |
+| Agentes IA (descripciones del MCP)                            | cuenta habitual                                                                               | cuenta por defecto                                                             | Excepción al alcance: mismo nombre que la UI      |
+| Exportar (`export-dialog`)                                    | Ahorro de tinta                                                                               | Para imprimir                                                                  | Dice el uso                                       |
+| Recomendaciones (toast)                                       | Recomendación oculta este mes                                                                 | Oculta hasta el próximo mes                                                    | Dice cuándo vuelve                                |
+| Cuenta → Agentes IA (`mcp/components`)                        | ¿Revertir esta operación? / Operación revertida                                               | ¿Deshacer este cambio? / Cambio deshecho                                       | "Revertir operación" es jerga técnica             |
+| Deudas (tarjeta con `upcoming-debt-payments`)                 | Próximos pagos                                                                                | Próximos vencimientos                                                          | Son fechas límite, no pagos hechos                |
+| Toasts de error con punto final vs. sin él                    | Mezcla ("Intenta de nuevo" / "…conexión.")                                                    | Sin punto final en toasts                                                      | Consistencia (regla 4/5)                          |
+| `HELP.utilization`                                            | "Cuánto de tu cupo de tarjetas estás usando"                                                  | "Qué parte del cupo de tus tarjetas estás usando"                              | Más claro; enlaza con la ayuda de Cupo            |
+| `HELP.accumulatedBalance`                                     | "…no cuenta traspasos ni saldos iniciales."                                                   | Igual, y "entrado / gastado" pasa a "entradas / salidas"                       | Vocabulario de SPEC 47                            |
+| Cuentas (`SITE.reconciliation.note`), paso 7                  | Conciliación con saldo real                                                                   | Saldo cuadrado con tu banco                                                    | Nota visible en Movimientos (solo ajustes nuevos) |
+| Exportar (errores de la ruta y `range.ts`), paso 7            | "…xlsx, csv o pdf." / "No se pudo descargar el archivo. Revisa tu conexión."                  | Sin punto final; "Revisa tu conexión e intenta de nuevo"                       | Llegan al toast (reglas 4 y 5)                    |
+| Presupuestos (toast de copiar), paso 7                        | Se copiaron N presupuestos                                                                    | N presupuestos copiados                                                        | Objeto + participio (regla 4)                     |
+| Tutoriales (toast de reiniciar), paso 7                       | Los tutoriales volverán a arrancar solos                                                      | Tutoriales reiniciados                                                         | Objeto + participio (regla 4)                     |
+| Agentes IA (vacío, acceso, consentimiento), paso 7            | "…ningún agente." / "…borrar y revertir…" / "Esta solicitud ya no es válida."                 | Sin punto final; "deshacer"; descripción del acceso en tres frases             | Reglas 3, 6, 7 y 8                                |
+| Importar (`preview-step`), paso 7                             | Una frase de 21 palabras sobre pagos y abonos                                                 | Dos frases                                                                     | Regla 8                                           |
+| `HELP.frequency`, paso 7                                      | "…(cada mes, cada quincena, cada año…) para que marques…"                                     | "…cada mes, cada quincena o cada año. Así marcas…"                             | Regla 8                                           |
 
 Lo que se revisó y **se queda**:
 
@@ -71,6 +79,12 @@ Lo que se revisó y **se queda**:
 - "Cuota de manejo": término de los bancos, con su ayuda.
 - "Score": tiene `HelpHint` y es marca de la landing.
 - Los grupos del aside ("Día a día", "Tu plan", "Entiende tu dinero").
+- "Entradas vs. salidas" y "vs. mes anterior": "vs." es abreviatura de uso común en español, no un signo.
+- "Nueva cuenta por cobrar": pasa de 3 palabras, pero acortarlo crearía otro nombre para el mismo concepto (regla 7 sobre regla 2).
+- "¡Lo lograste!" en una meta cumplida: es un aviso de celebración, no un toast.
+- "Próximos pagos" en Gastos fijos: ahí sí son pagos por hacer de cada gasto fijo.
+- Los mensajes de la RPC `undo_mcp_operation` ("Esta operación ya se revirtió"): viven en una migración; cambiarlos es un cambio de datos.
+- El ejemplo de Agentes de la landing (`SITE`, "se puede revertir durante 30 días"): es de los videos de la landing.
 
 ## Modelo de datos
 
@@ -89,15 +103,15 @@ No hay datos nuevos. Solo cambian textos en componentes, `src/config/help.ts`, `
 
 ## Criterios de aceptación
 
-- [ ] `docs/ui.md` tiene la sección **Voz** con las 8 reglas.
-- [ ] `grep -rn "Cuenta habitual" src` no devuelve nada.
-- [ ] `grep -rni "ocurrencia" src` no devuelve textos visibles.
-- [ ] `grep -rn "Avance por categoría" src` no devuelve nada; "Avance" solo aparece como tipo de movimiento de deuda.
-- [ ] `grep -rn "Saldo real\|conciliad" src --include=*.tsx` no devuelve textos visibles.
-- [ ] Ningún toast termina en punto ni empieza con "¡".
-- [ ] Los tours (`tutorials.ts`) no nombran textos que ya no existen.
-- [ ] La tabla de hallazgos refleja también lo encontrado en el paso 7.
-- [ ] `pnpm check`, `pnpm eslint` y `pnpm prettier:check` pasan.
+- [x] `docs/ui.md` tiene la sección **Voz** con las 8 reglas.
+- [x] `grep -rn "Cuenta habitual" src` no devuelve nada.
+- [x] `grep -rni "ocurrencia" src` no devuelve textos visibles.
+- [x] `grep -rn "Avance por categoría" src` no devuelve nada; "Avance" solo aparece como tipo de movimiento de deuda.
+- [x] `grep -rn "Saldo real\|conciliad" src --include=*.tsx` no devuelve textos visibles.
+- [x] Ningún toast termina en punto ni empieza con "¡".
+- [x] Los tours (`tutorials.ts`) no nombran textos que ya no existen.
+- [x] La tabla de hallazgos refleja también lo encontrado en el paso 7.
+- [x] `pnpm check`, `pnpm eslint` y `pnpm prettier:check` pasan.
 
 ## Decisiones
 

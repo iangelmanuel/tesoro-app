@@ -17,7 +17,7 @@ export const recurringExpenseSchema = z
       .max(60, { error: "El nombre debe tener máximo 60 caracteres" }),
     amount: amountSchema,
     category_id: z.uuid({ error: "Elige una categoría" }),
-    // Cuenta habitual (SPEC 41): prellena la cuenta al pagar. Vacía = ninguna
+    // Cuenta por defecto (SPEC 41): prellena la cuenta al pagar. Vacía = ninguna
     account_id: z.preprocess(
       emptyToNull,
       z.uuid({ error: "Elige una cuenta válida" }).nullable()

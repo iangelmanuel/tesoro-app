@@ -87,7 +87,7 @@ export type DebtData = (
 
 /**
  * Valida con el esquema del tipo (y, en una cuenta por cobrar, del tipo de
- * cobro) más la cuenta habitual (SPEC 41). Los valores pueden llegar como
+ * cobro) más la cuenta por defecto (SPEC 41). Los valores pueden llegar como
  * texto del formulario o ya tipados (MCP). Los errores se aplanan aquí
  * porque cada tipo tiene su propio esquema.
  */
@@ -123,7 +123,7 @@ export function parseDebtInput(
   }
 }
 
-/** La cuenta habitual, si llega, debe ser del espacio y estar activa */
+/** La cuenta por defecto, si llega, debe ser del espacio y estar activa */
 export async function validateHabitualAccount(
   supabase: AppSupabase,
   workspaceId: string,

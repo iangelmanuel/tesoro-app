@@ -38,7 +38,7 @@ import { amountInput } from "./field"
 interface ReceivableDialogProps {
   /** Espacio (para crear una cuenta desde el select) */
   workspaceId: string
-  /** Cuentas del espacio (cuenta habitual); solo se ofrecen las activas */
+  /** Cuentas del espacio (cuenta por defecto); solo se ofrecen las activas */
   accounts: AccountOption[]
   /** Si llega, el diálogo edita esta cuenta por cobrar */
   receivable?: Debt
@@ -121,7 +121,7 @@ function ReceivableForm({
   const [schedule, setSchedule] = useState<ReceivableSchedule>(
     receivable?.schedule ?? "once"
   )
-  // Cuenta habitual (SPEC 41): la que recibe los cobros. Solo activas; una
+  // Cuenta por defecto (SPEC 41): la que recibe los cobros. Solo activas; una
   // archivada se vacía
   const accountOptions = selectableAccounts(accounts)
   const [accountId, setAccountId] = useState(() =>
@@ -254,7 +254,7 @@ function ReceivableForm({
 
       <AccountSelectField
         name="account_id"
-        label="Cuenta habitual (opcional)"
+        label="Cuenta por defecto (opcional)"
         help="common.defaultAccount"
         value={accountId}
         onChange={setAccountId}

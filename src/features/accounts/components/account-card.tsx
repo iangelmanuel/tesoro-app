@@ -179,7 +179,7 @@ export function AccountCard({
             className="max-md:h-11"
             onPress={() => setReconciling(true)}
           >
-            Conciliar
+            Cuadrar saldo
           </Button>
         </div>
       )}
@@ -202,7 +202,7 @@ export function AccountCard({
           onPress={() => setReconciling(true)}
         >
           <Scale />
-          Conciliar
+          Cuadrar saldo
         </Button>
         <Link
           href={accountTransactionsHref(account.id, transactionsPath)}

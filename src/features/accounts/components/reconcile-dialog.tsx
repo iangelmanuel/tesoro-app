@@ -33,7 +33,7 @@ interface ReconcileDialogProps {
 const roundCents = (value: number) => Math.round(value * 100) / 100
 
 /**
- * Conciliar (SPEC 21): el usuario escribe el saldo real a una fecha, el
+ * Cuadrar saldo (SPEC 21 y 48): el usuario escribe el saldo de su banco a una fecha, el
  * diálogo muestra el saldo que calcula Tesoro y la diferencia, y "Crear
  * ajuste" guarda esa diferencia. En móvil se abre como hoja inferior.
  */
@@ -64,12 +64,12 @@ export function ReconcileDialog({
             <Modal.CloseTrigger />
             <Modal.Header>
               <Modal.Heading className="flex items-center gap-1">
-                Conciliar {account.name}
+                Cuadrar saldo de {account.name}
                 <HelpHint topic="reconciliation" />
               </Modal.Heading>
               <p className="text-sm text-muted">
-                Escribe el saldo real que ves en tu banco o billetera y la
-                fecha. Tesoro crea un ajuste por la diferencia.
+                Escribe el saldo que ves en tu banco o billetera y la fecha.
+                Tesoro crea un ajuste por la diferencia.
               </p>
             </Modal.Header>
             <Modal.Body>
@@ -108,7 +108,7 @@ function ReconcileForm({
     const result = await reconcileAccountAction(prevState, formData)
 
     if (result.ok) {
-      toast.success("Cuenta conciliada")
+      toast.success("Saldo cuadrado")
       onSaved()
     }
     return result
@@ -205,7 +205,7 @@ function ReconcileForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <FieldLabel help="balance.real">Saldo real</FieldLabel>
+        <FieldLabel help="balance.real">Saldo en tu banco</FieldLabel>
         <Input
           placeholder="0"
           className="min-h-11"

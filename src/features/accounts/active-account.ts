@@ -1,7 +1,7 @@
 import type { AccountOption } from "./components/account-select"
 
 /**
- * Cuenta habitual de un origen (gasto fijo, deuda) para prellenar un pago
+ * Cuenta por defecto de un origen (gasto fijo, deuda) para prellenar un pago
  * (SPEC 41): su id si sigue activa en el espacio; si está archivada, borrada
  * o no hay, null y la elige el usuario
  */

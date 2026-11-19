@@ -22,7 +22,7 @@ import type { IncomeAllocation } from "./types"
 /** Ocurrencias futuras que un cobro puede cubrir por adelantado */
 export const FUTURE_OCCURRENCE_LIMIT = 12
 
-export const FUTURE_LIMIT_ERROR = `El monto cubre más de ${FUTURE_OCCURRENCE_LIMIT} ocurrencias futuras`
+export const FUTURE_LIMIT_ERROR = `El monto cubre más de ${FUTURE_OCCURRENCE_LIMIT} periodos futuros`
 export const EXCEEDS_END_ERROR =
   "El monto supera lo que falta por recibir de este ingreso fijo"
 
@@ -199,7 +199,7 @@ export function amountDueUntil(source: IncomeReceiptPeriods, dueOn: string) {
 
 /**
  * Fechas cubiertas como texto: hasta 3, una por una ("sáb 1 nov, sáb 8
- * nov"); más, como rango ("5 ocurrencias, del sáb 1 nov al sáb 29 nov")
+ * nov"); más, como rango ("5 periodos, del sáb 1 nov al sáb 29 nov")
  */
 export function describeOccurrences(dates: string[]) {
   if (dates.length <= 3) {
@@ -207,7 +207,7 @@ export function describeOccurrences(dates: string[]) {
   }
   const first = shortOccurrenceDate(dates[0])
   const last = shortOccurrenceDate(dates[dates.length - 1])
-  return `${dates.length} ocurrencias, del ${first} al ${last}`
+  return `${dates.length} periodos, del ${first} al ${last}`
 }
 
 /**
@@ -276,7 +276,7 @@ export function incomeReceiptDescription(
 
 /**
  * Valores del ingreso al recibir un ingreso fijo (SPEC 41 y 43): el monto
- * esperado, su categoría si sigue activa, la cuenta habitual si sigue activa
+ * esperado, su categoría si sigue activa, la cuenta por defecto si sigue activa
  * y la descripción de la ocurrencia más antigua abierta. Lo usan el tab
  * Ingreso del diálogo de movimiento y la tool receive_recurring_income.
  */

@@ -14,7 +14,7 @@ import {
 export interface BarSeries {
   label: string
   color: string
-  /** Rayado en vez de relleno (tema Ahorro de tinta) */
+  /** Rayado en vez de relleno (tema Para imprimir) */
   hatch?: boolean
 }
 

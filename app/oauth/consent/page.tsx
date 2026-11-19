@@ -55,7 +55,7 @@ function InvalidRequest() {
   return (
     <EmptyState
       icon={Bot}
-      title="Esta solicitud ya no es válida."
+      title="Esta solicitud ya no es válida"
       description="Vuelve a conectar desde tu agente."
     />
   )

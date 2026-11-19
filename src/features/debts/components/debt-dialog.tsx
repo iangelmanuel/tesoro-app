@@ -30,7 +30,7 @@ type PayableKind = "credit_card" | "loan"
 interface DebtDialogProps {
   /** Espacio de la deuda (para crear una cuenta desde el select) */
   workspaceId: string
-  /** Cuentas del espacio (cuenta habitual); solo se ofrecen las activas */
+  /** Cuentas del espacio (cuenta por defecto); solo se ofrecen las activas */
   accounts: AccountOption[]
   /** Si llega, el diálogo edita esta tarjeta o préstamo */
   debt?: Debt
@@ -106,7 +106,7 @@ function DebtForm({
   onCancel
 }: DebtFormProps) {
   const isEditing = debt !== undefined
-  // Cuenta habitual (SPEC 41): solo activas; una archivada se vacía
+  // Cuenta por defecto (SPEC 41): solo activas; una archivada se vacía
   const accountOptions = selectableAccounts(accounts)
   const [accountId, setAccountId] = useState(() =>
     accountOptions.some((account) => account.id === debt?.account_id)
@@ -235,7 +235,7 @@ function DebtForm({
 
       <AccountSelectField
         name="account_id"
-        label="Cuenta habitual (opcional)"
+        label="Cuenta por defecto (opcional)"
         help="debt.defaultAccount"
         value={accountId}
         onChange={setAccountId}

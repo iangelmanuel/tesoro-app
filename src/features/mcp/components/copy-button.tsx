@@ -39,7 +39,7 @@ export function CopyButton({
       setCopied(true)
       if (toastMessage) toast.success(toastMessage)
     } catch {
-      toast.danger("No se pudo copiar. Selecciónalo y cópialo a mano.")
+      toast.danger("No se pudo copiar. Selecciónalo y cópialo a mano")
     }
   }
 

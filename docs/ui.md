@@ -28,6 +28,34 @@ El contexto de producto (usuarios, voz, principios) está en
 - **Movimiento corto.** ≤ 200 ms en la UI y ≤ 400 ms en gráficas, y nada con
   `prefers-reduced-motion: reduce`.
 
+## Voz
+
+Reglas para todo texto de la UI (SPEC 48). Son verificables: se revisan con
+el texto en mano, sin juicio de gusto. El vocabulario de movimientos está en
+[Vocabulario](#vocabulario-spec-47).
+
+1. **Tuteo, español neutro (es-CO), sin anglicismos** cuando hay una palabra
+   común. Se mantienen "score" y "email", que ya son conocidas.
+2. **Botones: verbo + objeto, máximo 3 palabras.** Ej.: "Registrar
+   movimiento", "Crear meta", "Actualizar saldo".
+3. **Títulos: sustantivo, sin verbo ni signos.** Ej.: "Próximos
+   vencimientos".
+4. **Toasts de éxito: objeto + participio.** Ej.: "Meta creada". Sin "¡", sin
+   "exitosamente" y sin punto final.
+5. **Errores: qué pasó + qué hacer.** Ej.: "No se pudo guardar. Revisa tu
+   conexión e intenta de nuevo". Nunca un código ni un término interno.
+6. **Vacíos: qué falta + para qué sirve, en una frase.** La acción va en el
+   botón.
+7. **Un concepto, una palabra.** Las equivalencias están en el glosario de
+   SPEC 47 y en la tabla de hallazgos de SPEC 48.
+8. **Frases de máximo 20 palabras.** Si hace falta más, se parte o se mueve a
+   una ayuda (?).
+
+Nombres fijados por SPEC 48: **Progreso** (de un presupuesto; "Avance" es
+solo el retiro con tarjeta), **Cuenta por defecto**, **Saldo en tu banco**,
+**Cuadrar saldo**, **Periodos** (de un gasto o ingreso fijo), **Próximos
+vencimientos** y **Deshacer cambio** (Agentes IA).
+
 ## Tema y tokens
 
 Todo vive en `src/styles/globals.css`, con los nombres de HeroUI v3.
@@ -264,12 +292,12 @@ Reglas:
 - El orden manual se mueve al instante con `useOptimistic` y vuelve a su lugar
   con un toast si la action falla.
 
-### Conciliar cuenta (SPEC 21)
+### Cuadrar saldo (SPEC 21 y 48)
 
-| Pieza                                      | Qué hace                                                                                                                                                                                                                                                                               |
-| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `accounts/components/reconcile-dialog.tsx` | `ReconcileDialog`: saldo real, `DatePickerField` (no futura), panel con saldo calculado y diferencia (`TONE_TEXT_CLASSES`: `success` si > 0, `danger` si < 0, neutro en 0) y `HelpHint` `reconciliation`. Modal centrado en escritorio y hoja inferior (`placement="bottom"`) en móvil |
-| `accounts/components/account-card.tsx`     | Botón **Conciliar** (`Scale`) y, solo en `wallet` / `bank` con saldo < 0, un aviso `TONE_BADGE_CLASSES.danger` con su propio botón **Conciliar**                                                                                                                                       |
+| Pieza                                      | Qué hace                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `accounts/components/reconcile-dialog.tsx` | `ReconcileDialog`: saldo en tu banco, `DatePickerField` (no futura), panel con saldo calculado y diferencia (`TONE_TEXT_CLASSES`: `success` si > 0, `danger` si < 0, neutro en 0) y `HelpHint` `reconciliation`. Modal centrado en escritorio y hoja inferior (`placement="bottom"`) en móvil |
+| `accounts/components/account-card.tsx`     | Botón **Cuadrar saldo** (`Scale`) y, solo en `wallet` / `bank` con saldo < 0, un aviso `TONE_BADGE_CLASSES.danger` con su propio botón **Cuadrar saldo**                                                                                                                                      |
 
 Reglas:
 
@@ -462,8 +490,8 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
   - `Select` **Periodo** y, según el periodo, otro `Select` con el valor, o
     **Desde** / **Hasta** en dos columnas (una en móvil). Controles de 44 px.
   - Con PDF, bajo el periodo: `Select` **Tamaño** (A4 | Carta) y tabs
-    **Orientación** (Vertical | Horizontal) y **Tema** (Color | Ahorro de
-    tinta) con una línea en `text-muted` que explica el tema elegido. Las
+    **Orientación** (Vertical | Horizontal) y **Tema** (Color | Para
+    imprimir) con una línea en `text-muted` que explica el tema elegido. Las
     tabs llevan etiqueta visible (`OptionTabs`, `aria-labelledby`).
   - Bajo el periodo, en `text-muted`, "Se crearán N hojas de mes" (Excel) o
     "Incluye N meses de detalle" (PDF). Con PDF el tope es de 12 meses: un
@@ -505,7 +533,7 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
   libro, más `balance` y `chart1`–`chart5` (`--balance` y `--chart-*` en
   claro); ninguna sección fija un color a mano. Los pares del tema Color son
   los del libro (tabla de arriba); la fila de total también va en texto
-  oscuro. Ahorro de tinta usa texto ≥ `#4b5563` sobre blanco, sin rellenos de
+  oscuro. Para imprimir usa texto ≥ `#4b5563` sobre blanco, sin rellenos de
   color, y las gráficas en grises con contorno y rayado.
   - Secciones reutilizables en `sections/` (`pdfTable` para toda tabla) y
     gráficas en `charts/` como funciones puras que devuelven un SVG (solo

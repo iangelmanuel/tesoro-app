@@ -160,7 +160,7 @@ const paymentInput = z.object({
     .describe("Fecha YYYY-MM-DD, no futura. Por defecto hoy."),
   time: timeInputSchema.optional().describe("Hora HH:MM, opcional."),
   account_id: accountIdField.describe(
-    "Cuenta de la que sale el pago. Sin ella se usa la cuenta habitual de la deuda; null = fuera de las cuentas."
+    "Cuenta de la que sale el pago. Sin ella se usa la cuenta por defecto de la deuda; null = fuera de las cuentas."
   ),
   account: accountNameSchema.optional(),
   is_extra_payment: z

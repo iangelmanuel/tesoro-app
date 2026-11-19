@@ -7,7 +7,7 @@ import { SectionHeading } from "./section-heading"
 // si cambian los pesos allá, cambian aquí. Suman 100.
 const FACTORS = [
   { label: "Tasa de ahorro", weight: 25 },
-  { label: "Deuda / ingresos", weight: 20 },
+  { label: "Deuda / entradas", weight: 20 },
   { label: "Colchón", weight: 15 },
   { label: "Presupuestos", weight: 15 },
   { label: "Utilización de tarjetas", weight: 10 },

@@ -7,7 +7,7 @@ export const HELP = {
   utilization:
     "Cuánto de tu cupo de tarjetas estás usando. Por debajo del 30 % está bien; cerca del 100 % pesa en tu score.",
   savingsRate:
-    "La parte de tus ingresos que te quedó después de gastar. Si es negativa, gastaste más de lo que entró. Un 20 % o más es una meta sana.",
+    "La parte de tus entradas que te quedó después de gastar. Si es negativa, gastaste más de lo que entró. Un 20 % o más es una meta sana.",
   accumulatedBalance:
     "Todo lo que te ha entrado menos todo lo que has gastado desde tu primer registro. No es el saldo de tus cuentas: no cuenta traspasos ni saldos iniciales.",
   maintenanceFee:
@@ -15,7 +15,7 @@ export const HELP = {
   reconciliation:
     "Compara el saldo que ves en tu banco o billetera con el que calcula Tesoro en esa fecha y crea un ajuste por la diferencia. Con una fecha pasada, el saldo de hoy también cambia por los movimientos posteriores.",
   upcomingIncomes:
-    "Lo que esperas recibir este mes, más lo que no te llegó en los dos meses anteriores. Atrasado quiere decir que ya pasó el día de pago y no has registrado el ingreso.",
+    "Lo que esperas recibir este mes, más lo que no te llegó en los dos meses anteriores. Atrasado quiere decir que ya pasó el día de pago y no has registrado la entrada.",
   noFixedDate:
     "Para proyectos o inversiones que pagan cuando pagan. No tienen fechas ni estados: Tesoro suma lo que registras con ellos en el mes y en el año.",
   frequency:
@@ -23,7 +23,7 @@ export const HELP = {
   installment:
     "La parte fija que pagas o cobras cada periodo. Al marcar una cuota, Tesoro registra el movimiento y baja el saldo pendiente.",
   multipleReceipts:
-    "Un ingreso puede llegarte en varias partes. Cada movimiento que registras suma a su periodo hasta completarlo; mientras falte algo, queda como parcial.",
+    "Un ingreso fijo puede llegarte en varias partes. Cada movimiento que registras suma a su periodo hasta completarlo; mientras falte algo, queda como parcial.",
   cardInstallments:
     "Cada compra a cuotas suma su parte (monto entre cuotas) a los pagos de los meses siguientes. El pago del mes es el mayor entre tu pago mínimo y esa suma. Es una estimación sin intereses: si tu extracto dice otra cosa, sube el pago mínimo."
 } as const

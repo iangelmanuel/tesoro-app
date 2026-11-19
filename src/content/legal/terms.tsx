@@ -34,9 +34,9 @@ export const TERMS: LegalContent = {
         <>
           <p>
             {SITE.info.name} es una herramienta para organizar tus finanzas
-            personales y las de tu negocio: registras ingresos, gastos, deudas y
-            metas, y la aplicación los presenta en gráficas, reportes, un score
-            de salud financiera y recomendaciones.
+            personales y las de tu negocio: registras entradas, salidas, deudas
+            y metas, y la aplicación los presenta en gráficas, reportes, un
+            score de salud financiera y recomendaciones.
           </p>
           <p>
             <strong>

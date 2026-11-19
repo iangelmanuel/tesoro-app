@@ -58,13 +58,12 @@ export const SITE = {
         id: "personal",
         name: "Personal",
         description:
-          "Ingresos, gastos, presupuestos, metas de ahorro y deudas de tu día a día."
+          "Entradas, salidas, presupuestos, metas de ahorro y deudas de tu día a día."
       },
       {
         id: "business",
         name: "Empresa",
-        description:
-          "Flujo de caja, ventas, costos y gastos operativos de tu negocio."
+        description: "Flujo de caja, entradas y salidas de tu negocio."
       }
     ]
   },
@@ -81,7 +80,7 @@ export const SITE = {
       title: "Gráficas claras",
       icon: "ChartColumn",
       description:
-        "Ingresos, gastos, categorías y tendencias presentados de forma visual y fácil de entender."
+        "Entradas, salidas, categorías y tendencias presentados de forma visual y fácil de entender."
     },
     {
       title: "Recomendaciones",
@@ -432,7 +431,7 @@ export const SITE = {
     title: "Tesoro — Finanzas personales y empresariales claras",
     titleTemplate: "%s | Tesoro",
     description:
-      "Gestor y recomendador de finanzas personales y empresariales de código abierto. Registra ingresos y gastos y obtén gráficas claras, recomendaciones y un score de salud financiera.",
+      "Gestor y recomendador de finanzas personales y empresariales de código abierto. Registra entradas y salidas y obtén gráficas claras, recomendaciones y un score de salud financiera.",
     keywords: [
       "finanzas personales",
       "finanzas empresariales",
@@ -463,7 +462,7 @@ export const SITE = {
 
     image: "/opengraph-image.png",
     imageAlt:
-      "Tesoro: panel de finanzas con gráficas de ingresos, gastos y score financiero",
+      "Tesoro: panel de finanzas con gráficas de entradas, salidas y score financiero",
     imageWidth: 1200,
     imageHeight: 630,
     logo: "/brand/logo.png",

@@ -416,7 +416,7 @@ su origen, que valida igual que al registrar y recalcula el saldo:
 Aplica al pagar un gasto fijo (tab Gasto fijo, **Marcar como pagado** de
 Próximos pagos y del Sheet), al recibir un ingreso fijo (**Recibir** y el
 select del tab Ingreso), al pagar una tarjeta o préstamo (tab Deuda, Sheet y
-**Más → Pago de deuda**) y al cobrar Me deben.
+**Más → Movimiento de deuda**) y al cobrar Me deben.
 
 - **Fecha:** hoy (`America/Bogota`), no el vencimiento. El pago real ocurre
   hoy; la ocurrencia o cuota que se paga sigue siendo la elegida y guarda su
@@ -1177,8 +1177,16 @@ inválido de `tab` cae a Debo.
   deben el cobro se reparte de nuevo (SPEC 39). `check_debt_entry` ya no
   restringe el cambio de tipo: el resultado pasa por las mismas reglas y
   `check_debt_balance` revisa el saldo.
-- Registrar sigue igual: **Registrar pago** (Pago | Abono | Compra) y
-  **Actualizar saldo** (el saldo real crea un ajuste por la diferencia).
+- Registrar ofrece los mismos tipos (SPEC 46): **Registrar movimiento**
+  (botón del Sheet, **Más → Movimiento de deuda** y tab **Deuda**) tiene el
+  select **Tipo** del editor con Pago, Abono, Compra, Avance, Cuota de manejo
+  y Ajuste en tarjetas, y Pago, Abono y Ajuste en préstamos. Pago y Abono van
+  por `record_debt_payment`; Compra y Avance por `record_card_advance` (el
+  Avance exige la cuenta que recibe); Cuota de manejo y Ajuste (con **Sube** /
+  **Baja**) se insertan sin cuenta ni movimiento (`recordDebtCharge`). Con
+  saldo 0, una tarjeta igual puede registrar compras y cargos.
+  **Actualizar saldo** sigue igual (el saldo real crea un ajuste por la
+  diferencia).
 - Una deuda pagada o archivada no permite editar. No hay edición en lote ni
   buscador libre de movimientos. El MCP edita pagos con
   `updatePaymentEntry` (sin cambio de tipo).
@@ -1188,7 +1196,7 @@ inválido de `tab` cae a Debo.
 - **Compra o avance** (`kind = 'advance'`): sube el saldo de la tarjeta. Sin
   cuenta es una **compra**; con cuenta es un **avance** y entra a la cuenta
   como ingreso "Avance de tarjeta" (SPEC 36). El historial dice "Compra" o
-  "Avance" según tenga cuenta. Se registra desde **Registrar pago → Compra**.
+  "Avance" según tenga cuenta. Se registra desde **Registrar movimiento → Compra** o **→ Avance**.
 - **Cuotas** (`debt_entries.installments`, opcional, 1 a 48; vacío = sin
   cuotas). Solo compras y avances de tarjeta.
   - Cada compra a N cuotas aporta `monto / N` (redondeado a centavos) al
@@ -1343,7 +1351,7 @@ estar cobrada.
   por fecha esperada (sin fecha al final; las mes a mes no tienen fecha
   esperada).
 - Cada tarjeta abre un Sheet con el detalle, la proyección y el simulador,
-  "Registrar pago" (o "Registrar abono"), "Actualizar saldo" y el historial
+  "Registrar movimiento" (o "Registrar abono"), "Actualizar saldo" y el historial
   de pagos y ajustes, editable mientras la deuda está activa.
 - **Widget del Resumen:** "Deudas" con la deuda total, la utilización global
   (si hay tarjetas activas) y hasta 3 próximos pagos, vencidos primero, con
@@ -1727,7 +1735,7 @@ orígenes nuevos.
   pasa a "Pagado" por un abono.
 - Tab **Abono** en el diálogo de pago de tarjetas (Pago · Abono · Avance) y
   préstamos (Pago · Abono), en todos los accesos: botón de la deuda, **Más →
-  Pago de deuda**, hoja de acciones del móvil y tab **Deuda** del diálogo de
+  Movimiento de deuda**, hoja de acciones del móvil y tab **Deuda** del diálogo de
   movimiento. Al editar un pago se puede pasar de Pago a Abono y al revés.
 - En una cuenta por cobrar no aplica: todo lo que entra ya es un abono y no
   hay ciclo. La BD (`record_debt_payment`) y las actions lo rechazan.

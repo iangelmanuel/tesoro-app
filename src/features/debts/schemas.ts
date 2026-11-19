@@ -521,6 +521,39 @@ export const advanceSchema = z.object({
 
 export type AdvanceInput = z.infer<typeof advanceSchema>
 
+// Cuota de manejo o ajuste nuevo desde "Registrar movimiento" (SPEC 46).
+// Monto positivo; el ajuste dice si sube o baja el saldo. No tocan cuentas
+// ni crean movimiento.
+export const debtChargeSchema = z
+  .object({
+    type: z.enum(["fee", "adjustment"], {
+      error: "Elige el tipo de movimiento"
+    }),
+    amount: amountField,
+    direction: z.preprocess(
+      emptyToNull,
+      z
+        .enum(ADJUSTMENT_DIRECTIONS, {
+          error: "Elige si el ajuste sube o baja el saldo"
+        })
+        .nullable()
+    ),
+    occurred_on: pastDateField,
+    occurred_time: timeSchema,
+    note: noteField
+  })
+  .superRefine((data, ctx) => {
+    if (data.type === "adjustment" && data.direction === null) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["direction"],
+        message: "Elige si el ajuste sube o baja el saldo"
+      })
+    }
+  })
+
+export type DebtChargeInput = z.infer<typeof debtChargeSchema>
+
 // "Actualizar saldo": el saldo real, no la diferencia
 export const adjustBalanceSchema = z.object({
   balance: balanceField,

@@ -509,7 +509,8 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
     {
       target: "header-more",
       title: "Paga desde cualquier sección",
-      description: "En Más tienes Pago de deuda, sin entrar a esta página."
+      description:
+        "En Más tienes Movimiento de deuda, sin entrar a esta página."
     },
     {
       target: "debts-inactive",

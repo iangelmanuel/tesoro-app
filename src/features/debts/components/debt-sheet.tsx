@@ -56,7 +56,7 @@ interface DebtSheetProps {
 
 /**
  * Detalle de una deuda o cuenta por cobrar: resumen, proyección y simulador
- * (tarjetas y préstamos), "Registrar pago" / "Actualizar saldo" e historial.
+ * (tarjetas y préstamos), "Registrar movimiento" / "Actualizar saldo" e historial.
  * Las pagadas, cobradas o archivadas son de solo lectura, con "Reactivar".
  */
 export function DebtSheet({
@@ -185,9 +185,14 @@ export function DebtSheet({
                 }}
                 accounts={accounts}
                 trigger={
-                  <Button isDisabled={debt.balance <= 0}>
+                  <Button
+                    // Sin saldo, una tarjeta igual registra compras y cargos
+                    isDisabled={
+                      debt.balance <= 0 && debt.kind !== "credit_card"
+                    }
+                  >
                     <Plus />
-                    Registrar pago
+                    Registrar movimiento
                   </Button>
                 }
               />

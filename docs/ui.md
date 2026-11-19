@@ -287,7 +287,7 @@ Reglas:
 ### Menú Más, selects con creación y tarjetas clicables (SPEC 25)
 
 - **Menú Más** (`quick-actions-menu.tsx`): en todas las páginas de un
-  espacio. Personal: Aporte a meta, Pago de deuda, Importar, **Categorías** y
+  espacio. Personal: Aporte a meta, Movimiento de deuda, Importar, **Categorías** y
   **Verificar movimientos**. Empresa: solo Categorías y Verificar. Los dos
   abren `CategoriesSheet` y `VerifyMovementsDialog` sobre la página actual,
   sin navegar, y no dependen de que haya movimientos. En el teléfono están al

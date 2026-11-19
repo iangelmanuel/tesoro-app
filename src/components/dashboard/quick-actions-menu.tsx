@@ -189,10 +189,10 @@ function MoreMenu({
             {isPersonal && (
               <Dropdown.Item
                 id="payment"
-                textValue="Pago de deuda"
+                textValue="Movimiento de deuda"
               >
                 <CreditCard className="size-4" />
-                <Label>Pago de deuda</Label>
+                <Label>Movimiento de deuda</Label>
               </Dropdown.Item>
             )}
             {isPersonal && (

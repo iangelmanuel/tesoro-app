@@ -23,7 +23,13 @@ import {
   parsePaymentAmount
 } from "@/features/accounts/components/payment-account-section"
 import { todayISO } from "@/libs/dates"
-import { recordAdvance, recordPayment } from "../actions"
+import { recordAdvance, recordDebtCharge, recordPayment } from "../actions"
+import {
+  type AdjustmentDirection,
+  type EntryType,
+  entryTypeInfo,
+  entryTypesFor
+} from "../entry-types"
 import { MAX_INSTALLMENTS } from "../installments"
 import type { DebtPaymentDescriptions } from "../payment-description"
 import type { Debt } from "../queries"
@@ -37,8 +43,12 @@ type PaymentDebt = Pick<Debt, "id" | "kind"> & {
   descriptions?: DebtPaymentDescriptions
 }
 
-/** Pago del ciclo, abono extra o compra o avance (solo tarjeta) */
-type PaymentMode = "payment" | "extra" | "advance"
+/**
+ * Tipo del movimiento nuevo (SPEC 46): los mismos del editor (SPEC 42).
+ * Pago y Abono van por recordPayment, Compra y Avance por recordAdvance, y
+ * Cuota de manejo y Ajuste por recordDebtCharge
+ */
+type PaymentMode = EntryType
 
 /** Deuda que se puede elegir en el diálogo (acceso rápido del header) */
 export type DebtOption = Pick<Debt, "id" | "kind" | "name" | "account_id"> & {
@@ -98,12 +108,14 @@ export function PaymentDialog({
             <Modal.CloseTrigger />
             <Modal.Header>
               <Modal.Heading>
-                {kind === "receivable" ? "Registrar abono" : "Registrar pago"}
+                {kind === "receivable"
+                  ? "Registrar abono"
+                  : "Registrar movimiento"}
               </Modal.Heading>
               <p className="text-sm text-muted">
                 {kind === "receivable"
                   ? "Lo que te pagaron de esta cuenta por cobrar."
-                  : "Lo que pagaste de esta deuda."}
+                  : "Un pago, abono, compra, cargo o ajuste de esta deuda."}
               </p>
             </Modal.Header>
             <Modal.Body>
@@ -232,18 +244,35 @@ interface PaymentFormProps {
 const EXTRA_EFFECT =
   "No cubre el pago del mes: el próximo pago sigue pendiente."
 
-// Efecto real del pago, abono o compra o avance de una tarjeta según la
-// cuenta elegida
+const TOASTS: Record<PaymentMode, string> = {
+  payment: "Pago registrado",
+  extra: "Abono registrado",
+  purchase: "Compra registrada",
+  advance: "Avance registrado",
+  fee: "Cuota de manejo registrada",
+  adjustment: "Ajuste registrado"
+}
+
+// Efecto real del movimiento en una tarjeta según el tipo y la cuenta
 function cardEffect(mode: PaymentMode, accountName: string | null) {
-  if (mode === "advance") {
-    return accountName
-      ? `Es un avance: entra dinero a ${accountName} como ingreso (Avance de tarjeta) y sube la deuda de la tarjeta.`
-      : "Es una compra: no toca tus cuentas, solo sube el saldo de la tarjeta. Si es a cuotas, cada cuota suma al pago del mes."
+  switch (mode) {
+    case "purchase":
+      return "Es una compra: no toca tus cuentas, solo sube el saldo de la tarjeta. Si es a cuotas, cada cuota suma al pago del mes."
+    case "advance":
+      return accountName
+        ? `Es un avance: entra dinero a ${accountName} como ingreso (Avance de tarjeta) y sube la deuda de la tarjeta.`
+        : "Elige la cuenta a la que entró el avance."
+    case "fee":
+      return "Sube el saldo de la tarjeta. No toca tus cuentas."
+    case "adjustment":
+      return "Corrige el saldo de la tarjeta. No toca tus cuentas ni crea movimiento."
+    default: {
+      const effect = accountName
+        ? `Mueve dinero de ${accountName} a la tarjeta. No cuenta como gasto.`
+        : `Este ${mode === "extra" ? "abono" : "pago"} no toca tus cuentas: solo baja el saldo de la tarjeta. Las compras ya son gasto.`
+      return mode === "extra" ? `${effect} ${EXTRA_EFFECT}` : effect
+    }
   }
-  const effect = accountName
-    ? `Mueve dinero de ${accountName} a la tarjeta. No cuenta como gasto.`
-    : `Este ${mode === "extra" ? "abono" : "pago"} no toca tus cuentas: solo baja el saldo de la tarjeta. Las compras ya son gasto.`
-  return mode === "extra" ? `${effect} ${EXTRA_EFFECT}` : effect
 }
 
 function PaymentForm({
@@ -255,31 +284,31 @@ function PaymentForm({
 }: PaymentFormProps) {
   const isReceivable = debt.kind === "receivable"
   const isCard = debt.kind === "credit_card"
+  // Los mismos tipos del editor (SPEC 42). Una cuenta por cobrar llega aquí
+  // solo para abonar: su cobro va por ReceivableCollectForm
+  const types: PaymentMode[] = isReceivable
+    ? ["payment"]
+    : entryTypesFor({ kind: debt.kind, schedule: null })
   const [mode, setMode] = useState<PaymentMode>("payment")
-  const isAdvance = mode === "advance"
+  const isPayment = mode === "payment" || mode === "extra"
+  const isCharge = mode === "purchase" || mode === "advance"
   const isExtra = mode === "extra"
-  const canBeExtra = !isReceivable
   const [occurredOn, setOccurredOn] = useState(() => todayISO())
   const [time, setTime] = useState("")
+  const [direction, setDirection] = useState<AdjustmentDirection>("up")
 
   const [state, formAction, pending] = useActionState<
     PaymentFormState,
     FormData
   >(async (prevState, formData) => {
-    const result = isAdvance
+    const result = isCharge
       ? await recordAdvance(prevState, formData)
-      : await recordPayment(prevState, formData)
+      : isPayment
+        ? await recordPayment(prevState, formData)
+        : await recordDebtCharge(prevState, formData)
 
     if (result.ok) {
-      toast.success(
-        isAdvance
-          ? formData.get("account_id")
-            ? "Avance registrado"
-            : "Compra registrada"
-          : isReceivable || isExtra
-            ? "Abono registrado"
-            : "Pago registrado"
-      )
+      toast.success(isReceivable ? "Abono registrado" : TOASTS[mode])
       onSaved()
     }
     return result
@@ -287,8 +316,8 @@ function PaymentForm({
 
   const errors = state.fieldErrors
   const values = state.values
-  // Monto (SPEC 41): el Pago arranca con lo que falta de la cuota; Abono y
-  // Compra, vacíos. Se respeta lo que el usuario escriba
+  // Monto (SPEC 41): el Pago arranca con lo que falta de la cuota; los demás
+  // tipos, vacíos. Se respeta lo que el usuario escriba
   const amountFor = (next: PaymentMode) =>
     next === "payment" ? amountInput(debt.descriptions?.amount) : ""
   const [amountText, setAmountText] = useState(
@@ -303,23 +332,23 @@ function PaymentForm({
   const [accountId, setAccountId] = useState(defaultAccountId)
   // Descripción del movimiento (SPEC 41): se prellena según Pago o Abono y
   // se respeta lo que el usuario escriba
+  const descriptionFor = (next: PaymentMode) =>
+    debt.descriptions?.[next === "extra" ? "extra" : "payment"]
   const [description, setDescription] = useState(
-    () => values?.description ?? debt.descriptions?.payment ?? ""
+    () => values?.description ?? descriptionFor("payment") ?? ""
   )
   const [prefilledDescription, setPrefilledDescription] = useState(description)
-  // Nota del pago en el historial de la deuda: el mismo texto que la
-  // descripción ("Pago {nombre} · {mes}"). En una tarjeta es el único texto
-  // del pago. Una compra o avance arranca vacía
+  // Nota del movimiento en el historial de la deuda: en Pago y Abono, el
+  // mismo texto que la descripción ("Pago {nombre} · {mes}"); en una tarjeta
+  // es el único texto del pago. Los demás tipos arrancan vacíos
   const noteFor = (next: PaymentMode) =>
-    next === "advance"
-      ? ""
-      : (debt.descriptions?.[next === "extra" ? "extra" : "payment"] ?? "")
+    next === "payment" || next === "extra" ? (descriptionFor(next) ?? "") : ""
   const [note, setNote] = useState(() => values?.note ?? noteFor("payment"))
   const [prefilledNote, setPrefilledNote] = useState(note)
   function changeMode(next: PaymentMode) {
     setMode(next)
-    // Una compra o avance arranca sin cuenta (compra): la cuenta habitual es
-    // la que paga la tarjeta, no la que recibe un avance
+    // El avance arranca sin cuenta: la cuenta habitual es la que paga la
+    // tarjeta, no la que recibe un avance
     if ((next === "advance") !== (mode === "advance")) {
       setAccountId(next === "advance" ? "" : defaultAccountId)
     }
@@ -334,7 +363,7 @@ function PaymentForm({
       setPrefilledNote(text)
     }
     if (description === "" || description === prefilledDescription) {
-      const text = debt.descriptions?.[next === "extra" ? "extra" : "payment"]
+      const text = descriptionFor(next)
       if (text === undefined) return
       setDescription(text)
       setPrefilledDescription(text)
@@ -342,7 +371,10 @@ function PaymentForm({
   }
   const accountName =
     accounts.find((account) => account.id === accountId)?.name ?? null
-  const showAccount = isCard || createTransaction
+  // Pago o abono: en tarjeta, la cuenta que paga; en préstamo, la del
+  // movimiento. Avance: la que recibe. Compra, cuota y ajuste no tocan cuentas
+  const showAccount =
+    (isPayment && (isCard || createTransaction)) || mode === "advance"
 
   return (
     <form
@@ -355,43 +387,88 @@ function PaymentForm({
         name="debt_id"
         value={debt.id}
       />
+      <input
+        type="hidden"
+        name="type"
+        value={mode}
+      />
 
-      {canBeExtra && (
-        <Tabs
-          selectedKey={mode}
-          onSelectionChange={(key) => changeMode(key as PaymentMode)}
+      {types.length > 1 && (
+        <Select
+          fullWidth
+          value={mode}
+          onChange={(key) => {
+            if (key == null) return
+            changeMode(key as PaymentMode)
+          }}
+          isInvalid={Boolean(errors?.type)}
+          className="flex flex-col gap-2"
         >
-          <Tabs.ListContainer>
-            <Tabs.List
-              aria-label={
-                isCard ? "Tipo de movimiento de la tarjeta" : "Tipo de pago"
-              }
-            >
-              <Tabs.Tab id="payment">
-                Pago
-                <Tabs.Indicator />
-              </Tabs.Tab>
-              <Tabs.Tab id="extra">
-                Abono
-                <Tabs.Indicator />
-              </Tabs.Tab>
-              {isCard && (
-                <Tabs.Tab id="advance">
-                  Compra
-                  <Tabs.Indicator />
-                </Tabs.Tab>
-              )}
-            </Tabs.List>
-          </Tabs.ListContainer>
-        </Tabs>
+          <Label>Tipo</Label>
+          <Select.Trigger>
+            <Select.Value />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox>
+              {types.map((option) => {
+                const info = entryTypeInfo(option, debt.kind)
+                return (
+                  <ListBox.Item
+                    key={option}
+                    id={option}
+                    textValue={info.label}
+                  >
+                    <span className="flex flex-col py-0.5">
+                      <span className="text-sm font-medium">{info.label}</span>
+                      <span className="text-xs text-muted">{info.hint}</span>
+                    </span>
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                )
+              })}
+            </ListBox>
+          </Select.Popover>
+          <FieldError>{errors?.type?.[0]}</FieldError>
+        </Select>
       )}
 
-      {canBeExtra && (
+      {isPayment && !isReceivable && (
         <input
           type="hidden"
           name="is_extra_payment"
           value={isExtra ? "true" : "false"}
         />
+      )}
+
+      {mode === "adjustment" && (
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium">El ajuste</p>
+          <Tabs
+            selectedKey={direction}
+            onSelectionChange={(key) =>
+              setDirection(key as AdjustmentDirection)
+            }
+          >
+            <Tabs.ListContainer>
+              <Tabs.List aria-label="El ajuste sube o baja el saldo">
+                <Tabs.Tab id="up">
+                  Sube
+                  <Tabs.Indicator />
+                </Tabs.Tab>
+                <Tabs.Tab id="down">
+                  Baja
+                  <Tabs.Indicator />
+                </Tabs.Tab>
+              </Tabs.List>
+            </Tabs.ListContainer>
+          </Tabs>
+          <input
+            type="hidden"
+            name="direction"
+            value={direction}
+          />
+        </div>
       )}
 
       <TextField
@@ -429,7 +506,7 @@ function PaymentForm({
         />
       </div>
 
-      {isAdvance && (
+      {isCharge && (
         <TextField
           name="installments"
           inputMode="numeric"
@@ -456,21 +533,11 @@ function PaymentForm({
         className="flex flex-col gap-2"
       >
         <Label>Nota (opcional)</Label>
-        <Input
-          placeholder={
-            isAdvance
-              ? "Compra en el supermercado"
-              : isReceivable
-                ? "Primer abono"
-                : isExtra
-                  ? "Abono a capital"
-                  : "Cuota de noviembre"
-          }
-        />
+        <Input placeholder={notePlaceholder(mode, isReceivable)} />
         <FieldError>{errors?.note?.[0]}</FieldError>
       </TextField>
 
-      {!isCard && (
+      {!isCard && isPayment && (
         <Checkbox
           name="create_transaction"
           value="on"
@@ -487,7 +554,7 @@ function PaymentForm({
       )}
 
       {/* Solo con movimiento: una tarjeta no crea uno */}
-      {!isCard && createTransaction && (
+      {!isCard && isPayment && createTransaction && (
         <TextField
           name="description"
           maxLength={120}
@@ -516,27 +583,31 @@ function PaymentForm({
             transfer_amount: errors?.transfer_amount?.[0]
           }}
           label={
-            isAdvance || isReceivable ? "Cuenta que recibe" : "Cuenta que paga"
+            mode === "advance" || isReceivable
+              ? "Cuenta que recibe"
+              : "Cuenta que paga"
           }
-          direction={isAdvance || isReceivable ? "in" : "out"}
-          // Cambiar entre pago y compra o avance reinicia la cuenta
-          key={isAdvance ? "charge" : "payment"}
-          defaultAccountId={isAdvance ? "" : defaultAccountId}
+          direction={mode === "advance" || isReceivable ? "in" : "out"}
+          // Cambiar entre pago y avance reinicia la cuenta
+          key={mode === "advance" ? "advance" : "payment"}
+          defaultAccountId={mode === "advance" ? "" : defaultAccountId}
           onAccountChange={setAccountId}
         />
       )}
 
-      {isCard && (
+      {isCard ? (
         <p className="rounded-lg bg-default p-3 text-sm text-muted">
           {cardEffect(mode, accountName)}
         </p>
-      )}
-
-      {isExtra && !isCard && (
+      ) : isExtra ? (
         <p className="rounded-lg bg-default p-3 text-sm text-muted">
           Baja el saldo de la deuda. {EXTRA_EFFECT}
         </p>
-      )}
+      ) : mode === "adjustment" ? (
+        <p className="rounded-lg bg-default p-3 text-sm text-muted">
+          Corrige el saldo de la deuda. No toca tus cuentas ni crea movimiento.
+        </p>
+      ) : null}
 
       {state.error && (
         <p
@@ -563,4 +634,22 @@ function PaymentForm({
       </div>
     </form>
   )
+}
+
+function notePlaceholder(mode: PaymentMode, isReceivable: boolean) {
+  if (isReceivable) return "Primer abono"
+  switch (mode) {
+    case "purchase":
+      return "Compra en el supermercado"
+    case "advance":
+      return "Avance en cajero"
+    case "fee":
+      return "Cuota de manejo de noviembre"
+    case "adjustment":
+      return "Intereses del extracto"
+    case "extra":
+      return "Abono a capital"
+    default:
+      return "Cuota de noviembre"
+  }
 }

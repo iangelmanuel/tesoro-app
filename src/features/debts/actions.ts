@@ -15,12 +15,13 @@ import {
   recordReceivableCollection,
   updateDebtEntryRecord
 } from "./entry-service"
-import { type EntryType, entryKindOf } from "./entry-types"
+import { type EntryType, entryKindOf, entryTypesFor } from "./entry-types"
 import {
   ADVANCE_ONLY_CARD,
   DEBT_NOT_ACTIVE,
   DEBT_NOT_FOUND,
   ENTRY_NOT_FOUND,
+  ENTRY_TYPE_INVALID,
   NEGATIVE_BALANCE,
   RECEIVABLE_NOT_FOUND,
   debtPgError
@@ -37,6 +38,7 @@ import {
   type ReceivableSchedule,
   adjustBalanceSchema,
   advanceSchema,
+  debtChargeSchema,
   debtEntryEditSchema,
   paymentSchema,
   receivableCollectSchema,
@@ -413,6 +415,15 @@ export async function recordAdvance(
   if (debt.kind !== "credit_card") {
     return { error: ADVANCE_ONLY_CARD, values }
   }
+  // "Avance" en Registrar movimiento (SPEC 46): sin cuenta sería una compra
+  if (formData.get("type") === "advance" && parsed.data.account_id === null) {
+    return {
+      fieldErrors: {
+        account_id: ["Elige la cuenta a la que entró el avance"]
+      },
+      values
+    }
+  }
 
   const supabase = await createClient()
   const { error } = await supabase.rpc("record_card_advance", {
@@ -610,6 +621,71 @@ export async function adjustBalance(
   if (error) {
     return {
       ...debtPgError(error, "balance", NEGATIVE_BALANCE, ENTRY_DEFAULT_ERROR),
+      values
+    }
+  }
+
+  revalidatePersonalPages()
+  return { ok: true }
+}
+
+const CHARGE_FIELDS = [
+  "type",
+  "amount",
+  "direction",
+  "occurred_on",
+  "occurred_time",
+  "note"
+] as const
+
+// Cuota de manejo o ajuste nuevo desde "Registrar movimiento" (SPEC 46):
+// suben o bajan el saldo sin tocar cuentas. La cuota de manejo solo existe
+// en tarjetas; el ajuste, en los tipos que lo admiten (entryTypesFor)
+export async function recordDebtCharge(
+  _prevState: PaymentFormState,
+  formData: FormData
+): Promise<PaymentFormState> {
+  const values = readValues(formData, CHARGE_FIELDS)
+  const parsed = debtChargeSchema.safeParse(values)
+  const debtId = idSchema.safeParse(formData.get("debt_id"))
+
+  if (!debtId.success) {
+    return { error: DEBT_NOT_FOUND, values }
+  }
+  if (!parsed.success) {
+    return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
+  }
+
+  const debt = await findDebt(debtId.data)
+  if (!debt) {
+    return { error: DEBT_NOT_FOUND, values }
+  }
+  if (debt.status !== "active") {
+    return { error: DEBT_NOT_ACTIVE, values }
+  }
+  if (!entryTypesFor(debt).includes(parsed.data.type)) {
+    return { fieldErrors: { type: [ENTRY_TYPE_INVALID] }, values }
+  }
+
+  const amount =
+    parsed.data.type === "adjustment" && parsed.data.direction === "down"
+      ? -parsed.data.amount
+      : parsed.data.amount
+
+  const supabase = await createClient()
+  const { error } = await supabase.from("debt_entries").insert({
+    workspace_id: debt.workspace_id,
+    debt_id: debt.id,
+    kind: parsed.data.type,
+    amount,
+    occurred_on: parsed.data.occurred_on,
+    occurred_time: parsed.data.occurred_time,
+    note: parsed.data.note
+  })
+
+  if (error) {
+    return {
+      ...debtPgError(error, "amount", NEGATIVE_BALANCE, ENTRY_DEFAULT_ERROR),
       values
     }
   }

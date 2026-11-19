@@ -1,6 +1,6 @@
 # SPEC 49 — Duplicar movimientos
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 02, SPEC 05, SPEC 06, SPEC 08c, SPEC 10, SPEC 20, SPEC 26, SPEC 29, SPEC 37, SPEC 38, SPEC 39, SPEC 42
 > **Fecha:** 2026-11-19
 > **Objetivo:** Agregar la acción **Duplicar** a cada movimiento para abrir su diálogo de creación ya prellenado con sus datos, de modo que al guardar se registre un movimiento nuevo.
@@ -134,26 +134,26 @@ Helpers puros:
 
 ## Criterios de aceptación
 
-- [ ] El menú de fila de un movimiento suelto muestra **Editar**, **Duplicar** y **Eliminar**, en ese orden, en escritorio y en móvil.
-- [ ] Duplicar abre el diálogo de crear (no el de editar) con tipo, monto, categoría, cuenta, descripción, nota y contraparte del original.
-- [ ] La fecha del duplicado es hoy y la hora está vacía.
-- [ ] En Empresa, el n.º de factura del duplicado está vacío.
-- [ ] Cancelar el diálogo no crea nada.
-- [ ] Guardar crea un movimiento nuevo y el original no cambia (mismo id, monto y fecha).
-- [ ] Si la cuenta o la categoría del original están archivadas, el campo aparece vacío.
-- [ ] Duplicar el pago de noviembre de un gasto fijo abre el pago de diciembre; si diciembre ya está pagado, abre el de enero.
-- [ ] Duplicar el pago de un gasto fijo sin ocurrencias pendientes no abre el diálogo: en Movimientos muestra un toast y en su Sheet no aparece la acción.
-- [ ] Duplicar el cobro de un ingreso fijo guarda un cobro que cubre un periodo abierto, nunca uno ya cubierto del todo.
-- [ ] Duplicar un cobro de Me deben mensual cubre la cuota pendiente siguiente a la del original.
-- [ ] Duplicar un pago de préstamo o tarjeta con la cuota del ciclo ya cubierta muestra el aviso y permite guardar.
-- [ ] Duplicar una compra de tarjeta con cuotas copia el número de cuotas.
-- [ ] Duplicar un traspaso abre el traspaso con las mismas cuentas, monto y nota.
-- [ ] Duplicar un aporte o un retiro de meta abre el mismo tipo en la misma meta.
-- [ ] Los ajustes de cuenta y de deuda no muestran Duplicar.
-- [ ] Una deuda pagada o archivada y una meta no activa no muestran Duplicar en sus movimientos.
-- [ ] En un espacio marcado para borrar no aparece Duplicar.
-- [ ] Con cifras ocultas (SPEC 22), el monto prellenado se ve igual que al crear.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] El menú de fila de un movimiento suelto muestra **Editar**, **Duplicar** y **Eliminar**, en ese orden, en escritorio y en móvil.
+- [x] Duplicar abre el diálogo de crear (no el de editar) con tipo, monto, categoría, cuenta, descripción, nota y contraparte del original.
+- [x] La fecha del duplicado es hoy y la hora está vacía.
+- [x] En Empresa, el n.º de factura del duplicado está vacío.
+- [x] Cancelar el diálogo no crea nada.
+- [x] Guardar crea un movimiento nuevo y el original no cambia (mismo id, monto y fecha).
+- [x] Si la cuenta o la categoría del original están archivadas, el campo aparece vacío.
+- [x] Duplicar el pago de noviembre de un gasto fijo abre el pago de diciembre; si diciembre ya está pagado, abre el de enero.
+- [x] Duplicar el pago de un gasto fijo sin ocurrencias pendientes no abre el diálogo: en Movimientos muestra un toast y en su Sheet no aparece la acción.
+- [x] Duplicar el cobro de un ingreso fijo guarda un cobro que cubre un periodo abierto, nunca uno ya cubierto del todo.
+- [x] Duplicar un cobro de Me deben mensual cubre la cuota pendiente siguiente a la del original.
+- [x] Duplicar un pago de préstamo o tarjeta con la cuota del ciclo ya cubierta muestra el aviso y permite guardar.
+- [x] Duplicar una compra de tarjeta con cuotas copia el número de cuotas.
+- [x] Duplicar un traspaso abre el traspaso con las mismas cuentas, monto y nota.
+- [x] Duplicar un aporte o un retiro de meta abre el mismo tipo en la misma meta.
+- [x] Los ajustes de cuenta y de deuda no muestran Duplicar.
+- [x] Una deuda pagada o archivada y una meta no activa no muestran Duplicar en sus movimientos.
+- [x] En un espacio marcado para borrar no aparece Duplicar.
+- [x] Con cifras ocultas (SPEC 22), el monto prellenado se ve igual que al crear.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
 
 ## Decisiones
 
@@ -172,6 +172,15 @@ Helpers puros:
 - **No:** Duplicar en ajustes. Un ajuste corrige un saldo a una cifra; repetirlo dejaría el saldo mal.
 - **No:** tool del MCP. El agente ya puede crear movimientos con todos los datos.
 - **No:** columnas ni migraciones. Todo se resuelve con los diálogos y servicios de crear.
+
+## Notas de implementación
+
+- **Descripción con periodo:** el duplicado de un pago de gasto fijo o de un cobro de ingreso fijo no copia la descripción del original: nombra el periodo que se paga ("Pago Arriendo · diciembre"). Monto, categoría, cuenta y nota sí se copian.
+- **Deudas:** la categoría no se copia (el formulario de crear no la tiene). La descripción y la nota se copian tal cual. El aviso de ciclo cubierto sale de `loadDebtEntryEditor(id, { cycle: true })` en Movimientos y de `nextPayment(debt)` en el Sheet.
+- **Me deben mensual:** el duplicado abre **Una cuota** con la cuota siguiente; el monto es lo que le falta a esa cuota y la cuenta y la descripción las prellena el formulario. Solo aparece con la deuda activa: el servidor rechaza cobros en deudas que no lo están.
+- **Sheet de gasto fijo:** "sin ocurrencias pendientes" se deduce del historial y de `ends_on` (las futuras no se cargan); en el caso raro de que no quede ninguna antes del fin, la acción responde con el toast del servidor.
+- **Movimientos:** las filas de pago, avance y aporte traen el estado de su deuda o meta (`parent_active`, `debt_status`, `debt_schedule`) para ocultar Duplicar sin cargar más.
+- **Espacio marcado para borrar:** `BusinessGate` no muestra sus rutas, así que no hay dónde duplicar.
 
 ## Riesgos
 

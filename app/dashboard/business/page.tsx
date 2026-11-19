@@ -44,8 +44,8 @@ async function BusinessContent() {
           Aún no tienes una empresa
         </h1>
         <p className="max-w-md text-sm text-muted">
-          Crea un espacio de Empresa para llevar las ventas, los costos y los
-          gastos de tu negocio, separados de tus finanzas personales.
+          Crea un espacio de Empresa para llevar las entradas y salidas de tu
+          negocio, separadas de tus finanzas personales.
         </p>
       </div>
       <BusinessDialog trigger={<Button>Crear empresa</Button>} />

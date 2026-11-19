@@ -53,7 +53,7 @@ export function BusinessDialog({ business, trigger }: BusinessDialogProps) {
               <p className="text-sm text-muted">
                 {isEditing
                   ? "Cambia los datos de tu empresa. Sus movimientos no cambian."
-                  : "Un espacio separado de tus finanzas personales para las ventas, costos y gastos de tu negocio."}
+                  : "Un espacio separado de tus finanzas personales para las entradas y salidas de tu negocio."}
               </p>
             </Modal.Header>
             <Modal.Body>

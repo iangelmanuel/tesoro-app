@@ -17,7 +17,7 @@ export interface ReportLabels {
   rate: string
 }
 
-// Personal habla de ingresos y gastos; Empresa, de ventas y costos y gastos.
+// Personal y Empresa hablan de entradas y salidas (SPEC 47).
 // Los datos son los mismos: income y expense de transactions.
 export const REPORT_LABELS = {
   personal: {
@@ -30,12 +30,12 @@ export const REPORT_LABELS = {
     rate: "Tasa de ahorro"
   },
   business: {
-    income: "Ventas",
-    expense: "Costos y gastos",
-    incomeNoun: "venta",
-    expenseNoun: "costo",
-    series: "Ventas y costos",
-    trend: "ventas, costos y gastos, y balance por mes",
+    income: "Entradas",
+    expense: "Salidas",
+    incomeNoun: "entrada",
+    expenseNoun: "salida",
+    series: "Entradas y salidas",
+    trend: "entradas, salidas y balance por mes",
     rate: "Margen"
   }
 } as const satisfies Record<WorkspaceType, ReportLabels>

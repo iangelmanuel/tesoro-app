@@ -53,7 +53,7 @@ export function BusinessSummaryCards({
 
   const main = [
     {
-      title: "Ventas",
+      title: "Entradas",
       value: (
         <Amount
           value={current.income}
@@ -64,7 +64,7 @@ export function BusinessSummaryCards({
       changeClassName: changeTone(salesChange)
     },
     {
-      title: "Costos y gastos",
+      title: "Salidas",
       value: (
         <Amount
           value={current.expense}
@@ -101,7 +101,7 @@ export function BusinessSummaryCards({
       title: "Margen",
       value: margin === null ? EMPTY : PERCENT.format(margin / 100),
       valueClassName: margin !== null && margin < 0 ? NEGATIVE : undefined,
-      hint: "Utilidad sobre las ventas del mes"
+      hint: "Utilidad sobre las entradas del mes"
     },
     {
       title: "Saldo en cuentas",

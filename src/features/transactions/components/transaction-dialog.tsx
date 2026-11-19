@@ -77,9 +77,9 @@ const COPY = {
     placeholder: { expense: "Mercado de la semana", income: "Salario" }
   },
   business: {
-    expense: "Costo o gasto",
-    income: "Venta",
-    description: "Registra una venta o un costo o gasto de tu empresa.",
+    expense: "Salida",
+    income: "Entrada",
+    description: "Registra una entrada o una salida de tu empresa.",
     placeholder: { expense: "Compra de insumos", income: "Venta del día" }
   }
 } as const

@@ -188,8 +188,8 @@ export function personalMonthSection(
   const content: Content[] = [
     monthHeading(ctx, data.month),
     monthSummaryTable(ctx, [
-      { label: "Ingresos", value: income, tone: "income" },
-      { label: "Gastos", value: expense, tone: "expense" },
+      { label: "Entradas", value: income, tone: "income" },
+      { label: "Salidas", value: expense, tone: "expense" },
       { label: "Balance", value: balance },
       {
         label: "Tasa de ahorro",

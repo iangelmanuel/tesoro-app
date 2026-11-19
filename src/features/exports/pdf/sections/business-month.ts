@@ -95,8 +95,8 @@ export function businessMonthSection(
   const content: Content[] = [
     monthHeading(ctx, data.month),
     monthSummaryTable(ctx, [
-      { label: "Ventas", value: sales, tone: "income" },
-      { label: "Costos y gastos", value: costs, tone: "expense" },
+      { label: "Entradas", value: sales, tone: "income" },
+      { label: "Salidas", value: costs, tone: "expense" },
       { label: "Utilidad", value: profit },
       { label: "Margen", value: ratio(profit, sales), kind: "percent" },
       { label: "Saldo en cuentas al inicio", value: openingBalance },
@@ -104,7 +104,7 @@ export function businessMonthSection(
     ]),
     accountsTable(ctx, data.accounts),
     pdfTable<CategoryTotal>(ctx, {
-      title: "Costos por categoría",
+      title: "Salidas por categoría",
       columns: [
         { header: "Categoría", kind: "text", value: (row) => row.category },
         { header: "Total", kind: "money", value: (row) => row.total },
@@ -125,8 +125,8 @@ export function businessMonthSection(
         ]
       }
     }),
-    operationsTable(ctx, "Ventas", data.sales, "income"),
-    operationsTable(ctx, "Costos y gastos", data.costs, "expense")
+    operationsTable(ctx, "Entradas", data.sales, "income"),
+    operationsTable(ctx, "Salidas", data.costs, "expense")
   ]
 
   if (data.transfers.length > 0) {

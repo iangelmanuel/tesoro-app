@@ -13,14 +13,14 @@ import { pdfTable } from "./table"
 
 const LABELS = {
   personal: {
-    in: "Ingresos",
-    out: "Gastos",
+    in: "Entradas",
+    out: "Salidas",
     net: "Balance",
     rate: "Tasa de ahorro"
   },
   business: {
-    in: "Ventas",
-    out: "Costos y gastos",
+    in: "Entradas",
+    out: "Salidas",
     net: "Utilidad",
     rate: "Margen"
   }

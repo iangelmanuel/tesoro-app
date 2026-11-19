@@ -19,19 +19,19 @@ const GAP = 20
 
 const TITLES = {
   personal: {
-    byMonth: "Ingresos vs gastos por mes",
-    in: "Ingresos",
-    out: "Gastos",
-    donut: "Gastos por categoría",
-    top: "Top categorías de gasto",
+    byMonth: "Entradas vs. salidas por mes",
+    in: "Entradas",
+    out: "Salidas",
+    donut: "Salidas por categoría",
+    top: "Top categorías de salida",
     fourth: "Saldo en cuentas al cierre"
   },
   business: {
-    byMonth: "Ventas vs costos por mes",
-    in: "Ventas",
-    out: "Costos",
-    donut: "Costos por categoría",
-    top: "Top categorías de costo",
+    byMonth: "Entradas vs. salidas por mes",
+    in: "Entradas",
+    out: "Salidas",
+    donut: "Salidas por categoría",
+    top: "Top categorías de salida",
     fourth: "Utilidad por mes"
   }
 } as const

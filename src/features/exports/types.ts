@@ -35,8 +35,7 @@ export interface ExportRange {
   months: string[]
 }
 
-export type ExportMovementKind =
-  "Ingreso" | "Gasto" | "Traspaso" | "Venta" | "Costo o gasto"
+export type ExportMovementKind = "Entrada" | "Salida" | "Traspaso"
 
 /** Fila común de la hoja Movimientos y del CSV */
 export interface ExportMovementRow {

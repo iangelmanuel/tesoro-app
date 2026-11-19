@@ -142,8 +142,8 @@ const KIND_LABELS: Record<
   Workspace["type"],
   Record<"income" | "expense" | "transfer", ExportMovementKind>
 > = {
-  personal: { income: "Ingreso", expense: "Gasto", transfer: "Traspaso" },
-  business: { income: "Venta", expense: "Costo o gasto", transfer: "Traspaso" }
+  personal: { income: "Entrada", expense: "Salida", transfer: "Traspaso" },
+  business: { income: "Entrada", expense: "Salida", transfer: "Traspaso" }
 }
 
 interface LoadedMovement extends ExportMovementRow {

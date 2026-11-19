@@ -1,6 +1,6 @@
 # SPEC 48 — Auditoría de textos: claridad en toda la app
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 47
 > **Fecha:** 2026-11-18
 > **Objetivo:** Reescribir los textos ambiguos, técnicos o inconsistentes que quedan después de SPEC 47 con una guía de voz corta y verificable.
@@ -103,15 +103,15 @@ No hay datos nuevos. Solo cambian textos en componentes, `src/config/help.ts`, `
 
 ## Criterios de aceptación
 
-- [ ] `docs/ui.md` tiene la sección **Voz** con las 8 reglas.
-- [ ] `grep -rn "Cuenta habitual" src` no devuelve nada.
-- [ ] `grep -rni "ocurrencia" src` no devuelve textos visibles.
-- [ ] `grep -rn "Avance por categoría" src` no devuelve nada; "Avance" solo aparece como tipo de movimiento de deuda.
-- [ ] `grep -rn "Saldo real\|conciliad" src --include=*.tsx` no devuelve textos visibles.
-- [ ] Ningún toast termina en punto ni empieza con "¡".
-- [ ] Los tours (`tutorials.ts`) no nombran textos que ya no existen.
-- [ ] La tabla de hallazgos refleja también lo encontrado en el paso 7.
-- [ ] `pnpm check`, `pnpm eslint` y `pnpm prettier:check` pasan.
+- [x] `docs/ui.md` tiene la sección **Voz** con las 8 reglas.
+- [x] `grep -rn "Cuenta habitual" src` no devuelve nada.
+- [x] `grep -rni "ocurrencia" src` no devuelve textos visibles.
+- [x] `grep -rn "Avance por categoría" src` no devuelve nada; "Avance" solo aparece como tipo de movimiento de deuda.
+- [x] `grep -rn "Saldo real\|conciliad" src --include=*.tsx` no devuelve textos visibles.
+- [x] Ningún toast termina en punto ni empieza con "¡".
+- [x] Los tours (`tutorials.ts`) no nombran textos que ya no existen.
+- [x] La tabla de hallazgos refleja también lo encontrado en el paso 7.
+- [x] `pnpm check`, `pnpm eslint` y `pnpm prettier:check` pasan.
 
 ## Decisiones
 

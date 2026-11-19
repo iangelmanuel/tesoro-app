@@ -27,7 +27,7 @@ La única regla de fondo es no pagar dos veces el mismo periodo. Por eso el dupl
   - **Sheet de una deuda** (`DebtEntriesList`): pago, abono, compra, avance y cuota de manejo.
   - **Sheet de una meta** (`ContributionsList`): aporte y retiro.
   - **Sheet de un gasto fijo o ingreso fijo**: cada pago o cobro registrado (`RecordedPaymentActions`, SPEC 42).
-- **Qué se copia:** tipo, monto, categoría, cuenta, descripción, nota y contraparte (Empresa). En deudas, además, el modo del diálogo (pago, abono extra, compra, avance, cuota de manejo) y el número de cuotas de una compra o avance.
+- **Qué se copia:** tipo, monto, categoría, cuenta, descripción, nota y contraparte (Empresa). En deudas, además, el modo del diálogo (pago, abono extra, compra, avance, cuota de manejo) y el número de cuotas de una compra o avance. En deudas la categoría no se copia: el formulario de crear no la tiene y la asigna la creación, como en cualquier pago nuevo.
 - **Qué no se copia:**
   - la **fecha**: va **hoy** (`todayISO()`);
   - la **hora**: va vacía;
@@ -76,7 +76,6 @@ export interface PaymentInitialValues {
   mode: PaymentMode // "payment" | "extra" | "purchase" | "advance" | "fee"
   amount: number
   account_id: string | null
-  category_id: string | null
   description: string
   note: string
   installments?: number | null
@@ -127,7 +126,7 @@ Helpers puros:
 5. **Sheets de fijos.** Agregar Duplicar a `RecordedPaymentActions`, oculto cuando el Sheet sabe que no hay periodos pendientes.
 6. **Traspasos.** Agregar `initialValues` a `TransferDialog` y conectar Duplicar en `TransferRow`.
 7. **Metas.** Agregar `initialValues` a `ContributionDialog` (con `goalId` y `kind` fijos). Conectar Duplicar en `ContributionsList` y en la fila de aporte de `AccountMovementRow`. Oculto si la meta no está activa.
-8. **Deudas: diálogo.** Agregar `initialValues` a `PaymentDialog` / `PaymentForm` (modo, monto, cuenta, categoría, descripción, nota, cuotas). Aviso de ciclo ya cubierto en préstamos y tarjetas con `nextPayment`.
+8. **Deudas: diálogo.** Agregar `initialValues` a `PaymentDialog` / `PaymentForm` (modo, monto, cuenta, descripción, nota, cuotas). Aviso de ciclo ya cubierto en préstamos y tarjetas con `nextPayment`.
 9. **Deudas: Sheet.** Conectar Duplicar en `DebtEntriesList` usando `loadDebtEntryEditor` para leer el original. Oculto en ajustes y en deudas no activas.
 10. **Deudas: Movimientos.** Conectar Duplicar en `LinkedPaymentActions` y en la rama de deuda de `AccountMovementRow`, con el mismo camino del paso 9.
 11. **Me deben.** Agregar `nextPendingInstallment` y abrir `ReceivableCollectDialog` con `periodOn` de la cuota siguiente a la del original (leída de `debt_entry_allocations`). Sin cuota pendiente → oculto en el Sheet y toast en Movimientos.

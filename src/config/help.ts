@@ -188,6 +188,14 @@ export const FIELD_HELP = {
   "business.sector": "A qué se dedica. Ajusta las recomendaciones.",
 
   // Importar
+  "import.target":
+    "Elige qué datos trae el archivo. Cada opción dice qué columnas necesita.",
+  "import.sheets": "Las hojas del archivo que quieres leer.",
+  "import.column":
+    "La columna del archivo que trae este dato. Si no viene, déjalo sin mapear.",
+  "import.fixedLink": "Todas las filas se registran en esta deuda o meta.",
+  "import.entryMode":
+    "Cómo distingue el archivo un tipo de movimiento del otro.",
   "import.file": "Un .xlsx o .csv exportado de tu banco o de otra app.",
   "import.headerRow": "La fila donde están los nombres de las columnas.",
   "import.firstColumn": "Desde y hasta qué columna leer.",
@@ -201,6 +209,7 @@ export const FIELD_HELP = {
   // Exportar
   "export.format": "Excel o CSV para tus datos; PDF para leer o imprimir.",
   "export.period": "Qué rango de fechas incluye.",
+  "export.periodValue": "El mes, trimestre o año que quieres exportar.",
   "export.inkSaver": "Fondo blanco y menos color para imprimir.",
   "export.orientation": "Cómo se imprime la hoja.",
   "export.size": "Cómo se imprime la hoja.",

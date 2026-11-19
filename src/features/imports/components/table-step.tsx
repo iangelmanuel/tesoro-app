@@ -5,13 +5,14 @@ import {
   Checkbox,
   Chip,
   Input,
-  Label,
   ListBox,
   Select,
   Table,
   TextField,
   cn
 } from "@heroui/react"
+import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
+import type { FieldHelpKey } from "@/config/help"
 import { SAMPLE_ROWS } from "../constants"
 import {
   buildTable,
@@ -65,7 +66,13 @@ export function TableStep({
     <div className="flex flex-col gap-6">
       {!file.isCsv && (
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-2 text-sm font-medium">Hojas a importar</legend>
+          <legend className="mb-2 flex items-center gap-0.5 text-sm font-medium">
+            Hojas a importar
+            <FieldHelp
+              help="import.sheets"
+              label="Hojas a importar"
+            />
+          </legend>
           <p className="text-sm text-muted">
             La primera hoja marcada define la tabla y el mapeo. En las demás se
             busca una tabla con los mismos encabezados.
@@ -215,7 +222,7 @@ function PrimaryTable({ sheet, detected, table, onChange }: PrimaryTableProps) {
           }}
           className="flex flex-col gap-1.5"
         >
-          <Label>Fila de encabezados</Label>
+          <FieldLabel help="import.headerRow">Fila de encabezados</FieldLabel>
           <Input
             type="number"
             min={1}
@@ -225,6 +232,7 @@ function PrimaryTable({ sheet, detected, table, onChange }: PrimaryTableProps) {
         <ColumnSelect
           id="import-start-col"
           label="Columna inicial"
+          help="import.firstColumn"
           columns={columns}
           value={table?.startCol ?? 0}
           onChange={(startCol) => adjust({ startCol })}
@@ -232,6 +240,7 @@ function PrimaryTable({ sheet, detected, table, onChange }: PrimaryTableProps) {
         <ColumnSelect
           id="import-end-col"
           label="Columna final"
+          help="import.lastColumn"
           columns={columns}
           value={table?.endCol ?? columnCount - 1}
           onChange={(endCol) => adjust({ endCol })}
@@ -303,18 +312,25 @@ interface ColumnSelectProps {
   columns: number[]
   value: number
   onChange: (value: number) => void
+  help: FieldHelpKey
 }
 
 function ColumnSelect({
   id,
   label,
+  help,
   columns,
   value,
   onChange
 }: ColumnSelectProps) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      <FieldLabel
+        htmlFor={id}
+        help={help}
+      >
+        {label}
+      </FieldLabel>
       <Select
         value={String(value) || null}
         onChange={(key) =>

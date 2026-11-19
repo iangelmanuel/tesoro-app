@@ -5,6 +5,7 @@ import type { Route } from "next"
 import Link from "next/link"
 import { Button, Radio, RadioGroup, cn } from "@heroui/react"
 import { FileSpreadsheet, LoaderCircle, Upload } from "lucide-react"
+import { FieldHelp } from "@/components/forms/field-label"
 import {
   ImportFileError,
   type SheetCells,
@@ -72,12 +73,18 @@ export function FileStep({
 
   return (
     <div className="flex flex-col gap-3">
-      <p
-        id="import-target"
-        className="text-sm font-medium"
-      >
-        ¿Qué vas a importar?
-      </p>
+      <div className="flex items-center gap-0.5">
+        <p
+          id="import-target"
+          className="text-sm font-medium"
+        >
+          ¿Qué vas a importar?
+        </p>
+        <FieldHelp
+          help="import.target"
+          label="Qué vas a importar"
+        />
+      </div>
       <RadioGroup
         aria-labelledby="import-target"
         className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
@@ -151,7 +158,13 @@ export function FileStep({
           <>
             <FileSpreadsheet className="size-8 text-muted" />
             <div className="flex flex-col gap-1">
-              <p className="font-medium">Arrastra tu archivo aquí</p>
+              <div className="flex items-center justify-center gap-0.5">
+                <p className="font-medium">Arrastra tu archivo aquí</p>
+                <FieldHelp
+                  help="import.file"
+                  label="Archivo"
+                />
+              </div>
               <p className="text-sm text-muted">
                 Excel (.xlsx) o CSV, de hasta 5 MB. Se lee en tu navegador: el
                 archivo no sale de tu equipo.

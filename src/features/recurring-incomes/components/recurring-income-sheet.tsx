@@ -81,7 +81,13 @@ export function RecurringIncomeSheet({
   const { pending, toggle, remove } = useRecurringIncomeActions(income)
   const hasSchedule = income.frequency !== "none"
   // Pausada o terminada: el servidor no acepta cobros nuevos para ella
-  const canReceive = incomeSources.some((source) => source.id === income.id)
+  const source = incomeSources.find((option) => option.id === income.id)
+  const canReceive = source !== undefined
+  // Duplicar un cobro (SPEC 49) necesita un periodo abierto donde repartirse
+  const canDuplicate =
+    source !== undefined &&
+    (source.frequency === "none" ||
+      source.periods.some((period) => period.due > 0))
 
   // Se pide al abrir, con "Ver más", tras un cobro y al editar
   useEffect(() => {
@@ -219,6 +225,7 @@ export function RecurringIncomeSheet({
                   categories,
                   accounts,
                   incomeSources,
+                  canDuplicate,
                   onChanged: () => setVersion((value) => value + 1)
                 }}
                 onReceive={canReceive ? setReceiving : undefined}
@@ -352,12 +359,14 @@ function IncomeDetails({ income }: { income: RecurringIncome }) {
   )
 }
 
-/** Lo que necesitan Editar y Eliminar de un cobro registrado (SPEC 42) */
+/** Lo que necesitan Editar, Duplicar y Eliminar de un cobro registrado (SPEC 42 y 49) */
 interface ReceiptEditing {
   workspaceId: string
   categories: Category[]
   accounts: PaymentAccountOption[]
   incomeSources: IncomeSourceOption[]
+  /** Queda un periodo abierto donde repartir el duplicado */
+  canDuplicate: boolean
   onChanged: () => void
 }
 

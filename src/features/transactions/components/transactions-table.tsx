@@ -11,6 +11,7 @@ import { Table, cn, toast } from "@heroui/react"
 import {
   ArrowLeftRight,
   Banknote,
+  Copy,
   CreditCard,
   GripVertical,
   Pencil,
@@ -22,6 +23,7 @@ import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { RowActions } from "@/components/dashboard/row-actions"
 import { ScrollTable } from "@/components/dashboard/scroll-table"
 import { deleteAdjustment, deleteTransfer } from "@/features/accounts/actions"
+import { activeAccountId } from "@/features/accounts/active-account"
 import { AccountLabel } from "@/features/accounts/components/account-select"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
@@ -29,6 +31,10 @@ import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { deleteEntry } from "@/features/debts/actions"
 import { DebtEntryDialog } from "@/features/debts/components/debt-entry-dialog"
+import {
+  DuplicateDebtEntryLoader,
+  DuplicateReceivableLoader
+} from "@/features/debts/components/duplicate-debt-entry-dialog"
 import { deleteContribution } from "@/features/goals/actions"
 import { ContributionDialog } from "@/features/goals/components/contribution-dialog"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
@@ -40,6 +46,7 @@ import {
   type LedgerEntry,
   type LinkedDebtEntry
 } from "../queries"
+import { DuplicateTransactionDialog } from "./duplicate-transaction-dialog"
 import { TransactionDialog } from "./transaction-dialog"
 
 interface TransactionsTableProps {
@@ -442,6 +449,19 @@ export function TransactionsTable({
                                 onOpenChange={dialog.onOpenChange}
                               />
                             )}
+                            renderDuplicate={(dialog) =>
+                              dialog.open && (
+                                <DuplicateTransactionDialog
+                                  workspaceId={workspaceId}
+                                  workspaceType={workspaceType}
+                                  transactionId={transaction.id}
+                                  categories={categories}
+                                  accounts={accounts}
+                                  incomeSources={incomeSources}
+                                  onOpenChange={dialog.onOpenChange}
+                                />
+                              )
+                            }
                           />
                         )}
                       </Table.Cell>
@@ -650,6 +670,30 @@ function TransferRow({
               onOpenChange={dialog.onOpenChange}
             />
           )}
+          renderDuplicate={(dialog) =>
+            dialog.open && (
+              <TransferDialog
+                workspaceId={workspaceId}
+                accounts={accounts}
+                // Mismas cuentas (si siguen activas), monto y nota; fecha de
+                // hoy y hora vacía (SPEC 49)
+                initialValues={{
+                  from_account_id: activeAccountId(
+                    accounts,
+                    transfer.from_account_id
+                  ),
+                  to_account_id: activeAccountId(
+                    accounts,
+                    transfer.to_account_id
+                  ),
+                  amount: transfer.amount,
+                  note: transfer.note ?? ""
+                }}
+                open
+                onOpenChange={dialog.onOpenChange}
+              />
+            )
+          }
         />
       </Table.Cell>
     </SortableRow>
@@ -737,6 +781,30 @@ function AccountMovementRow({
                 onOpenChange={dialog.onOpenChange}
               />
             )}
+            renderDuplicate={
+              // Solo con la meta activa: cumplida o archivada no recibe aportes
+              entry.parent_active
+                ? (dialog) =>
+                    dialog.open && (
+                      <ContributionDialog
+                        workspaceId={workspaceId}
+                        goalId={entry.parent_id}
+                        kind={entry.amount < 0 ? "withdrawal" : "deposit"}
+                        accounts={accounts}
+                        initialValues={{
+                          amount: Math.abs(entry.amount),
+                          account_id: activeAccountId(
+                            accounts,
+                            entry.account_id
+                          ),
+                          note: entry.note ?? ""
+                        }}
+                        open
+                        onOpenChange={dialog.onOpenChange}
+                      />
+                    )
+                : undefined
+            }
           />
         ) : (
           <EntryActions
@@ -759,6 +827,20 @@ function AccountMovementRow({
                   onOpenChange={dialog.onOpenChange}
                 />
               )
+            }
+            renderDuplicate={
+              // Pago o avance antiguo de tarjeta: solo con la deuda activa
+              entry.parent_active
+                ? (dialog) =>
+                    dialog.open && (
+                      <DuplicateDebtEntryLoader
+                        workspaceId={workspaceId}
+                        entryId={entry.id}
+                        accounts={accounts}
+                        onOpenChange={dialog.onOpenChange}
+                      />
+                    )
+                : undefined
             }
           />
         )}
@@ -812,6 +894,30 @@ function LinkedPaymentActions({
             onOpenChange={dialog.onOpenChange}
           />
         )
+      }
+      renderDuplicate={
+        // Solo con la deuda activa. El cobro de un Me deben mensual va por su
+        // diálogo, a la cuota pendiente siguiente (toast si no queda)
+        entry.debt_status === "active"
+          ? (dialog) =>
+              dialog.open &&
+              (entry.debt_kind === "receivable" &&
+              entry.debt_schedule === "monthly" ? (
+                <DuplicateReceivableLoader
+                  workspaceId={entry.workspace_id}
+                  entryId={entry.id}
+                  accounts={accounts}
+                  onOpenChange={dialog.onOpenChange}
+                />
+              ) : (
+                <DuplicateDebtEntryLoader
+                  workspaceId={entry.workspace_id}
+                  entryId={entry.id}
+                  accounts={accounts}
+                  onOpenChange={dialog.onOpenChange}
+                />
+              ))
+          : undefined
       }
     />
   )
@@ -873,21 +979,28 @@ interface RemoveConfig {
   onDelete: () => Promise<{ error?: string }>
 }
 
-// Acciones de una fila: Editar (si hay diálogo) y Eliminar. Los diálogos se
-// controlan desde aquí porque el menú de escritorio no puede alojar triggers
+interface RowDialogControl {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+// Acciones de una fila: Editar y Duplicar (si hay diálogo) y Eliminar. Los
+// diálogos se controlan desde aquí porque el menú de escritorio no puede
+// alojar triggers
 function EntryActions({
   label,
   remove,
-  renderEdit
+  renderEdit,
+  renderDuplicate
 }: {
   label: string
   remove: RemoveConfig
-  renderEdit?: (dialog: {
-    open: boolean
-    onOpenChange: (open: boolean) => void
-  }) => React.ReactNode
+  renderEdit?: (dialog: RowDialogControl) => React.ReactNode
+  /** Diálogo de crear prellenado con los datos de la fila (SPEC 49) */
+  renderDuplicate?: (dialog: RowDialogControl) => React.ReactNode
 }) {
   const [editing, setEditing] = useState(false)
+  const [duplicating, setDuplicating] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
   return (
@@ -905,6 +1018,16 @@ function EntryActions({
                 }
               ]
             : []),
+          ...(renderDuplicate
+            ? [
+                {
+                  id: "duplicate",
+                  label: "Duplicar",
+                  icon: <Copy className="size-4" />,
+                  onAction: () => setDuplicating(true)
+                }
+              ]
+            : []),
           {
             id: "delete",
             label: "Eliminar",
@@ -915,6 +1038,7 @@ function EntryActions({
         ]}
       />
       {renderEdit?.({ open: editing, onOpenChange: setEditing })}
+      {renderDuplicate?.({ open: duplicating, onOpenChange: setDuplicating })}
       <DeleteEntryDialog
         label={label}
         {...remove}

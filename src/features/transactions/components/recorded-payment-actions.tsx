@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { toast } from "@heroui/react"
-import { Pencil, Trash2 } from "lucide-react"
+import { Copy, Pencil, Trash2 } from "lucide-react"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { RowActions } from "@/components/dashboard/row-actions"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
@@ -10,6 +10,7 @@ import type { Category } from "@/features/categories/queries"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
 import { deleteTransaction, loadEditableTransaction } from "../actions"
 import type { EditableTransaction } from "../queries"
+import { DuplicateTransactionDialog } from "./duplicate-transaction-dialog"
 import { TransactionDialog } from "./transaction-dialog"
 
 interface RecordedPaymentActionsProps {
@@ -23,14 +24,20 @@ interface RecordedPaymentActionsProps {
   categories: Category[]
   accounts: PaymentAccountOption[]
   incomeSources?: IncomeSourceOption[]
-  /** Tras editar o eliminar: vuelve a pedir el historial */
+  /**
+   * Muestra Duplicar (SPEC 49). El Sheet lo apaga cuando sabe que no quedan
+   * periodos pendientes
+   */
+  canDuplicate?: boolean
+  /** Tras editar, duplicar o eliminar: vuelve a pedir el historial */
   onChanged: () => void
 }
 
 /**
- * Editar y Eliminar un pago o cobro ya registrado desde el Sheet de su gasto
- * o ingreso fijo (SPEC 42). Es el mismo movimiento que en Movimientos: se
- * edita con TransactionDialog y se borra con deleteTransaction.
+ * Editar, Duplicar y Eliminar un pago o cobro ya registrado desde el Sheet de
+ * su gasto o ingreso fijo (SPEC 42 y 49). Es el mismo movimiento que en
+ * Movimientos: se edita con TransactionDialog, se duplica con
+ * DuplicateTransactionDialog y se borra con deleteTransaction.
  */
 export function RecordedPaymentActions({
   workspaceId,
@@ -40,11 +47,13 @@ export function RecordedPaymentActions({
   categories,
   accounts,
   incomeSources,
+  canDuplicate = false,
   onChanged
 }: RecordedPaymentActionsProps) {
   const [transaction, setTransaction] = useState<EditableTransaction | null>(
     null
   )
+  const [duplicating, setDuplicating] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [pending, startTransition] = useTransition()
 
@@ -83,6 +92,17 @@ export function RecordedPaymentActions({
             isDisabled: pending,
             onAction: edit
           },
+          ...(canDuplicate
+            ? [
+                {
+                  id: "duplicate",
+                  label: "Duplicar",
+                  icon: <Copy className="size-4" />,
+                  isDisabled: pending,
+                  onAction: () => setDuplicating(true)
+                }
+              ]
+            : []),
           {
             id: "delete",
             label: "Eliminar",
@@ -104,6 +124,21 @@ export function RecordedPaymentActions({
           onOpenChange={(isOpen) => {
             if (!isOpen) {
               setTransaction(null)
+              onChanged()
+            }
+          }}
+        />
+      )}
+      {duplicating && (
+        <DuplicateTransactionDialog
+          workspaceId={workspaceId}
+          transactionId={transactionId}
+          categories={categories}
+          accounts={accounts}
+          incomeSources={incomeSources}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setDuplicating(false)
               onChanged()
             }
           }}

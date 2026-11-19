@@ -21,7 +21,8 @@ import {
   installmentsShare,
   isActiveDebt,
   isReceivableOverdue,
-  nextFeeDate
+  nextFeeDate,
+  nextPayment
 } from "../calculations"
 import { debtPaymentDescriptions } from "../payment-description"
 import type { Debt, DebtEntry } from "../queries"
@@ -249,6 +250,8 @@ export function DebtSheet({
                 accounts={accounts}
                 categories={categories}
                 currency={currency}
+                cycleCovered={nextPayment(debt)?.status === "paid"}
+                collectable={isMonthly ? collectable : undefined}
                 readOnly={!isActive}
               />
             </DetailSection>

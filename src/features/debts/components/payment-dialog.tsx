@@ -13,6 +13,7 @@ import {
   TextField,
   toast
 } from "@heroui/react"
+import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
 import { TimePickerField } from "@/components/forms/time-picker-field"
@@ -41,6 +42,11 @@ type PaymentDebt = Pick<Debt, "id" | "kind"> & {
   account_id?: string | null
   /** Descripción prellenada del movimiento (SPEC 41); sin ella, vacía */
   descriptions?: DebtPaymentDescriptions
+  /**
+   * La cuota del ciclo actual ya está cubierta (`nextPayment(debt).status ===
+   * "paid"`): un Pago nuevo muestra un aviso, sin bloquear (SPEC 49)
+   */
+  cycleCovered?: boolean
 }
 
 /**
@@ -48,7 +54,24 @@ type PaymentDebt = Pick<Debt, "id" | "kind"> & {
  * Pago y Abono van por recordPayment, Compra y Avance por recordAdvance, y
  * Cuota de manejo y Ajuste por recordDebtCharge
  */
-type PaymentMode = EntryType
+export type PaymentMode = EntryType
+
+/**
+ * Prellenado de un movimiento nuevo de la deuda (Duplicar, SPEC 49). Sin fecha
+ * ni hora: ocurre hoy. Una cuenta archivada llega como null. La categoría no
+ * se copia: crear asigna la de siempre
+ */
+export interface PaymentInitialValues {
+  /** Nunca "adjustment": los ajustes no se duplican */
+  mode: Exclude<PaymentMode, "adjustment">
+  amount: number
+  account_id: string | null
+  /** Descripción del movimiento enlazado; vacía si el original no tenía */
+  description: string
+  note: string
+  /** Cuotas de una compra o avance */
+  installments?: number | null
+}
 
 /** Deuda que se puede elegir en el diálogo (acceso rápido del header) */
 export type DebtOption = Pick<Debt, "id" | "kind" | "name" | "account_id"> & {
@@ -64,6 +87,8 @@ interface PaymentDialogProps {
   debts?: DebtOption[]
   /** Cuentas con saldo para la cuenta del pago */
   accounts?: PaymentAccountOption[]
+  /** Prellenado del movimiento nuevo; solo con `debt` fija */
+  initialValues?: PaymentInitialValues
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
   trigger?: React.ReactNode
   open?: boolean
@@ -81,6 +106,7 @@ export function PaymentDialog({
   debt: fixedDebt,
   debts,
   accounts = [],
+  initialValues,
   trigger,
   open: controlledOpen,
   onOpenChange
@@ -134,6 +160,7 @@ export function PaymentDialog({
                   workspaceId={workspaceId}
                   debt={debt}
                   accounts={accounts}
+                  initialValues={fixedDebt ? initialValues : undefined}
                   onSaved={() => setOpen(false)}
                   onCancel={() => setOpen(false)}
                 />
@@ -236,6 +263,7 @@ interface PaymentFormProps {
   workspaceId: string
   debt: PaymentDebt
   accounts: PaymentAccountOption[]
+  initialValues?: PaymentInitialValues
   onSaved: () => void
   onCancel: () => void
 }
@@ -279,6 +307,7 @@ function PaymentForm({
   workspaceId,
   debt,
   accounts,
+  initialValues,
   onSaved,
   onCancel
 }: PaymentFormProps) {
@@ -289,7 +318,12 @@ function PaymentForm({
   const types: PaymentMode[] = isReceivable
     ? ["payment"]
     : entryTypesFor({ kind: debt.kind, schedule: null })
-  const [mode, setMode] = useState<PaymentMode>("payment")
+  // Un duplicado arranca con el tipo del original si la deuda lo admite
+  const initialMode: PaymentMode =
+    initialValues && types.includes(initialValues.mode)
+      ? initialValues.mode
+      : "payment"
+  const [mode, setMode] = useState<PaymentMode>(initialMode)
   const isPayment = mode === "payment" || mode === "extra"
   const isCharge = mode === "purchase" || mode === "advance"
   const isExtra = mode === "extra"
@@ -321,21 +355,37 @@ function PaymentForm({
   const amountFor = (next: PaymentMode) =>
     next === "payment" ? amountInput(debt.descriptions?.amount) : ""
   const [amountText, setAmountText] = useState(
-    () => values?.amount ?? amountFor("payment")
+    () =>
+      values?.amount ??
+      (initialValues ? amountInput(initialValues.amount) : amountFor("payment"))
   )
   const [prefilledAmount, setPrefilledAmount] = useState(amountText)
-  const [createTransaction, setCreateTransaction] = useState(
-    () => !values || values.create_transaction === "on"
+  // Un duplicado lleva movimiento si el original lo tenía (con descripción)
+  const [createTransaction, setCreateTransaction] = useState(() =>
+    values
+      ? values.create_transaction === "on"
+      : !initialValues || initialValues.description !== ""
   )
   // Cuenta por defecto de la deuda, si sigue activa (SPEC 41)
   const defaultAccountId = activeAccountId(accounts, debt.account_id) ?? ""
-  const [accountId, setAccountId] = useState(defaultAccountId)
+  // La del duplicado manda mientras no se cambie entre avance y pago
+  const accountFor = (next: PaymentMode) =>
+    initialValues && (next === "advance") === (initialMode === "advance")
+      ? (initialValues.account_id ?? "")
+      : next === "advance"
+        ? ""
+        : defaultAccountId
+  const [accountId, setAccountId] = useState(() => accountFor(initialMode))
   // Descripción del movimiento (SPEC 41): se prellena según Pago o Abono y
   // se respeta lo que el usuario escriba
   const descriptionFor = (next: PaymentMode) =>
     debt.descriptions?.[next === "extra" ? "extra" : "payment"]
   const [description, setDescription] = useState(
-    () => values?.description ?? descriptionFor("payment") ?? ""
+    () =>
+      values?.description ??
+      initialValues?.description ??
+      descriptionFor("payment") ??
+      ""
   )
   const [prefilledDescription, setPrefilledDescription] = useState(description)
   // Nota del movimiento en el historial de la deuda: en Pago y Abono, el
@@ -343,14 +393,16 @@ function PaymentForm({
   // es el único texto del pago. Los demás tipos arrancan vacíos
   const noteFor = (next: PaymentMode) =>
     next === "payment" || next === "extra" ? (descriptionFor(next) ?? "") : ""
-  const [note, setNote] = useState(() => values?.note ?? noteFor("payment"))
+  const [note, setNote] = useState(
+    () => values?.note ?? initialValues?.note ?? noteFor("payment")
+  )
   const [prefilledNote, setPrefilledNote] = useState(note)
   function changeMode(next: PaymentMode) {
     setMode(next)
     // El avance arranca sin cuenta: la cuenta por defecto es la que paga la
     // tarjeta, no la que recibe un avance
     if ((next === "advance") !== (mode === "advance")) {
-      setAccountId(next === "advance" ? "" : defaultAccountId)
+      setAccountId(accountFor(next))
     }
     if (amountText === "" || amountText === prefilledAmount) {
       const amount = amountFor(next)
@@ -520,7 +572,12 @@ function PaymentForm({
           inputMode="numeric"
           autoComplete="off"
           maxLength={2}
-          defaultValue={values?.installments ?? ""}
+          defaultValue={
+            values?.installments ??
+            (initialValues?.installments
+              ? String(initialValues.installments)
+              : "")
+          }
           isInvalid={Boolean(errors?.installments)}
           validationBehavior="aria"
           className="flex flex-col gap-2"
@@ -608,9 +665,19 @@ function PaymentForm({
           direction={mode === "advance" || isReceivable ? "in" : "out"}
           // Cambiar entre pago y avance reinicia la cuenta
           key={mode === "advance" ? "advance" : "payment"}
-          defaultAccountId={mode === "advance" ? "" : defaultAccountId}
+          defaultAccountId={accountFor(mode)}
           onAccountChange={setAccountId}
         />
+      )}
+
+      {mode === "payment" && !isReceivable && debt.cycleCovered && (
+        <p
+          role="status"
+          className={`rounded-lg p-3 text-sm ${TONE_BADGE_CLASSES.warning}`}
+        >
+          La cuota de este ciclo ya está cubierta. Puedes registrar el pago
+          igual o cambiar el tipo a Abono.
+        </p>
       )}
 
       {isCard ? (

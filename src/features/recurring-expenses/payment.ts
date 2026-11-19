@@ -25,6 +25,28 @@ export function unpaidOccurrence(
 }
 
 /**
+ * Primera ocurrencia sin pagar de un gasto fijo con vencimiento posterior a
+ * `afterDueOn` (Duplicar, SPEC 49): el duplicado del pago de noviembre paga
+ * diciembre, o enero si diciembre ya está pagado. null si no queda ninguna
+ */
+export function nextUnpaidOccurrence(
+  payments: UpcomingPayment[],
+  recurringExpenseId: string,
+  afterDueOn: string
+) {
+  return (
+    payments
+      .filter(
+        (payment) =>
+          payment.recurringExpenseId === recurringExpenseId &&
+          payment.transactionId === null &&
+          payment.dueOn > afterDueOn
+      )
+      .sort((a, b) => a.dueOn.localeCompare(b.dueOn))[0] ?? null
+  )
+}
+
+/**
  * Valores del gasto que paga una ocurrencia: su monto, su categoría, la
  * cuenta por defecto si sigue activa y "Pago {nombre} · {periodo}". Sin fecha:
  * el pago ocurre hoy y la ocurrencia conserva su vencimiento.

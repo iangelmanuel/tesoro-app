@@ -421,6 +421,44 @@ su origen, que valida igual que al registrar y recalcula el saldo:
   registra en dnd-kit: deshabilitada, recibía `aria-disabled` y HeroUI le
   quitaba los clics, así que su menú no abría.
 
+### Duplicar movimientos (SPEC 49)
+
+**Duplicar** abre el diálogo de **crear** prellenado con los datos de un
+movimiento. No escribe nada: el usuario revisa, cambia lo que quiera y
+guarda con el mismo flujo, validaciones y toast que al crear. Cancelar no
+crea nada y el original no cambia.
+
+- **Se copia:** tipo, monto, categoría, cuenta, descripción, nota y
+  contraparte (Empresa). En deudas, además, el tipo (pago, abono, compra,
+  avance o cuota de manejo) y las cuotas de una compra o avance.
+- **No se copia:** la fecha (va hoy), la hora (vacía), el n.º de factura
+  (vacío) y el orden dentro del día. En deudas tampoco la categoría: crear
+  asigna la de siempre.
+- **Cuenta o categoría archivada:** el campo queda vacío y el usuario elige
+  otra (`activeAccountId`).
+- **Nunca se paga dos veces el mismo periodo:**
+
+  | Original                   | El duplicado                                                                                          |
+  | -------------------------- | ----------------------------------------------------------------------------------------------------- |
+  | Pago de gasto fijo         | Paga la primera ocurrencia sin pagar posterior a la del original (`nextUnpaidOccurrence`)             |
+  | Cobro de ingreso fijo      | Lleva el mismo ingreso fijo y se reparte con la regla de SPEC 38 (periodo abierto más antiguo)        |
+  | Cobro de Me deben mensual  | Abre **Una cuota** con la cuota pendiente siguiente a la última que cubrió (`nextPendingInstallment`) |
+  | Pago de préstamo o tarjeta | Pago nuevo de la misma deuda; con la cuota del ciclo cubierta, un aviso que no bloquea                |
+
+  En gasto fijo e ingreso fijo la descripción nombra el periodo que se paga
+  ("Pago Arriendo · diciembre"), no el del original. El Me deben prellena el
+  monto con lo que le falta a esa cuota.
+
+- **Sin periodo pendiente** (el fijo terminó, todo está cubierto o el Me
+  deben no tiene cuotas): en el Sheet Duplicar no aparece; en Movimientos la
+  acción responde con un toast y no abre el diálogo. El periodo destino de
+  Movimientos se resuelve en el servidor (`loadTransactionDuplicate`,
+  `loadReceivableDuplicate`); los pagos de deuda se leen con
+  `loadDebtEntryEditor(id, { cycle: true })`.
+- **No aparece:** en ajustes de cuenta o de deuda (se corrigen con
+  **Actualizar saldo**), en deudas o metas que no están activas y en espacios
+  marcados para borrar.
+
 ### Fecha, descripción y cuenta al pagar (SPEC 41)
 
 Aplica al pagar un gasto fijo (tab Gasto fijo, **Marcar como pagado** de

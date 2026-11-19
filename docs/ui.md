@@ -705,7 +705,9 @@ Piezas en `src/components/dashboard/mobile/`:
 - **Acciones por fila (SPEC 20):** `RowActions`
   (`src/components/dashboard/row-actions.tsx`). Desde 768 px, un solo botón de
   tres puntos (`aria-label="Acciones de <fila>"`) abre un `Dropdown` con las
-  opciones; las destructivas van al final con tono `danger`. En móvil las
+  opciones; las destructivas van al final con tono `danger`. Orden fijo:
+  **Editar**, **Duplicar** (ícono `Copy`, SPEC 49) y **Eliminar**; Duplicar
+  abre el diálogo de crear prellenado, controlado igual que Editar. En móvil las
   mismas opciones son botones de ícono en línea de 44 px. Como el menú no
   puede alojar el trigger de un diálogo, los diálogos de edición se controlan
   con `open` / `onOpenChange` y la confirmación de borrado es `DeleteDialog`

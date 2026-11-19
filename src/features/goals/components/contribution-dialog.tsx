@@ -51,6 +51,17 @@ export type EditableContribution = Pick<
   "id" | "amount" | "occurred_on" | "occurred_time" | "note"
 >
 
+/**
+ * Prellenado de un aporte o retiro nuevo (Duplicar, SPEC 49). El monto va
+ * sin signo: el tipo lo da `kind`. Sin fecha ni hora: ocurre hoy. Una cuenta
+ * archivada llega como null
+ */
+export interface ContributionInitialValues {
+  amount: number
+  account_id: string | null
+  note: string
+}
+
 interface ContributionDialogProps {
   /** Espacio de la meta (para crear una cuenta desde el select) */
   workspaceId: string
@@ -62,6 +73,8 @@ interface ContributionDialogProps {
   kind?: ContributionKind
   /** Si llega, el diálogo edita este aporte */
   contribution?: EditableContribution
+  /** Prellenado de un aporte nuevo; se ignora al editar */
+  initialValues?: ContributionInitialValues
   /** Cuentas con saldo para el aporte; solo al registrar */
   accounts?: PaymentAccountOption[]
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
@@ -76,6 +89,7 @@ export function ContributionDialog({
   goals,
   kind = "deposit",
   contribution,
+  initialValues,
   accounts = [],
   trigger,
   open: controlledOpen,
@@ -121,6 +135,7 @@ export function ContributionDialog({
                 goals={goals}
                 initialKind={initialKind}
                 contribution={contribution}
+                initialValues={isEditing ? undefined : initialValues}
                 accounts={accounts}
                 onSaved={() => setOpen(false)}
                 onCancel={() => setOpen(false)}
@@ -139,6 +154,7 @@ interface ContributionFormProps {
   goals?: GoalOption[]
   initialKind: ContributionKind
   contribution?: EditableContribution
+  initialValues?: ContributionInitialValues
   accounts: PaymentAccountOption[]
   onSaved: () => void
   onCancel: () => void
@@ -150,6 +166,7 @@ function ContributionForm({
   goals,
   initialKind,
   contribution,
+  initialValues,
   accounts,
   onSaved,
   onCancel
@@ -192,7 +209,11 @@ function ContributionForm({
   const [amountText, setAmountText] = useState(
     () =>
       values?.amount ??
-      (contribution ? AMOUNT_FORMAT.format(Math.abs(contribution.amount)) : "")
+      (contribution
+        ? AMOUNT_FORMAT.format(Math.abs(contribution.amount))
+        : initialValues
+          ? AMOUNT_FORMAT.format(Math.abs(initialValues.amount))
+          : "")
   )
 
   return (
@@ -325,7 +346,9 @@ function ContributionForm({
       <TextField
         name="note"
         maxLength={120}
-        defaultValue={values?.note ?? contribution?.note ?? ""}
+        defaultValue={
+          values?.note ?? contribution?.note ?? initialValues?.note ?? ""
+        }
         isInvalid={Boolean(errors?.note)}
         validationBehavior="aria"
         className="flex flex-col gap-2"
@@ -351,6 +374,7 @@ function ContributionForm({
             kind === "withdrawal" ? "Cuenta que recibe" : "Cuenta que paga"
           }
           direction={kind === "withdrawal" ? "in" : "out"}
+          defaultAccountId={initialValues?.account_id ?? ""}
         />
       )}
 

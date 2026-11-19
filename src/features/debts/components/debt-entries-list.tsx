@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { Tooltip, cn, toast } from "@heroui/react"
-import { Link2, Pencil, Receipt, Trash2 } from "lucide-react"
+import { Copy, Link2, Pencil, Receipt, Trash2 } from "lucide-react"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import { RowActions } from "@/components/dashboard/row-actions"
@@ -18,7 +18,17 @@ import { formatCurrency, formatDate, formatTime } from "@/libs/format"
 import { deleteEntry, moveDebtEntry } from "../actions"
 import { installmentLabel, installmentProgress } from "../installments"
 import type { Debt, DebtEntry } from "../queries"
+import {
+  type CollectableReceivable,
+  lastCoveredPeriod,
+  nextPendingInstallment
+} from "../receivable-collect"
 import { DebtEntryDialog } from "./debt-entry-dialog"
+import {
+  DuplicateDebtEntryDialog,
+  canDuplicateDebtEntry
+} from "./duplicate-debt-entry-dialog"
+import { ReceivableCollectDialog } from "./receivable-collect-form"
 
 /**
  * Lo que el historial usa de la deuda. Día de pago, corte y próximo
@@ -45,6 +55,16 @@ interface DebtEntriesListProps {
   /** Categorías del espacio, para el movimiento de un pago (SPEC 42) */
   categories?: Category[]
   currency: string
+  /**
+   * La cuota del ciclo actual ya está cubierta: el duplicado de un pago
+   * muestra un aviso (SPEC 49)
+   */
+  cycleCovered?: boolean
+  /**
+   * Me deben mensual: sus cuotas, para que el duplicado de un cobro cubra la
+   * siguiente pendiente (SPEC 49)
+   */
+  collectable?: CollectableReceivable
   /** Deudas pagadas, cobradas o archivadas: sin editar ni eliminar */
   readOnly?: boolean
 }
@@ -55,6 +75,8 @@ export function DebtEntriesList({
   accounts,
   categories,
   currency,
+  cycleCovered = false,
+  collectable,
   readOnly
 }: DebtEntriesListProps) {
   // Orden manual dentro del día (SPEC 45), como en Movimientos
@@ -89,6 +111,8 @@ export function DebtEntriesList({
             accounts={accounts}
             categories={categories}
             currency={currency}
+            cycleCovered={cycleCovered}
+            collectable={collectable}
             readOnly={readOnly}
             sortable={sortable.configFor(entry)}
           />
@@ -104,6 +128,8 @@ function EntryRow({
   accounts,
   categories,
   currency,
+  cycleCovered,
+  collectable,
   readOnly,
   sortable
 }: {
@@ -112,10 +138,13 @@ function EntryRow({
   accounts?: PaymentAccountOption[]
   categories?: Category[]
   currency: string
+  cycleCovered: boolean
+  collectable?: CollectableReceivable
   readOnly?: boolean
   sortable?: SortableConfig
 }) {
   const [editing, setEditing] = useState(false)
+  const [duplicating, setDuplicating] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [, startTransition] = useTransition()
   const isPayment = entry.kind === "payment"
@@ -124,6 +153,16 @@ function EntryRow({
   // Compra o avance (SPEC 42): con cuenta es un avance; sin ella, una compra
   const isPurchase = isAdvance && entry.payment_account_id === null
   const label = entryLabel(debt, entry)
+  // Cobro de un Me deben mensual: el duplicado cubre la cuota pendiente
+  // siguiente a la última que cubrió el original; sin ella no se duplica
+  const isMonthlyCollect =
+    collectable?.schedule === "monthly" && entry.kind === "payment"
+  const duplicatePeriod = isMonthlyCollect
+    ? nextPendingInstallment(collectable, lastCoveredPeriod(entry))
+    : null
+  const canDuplicate = isMonthlyCollect
+    ? duplicatePeriod !== null
+    : canDuplicateDebtEntry(debt, entry)
   // Los ajustes no mueven cuentas. El abono de una cuenta por cobrar y el
   // avance entran a la cuenta; el resto sale de ella.
   const accountText = isPurchase
@@ -219,6 +258,17 @@ function EntryRow({
                     icon: <Pencil className="size-4" />,
                     onAction: () => setEditing(true)
                   },
+                  // Los ajustes se corrigen con Actualizar saldo (SPEC 49)
+                  ...(canDuplicate
+                    ? [
+                        {
+                          id: "duplicate",
+                          label: "Duplicar",
+                          icon: <Copy className="size-4" />,
+                          onAction: () => setDuplicating(true)
+                        }
+                      ]
+                    : []),
                   {
                     id: "delete",
                     label: "Eliminar",
@@ -239,6 +289,24 @@ function EntryRow({
                   currency={currency}
                   open
                   onOpenChange={setEditing}
+                />
+              )}
+              {duplicating && collectable && duplicatePeriod && (
+                <ReceivableCollectDialog
+                  workspaceId={entry.workspace_id}
+                  receivable={collectable}
+                  periodOn={duplicatePeriod.period_on}
+                  accounts={accounts ?? []}
+                  open
+                  onOpenChange={setDuplicating}
+                />
+              )}
+              {duplicating && !isMonthlyCollect && (
+                <DuplicateDebtEntryDialog
+                  workspaceId={entry.workspace_id}
+                  data={{ entry, debt, cycleCovered }}
+                  accounts={accounts ?? []}
+                  onOpenChange={setDuplicating}
                 />
               )}
               <DeleteDialog

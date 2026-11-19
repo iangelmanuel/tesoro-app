@@ -31,6 +31,7 @@ import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { deleteEntry } from "@/features/debts/actions"
 import { DebtEntryDialog } from "@/features/debts/components/debt-entry-dialog"
+import { DuplicateDebtEntryLoader } from "@/features/debts/components/duplicate-debt-entry-dialog"
 import { deleteContribution } from "@/features/goals/actions"
 import { ContributionDialog } from "@/features/goals/components/contribution-dialog"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
@@ -824,6 +825,20 @@ function AccountMovementRow({
                 />
               )
             }
+            renderDuplicate={
+              // Pago o avance antiguo de tarjeta: solo con la deuda activa
+              entry.parent_active
+                ? (dialog) =>
+                    dialog.open && (
+                      <DuplicateDebtEntryLoader
+                        workspaceId={workspaceId}
+                        entryId={entry.id}
+                        accounts={accounts}
+                        onOpenChange={dialog.onOpenChange}
+                      />
+                    )
+                : undefined
+            }
           />
         )}
       </Table.Cell>
@@ -876,6 +891,21 @@ function LinkedPaymentActions({
             onOpenChange={dialog.onOpenChange}
           />
         )
+      }
+      renderDuplicate={
+        // Solo con la deuda activa. El Me deben mensual va por su diálogo
+        entry.debt_status === "active" &&
+        !(entry.debt_kind === "receivable" && entry.debt_schedule === "monthly")
+          ? (dialog) =>
+              dialog.open && (
+                <DuplicateDebtEntryLoader
+                  workspaceId={entry.workspace_id}
+                  entryId={entry.id}
+                  accounts={accounts}
+                  onOpenChange={dialog.onOpenChange}
+                />
+              )
+          : undefined
       }
     />
   )

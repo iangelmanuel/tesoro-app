@@ -1,7 +1,8 @@
 import { NO_ACCOUNT } from "@/features/accounts/constants"
 import { TRANSACTION_TYPES } from "@/features/categories/constants"
+import type { DebtStatus } from "@/features/debts/calculations"
 import type { DebtEntry } from "@/features/debts/queries"
-import type { DebtKind } from "@/features/debts/schemas"
+import type { DebtKind, ReceivableSchedule } from "@/features/debts/schemas"
 import type { IncomeAllocation } from "@/features/recurring-incomes/types"
 import { createClient } from "@/libs/supabase/server"
 import type { Database } from "@/types/database"
@@ -63,6 +64,9 @@ export type LinkedDebtEntry = Pick<
   | "is_extra_payment"
 > & {
   debt_kind: DebtKind
+  /** Estado y tipo de cobro de la deuda: deciden si se duplica (SPEC 49) */
+  debt_status: DebtStatus
+  debt_schedule: ReceivableSchedule | null
 }
 
 /** Hora y posición manual dentro del día, comunes a toda fila de Movimientos */
@@ -262,7 +266,7 @@ async function getTransactionLinks(ids: string[]) {
   const { data, error } = await supabase
     .from("transactions")
     .select(
-      "id, recurring_expense_id, recurring_income_id, recurring_income_allocations(due_on, amount), debt_entries(id, debt_id, workspace_id, kind, amount, occurred_on, occurred_time, note, transaction_id, is_extra_payment, debts(kind))"
+      "id, recurring_expense_id, recurring_income_id, recurring_income_allocations(due_on, amount), debt_entries(id, debt_id, workspace_id, kind, amount, occurred_on, occurred_time, note, transaction_id, is_extra_payment, debts(kind, status, schedule))"
     )
     .in("id", ids)
 
@@ -293,7 +297,9 @@ async function getTransactionLinks(ids: string[]) {
             note: entry.note,
             transaction_id: entry.transaction_id,
             is_extra_payment: entry.is_extra_payment,
-            debt_kind: entry.debts.kind
+            debt_kind: entry.debts.kind,
+            debt_status: entry.debts.status,
+            debt_schedule: entry.debts.schedule
           }
         : null
     })

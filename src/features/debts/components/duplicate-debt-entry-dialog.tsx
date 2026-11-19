@@ -1,8 +1,10 @@
 "use client"
 
+import { useEffect, useEffectEvent, useState } from "react"
+import { toast } from "@heroui/react"
 import { activeAccountId } from "@/features/accounts/active-account"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
-import type { EntryEditorDebt } from "../actions"
+import { type EntryEditorDebt, loadDebtEntryEditor } from "../actions"
 import { entryTypeOf } from "../entry-types"
 import type { DebtEntry } from "../queries"
 import { PaymentDialog, type PaymentInitialValues } from "./payment-dialog"
@@ -81,6 +83,63 @@ export function DuplicateDebtEntryDialog({
       accounts={accounts}
       initialValues={initialValues}
       open
+      onOpenChange={onOpenChange}
+    />
+  )
+}
+
+const CANNOT_DUPLICATE = "Este movimiento no se puede duplicar"
+
+/**
+ * Duplicar desde Movimientos (SPEC 49), que no tiene el abono completo: lo
+ * lee con loadDebtEntryEditor, igual que Editar (SPEC 42), con el ciclo de la
+ * deuda para el aviso de cuota cubierta. Si no se puede, toast y no abre nada
+ */
+export function DuplicateDebtEntryLoader({
+  workspaceId,
+  entryId,
+  accounts,
+  onOpenChange
+}: {
+  workspaceId: string
+  entryId: string
+  accounts: PaymentAccountOption[]
+  onOpenChange: (open: boolean) => void
+}) {
+  const [data, setData] = useState<DebtEntryDuplicateData | null>(null)
+  const onLoadError = useEffectEvent((message: string) => {
+    toast.danger(message)
+    onOpenChange(false)
+  })
+
+  useEffect(() => {
+    let active = true
+    loadDebtEntryEditor(entryId, { cycle: true }).then((result) => {
+      if (!active) return
+      if ("error" in result) {
+        onLoadError(result.error)
+      } else if (!canDuplicateDebtEntry(result.debt, result.entry)) {
+        onLoadError(CANNOT_DUPLICATE)
+      } else {
+        setData({
+          entry: result.entry,
+          debt: result.debt,
+          cycleCovered: result.debt.cycle_covered === true
+        })
+      }
+    })
+    return () => {
+      active = false
+    }
+  }, [entryId])
+
+  if (!data) return null
+
+  return (
+    <DuplicateDebtEntryDialog
+      workspaceId={workspaceId}
+      data={data}
+      accounts={accounts}
       onOpenChange={onOpenChange}
     />
   )

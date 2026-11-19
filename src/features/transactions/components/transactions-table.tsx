@@ -23,6 +23,7 @@ import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { RowActions } from "@/components/dashboard/row-actions"
 import { ScrollTable } from "@/components/dashboard/scroll-table"
 import { deleteAdjustment, deleteTransfer } from "@/features/accounts/actions"
+import { activeAccountId } from "@/features/accounts/active-account"
 import { AccountLabel } from "@/features/accounts/components/account-select"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
@@ -665,6 +666,30 @@ function TransferRow({
               onOpenChange={dialog.onOpenChange}
             />
           )}
+          renderDuplicate={(dialog) =>
+            dialog.open && (
+              <TransferDialog
+                workspaceId={workspaceId}
+                accounts={accounts}
+                // Mismas cuentas (si siguen activas), monto y nota; fecha de
+                // hoy y hora vacía (SPEC 49)
+                initialValues={{
+                  from_account_id: activeAccountId(
+                    accounts,
+                    transfer.from_account_id
+                  ),
+                  to_account_id: activeAccountId(
+                    accounts,
+                    transfer.to_account_id
+                  ),
+                  amount: transfer.amount,
+                  note: transfer.note ?? ""
+                }}
+                open
+                onOpenChange={dialog.onOpenChange}
+              />
+            )
+          }
         />
       </Table.Cell>
     </SortableRow>

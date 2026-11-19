@@ -29,6 +29,17 @@ export interface TransferValues {
   note: string | null
 }
 
+/**
+ * Prellenado de un traspaso nuevo (Duplicar, SPEC 49). Sin fecha ni hora: el
+ * traspaso nuevo ocurre hoy. Una cuenta archivada llega como null
+ */
+export interface TransferInitialValues {
+  from_account_id: string | null
+  to_account_id: string | null
+  amount: number
+  note: string
+}
+
 interface TransferDialogProps {
   /** Espacio del traspaso */
   workspaceId: string
@@ -36,6 +47,8 @@ interface TransferDialogProps {
   accounts: AccountOption[]
   /** Si llega, el diálogo edita este traspaso */
   transfer?: TransferValues
+  /** Prellenado de un traspaso nuevo; se ignora al editar */
+  initialValues?: TransferInitialValues
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
   trigger?: React.ReactNode
   open?: boolean
@@ -46,6 +59,7 @@ export function TransferDialog({
   workspaceId,
   accounts,
   transfer,
+  initialValues,
   trigger,
   open: controlledOpen,
   onOpenChange
@@ -79,6 +93,7 @@ export function TransferDialog({
                 workspaceId={workspaceId}
                 accounts={accounts}
                 transfer={transfer}
+                initialValues={isEditing ? undefined : initialValues}
                 onSaved={() => setOpen(false)}
                 onCancel={() => setOpen(false)}
               />
@@ -94,6 +109,7 @@ export interface TransferFormProps {
   workspaceId: string
   accounts: AccountOption[]
   transfer?: TransferValues
+  initialValues?: TransferInitialValues
   onSaved: () => void
   onCancel: () => void
 }
@@ -103,12 +119,17 @@ export function TransferForm({
   workspaceId,
   accounts,
   transfer,
+  initialValues,
   onSaved,
   onCancel
 }: TransferFormProps) {
   const isEditing = transfer !== undefined
-  const [fromId, setFromId] = useState(transfer?.from_account_id ?? "")
-  const [toId, setToId] = useState(transfer?.to_account_id ?? "")
+  const [fromId, setFromId] = useState(
+    transfer?.from_account_id ?? initialValues?.from_account_id ?? ""
+  )
+  const [toId, setToId] = useState(
+    transfer?.to_account_id ?? initialValues?.to_account_id ?? ""
+  )
   const [occurredOn, setOccurredOn] = useState(
     () => transfer?.occurred_on ?? todayISO()
   )
@@ -183,7 +204,10 @@ export function TransferForm({
         name="amount"
         inputMode="decimal"
         autoComplete="off"
-        defaultValue={values?.amount ?? amountInput(transfer?.amount)}
+        defaultValue={
+          values?.amount ??
+          amountInput(transfer?.amount ?? initialValues?.amount)
+        }
         isRequired
         isInvalid={Boolean(errors?.amount)}
         validationBehavior="aria"
@@ -217,7 +241,9 @@ export function TransferForm({
       <TextField
         name="note"
         maxLength={120}
-        defaultValue={values?.note ?? transfer?.note ?? ""}
+        defaultValue={
+          values?.note ?? transfer?.note ?? initialValues?.note ?? ""
+        }
         isInvalid={Boolean(errors?.note)}
         validationBehavior="aria"
         className="flex flex-col gap-2"

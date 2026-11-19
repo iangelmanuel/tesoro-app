@@ -1,13 +1,12 @@
 "use client"
 
-import { useActionState, useEffect, useRef, useState } from "react"
+import { useActionState, useEffect, useId, useRef, useState } from "react"
 import type { Route } from "next"
 import Link from "next/link"
 import {
   Button,
   FieldError,
   Input,
-  Label,
   Modal,
   TextArea,
   TextField,
@@ -20,6 +19,7 @@ import {
 import { AccountSelectField } from "@/components/forms/account-select-field"
 import { CategorySelectField } from "@/components/forms/category-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import { FieldLabel } from "@/components/forms/field-label"
 import { TimePickerField } from "@/components/forms/time-picker-field"
 import { selectableAccounts } from "@/features/accounts/components/account-select"
 import {
@@ -71,15 +71,15 @@ const AMOUNT_FORMAT = new Intl.NumberFormat("es-CO", {
 // Textos que cambian entre Personal y Empresa
 const COPY = {
   personal: {
-    expense: "Gasto",
-    income: "Ingreso",
-    description: "Registra un ingreso o un gasto de tu espacio Personal.",
+    expense: "Salida",
+    income: "Entrada",
+    description: "Registra una entrada o una salida de tu espacio Personal.",
     placeholder: { expense: "Mercado de la semana", income: "Salario" }
   },
   business: {
-    expense: "Costo o gasto",
-    income: "Venta",
-    description: "Registra una venta o un costo o gasto de tu empresa.",
+    expense: "Salida",
+    income: "Entrada",
+    description: "Registra una entrada o una salida de tu empresa.",
     placeholder: { expense: "Compra de insumos", income: "Venta del día" }
   }
 } as const
@@ -445,6 +445,7 @@ function TransactionForm({
     ? incomeSources.find((source) => source.id === incomeSourceId)
     : undefined
   const showTransfer = !isEditing && type === "expense" && !isBusiness
+  const typeLabelId = useId()
 
   const expenseTab = (
     <ToggleButton
@@ -467,68 +468,76 @@ function TransactionForm({
   // Traspaso, Gasto fijo, Deuda, Me deben y Meta. Empresa: Venta, Costo o
   // gasto y Traspaso
   const typeToggle = hideTypeToggle ? null : (
-    // Con los tabs de pago son 7 opciones. Desde sm caben en el diálogo; en
-    // un teléfono angosto se desplazan en horizontal, sin barra visible
-    <div
-      ref={tabsRef}
-      className={cn(
-        paymentTabs &&
-          "-mx-1 [scrollbar-width:none] overflow-x-auto px-1 [&::-webkit-scrollbar]:hidden"
-      )}
-    >
-      <ToggleButtonGroup
-        selectionMode="single"
-        disallowEmptySelection
-        selectedKeys={[panel ?? type]}
-        onSelectionChange={handleTypeChange}
-        isDisabled={isLinked}
-        fullWidth
-        aria-label="Tipo de movimiento"
-        className={cn(paymentTabs && "w-max min-w-full")}
+    <div className="flex flex-col gap-2">
+      <FieldLabel
+        id={typeLabelId}
+        help="transaction.type"
       >
-        {isBusiness ? incomeTab : expenseTab}
-        {isBusiness ? expenseTab : incomeTab}
-        {canTransfer && (
-          <ToggleButton
-            id="transfer"
-            className="flex-1 whitespace-nowrap"
-          >
-            Traspaso
-          </ToggleButton>
+        Tipo
+      </FieldLabel>
+      {/* Con los tabs de pago son 7 opciones. Desde sm caben en el diálogo; en
+        un teléfono angosto se desplazan en horizontal, sin barra visible */}
+      <div
+        ref={tabsRef}
+        className={cn(
+          paymentTabs &&
+            "-mx-1 [scrollbar-width:none] overflow-x-auto px-1 [&::-webkit-scrollbar]:hidden"
         )}
-        {paymentTabs && (
-          <ToggleButton
-            id="recurring"
-            className="flex-1 whitespace-nowrap"
-          >
-            Gasto fijo
-          </ToggleButton>
-        )}
-        {paymentTabs && (
-          <ToggleButton
-            id="debt_payment"
-            className="flex-1 whitespace-nowrap"
-          >
-            Deuda
-          </ToggleButton>
-        )}
-        {paymentTabs && (
-          <ToggleButton
-            id="receivable"
-            className="flex-1 whitespace-nowrap"
-          >
-            Me deben
-          </ToggleButton>
-        )}
-        {paymentTabs && (
-          <ToggleButton
-            id="goal"
-            className="flex-1 whitespace-nowrap"
-          >
-            Meta
-          </ToggleButton>
-        )}
-      </ToggleButtonGroup>
+      >
+        <ToggleButtonGroup
+          selectionMode="single"
+          disallowEmptySelection
+          selectedKeys={[panel ?? type]}
+          onSelectionChange={handleTypeChange}
+          isDisabled={isLinked}
+          fullWidth
+          aria-labelledby={typeLabelId}
+          className={cn(paymentTabs && "w-max min-w-full")}
+        >
+          {isBusiness ? incomeTab : expenseTab}
+          {isBusiness ? expenseTab : incomeTab}
+          {canTransfer && (
+            <ToggleButton
+              id="transfer"
+              className="flex-1 whitespace-nowrap"
+            >
+              Traspaso
+            </ToggleButton>
+          )}
+          {paymentTabs && (
+            <ToggleButton
+              id="recurring"
+              className="flex-1 whitespace-nowrap"
+            >
+              Gasto fijo
+            </ToggleButton>
+          )}
+          {paymentTabs && (
+            <ToggleButton
+              id="debt_payment"
+              className="flex-1 whitespace-nowrap"
+            >
+              Deuda
+            </ToggleButton>
+          )}
+          {paymentTabs && (
+            <ToggleButton
+              id="receivable"
+              className="flex-1 whitespace-nowrap"
+            >
+              Me deben
+            </ToggleButton>
+          )}
+          {paymentTabs && (
+            <ToggleButton
+              id="goal"
+              className="flex-1 whitespace-nowrap"
+            >
+              Meta
+            </ToggleButton>
+          )}
+        </ToggleButtonGroup>
+      </div>
     </div>
   )
 
@@ -537,7 +546,7 @@ function TransactionForm({
       <div className="flex flex-col gap-4">
         {typeToggle}
         <p className="text-sm text-muted">
-          Mueve plata entre tus cuentas. No cuenta como ingreso ni gasto.
+          Mueve plata entre tus cuentas. No cuenta como entrada ni salida.
         </p>
         <TransferForm
           workspaceId={workspaceId}
@@ -711,7 +720,7 @@ function TransactionForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Monto</Label>
+        <FieldLabel help="common.amount">Monto</FieldLabel>
         <Input placeholder="0" />
         <FieldError>{errors?.amount?.[0]}</FieldError>
       </TextField>
@@ -732,6 +741,7 @@ function TransactionForm({
         <DatePickerField
           name="occurred_on"
           label="Fecha"
+          help="common.date"
           value={date}
           onChange={setDate}
           error={errors?.occurred_on?.[0]}
@@ -740,6 +750,7 @@ function TransactionForm({
 
         <TimePickerField
           name="occurred_time"
+          help="common.time"
           value={time}
           onChange={setTime}
           error={errors?.occurred_time?.[0]}
@@ -753,6 +764,7 @@ function TransactionForm({
         categories={options}
         workspaceId={workspaceId}
         type={type}
+        help="common.category"
         error={errors?.category_id?.[0]}
       >
         {initialCategoryUnavailable && !categoryId && (
@@ -785,6 +797,7 @@ function TransactionForm({
           workspaceId={workspaceId}
           name="account_id"
           label="Cuenta"
+          help="common.account"
           value={accountId}
           onChange={setAccountId}
           accounts={selectableAccounts(accounts, transaction?.account_id)}
@@ -803,7 +816,7 @@ function TransactionForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Descripción</Label>
+        <FieldLabel help="common.description">Descripción</FieldLabel>
         <Input placeholder={copy.placeholder[type]} />
         <FieldError>{errors?.description?.[0]}</FieldError>
       </TextField>
@@ -821,11 +834,11 @@ function TransactionForm({
             validationBehavior="aria"
             className="flex flex-col gap-2"
           >
-            <Label>
+            <FieldLabel help="transaction.counterparty">
               {type === "income"
                 ? "Cliente (opcional)"
                 : "Proveedor (opcional)"}
-            </Label>
+            </FieldLabel>
             <Input />
             <FieldError>{errors?.counterparty?.[0]}</FieldError>
           </TextField>
@@ -839,7 +852,9 @@ function TransactionForm({
             validationBehavior="aria"
             className="flex flex-col gap-2"
           >
-            <Label>N.º de factura (opcional)</Label>
+            <FieldLabel help="transaction.invoice">
+              N.º de factura (opcional)
+            </FieldLabel>
             <Input placeholder="FV-001" />
             <FieldError>{errors?.invoice_ref?.[0]}</FieldError>
           </TextField>
@@ -854,7 +869,7 @@ function TransactionForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Nota (opcional)</Label>
+        <FieldLabel help="common.note">Nota (opcional)</FieldLabel>
         <TextArea rows={3} />
         <FieldError>{errors?.note?.[0]}</FieldError>
       </TextField>

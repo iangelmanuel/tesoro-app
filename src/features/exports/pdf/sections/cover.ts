@@ -13,7 +13,7 @@ function intro(ctx: PdfContext) {
     return html`<p>
         Este reporte reúne la operación de
         <strong>${ctx.workspaceName}</strong> en el periodo: el
-        <strong>resumen</strong> de ventas, costos y utilidad, las
+        <strong>resumen</strong> de entradas, salidas y utilidad, las
         <strong>gráficas</strong> del periodo, el <strong>score</strong> del
         negocio con sus recomendaciones y el
         <strong>detalle de cada mes</strong>.
@@ -26,7 +26,7 @@ function intro(ctx: PdfContext) {
 
   return html`<p>
       Este reporte reúne tus finanzas personales del periodo: el
-      <strong>resumen</strong> de ingresos, gastos y ahorro, las
+      <strong>resumen</strong> de entradas, salidas y ahorro, las
       <strong>gráficas</strong> del periodo, tu
       <strong>score de salud financiera</strong> con sus recomendaciones y el
       <strong>detalle de cada mes</strong>.

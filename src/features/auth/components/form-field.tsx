@@ -1,4 +1,6 @@
-import { FieldError, Input, Label, TextField } from "@heroui/react"
+import { FieldError, Input, TextField } from "@heroui/react"
+import { FieldLabel } from "@/components/forms/field-label"
+import type { FieldHelpKey } from "@/config/help"
 
 interface FormFieldProps {
   name: string
@@ -11,6 +13,8 @@ interface FormFieldProps {
   defaultValue?: string
   maxLength?: number
   required?: boolean
+  /** Ayuda del (?) junto a la etiqueta (FIELD_HELP) */
+  help?: FieldHelpKey
 }
 
 // Campo de texto de HeroUI para formularios con useActionState. La
@@ -25,7 +29,8 @@ export function FormField({
   placeholder,
   defaultValue,
   maxLength,
-  required
+  required,
+  help
 }: FormFieldProps) {
   const error = errors?.[0]
 
@@ -41,7 +46,7 @@ export function FormField({
       validationBehavior="aria"
       className="flex flex-col gap-2"
     >
-      <Label>{label}</Label>
+      <FieldLabel help={help}>{label}</FieldLabel>
       <Input placeholder={placeholder} />
       <FieldError>{error}</FieldError>
     </TextField>

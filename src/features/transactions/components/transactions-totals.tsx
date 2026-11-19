@@ -25,7 +25,7 @@ export function TransactionsTotals({
     >
       <StatCard
         size="sm"
-        label="Ingresos"
+        label="Entradas"
         value={totals.income}
         previous={previous?.income}
         trend="higher-is-better"
@@ -34,7 +34,7 @@ export function TransactionsTotals({
       />
       <StatCard
         size="sm"
-        label="Gastos"
+        label="Salidas"
         value={totals.expense}
         previous={previous?.expense}
         trend="lower-is-better"

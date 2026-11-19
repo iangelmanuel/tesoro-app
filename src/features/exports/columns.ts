@@ -30,10 +30,8 @@ const BUSINESS: MovementColumn[] = [
 ]
 
 const KIND_TONES: Record<ExportMovementKind, AmountTone> = {
-  Ingreso: "income",
-  Venta: "income",
-  Gasto: "expense",
-  "Costo o gasto": "expense",
+  Entrada: "income",
+  Salida: "expense",
   Traspaso: "transfer"
 }
 

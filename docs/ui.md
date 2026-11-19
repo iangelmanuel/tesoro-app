@@ -173,7 +173,7 @@ estos solo agregan lo que HeroUI no trae.
 | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `app-sidebar.tsx`, `sidebar/`                                              | Aside: logo → tabs Personal/Empresa → navegación por grupos y ancho ajustable (SPEC 31); abajo solo el menú de cuenta (`user-menu.tsx`, con Ayuda y tema dentro, SPEC 40)                                                                                                                                                                                                                                                    |
 | `dashboard-title.tsx`                                                      | Único `<h1>` de la página, en el header. Saludo según la hora de Bogotá en el Resumen de Personal                                                                                                                                                                                                                                                                                                                            |
-| `quick-actions.tsx`, `quick-actions-menu.tsx`, `quick-actions-context.tsx` | Accesos del header: "Registrar movimiento" (tabs Gasto, Ingreso, Traspaso, Gasto fijo, Deuda, Me deben y Meta, SPEC 41) + "Más" (aporte, pago, importar, Categorías y Verificar) en Personal; "Registrar operación" + "Más" (Categorías y Verificar) en Empresa                                                                                                                                                              |
+| `quick-actions.tsx`, `quick-actions-menu.tsx`, `quick-actions-context.tsx` | Accesos del header: "Registrar movimiento" (tabs Salida, Entrada, Traspaso, Gasto fijo, Deuda, Me deben y Meta, SPEC 41 y 47) + "Más" (aporte, pago, importar, Categorías y Verificar) en Personal; "Registrar movimiento" + "Más" (Categorías y Verificar) en Empresa                                                                                                                                                       |
 | `stat-card.tsx`                                                            | KPI: etiqueta, valor y badge de variación con color por significado (`trend`); `<dl>` accesible                                                                                                                                                                                                                                                                                                                              |
 | `card-heading.tsx`                                                         | Cabecera de tarjeta: `<h2>`, ayuda (i) opcional y enlace discreto con chevron; `control` para el selector de mes                                                                                                                                                                                                                                                                                                             |
 | `help-hint.tsx`                                                            | Ícono (i) con `Popover`; los textos viven en `src/config/help.ts` (`HELP`)                                                                                                                                                                                                                                                                                                                                                   |
@@ -184,6 +184,40 @@ estos solo agregan lo que HeroUI no trae.
 | `detail-sheet.tsx`                                                         | `DetailSheet`, `DetailSection`, `DetailStats` y `DetailSheetSkeleton` (SPEC 40): base de los cinco paneles laterales de detalle                                                                                                                                                                                                                                                                                              |
 | `row-actions.tsx`, `delete-dialog.tsx`, `scroll-table.tsx`                 | Acciones de fila (menú en escritorio, botones en móvil), confirmación de borrado controlada y contenedor de tabla con scroll horizontal y columna de acciones fija (SPEC 20)                                                                                                                                                                                                                                                 |
 | `surface.ts`                                                               | Clases de superficie sin borde: `SURFACE_LIST`/`SURFACE_ROW` (lista sobre el fondo), `CARD_LIST`/`CARD_ROW` (lista dentro de una `Card`), `SURFACE_ITEM` (tarjeta de una grilla) y `SURFACE_NOTE`. Nunca `rounded-xl border` ni `border-dashed`. También `CONTROL_SURFACE` y `CONTROL_BUTTON` (controles de barra, ver Móvil). `SURFACE_ITEM_CLICKABLE`, `CARD_LINK` y `CARD_OVER_LINK`: tarjeta clicable completa (SPEC 25) |
+
+### Ayuda por campo (SPEC 47)
+
+Cada campo de formulario con etiqueta visible explica qué escribir con un
+ícono (?) a la derecha de la etiqueta. Es distinto de `HelpHint`: el (i)
+explica un concepto con un clic; el (?) dice qué poner en un campo.
+
+| Pieza                                                 | Qué hace                                                                                                                                                                                                                                                       |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FieldLabel` (`src/components/forms/field-label.tsx`) | `Label` + (?). `<FieldLabel help="debt.creditLimit">Cupo</FieldLabel>`. Sin `help` es un `Label` normal. `helpLabel` nombra la ayuda cuando la etiqueta no es texto plano                                                                                      |
+| `FieldHelp` (mismo archivo)                           | El (?) suelto, para lo que no tiene un `Label`: texto de un `Switch` o `Checkbox`, títulos en `<p>`, `<legend>` y grupos de tabs sin etiqueta (va al final de la fila)                                                                                         |
+| `FIELD_HELP` (`src/config/help.ts`)                   | Textos de ayuda, una frase en tuteo. Clave `"<formulario>.<campo>"` o `"common.<campo>"`; `FieldHelpKey` tipa la prop. Toda clave debe usarse: se verifica con `grep`. Los mínimos y formatos se comparan con los esquemas de Zod                              |
+| Campos compartidos                                    | `AccountSelectField`, `CategorySelectField`, `DatePickerField`, `TimePickerField`, `FormField` (auth), `Field` (deudas), `AmountField` y `DayField` reciben `help?: FieldHelpKey`. `PaymentAccountSection` recibe `accountHelp` (por defecto `common.account`) |
+
+- Es un `Tooltip` de HeroUI: se abre al pasar el mouse (300 ms) y al llegar
+  con Tab. En móvil no abre con un toque (decisión del spec).
+- El disparador es `Tooltip.Trigger` (un `div` con `role="button"`), no un
+  `Button`: dentro de `Select`, `DatePicker` o `NumberField` un `Button`
+  tomaría el `ButtonContext` del campo y abriría el campo.
+- Botón de 24 px (`size-6`) con `-my-1`: no cambia la altura del campo.
+- Ícono `MessageCircleQuestionMark` (`size-3.5`) en `text-muted/80`, que da
+  3.83:1 sobre `--surface` y `--overlay` en claro, 3.65:1 sobre la superficie
+  del sitio, y 4.98:1 / 4.49:1 sobre `--surface` / `--overlay` en oscuro. Al
+  pasar el mouse o con foco, `text-muted`.
+
+### Vocabulario (SPEC 47)
+
+La UI habla de **Entrada** y **Salida** en Personal y en Empresa (antes
+Ingreso / Gasto y Venta / Costo o gasto). Los datos siguen siendo `income` y
+`expense`. Se mantienen **Gasto fijo** e **Ingreso fijo**, los tipos **Pago**
+y **Abono** de una deuda, "Pago de tarjeta", "Día de pago" y los textos de
+pagar un gasto fijo. Los botones genéricos dicen **Registrar movimiento** y su
+toast **Movimiento registrado**. Glosario completo en
+`specs/47-entry-exit-vocabulary-and-field-help.md`.
 
 ### Gráficas (`src/components/charts/`)
 

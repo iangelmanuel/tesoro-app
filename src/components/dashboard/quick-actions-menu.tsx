@@ -53,7 +53,7 @@ export function QuickActionsMenu() {
   }
 
   const isPersonal = workspace.type === "personal"
-  const label = isPersonal ? "Registrar movimiento" : "Registrar operación"
+  const label = "Registrar movimiento"
   const paymentTabs = isPersonal
     ? { debts, receivables, pendingPayments, goals, incomeSources }
     : undefined

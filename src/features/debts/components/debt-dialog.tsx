@@ -5,7 +5,6 @@ import {
   Button,
   FieldError,
   Input,
-  Label,
   Modal,
   TextField,
   ToggleButton,
@@ -14,6 +13,8 @@ import {
 } from "@heroui/react"
 import { HelpHint } from "@/components/dashboard/help-hint"
 import { AccountSelectField } from "@/components/forms/account-select-field"
+import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
+import type { FieldHelpKey } from "@/config/help"
 import {
   type AccountOption,
   selectableAccounts
@@ -167,7 +168,12 @@ function DebtForm({
 
       {!isEditing && (
         <div className="flex flex-col gap-2">
-          <Label id="debt-kind-label">Tipo</Label>
+          <FieldLabel
+            id="debt-kind-label"
+            help="debt.kind"
+          >
+            Tipo
+          </FieldLabel>
           <ToggleButtonGroup
             aria-labelledby="debt-kind-label"
             selectionMode="single"
@@ -208,7 +214,7 @@ function DebtForm({
           validationBehavior="aria"
           className="flex flex-col gap-2"
         >
-          <Label>Nombre</Label>
+          <FieldLabel help="debt.name">Nombre</FieldLabel>
           <Input placeholder={isCard ? "Visa" : "Crédito de vehículo"} />
           <FieldError>{errors?.name?.[0]}</FieldError>
         </TextField>
@@ -221,7 +227,7 @@ function DebtForm({
           validationBehavior="aria"
           className="flex flex-col gap-2"
         >
-          <Label>Entidad (opcional)</Label>
+          <FieldLabel help="debt.institution">Entidad (opcional)</FieldLabel>
           <Input placeholder="Banco" />
           <FieldError>{errors?.counterparty?.[0]}</FieldError>
         </TextField>
@@ -230,6 +236,7 @@ function DebtForm({
       <AccountSelectField
         name="account_id"
         label="Cuenta habitual (opcional)"
+        help="debt.defaultAccount"
         value={accountId}
         onChange={setAccountId}
         accounts={accountOptions}
@@ -242,6 +249,7 @@ function DebtForm({
         <AmountField
           id="opening_balance"
           label={isEditing ? "Saldo inicial" : "Saldo actual"}
+          help="debt.currentBalance"
           errors={errors?.opening_balance}
           defaultValue={
             values?.opening_balance ?? amountInput(debt?.opening_balance)
@@ -253,6 +261,7 @@ function DebtForm({
           <AmountField
             id="credit_limit"
             label="Cupo"
+            help="debt.creditLimit"
             errors={errors?.credit_limit}
             defaultValue={
               values?.credit_limit ?? amountInput(debt?.credit_limit)
@@ -263,6 +272,7 @@ function DebtForm({
           <AmountField
             id="installment"
             label="Cuota mensual"
+            help="debt.monthlyInstallment"
             errors={errors?.installment}
             defaultValue={values?.installment ?? amountInput(debt?.installment)}
             required
@@ -277,12 +287,14 @@ function DebtForm({
         <div className="flex min-w-0 flex-col gap-2">
           {/* El label va sobre el campo y el tipo de tasa juntos: dentro del
               campo se partía en tres líneas */}
-          <Label
+          <FieldLabel
             id="debt-rate-label"
             isRequired={!isCard}
+            help="debt.interestRate"
+            helpLabel="Tasa de interés"
           >
             {isCard ? "Tasa de interés (opcional)" : "Tasa de interés"}
-          </Label>
+          </FieldLabel>
           <div className="flex min-w-0 items-end gap-2">
             <TextField
               name="interest_rate"
@@ -316,6 +328,11 @@ function DebtForm({
               <ToggleButton id="ea">E.A.</ToggleButton>
               <ToggleButton id="mv">M.V.</ToggleButton>
             </ToggleButtonGroup>
+            <FieldHelp
+              help="debt.rateType"
+              label="Tipo de tasa"
+              className="self-center"
+            />
           </div>
           {(errors?.interest_rate ?? errors?.rate_type) && (
             <p className="text-sm text-danger">
@@ -327,6 +344,7 @@ function DebtForm({
         <DayField
           id="due_day"
           label="Día de pago"
+          help="debt.dueDay"
           errors={errors?.due_day}
           defaultValue={values?.due_day ?? debt?.due_day ?? undefined}
           required
@@ -339,6 +357,7 @@ function DebtForm({
             <AmountField
               id="min_payment"
               label="Pago mínimo (opcional)"
+              help="debt.minimumPayment"
               errors={errors?.min_payment}
               defaultValue={
                 values?.min_payment ?? amountInput(debt?.min_payment)
@@ -347,6 +366,7 @@ function DebtForm({
             <DayField
               id="closing_day"
               label="Día de corte (opcional)"
+              help="debt.cutoffDay"
               errors={errors?.closing_day}
               defaultValue={
                 values?.closing_day ?? debt?.closing_day ?? undefined
@@ -365,6 +385,7 @@ function DebtForm({
               <AmountField
                 id="fee_amount"
                 label="Monto mensual"
+                help="debt.feeAmount"
                 errors={errors?.fee_amount}
                 defaultValue={
                   values?.fee_amount ?? amountInput(debt?.fee_amount)
@@ -373,6 +394,7 @@ function DebtForm({
               <DayField
                 id="fee_day"
                 label="Día de cobro"
+                help="debt.feeDay"
                 errors={errors?.fee_day}
                 defaultValue={values?.fee_day ?? debt?.fee_day ?? undefined}
               />
@@ -387,6 +409,7 @@ function DebtForm({
           <AmountField
             id="original_amount"
             label="Monto original (opcional)"
+            help="debt.originalAmount"
             errors={errors?.original_amount}
             defaultValue={
               values?.original_amount ?? amountInput(debt?.original_amount)
@@ -403,7 +426,9 @@ function DebtForm({
             validationBehavior="aria"
             className="flex flex-col gap-2"
           >
-            <Label>Plazo en meses (opcional)</Label>
+            <FieldLabel help="debt.termMonths">
+              Plazo en meses (opcional)
+            </FieldLabel>
             <Input
               type="number"
               min={1}
@@ -447,13 +472,15 @@ function AmountField({
   label,
   errors,
   defaultValue,
-  required
+  required,
+  help
 }: {
   id: string
   label: string
   errors?: string[]
   defaultValue: string
   required?: boolean
+  help?: FieldHelpKey
 }) {
   return (
     <TextField
@@ -466,7 +493,7 @@ function AmountField({
       validationBehavior="aria"
       className="flex flex-col gap-2"
     >
-      <Label>{label}</Label>
+      <FieldLabel help={help}>{label}</FieldLabel>
       <Input placeholder="0" />
       <FieldError>{errors?.[0]}</FieldError>
     </TextField>
@@ -478,13 +505,15 @@ function DayField({
   label,
   errors,
   defaultValue,
-  required
+  required,
+  help
 }: {
   id: string
   label: string
   errors?: string[]
   defaultValue?: string | number
   required?: boolean
+  help?: FieldHelpKey
 }) {
   return (
     <TextField
@@ -498,7 +527,7 @@ function DayField({
       validationBehavior="aria"
       className="flex flex-col gap-2"
     >
-      <Label>{label}</Label>
+      <FieldLabel help={help}>{label}</FieldLabel>
       <Input
         type="number"
         min={1}

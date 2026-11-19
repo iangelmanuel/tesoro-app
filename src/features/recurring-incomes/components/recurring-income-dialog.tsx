@@ -5,7 +5,6 @@ import {
   Button,
   FieldError,
   Input,
-  Label,
   ListBox,
   Modal,
   Select,
@@ -17,6 +16,7 @@ import { Amount } from "@/components/dashboard/amount"
 import { AccountSelectField } from "@/components/forms/account-select-field"
 import { CategorySelectField } from "@/components/forms/category-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import { FieldLabel } from "@/components/forms/field-label"
 import {
   type AccountOption,
   selectableAccounts
@@ -336,7 +336,7 @@ function RecurringIncomeForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Nombre</Label>
+        <FieldLabel help="recurringIncome.name">Nombre</FieldLabel>
         <Input placeholder="Salario" />
         <FieldError>{errors?.name?.[0]}</FieldError>
       </TextField>
@@ -353,7 +353,9 @@ function RecurringIncomeForm({
           validationBehavior="aria"
           className="flex flex-col gap-2"
         >
-          <Label>Monto esperado</Label>
+          <FieldLabel help="recurringIncome.expected">
+            Monto esperado
+          </FieldLabel>
           <Input placeholder="0" />
           <FieldError>{errors?.amount?.[0]}</FieldError>
         </TextField>
@@ -365,6 +367,7 @@ function RecurringIncomeForm({
           categories={categoryOptions}
           workspaceId={workspaceId}
           type="income"
+          help="common.category"
           error={errors?.category_id?.[0]}
         >
           {currentCategoryArchived && !categoryId && (
@@ -378,6 +381,7 @@ function RecurringIncomeForm({
       <AccountSelectField
         name="account_id"
         label="Cuenta por defecto (opcional)"
+        help="common.defaultAccount"
         value={accountId}
         onChange={setAccountId}
         accounts={accountOptions}
@@ -394,7 +398,7 @@ function RecurringIncomeForm({
           isInvalid={Boolean(errors?.frequency)}
           className="flex flex-col gap-2"
         >
-          <Label>Frecuencia</Label>
+          <FieldLabel help="common.frequency">Frecuencia</FieldLabel>
           <Select.Trigger>
             <Select.Value />
             <Select.Indicator />
@@ -429,7 +433,9 @@ function RecurringIncomeForm({
           isInvalid={Boolean(errors?.day_of_week)}
           className="flex flex-col gap-2"
         >
-          <Label>Día de la semana</Label>
+          <FieldLabel help="recurringIncome.weekday">
+            Día de la semana
+          </FieldLabel>
           <Select.Trigger className="capitalize">
             <Select.Value />
             <Select.Indicator />
@@ -464,7 +470,9 @@ function RecurringIncomeForm({
           validationBehavior="aria"
           className="flex flex-col gap-2"
         >
-          <Label>Cada cuántos días</Label>
+          <FieldLabel help="recurringIncome.everyDays">
+            Cada cuántos días
+          </FieldLabel>
           <Input
             type="number"
             min={INTERVAL_DAYS_MIN}
@@ -487,9 +495,12 @@ function RecurringIncomeForm({
             validationBehavior="aria"
             className="flex flex-col gap-2"
           >
-            <Label>
+            <FieldLabel
+              help="recurringIncome.day"
+              helpLabel="Día de pago"
+            >
               {frequency === "biweekly" ? "Primer día de pago" : "Día de pago"}
-            </Label>
+            </FieldLabel>
             <Input
               type="number"
               min={1}
@@ -510,7 +521,9 @@ function RecurringIncomeForm({
               validationBehavior="aria"
               className="flex flex-col gap-2"
             >
-              <Label>Segundo día de pago</Label>
+              <FieldLabel help="recurringIncome.secondDay">
+                Segundo día de pago
+              </FieldLabel>
               <Input
                 type="number"
                 min={1}
@@ -531,7 +544,7 @@ function RecurringIncomeForm({
               isInvalid={Boolean(errors?.month_of_year)}
               className="flex flex-col gap-2"
             >
-              <Label>Mes de pago</Label>
+              <FieldLabel help="recurringIncome.month">Mes de pago</FieldLabel>
               <Select.Trigger className="capitalize">
                 <Select.Value />
                 <Select.Indicator />
@@ -566,6 +579,7 @@ function RecurringIncomeForm({
         <DatePickerField
           name="starts_on"
           label="Desde"
+          help="common.from"
           value={startsOn}
           onChange={setStartsOn}
           error={errors?.starts_on?.[0]}
@@ -576,6 +590,7 @@ function RecurringIncomeForm({
           <DatePickerField
             name="ends_on"
             label="Hasta (opcional)"
+            help="common.until"
             value={endsOn}
             onChange={setEndsOn}
             error={errors?.ends_on?.[0]}

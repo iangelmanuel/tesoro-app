@@ -73,7 +73,7 @@ export function DebtEntriesList({
     return (
       <CardEmpty
         icon={Receipt}
-        message="Aún no hay pagos registrados"
+        message="Aún no hay movimientos registrados"
       />
     )
   }

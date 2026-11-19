@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { FieldError, Label, ListBox, Select } from "@heroui/react"
+import { FieldError, ListBox, Select } from "@heroui/react"
+import { FieldLabel } from "@/components/forms/field-label"
+import type { FieldHelpKey } from "@/config/help"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import { CategoryDialog } from "@/features/categories/components/category-dialog"
 import type { Category } from "@/features/categories/queries"
@@ -24,6 +26,8 @@ interface CategorySelectFieldProps {
   /** Error de Zod del campo */
   error?: string
   isDisabled?: boolean
+  /** Ayuda del (?) junto a la etiqueta (FIELD_HELP) */
+  help?: FieldHelpKey
   /** Ayuda o aviso debajo del campo */
   children?: React.ReactNode
 }
@@ -45,6 +49,7 @@ export function CategorySelectField({
   placeholder = "Elige una categoría",
   error,
   isDisabled,
+  help,
   children
 }: CategorySelectFieldProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -84,7 +89,7 @@ export function CategorySelectField({
         isDisabled={isDisabled}
         className="flex flex-col gap-2"
       >
-        <Label>{label}</Label>
+        <FieldLabel help={help}>{label}</FieldLabel>
         <Select.Trigger>
           <Select.Value />
           <Select.Indicator />

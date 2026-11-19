@@ -18,7 +18,7 @@ export type RecurringExpenseRow =
 
 export const RECURRING_EXPENSE_NOT_FOUND = "No se encontró el gasto fijo"
 const DEFAULT_ERROR = "No se pudo guardar el gasto fijo. Intenta de nuevo"
-const INVALID_CATEGORY = "Elige una categoría de gasto"
+const INVALID_CATEGORY = "Elige una categoría de salida"
 const ARCHIVED_CATEGORY = "Esta categoría está archivada. Elige otra"
 const INVALID_ACCOUNT = "Elige una cuenta de tu espacio"
 const ARCHIVED_ACCOUNT = "Esta cuenta está archivada. Elige otra"

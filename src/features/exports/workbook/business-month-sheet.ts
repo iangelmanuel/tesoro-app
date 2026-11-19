@@ -93,8 +93,8 @@ export function addBusinessMonthSheet(
 
   // 1. Resumen del mes (las fórmulas van al final)
   const summary = writeMonthSummary(sheet, accent, FIRST_SECTION_ROW, [
-    { label: "Ventas", value: sales },
-    { label: "Costos y gastos", value: costs },
+    { label: "Entradas", value: sales },
+    { label: "Salidas", value: costs },
     { label: "Utilidad", value: profit },
     { label: "Margen", value: margin },
     { label: "Saldo en cuentas al inicio", value: openingBalance },
@@ -119,7 +119,7 @@ export function addBusinessMonthSheet(
   type CategoryTotal = BusinessMonthData["costsByCategory"][number]
   const categories = writeSection(sheet, accent, {
     startRow: categoriesStart,
-    title: "Costos por categoría",
+    title: "Salidas por categoría",
     columns: [
       { header: "Categoría", key: "category", kind: "text" },
       { header: "Total", key: "total", kind: "money" },
@@ -151,14 +151,14 @@ export function addBusinessMonthSheet(
     sheet,
     accent,
     categories.nextRow,
-    "Ventas",
+    "Entradas",
     data.sales
   )
   const costsSection = writeOperations(
     sheet,
     accent,
     salesSection.nextRow,
-    "Costos y gastos",
+    "Salidas",
     data.costs
   )
 

@@ -7,6 +7,7 @@ import { Button, ListBox, Select, cn } from "@heroui/react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { CONTROL_BUTTON, CONTROL_SURFACE } from "@/components/dashboard/surface"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import { FieldHelp } from "@/components/forms/field-label"
 import {
   type ReportParams,
   type ReportPeriod,
@@ -69,37 +70,43 @@ export function ReportPeriodPicker({ params, path }: ReportPeriodPickerProps) {
       )}
       data-tour="reports-period"
     >
-      <Select
-        aria-label="Periodo"
-        value={params.period}
-        onChange={(value) => value && changePeriod(value as ReportPeriod)}
-        className="w-auto"
-      >
-        <Select.Trigger
-          className={cn(
-            "min-h-8 gap-1.5 rounded-3xl py-1 text-sm",
-            CONTROL_BUTTON
-          )}
+      <div className="flex items-center gap-0.5">
+        <Select
+          aria-label="Periodo"
+          value={params.period}
+          onChange={(value) => value && changePeriod(value as ReportPeriod)}
+          className="w-auto"
         >
-          <span className="text-muted">Periodo:</span>
-          <Select.Value className="font-medium" />
-          <Select.Indicator />
-        </Select.Trigger>
-        <Select.Popover>
-          <ListBox>
-            {Object.entries(PERIOD_LABELS).map(([value, label]) => (
-              <ListBox.Item
-                key={value}
-                id={value}
-                textValue={label}
-              >
-                {label}
-                <ListBox.ItemIndicator />
-              </ListBox.Item>
-            ))}
-          </ListBox>
-        </Select.Popover>
-      </Select>
+          <Select.Trigger
+            className={cn(
+              "min-h-8 gap-1.5 rounded-3xl py-1 text-sm",
+              CONTROL_BUTTON
+            )}
+          >
+            <span className="text-muted">Periodo:</span>
+            <Select.Value className="font-medium" />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox>
+              {Object.entries(PERIOD_LABELS).map(([value, label]) => (
+                <ListBox.Item
+                  key={value}
+                  id={value}
+                  textValue={label}
+                >
+                  {label}
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
+        </Select>
+        <FieldHelp
+          help="common.period"
+          label="Periodo"
+        />
+      </div>
 
       {params.period === "range" ? (
         <RangeControl
@@ -205,6 +212,7 @@ function RangeControl({
       <DatePickerField
         name="from"
         label="Desde"
+        help="common.from"
         value={from}
         maxValue={to}
         onChange={(value) => value && onChange(value, to)}
@@ -212,6 +220,7 @@ function RangeControl({
       <DatePickerField
         name="to"
         label="Hasta"
+        help="common.until"
         value={to}
         minValue={from}
         onChange={(value) => value && onChange(from, value)}

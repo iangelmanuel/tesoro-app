@@ -5,12 +5,13 @@ import {
   Button,
   FieldError,
   Input,
-  Label,
   Modal,
   TextField,
   toast
 } from "@heroui/react"
 import { CategorySelectField } from "@/components/forms/category-select-field"
+import { FieldLabel } from "@/components/forms/field-label"
+import type { FieldHelpKey } from "@/config/help"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { upsertBudget } from "../actions"
@@ -154,6 +155,7 @@ function BudgetForm({
         <Field
           id="category_id"
           label="Categoría"
+          help="budget.category"
           errors={errors?.category_id}
         >
           <input
@@ -177,11 +179,12 @@ function BudgetForm({
           categories={categories}
           workspaceId={workspaceId}
           type="expense"
+          help="budget.category"
           error={errors?.category_id?.[0]}
         >
           {categories.length === 0 && (
             <p className="text-sm text-muted">
-              Todas tus categorías de gasto ya tienen presupuesto este mes.
+              Todas tus categorías de salida ya tienen presupuesto este mes.
               Puedes crear una nueva.
             </p>
           )}
@@ -203,7 +206,7 @@ function BudgetForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Monto</Label>
+        <FieldLabel help="budget.amount">Monto</FieldLabel>
         <Input placeholder="0" />
         <FieldError>{errors?.amount?.[0]}</FieldError>
       </TextField>
@@ -239,16 +242,23 @@ function Field({
   id,
   label,
   errors,
+  help,
   children
 }: {
   id: string
   label: string
   errors?: string[]
+  help?: FieldHelpKey
   children: React.ReactNode
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>{label}</Label>
+      <FieldLabel
+        htmlFor={id}
+        help={help}
+      >
+        {label}
+      </FieldLabel>
       {children}
       {errors?.length ? (
         <p className="text-sm text-danger">{errors[0]}</p>

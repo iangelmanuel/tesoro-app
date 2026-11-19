@@ -25,6 +25,7 @@ export function SignUpForm() {
         <FormField
           name="fullName"
           label="Nombre"
+          help="profile.name"
           autoComplete="name"
           placeholder="Tu nombre"
           defaultValue={state.values?.fullName}
@@ -34,6 +35,7 @@ export function SignUpForm() {
         <FormField
           name="email"
           label="Email"
+          help="auth.email"
           type="email"
           autoComplete="email"
           placeholder="tu@email.com"
@@ -44,6 +46,7 @@ export function SignUpForm() {
         <FormField
           name="password"
           label="Contraseña"
+          help="auth.password"
           type="password"
           autoComplete="new-password"
           placeholder="Mínimo 8 caracteres"

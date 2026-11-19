@@ -101,14 +101,14 @@ async function SummaryContent() {
         data-tour="summary-kpis"
       >
         <StatCard
-          label="Ingresos del mes"
+          label="Entradas del mes"
           value={current.income}
           previous={previous?.income}
           trend="higher-is-better"
           currency={currency}
         />
         <StatCard
-          label="Gastos del mes"
+          label="Salidas del mes"
           value={current.expense}
           previous={previous?.expense}
           trend="lower-is-better"
@@ -133,7 +133,7 @@ async function SummaryContent() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <ChartCard
-          title="Ingresos vs. gastos"
+          title="Entradas vs. salidas"
           figure={
             <Amount
               value={trendBalance}

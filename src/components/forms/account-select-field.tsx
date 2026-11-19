@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { FieldError, Label, ListBox, Select } from "@heroui/react"
+import { FieldError, ListBox, Select } from "@heroui/react"
+import { FieldLabel } from "@/components/forms/field-label"
+import type { FieldHelpKey } from "@/config/help"
 import { AccountDialog } from "@/features/accounts/components/account-dialog"
 import {
   AccountLabel,
@@ -30,6 +32,8 @@ interface AccountSelectFieldProps {
   placeholder?: string
   /** Error de Zod del campo */
   error?: string
+  /** Ayuda del (?) junto a la etiqueta (FIELD_HELP) */
+  help?: FieldHelpKey
 }
 
 /**
@@ -47,7 +51,8 @@ export function AccountSelectField({
   workspaceId,
   allowNone = false,
   placeholder = "Elige una cuenta",
-  error
+  error,
+  help
 }: AccountSelectFieldProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [created, setCreated] = useState<AccountOption[]>([])
@@ -87,7 +92,7 @@ export function AccountSelectField({
         isInvalid={Boolean(error)}
         className="flex flex-col gap-2"
       >
-        <Label>{label}</Label>
+        <FieldLabel help={help}>{label}</FieldLabel>
         <Select.Trigger>
           <Select.Value />
           <Select.Indicator />

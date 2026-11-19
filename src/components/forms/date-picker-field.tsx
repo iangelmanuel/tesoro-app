@@ -1,13 +1,9 @@
 "use client"
 
-import {
-  Calendar,
-  DateField,
-  DatePicker,
-  FieldError,
-  Label
-} from "@heroui/react"
+import { Calendar, DateField, DatePicker, FieldError } from "@heroui/react"
 import { type CalendarDate, parseDate } from "@internationalized/date"
+import { FieldLabel } from "@/components/forms/field-label"
+import type { FieldHelpKey } from "@/config/help"
 
 interface DatePickerFieldProps {
   /** Nombre del campo: el formulario recibe la fecha como YYYY-MM-DD */
@@ -24,6 +20,8 @@ interface DatePickerFieldProps {
   /** Fecha máxima YYYY-MM-DD, p. ej. hoy para pagos y ajustes */
   maxValue?: string
   className?: string
+  /** Ayuda del (?) junto a la etiqueta (FIELD_HELP) */
+  help?: FieldHelpKey
 }
 
 function toCalendarDate(value: string): CalendarDate | null {
@@ -46,7 +44,8 @@ export function DatePickerField({
   isRequired,
   minValue,
   maxValue,
-  className = "flex flex-col gap-2"
+  className = "flex flex-col gap-2",
+  help
 }: DatePickerFieldProps) {
   return (
     <DatePicker
@@ -60,7 +59,7 @@ export function DatePickerField({
       validationBehavior="aria"
       className={className}
     >
-      <Label>{label}</Label>
+      <FieldLabel help={help}>{label}</FieldLabel>
       <DateField.Group fullWidth>
         <DateField.Input>
           {(segment) => <DateField.Segment segment={segment} />}

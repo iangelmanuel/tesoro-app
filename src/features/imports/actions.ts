@@ -1,6 +1,7 @@
 "use server"
 
 import { z } from "zod"
+import { DEBT_NOT_ACTIVE, DEBT_NOT_ACTIVE_DB } from "@/features/debts/errors"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { revalidatePersonalPages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
@@ -58,7 +59,7 @@ const PG_ERROR_MESSAGES: Record<string, string> = {
 const RPC_MESSAGES = new Set([
   "La deuda no existe",
   "La meta no existe",
-  "Reactiva la deuda para registrar pagos",
+  DEBT_NOT_ACTIVE_DB,
   "Reactiva la meta para registrar aportes",
   "La fecha no puede ser futura",
   "La fecha del aporte no puede ser futura",
@@ -277,9 +278,14 @@ async function validateLinks(
   return data.every((item) => item.status === "active") ? null : inactive
 }
 
+// La BD dice "registrar pagos"; la UI, "registrar movimientos" (SPEC 47)
+function shownRpcMessage(message: string) {
+  return message === DEBT_NOT_ACTIVE_DB ? DEBT_NOT_ACTIVE : message
+}
+
 // Error de una RPC de importación como mensaje para el usuario
 function rpcErrorMessage(error: { code: string; message: string }) {
-  if (RPC_MESSAGES.has(error.message)) return error.message
+  if (RPC_MESSAGES.has(error.message)) return shownRpcMessage(error.message)
   return PG_ERROR_MESSAGES[error.code] ?? DEFAULT_ERROR
 }
 
@@ -473,7 +479,9 @@ export async function undoImport(importId: string): Promise<UndoImportResult> {
     if (error.code === "23514" && error.message.includes("«")) {
       return { error: error.message }
     }
-    if (RPC_MESSAGES.has(error.message)) return { error: error.message }
+    if (RPC_MESSAGES.has(error.message)) {
+      return { error: shownRpcMessage(error.message) }
+    }
     return { error: UNDO_ERROR }
   }
 

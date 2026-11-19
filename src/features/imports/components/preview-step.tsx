@@ -11,6 +11,7 @@ import {
   cn
 } from "@heroui/react"
 import { LoaderCircle } from "lucide-react"
+import { FieldHelp } from "@/components/forms/field-label"
 import { formatCurrency, formatDate } from "@/libs/format"
 import type { ResultingBalance } from "../balances"
 import { MONTH_NAMES, PREVIEW_PAGE_SIZE } from "../constants"
@@ -46,7 +47,7 @@ const STATUS_BADGES: Record<
   skipped: { label: "Omitida", color: "default", variant: "tertiary" }
 }
 
-const TYPE_LABELS = { income: "Ingreso", expense: "Gasto" } as const
+const TYPE_LABELS = { income: "Entrada", expense: "Salida" } as const
 
 /** Columna de datos normalizados de la vista previa */
 export interface PreviewColumn<V> {
@@ -502,23 +503,30 @@ export function CreateTransactionsField({
   onChange
 }: CreateTransactionsProps) {
   return (
-    <Checkbox
-      isSelected={checked}
-      isDisabled={disabled}
-      onChange={onChange}
-      className="items-start"
-    >
-      <Checkbox.Control className="mt-0.5">
-        <Checkbox.Indicator />
-      </Checkbox.Control>
-      <Checkbox.Content>
-        <Label>Registrar también como gasto/ingreso</Label>
-        <Description>
-          Cada pago de préstamo crea un gasto en «Deudas» y cada abono de una
-          cuenta por cobrar, un ingreso en «Cobros». Desmárcala si ya importaste
-          estos pagos como movimientos.
-        </Description>
-      </Checkbox.Content>
-    </Checkbox>
+    <div className="flex items-start gap-0.5">
+      <Checkbox
+        isSelected={checked}
+        isDisabled={disabled}
+        onChange={onChange}
+        className="items-start"
+      >
+        <Checkbox.Control className="mt-0.5">
+          <Checkbox.Indicator />
+        </Checkbox.Control>
+        <Checkbox.Content>
+          <Label>Registrar también como salida/entrada</Label>
+          <Description>
+            Cada pago de préstamo crea una salida en «Deudas» y cada abono de
+            una cuenta por cobrar, una entrada en «Cobros». Desmárcala si ya
+            importaste estos pagos como movimientos.
+          </Description>
+        </Checkbox.Content>
+      </Checkbox>
+      <FieldHelp
+        help="import.alsoRegister"
+        label="Registrar también el movimiento"
+        className="mt-0"
+      />
+    </div>
   )
 }

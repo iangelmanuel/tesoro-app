@@ -2,16 +2,10 @@
 
 import { useId, useState } from "react"
 import { useSearchParams } from "next/navigation"
-import {
-  Button,
-  Label,
-  ListBox,
-  Modal,
-  Select,
-  Tabs,
-  toast
-} from "@heroui/react"
+import { Button, ListBox, Modal, Select, Tabs, toast } from "@heroui/react"
 import { useHideAmounts } from "@/components/dashboard/hide-amounts-context"
+import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
+import type { FieldHelpKey } from "@/config/help"
 import { parseReportParams } from "@/features/reports/period"
 import { useIsMobile } from "@/hooks/use-is-mobile"
 import { todayISO } from "@/libs/dates"
@@ -300,30 +294,38 @@ function ExportForm({
 
   return (
     <div className="flex flex-col gap-4">
-      <Tabs
-        selectedKey={format}
-        onSelectionChange={(key) => setFormat(key as ExportFormat)}
-      >
-        <Tabs.ListContainer>
-          <Tabs.List aria-label="Formato">
-            <Tabs.Tab id="xlsx">
-              Excel (.xlsx)
-              <Tabs.Indicator />
-            </Tabs.Tab>
-            <Tabs.Tab id="csv">
-              CSV (.csv)
-              <Tabs.Indicator />
-            </Tabs.Tab>
-            <Tabs.Tab id="pdf">
-              PDF (.pdf)
-              <Tabs.Indicator />
-            </Tabs.Tab>
-          </Tabs.List>
-        </Tabs.ListContainer>
-      </Tabs>
+      <div className="flex items-center gap-1">
+        <Tabs
+          className="min-w-0 flex-1"
+          selectedKey={format}
+          onSelectionChange={(key) => setFormat(key as ExportFormat)}
+        >
+          <Tabs.ListContainer>
+            <Tabs.List aria-label="Formato">
+              <Tabs.Tab id="xlsx">
+                Excel (.xlsx)
+                <Tabs.Indicator />
+              </Tabs.Tab>
+              <Tabs.Tab id="csv">
+                CSV (.csv)
+                <Tabs.Indicator />
+              </Tabs.Tab>
+              <Tabs.Tab id="pdf">
+                PDF (.pdf)
+                <Tabs.Indicator />
+              </Tabs.Tab>
+            </Tabs.List>
+          </Tabs.ListContainer>
+        </Tabs>
+        <FieldHelp
+          help="export.format"
+          label="Formato"
+        />
+      </div>
 
       <PeriodSelect
         label="Periodo"
+        help="export.period"
         value={selection.period}
         onChange={(value) => changePeriod(value as Period)}
         options={PERIODS.map((period) => ({
@@ -343,6 +345,7 @@ function ExportForm({
       {selection.period === "month" && (
         <PeriodSelect
           label="Mes"
+          help="export.periodValue"
           value={selection.value}
           onChange={(value) => setSelection({ ...selection, value })}
           options={options.months.map((month) => ({
@@ -354,6 +357,7 @@ function ExportForm({
       {selection.period === "quarter" && (
         <PeriodSelect
           label="Trimestre"
+          help="export.periodValue"
           value={selection.value}
           onChange={(value) => setSelection({ ...selection, value })}
           options={options.quarters.map((quarter) => ({
@@ -365,6 +369,7 @@ function ExportForm({
       {selection.period === "year" && (
         <PeriodSelect
           label="Año"
+          help="export.periodValue"
           value={selection.value}
           onChange={(value) => setSelection({ ...selection, value })}
           options={options.years.map((year) => ({ id: year, label: year }))}
@@ -374,6 +379,7 @@ function ExportForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <PeriodSelect
             label="Desde"
+            help="common.from"
             value={selection.from}
             onChange={(value) =>
               setSelection({
@@ -389,6 +395,7 @@ function ExportForm({
           />
           <PeriodSelect
             label="Hasta"
+            help="common.until"
             value={selection.to}
             onChange={(value) =>
               setSelection({
@@ -409,6 +416,7 @@ function ExportForm({
         <>
           <PeriodSelect
             label="Tamaño"
+            help="export.size"
             value={pdfOptions.size}
             onChange={(value) =>
               setPdfOptions({
@@ -423,6 +431,7 @@ function ExportForm({
           />
           <OptionTabs
             label="Orientación"
+            help="export.orientation"
             value={pdfOptions.orientation}
             onChange={(value) =>
               setPdfOptions({
@@ -437,6 +446,7 @@ function ExportForm({
           />
           <OptionTabs
             label="Tema"
+            help="export.inkSaver"
             value={pdfOptions.theme}
             onChange={(value) =>
               setPdfOptions({
@@ -509,11 +519,13 @@ function ExportForm({
 
 function PeriodSelect({
   label,
+  help,
   value,
   onChange,
   options
 }: {
   label: string
+  help: FieldHelpKey
   value: string
   onChange: (value: string) => void
   options: { id: string; label: string; isDisabled?: boolean }[]
@@ -525,7 +537,7 @@ function PeriodSelect({
       onChange={(key) => key !== null && onChange(String(key))}
       className="flex flex-col gap-2"
     >
-      <Label>{label}</Label>
+      <FieldLabel help={help}>{label}</FieldLabel>
       <Select.Trigger className="min-h-11">
         <Select.Value />
         <Select.Indicator />
@@ -552,12 +564,14 @@ function PeriodSelect({
 /** Tabs con etiqueta visible, para opciones de pocas alternativas */
 function OptionTabs({
   label,
+  help,
   value,
   onChange,
   options,
   hint
 }: {
   label: string
+  help: FieldHelpKey
   value: string
   onChange: (value: string) => void
   options: { id: string; label: string }[]
@@ -567,12 +581,18 @@ function OptionTabs({
 
   return (
     <div className="flex flex-col gap-2">
-      <span
-        id={labelId}
-        className="text-sm font-medium"
-      >
-        {label}
-      </span>
+      <div className="flex items-center gap-0.5">
+        <span
+          id={labelId}
+          className="text-sm font-medium"
+        >
+          {label}
+        </span>
+        <FieldHelp
+          help={help}
+          label={label}
+        />
+      </div>
       <Tabs
         selectedKey={value}
         onSelectionChange={(key) => onChange(String(key))}

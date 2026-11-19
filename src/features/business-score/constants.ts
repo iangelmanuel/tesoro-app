@@ -39,7 +39,7 @@ export const BUSINESS_FACTORS: Record<
     ]
   },
   sales_growth: {
-    label: "Crecimiento de ventas",
+    label: "Crecimiento de entradas",
     weight: 15,
     curve: [
       [-0.2, 0],
@@ -56,7 +56,7 @@ export const BUSINESS_FACTORS: Record<
     ]
   },
   cost_concentration: {
-    label: "Concentración de costos",
+    label: "Concentración de salidas",
     weight: 10,
     curve: [
       [0.3, 100],
@@ -90,14 +90,14 @@ export const BUSINESS_MONTH_FACTORS: readonly BusinessFactorKey[] = [
 
 export const BUSINESS_EXCLUDED_REASONS = {
   noClosedMonths: "Aún no hay meses cerrados",
-  noClosedCosts: "Sin costos en los meses cerrados",
+  noClosedCosts: "Sin salidas en los meses cerrados",
   fewClosedMonths: "Necesita 6 meses cerrados",
-  noPreviousSales: "Sin ventas en el trimestre previo",
-  noWindowCosts: "Sin costos en los últimos 3 meses"
+  noPreviousSales: "Sin entradas en el trimestre previo",
+  noWindowCosts: "Sin salidas en los últimos 3 meses"
 } as const
 
 export const BUSINESS_INSUFFICIENT_REASONS = {
-  noSales: "Registra tus ventas"
+  noSales: "Registra tus entradas"
 } as const
 
 /** Meses de cada trimestre del crecimiento de ventas */

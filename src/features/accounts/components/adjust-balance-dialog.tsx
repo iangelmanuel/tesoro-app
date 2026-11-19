@@ -5,11 +5,11 @@ import {
   Button,
   FieldError,
   Input,
-  Label,
   Modal,
   TextField,
   toast
 } from "@heroui/react"
+import { FieldLabel } from "@/components/forms/field-label"
 import { TimePickerField } from "@/components/forms/time-picker-field"
 import { formatCurrency } from "@/libs/format"
 import { adjustAccountBalance } from "../actions"
@@ -130,13 +130,14 @@ function AdjustBalanceForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Saldo real</Label>
+        <FieldLabel help="balance.real">Saldo real</FieldLabel>
         <Input placeholder="0" />
         <FieldError>{errors?.balance?.[0]}</FieldError>
       </TextField>
 
       <TimePickerField
         name="occurred_time"
+        help="common.time"
         value={time}
         onChange={setTime}
         error={errors?.occurred_time?.[0]}
@@ -150,7 +151,7 @@ function AdjustBalanceForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Nota (opcional)</Label>
+        <FieldLabel help="common.note">Nota (opcional)</FieldLabel>
         <Input placeholder="Cuadre con la app" />
         <FieldError>{errors?.note?.[0]}</FieldError>
       </TextField>

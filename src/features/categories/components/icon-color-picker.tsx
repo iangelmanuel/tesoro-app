@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Label, ToggleButton, ToggleButtonGroup, cn } from "@heroui/react"
+import { ToggleButton, ToggleButtonGroup, cn } from "@heroui/react"
+import { FieldLabel } from "@/components/forms/field-label"
 import {
   CATEGORY_COLORS,
   CATEGORY_COLOR_KEYS,
@@ -43,7 +44,12 @@ export function IconColorPicker({
       />
 
       <div className="flex flex-col gap-2">
-        <Label id="category-icon-label">Icono</Label>
+        <FieldLabel
+          id="category-icon-label"
+          help="common.icon"
+        >
+          Icono
+        </FieldLabel>
         <ToggleButtonGroup
           aria-labelledby="category-icon-label"
           selectionMode="single"
@@ -75,7 +81,12 @@ export function IconColorPicker({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label id="category-color-label">Color</Label>
+        <FieldLabel
+          id="category-color-label"
+          help="common.color"
+        >
+          Color
+        </FieldLabel>
         <ToggleButtonGroup
           aria-labelledby="category-color-label"
           selectionMode="single"

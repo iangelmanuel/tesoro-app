@@ -1,14 +1,8 @@
 "use client"
 
 import { useActionState } from "react"
-import {
-  Button,
-  FieldError,
-  Input,
-  Label,
-  TextField,
-  toast
-} from "@heroui/react"
+import { Button, FieldError, Input, TextField, toast } from "@heroui/react"
+import { FieldLabel } from "@/components/forms/field-label"
 import { updateProfile } from "../actions"
 import type { ProfileFormState } from "../types"
 
@@ -39,7 +33,7 @@ export function ProfileForm({ fullName }: { fullName: string }) {
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Nombre</Label>
+        <FieldLabel help="profile.name">Nombre</FieldLabel>
         <Input />
         <FieldError>{state.fieldErrors?.fullName?.[0]}</FieldError>
       </TextField>

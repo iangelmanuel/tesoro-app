@@ -1,14 +1,9 @@
 "use client"
 
 import { useMemo } from "react"
-import {
-  Button,
-  Label,
-  ListBox,
-  Radio,
-  RadioGroup,
-  Select
-} from "@heroui/react"
+import { Button, ListBox, Radio, RadioGroup, Select } from "@heroui/react"
+import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
+import type { FieldHelpKey } from "@/config/help"
 import { FIELD_LABELS, MAX_ROWS } from "../constants"
 import {
   type SourceTable,
@@ -42,17 +37,17 @@ const TYPE_MODES: ModeOption<TypeMode>[] = [
   {
     value: "column",
     label: "Columna con valores",
-    hint: "Una columna dice si es ingreso o gasto (p. ej. Entrada / Salida)"
+    hint: "Una columna dice si es entrada o salida (p. ej. Crédito / Débito)"
   },
   {
     value: "sign",
     label: "Signo del monto",
-    hint: "Los montos negativos son gastos y los positivos, ingresos"
+    hint: "Los montos negativos son salidas y los positivos, entradas"
   },
   {
     value: "split",
     label: "Dos columnas",
-    hint: "Una columna para ingresos y otra para gastos"
+    hint: "Una columna para entradas y otra para salidas"
   }
 ]
 
@@ -99,8 +94,8 @@ const DATE_FORMATS: { value: DateFormat; label: string }[] = [
 ]
 
 const TYPE_VALUE_OPTIONS: { value: TypeValueTarget; label: string }[] = [
-  { value: "income", label: "Ingreso" },
-  { value: "expense", label: "Gasto" },
+  { value: "income", label: "Entrada" },
+  { value: "expense", label: "Salida" },
   { value: "skip", label: "Omitir fila" }
 ]
 
@@ -329,7 +324,8 @@ export function ColumnsStep({
       {target === "transactions" && (
         <ModeRadio
           id="import-type-mode"
-          title="¿Cómo se sabe si es ingreso o gasto?"
+          help="import.amountSign"
+          title="¿Cómo se sabe si es entrada o salida?"
           options={TYPE_MODES}
           value={typeMode}
           onChange={onTypeModeChange}
@@ -338,6 +334,7 @@ export function ColumnsStep({
       {linkField && (
         <ModeRadio
           id="import-entry-mode"
+          help="import.entryMode"
           title={
             linkField === "debt"
               ? "¿Cómo se sabe si es pago o cargo?"
@@ -368,12 +365,16 @@ export function ColumnsStep({
                 key={field}
                 className="flex flex-col gap-1.5"
               >
-                <Label htmlFor={id}>
+                <FieldLabel
+                  htmlFor={id}
+                  help="import.column"
+                  helpLabel={FIELD_LABELS[field]}
+                >
                   {FIELD_LABELS[field]}
                   {required.includes(field) && (
                     <span className="text-danger">*</span>
                   )}
-                </Label>
+                </FieldLabel>
                 <Select
                   value={
                     (mapping[field] === undefined
@@ -423,12 +424,20 @@ export function ColumnsStep({
 
           {linkField && mapping[linkField] === undefined && (
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="import-fixed-link">
+              <FieldLabel
+                htmlFor="import-fixed-link"
+                help="import.fixedLink"
+                helpLabel={
+                  linkField === "debt"
+                    ? "Deuda para todo el archivo"
+                    : "Meta para todo el archivo"
+                }
+              >
                 {linkField === "debt"
                   ? "Deuda para todo el archivo"
                   : "Meta para todo el archivo"}
                 <span className="text-danger">*</span>
-              </Label>
+              </FieldLabel>
               <Select
                 value={(config.fixedLinkId ?? UNMAPPED) || null}
                 onChange={(key) =>
@@ -476,7 +485,12 @@ export function ColumnsStep({
           )}
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="import-date-format">Formato de fecha</Label>
+            <FieldLabel
+              htmlFor="import-date-format"
+              help="import.dateFormat"
+            >
+              Formato de fecha
+            </FieldLabel>
             <Select
               value={dateFormat || null}
               onChange={(key) =>
@@ -609,6 +623,7 @@ export function ColumnsStep({
 interface ModeRadioProps<T extends string> {
   id: string
   title: string
+  help: FieldHelpKey
   options: ModeOption<T>[]
   value: T
   onChange: (value: T) => void
@@ -617,18 +632,25 @@ interface ModeRadioProps<T extends string> {
 function ModeRadio<T extends string>({
   id,
   title,
+  help,
   options,
   value,
   onChange
 }: ModeRadioProps<T>) {
   return (
     <div className="flex flex-col gap-3">
-      <p
-        id={id}
-        className="text-sm font-medium"
-      >
-        {title}
-      </p>
+      <div className="flex items-center gap-0.5">
+        <p
+          id={id}
+          className="text-sm font-medium"
+        >
+          {title}
+        </p>
+        <FieldHelp
+          help={help}
+          label={title}
+        />
+      </div>
       <RadioGroup
         aria-labelledby={id}
         className="grid gap-3 sm:grid-cols-3"

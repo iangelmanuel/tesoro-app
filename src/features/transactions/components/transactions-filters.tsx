@@ -7,6 +7,7 @@ import { Button, Drawer, ListBox, SearchField, Select, cn } from "@heroui/react"
 import { SlidersHorizontal, X } from "lucide-react"
 import { MonthSwitcher } from "@/components/dashboard/month-switcher"
 import { CONTROL_BUTTON } from "@/components/dashboard/surface"
+import { FieldHelp } from "@/components/forms/field-label"
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import { NO_ACCOUNT } from "@/features/accounts/constants"
 import type { Category } from "@/features/categories/queries"
@@ -114,24 +115,30 @@ export function TransactionsFilters({
     Number(isAllMonths)
 
   const typeSelect = (fullWidth: boolean) => (
-    <FilterSelect
-      label="Tipo"
-      fullWidth={fullWidth}
-      value={filters.type ?? ALL}
-      onChange={(value) =>
-        navigate({
-          type: value === ALL ? undefined : (value as LedgerFilterType),
-          // Una categoría de otro tipo dejaría la tabla vacía
-          categoryId: undefined
-        })
-      }
-      options={[
-        { id: ALL, label: "Todos" },
-        { id: "income", label: "Ingresos" },
-        { id: "expense", label: "Gastos" },
-        { id: "transfer", label: "Traspasos" }
-      ]}
-    />
+    <div className={cn("flex items-center gap-0.5", fullWidth && "w-full")}>
+      <FilterSelect
+        label="Tipo"
+        fullWidth={fullWidth}
+        value={filters.type ?? ALL}
+        onChange={(value) =>
+          navigate({
+            type: value === ALL ? undefined : (value as LedgerFilterType),
+            // Una categoría de otro tipo dejaría la tabla vacía
+            categoryId: undefined
+          })
+        }
+        options={[
+          { id: ALL, label: "Todos" },
+          { id: "income", label: "Entradas" },
+          { id: "expense", label: "Salidas" },
+          { id: "transfer", label: "Traspasos" }
+        ]}
+      />
+      <FieldHelp
+        help="filters.type"
+        label="Tipo"
+      />
+    </div>
   )
 
   const categorySelect = (fullWidth: boolean) => (
@@ -198,19 +205,25 @@ export function TransactionsFilters({
         className="flex flex-wrap items-center gap-2"
         data-tour="transactions-search"
       >
-        <SearchField
-          aria-label="Buscar en descripción o nota"
-          value={q}
-          onChange={setQ}
-          className="w-full md:min-w-72 md:flex-1 md:basis-72"
-        >
-          {/* Mismo gris que las tarjetas y tablas (`bg-surface`). `bg-field` lo fija el CSS de HeroUI directo, no por la variable */}
-          <SearchField.Group className="h-11 bg-surface [--search-field-group-bg-focus:var(--surface)] [--search-field-group-bg-hover:var(--surface-secondary)] [--search-field-group-bg:var(--surface)] focus-within:bg-surface hover:bg-surface-secondary">
-            <SearchField.SearchIcon />
-            <SearchField.Input placeholder="Buscar" />
-            <SearchField.ClearButton />
-          </SearchField.Group>
-        </SearchField>
+        <div className="flex w-full items-center gap-1 md:min-w-72 md:flex-1 md:basis-72">
+          <SearchField
+            aria-label="Buscar en descripción o nota"
+            value={q}
+            onChange={setQ}
+            className="min-w-0 flex-1"
+          >
+            {/* Mismo gris que las tarjetas y tablas (`bg-surface`). `bg-field` lo fija el CSS de HeroUI directo, no por la variable */}
+            <SearchField.Group className="h-11 bg-surface [--search-field-group-bg-focus:var(--surface)] [--search-field-group-bg-hover:var(--surface-secondary)] [--search-field-group-bg:var(--surface)] focus-within:bg-surface hover:bg-surface-secondary">
+              <SearchField.SearchIcon />
+              <SearchField.Input placeholder="Buscar" />
+              <SearchField.ClearButton />
+            </SearchField.Group>
+          </SearchField>
+          <FieldHelp
+            help="filters.search"
+            label="Buscar"
+          />
+        </div>
 
         {/* El mes es texto (no botón): las flechas lo cambian y el toggle
             alterna entre un mes y todos */}

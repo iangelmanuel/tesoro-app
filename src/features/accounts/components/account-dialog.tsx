@@ -5,7 +5,6 @@ import {
   Button,
   FieldError,
   Input,
-  Label,
   ListBox,
   Modal,
   Select,
@@ -13,6 +12,7 @@ import {
   toast
 } from "@heroui/react"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import { FieldLabel } from "@/components/forms/field-label"
 import { IconColorPicker } from "@/features/categories/components/icon-color-picker"
 import { amountInput } from "@/features/debts/components/field"
 import { todayISO } from "@/libs/dates"
@@ -166,7 +166,7 @@ function AccountForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Nombre</Label>
+        <FieldLabel help="account.name">Nombre</FieldLabel>
         <Input placeholder="Nequi" />
         <FieldError>{errors?.name?.[0]}</FieldError>
       </TextField>
@@ -179,7 +179,7 @@ function AccountForm({
           isInvalid={Boolean(errors?.kind)}
           className="flex flex-col gap-2"
         >
-          <Label>Tipo</Label>
+          <FieldLabel help="account.type">Tipo</FieldLabel>
           <Select.Trigger>
             <Select.Value />
             <Select.Indicator />
@@ -212,7 +212,7 @@ function AccountForm({
           validationBehavior="aria"
           className="flex flex-col gap-2"
         >
-          <Label>Saldo inicial</Label>
+          <FieldLabel help="account.openingBalance">Saldo inicial</FieldLabel>
           <Input placeholder="0" />
           <FieldError>{errors?.opening_balance?.[0]}</FieldError>
         </TextField>
@@ -222,6 +222,7 @@ function AccountForm({
         <DatePickerField
           name="opening_balance_on"
           label="Fecha del saldo inicial"
+          help="account.openingBalanceDate"
           value={openingOn}
           onChange={setOpeningOn}
           error={errors?.opening_balance_on?.[0]}

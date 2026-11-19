@@ -5,7 +5,6 @@ import {
   Button,
   FieldError,
   Input,
-  Label,
   ListBox,
   Modal,
   Select,
@@ -15,6 +14,7 @@ import {
   toast
 } from "@heroui/react"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import { FieldLabel } from "@/components/forms/field-label"
 import { TimePickerField } from "@/components/forms/time-picker-field"
 import {
   type PaymentAccountOption,
@@ -110,7 +110,7 @@ export function ContributionDialog({
                     : "Aportar a la meta"}
               </Modal.Heading>
               <p className="text-sm text-muted">
-                Un aporte no es un gasto. Con cuenta, solo mueve su saldo.
+                Un aporte no es una salida. Con cuenta, solo mueve su saldo.
               </p>
             </Modal.Header>
             <Modal.Body>
@@ -224,7 +224,7 @@ function ContributionForm({
           isInvalid={Boolean(errors?.goal_id)}
           className="flex flex-col gap-2"
         >
-          <Label>Meta</Label>
+          <FieldLabel help="contribution.goal">Meta</FieldLabel>
           <Select.Trigger>
             <Select.Value />
             <Select.Indicator />
@@ -253,7 +253,12 @@ function ContributionForm({
       />
 
       <div className="flex flex-col gap-2">
-        <Label id="contribution-kind-label">Tipo</Label>
+        <FieldLabel
+          id="contribution-kind-label"
+          help="contribution.type"
+        >
+          Tipo
+        </FieldLabel>
         <ToggleButtonGroup
           aria-labelledby="contribution-kind-label"
           selectionMode="single"
@@ -291,7 +296,7 @@ function ContributionForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Monto</Label>
+        <FieldLabel help="common.amount">Monto</FieldLabel>
         <Input placeholder="0" />
         <FieldError>{errors?.amount?.[0]}</FieldError>
       </TextField>
@@ -300,6 +305,7 @@ function ContributionForm({
         <DatePickerField
           name="occurred_on"
           label="Fecha"
+          help="common.date"
           value={occurredOn}
           onChange={setOccurredOn}
           error={errors?.occurred_on?.[0]}
@@ -309,6 +315,7 @@ function ContributionForm({
 
         <TimePickerField
           name="occurred_time"
+          help="common.time"
           value={time}
           onChange={setTime}
           error={errors?.occurred_time?.[0]}
@@ -323,7 +330,7 @@ function ContributionForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Nota (opcional)</Label>
+        <FieldLabel help="common.note">Nota (opcional)</FieldLabel>
         <Input placeholder="Prima de diciembre" />
         <FieldError>{errors?.note?.[0]}</FieldError>
       </TextField>

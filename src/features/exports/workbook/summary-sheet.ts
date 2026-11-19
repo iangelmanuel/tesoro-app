@@ -32,14 +32,14 @@ const LABELS: Record<
   { in: string; out: string; net: string; rate: string }
 > = {
   personal: {
-    in: "Ingresos",
-    out: "Gastos",
+    in: "Entradas",
+    out: "Salidas",
     net: "Balance",
     rate: "Tasa de ahorro"
   },
   business: {
-    in: "Ventas",
-    out: "Costos y gastos",
+    in: "Entradas",
+    out: "Salidas",
     net: "Utilidad",
     rate: "Margen"
   }

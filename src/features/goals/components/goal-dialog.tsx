@@ -5,7 +5,6 @@ import {
   Button,
   FieldError,
   Input,
-  Label,
   Modal,
   TextField,
   toast
@@ -13,6 +12,7 @@ import {
 import { parseDate } from "@internationalized/date"
 import { X } from "lucide-react"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import { FieldLabel } from "@/components/forms/field-label"
 import { IconColorPicker } from "@/features/categories/components/icon-color-picker"
 import { todayISO } from "@/libs/dates"
 import { createGoal, updateGoal } from "../actions"
@@ -129,7 +129,7 @@ function GoalForm({ goal, onSaved, onCancel }: GoalFormProps) {
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Nombre</Label>
+        <FieldLabel help="goal.name">Nombre</FieldLabel>
         <Input placeholder="Viaje" />
         <FieldError>{errors?.name?.[0]}</FieldError>
       </TextField>
@@ -148,7 +148,7 @@ function GoalForm({ goal, onSaved, onCancel }: GoalFormProps) {
           validationBehavior="aria"
           className="flex flex-col gap-2"
         >
-          <Label>Monto objetivo</Label>
+          <FieldLabel help="goal.target">Monto objetivo</FieldLabel>
           <Input placeholder="0" />
           <FieldError>{errors?.target_amount?.[0]}</FieldError>
         </TextField>
@@ -158,6 +158,7 @@ function GoalForm({ goal, onSaved, onCancel }: GoalFormProps) {
           <DatePickerField
             name="target_date"
             label="Fecha objetivo (opcional)"
+            help="goal.targetDate"
             value={targetDate}
             onChange={setTargetDate}
             error={errors?.target_date?.[0]}

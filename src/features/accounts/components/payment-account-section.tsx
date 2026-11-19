@@ -1,9 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { FieldError, Input, Label, Switch, TextField } from "@heroui/react"
+import { FieldError, Input, Switch, TextField } from "@heroui/react"
 import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
 import { AccountSelectField } from "@/components/forms/account-select-field"
+import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
+import type { FieldHelpKey } from "@/config/help"
 import { amountInput } from "@/features/debts/components/field"
 import { parseAmount } from "@/features/transactions/schemas"
 import { formatCurrency } from "@/libs/format"
@@ -38,6 +40,8 @@ interface PaymentAccountSectionProps {
   errors?: PaymentAccountErrors
   /** Etiqueta del select de cuenta */
   label?: string
+  /** Ayuda del (?) del select de cuenta */
+  accountHelp?: FieldHelpKey
   /**
    * Si el dinero sale ("out") o entra ("in") a la cuenta. En "in" no hay
    * faltante ni traspaso: se muestra el saldo que quedará
@@ -60,6 +64,7 @@ export function PaymentAccountSection({
   amount,
   errors,
   label = "Cuenta",
+  accountHelp = "common.account",
   direction = "out",
   allowTransfer = true,
   defaultAccountId = "",
@@ -93,6 +98,7 @@ export function PaymentAccountSection({
         workspaceId={workspaceId}
         name="account_id"
         label={label}
+        help={accountHelp}
         value={accountId}
         onChange={(id) => {
           setAccountId(id)
@@ -136,16 +142,22 @@ export function PaymentAccountSection({
       )}
 
       {canTransfer && (
-        <Switch
-          isSelected={transferOn}
-          onChange={setTransferChoice}
-          className="min-h-11"
-        >
-          <Switch.Control>
-            <Switch.Thumb />
-          </Switch.Control>
-          <Switch.Content>Traspasar fondos antes</Switch.Content>
-        </Switch>
+        <div className="flex items-center gap-0.5">
+          <Switch
+            isSelected={transferOn}
+            onChange={setTransferChoice}
+            className="min-h-11"
+          >
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+            <Switch.Content>Traspasar fondos antes</Switch.Content>
+          </Switch>
+          <FieldHelp
+            help="transfer.before"
+            label="Traspasar fondos antes"
+          />
+        </div>
       )}
 
       {transferOn ? (
@@ -154,6 +166,7 @@ export function PaymentAccountSection({
             workspaceId={workspaceId}
             name="transfer_from"
             label="Desde"
+            help="transfer.from"
             value={sourceId}
             onChange={setSourceChoice}
             accounts={sources.map((account) => ({
@@ -172,7 +185,7 @@ export function PaymentAccountSection({
             validationBehavior="aria"
             className="flex flex-col gap-2"
           >
-            <Label>Monto del traspaso</Label>
+            <FieldLabel help="transfer.amount">Monto del traspaso</FieldLabel>
             <Input placeholder="0" />
             <FieldError>{errors?.transfer_amount}</FieldError>
           </TextField>

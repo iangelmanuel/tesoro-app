@@ -1,14 +1,8 @@
 "use client"
 
 import { useActionState, useRef } from "react"
-import {
-  Button,
-  FieldError,
-  Input,
-  Label,
-  TextField,
-  toast
-} from "@heroui/react"
+import { Button, FieldError, Input, TextField, toast } from "@heroui/react"
+import { FieldLabel } from "@/components/forms/field-label"
 import { changePassword, createPassword } from "../actions"
 import type { ProfileFormState } from "../types"
 
@@ -54,7 +48,7 @@ export function PasswordForm({ hasPassword }: PasswordFormProps) {
           validationBehavior="aria"
           className="flex flex-col gap-2"
         >
-          <Label>Contraseña actual</Label>
+          <FieldLabel help="password.current">Contraseña actual</FieldLabel>
           <Input />
           <FieldError>{errors?.currentPassword?.[0]}</FieldError>
         </TextField>
@@ -67,7 +61,7 @@ export function PasswordForm({ hasPassword }: PasswordFormProps) {
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Nueva contraseña</Label>
+        <FieldLabel help="password.new">Nueva contraseña</FieldLabel>
         <Input />
         <FieldError>{errors?.password?.[0]}</FieldError>
       </TextField>
@@ -79,7 +73,7 @@ export function PasswordForm({ hasPassword }: PasswordFormProps) {
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Confirma la contraseña</Label>
+        <FieldLabel help="password.confirm">Confirma la contraseña</FieldLabel>
         <Input />
         <FieldError>{errors?.confirmPassword?.[0]}</FieldError>
       </TextField>

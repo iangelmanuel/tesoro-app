@@ -5,13 +5,13 @@ import {
   Button,
   FieldError,
   Input,
-  Label,
   ListBox,
   Modal,
   Select,
   TextField,
   toast
 } from "@heroui/react"
+import { FieldLabel } from "@/components/forms/field-label"
 import { SITE } from "@/config/site"
 import { Field } from "@/features/debts/components/field"
 import { createBusiness, updateBusiness } from "../actions"
@@ -53,7 +53,7 @@ export function BusinessDialog({ business, trigger }: BusinessDialogProps) {
               <p className="text-sm text-muted">
                 {isEditing
                   ? "Cambia los datos de tu empresa. Sus movimientos no cambian."
-                  : "Un espacio separado de tus finanzas personales para las ventas, costos y gastos de tu negocio."}
+                  : "Un espacio separado de tus finanzas personales para las entradas y salidas de tu negocio."}
               </p>
             </Modal.Header>
             <Modal.Body>
@@ -128,7 +128,7 @@ export function BusinessForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Nombre</Label>
+        <FieldLabel help="business.name">Nombre</FieldLabel>
         <Input placeholder="Panadería Ana" />
         <FieldError>{errors?.name?.[0]}</FieldError>
       </TextField>
@@ -143,7 +143,7 @@ export function BusinessForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>NIT (opcional)</Label>
+        <FieldLabel help="business.taxId">NIT (opcional)</FieldLabel>
         <Input placeholder="900123456-7" />
         <FieldError>{errors?.tax_id?.[0]}</FieldError>
       </TextField>
@@ -151,6 +151,7 @@ export function BusinessForm({
       <Field
         id="sector"
         label="Sector"
+        help="business.sector"
         errors={errors?.sector}
       >
         <Select

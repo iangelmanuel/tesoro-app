@@ -58,6 +58,7 @@ export function SignInForm() {
         <FormField
           name="email"
           label="Email"
+          help="auth.email"
           type="email"
           autoComplete="email"
           placeholder="tu@email.com"
@@ -68,6 +69,7 @@ export function SignInForm() {
         <FormField
           name="password"
           label="Contraseña"
+          help="password.current"
           type="password"
           autoComplete="current-password"
           errors={state.fieldErrors?.password}

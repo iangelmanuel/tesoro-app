@@ -145,8 +145,8 @@ export function addPersonalMonthSheet(
 
   // 1. Resumen del mes (las fórmulas van al final)
   const summary = writeMonthSummary(sheet, accent, FIRST_SECTION_ROW, [
-    { label: "Ingresos", value: income },
-    { label: "Gastos", value: expense },
+    { label: "Entradas", value: income },
+    { label: "Salidas", value: expense },
     { label: "Balance", value: balance },
     { label: "Tasa de ahorro", value: rate },
     { label: "Saldo en cuentas al inicio", value: openingBalance },
@@ -346,10 +346,10 @@ export function addPersonalMonthSheet(
   const [incomeCell, expenseCell, balanceCell, rateCell, openCell, closeCell] =
     [0, 1, 2, 3, 4, 5].map(valueCell)
 
-  setFormula(sheet, incomeCell, sumByKind(movements, "Ingreso", income), {
+  setFormula(sheet, incomeCell, sumByKind(movements, "Entrada", income), {
     color: COLORS.income
   })
-  setFormula(sheet, expenseCell, sumByKind(movements, "Gasto", expense), {
+  setFormula(sheet, expenseCell, sumByKind(movements, "Salida", expense), {
     color: COLORS.expense
   })
   setFormula(sheet, balanceCell, {

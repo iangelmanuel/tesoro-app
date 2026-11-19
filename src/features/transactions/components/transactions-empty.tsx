@@ -37,13 +37,13 @@ export function NoTransactions({
       icon={ReceiptText}
       title={
         isBusiness
-          ? "Registra tu primera venta"
+          ? "Registra tu primera entrada"
           : "Registra tu primer movimiento"
       }
       description={
         isBusiness
-          ? "Anota una venta o un costo o gasto de tu empresa."
-          : "Anota un ingreso o un gasto, o importa los que ya tienes en un Excel o CSV."
+          ? "Anota una entrada o una salida de tu empresa."
+          : "Anota una entrada o una salida, o importa las que ya tienes en un Excel o CSV."
       }
     >
       <>
@@ -56,7 +56,7 @@ export function NoTransactions({
           trigger={
             <Button>
               <Plus />
-              {isBusiness ? "Registrar operación" : "Registrar movimiento"}
+              Registrar movimiento
             </Button>
           }
         />

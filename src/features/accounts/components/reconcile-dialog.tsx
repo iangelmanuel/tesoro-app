@@ -5,7 +5,6 @@ import {
   Button,
   FieldError,
   Input,
-  Label,
   Modal,
   TextField,
   toast
@@ -13,6 +12,7 @@ import {
 import { HelpHint } from "@/components/dashboard/help-hint"
 import { TONE_TEXT_CLASSES, type Tone } from "@/components/dashboard/tone"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import { FieldLabel } from "@/components/forms/field-label"
 import { SITE } from "@/config/site"
 import { useIsMobile } from "@/hooks/use-is-mobile"
 import { todayISO } from "@/libs/dates"
@@ -205,7 +205,7 @@ function ReconcileForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Saldo real</Label>
+        <FieldLabel help="balance.real">Saldo real</FieldLabel>
         <Input
           placeholder="0"
           className="min-h-11"
@@ -216,6 +216,7 @@ function ReconcileForm({
       <DatePickerField
         name="occurred_on"
         label="Fecha del saldo"
+        help="balance.date"
         value={date}
         onChange={setDate}
         error={errors?.occurred_on?.[0]}

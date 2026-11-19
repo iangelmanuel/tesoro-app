@@ -133,8 +133,8 @@ function lossMonthRule(
       rule: "loss_month",
       entityKey: lastClosed,
       severity: "high",
-      title: "Tus costos superaron tus ventas",
-      evidence: `En ${formatMonth(lastClosed)} tus costos superaron tus ventas en ${formatCurrency(loss, workspace.currency)}`,
+      title: "Tus salidas superaron tus entradas",
+      evidence: `En ${formatMonth(lastClosed)} tus salidas superaron tus entradas en ${formatCurrency(loss, workspace.currency)}`,
       amount: loss,
       href: monthReportHref(workspace, lastClosed, "expense"),
       linkLabel: "Ir a Reportes"
@@ -184,7 +184,7 @@ function lowLiquidityRule(
       entityKey: "workspace",
       severity: "high",
       title: "Tu liquidez es baja",
-      evidence: `Tu saldo en cuentas cubre ${DECIMAL_FORMAT.format(factor.value)} meses de costos`,
+      evidence: `Tu saldo en cuentas cubre ${DECIMAL_FORMAT.format(factor.value)} meses de salidas`,
       amount: LOW_LIQUIDITY_MONTHS * average - balance,
       href: workspaceCashFlowPath(workspace) as Route,
       linkLabel: "Ir a Flujo de caja"
@@ -219,7 +219,7 @@ function salesDropRule(
       rule: "sales_drop",
       entityKey: lastClosed,
       severity: "medium",
-      title: "Tus ventas bajaron",
+      title: "Tus entradas bajaron",
       evidence: `Vendiste ${formatCurrency(sales, workspace.currency)} en ${formatMonth(lastClosed)} vs. ${formatCurrency(average, workspace.currency)} de promedio (${signedPercent(sales / average - 1)})`,
       amount: average - sales,
       href: monthReportHref(workspace, lastClosed, "income"),
@@ -357,7 +357,7 @@ function clientConcentrationRule(
         entityKey: name.toLowerCase().slice(0, ENTITY_KEY_MAX),
         severity: "medium",
         title: `Dependes mucho de ${name}`,
-        evidence: `${name} es el ${Math.round(share * 100)} % de tus ventas de los últimos 3 meses`,
+        evidence: `${name} es el ${Math.round(share * 100)} % de tus entradas de los últimos 3 meses`,
         amount: client.total,
         href: `${workspaceTransactionsPath(workspace)}?${query}` as Route,
         linkLabel: "Ir a Movimientos"
@@ -381,8 +381,8 @@ function costConcentrationRule(
       rule: "cost_concentration",
       entityKey: top.categoryId,
       severity: "low",
-      title: `${top.name} concentra tus costos`,
-      evidence: `${top.name} es el ${Math.round(top.share * 100)} % de tus costos de los últimos 3 meses`,
+      title: `${top.name} concentra tus salidas`,
+      evidence: `${top.name} es el ${Math.round(top.share * 100)} % de tus salidas de los últimos 3 meses`,
       amount: top.total,
       href: `${workspaceReportsPath(workspace)}?type=expense` as Route,
       linkLabel: "Ir a Reportes"

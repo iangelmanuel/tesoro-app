@@ -1,6 +1,7 @@
 "use client"
 
-import { Label, ListBox, Select } from "@heroui/react"
+import { ListBox, Select } from "@heroui/react"
+import { FieldLabel } from "@/components/forms/field-label"
 import { OTHER_INCOME } from "../constants"
 import type { IncomeSourceOption } from "../queries"
 
@@ -53,7 +54,7 @@ export function IncomeSourceField({
         onChange={(key) => onChange(key == null ? OTHER_INCOME : String(key))}
         className="flex flex-col gap-2"
       >
-        <Label>Ingreso fijo</Label>
+        <FieldLabel help="recurringIncome.source">Ingreso fijo</FieldLabel>
         <Select.Trigger>
           <Select.Value />
           <Select.Indicator />
@@ -62,9 +63,9 @@ export function IncomeSourceField({
           <ListBox>
             <ListBox.Item
               id={OTHER_INCOME}
-              textValue="Otro ingreso"
+              textValue="Otra entrada"
             >
-              Otro ingreso
+              Otra entrada
               <ListBox.ItemIndicator />
             </ListBox.Item>
             {showCurrent ? (

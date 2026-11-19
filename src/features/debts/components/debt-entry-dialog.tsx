@@ -7,7 +7,6 @@ import {
   Description,
   FieldError,
   Input,
-  Label,
   ListBox,
   Modal,
   Select,
@@ -21,6 +20,7 @@ import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
 import { AccountSelectField } from "@/components/forms/account-select-field"
 import { CategorySelectField } from "@/components/forms/category-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
 import { TimePickerField } from "@/components/forms/time-picker-field"
 import { selectableAccounts } from "@/features/accounts/components/account-select"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
@@ -307,7 +307,7 @@ function DebtEntryForm({
           isInvalid={Boolean(errors?.type)}
           className="flex flex-col gap-2"
         >
-          <Label>Tipo</Label>
+          <FieldLabel help="debtEntry.type">Tipo</FieldLabel>
           <Select.Trigger>
             <Select.Value />
             <Select.Indicator />
@@ -343,7 +343,13 @@ function DebtEntryForm({
 
       {type === "adjustment" && (
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium">El ajuste</p>
+          <div className="flex items-center gap-0.5">
+            <p className="text-sm font-medium">El ajuste</p>
+            <FieldHelp
+              help="debtEntry.direction"
+              label="El ajuste"
+            />
+          </div>
           <Tabs
             selectedKey={direction}
             onSelectionChange={(key) =>
@@ -382,7 +388,7 @@ function DebtEntryForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Monto</Label>
+        <FieldLabel help="common.amount">Monto</FieldLabel>
         <Input placeholder="0" />
         <FieldError>{errors?.amount?.[0]}</FieldError>
       </TextField>
@@ -391,6 +397,7 @@ function DebtEntryForm({
         <DatePickerField
           name="occurred_on"
           label="Fecha"
+          help="common.date"
           value={occurredOn}
           onChange={setOccurredOn}
           error={errors?.occurred_on?.[0]}
@@ -400,6 +407,7 @@ function DebtEntryForm({
 
         <TimePickerField
           name="occurred_time"
+          help="common.time"
           value={time}
           onChange={setTime}
           error={errors?.occurred_time?.[0]}
@@ -418,7 +426,9 @@ function DebtEntryForm({
           validationBehavior="aria"
           className="flex flex-col gap-2"
         >
-          <Label>Cuotas (opcional)</Label>
+          <FieldLabel help="debtEntry.installments">
+            Cuotas (opcional)
+          </FieldLabel>
           <Input placeholder={`1 a ${MAX_INSTALLMENTS}`} />
           <Description>
             Cada cuota suma al pago del mes de la tarjeta.
@@ -428,19 +438,27 @@ function DebtEntryForm({
       )}
 
       {canCreateTransaction && (
-        <Checkbox
-          name="create_transaction"
-          value="on"
-          isSelected={createTransaction}
-          onChange={setCreateTransaction}
-        >
-          <Checkbox.Control>
-            <Checkbox.Indicator />
-          </Checkbox.Control>
-          <Checkbox.Content className="text-sm">
-            {isReceivable ? "Registrar como ingreso" : "Registrar como gasto"}
-          </Checkbox.Content>
-        </Checkbox>
+        <div className="flex items-center gap-0.5">
+          <Checkbox
+            name="create_transaction"
+            value="on"
+            isSelected={createTransaction}
+            onChange={setCreateTransaction}
+          >
+            <Checkbox.Control>
+              <Checkbox.Indicator />
+            </Checkbox.Control>
+            <Checkbox.Content className="text-sm">
+              {isReceivable
+                ? "Registrar como entrada"
+                : "Registrar como salida"}
+            </Checkbox.Content>
+          </Checkbox>
+          <FieldHelp
+            help="debtEntry.createTransaction"
+            label="Registrar el movimiento"
+          />
+        </div>
       )}
 
       {showLink && validAmount && (
@@ -450,7 +468,7 @@ function DebtEntryForm({
           amount={amount}
           occurredOn={occurredOn}
           currency={currency}
-          noun={transactionType === "income" ? "ingreso" : "gasto"}
+          noun={transactionType === "income" ? "entrada" : "salida"}
           noneLabel={
             isCard && isPayment
               ? "No, es un pago aparte"
@@ -471,6 +489,7 @@ function DebtEntryForm({
               ? "Cuenta que recibe"
               : "Cuenta que paga"
           }
+          help="common.account"
           value={accountId}
           onChange={setAccountId}
           accounts={selectableAccounts(accounts, entry.payment_account_id)}
@@ -490,7 +509,9 @@ function DebtEntryForm({
             validationBehavior="aria"
             className="flex flex-col gap-2"
           >
-            <Label>Descripción (opcional)</Label>
+            <FieldLabel help="common.description">
+              Descripción (opcional)
+            </FieldLabel>
             <Input
               placeholder={`${
                 type === "advance"
@@ -510,6 +531,7 @@ function DebtEntryForm({
             categories={categoryOptions}
             workspaceId={workspaceId}
             type={transactionType}
+            help="common.category"
             placeholder={
               type === "advance"
                 ? "Avance de tarjeta"
@@ -531,7 +553,7 @@ function DebtEntryForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Nota (opcional)</Label>
+        <FieldLabel help="common.note">Nota (opcional)</FieldLabel>
         <Input placeholder="Cuota de noviembre" />
         <FieldError>{errors?.note?.[0]}</FieldError>
       </TextField>
@@ -627,28 +649,28 @@ function accountEffect({
       const extra = type === "extra" ? " No cubre el pago del mes." : ""
       if (isCard) {
         if (linking) {
-          return `El gasto elegido se elimina: el pago a la tarjeta ya descuenta de la cuenta.${extra}`
+          return `La salida elegida se elimina: el pago a la tarjeta ya descuenta de la cuenta.${extra}`
         }
         return accountName
-          ? `Sale de ${accountName} hacia la tarjeta. No cuenta como gasto.${extra}`
+          ? `Sale de ${accountName} hacia la tarjeta. No cuenta como salida.${extra}`
           : `No toca tus cuentas: solo baja el saldo.${extra}`
       }
       if (!createsTransaction) {
-        return `No queda como ${isReceivable ? "ingreso" : "gasto"} en Movimientos.${extra}`
+        return `No queda como ${isReceivable ? "entrada" : "salida"} en Movimientos.${extra}`
       }
       if (linking) {
-        return `Se enlaza al ${isReceivable ? "ingreso" : "gasto"} elegido: no se crea otro.${extra}`
+        return `Se enlaza a la ${isReceivable ? "entrada" : "salida"} elegida: no se crea otra.${extra}`
       }
       return accountName
-        ? `${isReceivable ? "Entra a" : "Sale de"} ${accountName} como ${isReceivable ? "ingreso" : "gasto"}.${extra}`
+        ? `${isReceivable ? "Entra a" : "Sale de"} ${accountName} como ${isReceivable ? "entrada" : "salida"}.${extra}`
         : "Elige la cuenta."
     }
     case "purchase":
       return "Una compra no toca tus cuentas: solo sube el saldo de la tarjeta."
     case "advance":
-      if (linking) return "Se enlaza al ingreso elegido: no se crea otro."
+      if (linking) return "Se enlaza a la entrada elegida: no se crea otra."
       return accountName
-        ? `Entra a ${accountName} como ingreso (Avance de tarjeta).`
+        ? `Entra a ${accountName} como entrada (Avance de tarjeta).`
         : "Elige la cuenta a la que entró el dinero."
     case "fee":
       return "La cuota de manejo no toca tus cuentas: la pagas con la tarjeta."

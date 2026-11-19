@@ -5,7 +5,6 @@ import {
   Button,
   FieldError,
   Input,
-  Label,
   Modal,
   Tabs,
   TextField,
@@ -16,6 +15,7 @@ import {
 import { X } from "lucide-react"
 import { AccountSelectField } from "@/components/forms/account-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
 import {
   type AccountOption,
   selectableAccounts
@@ -176,23 +176,32 @@ function ReceivableForm({
             name="schedule"
             value={schedule}
           />
-          <Tabs
-            selectedKey={schedule}
-            onSelectionChange={(key) => setSchedule(key as ReceivableSchedule)}
-          >
-            <Tabs.ListContainer>
-              <Tabs.List aria-label="Tipo de cobro">
-                <Tabs.Tab id="once">
-                  Una vez
-                  <Tabs.Indicator />
-                </Tabs.Tab>
-                <Tabs.Tab id="monthly">
-                  Mes a mes
-                  <Tabs.Indicator />
-                </Tabs.Tab>
-              </Tabs.List>
-            </Tabs.ListContainer>
-          </Tabs>
+          <div className="flex items-center gap-1">
+            <Tabs
+              className="min-w-0 flex-1"
+              selectedKey={schedule}
+              onSelectionChange={(key) =>
+                setSchedule(key as ReceivableSchedule)
+              }
+            >
+              <Tabs.ListContainer>
+                <Tabs.List aria-label="Tipo de cobro">
+                  <Tabs.Tab id="once">
+                    Una vez
+                    <Tabs.Indicator />
+                  </Tabs.Tab>
+                  <Tabs.Tab id="monthly">
+                    Mes a mes
+                    <Tabs.Indicator />
+                  </Tabs.Tab>
+                </Tabs.List>
+              </Tabs.ListContainer>
+            </Tabs>
+            <FieldHelp
+              help="receivable.mode"
+              label="Tipo de cobro"
+            />
+          </div>
         </>
       )}
 
@@ -206,7 +215,7 @@ function ReceivableForm({
           validationBehavior="aria"
           className="flex flex-col gap-2"
         >
-          <Label>Nombre</Label>
+          <FieldLabel help="receivable.name">Nombre</FieldLabel>
           <Input
             placeholder={
               schedule === "monthly" ? "Arriendo" : "Préstamo a Juan"
@@ -223,7 +232,7 @@ function ReceivableForm({
           validationBehavior="aria"
           className="flex flex-col gap-2"
         >
-          <Label>Deudor (opcional)</Label>
+          <FieldLabel help="receivable.debtor">Deudor (opcional)</FieldLabel>
           <Input placeholder="Juan" />
           <FieldError>{errors?.counterparty?.[0]}</FieldError>
         </TextField>
@@ -246,6 +255,7 @@ function ReceivableForm({
       <AccountSelectField
         name="account_id"
         label="Cuenta habitual (opcional)"
+        help="common.defaultAccount"
         value={accountId}
         onChange={setAccountId}
         accounts={accountOptions}
@@ -308,7 +318,12 @@ function OnceFields({ receivable, errors, values }: FieldsProps) {
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>{isEditing ? "Monto inicial" : "Monto que te deben"}</Label>
+        <FieldLabel
+          help="receivable.amount"
+          helpLabel="Monto"
+        >
+          {isEditing ? "Monto inicial" : "Monto que te deben"}
+        </FieldLabel>
         <Input placeholder="0" />
         <FieldError>{errors?.opening_balance?.[0]}</FieldError>
       </TextField>
@@ -317,6 +332,7 @@ function OnceFields({ receivable, errors, values }: FieldsProps) {
         <DatePickerField
           name="expected_on"
           label="Fecha esperada (opcional)"
+          help="receivable.expectedDate"
           value={expectedOn}
           onChange={setExpectedOn}
           error={errors?.expected_on?.[0]}
@@ -380,7 +396,7 @@ function MonthlyFields({ receivable, errors, values }: FieldsProps) {
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Monto mensual</Label>
+        <FieldLabel help="receivable.monthlyAmount">Monto mensual</FieldLabel>
         <Input placeholder="0" />
         <FieldError>{errors?.installment?.[0]}</FieldError>
       </TextField>
@@ -390,6 +406,7 @@ function MonthlyFields({ receivable, errors, values }: FieldsProps) {
         <DatePickerField
           name="starts_on"
           label="Desde"
+          help="common.from"
           value={startsOn}
           onChange={setStartsOn}
           error={errors?.starts_on?.[0]}
@@ -407,7 +424,7 @@ function MonthlyFields({ receivable, errors, values }: FieldsProps) {
           validationBehavior="aria"
           className="flex flex-col gap-2"
         >
-          <Label>Día de pago</Label>
+          <FieldLabel help="receivable.dueDay">Día de pago</FieldLabel>
           <Input
             type="number"
             min={1}
@@ -419,7 +436,12 @@ function MonthlyFields({ receivable, errors, values }: FieldsProps) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label id="receivable-term-label">Duración</Label>
+        <FieldLabel
+          id="receivable-term-label"
+          help="receivable.installments"
+        >
+          Duración
+        </FieldLabel>
         <div className="flex items-center gap-2">
           <ToggleButtonGroup
             aria-labelledby="receivable-term-label"

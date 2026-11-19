@@ -116,7 +116,7 @@ async function SummaryContent({
       <div className="grid gap-4 lg:grid-cols-5">
         <Card className="lg:col-span-3">
           <CardHeader>
-            <CardTitle>Ventas vs. costos</CardTitle>
+            <CardTitle>Entradas vs. salidas</CardTitle>
             <CardDescription>Últimos {TREND_MONTHS} meses</CardDescription>
           </CardHeader>
           <CardContent>
@@ -154,7 +154,7 @@ async function SummaryContent({
                 message={
                   current.txCount === 0
                     ? "No hay movimientos en este periodo"
-                    : "No hay costos y gastos en este periodo"
+                    : "No hay salidas en este periodo"
                 }
                 className="h-72"
               />

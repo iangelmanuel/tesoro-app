@@ -251,6 +251,7 @@ export function DebtSheet({
                 categories={categories}
                 currency={currency}
                 cycleCovered={nextPayment(debt)?.status === "paid"}
+                collectable={isMonthly ? collectable : undefined}
                 readOnly={!isActive}
               />
             </DetailSection>

@@ -31,7 +31,10 @@ import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { deleteEntry } from "@/features/debts/actions"
 import { DebtEntryDialog } from "@/features/debts/components/debt-entry-dialog"
-import { DuplicateDebtEntryLoader } from "@/features/debts/components/duplicate-debt-entry-dialog"
+import {
+  DuplicateDebtEntryLoader,
+  DuplicateReceivableLoader
+} from "@/features/debts/components/duplicate-debt-entry-dialog"
 import { deleteContribution } from "@/features/goals/actions"
 import { ContributionDialog } from "@/features/goals/components/contribution-dialog"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
@@ -893,18 +896,27 @@ function LinkedPaymentActions({
         )
       }
       renderDuplicate={
-        // Solo con la deuda activa. El Me deben mensual va por su diálogo
-        entry.debt_status === "active" &&
-        !(entry.debt_kind === "receivable" && entry.debt_schedule === "monthly")
+        // Solo con la deuda activa. El cobro de un Me deben mensual va por su
+        // diálogo, a la cuota pendiente siguiente (toast si no queda)
+        entry.debt_status === "active"
           ? (dialog) =>
-              dialog.open && (
+              dialog.open &&
+              (entry.debt_kind === "receivable" &&
+              entry.debt_schedule === "monthly" ? (
+                <DuplicateReceivableLoader
+                  workspaceId={entry.workspace_id}
+                  entryId={entry.id}
+                  accounts={accounts}
+                  onOpenChange={dialog.onOpenChange}
+                />
+              ) : (
                 <DuplicateDebtEntryLoader
                   workspaceId={entry.workspace_id}
                   entryId={entry.id}
                   accounts={accounts}
                   onOpenChange={dialog.onOpenChange}
                 />
-              )
+              ))
           : undefined
       }
     />

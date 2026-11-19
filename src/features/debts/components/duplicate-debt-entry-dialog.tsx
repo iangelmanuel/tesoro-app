@@ -4,10 +4,16 @@ import { useEffect, useEffectEvent, useState } from "react"
 import { toast } from "@heroui/react"
 import { activeAccountId } from "@/features/accounts/active-account"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
-import { type EntryEditorDebt, loadDebtEntryEditor } from "../actions"
+import {
+  type EntryEditorDebt,
+  loadDebtEntryEditor,
+  loadReceivableDuplicate
+} from "../actions"
 import { entryTypeOf } from "../entry-types"
 import type { DebtEntry } from "../queries"
+import type { CollectableReceivable } from "../receivable-collect"
 import { PaymentDialog, type PaymentInitialValues } from "./payment-dialog"
+import { ReceivableCollectDialog } from "./receivable-collect-form"
 
 /** Movimiento de la deuda que se duplica y su deuda */
 export interface DebtEntryDuplicateData {
@@ -140,6 +146,60 @@ export function DuplicateDebtEntryLoader({
       workspaceId={workspaceId}
       data={data}
       accounts={accounts}
+      onOpenChange={onOpenChange}
+    />
+  )
+}
+
+/**
+ * Duplicar el cobro de un Me deben mensual desde Movimientos (SPEC 49): abre
+ * el cobro de la cuota pendiente siguiente a la que cubrió el original. Sin
+ * cuota pendiente, toast y no abre nada
+ */
+export function DuplicateReceivableLoader({
+  workspaceId,
+  entryId,
+  accounts,
+  onOpenChange
+}: {
+  workspaceId: string
+  entryId: string
+  accounts: PaymentAccountOption[]
+  onOpenChange: (open: boolean) => void
+}) {
+  const [data, setData] = useState<{
+    receivable: CollectableReceivable
+    periodOn: string
+  } | null>(null)
+  const onLoadError = useEffectEvent((message: string) => {
+    toast.danger(message)
+    onOpenChange(false)
+  })
+
+  useEffect(() => {
+    let active = true
+    loadReceivableDuplicate(entryId).then((result) => {
+      if (!active) return
+      if ("error" in result) {
+        onLoadError(result.error)
+      } else {
+        setData(result)
+      }
+    })
+    return () => {
+      active = false
+    }
+  }, [entryId])
+
+  if (!data) return null
+
+  return (
+    <ReceivableCollectDialog
+      workspaceId={workspaceId}
+      receivable={data.receivable}
+      periodOn={data.periodOn}
+      accounts={accounts}
+      open
       onOpenChange={onOpenChange}
     />
   )

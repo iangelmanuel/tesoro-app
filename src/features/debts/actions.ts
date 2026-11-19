@@ -2,6 +2,7 @@
 
 import { z } from "zod"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
+import { todayISO } from "@/libs/dates"
 import { moveErrorMessage } from "@/libs/move-error"
 import { revalidatePersonalPages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
@@ -30,9 +31,16 @@ import {
   type DebtEntry,
   type LinkableTransaction,
   findLinkableTransactions,
+  getDebtEntries,
   getDebtEntry,
   getDebts
 } from "./queries"
+import {
+  type CollectableReceivable,
+  lastCoveredPeriod,
+  nextPendingInstallment,
+  toCollectableReceivable
+} from "./receivable-collect"
 import {
   DEBT_KINDS,
   type DebtKind,
@@ -538,6 +546,55 @@ export async function loadDebtEntryEditor(
     return { entry, debt }
   } catch {
     return { error: "No se pudo cargar el movimiento. Intenta de nuevo" }
+  }
+}
+
+const NO_PENDING_INSTALLMENT =
+  "Esta cuenta por cobrar no tiene cuotas pendientes"
+
+/**
+ * Duplicar el cobro de un Me deben mensual desde Movimientos (SPEC 49): la
+ * cuenta por cobrar con sus cuotas y la cuota pendiente siguiente a la última
+ * que cubrió el original. Solo lectura: RLS limita las filas al dueño.
+ */
+export async function loadReceivableDuplicate(
+  entryId: string
+): Promise<
+  { receivable: CollectableReceivable; periodOn: string } | { error: string }
+> {
+  const id = idSchema.safeParse(entryId)
+  if (!id.success) {
+    return { error: ENTRY_NOT_FOUND }
+  }
+
+  try {
+    const [loaded, entry] = await Promise.all([
+      findEntry(id.data),
+      getDebtEntry(id.data)
+    ])
+    if (!loaded || !entry) {
+      return { error: ENTRY_NOT_FOUND }
+    }
+    if (loaded.debt.status !== "active") {
+      return { error: DEBT_NOT_ACTIVE }
+    }
+
+    const [debts, entries] = await Promise.all([
+      getDebts(loaded.debt.workspace_id),
+      getDebtEntries(loaded.debt.id)
+    ])
+    const debt = debts.find((option) => option.id === loaded.debt.id)
+    if (!debt || debt.kind !== "receivable" || debt.schedule !== "monthly") {
+      return { error: ENTRY_NOT_FOUND }
+    }
+
+    const receivable = toCollectableReceivable(debt, entries, todayISO())
+    const next = nextPendingInstallment(receivable, lastCoveredPeriod(entry))
+    return next
+      ? { receivable, periodOn: next.period_on }
+      : { error: NO_PENDING_INSTALLMENT }
+  } catch {
+    return { error: "No se pudo cargar el cobro. Intenta de nuevo" }
   }
 }
 

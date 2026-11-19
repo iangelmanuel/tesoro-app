@@ -157,6 +157,33 @@ export function openPeriods(receivable: CollectableReceivable) {
   return receivable.periods.filter((period) => period.remaining > 0)
 }
 
+/**
+ * Primera cuota sin cubrir posterior a `afterPeriodOn` (Duplicar, SPEC 49):
+ * el duplicado del cobro de octubre cubre noviembre, o la siguiente pendiente.
+ * Sin `afterPeriodOn`, la más antigua. null si no queda ninguna
+ */
+export function nextPendingInstallment(
+  receivable: CollectableReceivable,
+  afterPeriodOn: string | null
+) {
+  return (
+    openPeriods(receivable).find(
+      (period) => afterPeriodOn === null || period.period_on > afterPeriodOn
+    ) ?? null
+  )
+}
+
+/** Última cuota que cubrió un cobro; null si no cubrió ninguna */
+export function lastCoveredPeriod(entry: Pick<DebtEntry, "allocations">) {
+  return entry.allocations.reduce<string | null>(
+    (last, allocation) =>
+      last === null || allocation.period_on > last
+        ? allocation.period_on
+        : last,
+    null
+  )
+}
+
 export interface CollectPreview {
   /** Meses que el cobro cubre completos */
   covered: string[]

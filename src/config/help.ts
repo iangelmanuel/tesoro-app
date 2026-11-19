@@ -157,6 +157,7 @@ export const FIELD_HELP = {
   "goal.name": "Para qué ahorras. Ej.: Viaje, Fondo de emergencia.",
   "goal.target": "Cuánto quieres juntar.",
   "goal.targetDate": "Para cuándo. Opcional: sin fecha no hay ritmo sugerido.",
+  "contribution.goal": "La meta a la que sumas o de la que sacas.",
   "contribution.type": "Aporte: sumas a la meta. Retiro: sacas de ella.",
 
   // Presupuesto

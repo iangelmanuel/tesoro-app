@@ -166,7 +166,7 @@ Los grupos de tabs sin etiqueta visible (tipo de tasa E.A./M.V., tipo de cobro d
 | `receivable.select`         | Lo que te deben y vas a cobrar.                                                                                       |
 | `receivable.period`         | El mes de la cuota que te pagan.                                                                                      |
 
-**Meta y aporte** (`goal-dialog.tsx`, `contribution-dialog.tsx`): `goal.name` "Para qué ahorras. Ej.: Viaje, Fondo de emergencia." · `goal.target` "Cuánto quieres juntar." · `goal.targetDate` "Para cuándo. Opcional: sin fecha no hay ritmo sugerido." · `contribution.type` "Aporte: sumas a la meta. Retiro: sacas de ella."
+**Meta y aporte** (`goal-dialog.tsx`, `contribution-dialog.tsx`): `goal.name` "Para qué ahorras. Ej.: Viaje, Fondo de emergencia." · `goal.target` "Cuánto quieres juntar." · `goal.targetDate` "Para cuándo. Opcional: sin fecha no hay ritmo sugerido." · `contribution.goal` "La meta a la que sumas o de la que sacas." · `contribution.type` "Aporte: sumas a la meta. Retiro: sacas de ella."
 
 **Presupuesto** (`budget-dialog.tsx`): `budget.category` "La categoría de salida que quieres limitar." · `budget.amount` "Lo máximo que quieres gastar en el mes en esa categoría."
 

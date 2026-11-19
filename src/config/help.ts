@@ -132,6 +132,8 @@ export const FIELD_HELP = {
   "debtEntry.type": "Elige qué pasó. Debajo ves si sube o baja el saldo.",
   "debtEntry.installments":
     "En cuántas cuotas difieres la compra o el avance. Vacío: una sola.",
+  "debtEntry.createTransaction":
+    "Además, crea el movimiento en tu cuenta para que el saldo cuadre.",
   "debtEntry.direction":
     "Sube: el saldo aumenta (intereses, cargos). Baja: el saldo disminuye.",
 
@@ -139,14 +141,17 @@ export const FIELD_HELP = {
   "receivable.name": "Qué te deben. Ej.: Préstamo a Ana.",
   "receivable.debtor": "Quién te debe.",
   "receivable.mode":
-    "Único: te pagan todo de una vez. Mensual: te pagan una cuota cada mes.",
+    "Una vez: te pagan todo junto. Mes a mes: te pagan una cuota cada mes.",
   "receivable.amount": "Lo que te deben en total.",
   "receivable.monthlyAmount": "Lo que te pagan cada mes.",
   "receivable.installments": "Cuántas cuotas faltan por cobrar.",
   "receivable.expectedDate": "Cuándo esperas que te paguen. Opcional.",
   "receivable.collectAccount": "La cuenta donde recibes el dinero.",
   "receivable.collectHow":
-    "Cuota: cobras un mes. Varios meses: llenas varias cuotas de una vez.",
+    "Abono: una parte. Pago completo: todo lo que falta. Una cuota: un mes. Varios meses: llenas varias cuotas de una vez.",
+  "receivable.dueDay": "El día del mes en que te pagan la cuota.",
+  "receivable.select": "Lo que te deben y vas a cobrar.",
+  "receivable.period": "El mes de la cuota que te pagan.",
 
   // Meta y aporte
   "goal.name": "Para qué ahorras. Ej.: Viaje, Fondo de emergencia.",

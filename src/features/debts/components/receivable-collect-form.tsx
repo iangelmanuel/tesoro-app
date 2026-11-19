@@ -17,6 +17,7 @@ import {
 import { Amount } from "@/components/dashboard/amount"
 import { useHideAmounts } from "@/components/dashboard/hide-amounts-context"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
 import { activeAccountId } from "@/features/accounts/active-account"
 import {
   type PaymentAccountOption,
@@ -219,7 +220,7 @@ function ReceivableSelect({
       onChange={(key) => onChange(key == null ? "" : String(key))}
       className="flex flex-col gap-2"
     >
-      <Label>Cuenta por cobrar</Label>
+      <FieldLabel help="receivable.select">Cuenta por cobrar</FieldLabel>
       <Select.Trigger>
         <Select.Value />
         <Select.Indicator />
@@ -373,24 +374,31 @@ function CollectFields({
         value={mode}
       />
 
-      <Tabs
-        selectedKey={mode}
-        onSelectionChange={(key) => changeMode(key as ReceivableCollectMode)}
-      >
-        <Tabs.ListContainer>
-          <Tabs.List aria-label="Cómo se cobra">
-            {modes.map((item) => (
-              <Tabs.Tab
-                key={item}
-                id={item}
-              >
-                {MODE_LABELS[item]}
-                <Tabs.Indicator />
-              </Tabs.Tab>
-            ))}
-          </Tabs.List>
-        </Tabs.ListContainer>
-      </Tabs>
+      <div className="flex items-center gap-1">
+        <Tabs
+          className="min-w-0 flex-1"
+          selectedKey={mode}
+          onSelectionChange={(key) => changeMode(key as ReceivableCollectMode)}
+        >
+          <Tabs.ListContainer>
+            <Tabs.List aria-label="Cómo se cobra">
+              {modes.map((item) => (
+                <Tabs.Tab
+                  key={item}
+                  id={item}
+                >
+                  {MODE_LABELS[item]}
+                  <Tabs.Indicator />
+                </Tabs.Tab>
+              ))}
+            </Tabs.List>
+          </Tabs.ListContainer>
+        </Tabs>
+        <FieldHelp
+          help="receivable.collectHow"
+          label="Cómo se cobra"
+        />
+      </div>
 
       {mode === "single" && (
         <input
@@ -412,7 +420,7 @@ function CollectFields({
           isInvalid={Boolean(errors?.period_on)}
           className="flex flex-col gap-2"
         >
-          <Label>Cuota</Label>
+          <FieldLabel help="receivable.period">Cuota</FieldLabel>
           <Select.Trigger>
             <Select.Value />
             <Select.Indicator />
@@ -472,7 +480,7 @@ function CollectFields({
             validationBehavior="aria"
             className="flex flex-col gap-2"
           >
-            <Label>Monto</Label>
+            <FieldLabel help="common.amount">Monto</FieldLabel>
             <Input placeholder="0" />
             <FieldError>{amountError}</FieldError>
           </TextField>
@@ -518,6 +526,7 @@ function CollectFields({
       <DatePickerField
         name="occurred_on"
         label="Fecha"
+        help="common.date"
         value={occurredOn}
         onChange={setOccurredOn}
         error={errors?.occurred_on?.[0]}
@@ -534,24 +543,30 @@ function CollectFields({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Nota (opcional)</Label>
+        <FieldLabel help="common.note">Nota (opcional)</FieldLabel>
         <Input placeholder={monthly ? "Plan de noviembre" : "Primer abono"} />
         <FieldError>{errors?.note?.[0]}</FieldError>
       </TextField>
 
-      <Checkbox
-        name="create_transaction"
-        value="on"
-        isSelected={createTransaction}
-        onChange={setCreateTransaction}
-      >
-        <Checkbox.Control>
-          <Checkbox.Indicator />
-        </Checkbox.Control>
-        <Checkbox.Content className="text-sm">
-          Registrar como ingreso
-        </Checkbox.Content>
-      </Checkbox>
+      <div className="flex items-center gap-0.5">
+        <Checkbox
+          name="create_transaction"
+          value="on"
+          isSelected={createTransaction}
+          onChange={setCreateTransaction}
+        >
+          <Checkbox.Control>
+            <Checkbox.Indicator />
+          </Checkbox.Control>
+          <Checkbox.Content className="text-sm">
+            Registrar como ingreso
+          </Checkbox.Content>
+        </Checkbox>
+        <FieldHelp
+          help="debtEntry.createTransaction"
+          label="Registrar el movimiento"
+        />
+      </div>
 
       {createTransaction && (
         <TextField
@@ -563,7 +578,7 @@ function CollectFields({
           validationBehavior="aria"
           className="flex flex-col gap-2"
         >
-          <Label>Descripción</Label>
+          <FieldLabel help="common.description">Descripción</FieldLabel>
           <Input placeholder="Cobro" />
           <FieldError>{errors?.description?.[0]}</FieldError>
         </TextField>
@@ -577,6 +592,7 @@ function CollectFields({
           amount={amount}
           errors={{ account_id: errors?.account_id?.[0] }}
           label="Cuenta que recibe"
+          accountHelp="receivable.collectAccount"
           direction="in"
           // Cuenta habitual de la cuenta por cobrar, si sigue activa
           defaultAccountId={

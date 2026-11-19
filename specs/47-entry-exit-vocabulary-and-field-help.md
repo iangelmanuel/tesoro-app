@@ -145,21 +145,26 @@ Las claves `common.*` se reusan cuando el campo significa lo mismo. Si un formul
 | `debt.termMonths`         | En cuántos meses lo pagas en total.                                                                 |
 | `debt.defaultAccount`     | La cuenta de donde sueles pagar esta deuda. Se elige sola al registrar.                             |
 
-**Movimiento de deuda** (`payment-dialog.tsx`, `debt-entry-dialog.tsx`): `debtEntry.debt` "La tarjeta o el préstamo al que pertenece." · `debtEntry.type` "Elige qué pasó. Debajo ves si sube o baja el saldo." · `debtEntry.installments` "En cuántas cuotas difieres la compra o el avance. Vacío: una sola." · `debtEntry.direction` "Sube: el saldo aumenta (intereses, cargos). Baja: el saldo disminuye."
+**Movimiento de deuda** (`payment-dialog.tsx`, `debt-entry-dialog.tsx`): `debtEntry.debt` "La tarjeta o el préstamo al que pertenece." · `debtEntry.type` "Elige qué pasó. Debajo ves si sube o baja el saldo." · `debtEntry.installments` "En cuántas cuotas difieres la compra o el avance. Vacío: una sola." · `debtEntry.direction` "Sube: el saldo aumenta (intereses, cargos). Baja: el saldo disminuye." (junto a "El ajuste") · `debtEntry.createTransaction` (casilla "Registrar como entrada/salida", también en `receivable-collect-form.tsx`) "Además, crea el movimiento en tu cuenta para que el saldo cuadre."
+
+Los grupos de tabs sin etiqueta visible (tipo de tasa E.A./M.V., tipo de cobro de Me deben y cómo se cobra) llevan el (?) suelto (`FieldHelp`) al final de la fila. El grupo "¿Ya lo registraste?" (`linkable-transactions-field.tsx`) no lleva (?): su párrafo ya explica qué hacer. El "Monto" de Pago completo no es un campo (lo pone el servidor) y tampoco lo lleva.
 
 **Me deben** (`receivable-dialog.tsx`, `receivable-collect-form.tsx`):
 
-| Clave                       | Texto                                                                  |
-| --------------------------- | ---------------------------------------------------------------------- |
-| `receivable.name`           | Qué te deben. Ej.: Préstamo a Ana.                                     |
-| `receivable.debtor`         | Quién te debe.                                                         |
-| `receivable.mode`           | Único: te pagan todo de una vez. Mensual: te pagan una cuota cada mes. |
-| `receivable.amount`         | Lo que te deben en total.                                              |
-| `receivable.monthlyAmount`  | Lo que te pagan cada mes.                                              |
-| `receivable.installments`   | Cuántas cuotas faltan por cobrar.                                      |
-| `receivable.expectedDate`   | Cuándo esperas que te paguen. Opcional.                                |
-| `receivable.collectAccount` | La cuenta donde recibes el dinero.                                     |
-| `receivable.collectHow`     | Cuota: cobras un mes. Varios meses: llenas varias cuotas de una vez.   |
+| Clave                       | Texto                                                                                                                 |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `receivable.name`           | Qué te deben. Ej.: Préstamo a Ana.                                                                                    |
+| `receivable.debtor`         | Quién te debe.                                                                                                        |
+| `receivable.mode`           | Una vez: te pagan todo junto. Mes a mes: te pagan una cuota cada mes.                                                 |
+| `receivable.amount`         | Lo que te deben en total.                                                                                             |
+| `receivable.monthlyAmount`  | Lo que te pagan cada mes.                                                                                             |
+| `receivable.installments`   | Cuántas cuotas faltan por cobrar.                                                                                     |
+| `receivable.expectedDate`   | Cuándo esperas que te paguen. Opcional.                                                                               |
+| `receivable.collectAccount` | La cuenta donde recibes el dinero.                                                                                    |
+| `receivable.collectHow`     | Abono: una parte. Pago completo: todo lo que falta. Una cuota: un mes. Varios meses: llenas varias cuotas de una vez. |
+| `receivable.dueDay`         | El día del mes en que te pagan la cuota.                                                                              |
+| `receivable.select`         | Lo que te deben y vas a cobrar.                                                                                       |
+| `receivable.period`         | El mes de la cuota que te pagan.                                                                                      |
 
 **Meta y aporte** (`goal-dialog.tsx`, `contribution-dialog.tsx`): `goal.name` "Para qué ahorras. Ej.: Viaje, Fondo de emergencia." · `goal.target` "Cuánto quieres juntar." · `goal.targetDate` "Para cuándo. Opcional: sin fecha no hay ritmo sugerido." · `contribution.type` "Aporte: sumas a la meta. Retiro: sacas de ella."
 

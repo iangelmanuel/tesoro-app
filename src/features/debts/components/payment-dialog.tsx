@@ -6,7 +6,6 @@ import {
   Checkbox,
   FieldError,
   Input,
-  Label,
   ListBox,
   Modal,
   Select,
@@ -15,6 +14,7 @@ import {
   toast
 } from "@heroui/react"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
 import { TimePickerField } from "@/components/forms/time-picker-field"
 import { activeAccountId } from "@/features/accounts/active-account"
 import {
@@ -209,7 +209,7 @@ function DebtSelect({
       onChange={(key) => onChange(key == null ? "" : String(key))}
       className="mb-4 flex flex-col gap-2"
     >
-      <Label>Deuda</Label>
+      <FieldLabel help="debtEntry.debt">Deuda</FieldLabel>
       <Select.Trigger>
         <Select.Value />
         <Select.Indicator />
@@ -404,7 +404,7 @@ function PaymentForm({
           isInvalid={Boolean(errors?.type)}
           className="flex flex-col gap-2"
         >
-          <Label>Tipo</Label>
+          <FieldLabel help="debtEntry.type">Tipo</FieldLabel>
           <Select.Trigger>
             <Select.Value />
             <Select.Indicator />
@@ -443,7 +443,13 @@ function PaymentForm({
 
       {mode === "adjustment" && (
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium">El ajuste</p>
+          <div className="flex items-center gap-0.5">
+            <p className="text-sm font-medium">El ajuste</p>
+            <FieldHelp
+              help="debtEntry.direction"
+              label="El ajuste"
+            />
+          </div>
           <Tabs
             selectedKey={direction}
             onSelectionChange={(key) =>
@@ -482,7 +488,7 @@ function PaymentForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Monto</Label>
+        <FieldLabel help="common.amount">Monto</FieldLabel>
         <Input placeholder="0" />
         <FieldError>{errors?.amount?.[0]}</FieldError>
       </TextField>
@@ -491,6 +497,7 @@ function PaymentForm({
         <DatePickerField
           name="occurred_on"
           label="Fecha"
+          help="common.date"
           value={occurredOn}
           onChange={setOccurredOn}
           error={errors?.occurred_on?.[0]}
@@ -500,6 +507,7 @@ function PaymentForm({
 
         <TimePickerField
           name="occurred_time"
+          help="common.time"
           value={time}
           onChange={setTime}
           error={errors?.occurred_time?.[0]}
@@ -517,7 +525,9 @@ function PaymentForm({
           validationBehavior="aria"
           className="flex flex-col gap-2"
         >
-          <Label>Cuotas (opcional)</Label>
+          <FieldLabel help="debtEntry.installments">
+            Cuotas (opcional)
+          </FieldLabel>
           <Input placeholder={`1 a ${MAX_INSTALLMENTS}`} />
           <FieldError>{errors?.installments?.[0]}</FieldError>
         </TextField>
@@ -532,25 +542,31 @@ function PaymentForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <Label>Nota (opcional)</Label>
+        <FieldLabel help="common.note">Nota (opcional)</FieldLabel>
         <Input placeholder={notePlaceholder(mode, isReceivable)} />
         <FieldError>{errors?.note?.[0]}</FieldError>
       </TextField>
 
       {!isCard && isPayment && (
-        <Checkbox
-          name="create_transaction"
-          value="on"
-          isSelected={createTransaction}
-          onChange={setCreateTransaction}
-        >
-          <Checkbox.Control>
-            <Checkbox.Indicator />
-          </Checkbox.Control>
-          <Checkbox.Content className="text-sm">
-            {isReceivable ? "Registrar como ingreso" : "Registrar como gasto"}
-          </Checkbox.Content>
-        </Checkbox>
+        <div className="flex items-center gap-0.5">
+          <Checkbox
+            name="create_transaction"
+            value="on"
+            isSelected={createTransaction}
+            onChange={setCreateTransaction}
+          >
+            <Checkbox.Control>
+              <Checkbox.Indicator />
+            </Checkbox.Control>
+            <Checkbox.Content className="text-sm">
+              {isReceivable ? "Registrar como ingreso" : "Registrar como gasto"}
+            </Checkbox.Content>
+          </Checkbox>
+          <FieldHelp
+            help="debtEntry.createTransaction"
+            label="Registrar el movimiento"
+          />
+        </div>
       )}
 
       {/* Solo con movimiento: una tarjeta no crea uno */}
@@ -564,7 +580,7 @@ function PaymentForm({
           validationBehavior="aria"
           className="flex flex-col gap-2"
         >
-          <Label>Descripción</Label>
+          <FieldLabel help="common.description">Descripción</FieldLabel>
           <Input placeholder={isReceivable ? "Cobro" : "Pago de la cuota"} />
           <FieldError>{errors?.description?.[0]}</FieldError>
         </TextField>

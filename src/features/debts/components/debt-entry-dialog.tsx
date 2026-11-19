@@ -449,7 +449,9 @@ function DebtEntryForm({
               <Checkbox.Indicator />
             </Checkbox.Control>
             <Checkbox.Content className="text-sm">
-              {isReceivable ? "Registrar como ingreso" : "Registrar como gasto"}
+              {isReceivable
+                ? "Registrar como entrada"
+                : "Registrar como salida"}
             </Checkbox.Content>
           </Checkbox>
           <FieldHelp
@@ -466,7 +468,7 @@ function DebtEntryForm({
           amount={amount}
           occurredOn={occurredOn}
           currency={currency}
-          noun={transactionType === "income" ? "ingreso" : "gasto"}
+          noun={transactionType === "income" ? "entrada" : "salida"}
           noneLabel={
             isCard && isPayment
               ? "No, es un pago aparte"
@@ -647,28 +649,28 @@ function accountEffect({
       const extra = type === "extra" ? " No cubre el pago del mes." : ""
       if (isCard) {
         if (linking) {
-          return `El gasto elegido se elimina: el pago a la tarjeta ya descuenta de la cuenta.${extra}`
+          return `La salida elegida se elimina: el pago a la tarjeta ya descuenta de la cuenta.${extra}`
         }
         return accountName
-          ? `Sale de ${accountName} hacia la tarjeta. No cuenta como gasto.${extra}`
+          ? `Sale de ${accountName} hacia la tarjeta. No cuenta como salida.${extra}`
           : `No toca tus cuentas: solo baja el saldo.${extra}`
       }
       if (!createsTransaction) {
-        return `No queda como ${isReceivable ? "ingreso" : "gasto"} en Movimientos.${extra}`
+        return `No queda como ${isReceivable ? "entrada" : "salida"} en Movimientos.${extra}`
       }
       if (linking) {
-        return `Se enlaza al ${isReceivable ? "ingreso" : "gasto"} elegido: no se crea otro.${extra}`
+        return `Se enlaza a la ${isReceivable ? "entrada" : "salida"} elegida: no se crea otra.${extra}`
       }
       return accountName
-        ? `${isReceivable ? "Entra a" : "Sale de"} ${accountName} como ${isReceivable ? "ingreso" : "gasto"}.${extra}`
+        ? `${isReceivable ? "Entra a" : "Sale de"} ${accountName} como ${isReceivable ? "entrada" : "salida"}.${extra}`
         : "Elige la cuenta."
     }
     case "purchase":
       return "Una compra no toca tus cuentas: solo sube el saldo de la tarjeta."
     case "advance":
-      if (linking) return "Se enlaza al ingreso elegido: no se crea otro."
+      if (linking) return "Se enlaza a la entrada elegida: no se crea otra."
       return accountName
-        ? `Entra a ${accountName} como ingreso (Avance de tarjeta).`
+        ? `Entra a ${accountName} como entrada (Avance de tarjeta).`
         : "Elige la cuenta a la que entró el dinero."
     case "fee":
       return "La cuota de manejo no toca tus cuentas: la pagas con la tarjeta."

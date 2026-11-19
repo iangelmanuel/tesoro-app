@@ -17,7 +17,7 @@ import type { BudgetInput } from "./schemas"
 export type BudgetRow = Database["public"]["Tables"]["budgets"]["Row"]
 
 const DEFAULT_ERROR = "No se pudo guardar el presupuesto. Intenta de nuevo"
-const INVALID_CATEGORY = "Elige una categoría de gasto"
+const INVALID_CATEGORY = "Elige una categoría de salida"
 const ARCHIVED_CATEGORY = "Esta categoría está archivada. Elige otra"
 
 // Códigos de Postgres que pueden llegar pese a la validación con Zod

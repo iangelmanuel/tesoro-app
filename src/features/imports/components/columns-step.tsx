@@ -37,17 +37,17 @@ const TYPE_MODES: ModeOption<TypeMode>[] = [
   {
     value: "column",
     label: "Columna con valores",
-    hint: "Una columna dice si es ingreso o gasto (p. ej. Entrada / Salida)"
+    hint: "Una columna dice si es entrada o salida (p. ej. Crédito / Débito)"
   },
   {
     value: "sign",
     label: "Signo del monto",
-    hint: "Los montos negativos son gastos y los positivos, ingresos"
+    hint: "Los montos negativos son salidas y los positivos, entradas"
   },
   {
     value: "split",
     label: "Dos columnas",
-    hint: "Una columna para ingresos y otra para gastos"
+    hint: "Una columna para entradas y otra para salidas"
   }
 ]
 
@@ -94,8 +94,8 @@ const DATE_FORMATS: { value: DateFormat; label: string }[] = [
 ]
 
 const TYPE_VALUE_OPTIONS: { value: TypeValueTarget; label: string }[] = [
-  { value: "income", label: "Ingreso" },
-  { value: "expense", label: "Gasto" },
+  { value: "income", label: "Entrada" },
+  { value: "expense", label: "Salida" },
   { value: "skip", label: "Omitir fila" }
 ]
 
@@ -325,7 +325,7 @@ export function ColumnsStep({
         <ModeRadio
           id="import-type-mode"
           help="import.amountSign"
-          title="¿Cómo se sabe si es ingreso o gasto?"
+          title="¿Cómo se sabe si es entrada o salida?"
           options={TYPE_MODES}
           value={typeMode}
           onChange={onTypeModeChange}

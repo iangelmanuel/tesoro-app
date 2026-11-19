@@ -29,7 +29,7 @@ export const FACTORS: Record<
     ]
   },
   debt_to_income: {
-    label: "Deuda / ingresos",
+    label: "Deuda / entradas",
     weight: 20,
     curve: [
       [0.15, 100],
@@ -93,7 +93,7 @@ export const MONTH_FACTORS: readonly FactorKey[] = ["emergency_cushion"]
 
 export const EXCLUDED_REASONS = {
   noClosedMonths: "Aún no hay meses cerrados",
-  noClosedExpense: "Sin gastos en los meses cerrados",
+  noClosedExpense: "Sin salidas en los meses cerrados",
   noBudgets: "Sin presupuestos en el mes",
   noCards: "Sin tarjetas de crédito",
   noGoals: "Sin metas con fecha objetivo"
@@ -102,7 +102,7 @@ export const EXCLUDED_REASONS = {
 export const MIN_HISTORY_DAYS = 30
 
 export const INSUFFICIENT_REASONS = {
-  noIncome: "Registra tus ingresos",
+  noIncome: "Registra tus entradas",
   missingDays: (days: number) =>
     `Necesitamos ${MIN_HISTORY_DAYS} días de registros (faltan ${days} ${days === 1 ? "día" : "días"})`
 } as const

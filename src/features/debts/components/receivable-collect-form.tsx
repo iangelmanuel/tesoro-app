@@ -559,7 +559,7 @@ function CollectFields({
             <Checkbox.Indicator />
           </Checkbox.Control>
           <Checkbox.Content className="text-sm">
-            Registrar como ingreso
+            Registrar como entrada
           </Checkbox.Content>
         </Checkbox>
         <FieldHelp

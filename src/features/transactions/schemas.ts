@@ -104,7 +104,7 @@ export function refinePaymentAccount(
 }
 
 export const transactionSchema = z.object({
-  type: z.enum(TRANSACTION_TYPES, { error: "Elige ingreso o gasto" }),
+  type: z.enum(TRANSACTION_TYPES, { error: "Elige entrada o salida" }),
   amount: amountSchema,
   occurred_on: z.iso.date({ error: "Elige una fecha válida" }),
   occurred_time: timeSchema,
@@ -165,7 +165,7 @@ export const createTransactionSchema = transactionSchema
       ctx.addIssue({
         code: "custom",
         path: ["transfer_from"],
-        message: "Solo un gasto admite traspaso"
+        message: "Solo una salida admite traspaso"
       })
     }
   })

@@ -18,8 +18,8 @@ import { CategoryForm } from "./category-form"
 type TransactionType = Category["type"]
 
 const TYPE_LABELS: Record<TransactionType, string> = {
-  income: "Ingresos",
-  expense: "Gastos"
+  income: "Entradas",
+  expense: "Salidas"
 }
 
 interface CategoriesSheetProps {

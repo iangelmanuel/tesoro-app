@@ -129,8 +129,8 @@ export function TransactionsFilters({
         }
         options={[
           { id: ALL, label: "Todos" },
-          { id: "income", label: "Ingresos" },
-          { id: "expense", label: "Gastos" },
+          { id: "income", label: "Entradas" },
+          { id: "expense", label: "Salidas" },
           { id: "transfer", label: "Traspasos" }
         ]}
       />

@@ -47,7 +47,7 @@ const STATUS_BADGES: Record<
   skipped: { label: "Omitida", color: "default", variant: "tertiary" }
 }
 
-const TYPE_LABELS = { income: "Ingreso", expense: "Gasto" } as const
+const TYPE_LABELS = { income: "Entrada", expense: "Salida" } as const
 
 /** Columna de datos normalizados de la vista previa */
 export interface PreviewColumn<V> {
@@ -514,10 +514,10 @@ export function CreateTransactionsField({
           <Checkbox.Indicator />
         </Checkbox.Control>
         <Checkbox.Content>
-          <Label>Registrar también como gasto/ingreso</Label>
+          <Label>Registrar también como salida/entrada</Label>
           <Description>
-            Cada pago de préstamo crea un gasto en «Deudas» y cada abono de una
-            cuenta por cobrar, un ingreso en «Cobros». Desmárcala si ya
+            Cada pago de préstamo crea una salida en «Deudas» y cada abono de
+            una cuenta por cobrar, una entrada en «Cobros». Desmárcala si ya
             importaste estos pagos como movimientos.
           </Description>
         </Checkbox.Content>

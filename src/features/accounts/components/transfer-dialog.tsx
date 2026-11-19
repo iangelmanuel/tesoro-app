@@ -70,7 +70,7 @@ export function TransferDialog({
                 {isEditing ? "Editar traspaso" : "Nuevo traspaso"}
               </Modal.Heading>
               <p className="text-sm text-muted">
-                Mueve plata entre tus cuentas. No cuenta como ingreso ni gasto.
+                Mueve plata entre tus cuentas. No cuenta como entrada ni salida.
               </p>
             </Modal.Header>
             <Modal.Body>

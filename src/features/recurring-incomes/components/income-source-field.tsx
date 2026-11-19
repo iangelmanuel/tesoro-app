@@ -63,9 +63,9 @@ export function IncomeSourceField({
           <ListBox>
             <ListBox.Item
               id={OTHER_INCOME}
-              textValue="Otro ingreso"
+              textValue="Otra entrada"
             >
-              Otro ingreso
+              Otra entrada
               <ListBox.ItemIndicator />
             </ListBox.Item>
             {showCurrent ? (

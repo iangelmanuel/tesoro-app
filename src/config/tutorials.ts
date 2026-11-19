@@ -73,11 +73,11 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
       target: "summary-kpis",
       title: "Tu mes en cifras",
       description:
-        "Ingresos, gastos y balance del mes, comparados con el mes anterior. El saldo acumulado suma todo lo que has registrado."
+        "Entradas, salidas y balance del mes, comparados con el mes anterior. El saldo acumulado suma todo lo que has registrado."
     },
     {
       target: "summary-trend",
-      title: "Ingresos vs. gastos",
+      title: "Entradas vs. salidas",
       description:
         "Los últimos 6 meses lado a lado. Así ves si gastas más de lo que entra."
     },
@@ -108,7 +108,7 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
       target: "header-quick-add",
       title: "Registra un movimiento",
       description:
-        "Gastos, ingresos, traspasos, gastos fijos, pagos de deudas, cobros de Me deben y aportes a metas. Todo empieza aquí.",
+        "Salidas, entradas, traspasos, gastos fijos, pagos de deudas, cobros de Me deben y aportes a metas. Todo empieza aquí.",
       viewport: "desktop"
     },
     {
@@ -148,7 +148,7 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
       target: "mobile-quick-add",
       title: "Registra en un toque",
       description:
-        "El botón + abre Movimiento rápido: gastos, ingresos, traspasos, pagos, gastos fijos y aportes a metas en un solo diálogo.",
+        "El botón + abre Movimiento rápido: salidas, entradas, traspasos, pagos, gastos fijos y aportes a metas en un solo diálogo.",
       viewport: "mobile"
     },
     {
@@ -169,20 +169,20 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
     {
       title: "Tus movimientos",
       description:
-        "Aquí está todo lo que registras: ingresos, gastos, traspasos y pagos. Te mostramos cómo encontrar y ordenar cada uno."
+        "Aquí está todo lo que registras: entradas, salidas, traspasos y pagos. Te mostramos cómo encontrar y ordenar cada uno."
     },
     {
       target: "header-quick-add",
       title: "Registra o traspasa",
       description:
-        "Desde aquí registras ingresos y gastos. Para mover plata entre tus cuentas, elige Traspaso en el mismo diálogo.",
+        "Desde aquí registras entradas y salidas. Para mover plata entre tus cuentas, elige Traspaso en el mismo diálogo.",
       viewport: "desktop"
     },
     {
       target: "mobile-quick-add",
       title: "Registra o traspasa",
       description:
-        "El botón + abre Movimiento rápido para registrar ingresos y gastos. Para mover plata entre tus cuentas, elige Traspaso en el mismo diálogo.",
+        "El botón + abre Movimiento rápido para registrar entradas y salidas. Para mover plata entre tus cuentas, elige Traspaso en el mismo diálogo.",
       viewport: "mobile"
     },
     {
@@ -209,7 +209,7 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
       target: "transactions-totals",
       title: "Totales del periodo",
       description:
-        "Ingresos, gastos y balance de lo que ves en la lista, con los filtros aplicados."
+        "Entradas, salidas y balance de lo que ves en la lista, con los filtros aplicados."
     },
     {
       target: "transactions-table",
@@ -374,7 +374,7 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
     {
       target: "budgets-create",
       title: "Crea un presupuesto",
-      description: "Elige una categoría de gasto y el máximo para el mes."
+      description: "Elige una categoría de salida y el máximo para el mes."
     },
     {
       target: "budgets-copy",
@@ -533,7 +533,7 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
     },
     {
       target: "reports-type",
-      title: "Gastos o ingresos",
+      title: "Salidas o entradas",
       description:
         "Cambia qué muestran las categorías: en qué gastas o de dónde te entra la plata."
     },
@@ -541,13 +541,13 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
       target: "reports-kpis",
       title: "El periodo en cifras",
       description:
-        "Ingresos, gastos, balance y tasa de ahorro, comparados con el periodo anterior."
+        "Entradas, salidas, balance y tasa de ahorro, comparados con el periodo anterior."
     },
     {
       target: "reports-trend",
       title: "Tendencia mensual",
       description:
-        "Ingresos, gastos y balance mes a mes, con al menos 6 meses de historia."
+        "Entradas, salidas y balance mes a mes, con al menos 6 meses de historia."
     },
     {
       target: "reports-top",

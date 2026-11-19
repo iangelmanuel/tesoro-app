@@ -184,7 +184,7 @@ function BudgetForm({
         >
           {categories.length === 0 && (
             <p className="text-sm text-muted">
-              Todas tus categorías de gasto ya tienen presupuesto este mes.
+              Todas tus categorías de salida ya tienen presupuesto este mes.
               Puedes crear una nueva.
             </p>
           )}

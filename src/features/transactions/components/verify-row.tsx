@@ -37,13 +37,13 @@ function describe(
   switch (entry.kind) {
     case "income":
       return {
-        label: "Ingreso",
+        label: "Entrada",
         tone: "income",
         sign: "+",
         title: entry.title
       }
     case "expense":
-      return { label: "Gasto", tone: "expense", sign: "−", title: entry.title }
+      return { label: "Salida", tone: "expense", sign: "−", title: entry.title }
     case "transfer":
       return {
         label: "Traspaso",

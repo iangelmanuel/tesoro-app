@@ -347,7 +347,7 @@ function lowCushionRule(data: ScoreData, month: string): Recommendation[] {
       entityKey: "workspace",
       severity: "medium",
       title: "Tu colchón es bajo",
-      evidence: `Tu balance cubre ${DECIMAL_FORMAT.format(factor.value)} meses de gastos`,
+      evidence: `Tu balance cubre ${DECIMAL_FORMAT.format(factor.value)} meses de salidas`,
       amount: LOW_CUSHION_MONTHS * average - balance,
       href: GOALS_PATH,
       linkLabel: "Ir a Metas"
@@ -371,8 +371,8 @@ function unbudgetedSpendingRule(budgets: BudgetProgress[]): Recommendation[] {
       rule: "unbudgeted_spending",
       entityKey: "workspace",
       severity: "low",
-      title: "Hay gastos sin presupuesto",
-      evidence: `${unbudgeted.length} categorías con gastos este mes no tienen presupuesto: ${list}`,
+      title: "Hay salidas sin presupuesto",
+      evidence: `${unbudgeted.length} categorías con salidas este mes no tienen presupuesto: ${list}`,
       amount: unbudgeted.reduce((sum, row) => sum + row.spent, 0),
       href: BUDGETS_PATH,
       linkLabel: "Ir a Presupuestos"

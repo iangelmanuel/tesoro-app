@@ -260,7 +260,7 @@ function cardEffect(mode: PaymentMode, accountName: string | null) {
       return "Es una compra: no toca tus cuentas, solo sube el saldo de la tarjeta. Si es a cuotas, cada cuota suma al pago del mes."
     case "advance":
       return accountName
-        ? `Es un avance: entra dinero a ${accountName} como ingreso (Avance de tarjeta) y sube la deuda de la tarjeta.`
+        ? `Es un avance: entra dinero a ${accountName} como entrada (Avance de tarjeta) y sube la deuda de la tarjeta.`
         : "Elige la cuenta a la que entró el avance."
     case "fee":
       return "Sube el saldo de la tarjeta. No toca tus cuentas."
@@ -268,8 +268,8 @@ function cardEffect(mode: PaymentMode, accountName: string | null) {
       return "Corrige el saldo de la tarjeta. No toca tus cuentas ni crea movimiento."
     default: {
       const effect = accountName
-        ? `Mueve dinero de ${accountName} a la tarjeta. No cuenta como gasto.`
-        : `Este ${mode === "extra" ? "abono" : "pago"} no toca tus cuentas: solo baja el saldo de la tarjeta. Las compras ya son gasto.`
+        ? `Mueve dinero de ${accountName} a la tarjeta. No cuenta como salida.`
+        : `Este ${mode === "extra" ? "abono" : "pago"} no toca tus cuentas: solo baja el saldo de la tarjeta. Las compras ya son salidas.`
       return mode === "extra" ? `${effect} ${EXTRA_EFFECT}` : effect
     }
   }
@@ -559,7 +559,9 @@ function PaymentForm({
               <Checkbox.Indicator />
             </Checkbox.Control>
             <Checkbox.Content className="text-sm">
-              {isReceivable ? "Registrar como ingreso" : "Registrar como gasto"}
+              {isReceivable
+                ? "Registrar como entrada"
+                : "Registrar como salida"}
             </Checkbox.Content>
           </Checkbox>
           <FieldHelp

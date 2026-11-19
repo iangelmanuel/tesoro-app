@@ -36,8 +36,8 @@ export function CategoryDialog({
             <Modal.Header>
               <Modal.Heading>
                 {type === "expense"
-                  ? "Nueva categoría de gasto"
-                  : "Nueva categoría de ingreso"}
+                  ? "Nueva categoría de salida"
+                  : "Nueva categoría de entrada"}
               </Modal.Heading>
             </Modal.Header>
             <Modal.Body>

@@ -16,7 +16,7 @@ import { IMPORT_TARGETS } from "../targets"
 import type { ImportTarget } from "../types"
 
 const TARGET_HINTS: Record<ImportTarget, string> = {
-  transactions: "Ingresos y gastos",
+  transactions: "Entradas y salidas",
   recurring_expenses: "Pagos que se repiten cada mes o cada año",
   debt_entries:
     "Pagos y ajustes de tus tarjetas, préstamos y cuentas por cobrar",

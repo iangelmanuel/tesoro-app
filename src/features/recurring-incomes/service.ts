@@ -18,7 +18,7 @@ export type RecurringIncomeRow =
 
 export const RECURRING_INCOME_NOT_FOUND = "No se encontró el ingreso fijo"
 const DEFAULT_ERROR = "No se pudo guardar el ingreso fijo. Intenta de nuevo"
-const INVALID_CATEGORY = "Elige una categoría de ingreso"
+const INVALID_CATEGORY = "Elige una categoría de entrada"
 const ARCHIVED_CATEGORY = "Esta categoría está archivada. Elige otra"
 const INVALID_ACCOUNT = "Elige una cuenta válida"
 const ARCHIVED_ACCOUNT = "Esta cuenta está archivada. Elige otra"

@@ -331,7 +331,7 @@ export function extractRows(
           : Math.abs(parseAmountCell(at("expense_amount")))
 
         if (income > 0 && expense > 0) {
-          reasons.push("Ingreso y gasto a la vez")
+          reasons.push("Entrada y salida a la vez")
         } else if (income > 0 || Number.isNaN(income)) {
           type = "income"
           amount = income
@@ -345,7 +345,7 @@ export function extractRows(
       if (!occurredOn) reasons.push("Fecha inválida")
 
       if (
-        !reasons.includes("Ingreso y gasto a la vez") &&
+        !reasons.includes("Entrada y salida a la vez") &&
         !isValidAmount(amount)
       ) {
         reasons.push("Monto inválido")

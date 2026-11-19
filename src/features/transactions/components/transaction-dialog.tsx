@@ -71,9 +71,9 @@ const AMOUNT_FORMAT = new Intl.NumberFormat("es-CO", {
 // Textos que cambian entre Personal y Empresa
 const COPY = {
   personal: {
-    expense: "Gasto",
-    income: "Ingreso",
-    description: "Registra un ingreso o un gasto de tu espacio Personal.",
+    expense: "Salida",
+    income: "Entrada",
+    description: "Registra una entrada o una salida de tu espacio Personal.",
     placeholder: { expense: "Mercado de la semana", income: "Salario" }
   },
   business: {
@@ -546,7 +546,7 @@ function TransactionForm({
       <div className="flex flex-col gap-4">
         {typeToggle}
         <p className="text-sm text-muted">
-          Mueve plata entre tus cuentas. No cuenta como ingreso ni gasto.
+          Mueve plata entre tus cuentas. No cuenta como entrada ni salida.
         </p>
         <TransferForm
           workspaceId={workspaceId}

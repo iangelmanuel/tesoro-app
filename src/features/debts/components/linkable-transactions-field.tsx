@@ -21,7 +21,7 @@ interface LinkableTransactionsFieldProps {
   occurredOn: string
   currency: string
   /** "gasto" o "ingreso", para los textos */
-  noun: "gasto" | "ingreso"
+  noun: "salida" | "entrada"
   /** Texto de la opción sin enlazar ("Crear uno nuevo", "No está registrado") */
   noneLabel: string
   /** id del candidato elegido, o "" para no enlazar */
@@ -91,8 +91,8 @@ export function LinkableTransactionsField({
             ¿Ya lo registraste?
           </p>
           <p className="text-sm text-muted">
-            Hay un {noun} del mismo monto en esas fechas. Elígelo para no contar
-            el dinero dos veces.
+            Hay una {noun} del mismo monto en esas fechas. Elígelo para no
+            contar el dinero dos veces.
           </p>
           <RadioGroup
             aria-labelledby={labelId}

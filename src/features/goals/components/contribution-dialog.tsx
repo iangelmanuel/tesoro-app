@@ -110,7 +110,7 @@ export function ContributionDialog({
                     : "Aportar a la meta"}
               </Modal.Heading>
               <p className="text-sm text-muted">
-                Un aporte no es un gasto. Con cuenta, solo mueve su saldo.
+                Un aporte no es una salida. Con cuenta, solo mueve su saldo.
               </p>
             </Modal.Header>
             <Modal.Body>

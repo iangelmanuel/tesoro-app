@@ -21,12 +21,12 @@ export interface ReportLabels {
 // Los datos son los mismos: income y expense de transactions.
 export const REPORT_LABELS = {
   personal: {
-    income: "Ingresos",
-    expense: "Gastos",
-    incomeNoun: "ingreso",
-    expenseNoun: "gasto",
-    series: "Ingresos y gastos",
-    trend: "ingresos, gastos y balance por mes",
+    income: "Entradas",
+    expense: "Salidas",
+    incomeNoun: "entrada",
+    expenseNoun: "salida",
+    series: "Entradas y salidas",
+    trend: "entradas, salidas y balance por mes",
     rate: "Tasa de ahorro"
   },
   business: {

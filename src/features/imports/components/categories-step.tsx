@@ -21,7 +21,7 @@ const NEW = "new"
 const SKIP = "skip"
 const EXISTING_PREFIX = "existing:"
 
-const TYPE_LABELS = { income: "Ingreso", expense: "Gasto" } as const
+const TYPE_LABELS = { income: "Entrada", expense: "Salida" } as const
 
 function targetValue(target: CategoryTarget | undefined) {
   if (!target || target.kind === "skip") return SKIP
@@ -149,7 +149,7 @@ export function CategoriesStep({
         <h2 className="text-sm font-medium">Categorías</h2>
         <p className="text-sm text-muted">
           {expenseOnly
-            ? "Elige a qué categoría de gasto va cada valor de tu archivo. Marca «No importar» para omitir sus gastos fijos."
+            ? "Elige a qué categoría de salida va cada valor de tu archivo. Marca «No importar» para omitir sus gastos fijos."
             : "Elige a qué categoría va cada valor de tu archivo. Marca «No importar» para omitir filas como traspasos entre tus cuentas o saldos iniciales."}
         </p>
       </div>

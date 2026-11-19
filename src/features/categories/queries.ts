@@ -6,8 +6,8 @@ import type { Database } from "@/types/database"
 export type Category = Database["public"]["Tables"]["categories"]["Row"]
 
 // Categorías del sistema con el scope del espacio (Personal o Empresa) y
-// propias del espacio (activas y archivadas). Primero las del sistema, luego
-// las propias, cada grupo por nombre. Las propias ya tienen el scope de su
+// propias del espacio (activas y archivadas). Primero las del sistema, por
+// nombre; luego las propias, en el orden que eligió el usuario (SPEC 45). Las propias ya tienen el scope de su
 // espacio (trigger set_category_scope).
 // cache(): los accesos rápidos del header y las tarjetas del Resumen la
 // piden en el mismo request; así se consulta una sola vez
@@ -21,6 +21,8 @@ export const getCategories = cache(
       .eq("scope", workspace.type)
       .or(`workspace_id.is.null,workspace_id.eq.${workspace.id}`)
       .order("workspace_id", { ascending: true, nullsFirst: true })
+      // Orden manual de las propias (SPEC 45); las nuevas, al final
+      .order("position", { ascending: true, nullsFirst: false })
       .order("name", { ascending: true })
 
     if (error) {

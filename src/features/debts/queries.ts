@@ -133,6 +133,8 @@ export async function getDebtEntries(debtId: string): Promise<DebtEntry[]> {
     .select(ENTRY_COLUMNS)
     .eq("debt_id", debtId)
     .order("occurred_on", { ascending: false })
+    // Orden manual dentro del día (SPEC 19 y 45)
+    .order("day_position", { ascending: true })
     .order("created_at", { ascending: false })
 
   if (error) {

@@ -193,6 +193,7 @@ export type Database = {
           icon: string
           id: string
           name: string
+          position: number | null
           scope: Database["public"]["Enums"]["workspace_type"]
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at: string
@@ -205,6 +206,7 @@ export type Database = {
           icon: string
           id?: string
           name: string
+          position?: number | null
           scope?: Database["public"]["Enums"]["workspace_type"]
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
@@ -217,6 +219,7 @@ export type Database = {
           icon?: string
           id?: string
           name?: string
+          position?: number | null
           scope?: Database["public"]["Enums"]["workspace_type"]
           type?: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
@@ -1614,6 +1617,18 @@ export type Database = {
           month: string
           tx_count: number
         }[]
+      }
+      move_category: {
+        Args: { p_id: string; p_target_id: string; p_workspace_id: string }
+        Returns: undefined
+      }
+      move_debt_entry: {
+        Args: { p_id: string; p_target_id: string }
+        Returns: undefined
+      }
+      move_goal_contribution: {
+        Args: { p_id: string; p_target_id: string }
+        Returns: undefined
       }
       move_ledger_entry: {
         Args: {

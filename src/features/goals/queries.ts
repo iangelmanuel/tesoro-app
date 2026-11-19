@@ -48,6 +48,8 @@ export async function getGoalContributions(
     )
     .eq("goal_id", goalId)
     .order("occurred_on", { ascending: false })
+    // Orden manual dentro del día (SPEC 19 y 45)
+    .order("day_position", { ascending: true })
     .order("created_at", { ascending: false })
 
   if (error) {

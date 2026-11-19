@@ -6,10 +6,16 @@ import { Link2, Pencil, Receipt, Trash2 } from "lucide-react"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import { RowActions } from "@/components/dashboard/row-actions"
+import {
+  type SortableConfig,
+  SortableListItem,
+  SortableListProvider,
+  useSortableList
+} from "@/components/dashboard/sortable-list"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { formatCurrency, formatDate, formatTime } from "@/libs/format"
-import { deleteEntry } from "../actions"
+import { deleteEntry, moveDebtEntry } from "../actions"
 import { installmentLabel, installmentProgress } from "../installments"
 import type { Debt, DebtEntry } from "../queries"
 import { DebtEntryDialog } from "./debt-entry-dialog"
@@ -51,6 +57,18 @@ export function DebtEntriesList({
   currency,
   readOnly
 }: DebtEntriesListProps) {
+  // Orden manual dentro del día (SPEC 45), como en Movimientos
+  const sortable = useSortableList({
+    items: entries,
+    getId: (entry) => entry.id,
+    getGroup: (entry) => entry.occurred_on,
+    getTitle: (entry) =>
+      `${entryLabel(debt, entry)} · ${formatDate(entry.occurred_on)}`,
+    handleLabel: "Reordenar dentro del día",
+    enabled: !readOnly,
+    onMove: (source, target) => moveDebtEntry(source.id, target.id)
+  })
+
   if (entries.length === 0) {
     return (
       <CardEmpty
@@ -61,19 +79,22 @@ export function DebtEntriesList({
   }
 
   return (
-    <ul className="divide-y rounded-xl border">
-      {entries.map((entry) => (
-        <EntryRow
-          key={entry.id}
-          debt={debt}
-          entry={entry}
-          accounts={accounts}
-          categories={categories}
-          currency={currency}
-          readOnly={readOnly}
-        />
-      ))}
-    </ul>
+    <SortableListProvider {...sortable.providerProps}>
+      <ul className="divide-y rounded-xl border">
+        {sortable.items.map((entry) => (
+          <EntryRow
+            key={entry.id}
+            debt={debt}
+            entry={entry}
+            accounts={accounts}
+            categories={categories}
+            currency={currency}
+            readOnly={readOnly}
+            sortable={sortable.configFor(entry)}
+          />
+        ))}
+      </ul>
+    </SortableListProvider>
   )
 }
 
@@ -83,7 +104,8 @@ function EntryRow({
   accounts,
   categories,
   currency,
-  readOnly
+  readOnly,
+  sortable
 }: {
   debt: EntriesDebt
   entry: DebtEntry
@@ -91,6 +113,7 @@ function EntryRow({
   categories?: Category[]
   currency: string
   readOnly?: boolean
+  sortable?: SortableConfig
 }) {
   const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -100,17 +123,7 @@ function EntryRow({
   const isFee = entry.kind === "fee"
   // Compra o avance (SPEC 42): con cuenta es un avance; sin ella, una compra
   const isPurchase = isAdvance && entry.payment_account_id === null
-  const label = isFee
-    ? "Cuota de manejo"
-    : isAdvance
-      ? isPurchase
-        ? "Compra"
-        : "Avance"
-      : isPayment
-        ? debt.kind === "receivable" || entry.is_extra_payment
-          ? "Abono"
-          : "Pago"
-        : "Ajuste"
+  const label = entryLabel(debt, entry)
   // Los ajustes no mueven cuentas. El abono de una cuenta por cobrar y el
   // avance entran a la cuenta; el resto sale de ella.
   const accountText = isPurchase
@@ -146,100 +159,125 @@ function EntryRow({
   }
 
   return (
-    <li className="flex items-center gap-3 p-3">
-      <div className="flex min-w-0 flex-1 flex-col">
-        <span className="flex items-center gap-2">
-          <span className="text-sm font-medium">{label}</span>
-          {isFee && entry.generated && (
-            <span className="text-xs text-muted">· automática</span>
-          )}
-          <span
-            className={cn(
-              "font-medium tabular-nums",
-              lowersBalance ? "text-(--income)" : "text-(--expense)"
-            )}
-          >
-            {lowersBalance ? "−" : "+"}{" "}
-            {formatCurrency(Math.abs(entry.amount), currency)}
-          </span>
-          {entry.transaction_id && (
-            <Tooltip delay={500}>
-              <Tooltip.Trigger
-                aria-label="Tiene un movimiento enlazado"
-                className="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-focus"
-              >
-                <Link2 className="size-4 text-muted" />
-              </Tooltip.Trigger>
-              <Tooltip.Content>Tiene un movimiento enlazado</Tooltip.Content>
-            </Tooltip>
-          )}
-        </span>
-        <span className="text-xs text-muted">
-          {formatDate(entry.occurred_on)}
-          {entry.occurred_time && ` · ${formatTime(entry.occurred_time)}`}
-          {accountText && ` · ${accountText}`}
-          {installmentsText && ` · ${installmentsText}`}
-        </span>
-        {entry.note && (
-          <span className="line-clamp-3 text-sm break-words text-muted">
-            {entry.note}
-          </span>
-        )}
-      </div>
-
-      {!readOnly && (
+    <SortableListItem
+      config={sortable}
+      className="flex items-center gap-3 p-3"
+    >
+      {(handle) => (
         <>
-          <RowActions
-            label={label.toLowerCase()}
-            actions={[
-              {
-                id: "edit",
-                label: "Editar",
-                icon: <Pencil className="size-4" />,
-                onAction: () => setEditing(true)
-              },
-              {
-                id: "delete",
-                label: "Eliminar",
-                icon: <Trash2 className="size-4" />,
-                destructive: true,
-                onAction: () => setDeleting(true)
-              }
-            ]}
-          />
-          {/* Un solo editor para cualquier tipo (SPEC 42, parte 3) */}
-          {editing && (
-            <DebtEntryDialog
-              workspaceId={entry.workspace_id}
-              entryId={entry.id}
-              initial={{ entry, debt }}
-              accounts={accounts ?? []}
-              categories={categories ?? []}
-              currency={currency}
-              open
-              onOpenChange={setEditing}
-            />
+          {handle}
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="flex items-center gap-2">
+              <span className="text-sm font-medium">{label}</span>
+              {isFee && entry.generated && (
+                <span className="text-xs text-muted">· automática</span>
+              )}
+              <span
+                className={cn(
+                  "font-medium tabular-nums",
+                  lowersBalance ? "text-(--income)" : "text-(--expense)"
+                )}
+              >
+                {lowersBalance ? "−" : "+"}{" "}
+                {formatCurrency(Math.abs(entry.amount), currency)}
+              </span>
+              {entry.transaction_id && (
+                <Tooltip delay={500}>
+                  <Tooltip.Trigger
+                    aria-label="Tiene un movimiento enlazado"
+                    className="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                  >
+                    <Link2 className="size-4 text-muted" />
+                  </Tooltip.Trigger>
+                  <Tooltip.Content>
+                    Tiene un movimiento enlazado
+                  </Tooltip.Content>
+                </Tooltip>
+              )}
+            </span>
+            <span className="text-xs text-muted">
+              {formatDate(entry.occurred_on)}
+              {entry.occurred_time && ` · ${formatTime(entry.occurred_time)}`}
+              {accountText && ` · ${accountText}`}
+              {installmentsText && ` · ${installmentsText}`}
+            </span>
+            {entry.note && (
+              <span className="line-clamp-3 text-sm break-words text-muted">
+                {entry.note}
+              </span>
+            )}
+          </div>
+
+          {!readOnly && (
+            <>
+              <RowActions
+                label={label.toLowerCase()}
+                actions={[
+                  {
+                    id: "edit",
+                    label: "Editar",
+                    icon: <Pencil className="size-4" />,
+                    onAction: () => setEditing(true)
+                  },
+                  {
+                    id: "delete",
+                    label: "Eliminar",
+                    icon: <Trash2 className="size-4" />,
+                    destructive: true,
+                    onAction: () => setDeleting(true)
+                  }
+                ]}
+              />
+              {/* Un solo editor para cualquier tipo (SPEC 42, parte 3) */}
+              {editing && (
+                <DebtEntryDialog
+                  workspaceId={entry.workspace_id}
+                  entryId={entry.id}
+                  initial={{ entry, debt }}
+                  accounts={accounts ?? []}
+                  categories={categories ?? []}
+                  currency={currency}
+                  open
+                  onOpenChange={setEditing}
+                />
+              )}
+              <DeleteDialog
+                open={deleting}
+                onOpenChange={setDeleting}
+                title={`¿Eliminar ${feminine ? "esta" : "este"} ${label.toLowerCase()}?`}
+                onConfirm={handleDelete}
+              >
+                <p className="text-sm text-muted">
+                  El saldo se recalcula sin {feminine ? "ella" : "él"}.
+                  {isFee && " No se vuelve a generar."}
+                  {entry.transaction_id &&
+                    " También se elimina su movimiento en Movimientos."}{" "}
+                  Esta acción no se puede deshacer.
+                </p>
+              </DeleteDialog>
+            </>
           )}
-          <DeleteDialog
-            open={deleting}
-            onOpenChange={setDeleting}
-            title={`¿Eliminar ${feminine ? "esta" : "este"} ${label.toLowerCase()}?`}
-            onConfirm={handleDelete}
-          >
-            <p className="text-sm text-muted">
-              El saldo se recalcula sin {feminine ? "ella" : "él"}.
-              {isFee && " No se vuelve a generar."}
-              {entry.transaction_id &&
-                " También se elimina su movimiento en Movimientos."}{" "}
-              Esta acción no se puede deshacer.
-            </p>
-          </DeleteDialog>
         </>
       )}
-    </li>
+    </SortableListItem>
   )
 }
 
 function accountPhrase(preposition: "A" | "Desde", name: string | null) {
   return name ? `${preposition} ${name}` : "Fuera de cuentas"
+}
+
+/** Tipo del movimiento de la deuda: Pago, Abono, Compra, Avance… */
+function entryLabel(debt: Pick<Debt, "kind">, entry: DebtEntry) {
+  if (entry.kind === "fee") return "Cuota de manejo"
+  if (entry.kind === "advance") {
+    // Con cuenta es un avance; sin ella, una compra (SPEC 42)
+    return entry.payment_account_id === null ? "Compra" : "Avance"
+  }
+  if (entry.kind === "payment") {
+    return debt.kind === "receivable" || entry.is_extra_payment
+      ? "Abono"
+      : "Pago"
+  }
+  return "Ajuste"
 }

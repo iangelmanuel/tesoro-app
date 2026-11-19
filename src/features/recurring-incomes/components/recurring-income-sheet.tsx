@@ -10,10 +10,17 @@ import {
   DetailSheet,
   DetailStats
 } from "@/components/dashboard/detail-sheet"
+import {
+  SortableListItem,
+  SortableListProvider,
+  moveItem,
+  useSortableList
+} from "@/components/dashboard/sortable-list"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
+import { moveLedgerEntry } from "@/features/transactions/actions"
 import { RecordedPaymentActions } from "@/features/transactions/components/recorded-payment-actions"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
 import { todayISO } from "@/libs/dates"
@@ -26,6 +33,7 @@ import {
 } from "../occurrences"
 import type {
   IncomeHistoryRow,
+  IncomeReceipt,
   IncomeSourceOption,
   RecurringIncome,
   RecurringIncomeHistory
@@ -463,33 +471,96 @@ function HistoryRow({
       {/* Movimientos que cubren la ocurrencia (un cobro puede cubrir
           varias). Cada uno se edita o elimina aparte (SPEC 42) */}
       {row.receipts.length > 0 && (
-        <ul className="flex flex-col gap-1 text-xs text-muted">
-          {row.receipts.map((receipt) => (
-            <li
-              key={receipt.transactionId}
-              className="flex items-center justify-between gap-2 tabular-nums"
-            >
-              <span className="min-w-0">
-                {receipt.description} · {formatShortDate(receipt.occurredOn)} ·{" "}
-                <Amount
-                  value={receipt.amount}
-                  currency={currency}
-                />
-              </span>
-              <RecordedPaymentActions
-                {...editing}
-                transactionId={receipt.transactionId}
-                noun="cobro"
-                deleteEffect={
-                  row.receipts.length > 1
-                    ? "la ocurrencia queda parcial con los demás cobros"
-                    : "la ocurrencia vuelve a quedar por recibir"
-                }
-              />
-            </li>
-          ))}
-        </ul>
+        <ReceiptsList
+          // Otra lista del servidor (recarga del historial) reinicia el orden
+          key={row.receipts.map((receipt) => receipt.transactionId).join()}
+          receipts={row.receipts}
+          currency={currency}
+          editing={editing}
+        />
       )}
     </li>
+  )
+}
+
+/**
+ * Movimientos que cubren una ocurrencia (un cobro puede cubrir varias). Cada
+ * uno se edita o elimina aparte (SPEC 42) y los del mismo día se reordenan
+ * como en Movimientos (SPEC 45)
+ */
+function ReceiptsList({
+  receipts,
+  currency,
+  editing
+}: {
+  receipts: IncomeReceipt[]
+  currency: string
+  editing: ReceiptEditing
+}) {
+  // El historial se carga en el cliente: el orden guardado se queda aquí
+  // sin esperar a recargarlo
+  const [items, setItems] = useState(receipts)
+  const getId = (receipt: IncomeReceipt) => receipt.transactionId
+  const sortable = useSortableList({
+    items,
+    getId,
+    getGroup: (receipt) => receipt.occurredOn,
+    getTitle: (receipt) => receipt.description,
+    handleLabel: "Reordenar dentro del día",
+    onMove: async (source, target) => {
+      const result = await moveLedgerEntry(
+        editing.workspaceId,
+        "income",
+        source.transactionId,
+        "income",
+        target.transactionId
+      )
+      if (!result.error) {
+        setItems((current) =>
+          moveItem(current, getId, source.transactionId, target.transactionId)
+        )
+      }
+      return result
+    }
+  })
+
+  return (
+    <SortableListProvider {...sortable.providerProps}>
+      <ul className="flex flex-col gap-1 text-xs text-muted">
+        {sortable.items.map((receipt) => (
+          <SortableListItem
+            key={receipt.transactionId}
+            config={sortable.configFor(receipt)}
+            className="flex items-center justify-between gap-2 rounded-lg tabular-nums"
+          >
+            {(handle) => (
+              <>
+                <span className="flex min-w-0 items-center gap-1">
+                  {handle}
+                  <span className="min-w-0">
+                    {receipt.description} ·{" "}
+                    {formatShortDate(receipt.occurredOn)} ·{" "}
+                    <Amount
+                      value={receipt.amount}
+                      currency={currency}
+                    />
+                  </span>
+                </span>
+                <RecordedPaymentActions
+                  {...editing}
+                  transactionId={receipt.transactionId}
+                  noun="cobro"
+                  deleteEffect={
+                    receipts.length > 1
+                      ? "la ocurrencia queda parcial con los demás cobros"
+                      : "la ocurrencia vuelve a quedar por recibir"
+                  }
+                />
+              </>
+            )}
+          </SortableListItem>
+        ))}
+      </ul>
+    </SortableListProvider>
   )
 }

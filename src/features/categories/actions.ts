@@ -4,6 +4,7 @@ import { refresh } from "next/cache"
 import type { PostgrestError } from "@supabase/supabase-js"
 import { z } from "zod"
 import { requireWritableWorkspace } from "@/features/workspaces/queries"
+import { moveErrorMessage } from "@/libs/move-error"
 import { createClient } from "@/libs/supabase/server"
 import { categorySchema } from "./schemas"
 import { DUPLICATE_NAME, createCategoryRecord } from "./service"
@@ -155,4 +156,34 @@ export async function restoreCategory(
   id: string
 ): Promise<CategoryActionResult> {
   return setArchived(workspaceId, id, false)
+}
+
+// Reordena las categorías propias activas de un tipo (SPEC 45): la
+// categoría toma el lugar de la destino. Los selects siguen este orden
+export async function moveCategory(
+  workspaceId: string,
+  id: string,
+  targetId: string
+): Promise<CategoryActionResult> {
+  const parsedId = idSchema.safeParse(id)
+  const parsedTarget = idSchema.safeParse(targetId)
+
+  if (!parsedId.success || !parsedTarget.success) {
+    return { error: NOT_FOUND }
+  }
+
+  const workspace = await requireWritableWorkspace(workspaceId)
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("move_category", {
+    p_workspace_id: workspace.id,
+    p_id: parsedId.data,
+    p_target_id: parsedTarget.data
+  })
+
+  if (error) {
+    return { error: moveErrorMessage(error) }
+  }
+
+  refresh()
+  return {}
 }

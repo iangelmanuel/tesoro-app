@@ -4,7 +4,13 @@ import { useState, useTransition } from "react"
 import { Button, Tabs, cn, toast } from "@heroui/react"
 import { Archive, ArchiveRestore, Pencil } from "lucide-react"
 import { DetailSection, DetailSheet } from "@/components/dashboard/detail-sheet"
-import { archiveCategory, restoreCategory } from "../actions"
+import {
+  type SortableConfig,
+  SortableListItem,
+  SortableListProvider,
+  useSortableList
+} from "@/components/dashboard/sortable-list"
+import { archiveCategory, moveCategory, restoreCategory } from "../actions"
 import type { Category } from "../queries"
 import { CategoryBadge } from "./category-badge"
 import { CategoryForm } from "./category-form"
@@ -120,6 +126,15 @@ function CategoryList({
   const own = categories.filter((c) => c.workspace_id !== null)
   const active = own.filter((c) => c.archived_at === null)
   const archived = own.filter((c) => c.archived_at !== null)
+  // Orden propio de las activas (SPEC 45): los selects lo siguen
+  const sortable = useSortableList({
+    items: active,
+    getId: (category) => category.id,
+    getGroup: (category) => category.type,
+    getTitle: (category) => category.name,
+    handleLabel: "Reordenar categoría",
+    onMove: (source, target) => moveCategory(workspaceId, source.id, target.id)
+  })
 
   return (
     <div className="flex flex-col gap-6">
@@ -129,27 +144,30 @@ function CategoryList({
             Aún no tienes categorías propias.
           </p>
         ) : (
-          active.map((category) => (
-            <CategoryRow
-              key={category.id}
-              category={category}
-            >
-              <Button
-                variant="ghost"
-                size="sm"
-                isIconOnly
-                aria-label={`Editar ${category.name}`}
-                aria-pressed={editingId === category.id}
-                onPress={() => onEdit(category)}
-              >
-                <Pencil />
-              </Button>
-              <ArchiveButton
-                workspaceId={workspaceId}
+          <SortableListProvider {...sortable.providerProps}>
+            {sortable.items.map((category) => (
+              <CategoryRow
+                key={category.id}
                 category={category}
-              />
-            </CategoryRow>
-          ))
+                sortable={sortable.configFor(category)}
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  isIconOnly
+                  aria-label={`Editar ${category.name}`}
+                  aria-pressed={editingId === category.id}
+                  onPress={() => onEdit(category)}
+                >
+                  <Pencil />
+                </Button>
+                <ArchiveButton
+                  workspaceId={workspaceId}
+                  category={category}
+                />
+              </CategoryRow>
+            ))}
+          </SortableListProvider>
         )}
       </CategoryGroup>
 
@@ -199,22 +217,37 @@ function CategoryGroup({
 function CategoryRow({
   category,
   muted,
+  sortable,
   children
 }: {
   category: Category
   muted?: boolean
+  /** Solo las propias activas se reordenan (SPEC 45) */
+  sortable?: SortableConfig
   children?: React.ReactNode
 }) {
   return (
-    <li className="flex min-h-8 items-center justify-between gap-2">
-      <CategoryBadge
-        name={category.name}
-        icon={category.icon}
-        color={category.color}
-        className={cn(muted && "opacity-60")}
-      />
-      {children && <div className="flex items-center gap-1">{children}</div>}
-    </li>
+    <SortableListItem
+      config={sortable}
+      className="flex min-h-8 items-center justify-between gap-2 rounded-lg"
+    >
+      {(handle) => (
+        <>
+          <div className="flex min-w-0 items-center gap-1">
+            {handle}
+            <CategoryBadge
+              name={category.name}
+              icon={category.icon}
+              color={category.color}
+              className={cn(muted && "opacity-60")}
+            />
+          </div>
+          {children && (
+            <div className="flex items-center gap-1">{children}</div>
+          )}
+        </>
+      )}
+    </SortableListItem>
   )
 }
 

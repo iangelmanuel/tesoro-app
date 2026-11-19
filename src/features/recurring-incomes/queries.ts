@@ -455,7 +455,7 @@ export async function getRecurringIncomeHistory(
       supabase
         .from("recurring_income_allocations")
         .select(
-          "due_on, amount, transaction:transactions (id, occurred_on, description)"
+          "due_on, amount, transaction:transactions (id, occurred_on, description, day_position, created_at)"
         )
         .eq("recurring_income_id", recurringIncomeId)
         .order("created_at", { ascending: true })
@@ -480,8 +480,16 @@ export async function getRecurringIncomeHistory(
     dates.add(next)
   }
 
+  // Por fecha y, dentro del día, en el orden manual de Movimientos (SPEC 19
+  // y 45): así los cobros del mismo día quedan juntos y se pueden reordenar
+  const sortedAllocations = [...allocations].sort(
+    (a, b) =>
+      a.transaction.occurred_on.localeCompare(b.transaction.occurred_on) ||
+      a.transaction.day_position - b.transaction.day_position ||
+      b.transaction.created_at.localeCompare(a.transaction.created_at)
+  )
   const receiptsByDate = new Map<string, IncomeReceipt[]>()
-  for (const allocation of allocations) {
+  for (const allocation of sortedAllocations) {
     dates.add(allocation.due_on)
     const list = receiptsByDate.get(allocation.due_on) ?? []
     list.push({

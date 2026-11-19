@@ -518,6 +518,21 @@ Para que el historial de Tesoro se pueda cuadrar contra el extracto del banco
     la fecha de una fila reinicia su `day_position` a 0 (trigger
     `reset_day_position`).
   - El arrastre usa [dnd-kit](https://dndkit.com) (`@dnd-kit/react`).
+- **Orden en los paneles laterales (SPEC 45).** El mismo arrastre (asa,
+  vista previa, resaltado y teclado) funciona en las listas de los paneles
+  de la derecha:
+  - **Deudas y Me deben**: el historial de la deuda se reordena dentro del
+    mismo día (`move_debt_entry`, solo filas de esa deuda).
+  - **Metas**: aportes y retiros del mismo día (`move_goal_contribution`).
+  - **Ingresos fijos**: los cobros del mismo día dentro de una ocurrencia
+    (son movimientos: `move_ledger_entry`).
+  - **Categorías**: las propias activas, dentro de su tipo
+    (`categories.position`, `move_category`). Los selects siguen ese orden;
+    una categoría nueva va al final y las del sistema no se reordenan.
+  - Estas RPC renumeran `1..n` solo el grupo de la lista: el orden relativo
+    de esas filas se respeta en Movimientos y el resto del día no cambia.
+  - Los **gastos fijos** no se reordenan: cada periodo tiene un solo pago y
+    su fecha la fija el calendario.
 - **Verificar movimientos.** El botón **Verificar** de la barra de Movimientos
   abre una modal de solo lectura (hoja a pantalla completa en móvil) con todo el
   historial, sin filtro mensual y con el mismo orden que la tabla.

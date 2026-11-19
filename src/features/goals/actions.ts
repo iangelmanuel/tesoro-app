@@ -3,6 +3,7 @@
 import { z } from "zod"
 import { parseAmount } from "@/features/transactions/schemas"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
+import { moveErrorMessage } from "@/libs/move-error"
 import { revalidatePersonalPages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import {
@@ -327,6 +328,32 @@ export async function deleteContribution(
   }
   if (data.length === 0) {
     return { error: CONTRIBUTION_NOT_FOUND }
+  }
+
+  revalidatePersonalPages()
+  return {}
+}
+
+// Reordena los aportes y retiros de una meta dentro del mismo día (SPEC 45)
+export async function moveContribution(
+  id: string,
+  targetId: string
+): Promise<GoalActionResult> {
+  const parsedId = idSchema.safeParse(id)
+  const parsedTarget = idSchema.safeParse(targetId)
+
+  if (!parsedId.success || !parsedTarget.success) {
+    return { error: CONTRIBUTION_NOT_FOUND }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("move_goal_contribution", {
+    p_id: parsedId.data,
+    p_target_id: parsedTarget.data
+  })
+
+  if (error) {
+    return { error: moveErrorMessage(error) }
   }
 
   revalidatePersonalPages()

@@ -2,6 +2,7 @@
 
 import { z } from "zod"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
+import { moveErrorMessage } from "@/libs/move-error"
 import { revalidatePersonalPages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import type { DebtStatus } from "./calculations"
@@ -615,4 +616,31 @@ export async function adjustBalance(
 
   revalidatePersonalPages()
   return { ok: true }
+}
+
+// Reordena el historial de una deuda dentro del mismo día (SPEC 45): la
+// fila toma el lugar de la destino. RLS y la RPC validan dueño y espacio
+export async function moveDebtEntry(
+  id: string,
+  targetId: string
+): Promise<DebtActionResult> {
+  const parsedId = idSchema.safeParse(id)
+  const parsedTarget = idSchema.safeParse(targetId)
+
+  if (!parsedId.success || !parsedTarget.success) {
+    return { error: ENTRY_NOT_FOUND }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc("move_debt_entry", {
+    p_id: parsedId.data,
+    p_target_id: parsedTarget.data
+  })
+
+  if (error) {
+    return { error: moveErrorMessage(error) }
+  }
+
+  revalidatePersonalPages()
+  return {}
 }

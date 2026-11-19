@@ -1,6 +1,6 @@
 # SPEC 49 — Duplicar movimientos
 
-> **Estado:** Borrador
+> **Estado:** Aprobado
 > **Depende de:** SPEC 02, SPEC 05, SPEC 06, SPEC 08c, SPEC 10, SPEC 20, SPEC 26, SPEC 29, SPEC 37, SPEC 38, SPEC 39, SPEC 42
 > **Fecha:** 2026-11-19
 > **Objetivo:** Agregar la acción **Duplicar** a cada movimiento para abrir su diálogo de creación ya prellenado con sus datos, de modo que al guardar se registre un movimiento nuevo.

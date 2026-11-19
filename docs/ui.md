@@ -292,12 +292,12 @@ Reglas:
 - El orden manual se mueve al instante con `useOptimistic` y vuelve a su lugar
   con un toast si la action falla.
 
-### Conciliar cuenta (SPEC 21)
+### Cuadrar saldo (SPEC 21 y 48)
 
-| Pieza                                      | Qué hace                                                                                                                                                                                                                                                                               |
-| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `accounts/components/reconcile-dialog.tsx` | `ReconcileDialog`: saldo real, `DatePickerField` (no futura), panel con saldo calculado y diferencia (`TONE_TEXT_CLASSES`: `success` si > 0, `danger` si < 0, neutro en 0) y `HelpHint` `reconciliation`. Modal centrado en escritorio y hoja inferior (`placement="bottom"`) en móvil |
-| `accounts/components/account-card.tsx`     | Botón **Conciliar** (`Scale`) y, solo en `wallet` / `bank` con saldo < 0, un aviso `TONE_BADGE_CLASSES.danger` con su propio botón **Conciliar**                                                                                                                                       |
+| Pieza                                      | Qué hace                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `accounts/components/reconcile-dialog.tsx` | `ReconcileDialog`: saldo en tu banco, `DatePickerField` (no futura), panel con saldo calculado y diferencia (`TONE_TEXT_CLASSES`: `success` si > 0, `danger` si < 0, neutro en 0) y `HelpHint` `reconciliation`. Modal centrado en escritorio y hoja inferior (`placement="bottom"`) en móvil |
+| `accounts/components/account-card.tsx`     | Botón **Cuadrar saldo** (`Scale`) y, solo en `wallet` / `bank` con saldo < 0, un aviso `TONE_BADGE_CLASSES.danger` con su propio botón **Cuadrar saldo**                                                                                                                                      |
 
 Reglas:
 

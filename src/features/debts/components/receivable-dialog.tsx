@@ -121,7 +121,7 @@ function ReceivableForm({
   const [schedule, setSchedule] = useState<ReceivableSchedule>(
     receivable?.schedule ?? "once"
   )
-  // Cuenta habitual (SPEC 41): la que recibe los cobros. Solo activas; una
+  // Cuenta por defecto (SPEC 41): la que recibe los cobros. Solo activas; una
   // archivada se vacía
   const accountOptions = selectableAccounts(accounts)
   const [accountId, setAccountId] = useState(() =>
@@ -254,7 +254,7 @@ function ReceivableForm({
 
       <AccountSelectField
         name="account_id"
-        label="Cuenta habitual (opcional)"
+        label="Cuenta por defecto (opcional)"
         help="common.defaultAccount"
         value={accountId}
         onChange={setAccountId}

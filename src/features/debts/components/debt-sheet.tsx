@@ -570,7 +570,7 @@ function ProjectionDetails({
   }
 }
 
-/** "Si pagaras X al mes": recalcula la proyección sin guardar nada */
+/** "Simula un pago mensual": recalcula la proyección sin guardar nada */
 function PaymentSimulator({
   debt,
   currency
@@ -591,7 +591,7 @@ function PaymentSimulator({
         onChange={setValue}
         className="flex flex-col gap-2"
       >
-        <Label>Si pagaras al mes</Label>
+        <Label>Simula un pago mensual</Label>
         <Input placeholder="0" />
       </TextField>
       {valid && (

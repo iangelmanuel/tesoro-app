@@ -37,8 +37,7 @@ const ADJUST_DEFAULT_ERROR = "No se pudo actualizar el saldo. Intenta de nuevo"
 const ACCOUNT_ARCHIVED = "La cuenta está archivada"
 const SAME_BALANCE = "El saldo ya coincide"
 const ALREADY_RECONCILED = "La cuenta ya cuadra"
-const RECONCILE_DEFAULT_ERROR =
-  "No se pudo conciliar la cuenta. Intenta de nuevo"
+const RECONCILE_DEFAULT_ERROR = "No se pudo cuadrar el saldo. Intenta de nuevo"
 
 const ACCOUNT_FIELDS = [
   "name",

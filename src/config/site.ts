@@ -183,7 +183,7 @@ export const SITE = {
   reconciliation: {
     warnPercent: 5,
     warnAmount: 50000,
-    note: "Conciliación con saldo real"
+    note: "Saldo cuadrado con tu banco"
   },
 
   // Días entre programar el borrado de una empresa y la purga (pg_cron)

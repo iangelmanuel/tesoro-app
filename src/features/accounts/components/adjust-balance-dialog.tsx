@@ -130,7 +130,7 @@ function AdjustBalanceForm({
         validationBehavior="aria"
         className="flex flex-col gap-2"
       >
-        <FieldLabel help="balance.real">Saldo real</FieldLabel>
+        <FieldLabel help="balance.real">Saldo en tu banco</FieldLabel>
         <Input placeholder="0" />
         <FieldError>{errors?.balance?.[0]}</FieldError>
       </TextField>

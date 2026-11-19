@@ -1,6 +1,7 @@
 "use client"
 
-import { Label, ListBox, Select } from "@heroui/react"
+import { ListBox, Select } from "@heroui/react"
+import { FieldLabel } from "@/components/forms/field-label"
 import { formatCurrency, formatDate } from "@/libs/format"
 import { OCCURRENCE_STATUS } from "../occurrences"
 import type { UpcomingPayment } from "../queries"
@@ -36,7 +37,7 @@ export function OccurrenceSelect({
       onChange={(key) => onChange(key == null ? "" : String(key))}
       className="flex flex-col gap-2"
     >
-      <Label>Gasto fijo</Label>
+      <FieldLabel help="occurrence.select">Gasto fijo</FieldLabel>
       <Select.Trigger>
         <Select.Value />
         <Select.Indicator />

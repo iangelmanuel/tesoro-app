@@ -182,9 +182,9 @@ Los grupos de tabs sin etiqueta visible (tipo de tasa E.A./M.V., tipo de cobro d
 
 **Cuenta de usuario y auth** (`profile-form`, `password-form`, `currency-form`, `delete-*-dialog`, `form-field`): `profile.name` "Cómo te saluda Tesoro." · `password.current` "La que usas hoy para entrar." · `password.new` "Mínimo 8 caracteres." · `password.confirm` "Escríbela otra vez para evitar errores." · `currency.code` "Solo cambia cómo se muestran los montos. No convierte valores." · `confirm.typeToDelete` "Escríbelo igual para confirmar. No se puede deshacer." · `auth.email` "El correo con el que entras." · `auth.password` "Mínimo 8 caracteres." (solo en el registro; al entrar, la contraseña usa `password.current`, porque ahí no hay mínimo) Los mínimos se verifican contra los esquemas de Zod antes de escribirlos.
 
-**Filtros y periodos** (`transactions-filters`, `report-period-picker`, `verify-movements-dialog`, `occurrence-select`): `filters.search` "Busca en la descripción y la nota." · `filters.type` "Muestra solo entradas, salidas o traspasos." · `common.period` "El rango de fechas que se muestra." · `verify.account` "La cuenta cuyos movimientos vas a revisar." · `occurrence.select` "El periodo del gasto fijo que estás pagando."
+**Filtros y periodos** (`transactions-filters`, `report-period-picker`, `verify-movements-dialog`, `occurrence-select`): `filters.search` "Busca en la descripción y la nota." · `filters.type` "Muestra solo entradas, salidas o traspasos." · `common.period` "El rango de fechas que se muestra." · `verify.account` "La cuenta cuyos movimientos vas a revisar." · `occurrence.select` "El periodo del gasto fijo que estás pagando." El buscador, el pill Tipo (barra y hoja móvil) y el pill Periodo de Reportes no tienen etiqueta encima: llevan el (?) suelto a su derecha. Los pills Categoría y Cuenta no llevan (?). Desde / Hasta del rango de Reportes usan `common.from` / `common.until`.
 
-`mcp/connections-list` (**Acceso**): `mcp.access` "Qué puede hacer el agente: solo leer, o también registrar y editar."
+`mcp/connections-list` (**Acceso**): `mcp.access` "Qué puede hacer el agente: solo leer, o también registrar y editar." Su etiqueta es `sr-only`, así que el (?) va suelto junto al select.
 
 ## Plan de implementación
 

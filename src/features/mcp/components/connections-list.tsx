@@ -6,6 +6,7 @@ import { Button, Label, ListBox, Select, toast } from "@heroui/react"
 import { Bot } from "lucide-react"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import { FieldHelp } from "@/components/forms/field-label"
 import { todayISO } from "@/libs/dates"
 import { formatDate } from "@/libs/format"
 import { revokeAgent, updateAgentAccess } from "../actions"
@@ -80,33 +81,39 @@ function ConnectionRow({ connection }: { connection: AgentConnection }) {
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <Select
-          aria-label={`Acceso de ${connection.name}`}
-          selectedKey={access}
-          onSelectionChange={changeAccess}
-          isDisabled={pending}
-          className="flex w-full flex-col gap-2 sm:w-48"
-        >
-          <Label className="sr-only">Acceso</Label>
-          <Select.Trigger className="min-h-11 md:min-h-10">
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              {MCP_ACCESS_VALUES.map((value) => (
-                <ListBox.Item
-                  key={value}
-                  id={value}
-                  textValue={MCP_ACCESS_OPTIONS[value].label}
-                >
-                  {MCP_ACCESS_OPTIONS[value].label}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-        </Select>
+        <div className="flex w-full items-center gap-1 sm:w-auto">
+          <Select
+            aria-label={`Acceso de ${connection.name}`}
+            selectedKey={access}
+            onSelectionChange={changeAccess}
+            isDisabled={pending}
+            className="flex min-w-0 flex-1 flex-col gap-2 sm:w-48 sm:flex-none"
+          >
+            <Label className="sr-only">Acceso</Label>
+            <Select.Trigger className="min-h-11 md:min-h-10">
+              <Select.Value />
+              <Select.Indicator />
+            </Select.Trigger>
+            <Select.Popover>
+              <ListBox>
+                {MCP_ACCESS_VALUES.map((value) => (
+                  <ListBox.Item
+                    key={value}
+                    id={value}
+                    textValue={MCP_ACCESS_OPTIONS[value].label}
+                  >
+                    {MCP_ACCESS_OPTIONS[value].label}
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </Select.Popover>
+          </Select>
+          <FieldHelp
+            help="mcp.access"
+            label="Acceso"
+          />
+        </div>
         <Button
           variant="danger-soft"
           className="min-h-11 md:min-h-10"

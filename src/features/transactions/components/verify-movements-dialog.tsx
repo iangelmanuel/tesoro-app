@@ -1,7 +1,8 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Button, Label, ListBox, Modal, Select } from "@heroui/react"
+import { Button, ListBox, Modal, Select } from "@heroui/react"
+import { FieldLabel } from "@/components/forms/field-label"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { loadVerifyEntries } from "../actions"
 import type { VerifyEntry } from "../queries"
@@ -160,7 +161,7 @@ function VerifyMovementsBody({
           }
           className="mb-4 flex flex-col gap-2"
         >
-          <Label>Cuenta</Label>
+          <FieldLabel help="verify.account">Cuenta</FieldLabel>
           <Select.Trigger>
             <Select.Value />
             <Select.Indicator />

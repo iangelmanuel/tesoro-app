@@ -14,6 +14,8 @@ import {
 } from "@heroui/react"
 import { HelpHint } from "@/components/dashboard/help-hint"
 import { AccountSelectField } from "@/components/forms/account-select-field"
+import { FieldLabel } from "@/components/forms/field-label"
+import type { FieldHelpKey } from "@/config/help"
 import {
   type AccountOption,
   selectableAccounts
@@ -447,13 +449,15 @@ function AmountField({
   label,
   errors,
   defaultValue,
-  required
+  required,
+  help
 }: {
   id: string
   label: string
   errors?: string[]
   defaultValue: string
   required?: boolean
+  help?: FieldHelpKey
 }) {
   return (
     <TextField
@@ -466,7 +470,7 @@ function AmountField({
       validationBehavior="aria"
       className="flex flex-col gap-2"
     >
-      <Label>{label}</Label>
+      <FieldLabel help={help}>{label}</FieldLabel>
       <Input placeholder="0" />
       <FieldError>{errors?.[0]}</FieldError>
     </TextField>
@@ -478,13 +482,15 @@ function DayField({
   label,
   errors,
   defaultValue,
-  required
+  required,
+  help
 }: {
   id: string
   label: string
   errors?: string[]
   defaultValue?: string | number
   required?: boolean
+  help?: FieldHelpKey
 }) {
   return (
     <TextField
@@ -498,7 +504,7 @@ function DayField({
       validationBehavior="aria"
       className="flex flex-col gap-2"
     >
-      <Label>{label}</Label>
+      <FieldLabel help={help}>{label}</FieldLabel>
       <Input
         type="number"
         min={1}

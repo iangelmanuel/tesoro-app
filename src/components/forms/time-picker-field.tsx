@@ -1,8 +1,10 @@
 "use client"
 
-import { Button, FieldError, Label, TimeField } from "@heroui/react"
+import { Button, FieldError, TimeField } from "@heroui/react"
 import { Time } from "@internationalized/date"
 import { X } from "lucide-react"
+import { FieldLabel } from "@/components/forms/field-label"
+import type { FieldHelpKey } from "@/config/help"
 
 interface TimePickerFieldProps {
   /** Nombre del campo: el formulario recibe la hora como HH:MM o "" */
@@ -14,6 +16,8 @@ interface TimePickerFieldProps {
   /** Error de Zod del campo */
   error?: string
   className?: string
+  /** Ayuda del (?) junto a la etiqueta (FIELD_HELP) */
+  help?: FieldHelpKey
 }
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)(?::[0-5]\d)?$/
@@ -42,7 +46,8 @@ export function TimePickerField({
   value,
   onChange,
   error,
-  className = "flex flex-col gap-2"
+  className = "flex flex-col gap-2",
+  help
 }: TimePickerFieldProps) {
   const time = toTime(value)
 
@@ -57,7 +62,7 @@ export function TimePickerField({
       validationBehavior="aria"
       className={className}
     >
-      <Label>{label}</Label>
+      <FieldLabel help={help}>{label}</FieldLabel>
       <TimeField.Group fullWidth>
         <TimeField.Input>
           {(segment) => <TimeField.Segment segment={segment} />}

@@ -6,10 +6,10 @@ import {
   Button,
   FieldError,
   Input,
-  Label,
   TextField
 } from "@heroui/react"
 import { Trash2 } from "lucide-react"
+import { FieldLabel } from "@/components/forms/field-label"
 import { SITE } from "@/config/site"
 import { requestAccountDeletion } from "../actions"
 import type { ProfileFormState } from "../types"
@@ -62,7 +62,10 @@ export function DeleteAccountDialog({ email }: { email: string }) {
                   validationBehavior="aria"
                   className="flex flex-col gap-2"
                 >
-                  <Label>{`Escribe ${email} para confirmar`}</Label>
+                  <FieldLabel
+                    help="confirm.typeToDelete"
+                    helpLabel="Confirmación"
+                  >{`Escribe ${email} para confirmar`}</FieldLabel>
                   <Input />
                   <FieldError>
                     {state.fieldErrors?.confirmEmail?.[0]}

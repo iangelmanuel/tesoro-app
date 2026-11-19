@@ -6,10 +6,10 @@ import {
   Button,
   FieldError,
   Input,
-  Label,
   TextField
 } from "@heroui/react"
 import { Trash2 } from "lucide-react"
+import { FieldLabel } from "@/components/forms/field-label"
 import { SITE } from "@/config/site"
 import { requestBusinessDeletion } from "../actions"
 import type { BusinessFormState } from "../types"
@@ -72,7 +72,10 @@ export function DeleteBusinessDialog({ business }: DeleteBusinessDialogProps) {
                   validationBehavior="aria"
                   className="flex flex-col gap-2"
                 >
-                  <Label>{`Escribe ${business.name} para confirmar`}</Label>
+                  <FieldLabel
+                    help="confirm.typeToDelete"
+                    helpLabel="Confirmación"
+                  >{`Escribe ${business.name} para confirmar`}</FieldLabel>
                   <Input />
                   <FieldError>{state.fieldErrors?.confirmName?.[0]}</FieldError>
                 </TextField>

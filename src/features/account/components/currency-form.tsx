@@ -5,11 +5,11 @@ import {
   Button,
   Description,
   FieldError,
-  Label,
   ListBox,
   Select,
   toast
 } from "@heroui/react"
+import { FieldLabel } from "@/components/forms/field-label"
 import { SITE } from "@/config/site"
 import { updateCurrency } from "../actions"
 import type { ProfileFormState } from "../types"
@@ -38,7 +38,7 @@ export function CurrencyForm({ currency }: { currency: string }) {
         isInvalid={Boolean(state.fieldErrors?.currency)}
         className="flex w-full flex-col gap-2 sm:w-72"
       >
-        <Label>Moneda</Label>
+        <FieldLabel help="currency.code">Moneda</FieldLabel>
         <Select.Trigger>
           <Select.Value />
           <Select.Indicator />

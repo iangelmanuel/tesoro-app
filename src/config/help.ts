@@ -218,6 +218,7 @@ export const FIELD_HELP = {
   "profile.name": "Cómo te saluda Tesoro.",
   "password.current": "La que usas hoy para entrar.",
   "password.new": "Mínimo 8 caracteres.",
+  "password.confirm": "Escríbela otra vez para evitar errores.",
   "currency.code":
     "Solo cambia cómo se muestran los montos. No convierte valores.",
   "confirm.typeToDelete":

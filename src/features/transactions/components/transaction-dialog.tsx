@@ -96,6 +96,10 @@ export interface TransactionInitialValues {
   account_id?: string | null
   /** Ingreso fijo elegido en el select (Marcar recibido) */
   recurring_income_id?: string
+  /** Nota copiada de otro movimiento (Duplicar, SPEC 49) */
+  note?: string
+  /** Cliente o proveedor copiado de otro movimiento (Empresa, SPEC 49) */
+  counterparty?: string | null
 }
 
 /** Ocurrencia de gasto fijo que paga el movimiento nuevo */
@@ -828,7 +832,10 @@ function TransactionForm({
             maxLength={80}
             autoComplete="off"
             defaultValue={
-              values?.counterparty ?? transaction?.counterparty ?? ""
+              values?.counterparty ??
+              transaction?.counterparty ??
+              initialValues?.counterparty ??
+              ""
             }
             isInvalid={Boolean(errors?.counterparty)}
             validationBehavior="aria"
@@ -864,7 +871,9 @@ function TransactionForm({
       <TextField
         name="note"
         maxLength={500}
-        defaultValue={values?.note ?? transaction?.note ?? ""}
+        defaultValue={
+          values?.note ?? transaction?.note ?? initialValues?.note ?? ""
+        }
         isInvalid={Boolean(errors?.note)}
         validationBehavior="aria"
         className="flex flex-col gap-2"

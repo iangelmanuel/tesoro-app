@@ -41,6 +41,7 @@ import {
   type LedgerEntry,
   type LinkedDebtEntry
 } from "../queries"
+import { DuplicateTransactionDialog } from "./duplicate-transaction-dialog"
 import { TransactionDialog } from "./transaction-dialog"
 
 interface TransactionsTableProps {
@@ -443,6 +444,19 @@ export function TransactionsTable({
                                 onOpenChange={dialog.onOpenChange}
                               />
                             )}
+                            renderDuplicate={(dialog) =>
+                              dialog.open && (
+                                <DuplicateTransactionDialog
+                                  workspaceId={workspaceId}
+                                  workspaceType={workspaceType}
+                                  transactionId={transaction.id}
+                                  categories={categories}
+                                  accounts={accounts}
+                                  incomeSources={incomeSources}
+                                  onOpenChange={dialog.onOpenChange}
+                                />
+                              )
+                            }
                           />
                         )}
                       </Table.Cell>

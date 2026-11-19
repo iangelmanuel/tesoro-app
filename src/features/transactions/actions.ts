@@ -5,6 +5,10 @@ import { requireWritableWorkspace } from "@/features/workspaces/queries"
 import { revalidateWorkspacePages } from "@/libs/revalidate"
 import type { ServiceFailure } from "@/libs/service-result"
 import { createClient } from "@/libs/supabase/server"
+import type {
+  RecurringOccurrenceLink,
+  TransactionInitialValues
+} from "./components/transaction-dialog"
 import {
   type EditableTransaction,
   type VerifyEntry,
@@ -254,6 +258,79 @@ export async function loadEditableTransaction(
     return transaction ? { transaction } : { error: NOT_FOUND }
   } catch {
     return { error: "No se pudo cargar el movimiento. Intenta de nuevo" }
+  }
+}
+
+const DUPLICATE_ERROR = "No se pudo preparar el duplicado. Intenta de nuevo"
+
+/**
+ * Valores del duplicado de un movimiento suelto o de un pago de fijo (SPEC
+ * 49). Copia tipo, monto, categoría, cuenta, descripción, nota y contraparte.
+ * Sin fecha (el diálogo pone hoy), hora, factura ni posición del día. La
+ * cuenta y la categoría archivadas quedan vacías. Solo lectura: RLS limita
+ * las filas al dueño.
+ */
+export async function loadTransactionDuplicate(
+  workspaceId: string,
+  transactionId: string
+): Promise<
+  | {
+      initialValues: TransactionInitialValues
+      recurring?: RecurringOccurrenceLink
+    }
+  | { error: string }
+> {
+  const parsedWorkspace = idSchema.safeParse(workspaceId)
+  const parsedId = idSchema.safeParse(transactionId)
+
+  if (!parsedWorkspace.success || !parsedId.success) {
+    return { error: NOT_FOUND }
+  }
+
+  try {
+    const original = await getEditableTransaction(
+      parsedWorkspace.data,
+      parsedId.data
+    )
+    if (!original) {
+      return { error: NOT_FOUND }
+    }
+
+    const supabase = await createClient()
+    const [category, account] = await Promise.all([
+      supabase
+        .from("categories")
+        .select("id")
+        .eq("id", original.category_id)
+        .is("archived_at", null)
+        .maybeSingle(),
+      original.account_id
+        ? supabase
+            .from("accounts")
+            .select("id")
+            .eq("id", original.account_id)
+            .eq("workspace_id", parsedWorkspace.data)
+            .is("archived_at", null)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null })
+    ])
+    if (category.error || account.error) {
+      return { error: DUPLICATE_ERROR }
+    }
+
+    return {
+      initialValues: {
+        type: original.type,
+        amount: original.amount,
+        category_id: category.data?.id,
+        account_id: account.data?.id ?? null,
+        description: original.description,
+        note: original.note ?? "",
+        counterparty: original.counterparty
+      }
+    }
+  } catch {
+    return { error: DUPLICATE_ERROR }
   }
 }
 

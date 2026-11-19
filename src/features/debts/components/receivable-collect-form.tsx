@@ -17,6 +17,7 @@ import {
 import { Amount } from "@/components/dashboard/amount"
 import { useHideAmounts } from "@/components/dashboard/hide-amounts-context"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import { activeAccountId } from "@/features/accounts/active-account"
 import {
   type PaymentAccountOption,
   PaymentAccountSection,
@@ -570,6 +571,10 @@ function CollectFields({
           errors={{ account_id: errors?.account_id?.[0] }}
           label="Cuenta que recibe"
           direction="in"
+          // Cuenta habitual de la cuenta por cobrar, si sigue activa
+          defaultAccountId={
+            activeAccountId(accounts, receivable.accountId) ?? ""
+          }
         />
       )}
 

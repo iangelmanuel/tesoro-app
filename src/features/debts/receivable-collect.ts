@@ -35,6 +35,8 @@ export interface CollectPeriod {
 export interface CollectableReceivable {
   id: string
   name: string
+  /** Cuenta habitual que recibe los cobros (SPEC 41); se prellena si sigue activa */
+  accountId: string | null
   schedule: ReceivableSchedule
   /** Lo que falta en total; null en una mensual indefinida (sin saldo total) */
   balance: number | null
@@ -123,6 +125,7 @@ export function toCollectableReceivable(
     return {
       id: debt.id,
       name: debt.name,
+      accountId: debt.account_id,
       schedule: "once",
       balance: debt.balance,
       periods: [],
@@ -140,6 +143,7 @@ export function toCollectableReceivable(
   return {
     id: debt.id,
     name: debt.name,
+    accountId: debt.account_id,
     schedule: "monthly",
     balance: debt.term_months === null ? null : debt.balance,
     periods: collectPeriods(debt, entries, today),

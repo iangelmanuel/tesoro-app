@@ -1079,6 +1079,13 @@ inválido de `tab` cae a Debo.
   gastos.
 - Tarjetas y préstamos tienen una **cuenta habitual** opcional
   (`debts.account_id`, SPEC 41) que se prellena al registrar un pago.
+- El **Pago** de tarjeta o préstamo prellena el monto con lo que falta de la
+  cuota del ciclo (la vencida o la próxima sin cubrir). Sin cuota pendiente
+  o sin pago mínimo queda vacío; **Abono** y **Compra** arrancan vacíos. Lo
+  que escriba el usuario se respeta al cambiar de tab.
+- Las cuentas por cobrar también tienen **cuenta habitual** opcional
+  (`debts.account_id`): se elige al crearlas o editarlas y se prellena como
+  "Cuenta que recibe" al cobrar, si sigue activa.
 - Las deudas no se eliminan: se marcan como pagadas, se archivan y se
   reactivan. La historia de pagos no se pierde.
 

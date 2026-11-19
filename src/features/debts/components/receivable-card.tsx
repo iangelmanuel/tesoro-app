@@ -172,6 +172,8 @@ export function ReceivableCard({
           </Dropdown.Popover>
         </Dropdown>
         <ReceivableDialog
+          workspaceId={receivable.workspace_id}
+          accounts={accounts}
           receivable={receivable}
           open={editing}
           onOpenChange={setEditing}

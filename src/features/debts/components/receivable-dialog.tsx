@@ -14,7 +14,12 @@ import {
   toast
 } from "@heroui/react"
 import { X } from "lucide-react"
+import { AccountSelectField } from "@/components/forms/account-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
+import {
+  type AccountOption,
+  selectableAccounts
+} from "@/features/accounts/components/account-select"
 import { parseAmount } from "@/features/transactions/schemas"
 import { todayISO } from "@/libs/dates"
 import { formatDate } from "@/libs/format"
@@ -31,6 +36,10 @@ import type { DebtFormState } from "../types"
 import { amountInput } from "./field"
 
 interface ReceivableDialogProps {
+  /** Espacio (para crear una cuenta desde el select) */
+  workspaceId: string
+  /** Cuentas del espacio (cuenta habitual); solo se ofrecen las activas */
+  accounts: AccountOption[]
   /** Si llega, el diálogo edita esta cuenta por cobrar */
   receivable?: Debt
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
@@ -40,6 +49,8 @@ interface ReceivableDialogProps {
 }
 
 export function ReceivableDialog({
+  workspaceId,
+  accounts,
   receivable,
   trigger,
   open: controlledOpen,
@@ -75,6 +86,8 @@ export function ReceivableDialog({
             <Modal.Body>
               {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
               <ReceivableForm
+                workspaceId={workspaceId}
+                accounts={accounts}
                 receivable={receivable}
                 onSaved={() => setOpen(false)}
                 onCancel={() => setOpen(false)}
@@ -88,12 +101,16 @@ export function ReceivableDialog({
 }
 
 interface ReceivableFormProps {
+  workspaceId: string
+  accounts: AccountOption[]
   receivable?: Debt
   onSaved: () => void
   onCancel: () => void
 }
 
 function ReceivableForm({
+  workspaceId,
+  accounts,
   receivable,
   onSaved,
   onCancel
@@ -103,6 +120,14 @@ function ReceivableForm({
   // guardado y no se puede cambiar
   const [schedule, setSchedule] = useState<ReceivableSchedule>(
     receivable?.schedule ?? "once"
+  )
+  // Cuenta habitual (SPEC 41): la que recibe los cobros. Solo activas; una
+  // archivada se vacía
+  const accountOptions = selectableAccounts(accounts)
+  const [accountId, setAccountId] = useState(() =>
+    accountOptions.some((account) => account.id === receivable?.account_id)
+      ? (receivable?.account_id ?? "")
+      : ""
   )
 
   const [state, formAction, pending] = useActionState<DebtFormState, FormData>(
@@ -217,6 +242,17 @@ function ReceivableForm({
           values={values}
         />
       )}
+
+      <AccountSelectField
+        name="account_id"
+        label="Cuenta habitual (opcional)"
+        value={accountId}
+        onChange={setAccountId}
+        accounts={accountOptions}
+        workspaceId={workspaceId}
+        allowNone
+        error={errors?.account_id?.[0]}
+      />
 
       {state.error && (
         <p

@@ -28,6 +28,7 @@ import { MAX_INSTALLMENTS } from "../installments"
 import type { DebtPaymentDescriptions } from "../payment-description"
 import type { Debt } from "../queries"
 import type { PaymentFormState } from "../types"
+import { amountInput } from "./field"
 
 type PaymentDebt = Pick<Debt, "id" | "kind"> & {
   /** Cuenta habitual (SPEC 41): se prellena al registrar si sigue activa */
@@ -286,7 +287,14 @@ function PaymentForm({
 
   const errors = state.fieldErrors
   const values = state.values
-  const [amountText, setAmountText] = useState(() => values?.amount ?? "")
+  // Monto (SPEC 41): el Pago arranca con lo que falta de la cuota; Abono y
+  // Compra, vacíos. Se respeta lo que el usuario escriba
+  const amountFor = (next: PaymentMode) =>
+    next === "payment" ? amountInput(debt.descriptions?.amount) : ""
+  const [amountText, setAmountText] = useState(
+    () => values?.amount ?? amountFor("payment")
+  )
+  const [prefilledAmount, setPrefilledAmount] = useState(amountText)
   const [createTransaction, setCreateTransaction] = useState(
     () => !values || values.create_transaction === "on"
   )
@@ -305,6 +313,11 @@ function PaymentForm({
     // la que paga la tarjeta, no la que recibe un avance
     if ((next === "advance") !== (mode === "advance")) {
       setAccountId(next === "advance" ? "" : defaultAccountId)
+    }
+    if (amountText === "" || amountText === prefilledAmount) {
+      const amount = amountFor(next)
+      setAmountText(amount)
+      setPrefilledAmount(amount)
     }
     if (description === "" || description === prefilledDescription) {
       const text = debt.descriptions?.[next === "extra" ? "extra" : "payment"]

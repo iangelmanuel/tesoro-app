@@ -151,6 +151,8 @@ function ReceivablesTab({
 
   const createButton = (
     <ReceivableDialog
+      workspaceId={workspace.id}
+      accounts={accounts}
       trigger={
         <Button data-tour="debts-create">
           <Plus />

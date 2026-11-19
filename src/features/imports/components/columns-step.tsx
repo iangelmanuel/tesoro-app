@@ -108,7 +108,7 @@ const FREQUENCY_VALUE_OPTIONS: { value: FrequencyTarget; label: string }[] = [
 const DEBT_ENTRY_VALUE_OPTIONS: { value: DebtEntryTarget; label: string }[] = [
   { value: "payment", label: "Pago" },
   { value: "charge", label: "Cargo (sube el saldo)" },
-  { value: "decrease", label: "Ajuste a la baja" },
+  { value: "decrease", label: "Ajuste que baja el saldo" },
   { value: "skip", label: "Omitir fila" }
 ]
 
@@ -325,7 +325,7 @@ export function ColumnsStep({
         <ModeRadio
           id="import-type-mode"
           help="import.amountSign"
-          title="¿Cómo se sabe si es entrada o salida?"
+          title="Cómo distinguir entradas y salidas"
           options={TYPE_MODES}
           value={typeMode}
           onChange={onTypeModeChange}
@@ -337,8 +337,8 @@ export function ColumnsStep({
           help="import.entryMode"
           title={
             linkField === "debt"
-              ? "¿Cómo se sabe si es pago o cargo?"
-              : "¿Cómo se sabe si es aporte o retiro?"
+              ? "Cómo distinguir pagos y cargos"
+              : "Cómo distinguir aportes y retiros"
           }
           options={linkField === "debt" ? DEBT_ENTRY_MODES : GOAL_ENTRY_MODES}
           value={entryTypeMode}

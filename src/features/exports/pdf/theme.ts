@@ -17,7 +17,7 @@ import { FONT, FONT_SEMIBOLD } from "./fonts"
 // - blanco / accent: 5.36 Personal, 5.22 Empresa (banda de título)
 // - accentDark / accentTint: 7.13 Personal, 6.91 Empresa (encabezados)
 // - income / zebra 5.19, expense / zebra 5.01, muted / zebra 5.61
-// El tema Ahorro de tinta usa texto ≥ #4b5563 sobre blanco.
+// El tema Para imprimir usa texto ≥ #4b5563 sobre blanco.
 
 export interface PdfTheme {
   variant: PdfOptions["theme"]
@@ -76,7 +76,7 @@ function hex(argb: string) {
   return `#${argb.slice(2)}`
 }
 
-/** Gris del tema Ahorro de tinta para textos atenuados */
+/** Gris del tema Para imprimir para textos atenuados */
 const INK_MUTED = "#4B5563"
 
 function buildStyles(colors: {

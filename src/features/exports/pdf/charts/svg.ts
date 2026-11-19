@@ -113,7 +113,7 @@ export function niceScale(minValue: number, maxValue: number, ticks = 4) {
 export interface LegendItem {
   label: string
   color: string
-  /** Rayado (tema Ahorro de tinta) */
+  /** Rayado (tema Para imprimir) */
   hatch?: boolean
   /** Línea en vez de cuadro */
   line?: boolean

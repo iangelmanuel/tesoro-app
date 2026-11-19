@@ -490,8 +490,8 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
   - `Select` **Periodo** y, según el periodo, otro `Select` con el valor, o
     **Desde** / **Hasta** en dos columnas (una en móvil). Controles de 44 px.
   - Con PDF, bajo el periodo: `Select` **Tamaño** (A4 | Carta) y tabs
-    **Orientación** (Vertical | Horizontal) y **Tema** (Color | Ahorro de
-    tinta) con una línea en `text-muted` que explica el tema elegido. Las
+    **Orientación** (Vertical | Horizontal) y **Tema** (Color | Para
+    imprimir) con una línea en `text-muted` que explica el tema elegido. Las
     tabs llevan etiqueta visible (`OptionTabs`, `aria-labelledby`).
   - Bajo el periodo, en `text-muted`, "Se crearán N hojas de mes" (Excel) o
     "Incluye N meses de detalle" (PDF). Con PDF el tope es de 12 meses: un
@@ -533,7 +533,7 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
   libro, más `balance` y `chart1`–`chart5` (`--balance` y `--chart-*` en
   claro); ninguna sección fija un color a mano. Los pares del tema Color son
   los del libro (tabla de arriba); la fila de total también va en texto
-  oscuro. Ahorro de tinta usa texto ≥ `#4b5563` sobre blanco, sin rellenos de
+  oscuro. Para imprimir usa texto ≥ `#4b5563` sobre blanco, sin rellenos de
   color, y las gráficas en grises con contorno y rayado.
   - Secciones reutilizables en `sections/` (`pdfTable` para toda tabla) y
     gráficas en `charts/` como funciones puras que devuelven un SVG (solo

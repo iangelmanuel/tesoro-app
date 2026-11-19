@@ -460,8 +460,8 @@ select del tab Ingreso), al pagar una tarjeta o préstamo (tab Deuda, Sheet y
     `record_debt_payment` y `record_receivable_collection` reciben
     `p_description` (null = texto de siempre).
 
-- **Cuenta habitual:** gastos fijos y deudas tienen `account_id` opcional
-  ("Cuenta habitual (opcional)"), como la cuenta por defecto de los ingresos
+- **Cuenta por defecto:** gastos fijos y deudas tienen `account_id` opcional
+  ("Cuenta por defecto (opcional)", SPEC 48), igual que los ingresos
   fijos. Al pagar se prellena si sigue activa; archivada no se prellena y
   borrada queda en null (`on delete set null (account_id)`) sin borrar el
   origen. Sin cuenta, el campo queda vacío.
@@ -751,7 +751,7 @@ Estado de una ocurrencia (fechas en `America/Bogota`):
   teléfono es una hoja inferior. El estado se calcula, no se guarda.
 - **Marcar como pagado** abre el diálogo de movimiento prellenado (gasto,
   monto, categoría, fecha de hoy, descripción "Pago {nombre} · {periodo}" y
-  cuenta habitual; ver
+  cuenta por defecto; ver
   [Fecha, descripción y cuenta al pagar](#fecha-descripción-y-cuenta-al-pagar-spec-41)).
   La ocurrencia pagada sigue siendo la elegida. El monto se
   puede cambiar antes de guardar; si la categoría está archivada queda vacía
@@ -1105,13 +1105,13 @@ inválido de `tab` cae a Debo.
   vacía, la RPC usa "Pago <nombre>" / "Abono <nombre>". La casilla viene
   marcada por defecto; se desmarca para cargar pagos antiguos sin inflar los
   gastos.
-- Tarjetas y préstamos tienen una **cuenta habitual** opcional
+- Tarjetas y préstamos tienen una **cuenta por defecto** opcional
   (`debts.account_id`, SPEC 41) que se prellena al registrar un pago.
 - El **Pago** de tarjeta o préstamo prellena el monto con lo que falta de la
   cuota del ciclo (la vencida o la próxima sin cubrir). Sin cuota pendiente
   o sin pago mínimo queda vacío; **Abono** y **Compra** arrancan vacíos. Lo
   que escriba el usuario se respeta al cambiar de tab.
-- Las cuentas por cobrar también tienen **cuenta habitual** opcional
+- Las cuentas por cobrar también tienen **cuenta por defecto** opcional
   (`debts.account_id`): se elige al crearlas o editarlas y se prellena como
   "Cuenta que recibe" al cobrar, si sigue activa.
 - Las deudas no se eliminan: se marcan como pagadas, se archivan y se
@@ -2132,7 +2132,7 @@ Hace falta mapear Día o Inicio (con uno basta).
 
 - **Tipo**, en 3 modos:
   - **Columna con valores:** en deudas, cada valor → Pago, Cargo (ajuste que
-    sube el saldo), Ajuste a la baja u "Omitir fila" (pago / abono → Pago;
+    sube el saldo), Ajuste que baja el saldo u "Omitir fila" (pago / abono → Pago;
     compra / cargo / interés / cuota de manejo → Cargo). En metas → Aporte,
     Retiro u "Omitir fila" (aporte / ahorro / depósito → Aporte; retiro /
     saca → Retiro).
@@ -2634,7 +2634,7 @@ por defecto u Horizontal) y **Tema**:
   en Personal, naranja en Empresa) y texto blanco, encabezados de columna con
   un tinte claro, filas alternas, ingresos y ventas en verde, gastos y costos
   en rojo, traspasos en gris. Todo par texto/fondo da AA (4.5:1).
-- **Ahorro de tinta**: sin rellenos de color. Títulos con línea debajo,
+- **Para imprimir**: sin rellenos de color. Títulos con línea debajo,
   encabezados en negrita, montos en gris oscuro con signo `+` (ingreso,
   venta) o `−` (gasto, costo; los traspasos sin signo) y gráficas en grises
   con rayado. Texto ≥ `#4b5563` sobre blanco.
@@ -2783,7 +2783,7 @@ La guía para el usuario está en `/mcp`; la técnica, en
   desde la app), no revierte nada y dice cuántas cambiaron.
 - Revertir la creación de una cuenta, deuda, fijo, meta o presupuesto falla
   si ya tiene datos vinculados (movimientos, traspasos, pagos, aportes o
-  fijos que la usan como cuenta habitual): no borra nada y la operación
+  fijos que la usan como cuenta por defecto): no borra nada y la operación
   sigue **Aplicada** para intentarlo después. Revertir una edición devuelve
   solo los campos de la entidad; sus pagos no cambian.
 - Una operación se revierte una sola vez, hasta 30 días después. No hay

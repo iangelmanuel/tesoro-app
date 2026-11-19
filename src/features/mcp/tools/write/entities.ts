@@ -180,7 +180,7 @@ export async function commitEntity(
 
 type ToolResult = ReturnType<typeof toolError>
 
-/** Cuenta habitual: solo se resuelve si llega por id o por nombre */
+/** Cuenta por defecto: solo se resuelve si llega por id o por nombre */
 export async function habitualAccount(
   ctx: McpContext,
   workspace: McpWorkspace,
@@ -193,7 +193,7 @@ export async function habitualAccount(
     id: args.account_id,
     name: args.account,
     field: "account_id",
-    label: "la cuenta habitual",
+    label: "la cuenta por defecto",
     nullable: true
   })
 }

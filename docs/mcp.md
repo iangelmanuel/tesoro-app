@@ -114,7 +114,7 @@ pregunta para el usuario y sus opciones.
 - Cuenta y categoría van por id o por nombre (`account`, `category`). Un
   nombre que coincide con varias, o con ninguna, se pregunta.
 - Sin cuenta: con una sola cuenta activa se usa esa; con varias se pregunta.
-  En pagos y fijos primero se usa la cuenta habitual (SPEC 41).
+  En pagos y fijos primero se usa la cuenta por defecto (SPEC 41).
 - Las piezas viven en `tools/shared.ts` (`needsInput`, `NEEDS_INPUT_HINT`) y
   `tools/write/references.ts` (`resolveAccount`, `resolveCategory`).
 
@@ -157,7 +157,7 @@ El análisis vive en `tools/write/statement.ts`.
 { "workspace_id": "…", "debt_id": "…", "amount": 350000 }
 ```
 
-Fecha de hoy, cuenta habitual de la deuda y descripción "Pago {deuda} ·
+Fecha de hoy, cuenta por defecto de la deuda y descripción "Pago {deuda} ·
 {mes}". Las tools de deuda guardan en el log la deuda, el abono, sus
 movimientos y sus asignaciones (`tools/write/debt-snapshots.ts`), en el
 orden que necesita `undo_mcp_operation`. Las asignaciones de cobros mensuales
@@ -201,7 +201,7 @@ entidad y acción (grupo `manage`, "Crear y editar" en `/mcp`):
 - **Revertir.** Cada create y update deja su fila en el log. Revertir un
   create borra la entidad solo si nada la referencia. Si ya tiene
   movimientos, traspasos, abonos, aportes, ajustes o fijos que la usan como
-  cuenta habitual, `undo_mcp_operation` falla con el motivo y no borra nada
+  cuenta por defecto, `undo_mcp_operation` falla con el motivo y no borra nada
   (`mcp_row_references` revisa las llaves foráneas). La operación sigue
   `applied` y se puede revertir después. Revertir un update restaura solo los
   campos de la entidad: los pagos no se tocan.

@@ -456,7 +456,7 @@ function ExportForm({
             }
             options={[
               { id: "color", label: "Color" },
-              { id: "ink", label: "Ahorro de tinta" }
+              { id: "ink", label: "Para imprimir" }
             ]}
             hint={PDF_THEME_HINTS[pdfOptions.theme]}
           />

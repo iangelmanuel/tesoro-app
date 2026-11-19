@@ -70,7 +70,7 @@ const fields = {
     .uuid({ error: "Elige una cuenta válida" })
     .nullable()
     .describe(
-      "Cuenta habitual del pago (prellena la cuenta al pagar). null = ninguna."
+      "Cuenta por defecto del pago (prellena la cuenta al pagar). null = ninguna."
     ),
   account: accountNameSchema
 }
@@ -87,7 +87,7 @@ export const createRecurringExpenseTool = defineTool({
   name: "create_recurring_expense",
   group: "manage",
   title: "Crear gasto fijo",
-  description: `Crea un gasto fijo (suscripción, arriendo, servicio) que se repite cada mes o cada año, con su categoría de gasto, día de pago y cuenta habitual opcional. Aparece en Gastos fijos con sus próximas fechas. Para pagar una ocurrencia usa pay_recurring_expense. Solo Personal. ${NEEDS_INPUT_HINT}`,
+  description: `Crea un gasto fijo (suscripción, arriendo, servicio) que se repite cada mes o cada año, con su categoría de gasto, día de pago y cuenta por defecto opcional. Aparece en Gastos fijos con sus próximas fechas. Para pagar una ocurrencia usa pay_recurring_expense. Solo Personal. ${NEEDS_INPUT_HINT}`,
   input: createInput,
   annotations: { readOnlyHint: false, destructiveHint: false },
   async run(ctx, args) {
@@ -193,7 +193,7 @@ export const updateRecurringExpenseTool = defineTool({
   name: "update_recurring_expense",
   group: "manage",
   title: "Editar gasto fijo",
-  description: `Cambia nombre, monto, categoría, frecuencia, día, mes, fechas o cuenta habitual de un gasto fijo. Solo cambia los campos que envíes; los demás quedan igual. Los pagos ya registrados no cambian. Solo Personal. ${NEEDS_INPUT_HINT}`,
+  description: `Cambia nombre, monto, categoría, frecuencia, día, mes, fechas o cuenta por defecto de un gasto fijo. Solo cambia los campos que envíes; los demás quedan igual. Los pagos ya registrados no cambian. Solo Personal. ${NEEDS_INPUT_HINT}`,
   input: updateInput,
   annotations: { readOnlyHint: false, destructiveHint: false },
   async run(ctx, args) {

@@ -28,6 +28,34 @@ El contexto de producto (usuarios, voz, principios) está en
 - **Movimiento corto.** ≤ 200 ms en la UI y ≤ 400 ms en gráficas, y nada con
   `prefers-reduced-motion: reduce`.
 
+## Voz
+
+Reglas para todo texto de la UI (SPEC 48). Son verificables: se revisan con
+el texto en mano, sin juicio de gusto. El vocabulario de movimientos está en
+[Vocabulario](#vocabulario-spec-47).
+
+1. **Tuteo, español neutro (es-CO), sin anglicismos** cuando hay una palabra
+   común. Se mantienen "score" y "email", que ya son conocidas.
+2. **Botones: verbo + objeto, máximo 3 palabras.** Ej.: "Registrar
+   movimiento", "Crear meta", "Actualizar saldo".
+3. **Títulos: sustantivo, sin verbo ni signos.** Ej.: "Próximos
+   vencimientos".
+4. **Toasts de éxito: objeto + participio.** Ej.: "Meta creada". Sin "¡", sin
+   "exitosamente" y sin punto final.
+5. **Errores: qué pasó + qué hacer.** Ej.: "No se pudo guardar. Revisa tu
+   conexión e intenta de nuevo". Nunca un código ni un término interno.
+6. **Vacíos: qué falta + para qué sirve, en una frase.** La acción va en el
+   botón.
+7. **Un concepto, una palabra.** Las equivalencias están en el glosario de
+   SPEC 47 y en la tabla de hallazgos de SPEC 48.
+8. **Frases de máximo 20 palabras.** Si hace falta más, se parte o se mueve a
+   una ayuda (?).
+
+Nombres fijados por SPEC 48: **Progreso** (de un presupuesto; "Avance" es
+solo el retiro con tarjeta), **Cuenta por defecto**, **Saldo en tu banco**,
+**Cuadrar saldo**, **Periodos** (de un gasto o ingreso fijo), **Próximos
+vencimientos** y **Deshacer cambio** (Agentes IA).
+
 ## Tema y tokens
 
 Todo vive en `src/styles/globals.css`, con los nombres de HeroUI v3.

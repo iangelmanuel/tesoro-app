@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { Tooltip, cn, toast } from "@heroui/react"
-import { Link2, Pencil, Receipt, Trash2 } from "lucide-react"
+import { Copy, Link2, Pencil, Receipt, Trash2 } from "lucide-react"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import { RowActions } from "@/components/dashboard/row-actions"
@@ -19,6 +19,10 @@ import { deleteEntry, moveDebtEntry } from "../actions"
 import { installmentLabel, installmentProgress } from "../installments"
 import type { Debt, DebtEntry } from "../queries"
 import { DebtEntryDialog } from "./debt-entry-dialog"
+import {
+  DuplicateDebtEntryDialog,
+  canDuplicateDebtEntry
+} from "./duplicate-debt-entry-dialog"
 
 /**
  * Lo que el historial usa de la deuda. Día de pago, corte y próximo
@@ -45,6 +49,11 @@ interface DebtEntriesListProps {
   /** Categorías del espacio, para el movimiento de un pago (SPEC 42) */
   categories?: Category[]
   currency: string
+  /**
+   * La cuota del ciclo actual ya está cubierta: el duplicado de un pago
+   * muestra un aviso (SPEC 49)
+   */
+  cycleCovered?: boolean
   /** Deudas pagadas, cobradas o archivadas: sin editar ni eliminar */
   readOnly?: boolean
 }
@@ -55,6 +64,7 @@ export function DebtEntriesList({
   accounts,
   categories,
   currency,
+  cycleCovered = false,
   readOnly
 }: DebtEntriesListProps) {
   // Orden manual dentro del día (SPEC 45), como en Movimientos
@@ -89,6 +99,7 @@ export function DebtEntriesList({
             accounts={accounts}
             categories={categories}
             currency={currency}
+            cycleCovered={cycleCovered}
             readOnly={readOnly}
             sortable={sortable.configFor(entry)}
           />
@@ -104,6 +115,7 @@ function EntryRow({
   accounts,
   categories,
   currency,
+  cycleCovered,
   readOnly,
   sortable
 }: {
@@ -112,10 +124,12 @@ function EntryRow({
   accounts?: PaymentAccountOption[]
   categories?: Category[]
   currency: string
+  cycleCovered: boolean
   readOnly?: boolean
   sortable?: SortableConfig
 }) {
   const [editing, setEditing] = useState(false)
+  const [duplicating, setDuplicating] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [, startTransition] = useTransition()
   const isPayment = entry.kind === "payment"
@@ -219,6 +233,17 @@ function EntryRow({
                     icon: <Pencil className="size-4" />,
                     onAction: () => setEditing(true)
                   },
+                  // Los ajustes se corrigen con Actualizar saldo (SPEC 49)
+                  ...(canDuplicateDebtEntry(debt, entry)
+                    ? [
+                        {
+                          id: "duplicate",
+                          label: "Duplicar",
+                          icon: <Copy className="size-4" />,
+                          onAction: () => setDuplicating(true)
+                        }
+                      ]
+                    : []),
                   {
                     id: "delete",
                     label: "Eliminar",
@@ -239,6 +264,14 @@ function EntryRow({
                   currency={currency}
                   open
                   onOpenChange={setEditing}
+                />
+              )}
+              {duplicating && (
+                <DuplicateDebtEntryDialog
+                  workspaceId={entry.workspace_id}
+                  data={{ entry, debt, cycleCovered }}
+                  accounts={accounts ?? []}
+                  onOpenChange={setDuplicating}
                 />
               )}
               <DeleteDialog

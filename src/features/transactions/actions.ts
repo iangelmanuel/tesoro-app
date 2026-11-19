@@ -1,7 +1,11 @@
 "use server"
 
 import { z } from "zod"
+import { occurrenceDescription } from "@/features/recurring-expenses/occurrences"
+import { nextUnpaidOccurrence } from "@/features/recurring-expenses/payment"
+import { getRecurringExpenseOccurrences } from "@/features/recurring-expenses/queries"
 import { requireWritableWorkspace } from "@/features/workspaces/queries"
+import { monthRange, shiftMonth } from "@/libs/dates"
 import { revalidateWorkspacePages } from "@/libs/revalidate"
 import type { ServiceFailure } from "@/libs/service-result"
 import { createClient } from "@/libs/supabase/server"
@@ -262,6 +266,36 @@ export async function loadEditableTransaction(
 }
 
 const DUPLICATE_ERROR = "No se pudo preparar el duplicado. Intenta de nuevo"
+const NO_PENDING_OCCURRENCE =
+  "Este gasto fijo no tiene periodos pendientes de pago"
+
+// Cuánto hacia adelante se buscan ocurrencias sin pagar: cubre el siguiente
+// periodo de un gasto anual aunque ya esté pagado el de después
+const DUPLICATE_HORIZON_MONTHS = 24
+
+async function nextRecurringOccurrence(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  transactionId: string,
+  recurringExpenseId: string
+) {
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("recurring_due_on")
+    .eq("id", transactionId)
+    .single()
+
+  if (error || !data.recurring_due_on) {
+    throw new Error(DUPLICATE_ERROR)
+  }
+
+  const afterDueOn = data.recurring_due_on
+  const occurrences = await getRecurringExpenseOccurrences(
+    recurringExpenseId,
+    afterDueOn,
+    monthRange(shiftMonth(afterDueOn.slice(0, 7), DUPLICATE_HORIZON_MONTHS)).to
+  )
+  return nextUnpaidOccurrence(occurrences, recurringExpenseId, afterDueOn)
+}
 
 /**
  * Valores del duplicado de un movimiento suelto o de un pago de fijo (SPEC
@@ -318,15 +352,40 @@ export async function loadTransactionDuplicate(
       return { error: DUPLICATE_ERROR }
     }
 
+    const initialValues: TransactionInitialValues = {
+      type: original.type,
+      amount: original.amount,
+      category_id: category.data?.id,
+      account_id: account.data?.id ?? null,
+      description: original.description,
+      note: original.note ?? "",
+      counterparty: original.counterparty
+    }
+
+    if (original.recurring_expense_id === null) {
+      return { initialValues }
+    }
+
+    // Pago de gasto fijo: el duplicado paga la primera ocurrencia sin pagar
+    // posterior a la del original, nunca la misma
+    const next = await nextRecurringOccurrence(
+      supabase,
+      original.id,
+      original.recurring_expense_id
+    )
+    if (!next) {
+      return { error: NO_PENDING_OCCURRENCE }
+    }
+
     return {
+      // La descripción nombra el periodo que se paga, no el del original
       initialValues: {
-        type: original.type,
-        amount: original.amount,
-        category_id: category.data?.id,
-        account_id: account.data?.id ?? null,
-        description: original.description,
-        note: original.note ?? "",
-        counterparty: original.counterparty
+        ...initialValues,
+        description: occurrenceDescription(next)
+      },
+      recurring: {
+        recurringExpenseId: next.recurringExpenseId,
+        dueOn: next.dueOn
       }
     }
   } catch {

@@ -290,6 +290,37 @@ export async function getOverdueSummary(
 }
 
 /**
+ * Ocurrencias de un gasto fijo con vencimiento entre `from` y `to`, incluso
+ * futuras, en orden de vencimiento (Duplicar, SPEC 49). Vacío si no existe o
+ * es ajeno (RLS), o si terminó o está pausado
+ */
+export async function getRecurringExpenseOccurrences(
+  recurringExpenseId: string,
+  from: string,
+  to: string
+): Promise<UpcomingPayment[]> {
+  const supabase = await createClient()
+  const { data: expense, error } = await supabase
+    .from("recurring_expenses")
+    .select("workspace_id")
+    .eq("id", recurringExpenseId)
+    .maybeSingle()
+
+  if (error) {
+    throw new Error("No se pudieron cargar los pagos del gasto fijo")
+  }
+  if (!expense) {
+    return []
+  }
+
+  const rows = await fetchOccurrences(supabase, expense.workspace_id, from, to)
+  return toUpcomingPayments(
+    supabase,
+    rows.filter((row) => row.recurring_expense_id === recurringExpenseId)
+  )
+}
+
+/**
  * Ocurrencias de un gasto fijo desde su `starts_on` hasta el mes actual, la
  * más reciente primero, con los totales del Sheet. Un gasto pausado no tiene
  * ocurrencias (regla de `recurring_occurrences`).

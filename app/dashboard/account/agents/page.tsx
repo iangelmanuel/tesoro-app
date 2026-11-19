@@ -66,7 +66,7 @@ async function AgentsContent() {
         {connections.length === 0 ? (
           <CardEmpty
             icon={Bot}
-            message="Aún no has conectado ningún agente."
+            message="Aún no has conectado ningún agente"
             action={
               <Link
                 href={SITE.mcp.docsPath as Route}

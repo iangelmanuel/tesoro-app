@@ -516,8 +516,8 @@ export function CreateTransactionsField({
         <Checkbox.Content>
           <Label>Registrar también como salida/entrada</Label>
           <Description>
-            Cada pago de préstamo crea una salida en «Deudas» y cada abono de
-            una cuenta por cobrar, una entrada en «Cobros». Desmárcala si ya
+            Cada pago de préstamo crea una salida en «Deudas». Cada abono de una
+            cuenta por cobrar crea una entrada en «Cobros». Desmárcala si ya
             importaste estos pagos como movimientos.
           </Description>
         </Checkbox.Content>

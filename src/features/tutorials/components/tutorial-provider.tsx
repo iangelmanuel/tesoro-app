@@ -82,7 +82,7 @@ export function TutorialProvider({
           if (error) {
             toast.danger(error)
           } else {
-            toast.success("Los tutoriales volverán a arrancar solos")
+            toast.success("Tutoriales reiniciados")
           }
         })
       },

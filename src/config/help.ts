@@ -19,7 +19,7 @@ export const HELP = {
   noFixedDate:
     "Para proyectos o inversiones que pagan cuando pagan. No tienen fechas ni estados: Tesoro suma lo que registras con ellos en el mes y en el año.",
   frequency:
-    "Cada cuánto se repite. Tesoro crea un periodo por cada vez (cada mes, cada quincena, cada año…) para que marques si ya se pagó o se recibió.",
+    "Cada cuánto se repite. Tesoro crea un periodo por cada vez: cada mes, cada quincena o cada año. Así marcas si ya se pagó o se recibió.",
   installment:
     "La parte fija que pagas o cobras cada periodo. Al marcar una cuota, Tesoro registra el movimiento y baja el saldo pendiente.",
   multipleReceipts:

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { cn, toast } from "@heroui/react"
-import { Pencil, PiggyBank, Trash2 } from "lucide-react"
+import { Copy, Pencil, PiggyBank, Trash2 } from "lucide-react"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import { RowActions } from "@/components/dashboard/row-actions"
@@ -12,6 +12,8 @@ import {
   SortableListProvider,
   useSortableList
 } from "@/components/dashboard/sortable-list"
+import { activeAccountId } from "@/features/accounts/active-account"
+import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { formatCurrency, formatDate, formatTime } from "@/libs/format"
 import { deleteContribution, moveContribution } from "../actions"
 import type { GoalContribution } from "../queries"
@@ -20,13 +22,16 @@ import { ContributionDialog } from "./contribution-dialog"
 interface ContributionsListProps {
   contributions: GoalContribution[]
   currency: string
-  /** Metas cumplidas o archivadas: sin editar ni eliminar */
+  /** Cuentas con saldo para el duplicado (SPEC 49) */
+  accounts?: PaymentAccountOption[]
+  /** Metas cumplidas o archivadas: sin editar, duplicar ni eliminar */
   readOnly?: boolean
 }
 
 export function ContributionsList({
   contributions,
   currency,
+  accounts = [],
   readOnly
 }: ContributionsListProps) {
   // Orden manual dentro del día (SPEC 45), como en Movimientos
@@ -58,6 +63,7 @@ export function ContributionsList({
             key={contribution.id}
             contribution={contribution}
             currency={currency}
+            accounts={accounts}
             readOnly={readOnly}
             sortable={sortable.configFor(contribution)}
           />
@@ -70,15 +76,18 @@ export function ContributionsList({
 function ContributionRow({
   contribution,
   currency,
+  accounts,
   readOnly,
   sortable
 }: {
   contribution: GoalContribution
   currency: string
+  accounts: PaymentAccountOption[]
   readOnly?: boolean
   sortable?: SortableConfig
 }) {
   const [editing, setEditing] = useState(false)
+  const [duplicating, setDuplicating] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [, startTransition] = useTransition()
   const isWithdrawal = contribution.amount < 0
@@ -142,6 +151,12 @@ function ContributionRow({
                     onAction: () => setEditing(true)
                   },
                   {
+                    id: "duplicate",
+                    label: "Duplicar",
+                    icon: <Copy className="size-4" />,
+                    onAction: () => setDuplicating(true)
+                  },
+                  {
                     id: "delete",
                     label: "Eliminar",
                     icon: <Trash2 className="size-4" />,
@@ -157,6 +172,25 @@ function ContributionRow({
                 open={editing}
                 onOpenChange={setEditing}
               />
+              {/* Mismo tipo en la misma meta, con fecha de hoy (SPEC 49) */}
+              {duplicating && (
+                <ContributionDialog
+                  workspaceId={contribution.workspace_id}
+                  goalId={contribution.goal_id}
+                  kind={isWithdrawal ? "withdrawal" : "deposit"}
+                  accounts={accounts}
+                  initialValues={{
+                    amount: Math.abs(contribution.amount),
+                    account_id: activeAccountId(
+                      accounts,
+                      contribution.account_id
+                    ),
+                    note: contribution.note ?? ""
+                  }}
+                  open
+                  onOpenChange={setDuplicating}
+                />
+              )}
               <DeleteDialog
                 open={deleting}
                 onOpenChange={setDeleting}

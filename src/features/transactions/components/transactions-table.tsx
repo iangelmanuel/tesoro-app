@@ -777,6 +777,30 @@ function AccountMovementRow({
                 onOpenChange={dialog.onOpenChange}
               />
             )}
+            renderDuplicate={
+              // Solo con la meta activa: cumplida o archivada no recibe aportes
+              entry.parent_active
+                ? (dialog) =>
+                    dialog.open && (
+                      <ContributionDialog
+                        workspaceId={workspaceId}
+                        goalId={entry.parent_id}
+                        kind={entry.amount < 0 ? "withdrawal" : "deposit"}
+                        accounts={accounts}
+                        initialValues={{
+                          amount: Math.abs(entry.amount),
+                          account_id: activeAccountId(
+                            accounts,
+                            entry.account_id
+                          ),
+                          note: entry.note ?? ""
+                        }}
+                        open
+                        onOpenChange={dialog.onOpenChange}
+                      />
+                    )
+                : undefined
+            }
           />
         ) : (
           <EntryActions

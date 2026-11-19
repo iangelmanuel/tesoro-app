@@ -118,6 +118,8 @@ export type LedgerEntry = LedgerOrder &
         parent_id: string
         /** Pago de tarjeta que es un abono extra (no cubre el mínimo) */
         is_extra_payment: boolean
+        /** La deuda o la meta sigue activa: se puede duplicar (SPEC 49) */
+        parent_active: boolean
       }
   )
 
@@ -299,10 +301,14 @@ async function getTransactionLinks(ids: string[]) {
   return links
 }
 
-/** Deuda o meta de un pago, avance o aporte, y si el pago es un abono extra */
+/**
+ * Deuda o meta de un pago, avance o aporte, si el pago es un abono extra y si
+ * el padre sigue activo
+ */
 interface ParentLink {
   parentId: string
   isExtraPayment: boolean
+  isActive: boolean
 }
 
 // Deuda o meta de los pagos, avances y aportes de la página: id → padre
@@ -319,7 +325,9 @@ async function getParentIds(
   if (table === "debt_entries") {
     const { data, error } = await supabase
       .from("debt_entries")
-      .select("id, parent_id:debt_id, is_extra_payment")
+      .select(
+        "id, parent_id:debt_id, is_extra_payment, debt:debts!debt_entries_debt_id_workspace_id_fkey (status)"
+      )
       .in("id", ids)
 
     if (error) {
@@ -328,7 +336,8 @@ async function getParentIds(
     for (const row of data) {
       parents.set(row.id, {
         parentId: row.parent_id,
-        isExtraPayment: row.is_extra_payment
+        isExtraPayment: row.is_extra_payment,
+        isActive: row.debt?.status === "active"
       })
     }
     return parents
@@ -336,14 +345,20 @@ async function getParentIds(
 
   const { data, error } = await supabase
     .from("goal_contributions")
-    .select("id, parent_id:goal_id")
+    .select(
+      "id, parent_id:goal_id, goal:savings_goals!goal_contributions_goal_id_workspace_id_fkey (status)"
+    )
     .in("id", ids)
 
   if (error) {
     throw new Error("No se pudieron cargar los movimientos")
   }
   for (const row of data) {
-    parents.set(row.id, { parentId: row.parent_id, isExtraPayment: false })
+    parents.set(row.id, {
+      parentId: row.parent_id,
+      isExtraPayment: false,
+      isActive: row.goal?.status === "active"
+    })
   }
   return parents
 }
@@ -397,7 +412,8 @@ function toLedgerEntry(
       account_id: row.account_id as string,
       name: row.description ?? "",
       parent_id: parents.get(id)?.parentId ?? "",
-      is_extra_payment: parents.get(id)?.isExtraPayment ?? false
+      is_extra_payment: parents.get(id)?.isExtraPayment ?? false,
+      parent_active: parents.get(id)?.isActive ?? false
     }
   }
 

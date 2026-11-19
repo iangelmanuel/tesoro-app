@@ -132,6 +132,7 @@ export function GoalSheet({
           <ContributionsList
             contributions={contributions}
             currency={currency}
+            accounts={accounts}
             readOnly={!isActive}
           />
         </DetailSection>

@@ -269,7 +269,9 @@ function ExportForm({
         const body = (await response.json().catch(() => null)) as {
           error?: string
         } | null
-        toast.danger(body?.error ?? "No se pudo generar el archivo.")
+        toast.danger(
+          body?.error ?? "No se pudo generar el archivo. Intenta de nuevo"
+        )
         return
       }
 
@@ -286,7 +288,9 @@ function ExportForm({
       toast.success("Archivo descargado")
       onDone()
     } catch {
-      toast.danger("No se pudo descargar el archivo. Revisa tu conexión.")
+      toast.danger(
+        "No se pudo descargar el archivo. Revisa tu conexión e intenta de nuevo"
+      )
     } finally {
       setPending(false)
     }

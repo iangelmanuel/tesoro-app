@@ -83,12 +83,12 @@ async function AgentsContent() {
 
       <AccountSection
         title="Historial"
-        description={`Lo último que escribieron tus agentes. Puedes revertir una operación durante ${SITE.mcp.undoWindowDays} días.`}
+        description={`Lo último que escribieron tus agentes. Puedes deshacer un cambio durante ${SITE.mcp.undoWindowDays} días.`}
       >
         {operations.length === 0 ? (
           <CardEmpty
             icon={History}
-            message="Tus agentes aún no han hecho cambios."
+            message="Tus agentes aún no han hecho cambios"
           />
         ) : (
           <OperationsList operations={operations} />

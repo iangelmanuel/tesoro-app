@@ -134,7 +134,7 @@ function ConnectionRow({ connection }: { connection: AgentConnection }) {
         <p>
           Dejará de tener acceso a tu cuenta desde su siguiente llamada. Para
           volver a usarlo tendrás que conectarlo de nuevo. Su historial de
-          operaciones se conserva.
+          cambios se conserva.
         </p>
       </DeleteDialog>
     </li>

@@ -197,7 +197,7 @@ export async function undoAgentOperation(
 ): Promise<AgentActionResult> {
   const parsed = z.uuid().safeParse(operationId)
   if (!parsed.success) {
-    return { error: "No se encontró la operación" }
+    return { error: "No se encontró el cambio" }
   }
 
   const result = await undoOperation(await createClient(), parsed.data)

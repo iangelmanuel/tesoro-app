@@ -43,19 +43,19 @@ export async function GET(
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return jsonError(401, "Inicia sesión para exportar tus datos.")
+    return jsonError(401, "Inicia sesión para exportar tus datos")
   }
 
   // RLS solo devuelve los espacios del dueño: uno ajeno o inexistente es null
   const workspace = await findWorkspace(workspaceId)
   if (!workspace) {
-    return jsonError(404, "No encontramos este espacio.")
+    return jsonError(404, "No encontramos este espacio")
   }
 
   const params = request.nextUrl.searchParams
   const format = exportFormatSchema.safeParse(params.get("format"))
   if (!format.success) {
-    return jsonError(400, "El formato debe ser xlsx, csv o pdf.")
+    return jsonError(400, "El formato debe ser xlsx, csv o pdf")
   }
 
   // Tamaño, orientación y tema solo cuentan con PDF
@@ -114,6 +114,6 @@ export async function GET(
     })
   } catch (error) {
     console.error("export failed", error)
-    return jsonError(500, "No se pudo generar el archivo. Intenta de nuevo.")
+    return jsonError(500, "No se pudo generar el archivo. Intenta de nuevo")
   }
 }

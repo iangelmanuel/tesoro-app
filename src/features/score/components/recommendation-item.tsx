@@ -49,7 +49,7 @@ export function RecommendationItem({
       if (result.error) {
         toast.danger(result.error)
       } else {
-        toast.success("Recomendación oculta este mes")
+        toast.success("Oculta hasta el próximo mes")
       }
     })
   }

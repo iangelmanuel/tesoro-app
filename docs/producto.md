@@ -422,8 +422,11 @@ select del tab Ingreso), al pagar una tarjeta o préstamo (tab Deuda, Sheet y
   hoy; la ocurrencia o cuota que se paga sigue siendo la elegida y guarda su
   vencimiento aparte (`recurring_due_on`, asignaciones). Se puede cambiar.
   Editar un pago guardado conserva su fecha.
-- **Descripción:** `{Verbo} {nombre} · {periodo}`, editable y con la nota
-  vacía. Verbo: **Pago** (gasto fijo y deuda), **Ingreso** (ingreso fijo) y
+- **Descripción:** `{Verbo} {nombre} · {periodo}`, editable. En el pago de
+  una deuda y el cobro de Me deben, la **nota** del historial se prellena con
+  el mismo texto (en una tarjeta es el único texto del pago); una compra o
+  avance arranca sin nota. En gasto fijo e ingreso fijo la nota va vacía.
+  Verbo: **Pago** (gasto fijo y deuda), **Ingreso** (ingreso fijo) y
   **Cobro** (Me deben). El periodo es el de la cuota que se paga, no el de
   hoy, y sin año: la fecha del movimiento ya lo dice y el mes basta para
   distinguir cada cuota (`src/libs/payment-description.ts`):

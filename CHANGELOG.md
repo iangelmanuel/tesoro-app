@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Debt payment form now prefills the amount with what is left of the cycle installment (overdue or next unpaid), alongside the existing description, date and habitual account. Switching to **Abono** or **Compra** clears it unless the user edited it.
+- Debt payments and receivable collections prefill the note with the same text as the description (`Pago {name} · {month}`, `Cobro {name} · {months}`), so card payments, which have no description, also get it. It follows the Pago/Abono tab and the covered months until the user edits it; Compra starts empty.
 - Receivables (Me deben) can have a habitual account, chosen in the create/edit dialog; collecting prefills it as the receiving account when it is still active.
 - Signing out of the web app no longer disconnects AI agents: `signOut` now uses `scope: "local"`. The default global scope also deleted the MCP OAuth sessions, so the agent's refresh token failed (`refresh_token_not_found`) and every tool call errored.
 

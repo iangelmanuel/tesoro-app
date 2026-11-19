@@ -307,6 +307,15 @@ function PaymentForm({
     () => values?.description ?? debt.descriptions?.payment ?? ""
   )
   const [prefilledDescription, setPrefilledDescription] = useState(description)
+  // Nota del pago en el historial de la deuda: el mismo texto que la
+  // descripción ("Pago {nombre} · {mes}"). En una tarjeta es el único texto
+  // del pago. Una compra o avance arranca vacía
+  const noteFor = (next: PaymentMode) =>
+    next === "advance"
+      ? ""
+      : (debt.descriptions?.[next === "extra" ? "extra" : "payment"] ?? "")
+  const [note, setNote] = useState(() => values?.note ?? noteFor("payment"))
+  const [prefilledNote, setPrefilledNote] = useState(note)
   function changeMode(next: PaymentMode) {
     setMode(next)
     // Una compra o avance arranca sin cuenta (compra): la cuenta habitual es
@@ -318,6 +327,11 @@ function PaymentForm({
       const amount = amountFor(next)
       setAmountText(amount)
       setPrefilledAmount(amount)
+    }
+    if (note === "" || note === prefilledNote) {
+      const text = noteFor(next)
+      setNote(text)
+      setPrefilledNote(text)
     }
     if (description === "" || description === prefilledDescription) {
       const text = debt.descriptions?.[next === "extra" ? "extra" : "payment"]
@@ -435,7 +449,8 @@ function PaymentForm({
       <TextField
         name="note"
         maxLength={120}
-        defaultValue={values?.note ?? ""}
+        value={note}
+        onChange={setNote}
         isInvalid={Boolean(errors?.note)}
         validationBehavior="aria"
         className="flex flex-col gap-2"

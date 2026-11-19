@@ -341,6 +341,12 @@ function CollectFields({
     () => state.values?.description ?? null
   )
   const description = typedDescription ?? suggestedDescription
+  // Nota del cobro en el historial: el mismo texto sugerido, que sigue al
+  // modo y las cuotas mientras el usuario no la cambie
+  const [typedNote, setTypedNote] = useState<string | null>(
+    () => state.values?.note ?? null
+  )
+  const note = typedNote ?? suggestedDescription
 
   const changeMode = (next: ReceivableCollectMode) => {
     setMode(next)
@@ -522,7 +528,8 @@ function CollectFields({
       <TextField
         name="note"
         maxLength={120}
-        defaultValue={state.values?.note ?? ""}
+        value={note}
+        onChange={setTypedNote}
         isInvalid={Boolean(errors?.note)}
         validationBehavior="aria"
         className="flex flex-col gap-2"

@@ -1,7 +1,7 @@
 import type { Route } from "next"
 import Link from "next/link"
-import { buttonVariants } from "@heroui/react"
 import { FileUp } from "lucide-react"
+import { buttonVariants } from "@/components/ui/button"
 import { IMPORT_PATH } from "../constants"
 import type { ImportTarget } from "../types"
 

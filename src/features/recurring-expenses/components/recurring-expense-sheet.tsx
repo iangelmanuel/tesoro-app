@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Button, Chip, cn } from "@heroui/react"
 import { Check, Pause, Pencil, Play, Trash2 } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
@@ -11,12 +10,19 @@ import {
   DetailStats
 } from "@/components/dashboard/detail-sheet"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import {
+  TONE_BADGE_CLASSES,
+  TONE_TEXT_CLASSES
+} from "@/components/dashboard/tone"
+import { ToneBadge } from "@/components/dashboard/tone-badge"
+import { Button } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { formatMonthYear } from "@/features/debts/calculations"
 import { RecordedPaymentActions } from "@/features/transactions/components/recorded-payment-actions"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
+import { cn } from "@/libs/cn"
 import { currentMonth, monthRange } from "@/libs/dates"
 import { formatDate, formatShortDate } from "@/libs/format"
 import { loadRecurringExpenseHistory } from "../actions"
@@ -106,16 +112,15 @@ export function RecurringExpenseSheet({
         onOpenChange={onOpenChange}
         title={expense.name}
         status={
-          expense.is_active ? (
-            <Chip size="sm">Activo</Chip>
-          ) : (
-            <Chip
-              size="sm"
-              variant="tertiary"
-            >
-              Pausado
-            </Chip>
-          )
+          <ToneBadge
+            className={
+              expense.is_active
+                ? TONE_BADGE_CLASSES.success
+                : TONE_BADGE_CLASSES.neutral
+            }
+          >
+            {expense.is_active ? "Activo" : "Pausado"}
+          </ToneBadge>
         }
         figure={
           <Amount
@@ -127,12 +132,12 @@ export function RecurringExpenseSheet({
         loading={expense.is_active && error === null && history === null}
         summary={
           !expense.is_active ? (
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted-foreground">
               Este gasto está pausado: no genera pagos. Reanúdalo para ver su
               historial.
             </p>
           ) : error !== null ? (
-            <p className="text-sm text-danger">{error}</p>
+            <p className="text-sm text-destructive">{error}</p>
           ) : (
             history && (
               <DetailStats
@@ -145,7 +150,7 @@ export function RecurringExpenseSheet({
                         currency={currency}
                       />
                     ),
-                    className: "text-(--income)"
+                    className: TONE_TEXT_CLASSES.success
                   },
                   {
                     label: "Atrasado a la fecha",
@@ -156,7 +161,9 @@ export function RecurringExpenseSheet({
                       />
                     ),
                     className:
-                      history.overdueAmount > 0 ? "text-(--expense)" : undefined
+                      history.overdueAmount > 0
+                        ? TONE_TEXT_CLASSES.danger
+                        : undefined
                   },
                   {
                     label: "Próximo por pagar",
@@ -172,15 +179,15 @@ export function RecurringExpenseSheet({
         action={
           !expense.is_active ? (
             <Button
-              isDisabled={pending}
-              onPress={toggle}
+              disabled={pending}
+              onClick={toggle}
             >
               <Play />
               Reanudar
             </Button>
           ) : (
             nextUnpaid && (
-              <Button onPress={() => setPaying(nextUnpaid)}>
+              <Button onClick={() => setPaying(nextUnpaid)}>
                 <Check />
                 Marcar {periodLabel(nextUnpaid, isYearly)} como pagado
               </Button>
@@ -225,8 +232,7 @@ export function RecurringExpenseSheet({
             <Button
               size="sm"
               variant="secondary"
-              className="max-md:min-h-11"
-              onPress={() => setEditing(true)}
+              onClick={() => setEditing(true)}
             >
               <Pencil />
               Editar
@@ -235,9 +241,8 @@ export function RecurringExpenseSheet({
               <Button
                 size="sm"
                 variant="secondary"
-                className="max-md:min-h-11"
-                isDisabled={pending}
-                onPress={toggle}
+                disabled={pending}
+                onClick={toggle}
               >
                 <Pause />
                 Pausar
@@ -245,10 +250,9 @@ export function RecurringExpenseSheet({
             )}
             <Button
               size="sm"
-              variant="danger-soft"
-              className="max-md:min-h-11"
-              isDisabled={pending}
-              onPress={() => setDeleting(true)}
+              variant="destructive"
+              disabled={pending}
+              onClick={() => setDeleting(true)}
             >
               <Trash2 />
               Eliminar
@@ -271,7 +275,7 @@ export function RecurringExpenseSheet({
         title="¿Eliminar este gasto fijo?"
         onConfirm={() => remove(() => onOpenChange(false))}
       >
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted-foreground">
           &ldquo;{expense.name}&rdquo; dejará de aparecer en tus próximos pagos.
           Los movimientos que ya registraste como pago se conservan en
           Movimientos.
@@ -299,7 +303,7 @@ export function RecurringExpenseSheet({
 function ExpenseDetails({ expense }: { expense: RecurringExpense }) {
   return (
     <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-      <dt className="text-muted">Categoría</dt>
+      <dt className="text-muted-foreground">Categoría</dt>
       <dd className="min-w-0">
         <CategoryBadge
           name={
@@ -311,9 +315,9 @@ function ExpenseDetails({ expense }: { expense: RecurringExpense }) {
           color={expense.category.color}
         />
       </dd>
-      <dt className="text-muted">Frecuencia</dt>
+      <dt className="text-muted-foreground">Frecuencia</dt>
       <dd>{frequencyLabel(expense)}</dd>
-      <dt className="text-muted">Vigencia</dt>
+      <dt className="text-muted-foreground">Vigencia</dt>
       <dd>
         {expense.ends_on
           ? `${formatDate(expense.starts_on)} – ${formatDate(expense.ends_on)}`
@@ -359,7 +363,7 @@ function HistoryList({
   return (
     <div className="flex flex-col gap-3">
       {history.payments.length === 0 ? (
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted-foreground">
           Aún no tiene periodos: empieza más adelante.
         </p>
       ) : (
@@ -390,8 +394,8 @@ function HistoryList({
         <Button
           variant="ghost"
           size="sm"
-          className="self-start max-md:min-h-11"
-          onPress={onShowMore}
+          className="self-start"
+          onClick={onShowMore}
         >
           Ver más
         </Button>
@@ -432,7 +436,7 @@ function HistoryRow({
           </span>
           <OccurrenceStatusBadge status={payment.status} />
         </div>
-        <p className="text-xs text-muted tabular-nums">
+        <p className="text-xs text-muted-foreground tabular-nums">
           {isPaid && payment.paidOn !== null
             ? `Pagado el ${formatShortDate(payment.paidOn)} · vencía el ${formatShortDate(payment.dueOn)}`
             : `Vence el ${formatShortDate(payment.dueOn)}`}
@@ -442,7 +446,9 @@ function HistoryRow({
       <div className="flex shrink-0 items-center gap-2">
         {isPaid && payment.transactionId !== null ? (
           <>
-            <span className="text-sm font-medium text-(--income)">
+            <span
+              className={cn("text-sm font-medium", TONE_TEXT_CLASSES.success)}
+            >
               <Amount
                 value={payment.paidAmount ?? payment.amount}
                 currency={currency}
@@ -461,8 +467,7 @@ function HistoryRow({
           <Button
             size="sm"
             variant="outline"
-            className="max-md:min-h-11"
-            onPress={() => onPay(payment)}
+            onClick={() => onPay(payment)}
           >
             <Check />
             Marcar como pagado

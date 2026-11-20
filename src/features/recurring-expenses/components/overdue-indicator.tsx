@@ -1,10 +1,10 @@
 import type { Route } from "next"
 import Link from "next/link"
-import { cn } from "@heroui/react"
 import { CircleAlert } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
 import { RECURRING_PATH } from "@/features/budgets/tabs"
+import { cn } from "@/libs/cn"
 import type { OverdueSummary } from "../queries"
 
 interface OverdueIndicatorProps {
@@ -33,7 +33,7 @@ export function OverdueIndicator({
       href={`${path}?month=${summary.oldestMonth}` as Route}
       scroll={false}
       className={cn(
-        "inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-opacity outline-none hover:opacity-85 focus-visible:ring-2 focus-visible:ring-focus motion-reduce:transition-none max-md:min-h-11",
+        "inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-opacity outline-none hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none",
         TONE_BADGE_CLASSES.danger
       )}
     >

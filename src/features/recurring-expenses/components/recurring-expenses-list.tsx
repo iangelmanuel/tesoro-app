@@ -1,14 +1,33 @@
 "use client"
 
 import { useState } from "react"
-import { Chip, Table, cn } from "@heroui/react"
 import { Pause, Pencil, Play, Trash2 } from "lucide-react"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
-import { RowActions } from "@/components/dashboard/row-actions"
-import { ScrollTable } from "@/components/dashboard/scroll-table"
+import {
+  type RowAction,
+  RowActions,
+  RowContextMenu,
+  RowMenuBoundary
+} from "@/components/dashboard/row-actions"
+import {
+  ScrollTable,
+  ScrollTableSkeleton
+} from "@/components/dashboard/scroll-table"
+import { SURFACE_LIST } from "@/components/dashboard/surface"
+import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
+import { ToneBadge } from "@/components/dashboard/tone-badge"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
+import { cn } from "@/libs/cn"
 import { formatCurrency, formatDate } from "@/libs/format"
 import { frequencyLabel } from "../occurrences"
 import type { RecurringExpense } from "../queries"
@@ -16,7 +35,10 @@ import { RecurringExpenseDialog } from "./recurring-expense-dialog"
 import { RecurringExpenseSheet } from "./recurring-expense-sheet"
 import { useRecurringExpenseActions } from "./use-recurring-expense-actions"
 
-const NOWRAP = "whitespace-nowrap"
+/** Superficie de la tabla y de su skeleton */
+const TABLE_SURFACE = cn(SURFACE_LIST, "divide-y-0 px-2")
+const MIN_WIDTH = "56rem"
+const COLUMNS = 7
 
 function validityLabel(expense: RecurringExpense) {
   const from = formatDate(expense.starts_on)
@@ -33,8 +55,9 @@ interface RecurringExpensesListProps {
   currency: string
 }
 
-// Client: un clic en la fila abre el Sheet del gasto (SPEC 37) y el ⋮ abre
-// sus acciones. Las categorías y cuentas viajan una sola vez
+// Client: el nombre (o un clic en la fila) abre el Sheet del gasto
+// (SPEC 37) y el ⋯ abre sus acciones. Las categorías y cuentas viajan una
+// sola vez
 export function RecurringExpensesList({
   expenses,
   categories,
@@ -46,18 +69,46 @@ export function RecurringExpensesList({
   // Al eliminarlo desaparece de la lista: el Sheet se queda sin gasto
   const selected = expenses.find((expense) => expense.id === selectedId)
 
+  function open(id: string) {
+    setSelectedId(id)
+    setSheetOpen(true)
+  }
+
   return (
     <>
-      <RecurringExpensesTable
-        expenses={expenses}
-        categories={categories}
-        accounts={accounts}
-        currency={currency}
-        onOpen={(id) => {
-          setSelectedId(id)
-          setSheetOpen(true)
-        }}
-      />
+      <ScrollTable
+        minWidth={MIN_WIDTH}
+        tour="recurring-list"
+        className={TABLE_SURFACE}
+      >
+        <Table aria-label="Gastos fijos">
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead>Nombre</TableHead>
+              <TableHead>Categoría</TableHead>
+              <TableHead className="text-end">Monto</TableHead>
+              <TableHead>Frecuencia</TableHead>
+              <TableHead>Vigencia</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead className="w-28 md:w-16">
+                <span className="sr-only">Acciones</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {expenses.map((expense) => (
+              <ExpenseRow
+                key={expense.id}
+                expense={expense}
+                categories={categories}
+                accounts={accounts}
+                currency={currency}
+                onOpen={() => open(expense.id)}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </ScrollTable>
       {selected && (
         <RecurringExpenseSheet
           key={selected.id}
@@ -73,172 +124,150 @@ export function RecurringExpensesList({
   )
 }
 
-function RecurringExpensesTable({
-  expenses,
+/** La tabla mientras carga: misma superficie, columnas y ancho mínimo */
+export function RecurringExpensesListSkeleton() {
+  return (
+    <ScrollTableSkeleton
+      columns={COLUMNS}
+      rows={4}
+      amountColumn={false}
+      minWidth={MIN_WIDTH}
+    />
+  )
+}
+
+// Fila con el menú contextual (clic derecho y pulsación larga) y las mismas
+// acciones que su ⋯: editar, pausar o reanudar y eliminar. Los diálogos se
+// controlan desde aquí porque el menú no puede alojar sus triggers
+function ExpenseRow({
+  expense,
   categories,
   accounts,
   currency,
   onOpen
-}: RecurringExpensesListProps & {
-  onOpen: (id: string) => void
-}) {
-  return (
-    <ScrollTable
-      minWidth="56rem"
-      tour="recurring-list"
-    >
-      <Table>
-        <Table.ScrollContainer>
-          <Table.Content aria-label="Gastos fijos">
-            <Table.Header>
-              <Table.Column isRowHeader>Nombre</Table.Column>
-              <Table.Column className={NOWRAP}>Categoría</Table.Column>
-              <Table.Column className={cn("text-end", NOWRAP)}>
-                Monto
-              </Table.Column>
-              <Table.Column className={NOWRAP}>Frecuencia</Table.Column>
-              <Table.Column className={NOWRAP}>Vigencia</Table.Column>
-              <Table.Column className={NOWRAP}>Estado</Table.Column>
-              <Table.Column className="w-28 md:w-16">
-                <span className="sr-only">Acciones</span>
-              </Table.Column>
-            </Table.Header>
-            <Table.Body>
-              {expenses.map((expense) => (
-                <Table.Row
-                  key={expense.id}
-                  id={expense.id}
-                  textValue={expense.name}
-                  onAction={() => onOpen(expense.id)}
-                  className={cn(
-                    "cursor-pointer",
-                    !expense.is_active && "text-muted"
-                  )}
-                >
-                  <Table.Cell className="max-w-64 min-w-44">
-                    <p
-                      title={expense.name}
-                      className="line-clamp-3 font-medium break-words"
-                    >
-                      {expense.name}
-                    </p>
-                  </Table.Cell>
-                  <Table.Cell className={NOWRAP}>
-                    <CategoryBadge
-                      name={
-                        expense.category.archived_at
-                          ? `${expense.category.name} (archivada)`
-                          : expense.category.name
-                      }
-                      icon={expense.category.icon}
-                      color={expense.category.color}
-                    />
-                  </Table.Cell>
-                  <Table.Cell
-                    className={cn("text-end font-medium tabular-nums", NOWRAP)}
-                  >
-                    {formatCurrency(expense.amount, currency)}
-                  </Table.Cell>
-                  <Table.Cell className={NOWRAP}>
-                    {frequencyLabel(expense)}
-                  </Table.Cell>
-                  <Table.Cell className={cn("text-muted", NOWRAP)}>
-                    {validityLabel(expense)}
-                  </Table.Cell>
-                  <Table.Cell className={NOWRAP}>
-                    {expense.is_active ? (
-                      <Chip size="sm">Activo</Chip>
-                    ) : (
-                      <Chip
-                        size="sm"
-                        variant="tertiary"
-                      >
-                        Pausado
-                      </Chip>
-                    )}
-                  </Table.Cell>
-                  <Table.Cell>
-                    <ExpenseActions
-                      expense={expense}
-                      categories={categories}
-                      accounts={accounts}
-                    />
-                  </Table.Cell>
-                </Table.Row>
-              ))}
-            </Table.Body>
-          </Table.Content>
-        </Table.ScrollContainer>
-      </Table>
-    </ScrollTable>
-  )
-}
-
-// Editar, pausar o reanudar y eliminar. Los diálogos se controlan desde aquí
-// porque el menú de escritorio no puede alojar sus triggers
-function ExpenseActions({
-  expense,
-  categories,
-  accounts
 }: {
   expense: RecurringExpense
   categories: Category[]
   accounts: PaymentAccountOption[]
+  currency: string
+  onOpen: () => void
 }) {
   const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const { toggle: handleToggle, remove } = useRecurringExpenseActions(expense)
+  const {
+    pending,
+    toggle: handleToggle,
+    remove
+  } = useRecurringExpenseActions(expense)
+
+  const actions: RowAction[] = [
+    {
+      id: "edit",
+      label: "Editar",
+      icon: <Pencil />,
+      onAction: () => setEditing(true)
+    },
+    {
+      id: "toggle",
+      label: expense.is_active ? "Pausar" : "Reanudar",
+      icon: expense.is_active ? <Pause /> : <Play />,
+      onAction: handleToggle,
+      isDisabled: pending
+    },
+    {
+      id: "delete",
+      label: "Eliminar",
+      icon: <Trash2 />,
+      destructive: true,
+      onAction: () => setDeleting(true)
+    }
+  ]
 
   return (
-    <>
-      <RowActions
-        label={expense.name}
-        actions={[
-          {
-            id: "edit",
-            label: "Editar",
-            icon: <Pencil className="size-4" />,
-            onAction: () => setEditing(true)
-          },
-          {
-            id: "toggle",
-            label: expense.is_active ? "Pausar" : "Reanudar",
-            icon: expense.is_active ? (
-              <Pause className="size-4" />
-            ) : (
-              <Play className="size-4" />
-            ),
-            onAction: handleToggle
-          },
-          {
-            id: "delete",
-            label: "Eliminar",
-            icon: <Trash2 className="size-4" />,
-            destructive: true,
-            onAction: () => setDeleting(true)
-          }
-        ]}
-      />
-      <RecurringExpenseDialog
-        workspaceId={expense.workspace_id}
-        categories={categories}
-        accounts={accounts}
-        expense={expense}
-        open={editing}
-        onOpenChange={setEditing}
-      />
-      <DeleteDialog
-        open={deleting}
-        onOpenChange={setDeleting}
-        title="¿Eliminar este gasto fijo?"
-        onConfirm={() => remove()}
+    <RowContextMenu
+      label={expense.name}
+      actions={actions}
+    >
+      <TableRow
+        onClick={onOpen}
+        className={cn(
+          "cursor-pointer",
+          !expense.is_active && "text-muted-foreground"
+        )}
       >
-        <p className="text-sm text-muted">
-          &ldquo;{expense.name}&rdquo; dejará de aparecer en tus próximos pagos.
-          Los movimientos que ya registraste como pago se conservan en
-          Movimientos.
-        </p>
-      </DeleteDialog>
-    </>
+        <TableCell className="max-w-64 min-w-44 whitespace-normal">
+          {/* El nombre es el control de teclado que abre el detalle */}
+          <button
+            type="button"
+            title={expense.name}
+            onClick={(event) => {
+              event.stopPropagation()
+              onOpen()
+            }}
+            className="line-clamp-3 min-h-11 cursor-pointer rounded-md text-left font-medium break-words outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
+            {expense.name}
+          </button>
+        </TableCell>
+        <TableCell>
+          <CategoryBadge
+            name={
+              expense.category.archived_at
+                ? `${expense.category.name} (archivada)`
+                : expense.category.name
+            }
+            icon={expense.category.icon}
+            color={expense.category.color}
+          />
+        </TableCell>
+        <TableCell className="text-end font-medium tabular-nums">
+          {formatCurrency(expense.amount, currency)}
+        </TableCell>
+        <TableCell>{frequencyLabel(expense)}</TableCell>
+        <TableCell className="text-muted-foreground">
+          {validityLabel(expense)}
+        </TableCell>
+        <TableCell>
+          <ToneBadge
+            className={
+              expense.is_active
+                ? TONE_BADGE_CLASSES.success
+                : TONE_BADGE_CLASSES.neutral
+            }
+          >
+            {expense.is_active ? "Activo" : "Pausado"}
+          </ToneBadge>
+        </TableCell>
+        {/* Las acciones no abren el detalle */}
+        <TableCell onClick={(event) => event.stopPropagation()}>
+          <RowActions
+            label={expense.name}
+            actions={actions}
+          />
+          <RowMenuBoundary>
+            <RecurringExpenseDialog
+              workspaceId={expense.workspace_id}
+              categories={categories}
+              accounts={accounts}
+              expense={expense}
+              open={editing}
+              onOpenChange={setEditing}
+            />
+            <DeleteDialog
+              open={deleting}
+              onOpenChange={setDeleting}
+              title="¿Eliminar este gasto fijo?"
+              onConfirm={() => remove()}
+            >
+              <p className="text-sm text-muted-foreground">
+                &ldquo;{expense.name}&rdquo; dejará de aparecer en tus próximos
+                pagos. Los movimientos que ya registraste como pago se conservan
+                en Movimientos.
+              </p>
+            </DeleteDialog>
+          </RowMenuBoundary>
+        </TableCell>
+      </TableRow>
+    </RowContextMenu>
   )
 }

@@ -31,6 +31,8 @@ interface SelectFieldProps<T extends string> {
   options: readonly SelectFieldOption<T>[]
   error?: string
   disabled?: boolean
+  /** Texto del trigger sin valor elegido */
+  placeholder?: string
   className?: string
 }
 
@@ -49,6 +51,7 @@ export function SelectField<T extends string>({
   options,
   error,
   disabled,
+  placeholder,
   className
 }: SelectFieldProps<T>) {
   const id = useId()
@@ -82,7 +85,7 @@ export function SelectField<T extends string>({
             aria-describedby={error ? errorId : undefined}
             className="w-full"
           >
-            <SelectValue />
+            <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>
             {options.map((option) => (

@@ -177,7 +177,8 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   claro: `app/(public)/layout.tsx` monta `ThemeProvider` con
   `forcedTheme="light"` y cada otro grupo de rutas monta el suyo (nunca en el
   layout raíz, SPEC 40). En el resto,
-  Inter (`next/font/google`, `--font-sans`) y oscuro por defecto
+  Atkinson Hyperlegible Next (local con `next/font/local`, `--font-sans`;
+  también en los PDF) y oscuro por defecto
   (`defaultTheme="dark"`; el tema se cambia en el menú de cuenta). Fondo casi
   negro y tarjetas gris oscuro **sin borde**; radios grandes en tarjetas y
   pill en botones, tabs y selects. Montos con `tabular-nums`.
@@ -186,52 +187,81 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   rápidos del header, no en la página.
 - KPIs con `StatCard`, cabeceras de tarjeta con `CardHeading`, ayudas con
   `HelpHint` (textos en `src/config/help.ts`), vacíos con `EmptyState` /
-  `CardEmpty` y carga con `CardSkeleton`. Estados con `tone.ts`, nunca con la
-  paleta cruda de Tailwind.
+  `CardEmpty`. Estados con `tone.ts`, nunca con la paleta cruda de Tailwind.
+- **Skeletons** (SPEC 51): cada componente que carga datos exporta su
+  `…Skeleton` en el mismo archivo y con el mismo contenedor (mismas filas,
+  alturas y radios). `Suspense` por tarjeta y un `loading.tsx` por ruta que
+  los compone dentro de `LoadingRegion` (`aria-busy`). `CardSkeleton` es
+  genérico y en retiro: solo para pantallas aún en HeroUI.
 - Listas y tarjetas de grilla con las clases de
   `src/components/dashboard/surface.ts`, sin `rounded-xl border` ni
   `border-dashed`. Los campos de formulario van con relleno suave y sin borde
   (tokens `--field-*` en `globals.css`).
 - Los traspasos se registran desde el diálogo de movimiento (opción
   "Traspaso"); las páginas no llevan un botón de traspaso aparte.
-- **HeroUI v3** (`@heroui/react` y `@heroui/styles`), sin Provider. Se
-  importa **directo de `@heroui/react`**: no hay wrappers ni
-  `src/components/ui/`. `cn` también sale de `@heroui/react`.
-- Componentes compuestos (`Modal.Header`, `Select.Popover`…). En componentes
-  de servidor se usan los nombres exportados (`CardHeader`, `ToastProvider`),
-  no la notación con punto.
-- Botones con `onPress`, `isDisabled`, `isIconOnly`; enlaces con estilo de
-  botón: `<Link className={buttonVariants({ variant })}>`.
+- **shadcn + Base UI** (SPEC 51, `components.json` con `style: "base-maia"`):
+  las primitivas viven en **`src/components/ui/`** y son código nuestro (se
+  personalizan ahí, no se envuelven). Se agregan con
+  `pnpm exec shadcn add <nombre>` y luego se reescribe `from "cn"` a
+  `@/libs/cn` y `bg-accent` / `bg-muted` a `bg-highlight` / `bg-subtle`.
+  `cn` sale de `@/libs/cn` (`clsx` + `tailwind-merge`). Botones con
+  `onClick` y `disabled`; 44 px de área táctil (`touch-hitbox` para lo que
+  se dibuja más chico); foco con `outline-2 outline-offset-2 outline-ring`.
+  `src/components/dashboard/**`, `charts/**` y `ui/**` no importan
+  `@heroui/react`.
+- **HeroUI v3 convive hasta SPEC 53** en las pantallas aún no migradas
+  (`@heroui/react` directo, sin Provider, componentes compuestos como
+  `Modal.Header`, `onPress` / `isDisabled`). `src/styles/heroui-bridge.css`
+  apunta sus tokens a los nuevos; `heroui-compat.ts` deja los paneles de
+  Base UI con `modal={false}` para que alojen menús de HeroUI. SPEC 53 borra
+  ambos.
 - Formularios: `useActionState` + Zod. Cada campo es `TextField` / `Select` /
   `DatePicker` con `Label` y `FieldError` dentro y
   `validationBehavior="aria"` (valida el servidor).
 - Fechas: `DatePickerField` (`src/components/forms/date-picker-field.tsx`),
   que trabaja con `YYYY-MM-DD`. Hora opcional de un evento: `TimePickerField`
-  (`HH:MM` o `""`) y `timeSchema`; se muestra con `formatTime`. Toasts: `toast` de `@heroui/react`.
+  (`HH:MM` o `""`) y `timeSchema`; se muestra con `formatTime`. Toasts: `toast`
+  de `@/components/ui/sonner` (errores con `role="alert"`); el `toast` de
+  HeroUI sigue en las pantallas no migradas.
 - Gráficas: Recharts con `src/components/charts/*`: `ChartCard` (cabecera
   con leyenda y cifra), `ChartContainer`, las props de `chart-style.ts` y los
   montos abreviados de `chart-format.ts`. Colores siempre desde tokens.
   Funciones que llaman componentes de servidor no van en archivos
   `"use client"`.
-- Tokens en `globals.css` con los nombres de HeroUI (`--accent` es el
-  primario, `--muted` es texto atenuado, `--surface`, `--overlay`,
-  `--default`, `--danger`…), más los propios `--brand`, `--income`,
-  `--expense`, `--balance`, `--category-*` y `--chart-*`.
+- Tokens en `globals.css` con los nombres de shadcn (`--background`,
+  `--card`, `--popover`, `--primary`, `--secondary`, `--muted-foreground`,
+  `--destructive`, `--border`, `--input`, `--ring`, `--sidebar-*`,
+  `--chart-*`, `--radius`), con dos renombres para no chocar con HeroUI:
+  `--highlight` (el `--accent` de shadcn) y `--subtle` (su `--muted`). Más
+  los propios `--brand`, `--income` (turquesa), `--expense` (coral),
+  `--balance` (tinta), `--category-*`, `--field-*`, `*-soft` de estados y
+  las sombras.
 - Primario por espacio: `WorkspaceThemeRoot` + `getWorkspaceTheme(pathname)`
-  ponen `data-workspace` y `globals.css` lo aplica con `:has()`. Neutro fuera
-  del dashboard, emerald en Personal, naranja en Empresa. Nunca se pasa el
-  color por props; `data-workspace` solo aparece en esos dos archivos.
+  ponen `data-workspace` y `globals.css` cambia `--primary`, `--ring` y
+  `--sidebar-primary` con `:has()`. Neutro fuera del dashboard, emerald en
+  Personal, naranja en Empresa. Nunca se pasa el color por props;
+  `data-workspace` solo aparece en esos dos archivos. Los overlays de
+  Base UI se montan en ese contenedor (`PortalContainerProvider`).
 - **Aside** (SPEC 31): `SITE.navigation.personal` / `.business` son grupos
   (`{ label, items }`): "Día a día", "Tu plan" / "Tu operación" (donde se
   configura) y "Entiende tu dinero" / "Entiende tu negocio". Los
   consumidores planos usan `flattenNav` (`nav.ts`). En escritorio el ancho se
   ajusta (240–360 px) y se guarda en la cookie `tesoro-sidebar-width`
-  (`sidebar/width.ts`). Ver `docs/ui.md`.
-- **Móvil (`< 768 px`)**: hoja de acciones rápidas (**Movimiento rápido**,
-  Categorías y Verificar) y barra inferior
+  (`sidebar/width.ts`). Cada ítem lleva su letra de atajo (`shortcut`), que
+  el aside muestra como estación de la línea del espacio. Ver `docs/ui.md`.
+- **Menús rápidos** (SPEC 51): una sola lista de acciones en
+  `quick-actions-context.tsx` (`actions` + `run(key)`) para el header, la
+  hoja móvil y la paleta. Paleta de comandos en `dashboard/command/`
+  (⌘K / Ctrl+K; Tus datos con `loadCommandEntities` y
+  `requireWorkspace`). Atajos en `src/config/shortcuts.ts` +
+  `dashboard/shortcuts/` (N, T, ?, G + letra), apagables con la cookie
+  `tesoro-shortcuts`. Menú contextual de fila con `RowContextMenu`.
+- **Móvil (`< 768 px`)**: hoja de acciones rápidas (Drawer de Base UI, con
+  "Buscar o ejecutar" y la lista de acciones) y barra inferior
   (`src/components/dashboard/mobile/`) en vez del aside; el selector Personal /
-  Empresa vive solo en el aside (Drawer). Tablas como tarjetas
-  (`DataRows`), filtros de Movimientos en hoja y controles de 44 px o más. Ver
+  Empresa vive solo en el aside (Sheet). Tablas en `ScrollTable` (se
+  deslizan en horizontal), filtros de Movimientos en hoja y controles de
+  44 px o más. Ver
   `docs/ui.md#móvil`.
 - Todo par texto/fondo nuevo debe dar AA (4.5:1 texto, 3:1 gráficos y foco)
   en claro y oscuro.

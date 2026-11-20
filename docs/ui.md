@@ -12,7 +12,7 @@ El contexto de producto (usuarios, voz, principios) está en
 
 - **Oscuro por defecto, claro disponible.** El diseño se piensa sobre negro;
   el toggle del aside cambia a claro y lo recuerda (`next-themes`). Los dos
-  temas comparten lenguaje: tarjetas sin borde, mismo matiz neutro (264),
+  temas comparten lenguaje: tarjetas sin borde, mismo matiz neutro (255),
   niveles escalonados y elevación sutil (sombra en claro, brillo superior en
   oscuro).
 - **Un solo acento por espacio.** Neutro fuera de los espacios, emerald en
@@ -23,7 +23,7 @@ El contexto de producto (usuarios, voz, principios) está en
 - **Densidad media y un solo título por pantalla.** El título (o el saludo
   en el Resumen) lo pone el header; las páginas no repiten su `<h1>`.
 - **Color por significado.** Ingresos, gastos y balance tienen tokens
-  propios; los estados (bien, cuidado, mal) usan los tokens de HeroUI. Un
+  propios; los estados (bien, cuidado, mal) usan `tone.ts`. Un
   aumento de gastos se pinta como malo aunque el número suba.
 - **Movimiento corto.** ≤ 200 ms en la UI y ≤ 400 ms en gráficas, y nada con
   `prefers-reduced-motion: reduce`.
@@ -58,80 +58,111 @@ vencimientos** y **Deshacer cambio** (Agentes IA).
 
 ## Tema y tokens
 
-Todo vive en `src/styles/globals.css`, con los nombres de HeroUI v3.
+Todo vive en `src/styles/globals.css`, con los nombres de shadcn más los
+propios (SPEC 51, dirección "Señalética"). Neutros fríos de un solo matiz
+(255): grafito azulado casi negro en oscuro y papel gris claro en claro.
 
-| Token                                           | Qué es                                                                 |
-| ----------------------------------------------- | ---------------------------------------------------------------------- |
-| `--background`                                  | Fondo de la página. Oscuro ≈ `#07080a`, claro `#f1f2f5`                |
-| `--surface`                                     | Tarjetas. Oscuro ≈ `#16171a`, claro blanco                             |
-| `--surface-secondary`, `--surface-tertiary`     | Superficies escalonadas dentro de una tarjeta                          |
-| `--overlay`                                     | Diálogos, menús, popovers y tooltips                                   |
-| `--default`                                     | Ítem activo del aside, hover de filas, chips neutros                   |
-| `--muted`                                       | Texto atenuado, etiquetas, ticks de gráficas                           |
-| `--border`, `--separator`                       | Grilla de gráficas y divisores muy sutiles                             |
-| `--surface-shadow`, `--overlay-shadow`          | Elevación: sombra en claro; brillo superior de 1 px y sombra en oscuro |
-| `--accent`, `--accent-foreground`               | Primario. Lo cambia el espacio (ver abajo)                             |
-| `--success`, `--warning`, `--danger` y `*-soft` | Estados. Los `*-soft` con su `*-soft-foreground` en chips              |
-| `--brand`                                       | Emerald de marca (`Logo tone="color"`); igual en todos los temas       |
-| `--income`, `--expense`, `--balance`            | Dinero: texto ≥ 4.5:1 y series de gráfica                              |
-| `--category-*`                                  | Los 12 colores que el usuario elige por categoría                      |
-| `--chart-1…5`                                   | Serie neutra (score, comparaciones sin significado)                    |
-| `--field-radius`                                | Radio de inputs y selects (20 px, pill a su altura)                    |
-| `--field-background`, `--field-hover`           | Relleno suave de los campos; sin borde (`--field-border` transparente) |
+| Token                                   | Qué es                                                                    |
+| --------------------------------------- | ------------------------------------------------------------------------- |
+| `--background`, `--foreground`          | Fondo y texto. Oscuro ≈ `#08090d`, claro `#f1f4f7`                        |
+| `--card`, `--card-foreground`           | Tarjetas. Oscuro ≈ `#14171d`, claro blanco                                |
+| `--popover`, `--popover-foreground`     | Diálogos, menús, popovers, paneles y toasts                               |
+| `--secondary`                           | Niveles dentro de una tarjeta y botón secundario                          |
+| `--highlight`, `--highlight-foreground` | Hover y seleccionado (el `--accent` de shadcn, renombrado)                |
+| `--subtle`                              | Fondo atenuado (el `--muted` de shadcn, renombrado)                       |
+| `--muted-foreground`                    | Texto atenuado, etiquetas y ticks de gráficas                             |
+| `--primary`, `--primary-foreground`     | Primario. Lo cambia el espacio (ver abajo)                                |
+| `--ring`                                | Foco (contorno de 2 px) y cursor de texto                                 |
+| `--destructive` y `--destructive-soft*` | Errores y acciones destructivas                                           |
+| `--success`, `--warning` y `*-soft*`    | Estados en chips y barras (`tone.ts`)                                     |
+| `--border`, `--input`                   | Divisores y grilla de gráficas (las tarjetas no llevan borde)             |
+| `--sidebar-*`                           | Aside. `--sidebar-primary` es la "línea" del espacio y la estación activa |
+| `--field-background`, `--field-hover`   | Relleno de los campos, sin borde                                          |
+| `--surface-shadow`, `--overlay-shadow`  | Elevación: sombra en claro; brillo superior de 1 px y sombra en oscuro    |
+| `--brand`                               | Emerald del isotipo; igual en todos los temas                             |
+| `--income`, `--expense`, `--balance`    | Dinero: ingreso turquesa, gasto coral, balance en tinta                   |
+| `--category-*`                          | Los 12 colores de categoría (las claves se guardan en BD)                 |
+| `--chart-1…5`                           | Serie neutra (score, comparaciones sin significado)                       |
+| `--radius`                              | 0.5rem (escala de radios de Tailwind)                                     |
+
+En Tailwind: `bg-card`, `bg-popover`, `bg-highlight`, `bg-subtle`,
+`text-muted-foreground`, `bg-field`, `outline-ring`… `bg-accent` y
+`text-muted` siguen siendo de HeroUI hasta SPEC 53; el código nuevo no los
+usa.
 
 - **Primario por espacio:** `WorkspaceThemeRoot` + `getWorkspaceTheme()`
   ponen `data-workspace` en el contenedor del dashboard y `globals.css`
-  cambia `--accent` con `:has()`. Nunca se pasa un color por props.
-- **Botones de color con texto blanco:** el relleno de `--accent` es el tono
-  700 (emerald-700 en Personal, orange-700 en Empresa) en claro y oscuro, el
-  primero que da AA con blanco. En oscuro, el foco y el texto suave usan
-  `--accent-bright` (más claro), porque el 700 no contrasta con el fondo. El
-  botón `danger` en oscuro usa red-600 con texto blanco.
-- **Estados en chips y barras:** `src/components/dashboard/tone.ts`
-  (`TONE_BADGE_CLASSES`, `TONE_BAR_CLASSES`, `TONE_TEXT_CLASSES`). No se usa
-  la paleta cruda de Tailwind (`amber-*`, `rose-*`…).
-- **Tipografía:** Inter vía `next/font/google` en `app/layout.tsx`
-  (`--font-sans`). Montos, KPIs, tablas y ejes con `tabular-nums`.
+  cambia `--primary`, `--ring` y `--sidebar-primary` con `:has()`. Nunca se
+  pasa un color por props. Los overlays de Base UI se montan en ese
+  contenedor (`PortalContainerProvider`) para heredarlo.
+- **Botones de color con texto blanco:** el relleno de `--primary` es el
+  tono 700 (emerald-700 en Personal, orange-700 en Empresa) en claro y
+  oscuro, el primero que da AA con blanco; el hover lo oscurece. En oscuro,
+  el foco y la línea del aside usan el tono brillante.
+- **Daltonismo:** ingreso (turquesa) y gasto (coral) se separan en el eje
+  azul–amarillo, el que conserva la visión rojo-verde (ΔE ≥ 8 simulado con
+  deuteranopía y protanopía); balance va en tinta. Además llevan signo e
+  ícono, y `Amount` los lee en palabras.
+- **Tipografía:** Atkinson Hyperlegible Next (OFL), hecha para baja visión,
+  local con `next/font/local` en `app/layout.tsx` (`--font-sans`). Montos,
+  KPIs, tablas y ejes con `tabular-nums` (la fuente trae `tnum`). Los PDF
+  exportados usan la misma fuente.
+
+### Convivencia con HeroUI (hasta SPEC 53)
+
+`src/styles/heroui-bridge.css` se importa después de `@heroui/styles` y
+apunta los tokens de HeroUI a los nuevos (`--surface` → `--card`,
+`--overlay` → `--popover`, `--muted` → `--muted-foreground`, `--default` →
+`--highlight`, `--accent` → `--primary`, `--focus` → `--ring`, `--danger` →
+`--destructive`). Así las pantallas aún en HeroUI toman la paleta nueva.
+`--accent` y `--focus` se vuelven a declarar en el contenedor del espacio.
+
+Los paneles de Base UI que alojan menús o diálogos de HeroUI (`DetailSheet`
+y el aside móvil) van con `modal={false}` y el filtro de cierre de
+`src/components/dashboard/heroui-compat.ts`. Mientras tanto, Tab puede salir
+del panel. SPEC 53 borra el puente y el filtro.
 
 ## Contraste
 
-Pares verificados con los tokens de `src/styles/globals.css` (WCAG 2.x,
-OKLCH → sRGB). Mínimos: 4.5:1 texto, 3:1 gráficos y foco.
+Pares calculados con los tokens de `src/styles/globals.css` (WCAG 2.x,
+OKLCH → sRGB, SPEC 51). Mínimos: 4.5:1 texto, 3:1 gráficos y foco.
 
-| Par                                       | Claro | Oscuro |
-| ----------------------------------------- | ----- | ------ |
-| `foreground` / `background`               | 15.87 | 19.36  |
-| `muted` / `surface`                       | 6.00  | 7.06   |
-| `muted` / `default`                       | 4.88  | 5.69   |
-| `income` / `surface`                      | 5.56  | 4.97   |
-| `expense` / `surface`                     | 5.35  | 5.00   |
-| `balance` / `surface`                     | 8.16  | 5.82   |
-| `income` / `background`                   | 4.98  | 5.74   |
-| `expense` / `background`                  | 4.79  | 5.77   |
-| `danger` / `background`                   | 4.88  | 6.99   |
-| `accent-foreground` / `accent` Personal   | 5.22  | 5.22   |
-| `accent-foreground` / `accent` Empresa    | 5.08  | 5.08   |
-| `accent-foreground` / `accent-hover` P.   | 6.84  | 6.84   |
-| `accent-foreground` / `accent-hover` E.   | 6.68  | 6.68   |
-| `focus` / `background` Personal           | 4.81  | 8.71   |
-| `focus` / `background` Empresa            | 4.68  | 8.28   |
-| `focus` / `background` neutro             | 15.87 | 19.36  |
-| `muted` / `background` (títulos aside)    | 5.37  | 8.15   |
-| botón `danger` (blanco / relleno)         | 4.88  | 4.83   |
-| `text-brand` / `background`               | 5.06  | 11.74  |
-| `accent-soft-fg` / `accent-soft` Personal | 7.11  | 9.31   |
-| `accent-soft-fg` / `accent-soft` Empresa  | 6.96  | 8.96   |
-| `muted` / `field-background`              | 5.22  | 5.11   |
-| `foreground` / `field-background`         | 15.41 | 12.15  |
-| `--chart-*` / `surface` (mínimo)          | 3.36  | 3.68   |
+| Par                                                   | Claro | Oscuro |
+| ----------------------------------------------------- | ----- | ------ |
+| `foreground` / `background`                           | 16.19 | 18.15  |
+| `foreground` / `card`                                 | 17.91 | 16.42  |
+| `muted-foreground` / `card`                           | 6.26  | 7.77   |
+| `muted-foreground` / `popover`                        | 6.26  | 7.04   |
+| `muted-foreground` / `highlight`                      | 5.09  | 6.12   |
+| `muted-foreground` / `background`                     | 5.65  | 8.59   |
+| `muted-foreground` / `field-background`               | 5.38  | 6.12   |
+| `foreground` / `field-background`                     | 15.39 | 12.94  |
+| `income` / `card`                                     | 5.58  | 9.42   |
+| `income` / `background`                               | 5.04  | 10.41  |
+| `income` / `highlight`                                | 4.54  | 7.42   |
+| `expense` / `card`                                    | 5.85  | 6.96   |
+| `expense` / `background`                              | 5.28  | 7.69   |
+| `expense` / `highlight`                               | 4.76  | 5.48   |
+| `destructive` / `card`                                | 5.86  | 6.18   |
+| `*-soft-foreground` / `*-soft` (mínimo de los tres)   | 6.38  | 6.09   |
+| blanco / `primary` Personal                           | 5.22  | 5.22   |
+| blanco / `primary` Empresa                            | 5.08  | 5.08   |
+| `primary-foreground` / `primary` neutro               | 17.16 | 17.24  |
+| `ring` / `background` Personal                        | 4.85  | 9.83   |
+| `ring` / `background` Empresa                         | 4.73  | 8.46   |
+| `ring` / `popover` Personal                           | 5.37  | 8.05   |
+| `ring` / `popover` Empresa                            | 5.23  | 6.93   |
+| `ring` / `background` neutro                          | 16.19 | 18.15  |
+| línea del aside (`sidebar-primary`) / `background` P. | 4.85  | 9.83   |
+| línea del aside (`sidebar-primary`) / `background` E. | 4.73  | 8.46   |
+| `--category-*` / `card` y `background` (mínimo)       | 3.31  | 5.67   |
+| `--chart-*` / `card` (mínimo)                         | 3.36  | 3.68   |
 
-Las series de dinero (`--income`, `--expense`, `--balance`) también pasan el
-validador de paletas del skill `dataviz` en claro y oscuro: banda de
-luminosidad, croma, ΔE ≥ 10 entre todos los pares con protanopía y
-deuteranopía, y ΔE ≥ 21 con visión normal. Entre sí casi no difieren en
-luminancia, así que las gráficas nunca dependen solo del color: llevan
-leyenda, orden fijo de series y el monto en el tooltip y en la tabla
-`sr-only`.
+Las gráficas nunca dependen solo del color: llevan leyenda, orden fijo de
+series y el monto en el tooltip y en la tabla `sr-only`.
+
+Las auditorías de abajo (SPEC 23) son de la paleta anterior y quedan como
+historial.
 
 ### Auditoría del modo claro (SPEC 23, paso 1)
 
@@ -192,8 +223,9 @@ y tarjetas sin borde.
 
 ## Componentes propios
 
-Todos en `src/components/`. HeroUI se importa directo de `@heroui/react`;
-estos solo agregan lo que HeroUI no trae.
+Todos en `src/components/`. Desde SPEC 51, `dashboard/`, `charts/` y `ui/`
+usan shadcn (Base UI) y no importan `@heroui/react`; las pantallas aún en
+HeroUI lo importan directo hasta SPEC 52 y 53.
 
 ### Shell del dashboard (`src/components/dashboard/`)
 
@@ -206,12 +238,89 @@ estos solo agregan lo que HeroUI no trae.
 | `card-heading.tsx`                                                         | Cabecera de tarjeta: `<h2>`, ayuda (i) opcional y enlace discreto con chevron; `control` para el selector de mes                                                                                                                                                                                                                                                                                                             |
 | `help-hint.tsx`                                                            | Ícono (i) con `Popover`; los textos viven en `src/config/help.ts` (`HELP`)                                                                                                                                                                                                                                                                                                                                                   |
 | `empty-state.tsx`                                                          | `EmptyState` (página): ícono, qué falta, qué hacer y la acción. `CardEmpty` (dentro de una tarjeta)                                                                                                                                                                                                                                                                                                                          |
-| `card-skeleton.tsx`                                                        | Placeholder con el mismo contenedor de `Card`; todo bloque que carga usa este, no un `Skeleton` suelto                                                                                                                                                                                                                                                                                                                       |
+| `card-skeleton.tsx`                                                        | Placeholder genérico en retiro (SPEC 51): el código nuevo usa el `…Skeleton` de cada componente                                                                                                                                                                                                                                                                                                                              |
 | `tone.ts`                                                                  | Clases de estado (chips, barras, texto) desde tokens                                                                                                                                                                                                                                                                                                                                                                         |
 | `month-switcher.tsx`, `month-nav.tsx`                                      | `MonthSwitcher` (SPEC 40): píldora `‹ mes ›` única del dashboard, 44 px de alto, `on="page"` o `on="card"`, y su skeleton. `MonthNav` (SPEC 37) lo conecta a `?month=YYYY-MM` con `router.replace` sin mover el scroll; `prev` / `next` en `null` deshabilitan la flecha. Lo usan Movimientos, Presupuestos, Gastos fijos e Ingresos fijos                                                                                   |
 | `detail-sheet.tsx`                                                         | `DetailSheet`, `DetailSection`, `DetailStats` y `DetailSheetSkeleton` (SPEC 40): base de los cinco paneles laterales de detalle                                                                                                                                                                                                                                                                                              |
 | `row-actions.tsx`, `delete-dialog.tsx`, `scroll-table.tsx`                 | Acciones de fila (menú en escritorio, botones en móvil), confirmación de borrado controlada y contenedor de tabla con scroll horizontal y columna de acciones fija (SPEC 20)                                                                                                                                                                                                                                                 |
 | `surface.ts`                                                               | Clases de superficie sin borde: `SURFACE_LIST`/`SURFACE_ROW` (lista sobre el fondo), `CARD_LIST`/`CARD_ROW` (lista dentro de una `Card`), `SURFACE_ITEM` (tarjeta de una grilla) y `SURFACE_NOTE`. Nunca `rounded-xl border` ni `border-dashed`. También `CONTROL_SURFACE` y `CONTROL_BUTTON` (controles de barra, ver Móvil). `SURFACE_ITEM_CLICKABLE`, `CARD_LINK` y `CARD_OVER_LINK`: tarjeta clicable completa (SPEC 25) |
+
+### Primitivas de shadcn (`src/components/ui/`, SPEC 51)
+
+shadcn con primitivas de **Base UI** y estilo **Maia** (`components.json`,
+`style: "base-maia"`). El código es nuestro: se personaliza en el archivo,
+no se envuelve. Se agregan con `pnpm exec shadcn add <nombre>`; después se
+reescribe `from "cn"` a `@/libs/cn` y `accent`/`muted` a `highlight`/`subtle`.
+
+Instaladas: `button`, `input`, `textarea`, `label`, `field`, `select`,
+`combobox`, `input-group`, `checkbox`, `switch`, `radio-group`, `toggle`,
+`toggle-group`, `tabs`, `dialog`, `alert-dialog`, `sheet`, `drawer` (el de
+Base UI, sin vaul), `popover`, `tooltip`, `dropdown-menu`, `context-menu`,
+`command` (cmdk), `calendar` (react-day-picker, español por defecto),
+`skeleton` (+ `LoadingRegion`), `badge`, `avatar`, `separator`,
+`scroll-area`, `table`, `kbd` y `sonner` (+ `toast` con errores en
+`role="alert"`). Más `portal-container.tsx`: los overlays se montan en el
+contenedor del espacio para heredar el primario.
+
+Reglas de las primitivas:
+
+- **44 × 44 px** de área táctil en todo tamaño: botones y campos de 44 px;
+  lo que se dibuja más chico (casillas, interruptores, íconos, `sm`) lleva
+  la utilidad `touch-hitbox`, un `::before` invisible que llega a 44 px.
+- **Foco:** contorno de 2 px en `--ring` con 2 px de separación
+  (`focus-visible:outline-2 outline-offset-2 outline-ring`), nunca quitado.
+- **Campos:** relleno `bg-field`, sin borde; el error pone el borde
+  `--destructive` y `FieldError` va con `role="alert"`.
+- **Overlays:** `bg-popover` con `--overlay-shadow`, sin borde; fondo detrás
+  al 55 %, sin desenfoque. Títulos en 20 px seminegrita.
+- **Movimiento reducido:** todo lo que tiene `data-slot` deja de animar con
+  `prefers-reduced-motion: reduce` (regla al final de `globals.css`).
+
+### Skeletons (SPEC 51 §6)
+
+Cada componente que carga datos exporta su skeleton **en el mismo archivo**
+y con el **mismo contenedor** (mismas filas, columnas, alturas y radios);
+solo cambia el contenido por bloques `Skeleton`. Hoy: `StatCardSkeleton`,
+`ChartCardSkeleton`, `ScrollTableSkeleton`, `DetailSheetSkeleton`,
+`MonthSwitcherSkeleton`, `AppSidebarSkeleton`, `DashboardHeaderSkeleton`,
+`DashboardTitleSkeleton` y `QuickActionsSkeleton`.
+
+- Streaming: `Suspense` por tarjeta y un `loading.tsx` por ruta que compone
+  los skeletons de esa pantalla. `app/dashboard/loading.tsx` es el genérico.
+- La región que carga va en `LoadingRegion` (`aria-busy="true"` y
+  "Cargando…" solo para lector); los bloques van con `aria-hidden`.
+- `CardSkeleton` queda para las pantallas aún no migradas; el código nuevo
+  no lo usa (SPEC 53 lo borra).
+
+### Menús rápidos (SPEC 51 §5)
+
+- **Una sola lista de acciones:** `quick-actions-context.tsx` define las
+  acciones del espacio activo (registrar: movimiento, traspaso, pagar deuda,
+  aportar a meta, cobro de Me deben; herramientas: importar, categorías,
+  verificar, tema, ocultar cifras), monta sus diálogos una vez y las ejecuta
+  con `run(key)`. La leen el botón del header ("Registrar movimiento" +
+  "Más"), la hoja móvil y el grupo Acciones de la paleta.
+- **Paleta de comandos** (`command/`): ⌘K / Ctrl+K, el disparador del
+  header ("Buscar o ejecutar") o la hoja móvil. Grupos Acciones, Tus datos
+  (cuentas, deudas y metas del espacio, con `loadCommandEntities`, cargadas
+  al abrir por primera vez) e Ir a (pantallas del espacio y de Cuenta).
+  Una deuda o meta abre su panel con `?detalle=<id>` (`useDetailFromUrl`).
+- **Atajos** (`shortcuts/`, `src/config/shortcuts.ts`): N nuevo movimiento,
+  T traspaso, ? hoja de atajos y G + letra (la letra vive en el campo
+  `shortcut` de `SITE.navigation`). No se disparan en campos ni con un
+  diálogo, panel o menú abierto. Se apagan en Cuenta → Preferencias (cookie
+  `tesoro-shortcuts`); ⌘K / Ctrl+K sigue activo.
+- **Menú contextual de fila:** `RowContextMenu` (en `row-actions.tsx`)
+  recibe la misma lista que `RowActions` y la muestra con clic derecho o
+  pulsación larga de 500 ms. Cada pantalla envuelve sus filas al migrarse.
+
+### Aside "Señalética" (SPEC 51)
+
+Cada grupo del aside es una línea vertical del color del espacio
+(`--sidebar-primary`) y cada pantalla una estación: un círculo con la letra
+de su atajo G (o su ícono si no tiene). La estación activa se rellena y su
+fila va sobre la tarjeta. Filas de 44 px. El selector Personal / Empresa es
+una navegación de dos enlaces (`aria-current`).
 
 ### Ayuda por campo (SPEC 47)
 
@@ -538,7 +647,7 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
   - Secciones reutilizables en `sections/` (`pdfTable` para toda tabla) y
     gráficas en `charts/` como funciones puras que devuelven un SVG (solo
     `rect`, `path`, `line`, `circle`, `text` y `g`).
-  - Inter y el logo van en base64 (`fonts-data.ts`, `brand-data.ts`),
+  - La fuente (Atkinson Hyperlegible Next desde SPEC 51) y el logo van en base64 (`fonts-data.ts`, `brand-data.ts`),
     generados por `pnpm brand:assets` desde `assets/fonts/` y
     `assets/brand/mark.svg`.
 

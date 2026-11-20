@@ -52,8 +52,10 @@ vistazo y sabe qué hacer después, sin aprender contabilidad.
 
 ## Capabilities and Constraints
 
-- Next.js (App Router) + React + TypeScript, HeroUI v3 sin Provider,
-  Tailwind 4, Recharts, Supabase con RLS. Detalle en `CLAUDE.md` y
+- Next.js (App Router) + React + TypeScript, shadcn con primitivas de
+  Base UI en `src/components/ui/` (SPEC 51; HeroUI v3 convive en las
+  pantallas aún no migradas hasta SPEC 53), Tailwind 4, Recharts, Supabase
+  con RLS. Detalle en `CLAUDE.md` y
   `docs/producto.md`.
 - Marca, rutas, navegación y textos de marca viven en `src/config/site.ts`
   (`SITE`). No se duplican en componentes.
@@ -70,19 +72,25 @@ vistazo y sabe qué hacer después, sin aprender contabilidad.
   fondo, a un solo color: en tinta (el color del texto) en la UI y en el
   emerald de marca (`#059669`) en favicon, íconos de app, logo y OG
   (`assets/brand/mark.svg` y `mark-color.svg`). Wordmark "Tesoro" en paths.
-  Color de marca de la UI `--brand` (emerald-500; SPEC 51 lo re-afina).
+  Color de marca de la UI `--brand` (emerald-500, sin cambios en SPEC 51).
 - Voz: cercana, en tuteo, frases cortas, verbos de acción y sin jerga
   financiera sin explicar. Tranquila con las cifras, nunca alarmista.
-- Restricciones visuales fijadas por SPEC 14 (se registran aquí, el detalle
-  vive en DESIGN.md / `docs/ui.md`):
-  - tema HeroUI v3 con los tokens de `src/styles/globals.css`;
+- Restricciones visuales fijadas por SPEC 14 y SPEC 51 (se registran aquí,
+  el detalle vive en DESIGN.md / `docs/ui.md`):
+  - shadcn (Base UI, estilo Maia personalizado) con los tokens de
+    `src/styles/globals.css`; dirección "Señalética": cada pantalla es una
+    estación con la letra de su atajo y el espacio activo es la línea
+    encendida del aside;
   - en el dashboard, oscuro por defecto sobre una base casi negra, con
     claro disponible; las páginas públicas (landing, legales) siempre en
     claro sobre blanco (SPEC 40);
   - un solo acento por espacio: neutro fuera de los espacios, emerald en
     Personal y naranja en Empresa, aplicado por ruta y nunca por props;
-  - simplicidad y densidad media;
-  - tipografía Inter.
+  - simplicidad y densidad media, tarjetas sin borde y campos con relleno;
+  - dinero por significado y apto para daltonismo rojo-verde: ingreso
+    turquesa, gasto coral y balance en tinta, siempre con signo e ícono;
+  - tipografía Atkinson Hyperlegible Next (OFL), hecha para baja visión,
+    con cifras tabulares; también en los PDF exportados.
 
 ## Evidence on Hand
 
@@ -112,4 +120,8 @@ vistazo y sabe qué hacer después, sin aprender contabilidad.
 ## Accessibility & Inclusion
 
 WCAG AA en claro y oscuro: 4.5:1 en texto, 3:1 en marcas gráficas y foco.
-Toda animación respeta `prefers-reduced-motion`.
+Toda animación respeta `prefers-reduced-motion`. Desde SPEC 51, además:
+áreas táctiles de 44 × 44 px en todo tamaño, foco siempre visible, enlace
+"Saltar al contenido", montos leídos completos ("menos 120.000 pesos") o
+"Monto oculto", errores anunciados al momento y atajos de una tecla que se
+pueden apagar.

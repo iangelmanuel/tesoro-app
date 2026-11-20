@@ -22,7 +22,7 @@ La meta de producto es que el usuario llegue a cualquier acción sin buscarla: a
 - CLI de shadcn con primitivas **Base UI**, estilo **Maia**, Tailwind 4 y `components.json` en la raíz. Versiones exactas, confirmadas contra la doc vigente al arrancar.
 - Componentes en **`src/components/ui/`** (convención de shadcn). El código es nuestro: se personaliza ahí, no se envuelve.
 - `cn` propio en `src/libs/cn.ts` (`clsx` + `tailwind-merge`). El código nuevo no importa `cn` de `@heroui/react`.
-- Dependencias nuevas: las que pida shadcn para Base UI, `class-variance-authority`, `clsx`, `tailwind-merge`, `sonner`, `react-day-picker`, `vaul` y `cmdk`. Todas con versión exacta.
+- Dependencias nuevas: las que pida shadcn para Base UI, `class-variance-authority`, `clsx`, `tailwind-merge`, `sonner`, `react-day-picker` y `cmdk`. Sin `vaul`: el Drawer de `base-maia` es el de Base UI (ver Decisiones). Todas con versión exacta.
 - Primitivas instaladas y re-diseñadas: `button`, `input`, `textarea`, `label`, `field`, `select`, `combobox`, `checkbox`, `switch`, `radio-group`, `toggle-group`, `tabs`, `dialog`, `alert-dialog`, `sheet`, `drawer`, `popover`, `tooltip`, `dropdown-menu`, `context-menu`, `command`, `calendar`, `skeleton`, `badge`, `avatar`, `separator`, `scroll-area`, `table`, `kbd` y `sonner`.
 
 ### 2. Dirección visual con Impeccable (paso con aprobación)
@@ -56,7 +56,7 @@ Se migran a `src/components/ui/` todos los archivos de `src/components/dashboard
 - **Aside** (`app-sidebar.tsx`, `sidebar/`): grupos de SPEC 31, ancho ajustable 240–360 px con la cookie `tesoro-sidebar-width`, selector Personal / Empresa (`workspace-tabs.tsx`) arriba y menú de cuenta (`user-menu.tsx`, con tema, ocultar montos y ayuda) abajo.
 - **Header:** `DashboardTitle`, botón de acción rápida rediseñado (`quick-actions*.tsx`), disparador visible de la paleta de comandos con su atajo (`Kbd`) y `hide-amounts-toggle.tsx`.
 - **Móvil (< 768 px):** `mobile/` (barra inferior, hoja de acciones rápidas con `Drawer`, aside como `Sheet`). Mismas acciones que hoy (SPEC 15, 18, 20).
-- **Compartidos:** `StatCard`, `CardHeading`, `HelpHint`, `EmptyState`, `CardEmpty`, `Amount`, `MonthNav`, `MonthSwitcher`, `DetailSheet`, `DeleteDialog`, `RowActions`, `ScrollTable` / `DataRows`, `SortableList`, `tone.ts`, `surface.ts`.
+- **Compartidos:** `StatCard`, `CardHeading`, `HelpHint`, `EmptyState`, `CardEmpty`, `Amount`, `MonthNav`, `MonthSwitcher`, `DetailSheet`, `DeleteDialog`, `RowActions`, `ScrollTable` (las tablas; no existe un `DataRows` aparte), `SortableList`, `tone.ts`, `surface.ts`.
 - **Gráficas:** `ChartCard`, `ChartContainer`, `ChartLegend`, `ChartTooltip`, `chart-style.ts`. Siguen con Recharts y colores de tokens.
 - **Toasts:** `<Toaster />` de sonner montado en `app/dashboard/layout.tsx`, abajo a la derecha en escritorio y arriba en móvil. El `ToastProvider` de HeroUI sigue montado hasta SPEC 53 para las pantallas aún no migradas.
 - **Tours (SPEC 27):** driver.js se queda. `tour-theme.css` usa los tokens nuevos y se actualizan los selectores de los pasos que apuntan al shell.
@@ -86,7 +86,7 @@ Se migran a `src/components/ui/` todos los archivos de `src/components/dashboard
 - **Regla:** cada componente que carga datos exporta su skeleton **en el mismo archivo** (`StatCard` → `StatCardSkeleton`). Ambos se arman con el mismo contenedor de layout (mismas filas, columnas, alturas y radios). Solo cambia el contenido por bloques `Skeleton`.
 - `CardSkeleton` genérico se retira del código nuevo; se conserva hasta SPEC 53 para las pantallas aún no migradas.
 - Streaming: `Suspense` por tarjeta y un `loading.tsx` por ruta que compone los skeletons de esa pantalla.
-- En este spec se hacen los del shell y los compartidos: aside, header, `StatCard`, `ChartCard`, `DataRows`, `DetailSheet`, `MonthSwitcher`, y `app/dashboard/loading.tsx`.
+- En este spec se hacen los del shell y los compartidos: aside, header, `StatCard`, `ChartCard`, `ScrollTable`, `DetailSheet`, `MonthSwitcher`, y `app/dashboard/loading.tsx`.
 - Accesibilidad: la región que carga lleva `aria-busy="true"` y un texto solo para lector de pantalla ("Cargando…"). Con `prefers-reduced-motion` no hay brillo animado, solo el bloque estático.
 
 ### 7. Accesibilidad (WCAG 2.2 AA + extras)
@@ -154,13 +154,15 @@ type CommandEntity = {
 }
 // loadCommandEntities(workspaceId: string): Promise<CommandEntity[]>
 
-// src/components/dashboard/row-actions.tsx — API sin cambios, una sola lista
-type RowAction = {
-  key: string
+// src/components/dashboard/row-actions.tsx — API sin cambios (la real), una
+// sola lista para RowActions y RowContextMenu
+interface RowAction {
+  id: string
   label: string
-  icon: LucideIcon
+  icon: ReactNode
   onAction: () => void
-  tone?: "default" | "danger"
+  destructive?: boolean
+  isDisabled?: boolean
 }
 ```
 
@@ -224,7 +226,12 @@ type RowAction = {
 - **Sí:** `--highlight` y `--subtle` en vez de `--accent` y `--muted` de shadcn. HeroUI ya usa esos nombres con otro significado; renombrar evita el choque y no hay que volver a renombrar en 53.
 - **Sí:** `src/components/ui/`. Es la convención de shadcn y el código es nuestro. Se levanta la regla anterior de CLAUDE.md.
 - **Sí:** migrar todos los compartidos del dashboard en este spec. Las pantallas los heredan sin tocarlas.
-- **Sí:** sonner, Calendar de shadcn (react-day-picker), combobox de Base UI y Drawer (vaul). Stack estándar de shadcn.
+- **Sí:** sonner, Calendar de shadcn (react-day-picker), combobox de Base UI y el Drawer de Base UI. Stack estándar de shadcn. **No:** vaul; al implementar, el `drawer` de `base-maia` ya era de Base UI y se quitó la dependencia.
+- **Sí:** `cn` propio con `clsx` + `tailwind-merge`, aunque shadcn 4.23 importa el paquete `cn`: tras cada `shadcn add` se reescribe el import a `@/libs/cn`.
+- **Sí:** `components.json` escrito a mano y el CLI solo para `add`. `shadcn init` reescribía `globals.css` y la app debía seguir igual en el paso 2.
+- **Sí:** mientras conviva HeroUI, los paneles de Base UI que alojan menús o diálogos de HeroUI (`DetailSheet`, aside móvil) van con `modal={false}` y un filtro de cierre (`heroui-compat.ts`). Tab puede salir del panel hasta SPEC 53.
+- **Sí:** `--brand` se queda en el emerald del isotipo; la dirección elegida no pedía re-afinarlo y `BRAND_HEX` no cambia.
+- **Sí:** dirección visual "Señalética" (Impeccable): cada pantalla es una estación con la letra de su atajo G en el aside y el espacio activo es la línea encendida. Atkinson Hyperlegible Next como fuente.
 - **Sí:** driver.js se queda re-tematizado. Reemplazarlo no aporta a este objetivo.
 - **Sí:** paleta con pantallas, acciones y entidades; sin movimientos. Buscar movimientos requiere consulta paginada y es otro spec.
 - **Sí:** entidades cargadas al abrir la paleta por primera vez. No pesa en cada navegación.
@@ -237,27 +244,27 @@ type RowAction = {
 
 ## Riesgos
 
-| Riesgo                                                                         | Mitigación                                                                                                     |
-| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| `@heroui/styles` y el tema de shadcn definen las mismas variables de Tailwind  | `heroui-bridge.css` se importa después y se verifica pantalla por pantalla; renombres `--highlight`/`--subtle`. |
-| Dos sistemas de toasts a la vez (HeroUI y sonner)                              | El toast de HeroUI usa la misma esquina y estilo que sonner vía el puente. Temporal hasta SPEC 53.              |
-| Un compartido migrado cambia su comportamiento y rompe una pantalla en HeroUI  | Props públicas intactas; criterio de registrar, editar y eliminar en ambos espacios.                           |
-| Atajos de una tecla chocan con lectores de pantalla o extensiones              | Apagables en Preferencias; nunca dentro de campos ni con diálogos abiertos.                                    |
-| `loadCommandEntities` expone datos de otro espacio                             | Resuelve el espacio con `requireWorkspace` y consulta con RLS; criterio específico.                            |
-| La paleta nueva rompe el contraste de algún par heredado                       | Tabla de contraste completa en `docs/ui.md` como criterio de aceptación.                                       |
-| El bundle crece con dos librerías de UI                                        | Temporal; SPEC 53 retira HeroUI. Se revisa el tamaño en `pnpm build` al cerrar este spec.                      |
-| Los selectores de los tours dejan de existir al cambiar el DOM del shell       | Pasos con `data-tour` estables en vez de clases.                                                               |
+| Riesgo                                                                        | Mitigación                                                                                                      |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `@heroui/styles` y el tema de shadcn definen las mismas variables de Tailwind | `heroui-bridge.css` se importa después y se verifica pantalla por pantalla; renombres `--highlight`/`--subtle`. |
+| Dos sistemas de toasts a la vez (HeroUI y sonner)                             | El toast de HeroUI usa la misma esquina y estilo que sonner vía el puente. Temporal hasta SPEC 53.              |
+| Un compartido migrado cambia su comportamiento y rompe una pantalla en HeroUI | Props públicas intactas; criterio de registrar, editar y eliminar en ambos espacios.                            |
+| Atajos de una tecla chocan con lectores de pantalla o extensiones             | Apagables en Preferencias; nunca dentro de campos ni con diálogos abiertos.                                     |
+| `loadCommandEntities` expone datos de otro espacio                            | Resuelve el espacio con `requireWorkspace` y consulta con RLS; criterio específico.                             |
+| La paleta nueva rompe el contraste de algún par heredado                      | Tabla de contraste completa en `docs/ui.md` como criterio de aceptación.                                        |
+| El bundle crece con dos librerías de UI                                       | Temporal; SPEC 53 retira HeroUI. Se revisa el tamaño en `pnpm build` al cerrar este spec.                       |
+| Los selectores de los tours dejan de existir al cambiar el DOM del shell      | Pasos con `data-tour` estables en vez de clases.                                                                |
 
 ## Siguientes specs: cuándo y qué pedir
 
 El rediseño sigue este orden. Cada spec se escribe con `/spec` **solo cuando el anterior está en `Implementado` y mergeado en master**, porque necesita los nombres reales de componentes, tokens y skeletons que dejó el anterior.
 
-| Orden | Spec    | Cuándo se crea                                                         | Cuándo se implementa      |
-| ----- | ------- | ---------------------------------------------------------------------- | ------------------------- |
-| 1     | SPEC 50 | Ya creado                                                              | Primero                   |
-| 2     | SPEC 51 | Ya creado                                                              | Tras mergear SPEC 50      |
-| 3     | SPEC 52 | Tras mergear SPEC 51 (paleta, fuente y primitivas ya definidas)        | Tras aprobar SPEC 52      |
-| 4     | SPEC 53 | Tras mergear SPEC 52 (Personal ya sin HeroUI)                          | Tras aprobar SPEC 53      |
+| Orden | Spec    | Cuándo se crea                                                  | Cuándo se implementa |
+| ----- | ------- | --------------------------------------------------------------- | -------------------- |
+| 1     | SPEC 50 | Ya creado                                                       | Primero              |
+| 2     | SPEC 51 | Ya creado                                                       | Tras mergear SPEC 50 |
+| 3     | SPEC 52 | Tras mergear SPEC 51 (paleta, fuente y primitivas ya definidas) | Tras aprobar SPEC 52 |
+| 4     | SPEC 53 | Tras mergear SPEC 52 (Personal ya sin HeroUI)                   | Tras aprobar SPEC 53 |
 
 Antes de escribir cada uno, revisa que `docs/ui.md` tenga la paleta, la fuente y la lista de primitivas finales del spec anterior. El `/spec` las lee de ahí.
 

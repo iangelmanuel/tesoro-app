@@ -1,26 +1,45 @@
 import { Suspense } from "react"
 import { ChartCard } from "@/components/charts/chart-card"
 import { Amount } from "@/components/dashboard/amount"
-import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { StatCard } from "@/components/dashboard/stat-card"
+import { LoadingRegion } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
-import { AccountsCard } from "@/features/accounts/components/accounts-card"
+import {
+  AccountsCard,
+  AccountsCardSkeleton
+} from "@/features/accounts/components/accounts-card"
 import { getAccountBalances } from "@/features/accounts/queries"
-import { BudgetsAtRiskCard } from "@/features/budgets/components/budgets-at-risk-card"
+import {
+  BudgetsAtRiskCard,
+  BudgetsAtRiskCardSkeleton
+} from "@/features/budgets/components/budgets-at-risk-card"
 import { getCategories } from "@/features/categories/queries"
-import { DebtsCard } from "@/features/debts/components/debts-card"
-import { GoalsCard } from "@/features/goals/components/goals-card"
-import { UpcomingPaymentsCard } from "@/features/recurring-expenses/components/upcoming-payments-card"
+import {
+  DebtsCard,
+  DebtsCardSkeleton
+} from "@/features/debts/components/debts-card"
+import {
+  GoalsCard,
+  GoalsCardSkeleton
+} from "@/features/goals/components/goals-card"
+import {
+  UpcomingPaymentsCard,
+  UpcomingPaymentsCardSkeleton
+} from "@/features/recurring-expenses/components/upcoming-payments-card"
 import { IncomeExpenseChart } from "@/features/reports/components/income-expense-chart"
 import { NoPeriodData } from "@/features/reports/components/no-period-data"
 import { RecentTransactions } from "@/features/reports/components/recent-transactions"
+import { SummarySkeleton } from "@/features/reports/components/summary-skeleton"
 import {
   getMonthlyTotals,
   getRecentTransactions,
   getWorkspaceBalance
 } from "@/features/reports/queries"
 import { incomeExpenseLegend } from "@/features/reports/series"
-import { ScoreSummaryCard } from "@/features/score/components/score-summary-card"
+import {
+  ScoreSummaryCard,
+  ScoreSummaryCardSkeleton
+} from "@/features/score/components/score-summary-card"
 import { NoTransactions } from "@/features/transactions/components/transactions-empty"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { currentMonth, monthRange, shiftMonth } from "@/libs/dates"
@@ -45,7 +64,7 @@ export default function SummaryPage() {
       className="flex flex-1 flex-col gap-4"
     >
       {/* La sesión y la fecha de hoy son dinámicas: van dentro de Suspense */}
-      <Suspense fallback={<SummarySkeleton />}>
+      <Suspense fallback={<SummaryLoading />}>
         <SummaryContent />
       </Suspense>
     </section>
@@ -160,10 +179,10 @@ async function SummaryContent() {
           )}
         </ChartCard>
         <div className="flex flex-col gap-4">
-          <Suspense fallback={<CardSkeleton className="h-64" />}>
+          <Suspense fallback={<ScoreSummaryCardSkeleton />}>
             <ScoreSummaryCard workspaceId={workspace.id} />
           </Suspense>
-          <Suspense fallback={<CardSkeleton className="h-48" />}>
+          <Suspense fallback={<AccountsCardSkeleton />}>
             <AccountsCard
               workspaceId={workspace.id}
               currency={currency}
@@ -182,25 +201,25 @@ async function SummaryContent() {
         className="grid gap-4 md:grid-cols-2"
         data-tour="summary-cards"
       >
-        <Suspense fallback={<CardSkeleton className="h-64" />}>
+        <Suspense fallback={<UpcomingPaymentsCardSkeleton />}>
           <UpcomingPaymentsCard
             workspaceId={workspace.id}
             currency={currency}
           />
         </Suspense>
-        <Suspense fallback={<CardSkeleton className="h-64" />}>
+        <Suspense fallback={<BudgetsAtRiskCardSkeleton />}>
           <BudgetsAtRiskCard
             workspaceId={workspace.id}
             currency={currency}
           />
         </Suspense>
-        <Suspense fallback={<CardSkeleton className="h-64" />}>
+        <Suspense fallback={<GoalsCardSkeleton />}>
           <GoalsCard
             workspaceId={workspace.id}
             currency={currency}
           />
         </Suspense>
-        <Suspense fallback={<CardSkeleton className="h-64" />}>
+        <Suspense fallback={<DebtsCardSkeleton />}>
           <DebtsCard
             workspaceId={workspace.id}
             currency={currency}
@@ -211,35 +230,13 @@ async function SummaryContent() {
   )
 }
 
-// Misma estructura que el contenido: 4 KPI, gráfica + columna, tabla y
-// cuatro tarjetas
-function SummarySkeleton() {
+function SummaryLoading() {
   return (
-    <>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 4 }, (_, index) => (
-          <CardSkeleton
-            key={index}
-            className="h-28"
-          />
-        ))}
-      </div>
-      <div className="grid gap-4 lg:grid-cols-3">
-        <CardSkeleton className="h-96 lg:col-span-2" />
-        <div className="flex flex-col gap-4">
-          <CardSkeleton className="h-64" />
-          <CardSkeleton className="h-28" />
-        </div>
-      </div>
-      <CardSkeleton className="h-72" />
-      <div className="grid gap-4 md:grid-cols-2">
-        {Array.from({ length: 4 }, (_, index) => (
-          <CardSkeleton
-            key={index}
-            className="h-64"
-          />
-        ))}
-      </div>
-    </>
+    <LoadingRegion
+      label="Cargando resumen…"
+      className="flex flex-1 flex-col gap-4"
+    >
+      <SummarySkeleton />
+    </LoadingRegion>
   )
 }

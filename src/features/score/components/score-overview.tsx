@@ -1,8 +1,9 @@
-import { Chip, cn } from "@heroui/react"
 import {
   TONE_BADGE_CLASSES as TONE_BADGE,
   TONE_TEXT_CLASSES as TONE_TEXT
 } from "@/components/dashboard/tone"
+import { ToneBadge } from "@/components/dashboard/tone-badge"
+import { cn } from "@/libs/cn"
 import { formatDate } from "@/libs/format"
 import type { BandTone } from "../constants"
 import { bandInfo } from "../curves"
@@ -25,22 +26,15 @@ const BAND_TEXT_CLASSES: Record<BandTone, string> = {
 /** "Débil", "Regular", "Bueno" o "Excelente" con su color */
 export function BandBadge({ band }: { band: Band }) {
   const { label, tone } = bandInfo(band)
-  return (
-    <Chip
-      size="sm"
-      className={BAND_BADGE_CLASSES[tone]}
-      color="accent"
-      variant="primary"
-    >
-      {label}
-    </Chip>
-  )
+  return <ToneBadge className={BAND_BADGE_CLASSES[tone]}>{label}</ToneBadge>
 }
 
 /** "+3 pts vs. el mes anterior", o "Sin comparación aún" si el anterior no tiene score */
 export function ScoreVariation({ variation }: { variation: number | null }) {
   if (variation === null) {
-    return <span className="text-sm text-muted">Sin comparación aún</span>
+    return (
+      <span className="text-sm text-muted-foreground">Sin comparación aún</span>
+    )
   }
 
   const sign = variation > 0 ? "+" : ""
@@ -50,7 +44,7 @@ export function ScoreVariation({ variation }: { variation: number | null }) {
         "text-sm tabular-nums",
         variation > 0 && "text-(--income)",
         variation < 0 && "text-(--expense)",
-        variation === 0 && "text-muted"
+        variation === 0 && "text-muted-foreground"
       )}
     >
       {sign}

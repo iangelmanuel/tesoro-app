@@ -1,9 +1,15 @@
-import { Card, CardContent, Chip } from "@heroui/react"
 import { ShieldCheck } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
-import { CardHeading } from "@/components/dashboard/card-heading"
+import {
+  CardHeading,
+  CardHeadingSkeleton
+} from "@/components/dashboard/card-heading"
 import { CardEmpty } from "@/components/dashboard/empty-state"
+import { CARD, CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import { ToneBadge } from "@/components/dashboard/tone-badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
+import { cn } from "@/libs/cn"
 import { currentMonth } from "@/libs/dates"
 import {
   BUDGET_STATUS_LABELS,
@@ -40,14 +46,17 @@ export async function BudgetsAtRiskCard({
     .slice(0, MAX_BUDGETS)
 
   return (
-    <Card>
+    <section
+      aria-label="Presupuestos en riesgo"
+      className={CARD}
+    >
       <CardHeading
         title="Presupuestos en riesgo"
         href={BUDGETS_PATH}
         linkLabel="Ver todos"
         linkContext="los presupuestos"
       />
-      <CardContent>
+      <div>
         {atRisk.length === 0 && (
           <CardEmpty
             icon={ShieldCheck}
@@ -55,13 +64,13 @@ export async function BudgetsAtRiskCard({
             hint="Te avisamos aquí cuando uno pase del 80 %."
           />
         )}
-        <ul className="flex flex-col divide-y">
+        <ul className={CARD_LIST}>
           {atRisk.map((row) => {
             const status = budgetStatus(row.spent, row.budgetAmount)
             return (
               <li
                 key={row.categoryId}
-                className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0"
+                className={cn("flex flex-col gap-2", CARD_ROW)}
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <CategoryBadge
@@ -69,14 +78,9 @@ export async function BudgetsAtRiskCard({
                     icon={row.icon}
                     color={row.color}
                   />
-                  <Chip
-                    size="sm"
-                    className={STATUS_BADGE_CLASSES[status]}
-                    color="accent"
-                    variant="primary"
-                  >
+                  <ToneBadge className={STATUS_BADGE_CLASSES[status]}>
                     {BUDGET_STATUS_LABELS[status]}
-                  </Chip>
+                  </ToneBadge>
                   <p className="ml-auto text-sm font-medium tabular-nums">
                     {formatPercent(budgetPercent(row.spent, row.budgetAmount))}
                   </p>
@@ -87,7 +91,7 @@ export async function BudgetsAtRiskCard({
                   budget={row.budgetAmount}
                   label={`${row.name}: ${formatPercent(budgetPercent(row.spent, row.budgetAmount))}`}
                 />
-                <p className="text-sm text-muted tabular-nums">
+                <p className="text-sm text-muted-foreground tabular-nums">
                   <Amount
                     value={row.spent}
                     currency={currency}
@@ -102,7 +106,32 @@ export async function BudgetsAtRiskCard({
             )
           })}
         </ul>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
+  )
+}
+
+/** Presupuestos en riesgo mientras carga: cabecera y tres filas */
+export function BudgetsAtRiskCardSkeleton() {
+  return (
+    <div className={CARD}>
+      <CardHeadingSkeleton />
+      <ul className={CARD_LIST}>
+        {Array.from({ length: 3 }, (_, index) => (
+          <li
+            key={index}
+            className={cn("flex flex-col gap-2", CARD_ROW)}
+          >
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-6 w-28 rounded-4xl" />
+              <Skeleton className="h-6 w-20 rounded-4xl" />
+              <Skeleton className="ml-auto h-5 w-12" />
+            </div>
+            <Skeleton className="h-2 w-full rounded-full" />
+            <Skeleton className="h-5 w-40" />
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }

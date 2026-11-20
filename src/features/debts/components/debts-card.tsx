@@ -1,11 +1,17 @@
 import Link from "next/link"
-import { Card, CardContent, buttonVariants } from "@heroui/react"
 import { CreditCard } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
-import { CardHeading } from "@/components/dashboard/card-heading"
+import {
+  CardHeading,
+  CardHeadingSkeleton
+} from "@/components/dashboard/card-heading"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import { HelpHint } from "@/components/dashboard/help-hint"
+import { CARD, CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import { buttonVariants } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { formatPercent } from "@/features/budgets/progress"
+import { cn } from "@/libs/cn"
 import { todayISO } from "@/libs/dates"
 import {
   DEBTS_PATH,
@@ -33,14 +39,17 @@ export async function DebtsCard({ workspaceId, currency }: DebtsCardProps) {
   const utilization = globalUtilization(debts)
 
   return (
-    <Card>
+    <section
+      aria-label="Deudas"
+      className={CARD}
+    >
       <CardHeading
         title="Deudas"
         href={DEBTS_PATH}
         linkLabel="Ver todas"
         linkContext="las deudas"
       />
-      <CardContent className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         {active.length === 0 ? (
           <CardEmpty
             icon={CreditCard}
@@ -59,7 +68,7 @@ export async function DebtsCard({ workspaceId, currency }: DebtsCardProps) {
           <>
             <dl className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
-                <dt className="text-sm text-muted">Deuda total</dt>
+                <dt className="text-sm text-muted-foreground">Deuda total</dt>
                 <dd className="text-xl font-semibold tracking-tight tabular-nums">
                   <Amount
                     value={totalDebt(debts)}
@@ -69,7 +78,7 @@ export async function DebtsCard({ workspaceId, currency }: DebtsCardProps) {
               </div>
               {utilization !== null && (
                 <div className="flex flex-col gap-1">
-                  <dt className="flex items-center gap-1 text-sm text-muted">
+                  <dt className="flex items-center gap-1 text-sm text-muted-foreground">
                     Utilización de tarjetas
                     <HelpHint topic="utilization" />
                   </dt>
@@ -88,7 +97,43 @@ export async function DebtsCard({ workspaceId, currency }: DebtsCardProps) {
             />
           </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </section>
+  )
+}
+
+/** Deudas mientras carga: total, utilización y tres pagos */
+export function DebtsCardSkeleton() {
+  return (
+    <div className={CARD}>
+      <CardHeadingSkeleton />
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-2 gap-4">
+          {Array.from({ length: 2 }, (_, index) => (
+            <div
+              key={index}
+              className="flex flex-col gap-1"
+            >
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-7 w-32" />
+            </div>
+          ))}
+        </div>
+        <ul className={CARD_LIST}>
+          {Array.from({ length: 3 }, (_, index) => (
+            <li
+              key={index}
+              className={cn("flex items-center gap-4", CARD_ROW)}
+            >
+              <div className="flex flex-1 flex-col gap-1">
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-5 w-24" />
+              </div>
+              <Skeleton className="h-6 w-24" />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   )
 }

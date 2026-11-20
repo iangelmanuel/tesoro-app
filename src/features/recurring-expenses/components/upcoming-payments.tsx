@@ -1,14 +1,15 @@
-import { Chip, cn } from "@heroui/react"
 import { Check } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import { TONE_BADGE_CLASSES as TONE_BADGE } from "@/components/dashboard/tone"
+import { ToneBadge } from "@/components/dashboard/tone-badge"
 import { Button } from "@/components/ui/button"
 import { activeAccountId } from "@/features/accounts/active-account"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
+import { cn } from "@/libs/cn"
 import { formatDate, formatShortDate } from "@/libs/format"
 import {
   OCCURRENCE_STATUS,
@@ -31,16 +32,7 @@ export function OccurrenceStatusBadge({
   status: OccurrenceStatus
 }) {
   const { label, tone } = OCCURRENCE_STATUS[status]
-  return (
-    <Chip
-      size="sm"
-      className={TONE_CLASSES[tone]}
-      color="accent"
-      variant="primary"
-    >
-      {label}
-    </Chip>
-  )
+  return <ToneBadge className={TONE_CLASSES[tone]}>{label}</ToneBadge>
 }
 
 interface PayOccurrenceButtonProps {
@@ -174,7 +166,7 @@ export function UpcomingPayments({
                 className="md:hidden"
               />
             </div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
               <span className="whitespace-nowrap">
                 {formatDate(payment.dueOn)}
               </span>

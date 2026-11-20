@@ -1,8 +1,9 @@
-import { Chip, cn } from "@heroui/react"
 import {
   TONE_BADGE_CLASSES as TONE_BADGE,
   TONE_BAR_CLASSES as TONE_BAR
 } from "@/components/dashboard/tone"
+import { ToneBadge } from "@/components/dashboard/tone-badge"
+import { cn } from "@/libs/cn"
 import { GOAL_STATUS_LABELS, type GoalStatus } from "../progress"
 
 // Sin estado (activa sin fecha) la barra usa el color primario
@@ -26,14 +27,9 @@ export function GoalStatusBadge({ status }: { status: GoalStatus | null }) {
     return null
   }
   return (
-    <Chip
-      size="sm"
-      className={GOAL_BADGE_CLASSES[status]}
-      color="accent"
-      variant="primary"
-    >
+    <ToneBadge className={GOAL_BADGE_CLASSES[status]}>
       {GOAL_STATUS_LABELS[status]}
-    </Chip>
+    </ToneBadge>
   )
 }
 

@@ -9,7 +9,7 @@ export const GRID_PROPS = {
   strokeDasharray: "3 4"
 } as const
 
-/** Ejes sin línea ni marcas; los ticks en --muted (ChartContainer) */
+/** Ejes sin línea ni marcas; los ticks en --muted-foreground (ChartContainer) */
 export const AXIS_PROPS = {
   axisLine: false,
   tickLine: false,

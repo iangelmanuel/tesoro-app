@@ -1,7 +1,7 @@
 "use client"
 
-import { cn } from "@heroui/react"
 import { type DefaultLegendContentProps, Legend } from "recharts"
+import { cn } from "@/libs/cn"
 import { getPayloadConfig, useChart } from "./chart-container"
 
 export const ChartLegend = Legend
@@ -29,7 +29,7 @@ export function ChartLegendContent({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted",
+        "flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground",
         verticalAlign === "top" ? "pb-3" : "pt-3",
         className
       )}

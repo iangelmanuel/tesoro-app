@@ -1,4 +1,6 @@
-import { Card, cn } from "@heroui/react"
+import { CARD } from "@/components/dashboard/surface"
+import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/libs/cn"
 
 export interface LegendItem {
   label: string
@@ -20,7 +22,7 @@ export function ChartLegendList({
     <ul
       aria-label="Leyenda"
       className={cn(
-        "flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted",
+        "flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground",
         className
       )}
     >
@@ -73,13 +75,15 @@ export function ChartCard({
   tour
 }: ChartCardProps) {
   return (
-    <Card
-      className={cn("gap-4", className)}
+    <ChartCardFrame
+      className={className}
       data-tour={tour}
     >
       <div className="flex flex-col gap-1">
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <h2 className="text-sm font-medium text-muted">{title}</h2>
+        <div className="flex min-h-7 flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <h2 className="text-sm font-semibold text-muted-foreground">
+            {title}
+          </h2>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             {legend && <ChartLegendList items={legend} />}
             {action}
@@ -87,11 +91,13 @@ export function ChartCard({
         </div>
         {figure !== undefined && (
           <p className="flex flex-wrap items-baseline gap-x-2">
-            <span className="text-2xl font-semibold tracking-tight tabular-nums">
+            <span className="text-2xl font-bold tracking-[-0.01em] tabular-nums">
               {figure}
             </span>
             {figureCaption && (
-              <span className="text-sm text-muted">{figureCaption}</span>
+              <span className="text-sm text-muted-foreground">
+                {figureCaption}
+              </span>
             )}
           </p>
         )}
@@ -99,6 +105,63 @@ export function ChartCard({
       {/* Crece con la tarjeta: si la fila es más alta (columna lateral del
           Resumen), la gráfica ocupa el espacio en vez de dejarlo vacío */}
       <div className="flex min-h-0 flex-1 flex-col">{children}</div>
-    </Card>
+    </ChartCardFrame>
+  )
+}
+
+// Contenedor compartido por la tarjeta y su skeleton
+function ChartCardFrame({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="chart-card"
+      className={cn(CARD, className)}
+      {...props}
+    >
+      {children}
+    </div>
+  )
+}
+
+/**
+ * Hueco de ChartCard: misma cabecera (título y, si la hay, cifra) y el área
+ * de la gráfica con la proporción de ChartContainer (16:9) o la altura que
+ * le den, para que la página no salte al llegar los datos
+ */
+export function ChartCardSkeleton({
+  figure = true,
+  chartClassName,
+  className
+}: {
+  /** La tarjeta real lleva cifra bajo el título */
+  figure?: boolean
+  /** Las mismas clases de tamaño que el ChartContainer real */
+  chartClassName?: string
+  className?: string
+}) {
+  return (
+    <ChartCardFrame
+      className={className}
+      aria-hidden="true"
+    >
+      <div className="flex flex-col gap-1">
+        <div className="flex min-h-7 items-center">
+          <Skeleton className="h-4 w-32" />
+        </div>
+        {figure && (
+          <div className="flex h-8 items-center">
+            <Skeleton className="h-6 w-36" />
+          </div>
+        )}
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col">
+        <Skeleton
+          className={cn("aspect-video w-full rounded-2xl", chartClassName)}
+        />
+      </div>
+    </ChartCardFrame>
   )
 }

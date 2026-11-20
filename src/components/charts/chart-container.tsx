@@ -1,11 +1,11 @@
 "use client"
 
 import { createContext, useContext, useId } from "react"
-import { cn } from "@heroui/react"
 import { ResponsiveContainer } from "recharts"
+import { cn } from "@/libs/cn"
 
 // Contenedor de las gráficas de Recharts con los tokens del tema de HeroUI:
-// ticks con --muted, grilla con --border y cursor con --default. Cada
+// ticks con --muted-foreground, grilla con --border y cursor con --highlight. Cada
 // serie expone su color como --color-<clave> para usarlo en fill/stroke.
 // Las props de forma (grilla, ejes, barras, líneas) están en chart-style.ts
 
@@ -56,25 +56,25 @@ export function ChartContainer({
         data-chart={chartId}
         className={cn(
           "flex aspect-video justify-center text-xs text-foreground tabular-nums",
-          "[&_.recharts-cartesian-axis-tick_text]:fill-muted",
+          "[&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground",
           "[&_.recharts-cartesian-grid_line]:stroke-border",
           "[&_.recharts-curve.recharts-tooltip-cursor]:stroke-border",
-          "[&_.recharts-rectangle.recharts-tooltip-cursor]:fill-default/60",
-          "[&_.recharts-radial-bar-background-sector]:fill-default",
-          "[&_.recharts-polar-grid_[stroke='#ccc']]:stroke-separator",
+          "[&_.recharts-rectangle.recharts-tooltip-cursor]:fill-highlight/70",
+          "[&_.recharts-radial-bar-background-sector]:fill-highlight",
+          "[&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border/60",
           "[&_.recharts-reference-line_[stroke='#ccc']]:stroke-border",
           // Recharts fija el stroke-dasharray de las líneas con el ancho
           // inicial del contenedor y no lo recalcula al crecer: la línea
           // quedaba cortada. Sin dasharray se dibuja completa
           "[&_.recharts-line-curve]:[stroke-dasharray:none]",
           // Punto activo de las líneas con anillo del color de la tarjeta
-          "[&_.recharts-active-dot_circle]:stroke-surface",
+          "[&_.recharts-active-dot_circle]:stroke-card",
           "[&_.recharts-dot[stroke='#fff']]:stroke-transparent",
           // 2 px de superficie entre porciones de la dona
-          "[&_.recharts-sector]:stroke-surface [&_.recharts-sector]:stroke-2",
+          "[&_.recharts-sector]:stroke-card [&_.recharts-sector]:stroke-2",
           "[&_.recharts-layer]:outline-hidden [&_.recharts-sector]:outline-hidden",
           // Con accessibilityLayer la superficie recibe foco: se marca visible
-          "[&_.recharts-surface]:rounded-lg [&_.recharts-surface]:outline-none [&_.recharts-surface:focus-visible]:outline-2 [&_.recharts-surface:focus-visible]:outline-offset-2 [&_.recharts-surface:focus-visible]:outline-focus",
+          "[&_.recharts-surface]:rounded-lg [&_.recharts-surface]:outline-none [&_.recharts-surface:focus-visible]:outline-2 [&_.recharts-surface:focus-visible]:outline-offset-2 [&_.recharts-surface:focus-visible]:outline-ring",
           className
         )}
         {...props}

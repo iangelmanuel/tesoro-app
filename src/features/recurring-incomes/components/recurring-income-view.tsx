@@ -1,17 +1,21 @@
-import { Button, Card, CardContent, cn } from "@heroui/react"
 import { CalendarClock, CalendarPlus, CircleCheck, Plus } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardEmpty, EmptyState } from "@/components/dashboard/empty-state"
 import { MonthNav } from "@/components/dashboard/month-nav"
-import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import { CARD, CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
+import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import { getCategories } from "@/features/categories/queries"
 import { OverdueIndicator } from "@/features/recurring-expenses/components/overdue-indicator"
+import { UpcomingPaymentsCardSkeleton } from "@/features/recurring-expenses/components/upcoming-payments-card"
 import { parseRecurringMonth } from "@/features/recurring-expenses/month"
 import type { PersonalWorkspace } from "@/features/workspaces/queries"
+import { cn } from "@/libs/cn"
 import { todayISO } from "@/libs/dates"
 import { groupIncomeRows } from "../month-rows"
 import { incomeFrequencyLabel } from "../occurrences"
@@ -26,7 +30,10 @@ import {
 import { IncomeSheetProvider } from "./income-sheet-context"
 import { ReceiveIncomeButton } from "./receive-income-button"
 import { RecurringIncomeDialog } from "./recurring-income-dialog"
-import { RecurringIncomesList } from "./recurring-incomes-list"
+import {
+  RecurringIncomesList,
+  RecurringIncomesListSkeleton
+} from "./recurring-incomes-list"
 import { UpcomingIncomes } from "./upcoming-incomes"
 
 /**
@@ -62,7 +69,7 @@ export async function RecurringIncomeView({
       categories={categories}
       accounts={accounts}
       trigger={
-        <Button>
+        <Button data-tour="income-create">
           <Plus />
           Nuevo ingreso fijo
         </Button>
@@ -127,7 +134,13 @@ export async function RecurringIncomeView({
       </div>
 
       {hasSchedule && (
-        <Card>
+        <section
+          aria-label={
+            month.isCurrent ? "Próximos ingresos" : `Ingresos de ${month.label}`
+          }
+          className={CARD}
+          data-tour="income-upcoming"
+        >
           <CardHeading
             title={
               month.isCurrent
@@ -137,6 +150,7 @@ export async function RecurringIncomeView({
             help="upcomingIncomes"
             control={
               <MonthNav
+                data-tour="income-month"
                 path={SITE.routes.personalRecurringIncome}
                 label={month.label}
                 prev={month.prev}
@@ -145,9 +159,9 @@ export async function RecurringIncomeView({
               />
             }
           />
-          <CardContent className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3">
             {monthIncomes.length > 0 && (
-              <p className="text-sm text-muted">
+              <p className="text-sm text-muted-foreground">
                 Recibido{" "}
                 <Amount
                   value={received}
@@ -198,23 +212,24 @@ export async function RecurringIncomeView({
                 )}
               />
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       )}
 
       {withoutDate.length > 0 && (
-        <Card>
+        <section
+          aria-label="Sin fecha fija"
+          className={CARD}
+        >
           <CardHeading
             title="Sin fecha fija"
             help="noFixedDate"
           />
-          <CardContent>
-            <NoFixedDateList
-              incomes={withoutDate}
-              currency={workspace.currency}
-            />
-          </CardContent>
-        </Card>
+          <NoFixedDateList
+            incomes={withoutDate}
+            currency={workspace.currency}
+          />
+        </section>
       )}
 
       <div className="flex flex-col gap-3">
@@ -253,7 +268,7 @@ function NoFixedDateList({
         >
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <p className="min-w-0 font-medium break-words">{income.name}</p>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
               <CategoryBadge
                 name={income.category.name}
                 icon={income.category.icon}
@@ -262,9 +277,9 @@ function NoFixedDateList({
             </div>
           </div>
           <dl className="grid grid-cols-2 gap-x-6 gap-y-0.5 text-sm md:text-end">
-            <dt className="text-muted">Este mes</dt>
-            <dt className="text-muted">Este año</dt>
-            <dd className="font-medium text-(--income)">
+            <dt className="text-muted-foreground">Este mes</dt>
+            <dt className="text-muted-foreground">Este año</dt>
+            <dd className={cn("font-medium", TONE_TEXT_CLASSES.success)}>
               <Amount
                 value={income.received?.month ?? 0}
                 currency={currency}
@@ -280,5 +295,24 @@ function NoFixedDateList({
         </li>
       ))}
     </ul>
+  )
+}
+
+/**
+ * Ingresos fijos mientras carga: botón de arriba, la tarjeta de ingresos del
+ * mes (con su selector) y la tabla, con los mismos contenedores
+ */
+export function RecurringIncomeViewSkeleton() {
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-2">
+        <Skeleton className="h-11 w-48 rounded-4xl" />
+      </div>
+      <UpcomingPaymentsCardSkeleton withMonth />
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-7 w-36" />
+        <RecurringIncomesListSkeleton />
+      </div>
+    </>
   )
 }

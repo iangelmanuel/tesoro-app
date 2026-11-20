@@ -1,8 +1,16 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { Tooltip, cn, toast } from "@heroui/react"
-import { Copy, Link2, Pencil, Receipt, Trash2 } from "lucide-react"
+import {
+  ArrowDown,
+  ArrowUp,
+  Copy,
+  Link2,
+  Pencil,
+  Receipt,
+  Trash2
+} from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import { RowActions } from "@/components/dashboard/row-actions"
@@ -12,9 +20,18 @@ import {
   SortableListProvider,
   useSortableList
 } from "@/components/dashboard/sortable-list"
+import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
+import { toast } from "@/components/ui/sonner"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from "@/components/ui/tooltip"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
-import { formatCurrency, formatDate, formatTime } from "@/libs/format"
+import { cn } from "@/libs/cn"
+import { formatDate, formatTime } from "@/libs/format"
 import { deleteEntry, moveDebtEntry } from "../actions"
 import { installmentLabel, installmentProgress } from "../installments"
 import type { Debt, DebtEntry } from "../queries"
@@ -102,7 +119,7 @@ export function DebtEntriesList({
 
   return (
     <SortableListProvider {...sortable.providerProps}>
-      <ul className="divide-y rounded-xl border">
+      <ul className={CARD_LIST}>
         {sortable.items.map((entry) => (
           <EntryRow
             key={entry.id}
@@ -190,7 +207,7 @@ function EntryRow({
     startTransition(async () => {
       const result = await deleteEntry(entry.id)
       if (result.error) {
-        toast.danger(result.error)
+        toast.error(result.error)
       } else {
         toast.success(`${label} ${feminine ? "eliminada" : "eliminado"}`)
       }
@@ -200,7 +217,7 @@ function EntryRow({
   return (
     <SortableListItem
       config={sortable}
-      className="flex items-center gap-3 p-3"
+      className={cn(CARD_ROW, "flex items-center gap-3")}
     >
       {(handle) => (
         <>
@@ -209,39 +226,60 @@ function EntryRow({
             <span className="flex items-center gap-2">
               <span className="text-sm font-medium">{label}</span>
               {isFee && entry.generated && (
-                <span className="text-xs text-muted">· automática</span>
+                <span className="text-xs text-muted-foreground">
+                  · automática
+                </span>
               )}
               <span
                 className={cn(
                   "font-medium tabular-nums",
-                  lowersBalance ? "text-(--income)" : "text-(--expense)"
+                  lowersBalance
+                    ? TONE_TEXT_CLASSES.success
+                    : TONE_TEXT_CLASSES.danger
                 )}
               >
-                {lowersBalance ? "−" : "+"}{" "}
-                {formatCurrency(Math.abs(entry.amount), currency)}
+                {lowersBalance ? (
+                  <ArrowDown
+                    aria-hidden
+                    className="mr-0.5 inline size-3.5 align-[-2px]"
+                  />
+                ) : (
+                  <ArrowUp
+                    aria-hidden
+                    className="mr-0.5 inline size-3.5 align-[-2px]"
+                  />
+                )}
+                <Amount
+                  value={
+                    lowersBalance
+                      ? -Math.abs(entry.amount)
+                      : Math.abs(entry.amount)
+                  }
+                  currency={currency}
+                  signed
+                />
               </span>
               {entry.transaction_id && (
-                <Tooltip delay={500}>
-                  <Tooltip.Trigger
+                <Tooltip>
+                  <TooltipTrigger
+                    delay={500}
                     aria-label="Tiene un movimiento enlazado"
-                    className="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                    className="touch-hitbox rounded-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
-                    <Link2 className="size-4 text-muted" />
-                  </Tooltip.Trigger>
-                  <Tooltip.Content>
-                    Tiene un movimiento enlazado
-                  </Tooltip.Content>
+                    <Link2 className="size-4 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent>Tiene un movimiento enlazado</TooltipContent>
                 </Tooltip>
               )}
             </span>
-            <span className="text-xs text-muted">
+            <span className="text-xs text-muted-foreground">
               {formatDate(entry.occurred_on)}
               {entry.occurred_time && ` · ${formatTime(entry.occurred_time)}`}
               {accountText && ` · ${accountText}`}
               {installmentsText && ` · ${installmentsText}`}
             </span>
             {entry.note && (
-              <span className="line-clamp-3 text-sm break-words text-muted">
+              <span className="line-clamp-3 text-sm break-words text-muted-foreground">
                 {entry.note}
               </span>
             )}
@@ -315,7 +353,7 @@ function EntryRow({
                 title={`¿Eliminar ${feminine ? "esta" : "este"} ${label.toLowerCase()}?`}
                 onConfirm={handleDelete}
               >
-                <p className="text-sm text-muted">
+                <p className="text-sm text-muted-foreground">
                   El saldo se recalcula sin {feminine ? "ella" : "él"}.
                   {isFee && " No se vuelve a generar."}
                   {entry.transaction_id &&

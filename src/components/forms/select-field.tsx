@@ -17,6 +17,8 @@ import { cn } from "@/libs/cn"
 export interface SelectFieldOption<T extends string> {
   value: T
   label: string
+  /** Texto de apoyo bajo la etiqueta, solo en la lista */
+  description?: string
 }
 
 interface SelectFieldProps<T extends string> {
@@ -29,6 +31,8 @@ interface SelectFieldProps<T extends string> {
   options: readonly SelectFieldOption<T>[]
   error?: string
   disabled?: boolean
+  /** Texto del trigger sin valor elegido */
+  placeholder?: string
   className?: string
 }
 
@@ -47,6 +51,7 @@ export function SelectField<T extends string>({
   options,
   error,
   disabled,
+  placeholder,
   className
 }: SelectFieldProps<T>) {
   const id = useId()
@@ -80,7 +85,7 @@ export function SelectField<T extends string>({
             aria-describedby={error ? errorId : undefined}
             className="w-full"
           >
-            <SelectValue />
+            <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>
             {options.map((option) => (
@@ -88,7 +93,16 @@ export function SelectField<T extends string>({
                 key={option.value}
                 value={option.value}
               >
-                {option.label}
+                {option.description ? (
+                  <span className="flex flex-col py-0.5 whitespace-normal">
+                    <span className="font-medium">{option.label}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {option.description}
+                    </span>
+                  </span>
+                ) : (
+                  option.label
+                )}
               </SelectItem>
             ))}
           </SelectContent>

@@ -87,6 +87,7 @@ export function ReceiveIncomeButton({
       )}
       trigger={
         <Button
+          data-tour="income-receive"
           size="sm"
           variant="outline"
           className="max-md:min-h-11 max-md:w-full"

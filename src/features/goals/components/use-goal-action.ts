@@ -1,7 +1,7 @@
 "use client"
 
 import { useTransition } from "react"
-import { toast } from "@heroui/react"
+import { toast } from "@/components/ui/sonner"
 import { archiveGoal, completeGoal, reactivateGoal } from "../actions"
 
 const ACTIONS = {
@@ -20,7 +20,7 @@ export function useGoalAction(goal: { id: string; name: string }) {
     startTransition(async () => {
       const result = await ACTIONS[action].run(goal.id)
       if (result.error) {
-        toast.danger(result.error)
+        toast.error(result.error)
       } else {
         toast.success(`"${goal.name}" ${ACTIONS[action].success}`)
       }

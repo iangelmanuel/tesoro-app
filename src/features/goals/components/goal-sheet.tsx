@@ -1,9 +1,9 @@
 "use client"
 
-import { Button } from "@heroui/react"
 import { Minus, Plus } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { DetailSection, DetailSheet } from "@/components/dashboard/detail-sheet"
+import { Button } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { goalStatus } from "../progress"
 import type { Goal, GoalContribution } from "../queries"
@@ -81,14 +81,14 @@ export function GoalSheet({
       }
       action={
         isActive ? (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-wrap gap-2">
             <ContributionDialog
               workspaceId={workspaceId}
               goalId={goal.id}
               kind="deposit"
               accounts={accounts}
               trigger={
-                <Button>
+                <Button className="min-w-fit flex-1">
                   <Plus />
                   Aportar
                 </Button>
@@ -100,7 +100,10 @@ export function GoalSheet({
               kind="withdrawal"
               accounts={accounts}
               trigger={
-                <Button variant="secondary">
+                <Button
+                  className="min-w-fit flex-1"
+                  variant="outline"
+                >
                   <Minus />
                   Retirar
                 </Button>
@@ -108,19 +111,19 @@ export function GoalSheet({
             />
           </div>
         ) : (
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-surface-secondary p-4">
-            <p className="text-sm text-muted">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-subtle p-4">
+            <p className="text-sm text-muted-foreground">
               {goal.status === "completed"
                 ? "Meta cumplida."
                 : "Meta archivada."}{" "}
               Reactívala para registrar aportes.
             </p>
             <Button
-              variant="secondary"
+              type="button"
+              variant="outline"
               size="sm"
-              className="max-md:min-h-11"
-              isDisabled={pending}
-              onPress={() => run("reactivate")}
+              disabled={pending}
+              onClick={() => run("reactivate")}
             >
               Reactivar
             </Button>

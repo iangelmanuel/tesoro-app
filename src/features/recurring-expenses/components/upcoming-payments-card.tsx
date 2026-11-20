@@ -1,17 +1,19 @@
 import type { Route } from "next"
 import { CircleCheck } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import {
   CardHeading,
   CardHeadingSkeleton
 } from "@/components/dashboard/card-heading"
 import { CardEmpty } from "@/components/dashboard/empty-state"
+import { MonthSwitcherSkeleton } from "@/components/dashboard/month-switcher"
 import { CARD, CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { RECURRING_PATH } from "@/features/budgets/tabs"
 import { getCategories } from "@/features/categories/queries"
 import { cn } from "@/libs/cn"
-import { formatCurrency, formatDate } from "@/libs/format"
+import { formatDate } from "@/libs/format"
 import { getUpcomingPayments } from "../queries"
 import { OccurrenceStatusBadge, PayOccurrenceButton } from "./upcoming-payments"
 
@@ -73,7 +75,10 @@ export async function UpcomingPaymentsCard({
                 </div>
                 <p className="text-sm text-muted-foreground tabular-nums">
                   {formatDate(payment.dueOn)} ·{" "}
-                  {formatCurrency(payment.amount, currency)}
+                  <Amount
+                    value={payment.amount}
+                    currency={currency}
+                  />
                 </p>
               </div>
               <PayOccurrenceButton
@@ -92,10 +97,26 @@ export async function UpcomingPaymentsCard({
 }
 
 /** Próximos pagos mientras carga: cabecera y tres filas con su botón */
-export function UpcomingPaymentsCardSkeleton() {
+export function UpcomingPaymentsCardSkeleton({
+  withMonth = false
+}: {
+  /** Reserva el selector de mes de la cabecera (pantalla de Gastos fijos) */
+  withMonth?: boolean
+}) {
   return (
     <div className={CARD}>
-      <CardHeadingSkeleton />
+      {withMonth ? (
+        // Misma cabecera que CardHeading con `control`: en el teléfono el
+        // selector baja a su propia fila
+        <div className="flex min-h-7 flex-wrap items-center justify-between gap-x-3 gap-y-3">
+          <Skeleton className="h-5 w-32" />
+          <div className="order-last w-full md:order-none md:ml-auto md:w-auto">
+            <MonthSwitcherSkeleton on="card" />
+          </div>
+        </div>
+      ) : (
+        <CardHeadingSkeleton />
+      )}
       <ul className={CARD_LIST}>
         {Array.from({ length: 3 }, (_, index) => (
           <li

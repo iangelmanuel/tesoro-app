@@ -1,9 +1,11 @@
-import { Button, Card, CardContent } from "@heroui/react"
 import { CalendarClock, CircleCheck, Plus } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardEmpty, EmptyState } from "@/components/dashboard/empty-state"
 import { MonthNav } from "@/components/dashboard/month-nav"
+import { CARD } from "@/components/dashboard/surface"
+import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { RECURRING_PATH } from "@/features/budgets/tabs"
 import { getCategories } from "@/features/categories/queries"
@@ -18,8 +20,12 @@ import {
 } from "../queries"
 import { OverdueIndicator } from "./overdue-indicator"
 import { RecurringExpenseDialog } from "./recurring-expense-dialog"
-import { RecurringExpensesList } from "./recurring-expenses-list"
+import {
+  RecurringExpensesList,
+  RecurringExpensesListSkeleton
+} from "./recurring-expenses-list"
 import { UpcomingPayments } from "./upcoming-payments"
+import { UpcomingPaymentsCardSkeleton } from "./upcoming-payments-card"
 
 /**
  * Contenido de Gastos fijos: pagos del mes elegido (`?month`) y lista.
@@ -102,7 +108,13 @@ export async function RecurringView({
         )}
       </div>
 
-      <Card data-tour="recurring-upcoming">
+      <section
+        aria-label={
+          month.isCurrent ? "Próximos pagos" : `Pagos de ${month.label}`
+        }
+        className={CARD}
+        data-tour="recurring-upcoming"
+      >
         <CardHeading
           title={month.isCurrent ? "Próximos pagos" : `Pagos de ${month.label}`}
           control={
@@ -115,9 +127,9 @@ export async function RecurringView({
             />
           }
         />
-        <CardContent className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3">
           {monthPayments.length > 0 && (
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted-foreground">
               Pagado{" "}
               <Amount
                 value={paid}
@@ -154,8 +166,8 @@ export async function RecurringView({
               currency={workspace.currency}
             />
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Gastos fijos</h2>
@@ -165,6 +177,26 @@ export async function RecurringView({
           accounts={accounts}
           currency={workspace.currency}
         />
+      </div>
+    </>
+  )
+}
+
+/**
+ * Gastos fijos mientras carga: botones de arriba, la tarjeta de pagos del
+ * mes (con su selector) y la tabla, con los mismos contenedores
+ */
+export function RecurringViewSkeleton() {
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-2">
+        <Skeleton className="h-11 w-44 rounded-4xl" />
+        <Skeleton className="h-11 w-32 rounded-4xl" />
+      </div>
+      <UpcomingPaymentsCardSkeleton withMonth />
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-7 w-32" />
+        <RecurringExpensesListSkeleton />
       </div>
     </>
   )

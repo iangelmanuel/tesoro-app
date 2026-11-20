@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { closesFromDialog } from "@/components/dashboard/heroui-compat"
 import { HeroUIPortalBridge } from "@/components/dashboard/heroui-portal-bridge"
 import {
   Dialog,
@@ -24,12 +23,6 @@ interface FormDialogProps {
   children: (close: () => void) => React.ReactNode
   /** En el teléfono se pega abajo, como hoja */
   bottomOnMobile?: boolean
-  /**
-   * Aloja controles de HeroUI (menús, selects): el diálogo no es modal para
-   * no volverlos inertes, y solo lo cierran su fondo, Escape dentro de él y
-   * su botón Cerrar (ver heroui-compat.ts). Se quita en SPEC 52b
-   */
-  hostsHeroUI?: boolean
   className?: string
 }
 
@@ -47,7 +40,6 @@ export function FormDialog({
   description,
   children,
   bottomOnMobile = false,
-  hostsHeroUI = false,
   className
 }: FormDialogProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
@@ -58,18 +50,7 @@ export function FormDialog({
     <HeroUIPortalBridge>
       <Dialog
         open={open}
-        modal={!hostsHeroUI}
-        onOpenChange={(next, details) => {
-          if (
-            hostsHeroUI &&
-            !next &&
-            !closesFromDialog(details.reason, details.event)
-          ) {
-            details.cancel()
-            return
-          }
-          setOpen(next)
-        }}
+        onOpenChange={setOpen}
       >
         {trigger ? <DialogTrigger render={trigger} /> : null}
         <DialogContent

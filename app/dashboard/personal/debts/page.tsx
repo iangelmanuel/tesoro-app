@@ -1,18 +1,11 @@
 import { Suspense } from "react"
-import {
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Skeleton
-} from "@heroui/react"
 import { CreditCard, HandCoins, Plus } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
 import { CardHeading } from "@/components/dashboard/card-heading"
-import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { EmptyState } from "@/components/dashboard/empty-state"
+import { StatCard } from "@/components/dashboard/stat-card"
+import { CARD } from "@/components/dashboard/surface"
+import { Button } from "@/components/ui/button"
+import { LoadingRegion } from "@/components/ui/skeleton"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { type Category, getCategories } from "@/features/categories/queries"
@@ -25,6 +18,7 @@ import {
 import { DebtCard } from "@/features/debts/components/debt-card"
 import { DebtDialog } from "@/features/debts/components/debt-dialog"
 import { DebtTotals } from "@/features/debts/components/debt-totals"
+import { DebtsScreenSkeleton } from "@/features/debts/components/debts-screen-skeleton"
 import { DebtsTabs } from "@/features/debts/components/debts-tabs"
 import { InactiveDebts } from "@/features/debts/components/inactive-debts"
 import { InactiveReceivables } from "@/features/debts/components/inactive-receivables"
@@ -186,23 +180,20 @@ function ReceivablesTab({
 
   return (
     <>
-      <Card
+      <div
         className="sm:max-w-xs"
         data-tour="debts-totals"
       >
-        <CardHeader>
-          <CardDescription>Te deben</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums">
-            <Amount
-              value={
-                totalReceivable(receivables) +
-                owedOnOpenEnded(active, entries, today)
-              }
-              currency={workspace.currency}
-            />
-          </CardTitle>
-        </CardHeader>
-      </Card>
+        <StatCard
+          label="Te deben"
+          value={
+            totalReceivable(receivables) +
+            owedOnOpenEnded(active, entries, today)
+          }
+          trend="higher-is-better"
+          currency={workspace.currency}
+        />
+      </div>
 
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -306,16 +297,18 @@ function PayablesTab({
             currency={workspace.currency}
           />
 
-          <Card data-tour="debts-upcoming">
+          <section
+            aria-label="Próximos vencimientos"
+            className={CARD}
+            data-tour="debts-upcoming"
+          >
             <CardHeading title="Próximos vencimientos" />
-            <CardContent>
-              <UpcomingDebtPayments
-                debts={active}
-                today={today}
-                currency={workspace.currency}
-              />
-            </CardContent>
-          </Card>
+            <UpcomingDebtPayments
+              debts={active}
+              today={today}
+              currency={workspace.currency}
+            />
+          </section>
 
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -356,17 +349,11 @@ function PayablesTab({
 
 function DebtsSkeleton() {
   return (
-    <>
-      <Skeleton className="h-9 w-48 rounded-3xl" />
-      <div className="grid gap-4 sm:grid-cols-3">
-        <CardSkeleton className="h-24" />
-        <CardSkeleton className="h-24" />
-        <CardSkeleton className="h-24" />
-      </div>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <CardSkeleton className="h-56" />
-        <CardSkeleton className="h-56" />
-      </div>
-    </>
+    <LoadingRegion
+      label="Cargando deudas…"
+      className="flex flex-1 flex-col gap-6"
+    >
+      <DebtsScreenSkeleton />
+    </LoadingRegion>
   )
 }

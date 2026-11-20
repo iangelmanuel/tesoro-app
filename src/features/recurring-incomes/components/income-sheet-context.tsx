@@ -85,7 +85,7 @@ export function OpenIncomeSheetButton({
     <button
       type="button"
       onClick={() => open(incomeId)}
-      className="min-w-0 rounded-sm text-start font-medium break-words underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-focus max-md:min-h-11"
+      className="min-h-11 min-w-0 cursor-pointer rounded-sm text-start font-medium break-words underline-offset-4 outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:touch-hitbox md:min-h-0"
     >
       {children}
     </button>

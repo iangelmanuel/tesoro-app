@@ -1,11 +1,12 @@
 import { Suspense } from "react"
-import { Button, Skeleton } from "@heroui/react"
 import { Plus, Target } from "lucide-react"
-import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { EmptyState } from "@/components/dashboard/empty-state"
+import { Button } from "@/components/ui/button"
+import { LoadingRegion } from "@/components/ui/skeleton"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { GoalCard } from "@/features/goals/components/goal-card"
 import { GoalDialog } from "@/features/goals/components/goal-dialog"
+import { GoalsScreenSkeleton } from "@/features/goals/components/goals-screen-skeleton"
 import { InactiveGoals } from "@/features/goals/components/inactive-goals"
 import { GOALS_PATH, compareByTargetDate } from "@/features/goals/progress"
 import {
@@ -136,12 +137,11 @@ async function GoalsContent() {
 
 function GoalsSkeleton() {
   return (
-    <>
-      <Skeleton className="h-9 w-32 rounded-3xl" />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <CardSkeleton className="h-56" />
-        <CardSkeleton className="h-56" />
-      </div>
-    </>
+    <LoadingRegion
+      label="Cargando metas…"
+      className="flex flex-1 flex-col gap-6"
+    >
+      <GoalsScreenSkeleton />
+    </LoadingRegion>
   )
 }

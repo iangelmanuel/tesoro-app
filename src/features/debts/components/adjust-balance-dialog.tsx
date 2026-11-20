@@ -1,19 +1,14 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import {
-  Button,
-  FieldError,
-  Input,
-  Modal,
-  TextField,
-  toast
-} from "@heroui/react"
+import { Amount } from "@/components/dashboard/amount"
 import { DatePickerField } from "@/components/forms/date-picker-field"
-import { FieldLabel } from "@/components/forms/field-label"
+import { FormDialog } from "@/components/forms/form-dialog"
+import { TextInputField } from "@/components/forms/text-input-field"
 import { TimePickerField } from "@/components/forms/time-picker-field"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/sonner"
 import { todayISO } from "@/libs/dates"
-import { formatCurrency } from "@/libs/format"
 import { adjustBalance } from "../actions"
 import type { Debt } from "../queries"
 import type { AdjustBalanceFormState } from "../types"
@@ -22,7 +17,7 @@ interface AdjustBalanceDialogProps {
   debt: Pick<Debt, "id" | "balance">
   currency: string
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
@@ -36,43 +31,36 @@ export function AdjustBalanceDialog({
   debt,
   currency,
   trigger,
-  open: controlledOpen,
+  open,
   onOpenChange
 }: AdjustBalanceDialogProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
-  const open = controlledOpen ?? uncontrolledOpen
-  const setOpen = onOpenChange ?? setUncontrolledOpen
-
   return (
-    <Modal
-      isOpen={open}
-      onOpenChange={setOpen}
+    <FormDialog
+      trigger={trigger}
+      open={open}
+      onOpenChange={onOpenChange}
+      className="sm:max-w-md"
+      title="Actualizar saldo"
+      description={
+        <>
+          Saldo actual:{" "}
+          <Amount
+            value={debt.balance}
+            currency={currency}
+          />
+          . Escribe el saldo real, por ejemplo el de tu extracto. No crea un
+          movimiento.
+        </>
+      }
     >
-      {trigger}
-      <Modal.Backdrop>
-        <Modal.Container scroll="outside">
-          <Modal.Dialog className="sm:max-w-md">
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>Actualizar saldo</Modal.Heading>
-              <p className="text-sm text-muted">
-                Saldo actual: {formatCurrency(debt.balance, currency)}. Escribe
-                el saldo real, por ejemplo el de tu extracto. No crea un
-                movimiento.
-              </p>
-            </Modal.Header>
-            <Modal.Body>
-              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-              <AdjustBalanceForm
-                debt={debt}
-                onSaved={() => setOpen(false)}
-                onCancel={() => setOpen(false)}
-              />
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+      {(close) => (
+        <AdjustBalanceForm
+          debt={debt}
+          onSaved={close}
+          onCancel={close}
+        />
+      )}
+    </FormDialog>
   )
 }
 
@@ -115,20 +103,17 @@ function AdjustBalanceForm({
         value={debt.id}
       />
 
-      <TextField
+      <TextInputField
         name="balance"
+        label="Saldo en tu banco"
+        help="balance.real"
         inputMode="decimal"
         autoComplete="off"
+        placeholder="0"
         defaultValue={values?.balance ?? ""}
         isRequired
-        isInvalid={Boolean(errors?.balance)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="balance.real">Saldo en tu banco</FieldLabel>
-        <Input placeholder="0" />
-        <FieldError>{errors?.balance?.[0]}</FieldError>
-      </TextField>
+        error={errors?.balance?.[0]}
+      />
 
       <div className="grid gap-4 md:grid-cols-2">
         <DatePickerField
@@ -151,23 +136,20 @@ function AdjustBalanceForm({
         />
       </div>
 
-      <TextField
+      <TextInputField
         name="note"
+        label="Nota (opcional)"
+        help="common.note"
         maxLength={120}
+        placeholder="Extracto de octubre"
         defaultValue={values?.note ?? ""}
-        isInvalid={Boolean(errors?.note)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="common.note">Nota (opcional)</FieldLabel>
-        <Input placeholder="Extracto de octubre" />
-        <FieldError>{errors?.note?.[0]}</FieldError>
-      </TextField>
+        error={errors?.note?.[0]}
+      />
 
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error}
         </p>
@@ -175,14 +157,15 @@ function AdjustBalanceForm({
 
       <div className="flex justify-end gap-2">
         <Button
+          type="button"
           variant="ghost"
-          onPress={onCancel}
+          onClick={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          isDisabled={pending}
+          disabled={pending}
         >
           {pending ? "Guardando..." : "Actualizar"}
         </Button>

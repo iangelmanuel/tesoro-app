@@ -171,9 +171,6 @@ export function TransactionDialog({
       trigger={trigger}
       open={controlledOpen}
       onOpenChange={onOpenChange}
-      // Los tabs Deuda, Me deben, Meta y Gasto fijo, y el select de ingreso
-      // fijo, siguen en HeroUI hasta SPEC 52b
-      hostsHeroUI
       // Con 7 tabs el diálogo se ensancha un poco para que quepan
       className={showPaymentTabs ? "sm:max-w-lg" : undefined}
       title={

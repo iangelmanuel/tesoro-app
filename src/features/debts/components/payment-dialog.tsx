@@ -1,28 +1,26 @@
 "use client"
 
-import { useActionState, useState } from "react"
-import {
-  Button,
-  Checkbox,
-  FieldError,
-  Input,
-  ListBox,
-  Modal,
-  Select,
-  Tabs,
-  TextField,
-  toast
-} from "@heroui/react"
+import { useActionState, useId, useState } from "react"
 import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
+import { amountInput } from "@/components/forms/amount-format"
 import { DatePickerField } from "@/components/forms/date-picker-field"
-import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
+import { FieldHelp } from "@/components/forms/field-label"
+import { FormDialog } from "@/components/forms/form-dialog"
+import { SegmentedField } from "@/components/forms/segmented-field"
+import { SelectField } from "@/components/forms/select-field"
+import { TextInputField } from "@/components/forms/text-input-field"
 import { TimePickerField } from "@/components/forms/time-picker-field"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { toast } from "@/components/ui/sonner"
 import { activeAccountId } from "@/features/accounts/active-account"
 import {
   type PaymentAccountOption,
   PaymentAccountSection,
   parsePaymentAmount
 } from "@/features/accounts/components/payment-account-section"
+import { cn } from "@/libs/cn"
 import { todayISO } from "@/libs/dates"
 import { recordAdvance, recordDebtCharge, recordPayment } from "../actions"
 import {
@@ -35,7 +33,6 @@ import { MAX_INSTALLMENTS } from "../installments"
 import type { DebtPaymentDescriptions } from "../payment-description"
 import type { Debt } from "../queries"
 import type { PaymentFormState } from "../types"
-import { amountInput } from "./field"
 
 type PaymentDebt = Pick<Debt, "id" | "kind"> & {
   /** Cuenta por defecto (SPEC 41): se prellena al registrar si sigue activa */
@@ -90,7 +87,7 @@ interface PaymentDialogProps {
   /** Prellenado del movimiento nuevo; solo con `debt` fija */
   initialValues?: PaymentInitialValues
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
@@ -111,9 +108,6 @@ export function PaymentDialog({
   open: controlledOpen,
   onOpenChange
 }: PaymentDialogProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
-  const open = controlledOpen ?? uncontrolledOpen
-  const setOpen = onOpenChange ?? setUncontrolledOpen
   // Sin deuda fija arranca con la primera de la lista
   const [selectedDebtId, setSelectedDebtId] = useState(
     () => debts?.[0]?.id ?? ""
@@ -123,53 +117,42 @@ export function PaymentDialog({
   const kind = debt?.kind ?? "loan"
 
   return (
-    <Modal
-      isOpen={open}
-      onOpenChange={setOpen}
+    <FormDialog
+      trigger={trigger}
+      open={controlledOpen}
+      onOpenChange={onOpenChange}
+      className="sm:max-w-md"
+      title={kind === "receivable" ? "Registrar abono" : "Registrar movimiento"}
+      description={
+        kind === "receivable"
+          ? "Lo que te pagaron de esta cuenta por cobrar."
+          : "Un pago, abono, compra, cargo o ajuste de esta deuda."
+      }
     >
-      {trigger}
-      <Modal.Backdrop>
-        <Modal.Container scroll="outside">
-          <Modal.Dialog className="sm:max-w-md">
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>
-                {kind === "receivable"
-                  ? "Registrar abono"
-                  : "Registrar movimiento"}
-              </Modal.Heading>
-              <p className="text-sm text-muted">
-                {kind === "receivable"
-                  ? "Lo que te pagaron de esta cuenta por cobrar."
-                  : "Un pago, abono, compra, cargo o ajuste de esta deuda."}
-              </p>
-            </Modal.Header>
-            <Modal.Body>
-              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-              {!fixedDebt && debts && (
-                <DebtSelect
-                  debts={debts}
-                  value={selectedDebtId}
-                  onChange={setSelectedDebtId}
-                />
-              )}
-              {debt && (
-                <PaymentForm
-                  // Cambiar de deuda reinicia el formulario (tipo y textos)
-                  key={debt.id}
-                  workspaceId={workspaceId}
-                  debt={debt}
-                  accounts={accounts}
-                  initialValues={fixedDebt ? initialValues : undefined}
-                  onSaved={() => setOpen(false)}
-                  onCancel={() => setOpen(false)}
-                />
-              )}
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+      {(close) => (
+        <div className="flex flex-col gap-4">
+          {!fixedDebt && debts && (
+            <DebtSelect
+              debts={debts}
+              value={selectedDebtId}
+              onChange={setSelectedDebtId}
+            />
+          )}
+          {debt && (
+            <PaymentForm
+              // Cambiar de deuda reinicia el formulario (tipo y textos)
+              key={debt.id}
+              workspaceId={workspaceId}
+              debt={debt}
+              accounts={accounts}
+              initialValues={fixedDebt ? initialValues : undefined}
+              onSaved={close}
+              onCancel={close}
+            />
+          )}
+        </div>
+      )}
+    </FormDialog>
   )
 }
 
@@ -183,7 +166,7 @@ interface DebtPaymentPanelProps {
 }
 
 /**
- * Elegir deuda + formulario de pago, sin el Modal: tab "Pago de deuda" del
+ * Elegir deuda + formulario de pago, sin el diálogo: tab "Pago de deuda" del
  * diálogo de movimiento. Mismo resultado que PaymentDialog desde "Más"
  */
 export function DebtPaymentPanel({
@@ -198,7 +181,7 @@ export function DebtPaymentPanel({
   const debt = debts.find((option) => option.id === selectedDebtId)
 
   return (
-    <div>
+    <div className="flex flex-col gap-4">
       <DebtSelect
         debts={debts}
         value={selectedDebtId}
@@ -229,33 +212,16 @@ function DebtSelect({
   onChange: (value: string) => void
 }) {
   return (
-    <Select
-      fullWidth
-      placeholder="Elige una deuda"
-      value={value || null}
-      onChange={(key) => onChange(key == null ? "" : String(key))}
-      className="mb-4 flex flex-col gap-2"
-    >
-      <FieldLabel help="debtEntry.debt">Deuda</FieldLabel>
-      <Select.Trigger>
-        <Select.Value />
-        <Select.Indicator />
-      </Select.Trigger>
-      <Select.Popover>
-        <ListBox>
-          {debts.map((option) => (
-            <ListBox.Item
-              key={option.id}
-              id={option.id}
-              textValue={option.name}
-            >
-              {option.name}
-              <ListBox.ItemIndicator />
-            </ListBox.Item>
-          ))}
-        </ListBox>
-      </Select.Popover>
-    </Select>
+    <SelectField
+      label="Deuda"
+      help="debtEntry.debt"
+      value={value}
+      onChange={onChange}
+      options={debts.map((option) => ({
+        value: option.id,
+        label: option.name
+      }))}
+    />
   )
 }
 
@@ -271,6 +237,11 @@ interface PaymentFormProps {
 // Un abono baja el saldo, pero el mínimo o la cuota del mes sigue pendiente
 const EXTRA_EFFECT =
   "No cubre el pago del mes: el próximo pago sigue pendiente."
+
+const DIRECTION_OPTIONS = [
+  { value: "up", label: "Sube" },
+  { value: "down", label: "Baja" }
+] as const satisfies readonly { value: AdjustmentDirection; label: string }[]
 
 const TOASTS: Record<PaymentMode, string> = {
   payment: "Pago registrado",
@@ -330,6 +301,7 @@ function PaymentForm({
   const [occurredOn, setOccurredOn] = useState(() => todayISO())
   const [time, setTime] = useState("")
   const [direction, setDirection] = useState<AdjustmentDirection>("up")
+  const createTransactionId = useId()
 
   const [state, formAction, pending] = useActionState<
     PaymentFormState,
@@ -446,43 +418,17 @@ function PaymentForm({
       />
 
       {types.length > 1 && (
-        <Select
-          fullWidth
+        <SelectField
+          label="Tipo"
+          help="debtEntry.type"
           value={mode}
-          onChange={(key) => {
-            if (key == null) return
-            changeMode(key as PaymentMode)
-          }}
-          isInvalid={Boolean(errors?.type)}
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="debtEntry.type">Tipo</FieldLabel>
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              {types.map((option) => {
-                const info = entryTypeInfo(option, debt.kind)
-                return (
-                  <ListBox.Item
-                    key={option}
-                    id={option}
-                    textValue={info.label}
-                  >
-                    <span className="flex flex-col py-0.5">
-                      <span className="text-sm font-medium">{info.label}</span>
-                      <span className="text-xs text-muted">{info.hint}</span>
-                    </span>
-                    <ListBox.ItemIndicator />
-                  </ListBox.Item>
-                )
-              })}
-            </ListBox>
-          </Select.Popover>
-          <FieldError>{errors?.type?.[0]}</FieldError>
-        </Select>
+          onChange={changeMode}
+          options={types.map((option) => {
+            const info = entryTypeInfo(option, debt.kind)
+            return { value: option, label: info.label, description: info.hint }
+          })}
+          error={errors?.type?.[0]}
+        />
       )}
 
       {isPayment && !isReceivable && (
@@ -494,56 +440,28 @@ function PaymentForm({
       )}
 
       {mode === "adjustment" && (
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-0.5">
-            <p className="text-sm font-medium">El ajuste</p>
-            <FieldHelp
-              help="debtEntry.direction"
-              label="El ajuste"
-            />
-          </div>
-          <Tabs
-            selectedKey={direction}
-            onSelectionChange={(key) =>
-              setDirection(key as AdjustmentDirection)
-            }
-          >
-            <Tabs.ListContainer>
-              <Tabs.List aria-label="El ajuste sube o baja el saldo">
-                <Tabs.Tab id="up">
-                  Sube
-                  <Tabs.Indicator />
-                </Tabs.Tab>
-                <Tabs.Tab id="down">
-                  Baja
-                  <Tabs.Indicator />
-                </Tabs.Tab>
-              </Tabs.List>
-            </Tabs.ListContainer>
-          </Tabs>
-          <input
-            type="hidden"
-            name="direction"
-            value={direction}
-          />
-        </div>
+        <SegmentedField
+          name="direction"
+          label="El ajuste"
+          help="debtEntry.direction"
+          value={direction}
+          onChange={setDirection}
+          options={DIRECTION_OPTIONS}
+        />
       )}
 
-      <TextField
+      <TextInputField
         name="amount"
+        label="Monto"
+        help="common.amount"
         inputMode="decimal"
         autoComplete="off"
+        placeholder="0"
         value={amountText}
-        onChange={setAmountText}
+        onChange={(event) => setAmountText(event.target.value)}
         isRequired
-        isInvalid={Boolean(errors?.amount)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="common.amount">Monto</FieldLabel>
-        <Input placeholder="0" />
-        <FieldError>{errors?.amount?.[0]}</FieldError>
-      </TextField>
+        error={errors?.amount?.[0]}
+      />
 
       <div className="grid gap-4 md:grid-cols-2">
         <DatePickerField
@@ -567,60 +485,50 @@ function PaymentForm({
       </div>
 
       {isCharge && (
-        <TextField
+        <TextInputField
           name="installments"
+          label="Cuotas (opcional)"
+          help="debtEntry.installments"
           inputMode="numeric"
           autoComplete="off"
           maxLength={2}
+          placeholder={`1 a ${MAX_INSTALLMENTS}`}
           defaultValue={
             values?.installments ??
             (initialValues?.installments
               ? String(initialValues.installments)
               : "")
           }
-          isInvalid={Boolean(errors?.installments)}
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="debtEntry.installments">
-            Cuotas (opcional)
-          </FieldLabel>
-          <Input placeholder={`1 a ${MAX_INSTALLMENTS}`} />
-          <FieldError>{errors?.installments?.[0]}</FieldError>
-        </TextField>
+          error={errors?.installments?.[0]}
+        />
       )}
 
-      <TextField
+      <TextInputField
         name="note"
+        label="Nota (opcional)"
+        help="common.note"
         maxLength={120}
+        placeholder={notePlaceholder(mode, isReceivable)}
         value={note}
-        onChange={setNote}
-        isInvalid={Boolean(errors?.note)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="common.note">Nota (opcional)</FieldLabel>
-        <Input placeholder={notePlaceholder(mode, isReceivable)} />
-        <FieldError>{errors?.note?.[0]}</FieldError>
-      </TextField>
+        onChange={(event) => setNote(event.target.value)}
+        error={errors?.note?.[0]}
+      />
 
       {!isCard && isPayment && (
-        <div className="flex items-center gap-0.5">
+        <div className="flex min-h-11 items-center gap-0.5">
           <Checkbox
+            id={createTransactionId}
             name="create_transaction"
             value="on"
-            isSelected={createTransaction}
-            onChange={setCreateTransaction}
+            checked={createTransaction}
+            onCheckedChange={setCreateTransaction}
+          />
+          <Label
+            htmlFor={createTransactionId}
+            className="min-h-11 pl-3 font-normal"
           >
-            <Checkbox.Control>
-              <Checkbox.Indicator />
-            </Checkbox.Control>
-            <Checkbox.Content className="text-sm">
-              {isReceivable
-                ? "Registrar como entrada"
-                : "Registrar como salida"}
-            </Checkbox.Content>
-          </Checkbox>
+            {isReceivable ? "Registrar como entrada" : "Registrar como salida"}
+          </Label>
           <FieldHelp
             help="debtEntry.createTransaction"
             label="Registrar el movimiento"
@@ -630,19 +538,16 @@ function PaymentForm({
 
       {/* Solo con movimiento: una tarjeta no crea uno */}
       {!isCard && isPayment && createTransaction && (
-        <TextField
+        <TextInputField
           name="description"
+          label="Descripción"
+          help="common.description"
           maxLength={120}
+          placeholder={isReceivable ? "Cobro" : "Pago de la cuota"}
           value={description}
-          onChange={setDescription}
-          isInvalid={Boolean(errors?.description)}
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="common.description">Descripción</FieldLabel>
-          <Input placeholder={isReceivable ? "Cobro" : "Pago de la cuota"} />
-          <FieldError>{errors?.description?.[0]}</FieldError>
-        </TextField>
+          onChange={(event) => setDescription(event.target.value)}
+          error={errors?.description?.[0]}
+        />
       )}
 
       {/* En préstamos y cuentas por cobrar la cuenta es la del movimiento: sin
@@ -673,7 +578,7 @@ function PaymentForm({
       {mode === "payment" && !isReceivable && debt.cycleCovered && (
         <p
           role="status"
-          className={`rounded-lg p-3 text-sm ${TONE_BADGE_CLASSES.warning}`}
+          className={cn("rounded-2xl p-3 text-sm", TONE_BADGE_CLASSES.warning)}
         >
           La cuota de este ciclo ya está cubierta. Puedes registrar el pago
           igual o cambiar el tipo a Abono.
@@ -681,15 +586,15 @@ function PaymentForm({
       )}
 
       {isCard ? (
-        <p className="rounded-lg bg-default p-3 text-sm text-muted">
+        <p className="rounded-2xl bg-subtle p-3 text-sm text-muted-foreground">
           {cardEffect(mode, accountName)}
         </p>
       ) : isExtra ? (
-        <p className="rounded-lg bg-default p-3 text-sm text-muted">
+        <p className="rounded-2xl bg-subtle p-3 text-sm text-muted-foreground">
           Baja el saldo de la deuda. {EXTRA_EFFECT}
         </p>
       ) : mode === "adjustment" ? (
-        <p className="rounded-lg bg-default p-3 text-sm text-muted">
+        <p className="rounded-2xl bg-subtle p-3 text-sm text-muted-foreground">
           Corrige el saldo de la deuda. No toca tus cuentas ni crea movimiento.
         </p>
       ) : null}
@@ -697,7 +602,7 @@ function PaymentForm({
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error}
         </p>
@@ -705,14 +610,15 @@ function PaymentForm({
 
       <div className="flex justify-end gap-2">
         <Button
+          type="button"
           variant="ghost"
-          onPress={onCancel}
+          onClick={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          isDisabled={pending}
+          disabled={pending}
         >
           {pending ? "Guardando..." : "Registrar"}
         </Button>

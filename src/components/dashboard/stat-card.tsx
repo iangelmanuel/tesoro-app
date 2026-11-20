@@ -23,6 +23,10 @@ interface StatCardProps {
   help?: HelpKey
   /** Texto corto bajo el valor, por ejemplo el alcance de los filtros */
   caption?: string
+  /** Chip junto a la cifra (p. ej. el nivel de utilización) */
+  badge?: React.ReactNode
+  /** Color de la cifra según su estado (`TONE_TEXT_CLASSES`) */
+  valueClassName?: string
   size?: "default" | "sm"
   className?: string
 }
@@ -96,6 +100,8 @@ export function StatCard({
   currency = "COP",
   help,
   caption,
+  badge,
+  valueClassName,
   size = "default",
   className
 }: StatCardProps) {
@@ -125,7 +131,8 @@ export function StatCard({
           <span
             className={cn(
               "font-bold tracking-[-0.01em] tabular-nums",
-              size === "sm" ? "text-xl" : "text-2xl sm:text-3xl"
+              size === "sm" ? "text-xl" : "text-2xl sm:text-3xl",
+              valueClassName
             )}
           >
             {value === null ? (
@@ -139,6 +146,7 @@ export function StatCard({
               formatValue(value, format)
             )}
           </span>
+          {badge}
           {rounded !== null && rounded !== 0 && (
             <span
               className={cn(

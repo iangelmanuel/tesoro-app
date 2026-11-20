@@ -1,7 +1,7 @@
 "use client"
 
 import { useTransition } from "react"
-import { toast } from "@heroui/react"
+import { toast } from "@/components/ui/sonner"
 import { deleteRecurringExpense, toggleRecurringExpense } from "../actions"
 import type { RecurringExpense } from "../queries"
 
@@ -21,7 +21,7 @@ export function useRecurringExpenseActions(
         !expense.is_active
       )
       if (result.error) {
-        toast.danger(result.error)
+        toast.error(result.error)
       } else {
         toast.success(
           expense.is_active ? "Gasto fijo pausado" : "Gasto fijo reanudado"
@@ -34,7 +34,7 @@ export function useRecurringExpenseActions(
     startTransition(async () => {
       const result = await deleteRecurringExpense(expense.id)
       if (result.error) {
-        toast.danger(result.error)
+        toast.error(result.error)
       } else {
         toast.success("Gasto fijo eliminado")
         onDeleted?.()

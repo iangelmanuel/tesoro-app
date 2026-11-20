@@ -1,6 +1,17 @@
 "use client"
 
-import { AlertDialog, Button } from "@heroui/react"
+import { Archive } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog"
 
 interface ArchiveDebtDialogProps {
   name: string
@@ -9,7 +20,10 @@ interface ArchiveDebtDialogProps {
   onConfirm: () => void
 }
 
-/** Confirmación al archivar una deuda que todavía tiene saldo */
+/**
+ * Confirmación al archivar una deuda que todavía tiene saldo. Cancelar es la
+ * acción segura y va primero; Escape también cancela
+ */
 export function ArchiveDebtDialog({
   name,
   open,
@@ -18,40 +32,32 @@ export function ArchiveDebtDialog({
 }: ArchiveDebtDialogProps) {
   return (
     <AlertDialog
-      isOpen={open}
+      open={open}
       onOpenChange={onOpenChange}
     >
-      <AlertDialog.Backdrop isKeyboardDismissDisabled={false}>
-        <AlertDialog.Container>
-          <AlertDialog.Dialog className="sm:max-w-md">
-            <AlertDialog.Header>
-              <AlertDialog.Heading>
-                ¿Archivar &quot;{name}&quot;?
-              </AlertDialog.Heading>
-              <AlertDialog.Body>
-                <p className="text-sm text-muted">
-                  Esta deuda tiene saldo. Al archivarla sale de los totales y de
-                  los próximos pagos.
-                </p>
-              </AlertDialog.Body>
-            </AlertDialog.Header>
-            <AlertDialog.Footer>
-              <Button
-                slot="close"
-                variant="tertiary"
-              >
-                Cancelar
-              </Button>
-              <Button
-                slot="close"
-                onPress={onConfirm}
-              >
-                Archivar
-              </Button>
-            </AlertDialog.Footer>
-          </AlertDialog.Dialog>
-        </AlertDialog.Container>
-      </AlertDialog.Backdrop>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogMedia className="bg-warning-soft text-warning-soft-foreground">
+            <Archive />
+          </AlertDialogMedia>
+          <AlertDialogTitle>¿Archivar &quot;{name}&quot;?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Esta deuda tiene saldo. Al archivarla sale de los totales y de los
+            próximos pagos.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              onConfirm()
+              onOpenChange(false)
+            }}
+          >
+            Archivar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
     </AlertDialog>
   )
 }

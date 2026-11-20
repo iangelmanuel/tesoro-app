@@ -18,12 +18,15 @@ export function DebtProgress({ debt }: { debt: Debt }) {
     return (
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-3">
-          <UtilizationBar percent={percent} />
+          <UtilizationBar
+            percent={percent}
+            label={`Utilización del cupo: ${formatPercent(percent)}`}
+          />
           <span className="text-sm font-medium tabular-nums">
             {formatPercent(percent)}
           </span>
         </div>
-        <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
+        <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           Utilización del cupo
           <UtilizationBadge percent={percent} />
         </p>
@@ -39,12 +42,15 @@ export function DebtProgress({ debt }: { debt: Debt }) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-3">
-        <DebtBar percent={percent} />
+        <DebtBar
+          percent={percent}
+          label={`Pagado del monto original: ${formatPercent(percent)}`}
+        />
         <span className="text-sm font-medium tabular-nums">
           {formatPercent(percent)}
         </span>
       </div>
-      <p className="text-sm text-muted">Pagado del monto original</p>
+      <p className="text-sm text-muted-foreground">Pagado del monto original</p>
     </div>
   )
 }
@@ -59,12 +65,13 @@ export function ReceivableProgress({ debt }: { debt: Debt }) {
         <DebtBar
           percent={percent}
           tone="success"
+          label={`Cobrado: ${formatPercent(percent)}`}
         />
         <span className="text-sm font-medium tabular-nums">
           {formatPercent(percent)}
         </span>
       </div>
-      <p className="text-sm text-muted">Cobrado</p>
+      <p className="text-sm text-muted-foreground">Cobrado</p>
     </div>
   )
 }

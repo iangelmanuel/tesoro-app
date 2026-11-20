@@ -1,33 +1,31 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import {
-  Button,
-  FieldError,
-  Input,
-  Modal,
-  TextField,
-  toast
-} from "@heroui/react"
-import { parseDate } from "@internationalized/date"
 import { X } from "lucide-react"
+import { amountInput } from "@/components/forms/amount-format"
 import { DatePickerField } from "@/components/forms/date-picker-field"
-import { FieldLabel } from "@/components/forms/field-label"
+import { FormDialog } from "@/components/forms/form-dialog"
+import { TextInputField } from "@/components/forms/text-input-field"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/sonner"
 import { IconColorPicker } from "@/features/categories/components/icon-color-picker"
-import { todayISO } from "@/libs/dates"
+import { fromLocalDate, toLocalDate, todayISO } from "@/libs/dates"
 import { createGoal, updateGoal } from "../actions"
 import type { Goal } from "../queries"
 import type { GoalFormState } from "../types"
 
-const AMOUNT_FORMAT = new Intl.NumberFormat("es-CO", {
-  maximumFractionDigits: 2
-})
+/** Mañana en YYYY-MM-DD: la fecha objetivo va después de hoy */
+function tomorrowISO() {
+  const date = toLocalDate(todayISO())
+  date.setDate(date.getDate() + 1)
+  return fromLocalDate(date)
+}
 
 interface GoalDialogProps {
   /** Si llega, el diálogo edita esta meta */
   goal?: Goal
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
@@ -38,43 +36,29 @@ export function GoalDialog({
   open: controlledOpen,
   onOpenChange
 }: GoalDialogProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
-  const open = controlledOpen ?? uncontrolledOpen
-  const setOpen = onOpenChange ?? setUncontrolledOpen
   const isEditing = goal !== undefined
 
   return (
-    <Modal
-      isOpen={open}
-      onOpenChange={setOpen}
+    <FormDialog
+      trigger={trigger}
+      open={controlledOpen}
+      onOpenChange={onOpenChange}
+      className="sm:max-w-md"
+      title={isEditing ? "Editar meta" : "Nueva meta"}
+      description={
+        isEditing
+          ? "Cambia los datos de la meta. Sus aportes no cambian."
+          : "Algo para lo que quieres ahorrar, como un viaje o un fondo de emergencia."
+      }
     >
-      {trigger}
-      <Modal.Backdrop>
-        <Modal.Container scroll="outside">
-          <Modal.Dialog className="sm:max-w-md">
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>
-                {isEditing ? "Editar meta" : "Nueva meta"}
-              </Modal.Heading>
-              <p className="text-sm text-muted">
-                {isEditing
-                  ? "Cambia los datos de la meta. Sus aportes no cambian."
-                  : "Algo para lo que quieres ahorrar, como un viaje o un fondo de emergencia."}
-              </p>
-            </Modal.Header>
-            <Modal.Body>
-              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-              <GoalForm
-                goal={goal}
-                onSaved={() => setOpen(false)}
-                onCancel={() => setOpen(false)}
-              />
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+      {(close) => (
+        <GoalForm
+          goal={goal}
+          onSaved={close}
+          onCancel={close}
+        />
+      )}
+    </FormDialog>
   )
 }
 
@@ -120,38 +104,31 @@ function GoalForm({ goal, onSaved, onCancel }: GoalFormProps) {
         />
       )}
 
-      <TextField
+      <TextInputField
         name="name"
+        label="Nombre"
+        help="goal.name"
         maxLength={60}
+        placeholder="Viaje"
         defaultValue={values?.name ?? goal?.name}
         isRequired
-        isInvalid={Boolean(errors?.name)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="goal.name">Nombre</FieldLabel>
-        <Input placeholder="Viaje" />
-        <FieldError>{errors?.name?.[0]}</FieldError>
-      </TextField>
+        error={errors?.name?.[0]}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
+        <TextInputField
           name="target_amount"
+          label="Monto objetivo"
+          help="goal.target"
           inputMode="decimal"
           autoComplete="off"
+          placeholder="0"
           defaultValue={
-            values?.target_amount ??
-            (goal ? AMOUNT_FORMAT.format(goal.target_amount) : "")
+            values?.target_amount ?? amountInput(goal?.target_amount)
           }
           isRequired
-          isInvalid={Boolean(errors?.target_amount)}
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="goal.target">Monto objetivo</FieldLabel>
-          <Input placeholder="0" />
-          <FieldError>{errors?.target_amount?.[0]}</FieldError>
-        </TextField>
+          error={errors?.target_amount?.[0]}
+        />
 
         {/* Solo deja elegir fechas posteriores a hoy */}
         <div className="flex items-end gap-1">
@@ -162,15 +139,16 @@ function GoalForm({ goal, onSaved, onCancel }: GoalFormProps) {
             value={targetDate}
             onChange={setTargetDate}
             error={errors?.target_date?.[0]}
-            minValue={parseDate(todayISO()).add({ days: 1 }).toString()}
+            minValue={tomorrowISO()}
             className="flex flex-1 flex-col gap-2"
           />
           {targetDate && (
             <Button
+              type="button"
               variant="ghost"
-              isIconOnly
+              size="icon"
               aria-label="Quitar fecha objetivo"
-              onPress={() => setTargetDate("")}
+              onClick={() => setTargetDate("")}
             >
               <X />
             </Button>
@@ -188,7 +166,7 @@ function GoalForm({ goal, onSaved, onCancel }: GoalFormProps) {
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error}
         </p>
@@ -196,14 +174,15 @@ function GoalForm({ goal, onSaved, onCancel }: GoalFormProps) {
 
       <div className="flex justify-end gap-2">
         <Button
+          type="button"
           variant="ghost"
-          onPress={onCancel}
+          onClick={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          isDisabled={pending}
+          disabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear"}
         </Button>

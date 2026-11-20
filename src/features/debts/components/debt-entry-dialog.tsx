@@ -1,33 +1,29 @@
 "use client"
 
-import { useActionState, useEffect, useState } from "react"
-import {
-  Button,
-  Checkbox,
-  Description,
-  FieldError,
-  Input,
-  ListBox,
-  Modal,
-  Select,
-  Skeleton,
-  Tabs,
-  TextField,
-  cn,
-  toast
-} from "@heroui/react"
+import { useActionState, useEffect, useId, useState } from "react"
+import { Amount } from "@/components/dashboard/amount"
 import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
 import { AccountSelectField } from "@/components/forms/account-select-field"
+import { amountInput } from "@/components/forms/amount-format"
 import { CategorySelectField } from "@/components/forms/category-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
-import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
+import { FieldHelp } from "@/components/forms/field-label"
+import { FormDialog } from "@/components/forms/form-dialog"
+import { SegmentedField } from "@/components/forms/segmented-field"
+import { SelectField } from "@/components/forms/select-field"
+import { TextInputField } from "@/components/forms/text-input-field"
 import { TimePickerField } from "@/components/forms/time-picker-field"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
+import { toast } from "@/components/ui/sonner"
 import { selectableAccounts } from "@/features/accounts/components/account-select"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { parseAmount } from "@/features/transactions/schemas"
+import { cn } from "@/libs/cn"
 import { todayISO } from "@/libs/dates"
-import { formatCurrency } from "@/libs/format"
 import {
   type EntryEditorDebt,
   loadDebtEntryEditor,
@@ -45,8 +41,12 @@ import {
 import { MAX_INSTALLMENTS } from "../installments"
 import type { DebtEntry, LinkableTransaction } from "../queries"
 import type { PaymentFormState } from "../types"
-import { amountInput } from "./field"
 import { LinkableTransactionsField } from "./linkable-transactions-field"
+
+const DIRECTION_OPTIONS = [
+  { value: "up", label: "Sube" },
+  { value: "down", label: "Baja" }
+] as const satisfies readonly { value: AdjustmentDirection; label: string }[]
 
 /** Movimiento y deuda que edita el diálogo */
 export interface DebtEntryEditorData {
@@ -107,57 +107,48 @@ export function DebtEntryDialog({
   }, [open, initial, entryId])
 
   return (
-    <Modal
-      isOpen={open}
+    <FormDialog
+      open={open}
       onOpenChange={onOpenChange}
+      className="sm:max-w-md"
+      title="Editar movimiento"
+      description={
+        data
+          ? `${data.debt.name}. Cambia cualquier dato, también el tipo: se guarda como si lo registraras de nuevo.`
+          : "Cargando el movimiento..."
+      }
     >
-      <Modal.Backdrop>
-        <Modal.Container scroll="outside">
-          <Modal.Dialog className="sm:max-w-md">
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>Editar movimiento</Modal.Heading>
-              <p className="text-sm text-muted">
-                {data
-                  ? `${data.debt.name}. Cambia cualquier dato, también el tipo: se guarda como si lo registraras de nuevo.`
-                  : "Cargando el movimiento..."}
-              </p>
-            </Modal.Header>
-            <Modal.Body>
-              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-              {data ? (
-                <DebtEntryForm
-                  workspaceId={workspaceId}
-                  data={data}
-                  accounts={accounts}
-                  categories={categories}
-                  currency={currency}
-                  onSaved={() => onOpenChange(false)}
-                  onCancel={() => onOpenChange(false)}
-                />
-              ) : loadError ? (
-                <p
-                  role="alert"
-                  className="text-sm text-danger"
-                >
-                  {loadError}
-                </p>
-              ) : (
-                <div
-                  role="status"
-                  aria-label="Cargando el movimiento"
-                  className="flex flex-col gap-4"
-                >
-                  <Skeleton className="h-11 rounded-full" />
-                  <Skeleton className="h-11 rounded-full" />
-                  <Skeleton className="h-11 rounded-full" />
-                </div>
-              )}
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+      {(close) =>
+        data ? (
+          <DebtEntryForm
+            workspaceId={workspaceId}
+            data={data}
+            accounts={accounts}
+            categories={categories}
+            currency={currency}
+            onSaved={close}
+            onCancel={close}
+          />
+        ) : loadError ? (
+          <p
+            role="alert"
+            className="text-sm text-destructive"
+          >
+            {loadError}
+          </p>
+        ) : (
+          <div
+            role="status"
+            aria-label="Cargando el movimiento"
+            className="flex flex-col gap-4"
+          >
+            <Skeleton className="h-11 rounded-4xl" />
+            <Skeleton className="h-11 rounded-4xl" />
+            <Skeleton className="h-11 rounded-4xl" />
+          </div>
+        )
+      }
+    </FormDialog>
   )
 }
 
@@ -220,6 +211,7 @@ function DebtEntryForm({
     entry.installments ? String(entry.installments) : ""
   )
   const [linkId, setLinkId] = useState("")
+  const createTransactionId = useId()
 
   const kind = entryKindOf(type)
   const isPayment = kind === "payment"
@@ -296,44 +288,20 @@ function DebtEntryForm({
       />
 
       {types.length > 1 ? (
-        <Select
-          fullWidth
+        <SelectField
+          label="Tipo"
+          help="debtEntry.type"
           value={type}
-          onChange={(key) => {
-            if (key == null) return
-            setType(key as EntryType)
+          onChange={(next) => {
+            setType(next)
             setLinkId("")
           }}
-          isInvalid={Boolean(errors?.type)}
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="debtEntry.type">Tipo</FieldLabel>
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              {types.map((option) => {
-                const info = entryTypeInfo(option, debt.kind)
-                return (
-                  <ListBox.Item
-                    key={option}
-                    id={option}
-                    textValue={info.label}
-                  >
-                    <span className="flex flex-col py-0.5">
-                      <span className="text-sm font-medium">{info.label}</span>
-                      <span className="text-xs text-muted">{info.hint}</span>
-                    </span>
-                    <ListBox.ItemIndicator />
-                  </ListBox.Item>
-                )
-              })}
-            </ListBox>
-          </Select.Popover>
-          <FieldError>{errors?.type?.[0]}</FieldError>
-        </Select>
+          options={types.map((option) => {
+            const info = entryTypeInfo(option, debt.kind)
+            return { value: option, label: info.label, description: info.hint }
+          })}
+          error={errors?.type?.[0]}
+        />
       ) : null}
       <input
         type="hidden"
@@ -342,56 +310,28 @@ function DebtEntryForm({
       />
 
       {type === "adjustment" && (
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-0.5">
-            <p className="text-sm font-medium">El ajuste</p>
-            <FieldHelp
-              help="debtEntry.direction"
-              label="El ajuste"
-            />
-          </div>
-          <Tabs
-            selectedKey={direction}
-            onSelectionChange={(key) =>
-              setDirection(key as AdjustmentDirection)
-            }
-          >
-            <Tabs.ListContainer>
-              <Tabs.List aria-label="El ajuste sube o baja el saldo">
-                <Tabs.Tab id="up">
-                  Sube
-                  <Tabs.Indicator />
-                </Tabs.Tab>
-                <Tabs.Tab id="down">
-                  Baja
-                  <Tabs.Indicator />
-                </Tabs.Tab>
-              </Tabs.List>
-            </Tabs.ListContainer>
-          </Tabs>
-          <input
-            type="hidden"
-            name="direction"
-            value={direction}
-          />
-        </div>
+        <SegmentedField
+          name="direction"
+          label="El ajuste"
+          help="debtEntry.direction"
+          value={direction}
+          onChange={setDirection}
+          options={DIRECTION_OPTIONS}
+        />
       )}
 
-      <TextField
+      <TextInputField
         name="amount"
+        label="Monto"
+        help="common.amount"
         inputMode="decimal"
         autoComplete="off"
+        placeholder="0"
         value={amountText}
-        onChange={setAmountText}
+        onChange={(event) => setAmountText(event.target.value)}
         isRequired
-        isInvalid={Boolean(errors?.amount)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="common.amount">Monto</FieldLabel>
-        <Input placeholder="0" />
-        <FieldError>{errors?.amount?.[0]}</FieldError>
-      </TextField>
+        error={errors?.amount?.[0]}
+      />
 
       <div className="grid gap-4 md:grid-cols-2">
         <DatePickerField
@@ -415,45 +355,36 @@ function DebtEntryForm({
       </div>
 
       {(type === "purchase" || type === "advance") && (
-        <TextField
+        <TextInputField
           name="installments"
+          label="Cuotas (opcional)"
+          help="debtEntry.installments"
           inputMode="numeric"
           autoComplete="off"
           maxLength={2}
+          placeholder={`1 a ${MAX_INSTALLMENTS}`}
           value={installments}
-          onChange={setInstallments}
-          isInvalid={Boolean(errors?.installments)}
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="debtEntry.installments">
-            Cuotas (opcional)
-          </FieldLabel>
-          <Input placeholder={`1 a ${MAX_INSTALLMENTS}`} />
-          <Description>
-            Cada cuota suma al pago del mes de la tarjeta.
-          </Description>
-          <FieldError>{errors?.installments?.[0]}</FieldError>
-        </TextField>
+          onChange={(event) => setInstallments(event.target.value)}
+          description="Cada cuota suma al pago del mes de la tarjeta."
+          error={errors?.installments?.[0]}
+        />
       )}
 
       {canCreateTransaction && (
-        <div className="flex items-center gap-0.5">
+        <div className="flex min-h-11 items-center gap-0.5">
           <Checkbox
+            id={createTransactionId}
             name="create_transaction"
             value="on"
-            isSelected={createTransaction}
-            onChange={setCreateTransaction}
+            checked={createTransaction}
+            onCheckedChange={setCreateTransaction}
+          />
+          <Label
+            htmlFor={createTransactionId}
+            className="min-h-11 pl-3 font-normal"
           >
-            <Checkbox.Control>
-              <Checkbox.Indicator />
-            </Checkbox.Control>
-            <Checkbox.Content className="text-sm">
-              {isReceivable
-                ? "Registrar como entrada"
-                : "Registrar como salida"}
-            </Checkbox.Content>
-          </Checkbox>
+            {isReceivable ? "Registrar como entrada" : "Registrar como salida"}
+          </Label>
           <FieldHelp
             help="debtEntry.createTransaction"
             label="Registrar el movimiento"
@@ -500,29 +431,22 @@ function DebtEntryForm({
 
       {showMovementFields && (
         <>
-          <TextField
+          <TextInputField
             name="description"
+            label="Descripción (opcional)"
+            help="common.description"
             maxLength={120}
+            placeholder={`${
+              type === "advance"
+                ? "Avance"
+                : isReceivable || type === "extra"
+                  ? "Abono"
+                  : "Pago"
+            } ${debt.name}`}
             value={description}
-            onChange={setDescription}
-            isInvalid={Boolean(errors?.description)}
-            validationBehavior="aria"
-            className="flex flex-col gap-2"
-          >
-            <FieldLabel help="common.description">
-              Descripción (opcional)
-            </FieldLabel>
-            <Input
-              placeholder={`${
-                type === "advance"
-                  ? "Avance"
-                  : isReceivable || type === "extra"
-                    ? "Abono"
-                    : "Pago"
-              } ${debt.name}`}
-            />
-            <FieldError>{errors?.description?.[0]}</FieldError>
-          </TextField>
+            onChange={(event) => setDescription(event.target.value)}
+            error={errors?.description?.[0]}
+          />
 
           <CategorySelectField
             name="category_id"
@@ -544,31 +468,42 @@ function DebtEntryForm({
         </>
       )}
 
-      <TextField
+      <TextInputField
         name="note"
+        label="Nota (opcional)"
+        help="common.note"
         maxLength={120}
+        placeholder="Cuota de noviembre"
         value={note}
-        onChange={setNote}
-        isInvalid={Boolean(errors?.note)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="common.note">Nota (opcional)</FieldLabel>
-        <Input placeholder="Cuota de noviembre" />
-        <FieldError>{errors?.note?.[0]}</FieldError>
-      </TextField>
+        onChange={(event) => setNote(event.target.value)}
+        error={errors?.note?.[0]}
+      />
 
-      <div className="flex flex-col gap-1 rounded-lg bg-default p-3 text-sm text-muted">
+      <div className="flex flex-col gap-1 rounded-2xl bg-subtle p-3 text-sm text-muted-foreground">
         {newBalance !== null && (
           <p className="tabular-nums">
             Saldo de la deuda:{" "}
             {newBalance === debt.balance ? (
-              <>no cambia ({formatCurrency(debt.balance, currency)})</>
+              <>
+                no cambia (
+                <Amount
+                  value={debt.balance}
+                  currency={currency}
+                />
+                )
+              </>
             ) : (
               <>
-                {formatCurrency(debt.balance, currency)} →{" "}
+                <Amount
+                  value={debt.balance}
+                  currency={currency}
+                />{" "}
+                →{" "}
                 <span className="font-medium text-foreground">
-                  {formatCurrency(newBalance, currency)}
+                  <Amount
+                    value={newBalance}
+                    currency={currency}
+                  />
                 </span>
               </>
             )}
@@ -593,7 +528,7 @@ function DebtEntryForm({
       {missing.length > 0 && (
         <p
           role="status"
-          className={cn("rounded-lg p-3 text-sm", TONE_BADGE_CLASSES.warning)}
+          className={cn("rounded-2xl p-3 text-sm", TONE_BADGE_CLASSES.warning)}
         >
           Para guardar como {entryTypeInfo(type, debt.kind).label.toLowerCase()}
           , completa {missing.join(" y ")}.
@@ -603,7 +538,7 @@ function DebtEntryForm({
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error}
         </p>
@@ -611,14 +546,15 @@ function DebtEntryForm({
 
       <div className="flex justify-end gap-2">
         <Button
+          type="button"
           variant="ghost"
-          onPress={onCancel}
+          onClick={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          isDisabled={pending}
+          disabled={pending}
         >
           {pending ? "Guardando..." : "Guardar"}
         </Button>

@@ -59,14 +59,14 @@ export function GoalProgressBar({
       aria-valuenow={width}
       aria-label={label}
       className={cn(
-        "flex h-2 w-full overflow-hidden rounded-full bg-default",
+        "flex h-2 w-full overflow-hidden rounded-full bg-subtle",
         className
       )}
     >
       <div
         className={cn(
           "h-full transition-all motion-reduce:transition-none",
-          status ? GOAL_BAR_CLASSES[status] : "bg-accent"
+          status ? GOAL_BAR_CLASSES[status] : "bg-primary"
         )}
         style={{ width: `${width}%` }}
       />

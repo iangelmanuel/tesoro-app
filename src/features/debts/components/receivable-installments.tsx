@@ -1,12 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { Button, cn } from "@heroui/react"
 import { Check, Plus } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
-import { formatCurrency, formatShortDate } from "@/libs/format"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/libs/cn"
+import { formatShortDate } from "@/libs/format"
 import { formatMonthYear } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
 import {
@@ -78,10 +79,11 @@ export function ReceivableInstallments({
       </ul>
       {hiddenCount > 0 && (
         <Button
+          type="button"
           variant="ghost"
           size="sm"
-          className="self-start max-md:min-h-11"
-          onPress={() => setShowAll(true)}
+          className="self-start"
+          onClick={() => setShowAll(true)}
         >
           Ver más ({hiddenCount})
         </Button>
@@ -100,7 +102,21 @@ function installmentDetail(installment: Installment, currency: string) {
       : `${installment.entries.length} abonos · último el ${formatShortDate(lastEntry.occurred_on)}`
   }
   if (installment.status === "partial") {
-    return `Abonó ${formatCurrency(installment.paid, currency)} de ${formatCurrency(installment.expected, currency)} · vence el ${formatShortDate(installment.due_on)}`
+    return (
+      <>
+        Abonó{" "}
+        <Amount
+          value={installment.paid}
+          currency={currency}
+        />{" "}
+        de{" "}
+        <Amount
+          value={installment.expected}
+          currency={currency}
+        />{" "}
+        · vence el {formatShortDate(installment.due_on)}
+      </>
+    )
   }
   return `Vence el ${formatShortDate(installment.due_on)}`
 }
@@ -123,7 +139,7 @@ function InstallmentEntries({
   }
 
   return (
-    <ul className="flex flex-col gap-0.5 text-xs text-muted tabular-nums">
+    <ul className="flex flex-col gap-0.5 text-xs text-muted-foreground tabular-nums">
       {installment.entries.map((entry) => (
         <li key={entry.id}>
           <Amount
@@ -174,7 +190,7 @@ function InstallmentRow({
           </span>
           <ToneBadge tone={tone}>{label}</ToneBadge>
         </div>
-        <p className="text-xs text-muted tabular-nums">
+        <p className="text-xs text-muted-foreground tabular-nums">
           {installmentDetail(installment, currency)}
         </p>
         <InstallmentEntries
@@ -207,13 +223,12 @@ function InstallmentRow({
           <Button
             variant="outline"
             size="sm"
-            className="max-md:min-h-11"
             aria-label={
               isPartial
                 ? `Abonar a la cuota de ${month}`
                 : `Marcar pagada la cuota de ${month}`
             }
-            onPress={() => onCollect(installment)}
+            onClick={() => onCollect(installment)}
           >
             {isPartial ? <Plus /> : <Check />}
             {isPartial ? "Abonar" : "Marcar pagada"}

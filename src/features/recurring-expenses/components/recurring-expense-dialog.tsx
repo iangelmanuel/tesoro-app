@@ -1,23 +1,17 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import {
-  Button,
-  FieldError,
-  Input,
-  ListBox,
-  Modal,
-  Select,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-  toast
-} from "@heroui/react"
 import { X } from "lucide-react"
 import { AccountSelectField } from "@/components/forms/account-select-field"
+import { amountInput } from "@/components/forms/amount-format"
 import { CategorySelectField } from "@/components/forms/category-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
-import { FieldLabel } from "@/components/forms/field-label"
+import { FormDialog } from "@/components/forms/form-dialog"
+import { SegmentedField } from "@/components/forms/segmented-field"
+import { SelectField } from "@/components/forms/select-field"
+import { TextInputField } from "@/components/forms/text-input-field"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/sonner"
 import {
   type AccountOption,
   selectableAccounts
@@ -30,11 +24,19 @@ import type { RecurringExpense } from "../queries"
 import type { RecurringFrequency } from "../schemas"
 import type { RecurringExpenseFormState } from "../types"
 
-const AMOUNT_FORMAT = new Intl.NumberFormat("es-CO", {
-  maximumFractionDigits: 2
+/** "enero" → "Enero": opciones del mes de pago */
+const MONTH_OPTIONS = Array.from({ length: 12 }, (_, index) => {
+  const name = monthName(index + 1)
+  return {
+    value: String(index + 1),
+    label: name.charAt(0).toUpperCase() + name.slice(1)
+  }
 })
 
-const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1)
+const FREQUENCY_OPTIONS = [
+  { value: "monthly", label: "Mensual" },
+  { value: "yearly", label: "Anual" }
+] as const satisfies readonly { value: RecurringFrequency; label: string }[]
 
 interface RecurringExpenseDialogProps {
   /** Espacio del gasto fijo (para crear una categoría desde el select) */
@@ -46,7 +48,7 @@ interface RecurringExpenseDialogProps {
   /** Si llega, el diálogo edita este gasto fijo */
   expense?: RecurringExpense
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
@@ -60,46 +62,32 @@ export function RecurringExpenseDialog({
   open: controlledOpen,
   onOpenChange
 }: RecurringExpenseDialogProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
-  const open = controlledOpen ?? uncontrolledOpen
-  const setOpen = onOpenChange ?? setUncontrolledOpen
   const isEditing = expense !== undefined
 
   return (
-    <Modal
-      isOpen={open}
-      onOpenChange={setOpen}
+    <FormDialog
+      trigger={trigger}
+      open={controlledOpen}
+      onOpenChange={onOpenChange}
+      className="sm:max-w-md"
+      title={isEditing ? "Editar gasto fijo" : "Nuevo gasto fijo"}
+      description={
+        isEditing
+          ? "Cambia los datos del gasto fijo."
+          : "Un pago que se repite cada mes o cada año, como el arriendo o una suscripción."
+      }
     >
-      {trigger}
-      <Modal.Backdrop>
-        <Modal.Container scroll="outside">
-          <Modal.Dialog className="sm:max-w-md">
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>
-                {isEditing ? "Editar gasto fijo" : "Nuevo gasto fijo"}
-              </Modal.Heading>
-              <p className="text-sm text-muted">
-                {isEditing
-                  ? "Cambia los datos del gasto fijo."
-                  : "Un pago que se repite cada mes o cada año, como el arriendo o una suscripción."}
-              </p>
-            </Modal.Header>
-            <Modal.Body>
-              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-              <RecurringExpenseForm
-                workspaceId={workspaceId}
-                categories={categories}
-                accounts={accounts}
-                expense={expense}
-                onSaved={() => setOpen(false)}
-                onCancel={() => setOpen(false)}
-              />
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+      {(close) => (
+        <RecurringExpenseForm
+          workspaceId={workspaceId}
+          categories={categories}
+          accounts={accounts}
+          expense={expense}
+          onSaved={close}
+          onCancel={close}
+        />
+      )}
+    </FormDialog>
   )
 }
 
@@ -167,12 +155,6 @@ function RecurringExpenseForm({
     return result
   }, {})
 
-  function handleFrequencyChange(keys: Set<React.Key>) {
-    const [value] = [...keys]
-    if (!value || value === frequency) return
-    setFrequency(value as RecurringFrequency)
-  }
-
   const errors = state.fieldErrors
   const values = state.values
 
@@ -195,38 +177,29 @@ function RecurringExpenseForm({
         value={frequency}
       />
 
-      <TextField
+      <TextInputField
         name="name"
+        label="Nombre"
+        help="recurringExpense.name"
         maxLength={60}
+        placeholder="Arriendo"
         defaultValue={values?.name ?? expense?.name}
         isRequired
-        isInvalid={Boolean(errors?.name)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="recurringExpense.name">Nombre</FieldLabel>
-        <Input placeholder="Arriendo" />
-        <FieldError>{errors?.name?.[0]}</FieldError>
-      </TextField>
+        error={errors?.name?.[0]}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
+        <TextInputField
           name="amount"
+          label="Monto"
+          help="recurringExpense.amount"
           inputMode="decimal"
           autoComplete="off"
-          defaultValue={
-            values?.amount ??
-            (expense ? AMOUNT_FORMAT.format(expense.amount) : "")
-          }
+          placeholder="0"
+          defaultValue={values?.amount ?? amountInput(expense?.amount)}
           isRequired
-          isInvalid={Boolean(errors?.amount)}
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="recurringExpense.amount">Monto</FieldLabel>
-          <Input placeholder="0" />
-          <FieldError>{errors?.amount?.[0]}</FieldError>
-        </TextField>
+          error={errors?.amount?.[0]}
+        />
 
         <CategorySelectField
           name="category_id"
@@ -239,7 +212,7 @@ function RecurringExpenseForm({
           error={errors?.category_id?.[0]}
         >
           {currentCategoryArchived && !categoryId && (
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted-foreground">
               La categoría de este gasto fijo está archivada. Elige otra.
             </p>
           )}
@@ -258,92 +231,44 @@ function RecurringExpenseForm({
         error={errors?.account_id?.[0]}
       />
 
-      <div className="flex flex-col gap-2">
-        <FieldLabel
-          id="frequency-label"
-          help="common.frequency"
-        >
-          Frecuencia
-        </FieldLabel>
-        <ToggleButtonGroup
-          aria-labelledby="frequency-label"
-          selectionMode="single"
-          disallowEmptySelection
-          selectedKeys={[frequency]}
-          onSelectionChange={handleFrequencyChange}
-          fullWidth
-        >
-          <ToggleButton
-            id="monthly"
-            className="flex-1"
-          >
-            Mensual
-          </ToggleButton>
-          <ToggleButton
-            id="yearly"
-            className="flex-1"
-          >
-            Anual
-          </ToggleButton>
-        </ToggleButtonGroup>
-      </div>
+      <SegmentedField
+        label="Frecuencia"
+        help="common.frequency"
+        value={frequency}
+        onChange={setFrequency}
+        options={FREQUENCY_OPTIONS}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
+        <TextInputField
           name="day_of_month"
+          label="Día de pago"
+          help="recurringExpense.day"
+          type="number"
           inputMode="numeric"
+          min={1}
+          max={31}
+          placeholder="5"
           defaultValue={
             values?.day_of_month ??
             (expense ? String(expense.day_of_month) : undefined)
           }
           isRequired
-          isInvalid={Boolean(errors?.day_of_month)}
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="recurringExpense.day">Día de pago</FieldLabel>
-          <Input
-            type="number"
-            min={1}
-            max={31}
-            placeholder="5"
-          />
-          <FieldError>{errors?.day_of_month?.[0]}</FieldError>
-        </TextField>
+          error={errors?.day_of_month?.[0]}
+        />
 
         {/* El mes de pago solo aplica a los anuales */}
         {frequency === "yearly" && (
-          <Select
+          <SelectField
             name="month_of_year"
-            fullWidth
+            label="Mes de pago"
+            help="recurringExpense.month"
             placeholder="Elige un mes"
-            value={monthOfYear || null}
-            onChange={(key) => setMonthOfYear(key == null ? "" : String(key))}
-            isInvalid={Boolean(errors?.month_of_year)}
-            className="flex flex-col gap-2"
-          >
-            <FieldLabel help="recurringExpense.month">Mes de pago</FieldLabel>
-            <Select.Trigger className="capitalize">
-              <Select.Value />
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox>
-                {MONTHS.map((month) => (
-                  <ListBox.Item
-                    key={month}
-                    id={String(month)}
-                    textValue={monthName(month)}
-                    className="capitalize"
-                  >
-                    {monthName(month)}
-                    <ListBox.ItemIndicator />
-                  </ListBox.Item>
-                ))}
-              </ListBox>
-            </Select.Popover>
-            <FieldError>{errors?.month_of_year?.[0]}</FieldError>
-          </Select>
+            value={monthOfYear}
+            onChange={setMonthOfYear}
+            options={MONTH_OPTIONS}
+            error={errors?.month_of_year?.[0]}
+          />
         )}
       </div>
 
@@ -370,10 +295,11 @@ function RecurringExpenseForm({
           />
           {endsOn && (
             <Button
+              type="button"
               variant="ghost"
-              isIconOnly
+              size="icon"
               aria-label="Quitar fecha de fin"
-              onPress={() => setEndsOn("")}
+              onClick={() => setEndsOn("")}
             >
               <X />
             </Button>
@@ -384,7 +310,7 @@ function RecurringExpenseForm({
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error}
         </p>
@@ -392,14 +318,15 @@ function RecurringExpenseForm({
 
       <div className="flex justify-end gap-2">
         <Button
+          type="button"
           variant="ghost"
-          onPress={onCancel}
+          onClick={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          isDisabled={pending}
+          disabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear"}
         </Button>

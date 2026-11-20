@@ -1,10 +1,11 @@
-import { Button, Card, CardContent } from "@heroui/react"
 import { Plus } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { CardHeading } from "@/components/dashboard/card-heading"
-import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import { CARD, CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import { Button } from "@/components/ui/button"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
+import { cn } from "@/libs/cn"
 import type { BudgetMonth } from "../month"
 import type { BudgetProgress } from "../queries"
 import { BudgetDialog } from "./budget-dialog"
@@ -33,11 +34,15 @@ export function UnbudgetedCategories({
   const total = rows.reduce((sum, row) => sum + row.spent, 0)
 
   return (
-    <Card data-tour="budgets-unbudgeted">
+    <section
+      aria-label="Sin presupuesto"
+      className={CARD}
+      data-tour="budgets-unbudgeted"
+    >
       <CardHeading
         title="Sin presupuesto"
         action={
-          <p className="text-sm text-muted tabular-nums">
+          <p className="text-sm text-muted-foreground tabular-nums">
             <Amount
               value={total}
               currency={currency}
@@ -46,57 +51,54 @@ export function UnbudgetedCategories({
           </p>
         }
       />
-      <CardContent>
-        <ul className={CARD_LIST}>
-          {rows.map((row) => (
-            // Tres columnas fijas: categoría (envuelve), monto a la derecha y
-            // acción de ancho constante, así los montos quedan alineados
-            <li
-              key={row.categoryId}
-              className={`grid ${UNBUDGETED_GRID} items-center gap-3 ${CARD_ROW}`}
-            >
-              <div className="min-w-0">
-                <CategoryBadge
-                  name={row.archived ? `${row.name} (archivada)` : row.name}
-                  icon={row.icon}
-                  color={row.color}
-                  className="max-w-full min-w-0 shrink break-words whitespace-normal"
-                />
-              </div>
-              <p className="text-right font-medium whitespace-nowrap tabular-nums">
-                <Amount
-                  value={row.spent}
-                  currency={currency}
-                />
-              </p>
-              {/* Una categoría archivada no se puede presupuestar: la celda
+      <ul className={CARD_LIST}>
+        {rows.map((row) => (
+          // Tres columnas fijas: categoría (envuelve), monto a la derecha y
+          // acción de ancho constante, así los montos quedan alineados
+          <li
+            key={row.categoryId}
+            className={cn("grid items-center gap-3", UNBUDGETED_GRID, CARD_ROW)}
+          >
+            <div className="min-w-0">
+              <CategoryBadge
+                name={row.archived ? `${row.name} (archivada)` : row.name}
+                icon={row.icon}
+                color={row.color}
+                className="max-w-full min-w-0 shrink break-words whitespace-normal"
+              />
+            </div>
+            <p className="text-right font-medium whitespace-nowrap tabular-nums">
+              <Amount
+                value={row.spent}
+                currency={currency}
+              />
+            </p>
+            {/* Una categoría archivada no se puede presupuestar: la celda
                   queda vacía para no mover las demás columnas */}
-              {row.archived ? (
-                <span aria-hidden="true" />
-              ) : (
-                <BudgetDialog
-                  workspaceId={workspaceId}
-                  month={month}
-                  categories={categories}
-                  defaultCategoryId={row.categoryId}
-                  trigger={
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      fullWidth
-                      aria-label={`Presupuestar ${row.name}`}
-                      className="min-h-11 md:min-h-8"
-                    >
-                      <Plus />
-                      <span className="max-sm:sr-only">Presupuestar</span>
-                    </Button>
-                  }
-                />
-              )}
-            </li>
-          ))}
-        </ul>
-      </CardContent>
-    </Card>
+            {row.archived ? (
+              <span aria-hidden="true" />
+            ) : (
+              <BudgetDialog
+                workspaceId={workspaceId}
+                month={month}
+                categories={categories}
+                defaultCategoryId={row.categoryId}
+                trigger={
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    aria-label={`Presupuestar ${row.name}`}
+                    className="w-full"
+                  >
+                    <Plus />
+                    <span className="max-sm:sr-only">Presupuestar</span>
+                  </Button>
+                }
+              />
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }

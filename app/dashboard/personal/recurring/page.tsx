@@ -1,9 +1,14 @@
 import { Suspense } from "react"
-import { Skeleton } from "@heroui/react"
-import { CardSkeleton } from "@/components/dashboard/card-skeleton"
-import { BudgetsAndRecurringTabs } from "@/features/budgets/components/budgets-and-recurring-tabs"
+import { LoadingRegion } from "@/components/ui/skeleton"
+import {
+  BudgetsAndRecurringTabs,
+  BudgetsAndRecurringTabsSkeleton
+} from "@/features/budgets/components/budgets-and-recurring-tabs"
 import { RECURRING_PATH } from "@/features/budgets/tabs"
-import { RecurringView } from "@/features/recurring-expenses/components/recurring-view"
+import {
+  RecurringView,
+  RecurringViewSkeleton
+} from "@/features/recurring-expenses/components/recurring-view"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { buildMetadata } from "@/libs/seo"
 
@@ -46,13 +51,12 @@ async function RecurringContent({
 
 function RecurringSkeleton() {
   return (
-    <>
-      <Skeleton className="h-10 w-48 rounded-3xl" />
-      <CardSkeleton
-        className="h-48"
-        withMonth
-      />
-      <CardSkeleton className="h-96" />
-    </>
+    <LoadingRegion
+      label="Cargando gastos fijos…"
+      className="flex flex-1 flex-col gap-6"
+    >
+      <BudgetsAndRecurringTabsSkeleton />
+      <RecurringViewSkeleton />
+    </LoadingRegion>
   )
 }

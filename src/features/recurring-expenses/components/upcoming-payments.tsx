@@ -1,7 +1,10 @@
 import { Check } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
-import { TONE_BADGE_CLASSES as TONE_BADGE } from "@/components/dashboard/tone"
+import {
+  TONE_BADGE_CLASSES as TONE_BADGE,
+  TONE_TEXT_CLASSES
+} from "@/components/dashboard/tone"
 import { ToneBadge } from "@/components/dashboard/tone-badge"
 import { Button } from "@/components/ui/button"
 import { activeAccountId } from "@/features/accounts/active-account"
@@ -23,7 +26,7 @@ const TONE_CLASSES: Record<OccurrenceTone, string> = {
   success: TONE_BADGE.success,
   danger: TONE_BADGE.danger,
   warning: TONE_BADGE.warning,
-  neutral: "bg-default text-muted"
+  neutral: TONE_BADGE.neutral
 }
 
 export function OccurrenceStatusBadge({
@@ -121,8 +124,8 @@ function AmountText({
     <p
       className={cn(
         "shrink-0 font-medium whitespace-nowrap tabular-nums",
-        paid && "text-(--income)",
-        !paid && payment.status === "overdue" && "text-(--expense)",
+        paid && TONE_TEXT_CLASSES.success,
+        !paid && payment.status === "overdue" && TONE_TEXT_CLASSES.danger,
         className
       )}
     >

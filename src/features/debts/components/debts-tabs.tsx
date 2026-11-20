@@ -3,7 +3,9 @@
 import { useTransition } from "react"
 import type { Route } from "next"
 import { useRouter } from "next/navigation"
-import { Tabs, cn } from "@heroui/react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { cn } from "@/libs/cn"
 import { DEBTS_PATH } from "../calculations"
 import type { DebtsTab } from "../tabs"
 
@@ -13,12 +15,17 @@ interface DebtsTabsProps {
   children: React.ReactNode
 }
 
+const TABS: { value: DebtsTab; label: string }[] = [
+  { value: "debts", label: "Debo" },
+  { value: "receivables", label: "Me deben" }
+]
+
 // Escribe `?tab` en la URL. Debo es la tab por defecto y va sin parámetro.
 export function DebtsTabs({ tab, children }: DebtsTabsProps) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
 
-  function changeTab(value: React.Key) {
+  function changeTab(value: unknown) {
     if (value === tab) return
 
     startTransition(() => {
@@ -33,35 +40,38 @@ export function DebtsTabs({ tab, children }: DebtsTabsProps) {
 
   return (
     <Tabs
-      selectedKey={tab}
-      onSelectionChange={changeTab}
+      value={tab}
+      onValueChange={changeTab}
       className="gap-6"
     >
-      <Tabs.ListContainer>
-        <Tabs.List
-          aria-label="Deudas y cuentas por cobrar"
-          data-tour="debts-tabs"
-        >
-          <Tabs.Tab id="debts">
-            Debo
-            <Tabs.Indicator />
-          </Tabs.Tab>
-          <Tabs.Tab id="receivables">
-            Me deben
-            <Tabs.Indicator />
-          </Tabs.Tab>
-        </Tabs.List>
-      </Tabs.ListContainer>
+      <TabsList
+        aria-label="Deudas y cuentas por cobrar"
+        data-tour="debts-tabs"
+      >
+        {TABS.map((item) => (
+          <TabsTrigger
+            key={item.value}
+            value={item.value}
+          >
+            {item.label}
+          </TabsTrigger>
+        ))}
+      </TabsList>
       {/* Solo se pinta la tab activa: su contenido llega del servidor */}
-      <Tabs.Panel
-        id={tab}
+      <TabsContent
+        value={tab}
         className={cn(
-          "flex flex-col gap-6 transition-opacity",
+          "flex flex-col gap-6 motion-safe:transition-opacity",
           pending && "opacity-60"
         )}
       >
         {children}
-      </Tabs.Panel>
+      </TabsContent>
     </Tabs>
   )
+}
+
+/** Las tabs mientras carga: misma pill de 44 px */
+export function DebtsTabsSkeleton() {
+  return <Skeleton className="h-11 w-48 rounded-4xl" />
 }

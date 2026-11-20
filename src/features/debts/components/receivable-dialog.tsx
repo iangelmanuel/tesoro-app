@@ -1,21 +1,22 @@
 "use client"
 
-import { useActionState, useState } from "react"
-import {
-  Button,
-  FieldError,
-  Input,
-  Modal,
-  Tabs,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-  toast
-} from "@heroui/react"
+import { useActionState, useId, useState } from "react"
 import { X } from "lucide-react"
 import { AccountSelectField } from "@/components/forms/account-select-field"
+import { amountInput } from "@/components/forms/amount-format"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
+import { FormDialog } from "@/components/forms/form-dialog"
+import {
+  SEGMENT_ITEM_CLASS,
+  SEGMENT_TRACK_CLASS
+} from "@/components/forms/segmented-field"
+import { TextInputField } from "@/components/forms/text-input-field"
+import { Button } from "@/components/ui/button"
+import { FieldError } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { toast } from "@/components/ui/sonner"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
   type AccountOption,
   selectableAccounts
@@ -33,7 +34,16 @@ import {
 } from "../receivable-schedule"
 import type { ReceivableSchedule } from "../schemas"
 import type { DebtFormState } from "../types"
-import { amountInput } from "./field"
+
+const SCHEDULE_OPTIONS = [
+  { value: "once", label: "Una vez" },
+  { value: "monthly", label: "Mes a mes" }
+] as const satisfies readonly { value: ReceivableSchedule; label: string }[]
+
+const TERM_OPTIONS = [
+  { value: "open", label: "Sin fin" },
+  { value: "fixed", label: "Con cuotas" }
+] as const satisfies readonly { value: TermMode; label: string }[]
 
 interface ReceivableDialogProps {
   /** Espacio (para crear una cuenta desde el select) */
@@ -43,7 +53,7 @@ interface ReceivableDialogProps {
   /** Si llega, el diálogo edita esta cuenta por cobrar */
   receivable?: Debt
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
@@ -56,47 +66,31 @@ export function ReceivableDialog({
   open: controlledOpen,
   onOpenChange
 }: ReceivableDialogProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
-  const open = controlledOpen ?? uncontrolledOpen
-  const setOpen = onOpenChange ?? setUncontrolledOpen
   const isEditing = receivable !== undefined
 
   return (
-    <Modal
-      isOpen={open}
-      onOpenChange={setOpen}
+    <FormDialog
+      trigger={trigger}
+      open={controlledOpen}
+      onOpenChange={onOpenChange}
+      className="sm:max-w-md"
+      title={isEditing ? "Editar cuenta por cobrar" : "Nueva cuenta por cobrar"}
+      description={
+        isEditing
+          ? "Cambia los datos de la cuenta por cobrar. Sus abonos y ajustes no cambian."
+          : "Dinero que prestaste, que alguien te debe o que te pagan cada mes."
+      }
     >
-      {trigger}
-      <Modal.Backdrop>
-        <Modal.Container scroll="outside">
-          <Modal.Dialog className="sm:max-w-md">
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>
-                {isEditing
-                  ? "Editar cuenta por cobrar"
-                  : "Nueva cuenta por cobrar"}
-              </Modal.Heading>
-              <p className="text-sm text-muted">
-                {isEditing
-                  ? "Cambia los datos de la cuenta por cobrar. Sus abonos y ajustes no cambian."
-                  : "Dinero que prestaste, que alguien te debe o que te pagan cada mes."}
-              </p>
-            </Modal.Header>
-            <Modal.Body>
-              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-              <ReceivableForm
-                workspaceId={workspaceId}
-                accounts={accounts}
-                receivable={receivable}
-                onSaved={() => setOpen(false)}
-                onCancel={() => setOpen(false)}
-              />
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+      {(close) => (
+        <ReceivableForm
+          workspaceId={workspaceId}
+          accounts={accounts}
+          receivable={receivable}
+          onSaved={close}
+          onCancel={close}
+        />
+      )}
+    </FormDialog>
   )
 }
 
@@ -177,26 +171,26 @@ function ReceivableForm({
             value={schedule}
           />
           <div className="flex items-center gap-1">
-            <Tabs
-              className="min-w-0 flex-1"
-              selectedKey={schedule}
-              onSelectionChange={(key) =>
-                setSchedule(key as ReceivableSchedule)
-              }
+            <ToggleGroup
+              value={[schedule]}
+              onValueChange={(next) => {
+                const [value] = next
+                if (value) setSchedule(value as ReceivableSchedule)
+              }}
+              aria-label="Tipo de cobro"
+              spacing={1}
+              className={SEGMENT_TRACK_CLASS}
             >
-              <Tabs.ListContainer>
-                <Tabs.List aria-label="Tipo de cobro">
-                  <Tabs.Tab id="once">
-                    Una vez
-                    <Tabs.Indicator />
-                  </Tabs.Tab>
-                  <Tabs.Tab id="monthly">
-                    Mes a mes
-                    <Tabs.Indicator />
-                  </Tabs.Tab>
-                </Tabs.List>
-              </Tabs.ListContainer>
-            </Tabs>
+              {SCHEDULE_OPTIONS.map((option) => (
+                <ToggleGroupItem
+                  key={option.value}
+                  value={option.value}
+                  className={SEGMENT_ITEM_CLASS}
+                >
+                  {option.label}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
             <FieldHelp
               help="receivable.mode"
               label="Tipo de cobro"
@@ -206,36 +200,26 @@ function ReceivableForm({
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
+        <TextInputField
           name="name"
+          label="Nombre"
+          help="receivable.name"
           maxLength={60}
+          placeholder={schedule === "monthly" ? "Arriendo" : "Préstamo a Juan"}
           defaultValue={values?.name ?? receivable?.name}
           isRequired
-          isInvalid={Boolean(errors?.name)}
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="receivable.name">Nombre</FieldLabel>
-          <Input
-            placeholder={
-              schedule === "monthly" ? "Arriendo" : "Préstamo a Juan"
-            }
-          />
-          <FieldError>{errors?.name?.[0]}</FieldError>
-        </TextField>
+          error={errors?.name?.[0]}
+        />
 
-        <TextField
+        <TextInputField
           name="counterparty"
+          label="Deudor (opcional)"
+          help="receivable.debtor"
           maxLength={60}
+          placeholder="Juan"
           defaultValue={values?.counterparty ?? receivable?.counterparty ?? ""}
-          isInvalid={Boolean(errors?.counterparty)}
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="receivable.debtor">Deudor (opcional)</FieldLabel>
-          <Input placeholder="Juan" />
-          <FieldError>{errors?.counterparty?.[0]}</FieldError>
-        </TextField>
+          error={errors?.counterparty?.[0]}
+        />
       </div>
 
       {schedule === "monthly" ? (
@@ -267,7 +251,7 @@ function ReceivableForm({
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error}
         </p>
@@ -275,14 +259,15 @@ function ReceivableForm({
 
       <div className="flex justify-end gap-2">
         <Button
+          type="button"
           variant="ghost"
-          onPress={onCancel}
+          onClick={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          isDisabled={pending}
+          disabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear"}
         </Button>
@@ -306,27 +291,20 @@ function OnceFields({ receivable, errors, values }: FieldsProps) {
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <TextField
+      <TextInputField
         name="opening_balance"
+        label={isEditing ? "Monto inicial" : "Monto que te deben"}
+        help="receivable.amount"
+        helpLabel="Monto"
         inputMode="decimal"
         autoComplete="off"
+        placeholder="0"
         defaultValue={
           values?.opening_balance ?? amountInput(receivable?.opening_balance)
         }
         isRequired
-        isInvalid={Boolean(errors?.opening_balance)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel
-          help="receivable.amount"
-          helpLabel="Monto"
-        >
-          {isEditing ? "Monto inicial" : "Monto que te deben"}
-        </FieldLabel>
-        <Input placeholder="0" />
-        <FieldError>{errors?.opening_balance?.[0]}</FieldError>
-      </TextField>
+        error={errors?.opening_balance?.[0]}
+      />
 
       <div className="flex items-end gap-1">
         <DatePickerField
@@ -340,10 +318,11 @@ function OnceFields({ receivable, errors, values }: FieldsProps) {
         />
         {expectedOn && (
           <Button
+            type="button"
             variant="ghost"
-            isIconOnly
+            size="icon"
             aria-label="Quitar fecha esperada"
-            onPress={() => setExpectedOn("")}
+            onClick={() => setExpectedOn("")}
           >
             <X />
           </Button>
@@ -376,6 +355,9 @@ function MonthlyFields({ receivable, errors, values }: FieldsProps) {
     values?.term_months || savedTerm || "12"
   )
   const isFixed = termMode === "fixed"
+  const termId = useId()
+  const termLabelId = `${termId}-label`
+  const termErrorId = `${termId}-error`
 
   return (
     <>
@@ -385,21 +367,18 @@ function MonthlyFields({ receivable, errors, values }: FieldsProps) {
         value={isFixed ? termText : ""}
       />
 
-      <TextField
+      <TextInputField
         name="installment"
+        label="Monto mensual"
+        help="receivable.monthlyAmount"
         inputMode="decimal"
         autoComplete="off"
+        placeholder="0"
         value={amountText}
-        onChange={setAmountText}
+        onChange={(event) => setAmountText(event.target.value)}
         isRequired
-        isInvalid={Boolean(errors?.installment)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="receivable.monthlyAmount">Monto mensual</FieldLabel>
-        <Input placeholder="0" />
-        <FieldError>{errors?.installment?.[0]}</FieldError>
-      </TextField>
+        error={errors?.installment?.[0]}
+      />
 
       {/* La fecha se lleva el ancho; el día de pago solo necesita dos cifras */}
       <div className="grid grid-cols-[minmax(0,1fr)_6.5rem] items-start gap-4">
@@ -414,81 +393,72 @@ function MonthlyFields({ receivable, errors, values }: FieldsProps) {
           className="flex min-w-0 flex-col gap-2"
         />
 
-        <TextField
+        <TextInputField
           name="due_day"
+          label="Día de pago"
+          help="receivable.dueDay"
+          type="number"
           inputMode="numeric"
+          min={1}
+          max={31}
+          placeholder="5"
           value={dueDay}
-          onChange={setDueDay}
+          onChange={(event) => setDueDay(event.target.value)}
           isRequired
-          isInvalid={Boolean(errors?.due_day)}
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="receivable.dueDay">Día de pago</FieldLabel>
-          <Input
-            type="number"
-            min={1}
-            max={31}
-            placeholder="5"
-          />
-          <FieldError>{errors?.due_day?.[0]}</FieldError>
-        </TextField>
+          error={errors?.due_day?.[0]}
+        />
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div
+        className="flex flex-col gap-2"
+        data-invalid={errors?.term_months ? true : undefined}
+      >
         <FieldLabel
-          id="receivable-term-label"
+          id={termLabelId}
           help="receivable.installments"
+          isInvalid={Boolean(errors?.term_months)}
         >
           Duración
         </FieldLabel>
         <div className="flex items-center gap-2">
-          <ToggleButtonGroup
-            aria-labelledby="receivable-term-label"
-            selectionMode="single"
-            disallowEmptySelection
-            selectedKeys={[termMode]}
-            onSelectionChange={(keys) => {
-              const [value] = [...keys]
+          <ToggleGroup
+            value={[termMode]}
+            onValueChange={(next) => {
+              const [value] = next
               if (value) setTermMode(value as TermMode)
             }}
-            className="min-w-0 flex-1"
-            fullWidth
+            aria-labelledby={termLabelId}
+            spacing={1}
+            className={SEGMENT_TRACK_CLASS}
           >
-            <ToggleButton
-              id="open"
-              className="flex-1"
-            >
-              Sin fin
-            </ToggleButton>
-            <ToggleButton
-              id="fixed"
-              className="flex-1"
-            >
-              Con cuotas
-            </ToggleButton>
-          </ToggleButtonGroup>
+            {TERM_OPTIONS.map((option) => (
+              <ToggleGroupItem
+                key={option.value}
+                value={option.value}
+                className={SEGMENT_ITEM_CLASS}
+              >
+                {option.label}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
           {isFixed && (
-            <TextField
+            <Input
               aria-label="Número de cuotas"
+              type="number"
               inputMode="numeric"
+              min={1}
+              max={600}
+              placeholder="12"
               value={termText}
-              onChange={setTermText}
-              isInvalid={Boolean(errors?.term_months)}
-              validationBehavior="aria"
+              onChange={(event) => setTermText(event.target.value)}
+              aria-invalid={errors?.term_months ? true : undefined}
+              aria-describedby={errors?.term_months ? termErrorId : undefined}
               className="w-24 shrink-0"
-            >
-              <Input
-                type="number"
-                min={1}
-                max={600}
-                placeholder="12"
-              />
-            </TextField>
+            />
           )}
         </div>
         {errors?.term_months && (
-          <p className="text-sm text-danger">{errors.term_months[0]}</p>
+          <FieldError id={termErrorId}>{errors.term_months[0]}</FieldError>
         )}
       </div>
 
@@ -539,7 +509,7 @@ function MonthlySummary({
 
   if (!ready) {
     return (
-      <p className="rounded-lg bg-default p-3 text-sm text-muted">
+      <p className="rounded-2xl bg-subtle p-3 text-sm text-muted-foreground">
         Completa el monto y el día de pago para ver el resumen.
       </p>
     )
@@ -554,7 +524,7 @@ function MonthlySummary({
 
   return (
     <div
-      className="flex flex-col gap-1 rounded-lg bg-default p-3 text-sm"
+      className="flex flex-col gap-1 rounded-2xl bg-subtle p-3 text-sm"
       aria-live="polite"
     >
       <p>
@@ -564,7 +534,7 @@ function MonthlySummary({
         cada mes, el día {day}. Primera cuota el{" "}
         <span className="font-medium">{formatDate(firstDue)}</span>.
       </p>
-      <p className="text-muted">
+      <p className="text-muted-foreground">
         {months === null || last === null ? (
           "Sin fecha de fin: sigue hasta que la archives."
         ) : (

@@ -1,8 +1,15 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { cn, toast } from "@heroui/react"
-import { Copy, Pencil, PiggyBank, Trash2 } from "lucide-react"
+import {
+  ArrowDown,
+  ArrowUp,
+  Copy,
+  Pencil,
+  PiggyBank,
+  Trash2
+} from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import { RowActions } from "@/components/dashboard/row-actions"
@@ -12,9 +19,13 @@ import {
   SortableListProvider,
   useSortableList
 } from "@/components/dashboard/sortable-list"
+import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
+import { toast } from "@/components/ui/sonner"
 import { activeAccountId } from "@/features/accounts/active-account"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
-import { formatCurrency, formatDate, formatTime } from "@/libs/format"
+import { cn } from "@/libs/cn"
+import { formatDate, formatTime } from "@/libs/format"
 import { deleteContribution, moveContribution } from "../actions"
 import type { GoalContribution } from "../queries"
 import { ContributionDialog } from "./contribution-dialog"
@@ -57,7 +68,7 @@ export function ContributionsList({
 
   return (
     <SortableListProvider {...sortable.providerProps}>
-      <ul className="divide-y rounded-xl border">
+      <ul className={CARD_LIST}>
         {sortable.items.map((contribution) => (
           <ContributionRow
             key={contribution.id}
@@ -101,7 +112,7 @@ function ContributionRow({
     startTransition(async () => {
       const result = await deleteContribution(contribution.id)
       if (result.error) {
-        toast.danger(result.error)
+        toast.error(result.error)
       } else {
         toast.success(isWithdrawal ? "Retiro eliminado" : "Aporte eliminado")
       }
@@ -111,7 +122,7 @@ function ContributionRow({
   return (
     <SortableListItem
       config={sortable}
-      className="flex items-center gap-3 p-3"
+      className={cn(CARD_ROW, "flex items-center gap-3")}
     >
       {(handle) => (
         <>
@@ -120,20 +131,36 @@ function ContributionRow({
             <span
               className={cn(
                 "font-medium tabular-nums",
-                isWithdrawal ? "text-(--expense)" : "text-(--income)"
+                isWithdrawal
+                  ? TONE_TEXT_CLASSES.danger
+                  : TONE_TEXT_CLASSES.success
               )}
             >
-              {isWithdrawal ? "−" : "+"}
-              {formatCurrency(Math.abs(contribution.amount), currency)}
+              {isWithdrawal ? (
+                <ArrowDown
+                  aria-hidden
+                  className="mr-0.5 inline size-3.5 align-[-2px]"
+                />
+              ) : (
+                <ArrowUp
+                  aria-hidden
+                  className="mr-0.5 inline size-3.5 align-[-2px]"
+                />
+              )}
+              <Amount
+                value={contribution.amount}
+                currency={currency}
+                signed
+              />
             </span>
-            <span className="text-xs text-muted">
+            <span className="text-xs text-muted-foreground">
               {formatDate(contribution.occurred_on)}
               {contribution.occurred_time &&
                 ` · ${formatTime(contribution.occurred_time)}`}{" "}
               · {accountText}
             </span>
             {contribution.note && (
-              <span className="line-clamp-3 text-sm break-words text-muted">
+              <span className="line-clamp-3 text-sm break-words text-muted-foreground">
                 {contribution.note}
               </span>
             )}
@@ -197,7 +224,7 @@ function ContributionRow({
                 title={`¿Eliminar este ${label}?`}
                 onConfirm={handleDelete}
               >
-                <p className="text-sm text-muted">
+                <p className="text-sm text-muted-foreground">
                   Lo ahorrado en la meta se recalcula sin él. Esta acción no se
                   puede deshacer.
                 </p>

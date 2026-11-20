@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Button, Dropdown, Label } from "@heroui/react"
 import {
   Archive,
   CircleCheck,
@@ -12,12 +11,27 @@ import {
 import { Amount } from "@/components/dashboard/amount"
 import { useDetailFromUrl } from "@/components/dashboard/command/use-detail-from-url"
 import {
+  type RowAction,
+  RowContextMenu,
+  RowMenuBoundary
+} from "@/components/dashboard/row-actions"
+import {
   CARD_LINK,
   CARD_OVER_LINK,
   SURFACE_ITEM,
   SURFACE_ITEM_CLICKABLE
 } from "@/components/dashboard/surface"
+import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
+import { cn } from "@/libs/cn"
 import { goalStatus, isReached } from "../progress"
 import type { Goal, GoalContribution } from "../queries"
 import { GoalDialog } from "./goal-dialog"
@@ -26,6 +40,9 @@ import { GoalStatusBadge } from "./goal-progress-bar"
 import { GoalSheet } from "./goal-sheet"
 import { GoalSummary } from "./goal-summary"
 import { useGoalAction } from "./use-goal-action"
+
+/** Contenedor de la tarjeta y de su skeleton: misma superficie y espacios */
+const CARD_FRAME = cn(SURFACE_ITEM, "flex flex-col gap-4")
 
 interface GoalCardProps {
   workspaceId: string
@@ -50,122 +67,188 @@ export function GoalCard({
   const [detailOpen, setDetailOpen] = useDetailFromUrl(goal.id)
   const { pending, run } = useGoalAction(goal)
 
+  // Las mismas acciones en el botón ⋯ y en el menú contextual (clic derecho
+  // y pulsación larga)
+  const actions: RowAction[] = [
+    {
+      id: "edit",
+      label: "Editar",
+      icon: <Pencil />,
+      onAction: () => setEditing(true)
+    },
+    {
+      id: "complete",
+      label: "Marcar como cumplida",
+      icon: <CircleCheck />,
+      onAction: () => run("complete"),
+      isDisabled: pending
+    },
+    {
+      id: "archive",
+      label: "Archivar",
+      icon: <Archive />,
+      onAction: () => run("archive"),
+      isDisabled: pending
+    }
+  ]
+
   return (
-    <li
-      className={`flex flex-col gap-4 ${SURFACE_ITEM} ${SURFACE_ITEM_CLICKABLE}`}
-      data-tour="goals-card"
+    <RowContextMenu
+      label={goal.name}
+      actions={actions}
     >
-      <div className="flex items-start gap-3">
-        {/* Abre el Sheet con el detalle y los aportes */}
-        <button
-          type="button"
-          data-card-link
-          data-tour="goals-detail"
-          className={`-m-1 flex min-w-0 flex-1 items-start gap-3 rounded-lg p-1 ${CARD_LINK}`}
-          onClick={() => setDetailOpen(true)}
-        >
-          <GoalIcon
-            icon={goal.icon}
-            color={goal.color}
-          />
-          <span className="flex min-w-0 flex-1 flex-col gap-1">
-            <span className="flex flex-wrap items-center gap-2">
-              <span className="min-w-0 truncate font-medium">{goal.name}</span>
-              <GoalStatusBadge status={goalStatus(goal, today)} />
-            </span>
-            <span className="text-sm text-muted tabular-nums">
-              <span className="font-medium text-foreground">
+      <li
+        className={cn(CARD_FRAME, SURFACE_ITEM_CLICKABLE)}
+        data-tour="goals-card"
+      >
+        <div className="flex items-start gap-3">
+          {/* Abre el Sheet con el detalle y los aportes */}
+          <button
+            type="button"
+            data-card-link
+            data-tour="goals-detail"
+            className={cn(
+              "-m-1 flex min-w-0 flex-1 items-start gap-3 rounded-2xl p-1",
+              CARD_LINK
+            )}
+            onClick={() => setDetailOpen(true)}
+          >
+            <GoalIcon
+              icon={goal.icon}
+              color={goal.color}
+            />
+            <span className="flex min-w-0 flex-1 flex-col gap-1">
+              <span className="flex flex-wrap items-center gap-2">
+                <span className="min-w-0 truncate font-medium">
+                  {goal.name}
+                </span>
+                <GoalStatusBadge status={goalStatus(goal, today)} />
+              </span>
+              <span className="text-sm text-muted-foreground tabular-nums">
+                <span className="font-medium text-foreground">
+                  <Amount
+                    value={goal.saved}
+                    currency={currency}
+                  />
+                </span>{" "}
+                de{" "}
                 <Amount
-                  value={goal.saved}
+                  value={goal.target_amount}
                   currency={currency}
                 />
-              </span>{" "}
-              de{" "}
-              <Amount
-                value={goal.target_amount}
-                currency={currency}
-              />
+              </span>
             </span>
-          </span>
-        </button>
+          </button>
 
-        <Dropdown>
-          <Button
-            variant="ghost"
-            isIconOnly
-            size="sm"
-            className={`shrink-0 max-md:size-11 ${CARD_OVER_LINK}`}
-            aria-label={`Acciones de ${goal.name}`}
-            isDisabled={pending}
-            data-tour="goals-menu"
-          >
-            <EllipsisVertical />
-          </Button>
-          <Dropdown.Popover placement="bottom end">
-            <Dropdown.Menu aria-label={`Acciones de ${goal.name}`}>
-              <Dropdown.Item
-                onAction={() => setEditing(true)}
-                textValue="Editar"
-              >
-                <Pencil className="size-4" />
-                <Label>Editar</Label>
-              </Dropdown.Item>
-              <Dropdown.Item
-                onAction={() => run("complete")}
-                textValue="Marcar como cumplida"
-              >
-                <CircleCheck className="size-4" />
-                <Label>Marcar como cumplida</Label>
-              </Dropdown.Item>
-              <Dropdown.Item
-                onAction={() => run("archive")}
-                textValue="Archivar"
-              >
-                <Archive className="size-4" />
-                <Label>Archivar</Label>
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown.Popover>
-        </Dropdown>
-        <GoalDialog
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Acciones de ${goal.name}`}
+                  disabled={pending}
+                  data-tour="goals-menu"
+                  className={cn(CARD_OVER_LINK, "-mt-2 -mr-2 shrink-0")}
+                />
+              }
+            >
+              <EllipsisVertical />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-auto min-w-48"
+            >
+              {actions.map((action) => (
+                <DropdownMenuItem
+                  key={action.id}
+                  disabled={action.isDisabled}
+                  onClick={action.onAction}
+                >
+                  {action.icon}
+                  {action.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <GoalSummary
           goal={goal}
-          open={editing}
-          onOpenChange={setEditing}
-        />
-        <GoalSheet
-          workspaceId={workspaceId}
-          goal={goal}
-          contributions={contributions}
           today={today}
           currency={currency}
-          accounts={accounts}
-          open={detailOpen}
-          onOpenChange={setDetailOpen}
         />
-      </div>
 
-      <GoalSummary
-        goal={goal}
-        today={today}
-        currency={currency}
-      />
-
-      {isReached(goal) && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-emerald-50 p-3 dark:bg-emerald-950">
-          <p className="flex items-center gap-2 text-sm font-medium text-emerald-800 dark:text-emerald-300">
-            <PartyPopper className="size-4 shrink-0" />
-            ¡Lo lograste!
-          </p>
-          <Button
-            size="sm"
-            className={CARD_OVER_LINK}
-            isDisabled={pending}
-            onPress={() => run("complete")}
+        {isReached(goal) && (
+          <div
+            className={cn(
+              "flex flex-wrap items-center justify-between gap-2 rounded-2xl p-3",
+              TONE_BADGE_CLASSES.success
+            )}
           >
-            Marcar como cumplida
-          </Button>
+            <p className="flex items-center gap-2 text-sm font-medium">
+              <PartyPopper
+                aria-hidden
+                className="size-4 shrink-0"
+              />
+              ¡Lo lograste!
+            </p>
+            <Button
+              size="sm"
+              className={CARD_OVER_LINK}
+              disabled={pending}
+              onClick={() => run("complete")}
+            >
+              Marcar como cumplida
+            </Button>
+          </div>
+        )}
+
+        {/* El diálogo y el Sheet se pintan en un portal; RowMenuBoundary
+            evita que un clic derecho dentro de ellos abra el menú de la
+            tarjeta */}
+        <RowMenuBoundary>
+          <GoalDialog
+            goal={goal}
+            open={editing}
+            onOpenChange={setEditing}
+          />
+          <GoalSheet
+            workspaceId={workspaceId}
+            goal={goal}
+            contributions={contributions}
+            today={today}
+            currency={currency}
+            accounts={accounts}
+            open={detailOpen}
+            onOpenChange={setDetailOpen}
+          />
+        </RowMenuBoundary>
+      </li>
+    </RowContextMenu>
+  )
+}
+
+/** Tarjeta de meta mientras carga: ícono, nombre, monto, barra y datos */
+export function GoalCardSkeleton() {
+  return (
+    <li className={CARD_FRAME}>
+      <div className="flex items-start gap-3">
+        <Skeleton className="size-9 shrink-0 rounded-full" />
+        <div className="flex flex-1 flex-col gap-1">
+          <Skeleton className="h-6 w-36" />
+          <Skeleton className="h-5 w-44" />
         </div>
-      )}
+        <Skeleton className="-mt-2 -mr-2 size-11 rounded-full" />
+      </div>
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-2 flex-1 rounded-full" />
+        <Skeleton className="h-5 w-10" />
+      </div>
+      <div className="grid gap-x-4 gap-y-1 sm:grid-cols-2">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
     </li>
   )
 }

@@ -1,6 +1,8 @@
 import { TriangleAlert } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
+import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
 import { formatPercent } from "@/features/budgets/progress"
+import { cn } from "@/libs/cn"
 import { formatDate } from "@/libs/format"
 import {
   goalPercent,
@@ -36,6 +38,7 @@ export function GoalSummary({ goal, today, currency }: GoalSummaryProps) {
         <GoalProgressBar
           percent={percent}
           status={status}
+          label={`${goal.name}: ${formatPercent(percent)}`}
         />
         <span className="shrink-0 text-sm font-medium whitespace-nowrap tabular-nums">
           {formatPercent(percent)}
@@ -44,7 +47,7 @@ export function GoalSummary({ goal, today, currency }: GoalSummaryProps) {
 
       <dl className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
         <div className="flex items-baseline justify-between gap-2 sm:flex-col sm:items-start sm:justify-start">
-          <dt className="text-muted">Faltan</dt>
+          <dt className="text-muted-foreground">Faltan</dt>
           <dd className="text-right font-medium whitespace-nowrap tabular-nums sm:text-left">
             <Amount
               value={remaining}
@@ -53,7 +56,7 @@ export function GoalSummary({ goal, today, currency }: GoalSummaryProps) {
           </dd>
         </div>
         <div className="flex items-baseline justify-between gap-2 sm:flex-col sm:items-start sm:justify-start">
-          <dt className="text-muted">Fecha objetivo</dt>
+          <dt className="text-muted-foreground">Fecha objetivo</dt>
           <dd className="text-right font-medium whitespace-nowrap sm:text-left">
             {goal.target_date
               ? formatDate(goal.target_date)
@@ -64,7 +67,9 @@ export function GoalSummary({ goal, today, currency }: GoalSummaryProps) {
             reemplaza al aporte sugerido */}
         {goal.status === "active" && suggested !== null && !isReached(goal) && (
           <div className="flex items-baseline justify-between gap-2 sm:col-span-2 sm:flex-col sm:items-start sm:justify-start">
-            <dt className="min-w-0 text-muted">Aporte mensual sugerido</dt>
+            <dt className="min-w-0 text-muted-foreground">
+              Aporte mensual sugerido
+            </dt>
             <dd className="text-right font-medium whitespace-nowrap tabular-nums sm:text-left">
               <Amount
                 value={suggested}
@@ -76,8 +81,16 @@ export function GoalSummary({ goal, today, currency }: GoalSummaryProps) {
       </dl>
 
       {isOverdue(goal, today) && (
-        <p className="flex items-center gap-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-          <TriangleAlert className="size-4 shrink-0" />
+        <p
+          className={cn(
+            "flex items-center gap-2 rounded-2xl p-3 text-sm",
+            TONE_BADGE_CLASSES.warning
+          )}
+        >
+          <TriangleAlert
+            aria-hidden
+            className="size-4 shrink-0"
+          />
           La fecha objetivo ya pasó
         </p>
       )}

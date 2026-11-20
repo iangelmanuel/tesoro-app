@@ -212,14 +212,19 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
 - **HeroUI v3 convive hasta SPEC 53** en las pantallas aún no migradas
   (`@heroui/react` directo, sin Provider, componentes compuestos como
   `Modal.Header`, `onPress` / `isDisabled`). `src/styles/heroui-bridge.css`
-  apunta sus tokens a los nuevos; `heroui-compat.ts` deja los paneles de
-  Base UI con `modal={false}` para que alojen menús de HeroUI. SPEC 53 borra
-  ambos.
+  apunta sus tokens a los nuevos; `heroui-compat.ts` deja el aside móvil
+  (Sheet de Base UI) con `modal={false}` para que aloje menús de HeroUI.
+  SPEC 53 borra ambos. Los Sheets de detalle (`DetailSheet`) son modales
+  desde SPEC 52b.
 - Formularios (SPEC 52a): `useActionState` + Zod, con las piezas de
   `src/components/forms/`:
   - `TextInputField` (`FieldLabel` + `Input` + `FieldError`), `SelectField`
-    (Select corto) y `CreatableSelect` (Combobox con búsqueda y "+ Crear …",
-    base de `AccountSelectField` y `CategorySelectField`);
+    (Select corto; opciones con `description` opcional), `SegmentedField`
+    (2 o 3 opciones como tabs; `SEGMENT_TRACK_CLASS` / `SEGMENT_ITEM_CLASS`
+    para las que van en línea) y `CreatableSelect` (Combobox con búsqueda y
+    "+ Crear …", base de `AccountSelectField` y `CategorySelectField`);
+  - `amount-format.ts`: `amountInput` / `rateInput` dan el texto inicial de
+    un monto o una tasa en un campo (es-CO);
   - `FormDialog` (Dialog de shadcn con título, descripción y el formulario;
     controlado o con `trigger`, que es un `ReactElement`);
   - el error del servidor va por `error` y se anuncia con `aria-invalid` +
@@ -241,9 +246,8 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   (`src/components/dashboard/heroui-portal-bridge.tsx`); su overlay se monta
   en `HeroUIPortalHost` (`data-react-aria-top-layer`), que React Aria no
   vuelve inerte. Los campos de `forms/`, `SelectField` y `FormDialog` ya lo
-  traen. Al revés, un `FormDialog` que aloja controles de HeroUI va con
-  `hostsHeroUI` (no modal + `closesFromDialog`); hoy solo el diálogo de
-  movimiento, hasta SPEC 52b.
+  traen. `FormDialog` siempre es modal: desde SPEC 52b ninguno aloja
+  controles de HeroUI.
 - Gráficas: Recharts con `src/components/charts/*`: `ChartCard` (cabecera
   con leyenda y cifra), `ChartContainer`, las props de `chart-style.ts` y los
   montos abreviados de `chart-format.ts`. Colores siempre desde tokens.

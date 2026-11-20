@@ -11,7 +11,6 @@ import type { HelpKey } from "@/config/help"
 import { useIsMobile } from "@/hooks/use-is-mobile"
 import { cn } from "@/libs/cn"
 import { HelpHint } from "./help-hint"
-import { closesFromSheet } from "./heroui-compat"
 
 interface DetailSheetProps {
   open: boolean
@@ -73,15 +72,7 @@ export function DetailSheet({
   return (
     <Sheet
       open={open}
-      // No modal mientras conviva con HeroUI (ver heroui-compat.ts)
-      modal={false}
-      onOpenChange={(next, details) => {
-        if (!next && !closesFromSheet(details.reason, details.event)) {
-          details.cancel()
-          return
-        }
-        onOpenChange(next)
-      }}
+      onOpenChange={onOpenChange}
     >
       <SheetContent
         side={isMobile ? "bottom" : "right"}

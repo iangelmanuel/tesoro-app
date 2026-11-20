@@ -1,23 +1,24 @@
 "use client"
 
-import { useActionState, useState } from "react"
-import {
-  Button,
-  Checkbox,
-  FieldError,
-  Input,
-  Label,
-  ListBox,
-  Modal,
-  Select,
-  Tabs,
-  TextField,
-  toast
-} from "@heroui/react"
+import { useActionState, useId, useState } from "react"
 import { Amount } from "@/components/dashboard/amount"
 import { useHideAmounts } from "@/components/dashboard/hide-amounts-context"
+import { amountInput } from "@/components/forms/amount-format"
 import { DatePickerField } from "@/components/forms/date-picker-field"
-import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
+import { FieldHelp } from "@/components/forms/field-label"
+import { FormDialog } from "@/components/forms/form-dialog"
+import {
+  SEGMENT_ITEM_CLASS,
+  SEGMENT_TRACK_CLASS
+} from "@/components/forms/segmented-field"
+import { SelectField } from "@/components/forms/select-field"
+import { TextInputField } from "@/components/forms/text-input-field"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { FieldDescription, FieldError } from "@/components/ui/field"
+import { Label } from "@/components/ui/label"
+import { toast } from "@/components/ui/sonner"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { activeAccountId } from "@/features/accounts/active-account"
 import {
   type PaymentAccountOption,
@@ -46,13 +47,17 @@ import {
   type ReceivableCollectMode
 } from "../schemas"
 import type { PaymentFormState } from "../types"
-import { amountInput } from "./field"
 
 const MODE_LABELS: Record<ReceivableCollectMode, string> = {
   partial: "Abono",
   full: "Pago completo",
   single: "Una cuota",
   allocate: "Varios meses"
+}
+
+/** "noviembre de 2026" → "Noviembre de 2026" */
+function capitalize(text: string) {
+  return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
 /** Monto como texto, o `***` con las cifras ocultas */
@@ -131,7 +136,7 @@ interface ReceivableCollectDialogProps {
   periodOn?: string
   accounts: PaymentAccountOption[]
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
@@ -146,43 +151,28 @@ export function ReceivableCollectDialog({
   open: controlledOpen,
   onOpenChange
 }: ReceivableCollectDialogProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
-  const open = controlledOpen ?? uncontrolledOpen
-  const setOpen = onOpenChange ?? setUncontrolledOpen
-
   return (
-    <Modal
-      isOpen={open}
-      onOpenChange={setOpen}
+    <FormDialog
+      trigger={trigger}
+      open={controlledOpen}
+      onOpenChange={onOpenChange}
+      className="sm:max-w-md"
+      title="Registrar cobro"
+      description={`Lo que te pagaron de ${receivable.name}.`}
     >
-      {trigger}
-      <Modal.Backdrop>
-        <Modal.Container scroll="outside">
-          <Modal.Dialog className="sm:max-w-md">
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>Registrar cobro</Modal.Heading>
-              <p className="text-sm text-muted">
-                Lo que te pagaron de {receivable.name}.
-              </p>
-            </Modal.Header>
-            <Modal.Body>
-              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-              <ReceivableCollectForm
-                workspaceId={workspaceId}
-                receivables={[receivable]}
-                receivableId={receivable.id}
-                fixed
-                periodOn={periodOn}
-                accounts={accounts}
-                onSaved={() => setOpen(false)}
-                onCancel={() => setOpen(false)}
-              />
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+      {(close) => (
+        <ReceivableCollectForm
+          workspaceId={workspaceId}
+          receivables={[receivable]}
+          receivableId={receivable.id}
+          fixed
+          periodOn={periodOn}
+          accounts={accounts}
+          onSaved={close}
+          onCancel={close}
+        />
+      )}
+    </FormDialog>
   )
 }
 
@@ -213,38 +203,17 @@ function ReceivableSelect({
   const summary = useReceivableSummary()
 
   return (
-    <Select
-      fullWidth
-      placeholder="Elige a quién le cobras"
-      value={value || null}
-      onChange={(key) => onChange(key == null ? "" : String(key))}
-      className="flex flex-col gap-2"
-    >
-      <FieldLabel help="receivable.select">Cuenta por cobrar</FieldLabel>
-      <Select.Trigger>
-        <Select.Value />
-        <Select.Indicator />
-      </Select.Trigger>
-      <Select.Popover>
-        <ListBox>
-          {receivables.map((option) => (
-            <ListBox.Item
-              key={option.id}
-              id={option.id}
-              textValue={option.name}
-            >
-              <div className="flex min-w-0 flex-col">
-                <span className="truncate">{option.name}</span>
-                <span className="text-xs text-muted tabular-nums">
-                  {summary(option)}
-                </span>
-              </div>
-              <ListBox.ItemIndicator />
-            </ListBox.Item>
-          ))}
-        </ListBox>
-      </Select.Popover>
-    </Select>
+    <SelectField
+      label="Cuenta por cobrar"
+      help="receivable.select"
+      value={value}
+      onChange={onChange}
+      options={receivables.map((option) => ({
+        value: option.id,
+        label: option.name,
+        description: summary(option)
+      }))}
+    />
   )
 }
 
@@ -288,6 +257,10 @@ function CollectFields({
   )
   const [occurredOn, setOccurredOn] = useState(todayISO)
   const [createTransaction, setCreateTransaction] = useState(true)
+  const fieldId = useId()
+  const fullAmountLabelId = `${fieldId}-full-label`
+  const fullAmountErrorId = `${fieldId}-full-error`
+  const createTransactionId = `${fieldId}-create`
 
   const [state, formAction, pending] = useActionState<
     PaymentFormState,
@@ -375,25 +348,26 @@ function CollectFields({
       />
 
       <div className="flex items-center gap-1">
-        <Tabs
-          className="min-w-0 flex-1"
-          selectedKey={mode}
-          onSelectionChange={(key) => changeMode(key as ReceivableCollectMode)}
+        <ToggleGroup
+          value={[mode]}
+          onValueChange={(next) => {
+            const [value] = next
+            if (value) changeMode(value as ReceivableCollectMode)
+          }}
+          aria-label="Cómo se cobra"
+          spacing={1}
+          className={SEGMENT_TRACK_CLASS}
         >
-          <Tabs.ListContainer>
-            <Tabs.List aria-label="Cómo se cobra">
-              {modes.map((item) => (
-                <Tabs.Tab
-                  key={item}
-                  id={item}
-                >
-                  {MODE_LABELS[item]}
-                  <Tabs.Indicator />
-                </Tabs.Tab>
-              ))}
-            </Tabs.List>
-          </Tabs.ListContainer>
-        </Tabs>
+          {modes.map((item) => (
+            <ToggleGroupItem
+              key={item}
+              value={item}
+              className={SEGMENT_ITEM_CLASS}
+            >
+              {MODE_LABELS[item]}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
         <FieldHelp
           help="receivable.collectHow"
           label="Cómo se cobra"
@@ -408,85 +382,65 @@ function CollectFields({
         />
       )}
       {mode === "single" && (
-        <Select
-          fullWidth
-          placeholder="Elige la cuota"
-          value={period || null}
-          onChange={(key) => {
-            const next = key == null ? "" : String(key)
+        <SelectField
+          label="Cuota"
+          help="receivable.period"
+          value={period}
+          onChange={(next) => {
             setPeriod(next)
             setAmountText(amountInput(remainingOf(next)))
           }}
-          isInvalid={Boolean(errors?.period_on)}
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="receivable.period">Cuota</FieldLabel>
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              {open.map((item) => (
-                <ListBox.Item
-                  key={item.period_on}
-                  id={item.period_on}
-                  textValue={formatMonthYear(item.period_on.slice(0, 7))}
-                >
-                  <div className="flex min-w-0 flex-col">
-                    <span className="first-letter:uppercase">
-                      {formatMonthYear(item.period_on.slice(0, 7))}
-                    </span>
-                    <span className="text-xs text-muted tabular-nums">
-                      Falta {money(item.remaining)}
-                    </span>
-                  </div>
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-          <FieldError>{errors?.period_on?.[0]}</FieldError>
-        </Select>
+          options={open.map((item) => ({
+            value: item.period_on,
+            label: capitalize(formatMonthYear(item.period_on.slice(0, 7))),
+            description: `Falta ${money(item.remaining)}`
+          }))}
+          error={errors?.period_on?.[0]}
+        />
       )}
 
       {isFull ? (
         // Pago completo: el monto es el saldo pendiente y lo pone el servidor
         <div className="flex flex-col gap-2">
-          <Label id="full-amount-label">Monto</Label>
+          <span
+            id={fullAmountLabelId}
+            className="text-sm font-medium"
+          >
+            Monto
+          </span>
           <p
-            aria-labelledby="full-amount-label"
-            className="rounded-2xl bg-default px-3 py-2 text-base"
+            aria-labelledby={fullAmountLabelId}
+            aria-describedby={
+              errors?.amount?.[0] ? fullAmountErrorId : undefined
+            }
+            className="flex min-h-11 items-center rounded-4xl bg-field px-4 text-base"
           >
             <Amount value={receivable.balance ?? 0} />
           </p>
-          <p className="text-sm text-muted">
+          <FieldDescription>
             Es el saldo pendiente. La cuenta por cobrar queda pagada.
-          </p>
+          </FieldDescription>
           {errors?.amount?.[0] && (
-            <p className="text-sm text-danger">{errors.amount[0]}</p>
+            <FieldError id={fullAmountErrorId}>{errors.amount[0]}</FieldError>
           )}
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          <TextField
+          <TextInputField
             name="amount"
+            label="Monto"
+            help="common.amount"
             inputMode="decimal"
             autoComplete="off"
+            placeholder="0"
             value={amountText}
-            onChange={setAmountText}
+            onChange={(event) => setAmountText(event.target.value)}
             isRequired
-            isInvalid={Boolean(amountError)}
-            validationBehavior="aria"
-            className="flex flex-col gap-2"
-          >
-            <FieldLabel help="common.amount">Monto</FieldLabel>
-            <Input placeholder="0" />
-            <FieldError>{amountError}</FieldError>
-          </TextField>
+            error={amountError}
+          />
 
           {mode === "partial" && receivable.balance !== null && (
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted-foreground">
               Saldo pendiente: <Amount value={receivable.balance} />
             </p>
           )}
@@ -501,7 +455,7 @@ function CollectFields({
           {preview && !preview.error && (
             <p
               aria-live="polite"
-              className="text-sm text-muted"
+              className="text-sm text-muted-foreground"
             >
               {preview.covered.length > 0 && (
                 <>Cubre {describeMonths(preview.covered, today)}</>
@@ -518,7 +472,9 @@ function CollectFields({
           )}
 
           {mode === "allocate" && open.length === 0 && (
-            <p className="text-sm text-muted">{summary(receivable)}</p>
+            <p className="text-sm text-muted-foreground">
+              {summary(receivable)}
+            </p>
           )}
         </div>
       )}
@@ -534,34 +490,31 @@ function CollectFields({
         isRequired
       />
 
-      <TextField
+      <TextInputField
         name="note"
+        label="Nota (opcional)"
+        help="common.note"
         maxLength={120}
+        placeholder={monthly ? "Plan de noviembre" : "Primer abono"}
         value={note}
-        onChange={setTypedNote}
-        isInvalid={Boolean(errors?.note)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="common.note">Nota (opcional)</FieldLabel>
-        <Input placeholder={monthly ? "Plan de noviembre" : "Primer abono"} />
-        <FieldError>{errors?.note?.[0]}</FieldError>
-      </TextField>
+        onChange={(event) => setTypedNote(event.target.value)}
+        error={errors?.note?.[0]}
+      />
 
-      <div className="flex items-center gap-0.5">
+      <div className="flex min-h-11 items-center gap-0.5">
         <Checkbox
+          id={createTransactionId}
           name="create_transaction"
           value="on"
-          isSelected={createTransaction}
-          onChange={setCreateTransaction}
+          checked={createTransaction}
+          onCheckedChange={setCreateTransaction}
+        />
+        <Label
+          htmlFor={createTransactionId}
+          className="min-h-11 pl-3 font-normal"
         >
-          <Checkbox.Control>
-            <Checkbox.Indicator />
-          </Checkbox.Control>
-          <Checkbox.Content className="text-sm">
-            Registrar como entrada
-          </Checkbox.Content>
-        </Checkbox>
+          Registrar como entrada
+        </Label>
         <FieldHelp
           help="debtEntry.createTransaction"
           label="Registrar el movimiento"
@@ -569,19 +522,16 @@ function CollectFields({
       </div>
 
       {createTransaction && (
-        <TextField
+        <TextInputField
           name="description"
+          label="Descripción"
+          help="common.description"
           maxLength={120}
+          placeholder="Cobro"
           value={description}
-          onChange={setTypedDescription}
-          isInvalid={Boolean(errors?.description)}
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="common.description">Descripción</FieldLabel>
-          <Input placeholder="Cobro" />
-          <FieldError>{errors?.description?.[0]}</FieldError>
-        </TextField>
+          onChange={(event) => setTypedDescription(event.target.value)}
+          error={errors?.description?.[0]}
+        />
       )}
 
       {/* La cuenta es la del ingreso: sin él no aplica. Muestra "Quedará en" */}
@@ -604,7 +554,7 @@ function CollectFields({
       {(state.error ?? errors?.debt_id?.[0] ?? errors?.mode?.[0]) && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error ?? errors?.debt_id?.[0] ?? errors?.mode?.[0]}
         </p>
@@ -612,14 +562,15 @@ function CollectFields({
 
       <div className="flex justify-end gap-2">
         <Button
+          type="button"
           variant="ghost"
-          onPress={onCancel}
+          onClick={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          isDisabled={pending}
+          disabled={pending}
         >
           {pending ? "Guardando..." : "Registrar"}
         </Button>
@@ -659,10 +610,10 @@ function MonthShortcuts({
       {options.map((option) => (
         <Button
           key={option.months}
+          type="button"
           variant="outline"
           size="sm"
-          className="min-h-11 md:min-h-8"
-          onPress={() => onPick(option.amount)}
+          onClick={() => onPick(option.amount)}
         >
           {option.months} meses
         </Button>

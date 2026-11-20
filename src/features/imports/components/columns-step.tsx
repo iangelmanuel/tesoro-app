@@ -1,9 +1,13 @@
 "use client"
 
 import { useMemo } from "react"
-import { Button, ListBox, Radio, RadioGroup, Select } from "@heroui/react"
-import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
+import { CARD_LIST } from "@/components/dashboard/surface"
+import { FieldHelp } from "@/components/forms/field-label"
+import { SelectField } from "@/components/forms/select-field"
+import { Button } from "@/components/ui/button"
+import { RadioGroup } from "@/components/ui/radio-group"
 import type { FieldHelpKey } from "@/config/help"
+import { cn } from "@/libs/cn"
 import { FIELD_LABELS, MAX_ROWS } from "../constants"
 import {
   type SourceTable,
@@ -24,6 +28,8 @@ import type {
   TypeMode,
   TypeValueTarget
 } from "../types"
+import { RadioCard } from "./radio-card"
+import { RowTargetSelect } from "./row-target-select"
 
 const UNMAPPED = "none"
 
@@ -349,7 +355,7 @@ export function ColumnsStep({
       <section className="flex flex-col gap-3">
         <div className="flex flex-col gap-1">
           <h2 className="text-sm font-medium">Columnas</h2>
-          <p className="text-sm text-muted">
+          <p className="text-sm text-muted-foreground">
             {target === "transactions"
               ? "Revisa la sugerencia. Las columnas sin destino, como Método, se ignoran."
               : "Revisa la sugerencia. Las columnas sin destino se ignoran."}
@@ -357,173 +363,72 @@ export function ColumnsStep({
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {fields.map((field) => {
-            const id = `import-field-${field}`
             const hint = OPTIONAL_HINTS[target][field]
 
             return (
-              <div
+              <SelectField
                 key={field}
-                className="flex flex-col gap-1.5"
-              >
-                <FieldLabel
-                  htmlFor={id}
-                  help="import.column"
-                  helpLabel={FIELD_LABELS[field]}
-                >
-                  {FIELD_LABELS[field]}
-                  {required.includes(field) && (
-                    <span className="text-danger">*</span>
-                  )}
-                </FieldLabel>
-                <Select
-                  value={
-                    (mapping[field] === undefined
-                      ? UNMAPPED
-                      : String(mapping[field])) || null
-                  }
-                  onChange={(key) =>
-                    key != null &&
-                    ((value) =>
-                      onFieldChange(
-                        field,
-                        value === UNMAPPED ? undefined : Number(value)
-                      ))(String(key))
-                  }
-                  fullWidth
-                >
-                  <Select.Trigger id={id}>
-                    <Select.Value />
-                    <Select.Indicator />
-                  </Select.Trigger>
-                  <Select.Popover>
-                    <ListBox>
-                      <ListBox.Item
-                        id={UNMAPPED}
-                        textValue="Sin mapear"
-                      >
-                        Sin mapear
-                        <ListBox.ItemIndicator />
-                      </ListBox.Item>
-                      {headers.map((header, index) => (
-                        <ListBox.Item
-                          key={index}
-                          id={String(index)}
-                          textValue={String(header)}
-                        >
-                          {header}
-                          <ListBox.ItemIndicator />
-                        </ListBox.Item>
-                      ))}
-                    </ListBox>
-                  </Select.Popover>
-                </Select>
-                {hint && <p className="text-xs text-muted">{hint}</p>}
-              </div>
+                label={FIELD_LABELS[field]}
+                help="import.column"
+                isRequired={required.includes(field)}
+                value={
+                  mapping[field] === undefined
+                    ? UNMAPPED
+                    : String(mapping[field])
+                }
+                onChange={(value) =>
+                  onFieldChange(
+                    field,
+                    value === UNMAPPED ? undefined : Number(value)
+                  )
+                }
+                options={[
+                  { value: UNMAPPED, label: "Sin mapear" },
+                  ...headers.map((header, index) => ({
+                    value: String(index),
+                    label: String(header)
+                  }))
+                ]}
+                description={hint}
+              />
             )
           })}
 
           {linkField && mapping[linkField] === undefined && (
-            <div className="flex flex-col gap-1.5">
-              <FieldLabel
-                htmlFor="import-fixed-link"
-                help="import.fixedLink"
-                helpLabel={
-                  linkField === "debt"
-                    ? "Deuda para todo el archivo"
-                    : "Meta para todo el archivo"
-                }
-              >
-                {linkField === "debt"
+            <SelectField
+              label={
+                linkField === "debt"
                   ? "Deuda para todo el archivo"
-                  : "Meta para todo el archivo"}
-                <span className="text-danger">*</span>
-              </FieldLabel>
-              <Select
-                value={(config.fixedLinkId ?? UNMAPPED) || null}
-                onChange={(key) =>
-                  key != null &&
-                  ((value) =>
-                    onFixedLinkChange(value === UNMAPPED ? null : value))(
-                    String(key)
-                  )
-                }
-                fullWidth
-              >
-                <Select.Trigger id="import-fixed-link">
-                  <Select.Value />
-                  <Select.Indicator />
-                </Select.Trigger>
-                <Select.Popover>
-                  <ListBox>
-                    <ListBox.Item
-                      id={UNMAPPED}
-                      textValue={String(
-                        linkField === "debt"
-                          ? "Elige una deuda"
-                          : "Elige una meta"
-                      )}
-                    >
-                      {linkField === "debt"
-                        ? "Elige una deuda"
-                        : "Elige una meta"}
-                      <ListBox.ItemIndicator />
-                    </ListBox.Item>
-                    {links.map((link) => (
-                      <ListBox.Item
-                        key={link.id}
-                        id={link.id}
-                        textValue={String(link.name)}
-                      >
-                        {link.name}
-                        <ListBox.ItemIndicator />
-                      </ListBox.Item>
-                    ))}
-                  </ListBox>
-                </Select.Popover>
-              </Select>
-            </div>
+                  : "Meta para todo el archivo"
+              }
+              help="import.fixedLink"
+              isRequired
+              value={config.fixedLinkId ?? UNMAPPED}
+              onChange={(value) =>
+                onFixedLinkChange(value === UNMAPPED ? null : value)
+              }
+              options={[
+                {
+                  value: UNMAPPED,
+                  label:
+                    linkField === "debt" ? "Elige una deuda" : "Elige una meta"
+                },
+                ...links.map((link) => ({ value: link.id, label: link.name }))
+              ]}
+            />
           )}
 
-          <div className="flex flex-col gap-1.5">
-            <FieldLabel
-              htmlFor="import-date-format"
-              help="import.dateFormat"
-            >
-              Formato de fecha
-            </FieldLabel>
-            <Select
-              value={dateFormat || null}
-              onChange={(key) =>
-                key != null &&
-                ((value) => onDateFormatChange(value as DateFormat))(
-                  String(key)
-                )
-              }
-              fullWidth
-            >
-              <Select.Trigger id="import-date-format">
-                <Select.Value />
-                <Select.Indicator />
-              </Select.Trigger>
-              <Select.Popover>
-                <ListBox>
-                  {DATE_FORMATS.map((format) => (
-                    <ListBox.Item
-                      key={format.value}
-                      id={format.value}
-                      textValue={String(format.label)}
-                    >
-                      {format.label}
-                      <ListBox.ItemIndicator />
-                    </ListBox.Item>
-                  ))}
-                </ListBox>
-              </Select.Popover>
-            </Select>
-            <p className="text-xs text-muted">
-              Solo aplica a fechas escritas como texto
-            </p>
-          </div>
+          <SelectField
+            label="Formato de fecha"
+            help="import.dateFormat"
+            value={dateFormat}
+            onChange={(value) => onDateFormatChange(value as DateFormat)}
+            options={DATE_FORMATS.map((format) => ({
+              value: format.value,
+              label: format.label
+            }))}
+            description="Solo aplica a fechas escritas como texto"
+          />
         </div>
       </section>
 
@@ -533,7 +438,7 @@ export function ColumnsStep({
             <h2 className="text-sm font-medium">
               Valores de «{headers[valueColumn]}»
             </h2>
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted-foreground">
               Indica qué significa cada valor. Los que no asignes quedan con
               error «
               {valueField === "frequency"
@@ -542,15 +447,15 @@ export function ColumnsStep({
               ».
             </p>
           </div>
-          <ul className="flex flex-col divide-y rounded-lg border">
+          <ul className={cn(CARD_LIST, "rounded-2xl bg-subtle px-4")}>
             {columnValues.map(({ key, label, count }) => (
               <li
                 key={key}
-                className="flex flex-wrap items-center justify-between gap-3 px-3 py-2"
+                className="flex flex-wrap items-center justify-between gap-3 py-2"
               >
                 <span className="text-sm">
                   {label || "(vacío)"}{" "}
-                  <span className="text-muted">
+                  <span className="text-muted-foreground">
                     · {count === 1 ? "1 fila" : `${count} filas`}
                   </span>
                 </span>
@@ -587,14 +492,14 @@ export function ColumnsStep({
       )}
 
       {missing.length > 0 && (
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted-foreground">
           Falta mapear: {missing.join(", ")}.
         </p>
       )}
       {tooManyRows && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           Máximo 2.000 filas por importación. Las hojas elegidas tienen{" "}
           {rowCount.toLocaleString("es-CO")} filas con datos: desmarca alguna
@@ -604,14 +509,16 @@ export function ColumnsStep({
 
       <div className="flex flex-wrap justify-between gap-2">
         <Button
+          type="button"
           variant="outline"
-          onPress={onBack}
+          onClick={onBack}
         >
           Atrás
         </Button>
         <Button
-          isDisabled={missing.length > 0 || tooManyRows || rowCount === 0}
-          onPress={onNext}
+          type="button"
+          disabled={missing.length > 0 || tooManyRows || rowCount === 0}
+          onClick={onNext}
         >
           Continuar
         </Button>
@@ -655,28 +562,23 @@ function ModeRadio<T extends string>({
         aria-labelledby={id}
         className="grid gap-3 sm:grid-cols-3"
         value={value}
-        onChange={(next) => onChange(next as T)}
+        onValueChange={(next) => onChange(next as T)}
       >
         {options.map((mode) => (
-          <Radio
+          <RadioCard
             key={mode.value}
+            id={`${id}-${mode.value}`}
             value={mode.value}
-          >
-            {({ isSelected }) => (
-              <Radio.Content
-                className="flex h-full w-full cursor-pointer items-start gap-2 rounded-xl border border-border p-3 transition-colors data-[selected=true]:border-accent data-[selected=true]:bg-accent-soft"
-                data-selected={isSelected}
+            label={mode.label}
+            hint={
+              <span
+                id={`${id}-${mode.value}-hint`}
+                className="text-muted-foreground"
               >
-                <Radio.Control className="mt-0.5">
-                  <Radio.Indicator />
-                </Radio.Control>
-                <span className="flex flex-col gap-0.5 text-sm">
-                  <span className="font-medium">{mode.label}</span>
-                  <span className="text-muted">{mode.hint}</span>
-                </span>
-              </Radio.Content>
-            )}
-          </Radio>
+                {mode.hint}
+              </span>
+            }
+          />
         ))}
       </RadioGroup>
     </div>
@@ -697,42 +599,14 @@ function ValueSelect<T extends string>({
   onChange
 }: ValueSelectProps<T>) {
   return (
-    <Select
-      value={(value ?? UNMAPPED) || null}
-      onChange={(key) =>
-        key != null &&
-        ((next) => onChange(next === UNMAPPED ? undefined : (next as T)))(
-          String(key)
-        )
-      }
-      className="w-48"
+    <RowTargetSelect
       aria-label={`Destino de ${label || "(vacío)"}`}
-    >
-      <Select.Trigger>
-        <Select.Value />
-        <Select.Indicator />
-      </Select.Trigger>
-      <Select.Popover>
-        <ListBox>
-          <ListBox.Item
-            id={UNMAPPED}
-            textValue="Sin asignar"
-          >
-            Sin asignar
-            <ListBox.ItemIndicator />
-          </ListBox.Item>
-          {options.map((option) => (
-            <ListBox.Item
-              key={option.value}
-              id={option.value}
-              textValue={String(option.label)}
-            >
-              {option.label}
-              <ListBox.ItemIndicator />
-            </ListBox.Item>
-          ))}
-        </ListBox>
-      </Select.Popover>
-    </Select>
+      value={value ?? UNMAPPED}
+      onChange={(next) => onChange(next === UNMAPPED ? undefined : (next as T))}
+      groups={[
+        { options: [{ value: UNMAPPED, label: "Sin asignar" }] },
+        { options }
+      ]}
+    />
   )
 }

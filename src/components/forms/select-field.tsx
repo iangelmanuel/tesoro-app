@@ -3,7 +3,7 @@
 import { useId } from "react"
 import { HeroUIPortalBridge } from "@/components/dashboard/heroui-portal-bridge"
 import { FieldLabel } from "@/components/forms/field-label"
-import { FieldError } from "@/components/ui/field"
+import { FieldDescription, FieldError } from "@/components/ui/field"
 import {
   Select,
   SelectContent,
@@ -35,6 +35,10 @@ interface SelectFieldProps<T extends string> {
   disabled?: boolean
   /** Texto del trigger sin valor elegido */
   placeholder?: string
+  /** Asterisco en la etiqueta. No activa la validación del navegador */
+  isRequired?: boolean
+  /** Texto de apoyo bajo el campo */
+  description?: React.ReactNode
   className?: string
 }
 
@@ -54,10 +58,17 @@ export function SelectField<T extends string>({
   error,
   disabled,
   placeholder,
+  isRequired,
+  description,
   className
 }: SelectFieldProps<T>) {
   const id = useId()
   const errorId = `${id}-error`
+  const descriptionId = `${id}-description`
+  const describedBy =
+    [error ? errorId : null, description ? descriptionId : null]
+      .filter(Boolean)
+      .join(" ") || undefined
 
   return (
     <div
@@ -67,6 +78,7 @@ export function SelectField<T extends string>({
       <FieldLabel
         htmlFor={id}
         help={help}
+        isRequired={isRequired}
         isInvalid={Boolean(error)}
       >
         {label}
@@ -84,7 +96,7 @@ export function SelectField<T extends string>({
           <SelectTrigger
             id={id}
             aria-invalid={error ? true : undefined}
-            aria-describedby={error ? errorId : undefined}
+            aria-describedby={describedBy}
             className="w-full"
           >
             <SelectValue placeholder={placeholder} />
@@ -111,6 +123,9 @@ export function SelectField<T extends string>({
           </SelectContent>
         </Select>
       </HeroUIPortalBridge>
+      {description ? (
+        <FieldDescription id={descriptionId}>{description}</FieldDescription>
+      ) : null}
       {error ? <FieldError id={errorId}>{error}</FieldError> : null}
     </div>
   )

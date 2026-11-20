@@ -1,17 +1,24 @@
 "use client"
 
-import { type ReactNode, useMemo, useState } from "react"
-import {
-  Button,
-  Checkbox,
-  Chip,
-  Description,
-  Label,
-  Table,
-  cn
-} from "@heroui/react"
+import { type ReactNode, useId, useMemo, useState } from "react"
 import { LoaderCircle } from "lucide-react"
+import { CARD_LIST } from "@/components/dashboard/surface"
+import { TONE_BADGE_CLASSES, type Tone } from "@/components/dashboard/tone"
+import { ToneBadge } from "@/components/dashboard/tone-badge"
 import { FieldHelp } from "@/components/forms/field-label"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { FieldDescription } from "@/components/ui/field"
+import { Label } from "@/components/ui/label"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table"
+import { cn } from "@/libs/cn"
 import { formatCurrency, formatDate } from "@/libs/format"
 import type { ResultingBalance } from "../balances"
 import { MONTH_NAMES, PREVIEW_PAGE_SIZE } from "../constants"
@@ -33,18 +40,11 @@ const STATUS_LABELS: Record<RowStatus, string> = {
   skipped: "Omitidas"
 }
 
-const STATUS_BADGES: Record<
-  RowStatus,
-  {
-    label: string
-    color: "default" | "success" | "warning" | "danger"
-    variant: "secondary" | "soft" | "tertiary"
-  }
-> = {
-  ready: { label: "Lista", color: "default", variant: "secondary" },
-  duplicate: { label: "Duplicado", color: "warning", variant: "soft" },
-  error: { label: "Error", color: "danger", variant: "soft" },
-  skipped: { label: "Omitida", color: "default", variant: "tertiary" }
+const STATUS_BADGES: Record<RowStatus, { label: string; tone: Tone }> = {
+  ready: { label: "Lista", tone: "success" },
+  duplicate: { label: "Duplicado", tone: "warning" },
+  error: { label: "Error", tone: "danger" },
+  skipped: { label: "Omitida", tone: "neutral" }
 }
 
 const TYPE_LABELS = { income: "Entrada", expense: "Salida" } as const
@@ -279,25 +279,29 @@ export function PreviewStep<V>({
         className="flex flex-wrap gap-2"
       >
         <Button
+          type="button"
           size="sm"
-          variant={filter === "all" ? "primary" : "outline"}
-          onPress={() => changeFilter("all")}
+          variant={filter === "all" ? "default" : "outline"}
+          aria-pressed={filter === "all"}
+          onClick={() => changeFilter("all")}
         >
           Todas · {rows.length}
         </Button>
         {(Object.keys(STATUS_LABELS) as RowStatus[]).map((status) => (
           <Button
             key={status}
+            type="button"
             size="sm"
-            variant={filter === status ? "primary" : "outline"}
-            onPress={() => changeFilter(status)}
+            variant={filter === status ? "default" : "outline"}
+            aria-pressed={filter === status}
+            onClick={() => changeFilter(status)}
           >
             {STATUS_LABELS[status]} · {counts[status]}
           </Button>
         ))}
       </div>
       {empty > 0 && (
-        <p className="-mt-3 text-sm text-muted">
+        <p className="-mt-3 text-sm text-muted-foreground">
           {empty === 1
             ? "1 fila vacía no se muestra"
             : `${empty} filas vacías no se muestran`}{" "}
@@ -305,113 +309,105 @@ export function PreviewStep<V>({
         </p>
       )}
 
-      <div className="overflow-x-auto rounded-lg border">
-        <Table>
-          <Table.ScrollContainer>
-            <Table.Content aria-label="Vista previa de la importación">
-              <Table.Header>
-                <Table.Column
-                  isRowHeader
-                  className="w-10"
+      <div className="rounded-2xl bg-subtle px-2">
+        <Table aria-label="Vista previa de la importación">
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-12">
+                <span className="sr-only">Importar</span>
+              </TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead>Hoja · fila</TableHead>
+              {columns.map((column) => (
+                <TableHead
+                  key={column.header}
+                  className={
+                    column.className === AMOUNT_CLASS ? "text-right" : undefined
+                  }
                 >
-                  <span className="sr-only">Importar</span>
-                </Table.Column>
-                <Table.Column>Estado</Table.Column>
-                <Table.Column>Hoja · fila</Table.Column>
-                {columns.map((column) => (
-                  <Table.Column
-                    key={column.header}
-                    className={
-                      column.className === AMOUNT_CLASS
-                        ? "text-right"
-                        : undefined
-                    }
-                  >
-                    {column.header}
-                  </Table.Column>
-                ))}
-                <Table.Column>Motivos</Table.Column>
-              </Table.Header>
-              <Table.Body>
-                {pageRows.length === 0 ? (
-                  <Table.Row>
-                    <Table.Cell
-                      colSpan={columnCount}
-                      className="text-center text-muted"
+                  {column.header}
+                </TableHead>
+              ))}
+              <TableHead>Motivos</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {pageRows.length === 0 ? (
+              <TableRow className="hover:bg-transparent">
+                <TableCell
+                  colSpan={columnCount}
+                  className="text-center text-muted-foreground"
+                >
+                  No hay filas con este estado
+                </TableCell>
+              </TableRow>
+            ) : (
+              pageRows.map(({ row, index }) => (
+                <TableRow
+                  key={`${row.sheet}-${row.sourceRow}`}
+                  className={cn(!row.selected && "text-muted-foreground")}
+                >
+                  <TableCell>
+                    <Checkbox
+                      aria-label={`Importar fila ${row.sourceRow} de ${row.sheet}`}
+                      checked={row.selected}
+                      disabled={!row.value || importing}
+                      onCheckedChange={() => onToggle(index)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <ToneBadge
+                      className={
+                        TONE_BADGE_CLASSES[STATUS_BADGES[row.status].tone]
+                      }
                     >
-                      No hay filas con este estado
-                    </Table.Cell>
-                  </Table.Row>
-                ) : (
-                  pageRows.map(({ row, index }) => (
-                    <Table.Row
-                      key={`${row.sheet}-${row.sourceRow}`}
-                      className={cn(!row.selected && "text-muted")}
+                      {STATUS_BADGES[row.status].label}
+                    </ToneBadge>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {row.sheet} · {row.sourceRow}
+                  </TableCell>
+                  {columns.map((column) => (
+                    <TableCell
+                      key={column.header}
+                      className={column.className}
                     >
-                      <Table.Cell>
-                        <Checkbox
-                          aria-label={`Importar fila ${row.sourceRow} de ${row.sheet}`}
-                          isSelected={row.selected}
-                          isDisabled={!row.value || importing}
-                          onChange={() => onToggle(index)}
-                        >
-                          <Checkbox.Control>
-                            <Checkbox.Indicator />
-                          </Checkbox.Control>
-                        </Checkbox>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Chip
-                          size="sm"
-                          color={STATUS_BADGES[row.status].color}
-                          variant={STATUS_BADGES[row.status].variant}
-                        >
-                          {STATUS_BADGES[row.status].label}
-                        </Chip>
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap">
-                        {row.sheet} · {row.sourceRow}
-                      </Table.Cell>
-                      {columns.map((column) => (
-                        <Table.Cell
-                          key={column.header}
-                          className={column.className}
-                        >
-                          {row.value === undefined
-                            ? "—"
-                            : column.cell(row.value)}
-                        </Table.Cell>
-                      ))}
-                      <Table.Cell className="text-sm">
-                        {row.reasons.join(" · ")}
-                      </Table.Cell>
-                    </Table.Row>
-                  ))
-                )}
-              </Table.Body>
-            </Table.Content>
-          </Table.ScrollContainer>
+                      {row.value === undefined ? "—" : column.cell(row.value)}
+                    </TableCell>
+                  ))}
+                  <TableCell className="text-sm">
+                    {row.reasons.join(" · ")}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
         </Table>
       </div>
 
       {pageCount > 1 && (
         <div className="flex items-center justify-end gap-2 text-sm">
           <Button
+            type="button"
             size="sm"
             variant="outline"
-            isDisabled={currentPage === 0}
-            onPress={() => setPage(currentPage - 1)}
+            disabled={currentPage === 0}
+            onClick={() => setPage(currentPage - 1)}
           >
             Anterior
           </Button>
-          <span className="text-muted">
+          <span
+            className="text-muted-foreground tabular-nums"
+            aria-live="polite"
+          >
             Página {currentPage + 1} de {pageCount}
           </span>
           <Button
+            type="button"
             size="sm"
             variant="outline"
-            isDisabled={currentPage >= pageCount - 1}
-            onPress={() => setPage(currentPage + 1)}
+            disabled={currentPage >= pageCount - 1}
+            onClick={() => setPage(currentPage + 1)}
           >
             Siguiente
           </Button>
@@ -423,7 +419,7 @@ export function PreviewStep<V>({
       {(blocked ?? error) && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {blocked ?? error}
         </p>
@@ -431,17 +427,24 @@ export function PreviewStep<V>({
 
       <div className="flex flex-wrap justify-between gap-2">
         <Button
+          type="button"
           variant="outline"
-          isDisabled={importing}
-          onPress={onBack}
+          disabled={importing}
+          onClick={onBack}
         >
           Atrás
         </Button>
         <Button
-          isDisabled={selectedCount === 0 || importing || Boolean(blocked)}
-          onPress={onConfirm}
+          type="button"
+          disabled={selectedCount === 0 || importing || Boolean(blocked)}
+          onClick={onConfirm}
         >
-          {importing && <LoaderCircle className="animate-spin" />}
+          {importing && (
+            <LoaderCircle
+              aria-hidden="true"
+              className="animate-spin motion-reduce:animate-none"
+            />
+          )}
           Importar {countLabel(selectedCount)}
         </Button>
       </div>
@@ -462,22 +465,22 @@ export function Balances({ title, balances, currency }: BalancesProps) {
   return (
     <section className="flex flex-col gap-2">
       <h2 className="text-sm font-medium">{title}</h2>
-      <ul className="flex flex-col divide-y rounded-lg border">
+      <ul className={cn(CARD_LIST, "rounded-2xl bg-subtle px-4")}>
         {balances.map((balance) => (
           <li
             key={balance.id}
-            className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm"
+            className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm"
           >
             <span>{balance.name}</span>
             <span className="tabular-nums">
-              <span className="text-muted">
+              <span className="text-muted-foreground">
                 {formatCurrency(balance.current, currency)}
               </span>{" "}
               →{" "}
               <span
                 className={cn(
                   "font-medium",
-                  balance.result < 0 && "text-danger"
+                  balance.result < 0 && "text-(--expense)"
                 )}
               >
                 {formatCurrency(balance.result, currency)}
@@ -502,31 +505,37 @@ export function CreateTransactionsField({
   disabled,
   onChange
 }: CreateTransactionsProps) {
+  const id = useId()
+
   return (
-    <div className="flex items-start gap-0.5">
+    <div className="flex items-start gap-3">
       <Checkbox
-        isSelected={checked}
-        isDisabled={disabled}
-        onChange={onChange}
-        className="items-start"
-      >
-        <Checkbox.Control className="mt-0.5">
-          <Checkbox.Indicator />
-        </Checkbox.Control>
-        <Checkbox.Content>
-          <Label>Registrar también como salida/entrada</Label>
-          <Description>
-            Cada pago de préstamo crea una salida en «Deudas». Cada abono de una
-            cuenta por cobrar crea una entrada en «Cobros». Desmárcala si ya
-            importaste estos pagos como movimientos.
-          </Description>
-        </Checkbox.Content>
-      </Checkbox>
-      <FieldHelp
-        help="import.alsoRegister"
-        label="Registrar también el movimiento"
-        className="mt-0"
+        id={id}
+        checked={checked}
+        disabled={disabled}
+        onCheckedChange={onChange}
+        aria-describedby={`${id}-description`}
+        className="mt-3"
       />
+      <div className="flex flex-col gap-1">
+        <div className="flex min-h-11 items-center gap-0.5">
+          <Label
+            htmlFor={id}
+            className="cursor-pointer"
+          >
+            Registrar también como salida/entrada
+          </Label>
+          <FieldHelp
+            help="import.alsoRegister"
+            label="Registrar también el movimiento"
+          />
+        </div>
+        <FieldDescription id={`${id}-description`}>
+          Cada pago de préstamo crea una salida en «Deudas». Cada abono de una
+          cuenta por cobrar crea una entrada en «Cobros». Desmárcala si ya
+          importaste estos pagos como movimientos.
+        </FieldDescription>
+      </div>
     </div>
   )
 }

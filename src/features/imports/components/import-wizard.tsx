@@ -1,8 +1,9 @@
 "use client"
 
 import { useMemo, useReducer, useState, useTransition } from "react"
-import { cn } from "@heroui/react"
 import { Check } from "lucide-react"
+import { CARD } from "@/components/dashboard/surface"
+import { cn } from "@/libs/cn"
 import { formatCurrency } from "@/libs/format"
 import {
   type ConfirmImportResult,
@@ -507,7 +508,7 @@ export function ImportWizard({
   }
 
   return (
-    <div className="flex flex-col gap-6 rounded-xl border p-4 sm:p-6">
+    <div className={cn(CARD, "gap-6 sm:p-6")}>
       <StepIndicator
         current={state.step}
         target={state.target}
@@ -655,7 +656,10 @@ function StepIndicator({
   const currentIndex = STEPS.findIndex((step) => step.id === current)
 
   return (
-    <ol className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+    <ol
+      aria-label="Pasos de la importación"
+      className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm"
+    >
       {STEPS.map((step, index) => {
         const done = index < currentIndex
         const active = index === currentIndex
@@ -665,21 +669,27 @@ function StepIndicator({
             key={step.id}
             aria-current={active ? "step" : undefined}
             className={cn(
-              "flex items-center gap-2",
-              active ? "font-medium text-foreground" : "text-muted"
+              "flex min-h-8 items-center gap-2",
+              active ? "font-semibold text-foreground" : "text-muted-foreground"
             )}
           >
             <span
+              aria-hidden="true"
               className={cn(
-                "flex size-6 items-center justify-center rounded-full border text-xs",
-                active && "border-accent bg-accent text-accent-foreground",
-                done &&
-                  "border-accent bg-accent-soft text-accent-soft-foreground"
+                "flex size-7 shrink-0 items-center justify-center rounded-full text-xs tabular-nums",
+                active && "bg-primary text-primary-foreground",
+                done && "bg-success-soft text-success-soft-foreground",
+                !active && !done && "bg-subtle"
               )}
             >
               {done ? <Check className="size-3.5" /> : index + 1}
             </span>
-            {stepLabel(step.id, target)}
+            {/* En el teléfono solo se lee el paso actual; los demás quedan
+                para el lector de pantalla */}
+            <span className={cn(!active && "max-sm:sr-only")}>
+              {stepLabel(step.id, target)}
+              {done && <span className="sr-only"> (completado)</span>}
+            </span>
           </li>
         )
       })}

@@ -1,6 +1,6 @@
 # SPEC 50 — Logo nuevo: monograma T
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 12, SPEC 32, SPEC 33
 > **Fecha:** 2026-11-19
 > **Objetivo:** Reemplazar el cofre actual por un monograma T geométrico, sobrio y profesional, y regenerar con él todos los assets de marca.
@@ -97,17 +97,17 @@ const BRAND_HEX = "#059669" // único color de marca de los PNG; SPEC 51 lo pued
 
 ## Criterios de aceptación
 
-- [ ] Hubo tres propuestas y el usuario eligió una antes de generar assets.
-- [ ] `assets/brand/mark.svg` tiene 4 paths o menos y ningún degradado, filtro ni sombra.
-- [ ] A 16 px (favicon en la pestaña) el monograma se reconoce como una T, sin trazos borrosos.
-- [ ] `pnpm brand:assets` corre sin errores y regenera los 10 archivos listados en Alcance.
-- [ ] El ícono maskable queda completo dentro del círculo central del 80 %.
-- [ ] `LogoMark` con `tone="ink"` toma el color del texto que lo rodea en claro y en oscuro.
-- [ ] El wordmark del componente se ve igual con o sin la fuente de la UI cargada (son paths).
-- [ ] El logo nuevo aparece en header y footer públicos, aside, auth, `/account-deleted`, consentimiento OAuth y `/mcp`.
-- [ ] El Excel y el PDF exportados muestran el logo nuevo, nítido al 200 % de zoom.
-- [ ] El isotipo a color y el de tinta dan ≥ 3:1 contra su fondo en claro y oscuro.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
+- [x] Hubo tres propuestas y el usuario eligió una antes de generar assets.
+- [x] `assets/brand/mark.svg` tiene 4 paths o menos y ningún degradado, filtro ni sombra.
+- [x] A 16 px (favicon en la pestaña) el monograma se reconoce como una T, sin trazos borrosos.
+- [x] `pnpm brand:assets` corre sin errores y regenera los 10 archivos listados en Alcance.
+- [x] El ícono maskable queda completo dentro del círculo central del 80 %.
+- [x] `LogoMark` con `tone="ink"` toma el color del texto que lo rodea en claro y en oscuro.
+- [x] El wordmark del componente se ve igual con o sin la fuente de la UI cargada (son paths).
+- [x] El logo nuevo aparece en header y footer públicos, aside, auth, `/account-deleted`, consentimiento OAuth y `/mcp`.
+- [x] El Excel y el PDF exportados muestran el logo nuevo, nítido al 200 % de zoom.
+- [x] El isotipo a color y el de tinta dan ≥ 3:1 contra su fondo en claro y oscuro.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan.
 
 ## Decisiones
 

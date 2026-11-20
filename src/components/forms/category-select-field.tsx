@@ -1,13 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { FieldError, ListBox, Select } from "@heroui/react"
-import { FieldLabel } from "@/components/forms/field-label"
+import { CreatableSelect } from "@/components/forms/creatable-select"
 import type { FieldHelpKey } from "@/config/help"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import { CategoryDialog } from "@/features/categories/components/category-dialog"
 import type { Category } from "@/features/categories/queries"
-import { CREATE_OPTION, CreateOption } from "./create-option"
 
 interface CategorySelectFieldProps {
   /** Nombre del campo del formulario */
@@ -33,7 +31,8 @@ interface CategorySelectFieldProps {
 }
 
 /**
- * Select de categoría con "+ Crear categoría" al final. La opción abre el
+ * Select de categoría con búsqueda y "+ Crear categoría" al final. El valor
+ * viaja en un input oculto. La opción abre el
  * diálogo de categoría encima del formulario; al guardar, la nueva queda
  * elegida y el resto del formulario no se toca. Mientras llega la lista
  * refrescada del servidor, la nueva vive en el estado local.
@@ -64,14 +63,6 @@ export function CategorySelectField({
     )
   ]
 
-  function handleChange(key: React.Key | null) {
-    if (key === CREATE_OPTION) {
-      setDialogOpen(true)
-      return
-    }
-    onChange(key == null ? "" : String(key))
-  }
-
   function handleCreated(category: Category) {
     setCreated((current) => [...current, category])
     onChange(category.id)
@@ -79,48 +70,41 @@ export function CategorySelectField({
 
   return (
     <>
-      <Select
+      <input
+        type="hidden"
         name={name}
-        fullWidth
-        placeholder={placeholder}
+        value={value}
+      />
+      <CreatableSelect
+        label={label}
+        help={help}
         value={value || null}
-        onChange={handleChange}
-        isInvalid={Boolean(error)}
-        isDisabled={isDisabled}
-        className="flex flex-col gap-2"
+        onChange={onChange}
+        onCreate={() => setDialogOpen(true)}
+        options={options.map((category) => {
+          const categoryName = category.archived_at
+            ? `${category.name} (archivada)`
+            : category.name
+          return {
+            id: category.id,
+            text: categoryName,
+            node: (
+              <CategoryBadge
+                name={categoryName}
+                icon={category.icon}
+                color={category.color}
+              />
+            )
+          }
+        })}
+        createLabel="Crear categoría"
+        searchLabel="Buscar categoría"
+        placeholder={placeholder}
+        error={error}
+        disabled={isDisabled}
       >
-        <FieldLabel help={help}>{label}</FieldLabel>
-        <Select.Trigger>
-          <Select.Value />
-          <Select.Indicator />
-        </Select.Trigger>
-        <Select.Popover>
-          <ListBox>
-            {options.map((category) => {
-              const categoryName = category.archived_at
-                ? `${category.name} (archivada)`
-                : category.name
-              return (
-                <ListBox.Item
-                  key={category.id}
-                  id={category.id}
-                  textValue={categoryName}
-                >
-                  <CategoryBadge
-                    name={categoryName}
-                    icon={category.icon}
-                    color={category.color}
-                  />
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              )
-            })}
-            <CreateOption label="Crear categoría" />
-          </ListBox>
-        </Select.Popover>
-        <FieldError>{error}</FieldError>
         {children}
-      </Select>
+      </CreatableSelect>
       <CategoryDialog
         workspaceId={workspaceId}
         type={type}

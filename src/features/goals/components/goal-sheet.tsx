@@ -81,14 +81,14 @@ export function GoalSheet({
       }
       action={
         isActive ? (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-wrap gap-2">
             <ContributionDialog
               workspaceId={workspaceId}
               goalId={goal.id}
               kind="deposit"
               accounts={accounts}
               trigger={
-                <Button>
+                <Button className="min-w-fit flex-1">
                   <Plus />
                   Aportar
                 </Button>
@@ -100,7 +100,10 @@ export function GoalSheet({
               kind="withdrawal"
               accounts={accounts}
               trigger={
-                <Button variant="secondary">
+                <Button
+                  className="min-w-fit flex-1"
+                  variant="outline"
+                >
                   <Minus />
                   Retirar
                 </Button>
@@ -117,7 +120,7 @@ export function GoalSheet({
             </p>
             <Button
               type="button"
-              variant="secondary"
+              variant="outline"
               size="sm"
               disabled={pending}
               onClick={() => run("reactivate")}

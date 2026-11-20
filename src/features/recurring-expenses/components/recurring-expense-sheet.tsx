@@ -231,7 +231,7 @@ export function RecurringExpenseSheet({
           <>
             <Button
               size="sm"
-              variant="secondary"
+              variant="outline"
               onClick={() => setEditing(true)}
             >
               <Pencil />
@@ -240,7 +240,7 @@ export function RecurringExpenseSheet({
             {expense.is_active && (
               <Button
                 size="sm"
-                variant="secondary"
+                variant="outline"
                 disabled={pending}
                 onClick={toggle}
               >

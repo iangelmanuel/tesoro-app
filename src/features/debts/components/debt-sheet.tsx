@@ -152,15 +152,16 @@ export function DebtSheet({
           // Cuentas por cobrar: el formulario de cobro compartido con el tab
           // Me deben (SPEC 39). Mes a mes no lleva ajustes
           isActive && isReceivable ? (
-            <div
-              className={isMonthly ? "grid gap-2" : "grid grid-cols-2 gap-2"}
-            >
+            <div className="flex flex-wrap gap-2">
               <ReceivableCollectDialog
                 workspaceId={debt.workspace_id}
                 receivable={collectable}
                 accounts={accounts ?? []}
                 trigger={
-                  <Button disabled={!isOpenEnded && debt.balance <= 0}>
+                  <Button
+                    className="min-w-fit flex-1"
+                    disabled={!isOpenEnded && debt.balance <= 0}
+                  >
                     <Plus />
                     Registrar cobro
                   </Button>
@@ -171,7 +172,10 @@ export function DebtSheet({
                   debt={debt}
                   currency={currency}
                   trigger={
-                    <Button variant="secondary">
+                    <Button
+                      className="min-w-fit flex-1"
+                      variant="outline"
+                    >
                       <RefreshCw />
                       Actualizar saldo
                     </Button>
@@ -180,7 +184,7 @@ export function DebtSheet({
               )}
             </div>
           ) : isActive ? (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-wrap gap-2">
               <PaymentDialog
                 workspaceId={debt.workspace_id}
                 debt={{
@@ -190,6 +194,7 @@ export function DebtSheet({
                 accounts={accounts}
                 trigger={
                   <Button
+                    className="min-w-fit flex-1"
                     // Sin saldo, una tarjeta igual registra compras y cargos
                     disabled={debt.balance <= 0 && debt.kind !== "credit_card"}
                   >
@@ -202,7 +207,10 @@ export function DebtSheet({
                 debt={debt}
                 currency={currency}
                 trigger={
-                  <Button variant="secondary">
+                  <Button
+                    className="min-w-fit flex-1"
+                    variant="outline"
+                  >
                     <RefreshCw />
                     Actualizar saldo
                   </Button>
@@ -217,7 +225,7 @@ export function DebtSheet({
               </p>
               <Button
                 type="button"
-                variant="secondary"
+                variant="outline"
                 size="sm"
                 disabled={pending}
                 onClick={() => run("reactivate")}

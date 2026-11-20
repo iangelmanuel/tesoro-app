@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useRef } from "react"
 import { usePathname } from "next/navigation"
 import { I18nProvider, UNSAFE_PortalProvider } from "react-aria"
+import { HeroUIPortalHost } from "@/components/dashboard/heroui-portal-bridge"
 import { PortalContainerProvider } from "@/components/ui/portal-container"
 import { SITE } from "@/config/site"
 import { getWorkspaceTheme } from "@/libs/workspace-theme"
@@ -15,7 +16,8 @@ import { getWorkspaceTheme } from "@/libs/workspace-theme"
 //
 // Los overlays de HeroUI (UNSAFE_PortalProvider) y los de shadcn / Base UI
 // (PortalContainerProvider) se montan aquí y no en <body>, así heredan el
-// primario del espacio. I18nProvider fija el
+// primario del espacio. HeroUIPortalHost recibe los overlays de Base UI que
+// se abren dentro de un Modal de HeroUI (hasta SPEC 53). I18nProvider fija el
 // locale de fechas y números de React Aria (DatePicker, Calendar): sin él el
 // servidor y el navegador podrían usar locales distintos
 export function WorkspaceThemeRoot({
@@ -35,7 +37,7 @@ export function WorkspaceThemeRoot({
       <I18nProvider locale={SITE.seo.locale}>
         <UNSAFE_PortalProvider getContainer={getContainer}>
           <PortalContainerProvider container={containerRef}>
-            {children}
+            <HeroUIPortalHost>{children}</HeroUIPortalHost>
           </PortalContainerProvider>
         </UNSAFE_PortalProvider>
       </I18nProvider>

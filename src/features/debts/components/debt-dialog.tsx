@@ -12,6 +12,7 @@ import {
   toast
 } from "@heroui/react"
 import { HelpHint } from "@/components/dashboard/help-hint"
+import { PortalBridgeProbe } from "@/components/dashboard/portal-bridge-probe"
 import { AccountSelectField } from "@/components/forms/account-select-field"
 import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
 import type { FieldHelpKey } from "@/config/help"
@@ -74,6 +75,7 @@ export function DebtDialog({
               </p>
             </Modal.Header>
             <Modal.Body>
+              <PortalBridgeProbe />
               {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
               <DebtForm
                 workspaceId={workspaceId}

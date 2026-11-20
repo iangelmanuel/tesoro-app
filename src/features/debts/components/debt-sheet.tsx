@@ -1,17 +1,17 @@
 "use client"
 
 import { useState } from "react"
-import { Button, Input, Label, TextField } from "@heroui/react"
 import { Plus, RefreshCw } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { DetailSection, DetailSheet } from "@/components/dashboard/detail-sheet"
 import { HelpHint } from "@/components/dashboard/help-hint"
-// Triggers de los diálogos ya en FormDialog; el resto del Sheet migra en
-// el paso 7
-import { Button as UiButton } from "@/components/ui/button"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
+import { TextInputField } from "@/components/forms/text-input-field"
+import { Button } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { parseAmount } from "@/features/transactions/schemas"
+import { cn } from "@/libs/cn"
 import { formatCurrency, formatDate } from "@/libs/format"
 import {
   type DebtProjection,
@@ -126,7 +126,7 @@ export function DebtSheet({
               <DebtProgress debt={debt} />
             )}
             {isMonthly && debt.term_months !== null && (
-              <p className="text-sm text-muted tabular-nums">
+              <p className="text-sm text-muted-foreground tabular-nums">
                 {
                   receivableInstallments(debt, entries, today).filter(
                     (installment) => installment.status === "paid"
@@ -160,10 +160,10 @@ export function DebtSheet({
                 receivable={collectable}
                 accounts={accounts ?? []}
                 trigger={
-                  <UiButton disabled={!isOpenEnded && debt.balance <= 0}>
+                  <Button disabled={!isOpenEnded && debt.balance <= 0}>
                     <Plus />
                     Registrar cobro
-                  </UiButton>
+                  </Button>
                 }
               />
               {!isMonthly && (
@@ -171,10 +171,10 @@ export function DebtSheet({
                   debt={debt}
                   currency={currency}
                   trigger={
-                    <UiButton variant="secondary">
+                    <Button variant="secondary">
                       <RefreshCw />
                       Actualizar saldo
-                    </UiButton>
+                    </Button>
                   }
                 />
               )}
@@ -189,38 +189,38 @@ export function DebtSheet({
                 }}
                 accounts={accounts}
                 trigger={
-                  <UiButton
+                  <Button
                     // Sin saldo, una tarjeta igual registra compras y cargos
                     disabled={debt.balance <= 0 && debt.kind !== "credit_card"}
                   >
                     <Plus />
                     Registrar movimiento
-                  </UiButton>
+                  </Button>
                 }
               />
               <AdjustBalanceDialog
                 debt={debt}
                 currency={currency}
                 trigger={
-                  <UiButton variant="secondary">
+                  <Button variant="secondary">
                     <RefreshCw />
                     Actualizar saldo
-                  </UiButton>
+                  </Button>
                 }
               />
             </div>
           ) : (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-surface-secondary p-4">
-              <p className="text-sm text-muted">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-subtle p-4">
+              <p className="text-sm text-muted-foreground">
                 {status?.label}. Reactívala para registrar{" "}
                 {isReceivable ? "abonos" : "pagos"}.
               </p>
               <Button
+                type="button"
                 variant="secondary"
                 size="sm"
-                className="max-md:min-h-11"
-                isDisabled={pending}
-                onPress={() => run("reactivate")}
+                disabled={pending}
+                onClick={() => run("reactivate")}
               >
                 Reactivar
               </Button>
@@ -316,7 +316,7 @@ function CollectedThisYear({
   )
 
   return (
-    <p className="text-sm text-muted tabular-nums">
+    <p className="text-sm text-muted-foreground tabular-nums">
       Cobrado en {today.slice(0, 4)}{" "}
       <span className="font-medium text-foreground">
         <Amount
@@ -341,7 +341,7 @@ function InstallmentsDue({ debt, currency }: { debt: Debt; currency: string }) {
   }
 
   return (
-    <p className="flex flex-wrap items-center gap-x-1 text-sm text-muted tabular-nums">
+    <p className="flex flex-wrap items-center gap-x-1 text-sm text-muted-foreground tabular-nums">
       Pago del mes:{" "}
       <span className="font-medium text-foreground">
         <Amount
@@ -377,7 +377,7 @@ function NextFee({
   }
 
   return (
-    <p className="text-sm text-muted tabular-nums">
+    <p className="text-sm text-muted-foreground tabular-nums">
       Próxima cuota: {formatDayMonth(dueOn)} ·{" "}
       <span className="font-medium text-foreground">
         {formatCurrency(debt.fee_amount, currency)}
@@ -501,7 +501,7 @@ function DebtDetails({ debt, currency }: { debt: Debt; currency: string }) {
             key={label}
             className="flex justify-between gap-2 sm:flex-col sm:justify-start"
           >
-            <dt className="text-muted">{label}</dt>
+            <dt className="text-muted-foreground">{label}</dt>
             <dd className="font-medium tabular-nums">{value}</dd>
           </div>
         ))}
@@ -524,19 +524,19 @@ function ProjectionDetails({
   switch (projection.kind) {
     case "needs_min_payment":
       return (
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted-foreground">
           Agrega el pago mínimo para ver la proyección
         </p>
       )
     case "no_progress":
       return (
-        <p className="text-sm font-medium text-(--expense)">
+        <p className={cn("text-sm font-medium", TONE_TEXT_CLASSES.danger)}>
           Con este pago la deuda no baja
         </p>
       )
     case "too_long":
       return (
-        <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
+        <p className={cn("text-sm font-medium", TONE_TEXT_CLASSES.warning)}>
           Más de 50 años
         </p>
       )
@@ -545,17 +545,17 @@ function ProjectionDetails({
         <div className="flex flex-col gap-2">
           <dl className="grid grid-cols-3 gap-2 text-sm">
             <div className="flex flex-col">
-              <dt className="text-muted">Meses</dt>
+              <dt className="text-muted-foreground">Meses</dt>
               <dd className="font-medium tabular-nums">{projection.months}</dd>
             </div>
             <div className="flex flex-col">
-              <dt className="text-muted">Terminas en</dt>
+              <dt className="text-muted-foreground">Terminas en</dt>
               <dd className="font-medium">
                 {formatMonthYear(projection.payoffMonth)}
               </dd>
             </div>
             <div className="flex flex-col">
-              <dt className="text-muted">Intereses</dt>
+              <dt className="text-muted-foreground">Intereses</dt>
               <dd className="font-medium tabular-nums">
                 <Amount
                   value={projection.totalInterest}
@@ -565,7 +565,7 @@ function ProjectionDetails({
             </div>
           </dl>
           {projection.withoutRate && (
-            <p className="text-xs text-muted">
+            <p className="text-xs text-muted-foreground">
               Sin tasa, la proyección no incluye intereses
             </p>
           )}
@@ -587,17 +587,15 @@ function PaymentSimulator({
   const valid = !Number.isNaN(payment) && payment > 0
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg bg-default/50 p-3">
-      <TextField
+    <div className="flex flex-col gap-3 rounded-2xl bg-subtle p-3">
+      <TextInputField
+        label="Simula un pago mensual"
         inputMode="decimal"
         autoComplete="off"
+        placeholder="0"
         value={value}
-        onChange={setValue}
-        className="flex flex-col gap-2"
-      >
-        <Label>Simula un pago mensual</Label>
-        <Input placeholder="0" />
-      </TextField>
+        onChange={(event) => setValue(event.target.value)}
+      />
       {valid && (
         <ProjectionDetails
           projection={debtProjection(debt, payment)}

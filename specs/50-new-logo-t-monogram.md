@@ -39,16 +39,16 @@ Cuándo se crean SPEC 52 y 53, y el texto exacto para pedirlos con `/spec`, est�
 - **Wordmark** "Tesoro" dibujado como paths propios (letra ajustada a mano sobre una base de palo seco, con espaciado corregido). No depende de la fuente de la UI.
 - **Versiones del isotipo:**
   - **tinta** (principal): un color, `currentColor` en el componente; en los SVG fuente, el foreground del tema claro;
-  - **color**: el monograma en blanco sobre un cuadro redondeado con el color de marca, para favicon, íconos de app y apple-touch.
+  - **color**: el mismo monograma, sin fondo ni cuadro, en el color de marca (`BRAND_HEX`), para favicon, íconos de app, apple-touch, el logo y la imagen OG. En los íconos que exigen fondo completo (apple-touch, 192, 512 y maskable) va sobre blanco.
 - **Archivos fuente** en `assets/brand/`:
-  - `mark.svg` (tinta), `mark-color.svg` (sobre marca, nuevo), `logo.svg` (isotipo + wordmark), `opengraph.svg` (1200 × 630).
+  - `mark.svg` (tinta), `mark-color.svg` (en color de marca, nuevo), `logo.svg` (isotipo + wordmark), `opengraph.svg` (1200 × 630).
 - **Regeneración** con `pnpm brand:assets` (`scripts/generate-brand-assets.mjs`):
   - `app/icon.svg`, `app/favicon.ico` (16, 32, 48);
   - `public/apple-touch-icon.png`, `public/icons/icon-192.png`, `icon-512.png`, `icon-maskable-512.png`;
   - `public/brand/logo.png`, `public/opengraph-image.png`;
   - `src/features/exports/workbook/logo-data.ts` (Excel) y `src/features/exports/pdf/brand-data.ts` (PDF).
-  - Los íconos de app salen de `mark-color.svg`; el maskable respeta la zona segura del 80 %.
-  - El color de fondo de los PNG sale de una sola constante `BRAND_HEX` en el script (hoy `MASKABLE_BACKGROUND`). SPEC 51 la actualiza si re-afina `--brand`.
+  - Los íconos de app salen de `mark-color.svg` sobre fondo blanco; el maskable respeta la zona segura del 80 %.
+  - El color de marca de los PNG sale de una sola constante `BRAND_HEX` en el script (reemplaza a `MASKABLE_BACKGROUND`, que pasa a ser blanco). SPEC 51 la actualiza si re-afina `--brand`.
 - **Componente** `src/components/brand/logo.tsx`:
   - `LogoMark` con el monograma nuevo en `currentColor` y prop `tone: "ink" | "color"` (por defecto `ink`);
   - `variant="full"` muestra isotipo + wordmark en paths, no texto en Inter;
@@ -82,7 +82,7 @@ type LogoProps = {
 
 ```js
 // scripts/generate-brand-assets.mjs
-const BRAND_HEX = "#10b981" // único color de marca de los PNG; SPEC 51 lo puede re-afinar
+const BRAND_HEX = "#059669" // único color de marca de los PNG; SPEC 51 lo puede re-afinar
 ```
 
 ## Plan de implementación
@@ -120,6 +120,7 @@ const BRAND_HEX = "#10b981" // único color de marca de los PNG; SPEC 51 lo pued
 - **Sí:** tinta como versión principal y una versión a color para íconos de app. La UI nueva usa la marca con sobriedad; el color queda donde el sistema lo pide.
 - **Sí:** wordmark en paths. Si SPEC 51 cambia la fuente, el logo no cambia.
 - **Sí:** el logo va antes que la base shadcn. El shell nuevo ya nace con él.
+- **Sí:** versión a color sin cuadro: la T sola en `BRAND_HEX` (emerald-600, ≥ 3:1 sobre blanco y sobre oscuro), y blanco detrás solo donde el sistema exige fondo. El usuario descartó el cuadro verde al revisar el Paso 3; `#10b981` con blanco daba ~2,5:1.
 - **No:** re-renderizar videos aquí. Requieren Docker, FFmpeg y la UI nueva; van en un spec propio.
 
 ## Riesgos

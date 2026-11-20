@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/portal-container"
 
 // Puente de portales de Base UI dentro de un Modal de HeroUI, hasta SPEC 53
-// (vive junto a heroui-compat.ts y se borra con él).
+// (se borra junto con heroui-bridge.css).
 //
 // Un Modal de HeroUI (React Aria) vuelve `inert` todo lo que queda fuera de
 // él, le roba el foco y se cierra con un clic afuera. Los Popover / Combobox

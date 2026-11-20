@@ -1,4 +1,4 @@
-import { StatCard } from "@/components/dashboard/stat-card"
+import { StatCard, StatCardSkeleton } from "@/components/dashboard/stat-card"
 import type { TransactionTotals } from "../queries"
 
 interface TransactionsTotalsProps {
@@ -48,6 +48,31 @@ export function TransactionsTotals({
         previous={previous?.balance}
         trend="higher-is-better"
         currency={currency}
+        caption={caption}
+      />
+    </div>
+  )
+}
+
+/** Las tres KPI mientras cargan, con el mismo contenedor y alturas */
+export function TransactionsTotalsSkeleton({
+  caption = false
+}: {
+  /** Reserva la línea del alcance bajo la cifra */
+  caption?: boolean
+}) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-3">
+      <StatCardSkeleton
+        size="sm"
+        caption={caption}
+      />
+      <StatCardSkeleton
+        size="sm"
+        caption={caption}
+      />
+      <StatCardSkeleton
+        size="sm"
         caption={caption}
       />
     </div>

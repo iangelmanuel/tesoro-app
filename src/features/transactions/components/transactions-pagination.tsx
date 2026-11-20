@@ -1,8 +1,8 @@
-"use client"
-
 import type { Route } from "next"
-import { useRouter } from "next/navigation"
-import { Pagination } from "@heroui/react"
+import Link from "next/link"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import { buttonVariants } from "@/components/ui/button"
+import { cn } from "@/libs/cn"
 import {
   PAGE_SIZE,
   TRANSACTIONS_PATH,
@@ -31,64 +31,84 @@ interface TransactionsPaginationProps {
   count: number
 }
 
-// Pagination de HeroUI: cada página navega con el router a la URL con sus
-// filtros
+// Cada página es un enlace a la URL con sus filtros: se puede abrir en otra
+// pestaña y el lector la anuncia como navegación
 export function TransactionsPagination({
   path = TRANSACTIONS_PATH,
   filters,
   count
 }: TransactionsPaginationProps) {
-  const router = useRouter()
   const totalPages = Math.ceil(count / PAGE_SIZE)
 
   if (totalPages <= 1) {
     return null
   }
 
-  const goTo = (page: number) =>
-    router.push(`${path}?${buildFiltersQuery(filters, { page })}` as Route)
+  const href = (page: number) =>
+    `${path}?${buildFiltersQuery(filters, { page })}` as Route
   const current = Math.min(filters.page, totalPages)
 
   return (
-    <Pagination className="flex-col items-center gap-2 sm:flex-row sm:justify-between">
-      <Pagination.Summary>
+    <nav
+      aria-label="Páginas de movimientos"
+      className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between"
+    >
+      <p className="text-sm text-muted-foreground tabular-nums">
         Página {current} de {totalPages} · {count} movimientos
-      </Pagination.Summary>
-      <Pagination.Content>
+      </p>
+      <ul className="flex flex-wrap items-center justify-center gap-1">
         {current > 1 && (
-          <Pagination.Item>
-            <Pagination.Previous onPress={() => goTo(current - 1)}>
-              <Pagination.PreviousIcon />
+          <li>
+            <Link
+              href={href(current - 1)}
+              className={buttonVariants({ variant: "ghost" })}
+            >
+              <ChevronLeft aria-hidden />
               Anterior
-            </Pagination.Previous>
-          </Pagination.Item>
+            </Link>
+          </li>
         )}
         {visiblePages(current, totalPages).map((page, index) =>
           page === "ellipsis" ? (
-            <Pagination.Item key={`ellipsis-${index}`}>
-              <Pagination.Ellipsis />
-            </Pagination.Item>
+            <li
+              key={`ellipsis-${index}`}
+              aria-hidden="true"
+              className="flex size-11 items-center justify-center text-muted-foreground"
+            >
+              …
+            </li>
           ) : (
-            <Pagination.Item key={page}>
-              <Pagination.Link
-                isActive={page === current}
+            <li key={page}>
+              <Link
+                href={href(page)}
                 aria-current={page === current ? "page" : undefined}
-                onPress={() => goTo(page)}
+                aria-label={`Página ${page}`}
+                className={cn(
+                  buttonVariants({
+                    variant: page === current ? "secondary" : "ghost",
+                    size: "icon"
+                  }),
+                  "tabular-nums",
+                  page === current && "font-semibold"
+                )}
               >
                 {page}
-              </Pagination.Link>
-            </Pagination.Item>
+              </Link>
+            </li>
           )
         )}
         {current < totalPages && (
-          <Pagination.Item>
-            <Pagination.Next onPress={() => goTo(current + 1)}>
+          <li>
+            <Link
+              href={href(current + 1)}
+              className={buttonVariants({ variant: "ghost" })}
+            >
               Siguiente
-              <Pagination.NextIcon />
-            </Pagination.Next>
-          </Pagination.Item>
+              <ChevronRight aria-hidden />
+            </Link>
+          </li>
         )}
-      </Pagination.Content>
-    </Pagination>
+      </ul>
+    </nav>
   )
 }

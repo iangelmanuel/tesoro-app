@@ -7,8 +7,8 @@ import {
   DragOverlay
 } from "@dnd-kit/react"
 import { isSortable, useSortable } from "@dnd-kit/react/sortable"
-import { toast } from "@heroui/react"
 import { GripVertical } from "lucide-react"
+import { toast } from "@/components/ui/sonner"
 import { cn } from "@/libs/cn"
 
 // Listas ordenables de los paneles laterales (SPEC 45): el mismo arrastre de
@@ -134,7 +134,7 @@ export function useSortableList<T>({
       })
       const result = await onMove(moved, destination)
       if (result.error) {
-        toast.danger(result.error)
+        toast.error(result.error)
       }
     })
   }

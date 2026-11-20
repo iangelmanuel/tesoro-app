@@ -11,7 +11,7 @@ const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)"
 
 // El primario del espacio (emerald en Personal) se define en el contenedor
 // del dashboard, no en <html>; driver.js monta el popover en <body>
-const WORKSPACE_TOKENS = ["--accent", "--accent-foreground", "--focus"]
+const WORKSPACE_TOKENS = ["--primary", "--primary-foreground", "--ring"]
 
 /** Copia el primario del espacio actual al popover */
 function applyWorkspaceTokens(popover: HTMLElement) {

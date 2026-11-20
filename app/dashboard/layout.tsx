@@ -22,6 +22,7 @@ import {
 } from "@/components/dashboard/sidebar/width"
 import { WorkspaceThemeRoot } from "@/components/dashboard/workspace-theme-root"
 import { ThemeProvider } from "@/components/theme/theme-provider"
+import { Toaster } from "@/components/ui/sonner"
 import { SITE } from "@/config/site"
 import { TutorialAutoStart } from "@/features/tutorials/components/tutorial-auto-start"
 import { TutorialHelpButton } from "@/features/tutorials/components/tutorial-help-button"
@@ -107,6 +108,10 @@ export default function DashboardLayout({
       <WorkspaceThemeRoot>
         {/* Los toasts solo existen en el dashboard: fuera de aquí, react-aria no
           entra en el JS de la landing (SPEC 24) */}
+        {/* Toasts de shadcn (sonner). El ToastProvider de HeroUI sigue para
+            las pantallas aún en HeroUI, en la misma esquina (SPEC 53 lo
+            retira) */}
+        <Toaster />
         <ToastProvider placement="bottom end" />
         <SidebarProvider>
           {/* Primer elemento enfocable: salta el aside y el header y lleva el

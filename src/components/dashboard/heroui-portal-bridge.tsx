@@ -26,6 +26,13 @@ import {
 
 const HEROUI_MODAL = "[data-slot=modal-container]"
 
+// Dentro de un modal de HeroUI, o dentro de algo que ya se montó en el host
+// (un diálogo de Base UI abierto desde un modal de HeroUI): ahí un portal
+// al contenedor normal quedaría debajo
+function needsHost(anchor: HTMLElement | null, host: HTMLElement) {
+  return anchor?.closest(HEROUI_MODAL) != null || host.contains(anchor)
+}
+
 const HostContext = createContext<RefObject<HTMLDivElement | null> | null>(null)
 
 /** Host de los portales de Base UI abiertos dentro de un Modal de HeroUI */
@@ -65,9 +72,9 @@ export function HeroUIPortalBridge({
   const container = useMemo<RefObject<HTMLElement | null>>(
     () => ({
       get current() {
-        const inModal = anchorRef.current?.closest(HEROUI_MODAL) != null
-        if (inModal && hostRef?.current) {
-          return hostRef.current
+        const host = hostRef?.current
+        if (host && needsHost(anchorRef.current, host)) {
+          return host
         }
         return outer?.current ?? null
       }
@@ -82,8 +89,11 @@ export function HeroUIPortalBridge({
       return
     }
     const host = hostRef?.current
-    const inModal = anchorRef.current?.closest(HEROUI_MODAL) != null
-    if (inModal && host && host.childElementCount > 0) {
+    if (
+      host &&
+      needsHost(anchorRef.current, host) &&
+      host.childElementCount > 0
+    ) {
       event.stopPropagation()
     }
   }

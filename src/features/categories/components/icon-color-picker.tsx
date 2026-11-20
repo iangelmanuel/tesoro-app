@@ -1,8 +1,10 @@
 "use client"
 
-import { useState } from "react"
-import { ToggleButton, ToggleButtonGroup, cn } from "@heroui/react"
+import { useId, useState } from "react"
 import { FieldLabel } from "@/components/forms/field-label"
+import { FieldError } from "@/components/ui/field"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { cn } from "@/libs/cn"
 import {
   CATEGORY_COLORS,
   CATEGORY_COLOR_KEYS,
@@ -19,6 +21,10 @@ interface IconColorPickerProps {
   colorErrors?: string[]
 }
 
+// Elegido: relleno suave y contorno en el primario del espacio
+const ITEM_CLASS =
+  "size-9 min-w-9 p-0 data-pressed:bg-highlight data-pressed:outline-2 data-pressed:outline-primary"
+
 // Selector de icono y color con las paletas de categorías. Envía la
 // elección en los campos ocultos "icon" y "color" del formulario.
 export function IconColorPicker({
@@ -27,8 +33,11 @@ export function IconColorPicker({
   iconErrors,
   colorErrors
 }: IconColorPickerProps) {
+  const id = useId()
   const [icon, setIcon] = useState<string>(defaultIcon)
   const [color, setColor] = useState<string>(defaultColor)
+  const iconError = iconErrors?.[0]
+  const colorError = colorErrors?.[0]
 
   return (
     <>
@@ -45,69 +54,72 @@ export function IconColorPicker({
 
       <div className="flex flex-col gap-2">
         <FieldLabel
-          id="category-icon-label"
+          id={`${id}-icon`}
           help="common.icon"
+          isInvalid={Boolean(iconError)}
         >
           Icono
         </FieldLabel>
-        <ToggleButtonGroup
-          aria-labelledby="category-icon-label"
-          selectionMode="single"
-          disallowEmptySelection
-          selectedKeys={[icon]}
-          onSelectionChange={(keys) => {
-            const [value] = [...keys]
+        <ToggleGroup
+          aria-labelledby={`${id}-icon`}
+          aria-describedby={iconError ? `${id}-icon-error` : undefined}
+          value={[icon]}
+          onValueChange={(values) => {
+            const [value] = values
             if (value) setIcon(String(value))
           }}
           size="sm"
-          isDetached
-          className="flex-wrap"
+          spacing={1}
+          className="w-full flex-wrap"
         >
           {CATEGORY_ICON_KEYS.map((key: CategoryIconKey) => {
             const Icon = CATEGORY_ICONS[key]
             return (
-              <ToggleButton
+              <ToggleGroupItem
                 key={key}
-                id={key}
-                isIconOnly
+                value={key}
                 aria-label={key}
+                className={ITEM_CLASS}
               >
-                <Icon />
-              </ToggleButton>
+                <Icon aria-hidden />
+              </ToggleGroupItem>
             )
           })}
-        </ToggleButtonGroup>
-        {iconErrors && <p className="text-sm text-danger">{iconErrors[0]}</p>}
+        </ToggleGroup>
+        {iconError ? (
+          <FieldError id={`${id}-icon-error`}>{iconError}</FieldError>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-2">
         <FieldLabel
-          id="category-color-label"
+          id={`${id}-color`}
           help="common.color"
+          isInvalid={Boolean(colorError)}
         >
           Color
         </FieldLabel>
-        <ToggleButtonGroup
-          aria-labelledby="category-color-label"
-          selectionMode="single"
-          disallowEmptySelection
-          selectedKeys={[color]}
-          onSelectionChange={(keys) => {
-            const [value] = [...keys]
+        <ToggleGroup
+          aria-labelledby={`${id}-color`}
+          aria-describedby={colorError ? `${id}-color-error` : undefined}
+          value={[color]}
+          onValueChange={(values) => {
+            const [value] = values
             if (value) setColor(String(value))
           }}
           size="sm"
-          isDetached
-          className="flex-wrap"
+          spacing={1}
+          className="w-full flex-wrap"
         >
           {CATEGORY_COLOR_KEYS.map((key: CategoryColorKey) => (
-            <ToggleButton
+            <ToggleGroupItem
               key={key}
-              id={key}
-              isIconOnly
+              value={key}
               aria-label={key}
+              className={ITEM_CLASS}
             >
               <span
+                aria-hidden
                 className={cn(
                   "flex size-5 items-center justify-center rounded-full",
                   CATEGORY_COLORS[key]
@@ -115,10 +127,12 @@ export function IconColorPicker({
               >
                 <span className="size-2 rounded-full bg-current" />
               </span>
-            </ToggleButton>
+            </ToggleGroupItem>
           ))}
-        </ToggleButtonGroup>
-        {colorErrors && <p className="text-sm text-danger">{colorErrors[0]}</p>}
+        </ToggleGroup>
+        {colorError ? (
+          <FieldError id={`${id}-color-error`}>{colorError}</FieldError>
+        ) : null}
       </div>
     </>
   )

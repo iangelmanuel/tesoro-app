@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { HeroUIPortalBridge } from "@/components/dashboard/heroui-portal-bridge"
 import { CreatableSelect } from "@/components/forms/creatable-select"
 import type { FieldHelpKey } from "@/config/help"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
@@ -105,13 +106,16 @@ export function CategorySelectField({
       >
         {children}
       </CreatableSelect>
-      <CategoryDialog
-        workspaceId={workspaceId}
-        type={type}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onCreated={handleCreated}
-      />
+      {/* Si el formulario es un Modal de HeroUI, el diálogo va encima */}
+      <HeroUIPortalBridge>
+        <CategoryDialog
+          workspaceId={workspaceId}
+          type={type}
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          onCreated={handleCreated}
+        />
+      </HeroUIPortalBridge>
     </>
   )
 }

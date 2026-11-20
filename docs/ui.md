@@ -72,7 +72,7 @@ Todo vive en `src/styles/globals.css`, con los nombres de HeroUI v3.
 | `--surface-shadow`, `--overlay-shadow`          | Elevación: sombra en claro; brillo superior de 1 px y sombra en oscuro |
 | `--accent`, `--accent-foreground`               | Primario. Lo cambia el espacio (ver abajo)                             |
 | `--success`, `--warning`, `--danger` y `*-soft` | Estados. Los `*-soft` con su `*-soft-foreground` en chips              |
-| `--brand`                                       | Emerald del logo; igual en todos los temas                             |
+| `--brand`                                       | Emerald de marca (`Logo tone="color"`); igual en todos los temas       |
 | `--income`, `--expense`, `--balance`            | Dinero: texto ≥ 4.5:1 y series de gráfica                              |
 | `--category-*`                                  | Los 12 colores que el usuario elige por categoría                      |
 | `--chart-1…5`                                   | Serie neutra (score, comparaciones sin significado)                    |
@@ -627,6 +627,30 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
   así no se dispara dos veces.
 - **Videos (`public/videos/`):** tope de 30 MB (antes 25) para dar cabida al
   hero, que pesa ≤ 4 MB entre sus cuatro variantes y dos pósters.
+
+### Logo (SPEC 50)
+
+- **`Logo`** (`src/components/brand/logo.tsx`): `variant="full"` (isotipo +
+  wordmark) o `"mark"`, `size` `default` (isotipo de 28 px) o `lg` (32 px) y
+  `tone`. El wordmark son paths, no texto en Inter: se ve igual con o sin la
+  fuente cargada, y el nombre va en un `sr-only`. `LogoMark` se exporta para
+  usar solo el isotipo.
+- **Versiones:**
+  - **tinta** (`tone="ink"`, por defecto): `currentColor`, toma el color del
+    texto que lo rodea en claro y oscuro. Es la versión de la UI.
+  - **color** (`tone="color"`): la misma T en `--brand`. Fuera de la UI
+    (favicon, íconos de app, Excel, PDF, OG) va en `BRAND_HEX` (`#059669`).
+    Sin cuadro ni fondo; blanco detrás solo donde el sistema lo exige
+    (apple-touch, PWA, maskable).
+- **Área de respeto:** alrededor del isotipo, como mínimo el grosor del
+  travesaño (12 de 64, ≈ 5 px a 28 px). La retícula ya trae 8 de 64 de margen
+  a los lados; no se recorta el SVG para pegarlo a otro elemento.
+- **Tamaño mínimo:** 16 px. La T está ajustada a una retícula de 4: a 16 px
+  cada trazo y hueco cae en píxeles enteros.
+- **Contraste:** tinta sobre el fondo de su tema, ≥ 15:1. `#059669` da ≈ 3,8:1
+  sobre blanco y ≈ 5:1 sobre el fondo oscuro. `--brand` (`#10b981`) da
+  ≈ 2,5:1 sobre blanco: no se usa `tone="color"` sobre claro hasta que SPEC 51
+  lo re-afine.
 
 ## Dónde vive cada pantalla
 

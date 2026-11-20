@@ -7,8 +7,9 @@ import {
   DragOverlay
 } from "@dnd-kit/react"
 import { isSortable, useSortable } from "@dnd-kit/react/sortable"
-import { cn, toast } from "@heroui/react"
+import { toast } from "@heroui/react"
 import { GripVertical } from "lucide-react"
+import { cn } from "@/libs/cn"
 
 // Listas ordenables de los paneles laterales (SPEC 45): el mismo arrastre de
 // Movimientos (SPEC 19), con asa ⋮⋮, resaltado del grupo y vista previa. Una
@@ -170,10 +171,10 @@ export function SortableListProvider({
       {children}
       <DragOverlay>
         {(source) => (
-          <div className="flex w-fit max-w-full items-center gap-2 rounded-2xl bg-surface px-4 py-2.5 text-sm font-medium shadow-overlay ring-1 ring-accent">
+          <div className="flex w-fit max-w-full items-center gap-2 rounded-2xl bg-popover px-4 py-2.5 text-sm font-semibold text-popover-foreground shadow-(--overlay-shadow) outline-2 outline-ring">
             <GripVertical
               aria-hidden="true"
-              className="size-4 text-muted"
+              className="size-4 text-muted-foreground"
             />
             {String(source.data?.title ?? "")}
           </div>
@@ -214,7 +215,7 @@ export function SortableListItem({
       type="button"
       aria-label={config.handleLabel}
       className={cn(
-        "grid h-6 w-5 shrink-0 touch-none place-items-center rounded-md text-muted/50 outline-none select-none hover:bg-default hover:text-foreground focus-visible:ring-2 focus-visible:ring-focus pointer-coarse:h-11 pointer-coarse:w-7",
+        "touch-hitbox grid h-6 w-5 shrink-0 touch-none place-items-center rounded-md text-muted-foreground outline-none select-none hover:bg-highlight hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring pointer-coarse:h-11 pointer-coarse:w-7",
         isDragging ? "cursor-grabbing" : "cursor-grab"
       )}
     >
@@ -235,7 +236,7 @@ export function SortableListItem({
         className,
         config?.className,
         // La fila original queda como hueco en el lugar de destino
-        isDragSource && "bg-accent/15 opacity-50"
+        isDragSource && "bg-highlight opacity-50"
       )}
     >
       {children(handle)}

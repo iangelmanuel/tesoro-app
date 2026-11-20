@@ -1,5 +1,7 @@
-import { Card, Skeleton, cn } from "@heroui/react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/libs/cn"
 import { MonthSwitcherSkeleton } from "./month-switcher"
+import { CARD } from "./surface"
 
 interface CardSkeletonProps {
   /** Alto y posición en la grilla, como la tarjeta que reemplaza */
@@ -11,9 +13,12 @@ interface CardSkeletonProps {
 }
 
 /**
- * Placeholder de una tarjeta mientras carga: el mismo contenedor (superficie,
- * radio y padding de Card) con líneas de skeleton dentro, así la página no
- * cambia de forma al llegar los datos
+ * Placeholder genérico de una tarjeta mientras carga: el mismo contenedor
+ * (superficie, radio y padding de la tarjeta) con líneas de skeleton dentro.
+ *
+ * En retiro (SPEC 51 §6): el código nuevo usa el …Skeleton de cada
+ * componente, con su mismo contenedor. Este queda para las pantallas aún no
+ * migradas y se borra en SPEC 53
  */
 export function CardSkeleton({
   className,
@@ -21,31 +26,31 @@ export function CardSkeleton({
   withMonth = false
 }: CardSkeletonProps) {
   return (
-    <Card
+    <div
       aria-hidden="true"
-      className={cn("gap-3", className)}
+      className={cn(CARD, "gap-3", className)}
     >
       {withMonth ? (
         // Misma forma que CardHeading con control: título y píldora a la
         // derecha; en el teléfono la píldora baja a todo el ancho
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-3">
-          <Skeleton className="h-4 w-28 rounded-lg" />
+          <Skeleton className="h-4 w-28" />
           <MonthSwitcherSkeleton
             on="card"
             className="order-last md:order-none"
           />
         </div>
       ) : (
-        <Skeleton className="h-4 w-28 rounded-lg" />
+        <Skeleton className="h-4 w-28" />
       )}
-      <Skeleton className="h-7 w-40 rounded-lg" />
+      <Skeleton className="h-7 w-40" />
       {Array.from({ length: Math.max(lines - 1, 0) }, (_, index) => (
         <Skeleton
           key={index}
           // Anchos fijos: Math.random() no se permite al prerenderizar
-          className={cn("h-3 rounded-lg", index % 2 ? "w-1/2" : "w-3/4")}
+          className={cn("h-3", index % 2 ? "w-1/2" : "w-3/4")}
         />
       ))}
-    </Card>
+    </div>
   )
 }

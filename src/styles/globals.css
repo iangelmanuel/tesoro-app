@@ -200,6 +200,47 @@
   --scrollbar-hover: oklch(0.46 0.01 255);
 }
 
+/* Fondos suaves de estado (chips, avisos) con su texto: ≥ 4.5:1 sobre el
+   fondo suave puesto encima de la tarjeta, en claro y oscuro */
+:root {
+  --success-soft: color-mix(in oklab, var(--success) 14%, transparent);
+  --success-soft-foreground: color-mix(
+    in oklab,
+    var(--success) 70%,
+    var(--foreground) 30%
+  );
+  --warning-soft: color-mix(in oklab, var(--warning) 14%, transparent);
+  --warning-soft-foreground: color-mix(
+    in oklab,
+    var(--warning) 70%,
+    var(--foreground) 30%
+  );
+  --destructive-soft: color-mix(in oklab, var(--destructive) 14%, transparent);
+  --destructive-soft-foreground: color-mix(
+    in oklab,
+    var(--destructive) 75%,
+    var(--foreground) 25%
+  );
+}
+
+.dark {
+  --success-soft-foreground: color-mix(
+    in oklab,
+    var(--success) 85%,
+    var(--foreground) 15%
+  );
+  --warning-soft-foreground: color-mix(
+    in oklab,
+    var(--warning) 85%,
+    var(--foreground) 15%
+  );
+  --destructive-soft-foreground: color-mix(
+    in oklab,
+    var(--destructive) 85%,
+    var(--foreground) 15%
+  );
+}
+
 /* Páginas públicas (landing, legales, /mcp) siempre en claro (SPEC 40):
    fondo blanco puro. El layout de (public) pinta data-surface="site" y
    :has() lo sube a :root para que body y el área de overscroll también
@@ -288,6 +329,16 @@
      retirarlo en SPEC 53) */
   --color-field: var(--field-background);
   --color-field-hover: var(--field-hover);
+  /* Estados para chips y barras (tone.ts). HeroUI declara los mismos nombres;
+     estos los sustituyen y quedan al retirarlo */
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-soft-foreground: var(--success-soft-foreground);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-soft-foreground: var(--warning-soft-foreground);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-destructive-soft-foreground: var(--destructive-soft-foreground);
 }
 
 @layer base {

@@ -3,8 +3,13 @@
 import { useTransition } from "react"
 import type { Route } from "next"
 import { useRouter } from "next/navigation"
-import { ToggleButton, ToggleButtonGroup, cn } from "@heroui/react"
+import {
+  SEGMENT_ITEM_CLASS,
+  SEGMENT_TRACK_CLASS
+} from "@/components/forms/segmented-field"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import type { TransactionType } from "@/features/transactions/filters"
+import { cn } from "@/libs/cn"
 import { REPORT_LABELS, type ReportLabels } from "../labels"
 import {
   type ReportParams,
@@ -30,8 +35,8 @@ export function ReportTypeToggle({
   const router = useRouter()
   const [pending, startTransition] = useTransition()
 
-  function changeType(keys: Set<React.Key>) {
-    const [value] = [...keys]
+  function changeType(next: unknown[]) {
+    const [value] = next
     if (!value || value === params.type) return
 
     const query = reportQueryFromParams(params, {
@@ -45,22 +50,31 @@ export function ReportTypeToggle({
   }
 
   return (
-    <ToggleButtonGroup
-      selectionMode="single"
-      disallowEmptySelection
-      selectedKeys={[params.type]}
-      onSelectionChange={changeType}
-      size="sm"
+    <ToggleGroup
+      value={[params.type]}
+      onValueChange={changeType}
+      spacing={1}
       aria-busy={pending}
+      aria-label="Tipo de movimiento"
       data-tour="reports-type"
       className={cn(
-        "transition-opacity duration-150 motion-reduce:transition-none",
+        SEGMENT_TRACK_CLASS,
+        "h-11 w-auto bg-card transition-opacity duration-150 motion-reduce:transition-none dark:bg-card",
         pending && "opacity-60"
       )}
-      aria-label="Tipo de movimiento"
     >
-      <ToggleButton id="expense">{labels.expense}</ToggleButton>
-      <ToggleButton id="income">{labels.income}</ToggleButton>
-    </ToggleButtonGroup>
+      <ToggleGroupItem
+        value="expense"
+        className={SEGMENT_ITEM_CLASS}
+      >
+        {labels.expense}
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        value="income"
+        className={SEGMENT_ITEM_CLASS}
+      >
+        {labels.income}
+      </ToggleGroupItem>
+    </ToggleGroup>
   )
 }

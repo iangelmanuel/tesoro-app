@@ -3,11 +3,19 @@
 import { useTransition } from "react"
 import type { Route } from "next"
 import { useRouter } from "next/navigation"
-import { Button, ListBox, Select, cn } from "@heroui/react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { CONTROL_BUTTON, CONTROL_SURFACE } from "@/components/dashboard/surface"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { FieldHelp } from "@/components/forms/field-label"
+import { Button } from "@/components/ui/button"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select"
+import { cn } from "@/libs/cn"
 import {
   type ReportParams,
   type ReportPeriod,
@@ -23,6 +31,11 @@ const PERIOD_LABELS: Record<ReportPeriod, string> = {
   year: "Año",
   range: "Rango"
 }
+
+const PERIOD_ITEMS = Object.entries(PERIOD_LABELS).map(([value, label]) => ({
+  value: value as ReportPeriod,
+  label
+}))
 
 const STEP_LABELS: Record<
   Exclude<ReportPeriod, "range">,
@@ -72,35 +85,29 @@ export function ReportPeriodPicker({ params, path }: ReportPeriodPickerProps) {
     >
       <div className="flex items-center gap-0.5">
         <Select
-          aria-label="Periodo"
+          items={PERIOD_ITEMS}
           value={params.period}
-          onChange={(value) => value && changePeriod(value as ReportPeriod)}
-          className="w-auto"
+          onValueChange={(value) =>
+            value && changePeriod(value as ReportPeriod)
+          }
         >
-          <Select.Trigger
-            className={cn(
-              "min-h-8 gap-1.5 rounded-3xl py-1 text-sm",
-              CONTROL_BUTTON
-            )}
+          <SelectTrigger
+            aria-label="Periodo"
+            className={cn("gap-1.5", CONTROL_BUTTON)}
           >
-            <span className="text-muted">Periodo:</span>
-            <Select.Value className="font-medium" />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              {Object.entries(PERIOD_LABELS).map(([value, label]) => (
-                <ListBox.Item
-                  key={value}
-                  id={value}
-                  textValue={label}
-                >
-                  {label}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
+            <span className="text-muted-foreground">Periodo:</span>
+            <SelectValue className="font-medium" />
+          </SelectTrigger>
+          <SelectContent>
+            {PERIOD_ITEMS.map((item) => (
+              <SelectItem
+                key={item.value}
+                value={item.value}
+              >
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
         <FieldHelp
           help="common.period"
@@ -154,31 +161,31 @@ function StepControl({
     <div className="flex items-center gap-2">
       <div
         className={cn(
-          "flex items-center gap-0.5 rounded-3xl p-0.5",
+          "flex min-h-11 items-center gap-0.5 rounded-3xl p-0.5",
           CONTROL_SURFACE
         )}
       >
         <Button
           variant="ghost"
-          size="sm"
-          isIconOnly
+          size="icon"
+          className="size-11 md:touch-hitbox md:size-10"
           aria-label={step.previous}
-          onPress={() => onChange(shiftPeriodValue(period, value, -1))}
+          onClick={() => onChange(shiftPeriodValue(period, value, -1))}
         >
           <ChevronLeft />
         </Button>
         <span
-          className="min-w-32 px-1 text-center text-sm font-medium first-letter:uppercase"
+          className="min-w-32 px-1 text-center text-sm font-semibold first-letter:uppercase"
           aria-live="polite"
         >
           {label}
         </span>
         <Button
           variant="ghost"
-          size="sm"
-          isIconOnly
+          size="icon"
+          className="size-11 md:touch-hitbox md:size-10"
           aria-label={step.next}
-          onPress={() => onChange(shiftPeriodValue(period, value, 1))}
+          onClick={() => onChange(shiftPeriodValue(period, value, 1))}
         >
           <ChevronRight />
         </Button>
@@ -186,8 +193,8 @@ function StepControl({
       {!isCurrent && (
         <Button
           variant="ghost"
-          size="sm"
-          onPress={() => onChange(currentPeriodValue(period))}
+          className={CONTROL_BUTTON}
+          onClick={() => onChange(currentPeriodValue(period))}
         >
           Hoy
         </Button>

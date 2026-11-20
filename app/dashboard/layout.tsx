@@ -1,18 +1,21 @@
 import { Suspense, cache } from "react"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { Skeleton, ToastProvider } from "@heroui/react"
+import { ToastProvider } from "@heroui/react"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { AppSidebarSkeleton } from "@/components/dashboard/app-sidebar-skeleton"
-import { DashboardTitle } from "@/components/dashboard/dashboard-title"
+import {
+  DashboardHeader,
+  DashboardHeaderSkeleton
+} from "@/components/dashboard/dashboard-header"
+import {
+  DashboardTitle,
+  DashboardTitleSkeleton
+} from "@/components/dashboard/dashboard-title"
 import { HideAmountsProvider } from "@/components/dashboard/hide-amounts-context"
 import { HideAmountsToggle } from "@/components/dashboard/hide-amounts-toggle"
 import { QuickActions } from "@/components/dashboard/quick-actions"
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger
-} from "@/components/dashboard/sidebar"
+import { SidebarInset, SidebarProvider } from "@/components/dashboard/sidebar"
 import {
   SIDEBAR_WIDTH_COOKIE,
   parseSidebarWidth
@@ -76,7 +79,8 @@ async function DashboardHeaderTitle() {
 
 // Entrega al cliente si las cifras están ocultas y qué tutoriales terminó el
 // usuario: el primer render ya sale con la máscara y el arranque automático
-// decide sin parpadeo ni consulta por página. Envuelve el header y el contenido
+// decide sin parpadeo ni consulta por página. Envuelve el aside (el menú de
+// cuenta también oculta cifras), el header y el contenido
 async function DashboardPreferencesBoundary({
   children
 }: Readonly<{ children: React.ReactNode }>) {
@@ -105,54 +109,53 @@ export default function DashboardLayout({
           entra en el JS de la landing (SPEC 24) */}
         <ToastProvider placement="bottom end" />
         <SidebarProvider>
-          {/* Primer elemento enfocable: salta el aside y el header */}
+          {/* Primer elemento enfocable: salta el aside y el header y lleva el
+              foco a main */}
           <a
             href="#contenido"
-            className="sr-only z-50 rounded-3xl bg-accent px-4 py-2 text-sm font-medium text-accent-foreground focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+            className="sr-only z-50 rounded-4xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground outline-none focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             Saltar al contenido
           </a>
-          <Suspense fallback={<AppSidebarSkeleton />}>
-            <DashboardSidebar />
-          </Suspense>
-          <SidebarInset>
-            {/* Hasta leer el perfil: el header sin acciones y el contenido vacío
-              (sin números que luego haya que ocultar) */}
-            <Suspense
-              fallback={
-                <>
-                  <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 bg-background px-4 md:px-6">
-                    <SidebarTrigger className="-ml-1.5 max-md:size-11" />
-                    <Skeleton className="h-6 w-44 rounded-lg" />
-                  </header>
+          {/* Hasta leer el perfil: aside y header como huecos y el contenido
+              vacío (sin números que luego haya que ocultar) */}
+          <Suspense
+            fallback={
+              <>
+                <AppSidebarSkeleton />
+                <SidebarInset>
+                  <DashboardHeaderSkeleton />
                   <main
                     id="contenido"
                     tabIndex={-1}
                     className="flex flex-1 flex-col px-4 pt-2 outline-none md:px-6"
                   />
-                </>
-              }
-            >
-              <DashboardPreferencesBoundary>
-                <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 bg-background px-4 md:px-6">
-                  {/* En el teléfono abre el Drawer del aside (44 px de área táctil) */}
-                  <SidebarTrigger className="-ml-1.5 max-md:size-11" />
-                  <div className="min-w-0 flex-1">
-                    {/* La ruta y la sesión son dinámicas: hasta resolverlas, un
-                      placeholder del tamaño del título */}
-                    <Suspense
-                      fallback={<Skeleton className="h-6 w-44 rounded-lg" />}
-                    >
+                </SidebarInset>
+              </>
+            }
+          >
+            <DashboardPreferencesBoundary>
+              <Suspense fallback={<AppSidebarSkeleton />}>
+                <DashboardSidebar />
+              </Suspense>
+              <SidebarInset>
+                <DashboardHeader
+                  title={
+                    // La ruta y la sesión son dinámicas: hasta resolverlas, un
+                    // hueco del tamaño del título
+                    <Suspense fallback={<DashboardTitleSkeleton />}>
                       <DashboardHeaderTitle />
                     </Suspense>
-                  </div>
-                  {/* Tutorial, ojo y accesos rápidos del espacio */}
-                  <div className="flex shrink-0 items-center gap-2">
-                    <TutorialHelpButton />
-                    <HideAmountsToggle />
-                    <QuickActions />
-                  </div>
-                </header>
+                  }
+                  actions={
+                    // Tutorial, ojo y accesos rápidos del espacio
+                    <>
+                      <TutorialHelpButton />
+                      <HideAmountsToggle />
+                      <QuickActions />
+                    </>
+                  }
+                />
                 <main
                   id="contenido"
                   tabIndex={-1}
@@ -160,9 +163,9 @@ export default function DashboardLayout({
                 >
                   {children}
                 </main>
-              </DashboardPreferencesBoundary>
-            </Suspense>
-          </SidebarInset>
+              </SidebarInset>
+            </DashboardPreferencesBoundary>
+          </Suspense>
         </SidebarProvider>
       </WorkspaceThemeRoot>
     </ThemeProvider>

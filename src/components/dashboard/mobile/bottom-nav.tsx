@@ -3,11 +3,12 @@
 import type { Route } from "next"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Button, cn } from "@heroui/react"
 import { Plus } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import { BUDGETS_PATH, RECURRING_PATH } from "@/features/budgets/tabs"
 import { workspaceBasePath } from "@/features/workspaces/paths"
+import { cn } from "@/libs/cn"
 import { NAV_ICONS, type NavIcon, flattenNav, isActive } from "../nav"
 import { useActiveWorkspace } from "../use-active-workspace"
 
@@ -26,7 +27,7 @@ interface BottomNavProps {
 }
 
 const ITEM_CLASSES =
-  "flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[0.6875rem] leading-tight outline-none focus-visible:ring-2 focus-visible:ring-focus"
+  "flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[0.6875rem] leading-tight outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
 
 // Barra inferior del teléfono (< 768 px): cuatro destinos del espacio y el
 // botón [+] al centro. Fuera de un espacio (cuenta, estado vacío de Empresa)
@@ -84,12 +85,11 @@ export function BottomNav({ onOpenQuickSheet }: BottomNavProps) {
         {workspace && (
           <li className="flex flex-1 justify-center">
             <Button
-              isIconOnly
-              size="lg"
+              size="icon-lg"
               aria-label="Acciones rápidas"
               className="size-12 rounded-full"
               data-tour="mobile-quick-add"
-              onPress={onOpenQuickSheet}
+              onClick={onOpenQuickSheet}
             >
               <Plus className="size-6" />
             </Button>
@@ -135,13 +135,13 @@ function NavDestination({
       aria-current={active ? "page" : undefined}
       className={cn(
         ITEM_CLASSES,
-        active ? "font-medium text-foreground" : "text-muted"
+        active ? "font-semibold text-foreground" : "text-muted-foreground"
       )}
     >
       <span
         className={cn(
           "flex h-7 w-12 items-center justify-center rounded-full",
-          active && "bg-accent-soft text-accent-soft-foreground"
+          active && "bg-sidebar-primary/15 text-foreground"
         )}
       >
         <Icon className="size-5" />

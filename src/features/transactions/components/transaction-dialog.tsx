@@ -215,7 +215,12 @@ export function TransactionDialog({
                 initialValues={isEditing ? undefined : initialValues}
                 recurring={isEditing ? undefined : recurring}
                 paymentTabs={showPaymentTabs ? paymentTabs : undefined}
-                initialPanel={showPaymentTabs ? initialPanel : undefined}
+                // El traspaso existe en ambos espacios (atajo T, SPEC 51)
+                initialPanel={
+                  showPaymentTabs || initialPanel === "transfer"
+                    ? initialPanel
+                    : undefined
+                }
                 incomeSources={
                   workspaceType === "personal" && !isPayment
                     ? (incomeSources ?? paymentTabs?.incomeSources)

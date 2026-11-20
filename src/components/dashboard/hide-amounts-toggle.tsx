@@ -1,7 +1,7 @@
 "use client"
 
-import { Button } from "@heroui/react"
 import { Eye, EyeOff } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { useHideAmounts } from "./hide-amounts-context"
 
 /** Ojo del header: oculta o muestra saldos y totales en todo el dashboard */
@@ -12,13 +12,11 @@ export function HideAmountsToggle() {
   return (
     <Button
       variant="ghost"
-      size="sm"
-      isIconOnly
+      size="icon"
       aria-label={hidden ? "Mostrar cifras" : "Ocultar cifras"}
       aria-pressed={hidden}
-      className="max-md:size-11"
       data-tour="header-amounts"
-      onPress={toggle}
+      onClick={toggle}
     >
       <Icon className="size-4" />
     </Button>

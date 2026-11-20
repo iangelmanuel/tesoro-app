@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { Skeleton } from "@heroui/react"
+import { Skeleton } from "@/components/ui/skeleton"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { getCategories } from "@/features/categories/queries"
 import { isActiveDebt } from "@/features/debts/calculations"
@@ -115,8 +115,21 @@ export function QuickActions() {
   return (
     // La ruta no se conoce en el shell estático: el placeholder tiene el
     // tamaño del botón primario para que el header no salte al cargar
-    <Suspense fallback={<Skeleton className="h-9 w-40 rounded-3xl" />}>
+    <Suspense fallback={<QuickActionsSkeleton />}>
       <QuickActionsLoader />
     </Suspense>
+  )
+}
+
+/** Hueco de los accesos: el primario y "Más", con su alto y su forma */
+export function QuickActionsSkeleton() {
+  return (
+    <div
+      aria-hidden="true"
+      className="flex items-center gap-2"
+    >
+      <Skeleton className="h-11 w-11 rounded-4xl sm:w-52" />
+      <Skeleton className="h-11 w-11 rounded-4xl sm:w-20" />
+    </div>
   )
 }

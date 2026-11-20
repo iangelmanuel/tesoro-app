@@ -11,6 +11,7 @@ import type { HelpKey } from "@/config/help"
 import { useIsMobile } from "@/hooks/use-is-mobile"
 import { cn } from "@/libs/cn"
 import { HelpHint } from "./help-hint"
+import { closesFromSheet } from "./heroui-compat"
 
 interface DetailSheetProps {
   open: boolean
@@ -72,10 +73,7 @@ export function DetailSheet({
   return (
     <Sheet
       open={open}
-      // Convivencia con HeroUI (hasta SPEC 53): los paneles abren diálogos y
-      // menús de HeroUI, que se montan fuera del panel. Modal, Base UI les
-      // quitaría el foco y los volvería inertes; por eso no es modal y solo
-      // se cierra con el fondo, Escape dentro del panel o el botón Cerrar
+      // No modal mientras conviva con HeroUI (ver heroui-compat.ts)
       modal={false}
       onOpenChange={(next, details) => {
         if (!next && !closesFromSheet(details.reason, details.event)) {
@@ -153,31 +151,6 @@ export function DetailSheet({
       </SheetContent>
     </Sheet>
   )
-}
-
-/**
- * Si un cierre viene del propio panel. Un clic o un Escape dentro de un
- * overlay de HeroUI abierto desde el panel, o el foco que se va a él, no lo
- * cierran
- */
-function closesFromSheet(reason: string, event: Event | undefined) {
-  if (reason === "focus-out") {
-    return false
-  }
-  const target = event?.target
-  if (!(target instanceof Element)) {
-    return true
-  }
-  if (reason === "outside-press") {
-    return target.closest("[data-slot=sheet-overlay]") !== null
-  }
-  if (reason === "escape-key") {
-    return (
-      target.closest("[data-slot=sheet-content]") !== null ||
-      target === document.body
-    )
-  }
-  return true
 }
 
 /**

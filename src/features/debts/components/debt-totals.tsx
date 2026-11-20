@@ -1,6 +1,4 @@
-import { Card, CardDescription, CardHeader, CardTitle } from "@heroui/react"
-import { Amount } from "@/components/dashboard/amount"
-import { formatPercent } from "@/features/budgets/progress"
+import { StatCard, StatCardSkeleton } from "@/components/dashboard/stat-card"
 import {
   globalUtilization,
   totalDebt,
@@ -15,51 +13,52 @@ interface DebtTotalsProps {
   currency: string
 }
 
+/** Contenedor de los KPIs y de su skeleton: misma grilla */
+const TOTALS_GRID = "grid gap-4 sm:grid-cols-3"
+
 export function DebtTotals({ debts, currency }: DebtTotalsProps) {
   const utilization = globalUtilization(debts)
 
   return (
     <div
-      className="grid gap-4 sm:grid-cols-3"
+      className={TOTALS_GRID}
       data-tour="debts-totals"
     >
-      <Card>
-        <CardHeader>
-          <CardDescription>Deuda total</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums">
-            <Amount
-              value={totalDebt(debts)}
-              currency={currency}
-            />
-          </CardTitle>
-        </CardHeader>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardDescription>Utilización de tarjetas</CardDescription>
-          {utilization === null ? (
-            <CardTitle className="text-2xl font-semibold text-muted">
-              Sin tarjetas
-            </CardTitle>
-          ) : (
-            <CardTitle className="flex flex-wrap items-center gap-2 text-2xl font-semibold tabular-nums">
-              {formatPercent(utilization)}
-              <UtilizationBadge percent={utilization} />
-            </CardTitle>
-          )}
-        </CardHeader>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardDescription>Interés estimado del mes</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums">
-            <Amount
-              value={totalMonthlyInterest(debts)}
-              currency={currency}
-            />
-          </CardTitle>
-        </CardHeader>
-      </Card>
+      <StatCard
+        label="Deuda total"
+        value={totalDebt(debts)}
+        trend="lower-is-better"
+        currency={currency}
+      />
+      <StatCard
+        label="Utilización de tarjetas"
+        value={utilization}
+        trend="lower-is-better"
+        format="percent"
+        caption={utilization === null ? "Sin tarjetas" : undefined}
+        badge={
+          utilization === null ? undefined : (
+            <UtilizationBadge percent={utilization} />
+          )
+        }
+      />
+      <StatCard
+        label="Interés estimado del mes"
+        value={totalMonthlyInterest(debts)}
+        trend="lower-is-better"
+        currency={currency}
+      />
+    </div>
+  )
+}
+
+/** Los tres KPIs mientras cargan */
+export function DebtTotalsSkeleton() {
+  return (
+    <div className={TOTALS_GRID}>
+      <StatCardSkeleton />
+      <StatCardSkeleton />
+      <StatCardSkeleton />
     </div>
   )
 }

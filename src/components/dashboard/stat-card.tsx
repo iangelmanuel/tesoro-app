@@ -23,6 +23,8 @@ interface StatCardProps {
   help?: HelpKey
   /** Texto corto bajo el valor, por ejemplo el alcance de los filtros */
   caption?: string
+  /** Chip junto a la cifra (p. ej. el nivel de utilización) */
+  badge?: React.ReactNode
   size?: "default" | "sm"
   className?: string
 }
@@ -96,6 +98,7 @@ export function StatCard({
   currency = "COP",
   help,
   caption,
+  badge,
   size = "default",
   className
 }: StatCardProps) {
@@ -139,6 +142,7 @@ export function StatCard({
               formatValue(value, format)
             )}
           </span>
+          {badge}
           {rounded !== null && rounded !== 0 && (
             <span
               className={cn(

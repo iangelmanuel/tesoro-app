@@ -69,14 +69,14 @@ export function DebtBar({ percent, tone, label, className }: DebtBarProps) {
       aria-valuenow={width}
       aria-label={label}
       className={cn(
-        "flex h-2 w-full overflow-hidden rounded-full bg-default",
+        "flex h-2 w-full overflow-hidden rounded-full bg-subtle",
         className
       )}
     >
       <div
         className={cn(
           "h-full transition-all motion-reduce:transition-none",
-          tone ? TONE_BAR_CLASSES[tone] : "bg-accent"
+          tone ? TONE_BAR_CLASSES[tone] : "bg-primary"
         )}
         style={{ width: `${width}%` }}
       />

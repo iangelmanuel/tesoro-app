@@ -1,9 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { Button, Disclosure } from "@heroui/react"
+import { ChevronRight } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { SURFACE_LIST, SURFACE_ROW } from "@/components/dashboard/surface"
+import { Button } from "@/components/ui/button"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from "@/components/ui/collapsible"
+import { cn } from "@/libs/cn"
 import { debtStatusLabel } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
 import { ToneBadge } from "./debt-indicators"
@@ -31,17 +38,25 @@ export function InactiveDebts({
   title = "Pagadas y archivadas"
 }: InactiveDebtsProps) {
   return (
-    <Disclosure className="flex flex-col gap-3">
-      <Disclosure.Heading>
-        <Disclosure.Trigger
-          className="flex w-fit items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-default"
+    <Collapsible className="flex flex-col gap-3">
+      <h2 className="w-fit">
+        <CollapsibleTrigger
+          render={
+            <Button
+              variant="ghost"
+              className="group/inactive px-3"
+            />
+          }
           data-tour="debts-inactive"
         >
-          <Disclosure.Indicator />
+          <ChevronRight
+            aria-hidden
+            className="group-data-panel-open/inactive:rotate-90 motion-safe:transition-transform"
+          />
           {title} ({debts.length})
-        </Disclosure.Trigger>
-      </Disclosure.Heading>
-      <Disclosure.Content>
+        </CollapsibleTrigger>
+      </h2>
+      <CollapsibleContent>
         <ul className={SURFACE_LIST}>
           {debts.map((debt) => (
             <InactiveDebtRow
@@ -53,8 +68,8 @@ export function InactiveDebts({
             />
           ))}
         </ul>
-      </Disclosure.Content>
-    </Disclosure>
+      </CollapsibleContent>
+    </Collapsible>
   )
 }
 
@@ -74,18 +89,18 @@ function InactiveDebtRow({
   const status = debtStatusLabel(debt)
 
   return (
-    <li className={`flex flex-wrap items-center gap-3 ${SURFACE_ROW}`}>
+    <li className={cn(SURFACE_ROW, "flex flex-wrap items-center gap-3")}>
       {/* Abre el Sheet de solo lectura */}
       <button
         type="button"
-        className="-m-1 flex min-w-0 flex-1 flex-col gap-1 rounded-lg p-1 text-left transition-colors hover:bg-default/50 focus-visible:ring-[3px] focus-visible:ring-focus/50 focus-visible:outline-none"
+        className="-m-1 flex min-h-11 min-w-0 flex-1 cursor-pointer flex-col gap-1 rounded-2xl p-1 text-left transition-colors outline-none hover:bg-highlight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         onClick={() => setDetailOpen(true)}
       >
         <span className="flex flex-wrap items-center gap-2">
           <span className="truncate font-medium">{debt.name}</span>
           {status && <ToneBadge tone={status.tone}>{status.label}</ToneBadge>}
         </span>
-        <span className="text-sm text-muted tabular-nums">
+        <span className="text-sm text-muted-foreground tabular-nums">
           Saldo{" "}
           <Amount
             value={debt.balance}
@@ -102,10 +117,10 @@ function InactiveDebtRow({
         onOpenChange={setDetailOpen}
       />
       <Button
-        variant="outline"
+        variant="secondary"
         size="sm"
-        isDisabled={pending}
-        onPress={() => run("reactivate")}
+        disabled={pending}
+        onClick={() => run("reactivate")}
       >
         Reactivar
       </Button>

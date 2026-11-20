@@ -1,4 +1,6 @@
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"
 import { formatCurrency, formatDate } from "@/libs/format"
 import { upcomingPayments } from "../calculations"
@@ -58,13 +60,33 @@ export function UpcomingDebtPayments({
             <p
               className={cn(
                 "font-medium tabular-nums",
-                payment.status === "overdue" && "text-(--expense)",
-                payment.status === "paid" && "text-(--income)"
+                payment.status === "overdue" && TONE_TEXT_CLASSES.danger,
+                payment.status === "paid" && TONE_TEXT_CLASSES.success
               )}
             >
               {formatCurrency(payment.amount, currency)}
             </p>
           )}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+/** Filas de próximos pagos mientras cargan */
+export function UpcomingDebtPaymentsSkeleton({ rows = 3 }: { rows?: number }) {
+  return (
+    <ul className={CARD_LIST}>
+      {Array.from({ length: rows }, (_, index) => (
+        <li
+          key={index}
+          className={cn("flex items-center gap-4", CARD_ROW)}
+        >
+          <div className="flex flex-1 flex-col gap-1">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-5 w-24" />
+          </div>
+          <Skeleton className="h-6 w-24" />
         </li>
       ))}
     </ul>

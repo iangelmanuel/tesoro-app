@@ -10,20 +10,34 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const BRAND = path.join(ROOT, "assets/brand")
 const FONTS = path.join(ROOT, "assets/fonts")
 
+// Único color de marca de los PNG y del favicon (SPEC 50). Los SVG fuente se
+// dibujan con SOURCE_BRAND_HEX y el script lo cambia por BRAND_HEX al
+// rasterizar, así que re-afinar la marca (SPEC 51) es cambiar solo esta línea
+const BRAND_HEX = "#059669"
+const SOURCE_BRAND_HEX = "#059669"
+// Fondo de los íconos que no admiten transparencia (apple-touch, PWA)
+const ICON_BACKGROUND = "#ffffff"
+
 // [SVG fuente, ancho del SVG, salida, ancho, alto]
 const PNG_TARGETS = [
   ["opengraph.svg", 1200, "public/opengraph-image.png", 1200, 630],
-  ["logo.svg", 512, "public/brand/logo.png", 512, 512],
-  ["mark.svg", 64, "public/apple-touch-icon.png", 180, 180],
-  ["mark.svg", 64, "public/icons/icon-192.png", 192, 192],
-  ["mark.svg", 64, "public/icons/icon-512.png", 512, 512]
+  ["logo.svg", 512, "public/brand/logo.png", 512, 512]
 ]
+
+// Íconos de app: la T a color sobre fondo blanco, a sangre
+const ICON_TARGETS = [
+  ["public/apple-touch-icon.png", 180],
+  ["public/icons/icon-192.png", 192],
+  ["public/icons/icon-512.png", 512]
+]
+
+// Favicon SVG de Next (app/icon.svg): la T a color, sin fondo
+const ICON_SVG_TARGET = "app/icon.svg"
 
 // Ícono maskable: el sistema recorta el borde (círculo, squircle…), así que el
 // fondo va a sangre y la marca se reduce para quedar dentro de la zona segura
 // (círculo central del 80 %)
 const MASKABLE_TARGET = ["public/icons/icon-maskable-512.png", 512]
-const MASKABLE_BACKGROUND = "#10b981"
 const MASKABLE_MARK_SCALE = 0.8
 
 const ICO_SIZES = [16, 32, 48]
@@ -35,7 +49,10 @@ const EXPORT_LOGO_TARGET = ["src/features/exports/workbook/logo-data.ts", 128]
 
 // Reportes PDF (SPEC 33): el logo va como SVG vectorial y la fuente Inter en
 // base64, por la misma razón (sin fs en el despliegue). Solo cuatro pesos.
-const PDF_BRAND_TARGET = ["mark.svg", "src/features/exports/pdf/brand-data.ts"]
+const PDF_BRAND_TARGET = [
+  "mark-color.svg",
+  "src/features/exports/pdf/brand-data.ts"
+]
 const PDF_FONTS_TARGET = "src/features/exports/pdf/fonts-data.ts"
 const PDF_FONTS = [
   ["INTER_REGULAR", "Inter-Regular.ttf"],
@@ -44,24 +61,32 @@ const PDF_FONTS = [
   ["INTER_ITALIC", "Inter-Italic.ttf"]
 ]
 
+// Lee un SVG fuente con el color de marca vigente
+async function readBrandSvg(source) {
+  const svg = await readFile(path.join(BRAND, source), "utf8")
+  return svg.replaceAll(SOURCE_BRAND_HEX, BRAND_HEX)
+}
+
 // Rasteriza el SVG a la densidad justa para no escalar un bitmap
 async function renderPng(source, sourceWidth, width, height) {
-  const svg = await readFile(path.join(BRAND, source))
-  return sharp(svg, { density: (72 * width) / sourceWidth })
+  const svg = await readBrandSvg(source)
+  return sharp(Buffer.from(svg), { density: (72 * width) / sourceWidth })
     .resize(width, height)
     .png({ compressionLevel: 9 })
     .toBuffer()
 }
 
-async function renderMaskable(size) {
-  const markSize = Math.round(size * MASKABLE_MARK_SCALE)
-  const mark = await renderPng("mark.svg", 64, markSize, markSize)
+// La T a color centrada sobre fondo blanco. scale = fracción del lado que
+// ocupa la retícula de 64 (la T ya trae su margen dentro de ella)
+async function renderIcon(size, scale = 1) {
+  const markSize = Math.round(size * scale)
+  const mark = await renderPng("mark-color.svg", 64, markSize, markSize)
   return sharp({
     create: {
       width: size,
       height: size,
       channels: 4,
-      background: MASKABLE_BACKGROUND
+      background: ICON_BACKGROUND
     }
   })
     .composite([{ input: mark, gravity: "center" }])
@@ -102,28 +127,41 @@ async function main() {
     console.log(`✓ ${output} (${width}×${height})`)
   }
 
+  for (const [output, size] of ICON_TARGETS) {
+    const file = path.join(ROOT, output)
+    await mkdir(path.dirname(file), { recursive: true })
+    await writeFile(file, await renderIcon(size))
+    console.log(`✓ ${output} (${size}×${size})`)
+  }
+
   const [maskableOutput, maskableSize] = MASKABLE_TARGET
   await writeFile(
     path.join(ROOT, maskableOutput),
-    await renderMaskable(maskableSize)
+    await renderIcon(maskableSize, MASKABLE_MARK_SCALE)
   )
   console.log(`✓ ${maskableOutput} (${maskableSize}×${maskableSize})`)
 
   const icons = await Promise.all(
     ICO_SIZES.map(async (size) => ({
       size,
-      data: await renderPng("mark.svg", 64, size, size)
+      data: await renderPng("mark-color.svg", 64, size, size)
     }))
   )
   await writeFile(path.join(ROOT, "app/favicon.ico"), buildIco(icons))
   console.log(`✓ app/favicon.ico (${ICO_SIZES.join(", ")})`)
 
+  await writeFile(
+    path.join(ROOT, ICON_SVG_TARGET),
+    await readBrandSvg("mark-color.svg")
+  )
+  console.log(`✓ ${ICON_SVG_TARGET}`)
+
   const [logoOutput, logoSize] = EXPORT_LOGO_TARGET
-  const logo = await renderPng("mark.svg", 64, logoSize, logoSize)
+  const logo = await renderPng("mark-color.svg", 64, logoSize, logoSize)
   await writeFile(
     path.join(ROOT, logoOutput),
     [
-      "// Generado por `pnpm brand:assets` desde assets/brand/mark.svg. No editar.",
+      "// Generado por `pnpm brand:assets` desde assets/brand/mark-color.svg. No editar.",
       `export const LOGO_PNG_BASE64 =\n  "${logo.toString("base64")}"`,
       ""
     ].join("\n")
@@ -131,7 +169,7 @@ async function main() {
   console.log(`✓ ${logoOutput} (${logoSize}×${logoSize})`)
 
   const [brandSource, brandOutput] = PDF_BRAND_TARGET
-  const markSvg = (await readFile(path.join(BRAND, brandSource), "utf8"))
+  const markSvg = (await readBrandSvg(brandSource))
     .replace(/>\s+</g, "><")
     // Atributos con comilla simple: el string queda sin escapes y Prettier
     // lo acepta tal cual

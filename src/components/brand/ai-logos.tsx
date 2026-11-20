@@ -1,4 +1,4 @@
-import { cn } from "@heroui/react"
+import { cn } from "@/libs/cn"
 
 // Logos de los clientes MCP que nombra Tesoro (SPEC 34), con el color de su
 // marca: el naranja de Claude en Claude y Claude Code; OpenAI y Cursor son

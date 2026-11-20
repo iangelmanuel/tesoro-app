@@ -3,7 +3,6 @@
 import type { Route } from "next"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { cn } from "@heroui/react"
 import {
   Bot,
   Eye,
@@ -13,6 +12,7 @@ import {
   User
 } from "lucide-react"
 import { SITE } from "@/config/site"
+import { cn } from "@/libs/cn"
 
 type AccountIcon = (typeof SITE.account.sections)[number]["icon"]
 

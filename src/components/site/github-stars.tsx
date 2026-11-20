@@ -1,6 +1,6 @@
-import { cn } from "@heroui/react"
 import { StarIcon } from "lucide-react"
 import { SITE } from "@/config/site"
+import { cn } from "@/libs/cn"
 import { getRepoStars } from "@/libs/github"
 
 const COMPACT = new Intl.NumberFormat(SITE.site.locale, {

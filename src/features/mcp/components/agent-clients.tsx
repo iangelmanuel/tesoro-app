@@ -1,9 +1,9 @@
-import { cn } from "@heroui/react"
 import {
   AI_CLIENT_NAMES,
   type AiClient,
   AiLogo
 } from "@/components/brand/ai-logos"
+import { cn } from "@/libs/cn"
 
 interface AgentClientsProps {
   clients: readonly AiClient[]

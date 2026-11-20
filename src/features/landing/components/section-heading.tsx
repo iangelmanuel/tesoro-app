@@ -1,4 +1,4 @@
-import { cn } from "@heroui/react"
+import { cn } from "@/libs/cn"
 import { Reveal } from "./reveal"
 
 type SectionHeadingProps = {

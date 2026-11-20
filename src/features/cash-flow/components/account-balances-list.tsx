@@ -1,9 +1,9 @@
-import { cn } from "@heroui/react"
 import { Amount } from "@/components/dashboard/amount"
 import { ACCOUNT_KIND_META } from "@/features/accounts/constants"
 import type { AccountWithBalance } from "@/features/accounts/types"
 import { GoalIcon } from "@/features/goals/components/goal-icon"
 import { NEGATIVE } from "@/features/reports/change"
+import { cn } from "@/libs/cn"
 
 interface AccountBalancesListProps {
   /** Cuentas activas */

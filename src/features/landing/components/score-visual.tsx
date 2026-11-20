@@ -1,5 +1,5 @@
-import { cn } from "@heroui/react"
 import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
+import { cn } from "@/libs/cn"
 import { SCORE_BANDS } from "./score-bands"
 
 // Ejemplo del score (datos ficticios): solo la cifra, su escala y su banda.

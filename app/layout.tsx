@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next"
-import { Inter } from "next/font/google"
-import { cn } from "@heroui/react"
+import localFont from "next/font/local"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { SITE } from "@/config/site"
+import { cn } from "@/libs/cn"
 import {
   buildApplicationSchema,
   buildAuthorSchema,
@@ -11,7 +11,18 @@ import {
 } from "@/libs/seo"
 import "@/styles/globals.css"
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
+// Atkinson Hyperlegible Next (OFL, licencia junto al archivo): hecha para
+// leer bien con baja visión y con cifras tabulares (tnum) para los montos
+// (SPEC 51). Variable 200–800, subconjunto latino (español, €, −, flechas).
+// Local y no desde next/font/google: así Next calcula la fuente de respaldo
+// ajustada y el cambio de fuente no mueve el layout
+const sans = localFont({
+  src: "../src/styles/fonts/atkinson-hyperlegible-next-latin.woff2",
+  weight: "200 800",
+  style: "normal",
+  display: "swap",
+  variable: "--font-sans"
+})
 
 const baseMetadata = buildMetadata({ path: "/" })
 
@@ -58,7 +69,7 @@ export default function RootLayout({
   return (
     <html
       lang={SITE.seo.lang}
-      className={cn("font-sans", inter.variable)}
+      className={cn("font-sans", sans.variable)}
       suppressHydrationWarning
     >
       <body>

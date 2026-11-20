@@ -29,6 +29,8 @@ interface NavItem {
   name: string
   href: string
   icon: NavIcon
+  /** Letra tras la G (atajo); es el código de la estación */
+  shortcut?: string
 }
 
 interface NavGroup {
@@ -76,7 +78,8 @@ export function AppSidebar({ user, businesses, width }: AppSidebarProps) {
       items: group.items.map((item) => ({
         name: item.name,
         href: `${base}${item.segment}`,
-        icon: item.icon
+        icon: item.icon,
+        shortcut: "shortcut" in item ? item.shortcut : undefined
       }))
     }))
   }
@@ -135,7 +138,9 @@ export function AppSidebar({ user, businesses, width }: AppSidebarProps) {
                           <SidebarNavLink
                             href={item.href as Route}
                             isActive={isActive(pathname, item.href, root)}
-                            marker={<Icon />}
+                            // La estación lleva la letra de su atajo G; sin
+                            // atajo, el ícono
+                            marker={item.shortcut ?? <Icon />}
                           >
                             <span className="truncate">{item.name}</span>
                           </SidebarNavLink>

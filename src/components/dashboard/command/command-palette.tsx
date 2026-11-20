@@ -26,10 +26,11 @@ import {
   DialogDescription,
   DialogTitle
 } from "@/components/ui/dialog"
+import { SHORTCUTS } from "@/config/shortcuts"
 import { SITE } from "@/config/site"
-import { workspaceBasePath } from "@/features/workspaces/paths"
-import { NAV_ICONS } from "../nav"
-import { useQuickActions } from "../quick-actions-context"
+import { type QuickActionKey, useQuickActions } from "../quick-actions-context"
+import { type NavTarget, getNavTargets } from "../shortcuts/nav-targets"
+import { ShortcutKeys } from "../shortcuts/shortcut-keys"
 import { type CommandEntity, loadCommandEntities } from "./actions"
 import { useCommandPalette } from "./command-palette-context"
 import { DETAIL_PARAM, OPEN_DETAIL_EVENT } from "./detail-param"
@@ -99,58 +100,27 @@ function openEntity(entity: CommandEntity, push: (href: Route) => void) {
   push(entity.href)
 }
 
-interface GoToItem {
-  name: string
-  href: string
-  icon: LucideIcon
-  /** Grupo del aside o "Cuenta", para la búsqueda */
-  group: string
-}
-
 /**
- * Pantallas del espacio activo (desde SITE.navigation, como el aside) y las
- * de la cuenta. Fuera de un espacio (Cuenta) van las de Personal, como en el
- * aside
+ * Pantallas del espacio activo con su atajo G (como el aside) y las de la
+ * cuenta
  */
-function useGoToItems(): GoToItem[] {
+function useGoToItems(): NavTarget[] {
   const { workspace } = useQuickActions()
-  const items: GoToItem[] = []
-
-  if (workspace?.type === "business") {
-    const base = workspaceBasePath({ id: workspace.id, type: "business" })
-    for (const group of SITE.navigation.business) {
-      for (const item of group.items) {
-        items.push({
-          name: item.name,
-          href: `${base}${item.segment}`,
-          icon: NAV_ICONS[item.icon],
-          group: group.label
-        })
-      }
-    }
-  } else {
-    for (const group of SITE.navigation.personal) {
-      for (const item of group.items) {
-        items.push({
-          name: item.name,
-          href: item.href,
-          icon: NAV_ICONS[item.icon],
-          group: group.label
-        })
-      }
-    }
-  }
-
-  for (const section of SITE.account.sections) {
-    items.push({
+  return [
+    ...getNavTargets(workspace),
+    ...SITE.account.sections.map((section) => ({
       name: `Cuenta: ${section.name}`,
       href: section.href,
       icon: UserRound,
       group: "Cuenta"
-    })
-  }
+    }))
+  ]
+}
 
-  return items
+// Atajos de una tecla de las acciones que los tienen
+const ACTION_SHORTCUTS: Partial<Record<QuickActionKey, readonly string[]>> = {
+  movement: SHORTCUTS.newTransaction.keys,
+  transfer: SHORTCUTS.newTransfer.keys
 }
 
 /**
@@ -206,6 +176,9 @@ export function CommandPalette() {
                   >
                     <Icon />
                     {label}
+                    {ACTION_SHORTCUTS[key] && (
+                      <ShortcutKeys keys={ACTION_SHORTCUTS[key]} />
+                    )}
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -254,7 +227,7 @@ export function CommandPalette() {
               </CommandGroup>
             )}
             <CommandGroup heading="Ir a">
-              {goTo.map(({ name, href, icon: Icon, group }) => (
+              {goTo.map(({ name, href, icon: Icon, group, shortcut }) => (
                 <CommandItem
                   key={href}
                   value={`ir ${href} ${name}`}
@@ -263,6 +236,12 @@ export function CommandPalette() {
                 >
                   <Icon />
                   {name}
+                  {shortcut && (
+                    <ShortcutKeys
+                      keys={[SHORTCUTS.goPrefix, shortcut]}
+                      sequence
+                    />
+                  )}
                 </CommandItem>
               ))}
             </CommandGroup>

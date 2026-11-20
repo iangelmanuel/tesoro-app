@@ -25,6 +25,7 @@ import {
   type QuickActionsWorkspace
 } from "./quick-actions-context"
 import { QuickActionsMenu } from "./quick-actions-menu"
+import { KeyboardShortcuts } from "./shortcuts/keyboard-shortcuts"
 
 // Lee la sesión: va dentro de un Suspense por cacheComponents. El layout no
 // conoce la ruta en el servidor, así que carga Personal (con sus metas,
@@ -112,6 +113,7 @@ async function QuickActionsLoader() {
         <QuickActionsMenu />
         <MobileShell />
         <CommandPalette />
+        <KeyboardShortcuts />
       </CommandPaletteProvider>
     </QuickActionsProvider>
   )

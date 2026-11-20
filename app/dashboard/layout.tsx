@@ -15,6 +15,7 @@ import {
 import { HideAmountsProvider } from "@/components/dashboard/hide-amounts-context"
 import { HideAmountsToggle } from "@/components/dashboard/hide-amounts-toggle"
 import { QuickActions } from "@/components/dashboard/quick-actions"
+import { ShortcutsPreferenceProvider } from "@/components/dashboard/shortcuts/shortcuts-preference"
 import { SidebarInset, SidebarProvider } from "@/components/dashboard/sidebar"
 import {
   SIDEBAR_WIDTH_COOKIE,
@@ -23,6 +24,7 @@ import {
 import { WorkspaceThemeRoot } from "@/components/dashboard/workspace-theme-root"
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
+import { SHORTCUTS_COOKIE, parseShortcutsCookie } from "@/config/shortcuts"
 import { SITE } from "@/config/site"
 import { TutorialAutoStart } from "@/features/tutorials/components/tutorial-auto-start"
 import { TutorialHelpButton } from "@/features/tutorials/components/tutorial-help-button"
@@ -80,21 +82,27 @@ async function DashboardHeaderTitle() {
 
 // Entrega al cliente si las cifras están ocultas y qué tutoriales terminó el
 // usuario: el primer render ya sale con la máscara y el arranque automático
-// decide sin parpadeo ni consulta por página. Envuelve el aside (el menú de
+// decide sin parpadeo ni consulta por página. También si los atajos de
+// teclado están encendidos (cookie). Envuelve el aside (el menú de
 // cuenta también oculta cifras), el header y el contenido
 async function DashboardPreferencesBoundary({
   children
 }: Readonly<{ children: React.ReactNode }>) {
-  const [user, completedTutorials] = await Promise.all([
+  const [user, completedTutorials, cookieStore] = await Promise.all([
     getDashboardUser(),
-    getCompletedTutorials()
+    getCompletedTutorials(),
+    cookies()
   ])
   return (
     <HideAmountsProvider initial={user.hideAmounts}>
-      <TutorialProvider initial={completedTutorials}>
-        {children}
-        <TutorialAutoStart />
-      </TutorialProvider>
+      <ShortcutsPreferenceProvider
+        initial={parseShortcutsCookie(cookieStore.get(SHORTCUTS_COOKIE)?.value)}
+      >
+        <TutorialProvider initial={completedTutorials}>
+          {children}
+          <TutorialAutoStart />
+        </TutorialProvider>
+      </ShortcutsPreferenceProvider>
     </HideAmountsProvider>
   )
 }

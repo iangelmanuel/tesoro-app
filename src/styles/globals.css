@@ -1,34 +1,70 @@
 @import "tailwindcss";
 @import "@heroui/styles";
+/* tw-animate-css ya llega con @heroui/styles; cuando HeroUI salga (SPEC 53)
+   se importa aquí, antes de shadcn/tailwind.css */
+@import "shadcn/tailwind.css";
+@import "./heroui-bridge.css";
 
 @custom-variant dark (&:is(.dark *));
 
-/* Tema de Tesoro sobre los tokens de HeroUI v3. Oscuro por defecto: fondo
-   casi negro y tarjetas gris oscuro sin borde (las separa el contraste
-   fondo/superficie). Claro con la misma estructura: tarjeta blanca sobre un
-   gris suave, con sombra propia en dos niveles (--surface-shadow y
-   --overlay-shadow; en oscuro quedan sin sombra). Primario (--accent) neutro;
-   cada espacio lo cambia con [data-workspace]. Pares verificados en AA
-   (4.5:1 texto, 3:1 gráficos y foco) en docs/ui.md. */
+/* Tema de Tesoro (SPEC 51, dirección "Señalética"). Nombres de shadcn más
+   los propios. Neutros fríos de un solo matiz (255): grafito azulado casi
+   negro en oscuro (por defecto en el dashboard) y papel gris claro en claro.
+   Las tarjetas no llevan borde: las separa el escalón fondo → tarjeta →
+   popover y una sombra contenida. Un solo color vivo por pantalla: el
+   primario del espacio (emerald en Personal, naranja en Empresa, neutro
+   fuera). Ingreso turquesa, gasto coral y balance en tinta: distinguibles
+   también con daltonismo rojo-verde (ΔE ≥ 8 simulado con deuteranopía y
+   protanopía) y siempre con signo e ícono.
+
+   Renombres frente a shadcn mientras convive HeroUI (SPEC 51 §3):
+   --highlight es el --accent de shadcn (fondo de hover y seleccionado) y
+   --subtle es su --muted (fondo atenuado). HeroUI ya usa --accent y --muted
+   con otro significado; heroui-bridge.css los apunta a estos tokens.
+
+   Todo par texto/fondo da AA (4.5:1 texto, 3:1 gráficos y foco) en claro y
+   oscuro; la tabla está en docs/ui.md */
 :root {
   color-scheme: light;
-  --background: oklch(0.962 0.004 264);
-  --foreground: oklch(0.21 0.016 265);
-  --surface: oklch(1 0 0);
-  --surface-foreground: var(--foreground);
-  --surface-secondary: oklch(0.967 0.004 264);
-  --surface-secondary-foreground: var(--foreground);
-  --surface-tertiary: oklch(0.948 0.006 264);
-  --surface-tertiary-foreground: var(--foreground);
-  --overlay: oklch(1 0 0);
-  --overlay-foreground: var(--foreground);
-  --muted: oklch(0.5 0.02 262);
-  --default: oklch(0.93 0.006 264);
-  --default-foreground: var(--foreground);
-  /* Campos (inputs, selects, fechas): fondo suave y sin borde. Se
-     distinguen por el relleno, no por un trazo; el foco pone el anillo */
-  --field-background: oklch(0.952 0.006 264);
-  --field-hover: oklch(0.93 0.008 264);
+  --radius: 0.5rem;
+
+  --background: oklch(0.965 0.005 255);
+  --foreground: oklch(0.205 0.02 258);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--foreground);
+  /* Primario neutro fuera de los espacios (cuenta, auth): tinta con texto
+     claro. Cada espacio lo cambia con [data-workspace] */
+  --primary: oklch(0.205 0.02 258);
+  --primary-foreground: oklch(0.985 0.002 255);
+  --secondary: oklch(0.955 0.006 255);
+  --secondary-foreground: var(--foreground);
+  --subtle: oklch(0.955 0.006 255);
+  --muted-foreground: oklch(0.49 0.022 257); /* 5.1:1 sobre --highlight */
+  --highlight: oklch(0.93 0.009 255);
+  --highlight-foreground: var(--foreground);
+  --destructive: oklch(0.53 0.2 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.87 0.01 255);
+  --input: oklch(0.87 0.01 255);
+  --ring: var(--primary);
+
+  /* Aside: mismo fondo que la página; la "línea" del espacio y la estación
+     activa usan --sidebar-primary (marca gráfica, ≥ 3:1) */
+  --sidebar: var(--background);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--card);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+
+  /* Campos (inputs, selects, fechas): relleno suave y sin trazo. Se
+     distinguen por el relleno; el foco pone el anillo */
+  --field-background: oklch(0.948 0.007 255);
+  --field-hover: oklch(0.93 0.009 255);
   --field-focus: var(--field-background);
   --field-foreground: var(--foreground);
   --field-border: transparent;
@@ -36,44 +72,40 @@
   --field-border-focus: transparent;
   --field-border-width: 0px;
   --field-shadow: 0 0 0 0 transparent inset;
-  --segment: oklch(1 0 0);
-  --segment-foreground: var(--foreground);
-  --border: oklch(0.87 0.008 264);
-  --separator: oklch(0.93 0.006 264);
+
   /* Elevación en claro, dos niveles y sin negro puro (tinte del foreground).
-     Tarjeta: contacto fino + sombra ambiental muy difusa. Overlay (menús,
-     diálogos, tooltips): más alta. Solo un nivel por pila de tarjetas */
+     Tarjeta: contacto fino + sombra ambiental difusa. Overlay (menús,
+     diálogos, tooltips): más alta. Un solo nivel por pila de tarjetas */
   --surface-shadow:
-    0 1px 2px 0 oklch(0.21 0.016 265 / 0.05),
-    0 6px 20px -4px oklch(0.21 0.016 265 / 0.07);
+    0 1px 2px 0 oklch(0.205 0.02 258 / 0.05),
+    0 6px 20px -4px oklch(0.205 0.02 258 / 0.07);
   --overlay-shadow:
-    0 2px 6px 0 oklch(0.21 0.016 265 / 0.06),
-    0 18px 44px -10px oklch(0.21 0.016 265 / 0.16);
-  --accent: oklch(0.21 0.016 265);
-  --accent-foreground: oklch(0.985 0.002 264);
-  --focus: var(--accent);
-  --link: var(--foreground);
+    0 2px 6px 0 oklch(0.205 0.02 258 / 0.06),
+    0 18px 44px -10px oklch(0.205 0.02 258 / 0.16);
+
   /* Serie neutra de gráficas: luminosidad escalonada, ≥ 3:1 contra la
-     superficie (el más claro, 3.36) */
-  --chart-1: oklch(0.4 0.035 257);
-  --chart-2: oklch(0.58 0.04 257);
-  --chart-3: oklch(0.27 0.03 257);
-  --chart-4: oklch(0.5 0.04 257);
-  --chart-5: oklch(0.64 0.04 257);
-  /* Estados: AA como texto sobre la superficie y con su foreground */
-  --success: oklch(52.7% 0.154 150.069); /* green-700 */
+     tarjeta (la más clara, 3.36) */
+  --chart-1: oklch(0.4 0.035 255);
+  --chart-2: oklch(0.58 0.04 255);
+  --chart-3: oklch(0.27 0.03 255);
+  --chart-4: oklch(0.5 0.04 255);
+  --chart-5: oklch(0.64 0.04 255);
+
+  /* Estados (tone.ts): AA como texto sobre la tarjeta y con su foreground */
+  --success: oklch(52.7% 0.154 150.069);
   --success-foreground: oklch(1 0 0);
-  --warning: oklch(55.5% 0.163 48.998); /* amber-700 */
+  --warning: oklch(55.5% 0.163 48.998);
   --warning-foreground: oklch(1 0 0);
-  --danger: oklch(54% 0.235 27.4); /* entre red-600 y red-700 */
-  --danger-foreground: oklch(1 0 0);
-  /* Marca: el emerald del logo. No cambia con el tema ni con el espacio */
+
+  /* Marca: el emerald del isotipo. No cambia con el tema ni con el espacio */
   --brand: oklch(69.6% 0.17 162.48);
-  /* Categorías (gráficas): ≥ 3:1 contra la superficie y el fondo */
+
+  /* Categorías (gráficas). Las claves se guardan en BD: solo cambian los
+     valores. ≥ 3:1 contra la tarjeta y el fondo */
   --category-emerald: oklch(59.6% 0.145 163.225);
   --category-teal: oklch(60% 0.118 184.704);
   --category-lime: oklch(53.2% 0.157 131.589);
-  --category-amber: oklch(66.6% 0.179 58.318);
+  --category-amber: oklch(63% 0.17 58.3);
   --category-orange: oklch(64.6% 0.222 41.116);
   --category-rose: oklch(64.5% 0.246 16.439);
   --category-pink: oklch(65.6% 0.241 354.308);
@@ -82,54 +114,69 @@
   --category-blue: oklch(62.3% 0.214 259.815);
   --category-sky: oklch(58.8% 0.158 241.966);
   --category-slate: oklch(55.4% 0.046 257.417);
-  /* Dinero: ≥ 4.5:1 como texto sobre la superficie y el fondo, y a la vez
-     serie de gráfica: los tres pasan el validador de dataviz (banda de
-     luminosidad, ΔE con protanopía/deuteranopía ≥ 8 entre todos los pares) */
-  --income: oklch(50% 0.12 163);
-  --expense: oklch(55% 0.23 25);
-  --balance: oklch(43% 0.16 255);
+
+  /* Dinero: ≥ 4.5:1 como texto sobre fondo, tarjeta, popover y --highlight,
+     y a la vez serie de gráfica. Ingreso turquesa y gasto coral se separan
+     en el eje azul–amarillo, el que conserva el daltonismo rojo-verde;
+     balance va en tinta */
+  --income: oklch(0.5 0.1 192);
+  --expense: oklch(0.53 0.19 17);
+  --balance: var(--foreground);
+
+  /* Color de cada espacio fuera del dashboard (SPEC 40): la landing muestra
+     Personal y Empresa lado a lado, así que no puede usar --primary (uno
+     por ruta). Marcas gráficas (≥ 3:1): tono 700 en claro, brillante en
+     oscuro */
+  --workspace-personal: oklch(50.8% 0.118 165.612);
+  --workspace-business: oklch(55.3% 0.195 38.402);
+
+  /* Scrollbar fina, sin carril, con el gris del sistema */
+  --scrollbar: oklch(0.83 0.008 255);
+  --scrollbar-hover: oklch(0.7 0.012 255);
 }
 
 .dark {
   color-scheme: dark;
-  /* Negros profundos y neutros, mismo matiz (264) que el claro: fondo
-     ~#07080a, tarjeta ~#16171a, con niveles más separados y elevación por
-     brillo superior (SPEC 23). Iguales en Personal y Empresa; solo cambia el
-     acento */
-  --background: oklch(0.125 0.003 264);
-  --foreground: oklch(0.985 0 0);
-  --surface: oklch(0.215 0.005 264);
-  --surface-secondary: oklch(0.255 0.005 264);
-  --surface-tertiary: oklch(0.29 0.005 264);
-  --overlay: oklch(0.265 0.005 264);
-  --muted: oklch(0.72 0.012 264);
-  --default: oklch(0.29 0.005 264);
-  /* Más claro que la tarjeta (0.215) y el modal (0.265) */
-  --field-background: oklch(0.32 0.005 264);
-  --field-hover: oklch(0.35 0.005 264);
-  --segment: oklch(0.37 0.005 264);
-  --border: oklch(0.31 0.005 264);
-  --separator: oklch(0.28 0.005 264);
-  /* Elevación en oscuro: brillo superior de 1 px (la luz que cae sobre el
-     borde alto) más una sombra profunda y difusa. Sin trazo alrededor */
+  --background: oklch(0.145 0.008 255);
+  --foreground: oklch(0.97 0.004 255);
+  --card: oklch(0.205 0.012 255);
+  --popover: oklch(0.245 0.012 255);
+  --primary: oklch(0.97 0.004 255);
+  --primary-foreground: oklch(0.18 0.01 255);
+  --secondary: oklch(0.25 0.012 255);
+  --subtle: oklch(0.25 0.012 255);
+  --muted-foreground: oklch(0.74 0.018 255); /* 6.1:1 sobre --highlight */
+  --highlight: oklch(0.29 0.013 255);
+  /* Tono claro para texto y errores sobre el fondo oscuro; como relleno va
+     con texto oscuro */
+  --destructive: oklch(0.7 0.18 22);
+  --destructive-foreground: oklch(0.18 0.01 255);
+  --border: oklch(0.32 0.012 255);
+  --input: oklch(0.32 0.012 255);
+
+  /* Más claro que la tarjeta (0.205) y el popover (0.245) */
+  --field-background: oklch(0.29 0.012 255);
+  --field-hover: oklch(0.32 0.012 255);
+
+  /* Elevación en oscuro: brillo superior de 1 px más una sombra profunda y
+     difusa. Sin trazo alrededor */
   --surface-shadow:
     inset 0 1px 0 0 oklch(1 0 0 / 0.055), 0 8px 24px -10px oklch(0 0 0 / 0.5);
   --overlay-shadow:
     inset 0 1px 0 0 oklch(1 0 0 / 0.08), 0 18px 44px -10px oklch(0 0 0 / 0.7);
-  --accent: oklch(0.985 0 0);
-  --accent-foreground: oklch(0.18 0.005 264);
-  --chart-1: oklch(86.9% 0.022 252.894); /* slate-300 */
-  --chart-2: oklch(70.4% 0.04 256.788); /* slate-400 */
-  --chart-3: oklch(55.4% 0.046 257.417); /* slate-500 */
-  --chart-4: oklch(92.9% 0.013 255.508); /* slate-200 */
-  --chart-5: oklch(96.8% 0.007 247.896); /* slate-100 */
-  --success: oklch(79.2% 0.209 151.711); /* green-400 */
-  --success-foreground: oklch(0.18 0.005 264);
-  --warning: oklch(82.8% 0.189 84.429); /* amber-400 */
-  --warning-foreground: oklch(0.18 0.005 264);
-  --danger: oklch(70.4% 0.191 22.216); /* red-400 */
-  --danger-foreground: oklch(0.18 0.005 264);
-  /* Categorías: tono 400, ≥ 3:1 sobre la superficie oscura */
+
+  --chart-1: oklch(86.9% 0.022 252.894);
+  --chart-2: oklch(70.4% 0.04 256.788);
+  --chart-3: oklch(55.4% 0.046 257.417);
+  --chart-4: oklch(92.9% 0.013 255.508);
+  --chart-5: oklch(96.8% 0.007 247.896);
+
+  --success: oklch(79.2% 0.209 151.711);
+  --success-foreground: oklch(0.18 0.01 255);
+  --warning: oklch(82.8% 0.189 84.429);
+  --warning-foreground: oklch(0.18 0.01 255);
+
+  /* Categorías: tono 400, ≥ 3:1 sobre fondo, tarjeta y popover */
   --category-emerald: oklch(76.5% 0.177 163.223);
   --category-teal: oklch(77.7% 0.152 181.912);
   --category-lime: oklch(84.1% 0.238 128.85);
@@ -142,123 +189,96 @@
   --category-blue: oklch(70.7% 0.165 254.624);
   --category-sky: oklch(74.6% 0.16 232.661);
   --category-slate: oklch(70.4% 0.04 256.788);
-  /* Dinero: AA sobre la superficie y dentro de la banda de gráficas en
-     oscuro (validador de dataviz, ΔE CVD ≥ 8 entre todos los pares) */
-  --income: oklch(60% 0.15 170);
-  --expense: oklch(66% 0.23 25);
-  --balance: oklch(67% 0.16 255);
+
+  --income: oklch(0.78 0.12 186);
+  --expense: oklch(0.73 0.16 15);
+
+  --workspace-personal: oklch(76% 0.15 163);
+  --workspace-business: oklch(75% 0.16 50);
+
+  --scrollbar: oklch(0.34 0.008 255);
+  --scrollbar-hover: oklch(0.46 0.01 255);
 }
 
-/* Páginas públicas (landing, legales, /mcp) en claro (SPEC 40): fondo blanco
-   puro. El layout de (public) pinta data-surface="site" y :has() lo sube a
-   :root para que también body y el área de overscroll queden en blanco. Las
-   tarjetas bajan a un gris muy suave (sin borde, misma sombra) para seguir
-   distinguiéndose del fondo; --muted da 5.6:1 sobre esa superficie y 6:1 sobre el blanco. El gris
-   hueso de --background queda para el dashboard y la auth. El oscuro no
-   cambia */
-/* Color de cada espacio fuera del dashboard (SPEC 40): la landing muestra
-   Personal y Empresa lado a lado, así que no puede usar --accent (uno por
-   ruta). Son marcas gráficas (≥ 3:1 sobre la superficie): tono 700 en
-   claro y el brillante en oscuro, los mismos del primario de cada espacio */
-:root {
-  --workspace-personal: oklch(50.8% 0.118 165.612);
-  --workspace-business: oklch(55.3% 0.195 38.402);
-}
-
-.dark {
-  --workspace-personal: oklch(72% 0.15 162.5);
-  --workspace-business: oklch(74% 0.17 48);
-}
-
+/* Páginas públicas (landing, legales, /mcp) siempre en claro (SPEC 40):
+   fondo blanco puro. El layout de (public) pinta data-surface="site" y
+   :has() lo sube a :root para que body y el área de overscroll también
+   queden en blanco. Las tarjetas bajan a un gris muy suave (sin borde, misma
+   sombra) para seguir separándose del fondo */
 :root:not(.dark):has([data-surface="site"]) {
   --background: oklch(1 0 0);
-  --surface: oklch(0.975 0.003 264);
+  --card: oklch(0.975 0.004 255);
 }
 
 /* Primario por espacio. WorkspaceThemeRoot pinta un marcador oculto con
    data-workspace como hijo directo del contenedor del dashboard; :has() pone
-   el primario en ese contenedor, así sidebar, header y contenido cambian
-   juntos. Los botones llevan texto blanco (SPEC 24): el relleno es el tono
-   700, el primero que da AA (≥ 4.5:1) con blanco. En oscuro, foco y texto
-   suave usan --accent-bright, porque el 700 no contrasta con el fondo casi
-   negro */
+   el primario en ese contenedor, así aside, header, contenido y overlays
+   cambian juntos. Nunca por props. El relleno es el tono 700, el primero que
+   da AA con texto blanco. En oscuro, el anillo de foco y la línea del aside
+   usan el tono brillante, porque el 700 no llega a 3:1 sobre el fondo */
 :has(> [data-workspace="personal"]) {
-  --accent: oklch(50.8% 0.118 165.612); /* emerald-700 */
-  --accent-foreground: oklch(0.99 0 0);
-  --accent-bright: var(--accent);
+  --primary: oklch(50.8% 0.118 165.612); /* emerald-700 */
+  --primary-foreground: oklch(0.99 0 0);
+  --ring: var(--primary);
+  --sidebar-primary: var(--primary);
 }
 
 .dark :has(> [data-workspace="personal"]) {
-  --accent-bright: oklch(72% 0.15 162.5);
+  --ring: oklch(76% 0.15 163);
+  --sidebar-primary: oklch(76% 0.15 163);
+  --sidebar-primary-foreground: oklch(0.2 0.04 165);
 }
 
 :has(> [data-workspace="business"]) {
-  --accent: oklch(55.3% 0.195 38.402); /* orange-700 */
-  --accent-foreground: oklch(0.99 0 0);
-  --accent-bright: var(--accent);
+  --primary: oklch(55.3% 0.195 38.402); /* orange-700 */
+  --primary-foreground: oklch(0.99 0 0);
+  --ring: var(--primary);
+  --sidebar-primary: var(--primary);
 }
 
 .dark :has(> [data-workspace="business"]) {
-  --accent-bright: oklch(74% 0.17 48);
+  --ring: oklch(75% 0.16 50);
+  --sidebar-primary: oklch(75% 0.16 50);
+  --sidebar-primary-foreground: oklch(0.22 0.05 45);
 }
 
-/* La entrada de los modales de HeroUI escala el contenedor desde 1.05. Con
-   scroll="outside" el backdrop es overflow-y: auto, y eso deja el eje x
-   también en auto: durante los 250 ms de la animación aparecía un scroll
-   horizontal (y un salto), muy visible al abrir un diálogo encima de otro */
-.modal__backdrop {
-  overflow-x: hidden;
-}
-
-/* Botón de peligro en oscuro: relleno red-600 con texto blanco (≥ 4.5:1),
-   igual que el resto de botones de color. --danger sigue en red-400 para
-   textos y errores sobre el fondo oscuro */
-.dark .button--danger {
-  --button-bg: oklch(57.7% 0.245 27.325);
-  --button-bg-hover: oklch(50.5% 0.213 27.518);
-  --button-bg-pressed: oklch(50.5% 0.213 27.518);
-  --button-fg: oklch(0.99 0 0);
-}
-
-/* Los derivados del primario se recalculan en el contenedor del espacio:
-   HeroUI los declara en :root y ahí se resuelven con el primario neutro */
+/* Los alias que dependen del primario se recalculan en el contenedor del
+   espacio: declarados solo en :root se resolverían con el primario neutro */
 :has(> [data-workspace]) {
-  --focus: var(--accent-bright);
-  /* Hover más oscuro: con texto blanco, aclarar bajaría el contraste */
-  --accent-hover: color-mix(in oklab, var(--accent) 88%, black 12%);
-  --accent-soft: color-mix(in oklab, var(--accent) 12%, transparent);
-  --accent-soft-foreground: color-mix(
-    in oklab,
-    var(--accent) 60%,
-    var(--foreground) 40%
-  );
-  --accent-soft-hover: color-mix(in oklab, var(--accent) 16%, transparent);
-}
-
-.dark :has(> [data-workspace]) {
-  --accent-soft: color-mix(in oklab, var(--accent-bright) 12%, transparent);
-  --accent-soft-foreground: color-mix(
-    in oklab,
-    var(--accent-bright) 80%,
-    var(--foreground) 20%
-  );
-  --accent-soft-hover: color-mix(
-    in oklab,
-    var(--accent-bright) 16%,
-    transparent
-  );
-}
-
-/* Radios: tarjetas grandes (HeroUI usa --radius-3xl, 24 px) y botones y
-   tabs pill. Los campos (selects e inputs) suben a 20 px, pill a su
-   altura de 36–40 px */
-:root {
-  --field-radius: calc(var(--radius) * 2.5);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-ring: var(--ring);
 }
 
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: var(--font-sans);
+  /* Colores de shadcn. --color-muted y --color-accent siguen siendo de HeroUI
+     hasta SPEC 53; el código nuevo usa text-muted-foreground, bg-subtle y
+     bg-highlight */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-subtle: var(--subtle);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -268,13 +288,21 @@
 
 @layer base {
   * {
-    @apply border-border outline-focus;
+    @apply border-border outline-ring;
   }
   body {
     @apply bg-background text-foreground;
   }
   html {
     @apply font-sans;
+  }
+  /* Selección y cursor con la paleta, no con los del navegador */
+  ::selection {
+    background: color-mix(in oklab, var(--ring) 32%, transparent);
+  }
+  input,
+  textarea {
+    caret-color: var(--ring);
   }
 }
 
@@ -471,16 +499,7 @@
 }
 
 /* Scrollbar de todo el proyecto: fina, sin flechas ni carril visible, con el
-   gris neutro del sistema (matiz 264). Se aclara al pasar el mouse */
-:root {
-  --scrollbar: oklch(0.83 0.006 264);
-  --scrollbar-hover: oklch(0.7 0.01 264);
-}
-
-.dark {
-  --scrollbar: oklch(0.34 0.005 264);
-  --scrollbar-hover: oklch(0.46 0.006 264);
-}
+   gris neutro del sistema (--scrollbar, arriba). Se aclara al pasar el mouse */
 
 @supports (scrollbar-color: auto) {
   * {

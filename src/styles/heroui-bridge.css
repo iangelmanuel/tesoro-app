@@ -1,0 +1,88 @@
+/* Puente HeroUI → tokens de shadcn (SPEC 51 §3). Temporal: SPEC 53 retira
+   HeroUI y borra este archivo.
+
+   Las pantallas que siguen en HeroUI leen sus propios tokens (--surface,
+   --accent, --muted…). Aquí apuntan a los nuevos de globals.css, así toman
+   la paleta nueva sin tocarlas. Va sin capa, después de @heroui/styles, así
+   gana sobre las variables que HeroUI declara en @layer base (también las de
+   .dark). Los valores viven en globals.css; aquí solo hay alias */
+
+:root {
+  --surface: var(--card);
+  --surface-foreground: var(--card-foreground);
+  --surface-secondary: var(--secondary);
+  --surface-secondary-foreground: var(--secondary-foreground);
+  --surface-tertiary: var(--highlight);
+  --surface-tertiary-foreground: var(--highlight-foreground);
+  --overlay: var(--popover);
+  --overlay-foreground: var(--popover-foreground);
+  --muted: var(--muted-foreground);
+  --default: var(--highlight);
+  --default-foreground: var(--highlight-foreground);
+  --field-placeholder: var(--muted-foreground);
+  --segment: var(--card);
+  --segment-foreground: var(--foreground);
+  --separator: color-mix(in oklab, var(--border) 55%, var(--card));
+  --danger: var(--destructive);
+  --danger-foreground: var(--destructive-foreground);
+  --link: var(--foreground);
+  /* Radios: tarjetas de 24 px (--radius-3xl), botones y tabs pill y campos a
+     20 px, pill a su altura de 36–40 px */
+  --field-radius: calc(var(--radius) * 2.5);
+}
+
+.dark {
+  /* El segmento activo va un paso más claro que el campo que lo contiene */
+  --segment: oklch(0.36 0.012 255);
+}
+
+/* Primario de HeroUI (--accent) y sus derivados. Se declaran en :root y otra
+   vez en el contenedor del espacio: una variable con var() se resuelve donde
+   se declara, así que solo en :root heredaría el primario neutro */
+:root,
+:has(> [data-workspace]) {
+  --accent: var(--primary);
+  --accent-foreground: var(--primary-foreground);
+  --focus: var(--ring);
+}
+
+/* Hover más oscuro (con texto blanco, aclarar bajaría el contraste) y
+   fondos suaves desde el tono de la línea, que en oscuro es el brillante */
+:has(> [data-workspace]) {
+  --accent-hover: color-mix(in oklab, var(--primary) 88%, black 12%);
+  --accent-soft: color-mix(in oklab, var(--sidebar-primary) 12%, transparent);
+  --accent-soft-foreground: color-mix(
+    in oklab,
+    var(--sidebar-primary) 60%,
+    var(--foreground) 40%
+  );
+  --accent-soft-hover: color-mix(
+    in oklab,
+    var(--sidebar-primary) 16%,
+    transparent
+  );
+}
+
+.dark :has(> [data-workspace]) {
+  --accent-soft-foreground: color-mix(
+    in oklab,
+    var(--sidebar-primary) 80%,
+    var(--foreground) 20%
+  );
+}
+
+/* La entrada de los modales de HeroUI escala el contenedor desde 1.05. Con
+   scroll="outside" el backdrop es overflow-y: auto, y eso deja el eje x
+   también en auto: durante la animación aparecía un scroll horizontal */
+.modal__backdrop {
+  overflow-x: hidden;
+}
+
+/* Botón de peligro en oscuro: relleno rojo con texto blanco (≥ 4.5:1).
+   --destructive sigue en el tono claro para textos y errores */
+.dark .button--danger {
+  --button-bg: oklch(57.7% 0.245 27.325);
+  --button-bg-hover: oklch(50.5% 0.213 27.518);
+  --button-bg-pressed: oklch(50.5% 0.213 27.518);
+  --button-fg: oklch(0.99 0 0);
+}

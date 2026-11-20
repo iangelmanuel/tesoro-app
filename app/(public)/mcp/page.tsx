@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { buttonVariants, cn } from "@heroui/react"
 import {
   ArrowRightIcon,
   ChartColumnIcon,
@@ -17,6 +16,7 @@ import {
 } from "lucide-react"
 import { AI_CLIENTS } from "@/components/brand/ai-logos"
 import { JsonLd } from "@/components/seo/JsonLd"
+import { buttonVariants } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import { RevealObserver } from "@/features/landing/components/reveal-observer"
 import { MCP_GROUP_LABELS, getMcpCatalog } from "@/features/mcp/catalog"
@@ -28,6 +28,7 @@ import { McpUrlField } from "@/features/mcp/components/mcp-url-field"
 import { MCP_AGENTS_PATH } from "@/features/mcp/constants"
 import { MCP_RESOURCE_URL } from "@/features/mcp/discovery"
 import type { McpToolDefinition } from "@/features/mcp/types"
+import { cn } from "@/libs/cn"
 import { buildBreadcrumbSchema, buildMetadata } from "@/libs/seo"
 
 export const metadata = buildMetadata({
@@ -354,7 +355,7 @@ export default function McpPage() {
               </Link>
               <Link
                 href={MCP_AGENTS_PATH}
-                className={buttonVariants({ size: "lg", variant: "tertiary" })}
+                className={buttonVariants({ size: "lg", variant: "secondary" })}
               >
                 Ir a Agentes IA
               </Link>

@@ -1,7 +1,7 @@
 import Link from "next/link"
-import { buttonVariants } from "@heroui/react"
 import { ArrowRightIcon } from "lucide-react"
 import { Logo } from "@/components/brand/logo"
+import { buttonVariants } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import { Reveal } from "./reveal"
 

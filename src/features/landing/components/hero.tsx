@@ -1,8 +1,9 @@
 import { getImageProps } from "next/image"
 import Link from "next/link"
-import { buttonVariants, cn } from "@heroui/react"
 import { ArrowRightIcon, PlayIcon } from "lucide-react"
+import { buttonVariants } from "@/components/ui/button"
 import { SITE } from "@/config/site"
+import { cn } from "@/libs/cn"
 import { HeroVideo } from "./hero-video"
 
 // Lo que más tranquiliza a quien llega: va abajo, como pie del hero

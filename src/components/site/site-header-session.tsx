@@ -1,8 +1,9 @@
 import { Suspense } from "react"
 import Link from "next/link"
-import { buttonVariants, cn } from "@heroui/react"
 import { ArrowRightIcon } from "lucide-react"
+import { buttonVariants } from "@/components/ui/button"
 import { SITE } from "@/config/site"
+import { cn } from "@/libs/cn"
 import { createClient } from "@/libs/supabase/server"
 
 // Botones de sesión del header. El fallback es el estado sin sesión, así el

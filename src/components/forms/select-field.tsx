@@ -17,6 +17,8 @@ import { cn } from "@/libs/cn"
 export interface SelectFieldOption<T extends string> {
   value: T
   label: string
+  /** Texto de apoyo bajo la etiqueta, solo en la lista */
+  description?: string
 }
 
 interface SelectFieldProps<T extends string> {
@@ -88,7 +90,16 @@ export function SelectField<T extends string>({
                 key={option.value}
                 value={option.value}
               >
-                {option.label}
+                {option.description ? (
+                  <span className="flex flex-col py-0.5 whitespace-normal">
+                    <span className="font-medium">{option.label}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {option.description}
+                    </span>
+                  </span>
+                ) : (
+                  option.label
+                )}
               </SelectItem>
             ))}
           </SelectContent>

@@ -6,6 +6,8 @@ import { Plus, RefreshCw } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { DetailSection, DetailSheet } from "@/components/dashboard/detail-sheet"
 import { HelpHint } from "@/components/dashboard/help-hint"
+// Trigger de PaymentDialog (FormDialog); el resto del Sheet migra en el paso 7
+import { Button as UiButton } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { parseAmount } from "@/features/transactions/schemas"
@@ -186,15 +188,13 @@ export function DebtSheet({
                 }}
                 accounts={accounts}
                 trigger={
-                  <Button
+                  <UiButton
                     // Sin saldo, una tarjeta igual registra compras y cargos
-                    isDisabled={
-                      debt.balance <= 0 && debt.kind !== "credit_card"
-                    }
+                    disabled={debt.balance <= 0 && debt.kind !== "credit_card"}
                   >
                     <Plus />
                     Registrar movimiento
-                  </Button>
+                  </UiButton>
                 }
               />
               <AdjustBalanceDialog

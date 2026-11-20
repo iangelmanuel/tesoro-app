@@ -161,6 +161,7 @@ OKLCH → sRGB, SPEC 51). Mínimos: 4.5:1 texto, 3:1 gráficos y foco.
 | `muted-foreground` / `highlight`                            | 5.09  | 6.12   |
 | `muted-foreground` / `background`                           | 5.65  | 8.59   |
 | `muted-foreground` / `field-background`                     | 5.38  | 6.12   |
+| `muted-foreground` / `subtle`                               | 5.49  | 6.94   |
 | `foreground` / `field-background`                           | 15.39 | 12.94  |
 | `income` / `card`                                           | 5.58  | 9.42   |
 | `income` / `background`                                     | 5.04  | 10.41  |

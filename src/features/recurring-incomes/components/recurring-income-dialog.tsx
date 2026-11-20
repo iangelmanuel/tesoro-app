@@ -1,22 +1,17 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import {
-  Button,
-  FieldError,
-  Input,
-  ListBox,
-  Modal,
-  Select,
-  TextField,
-  toast
-} from "@heroui/react"
 import { X } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { AccountSelectField } from "@/components/forms/account-select-field"
+import { amountInput } from "@/components/forms/amount-format"
 import { CategorySelectField } from "@/components/forms/category-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
-import { FieldLabel } from "@/components/forms/field-label"
+import { FormDialog } from "@/components/forms/form-dialog"
+import { SelectField } from "@/components/forms/select-field"
+import { TextInputField } from "@/components/forms/text-input-field"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/sonner"
 import {
   type AccountOption,
   selectableAccounts
@@ -39,13 +34,19 @@ import {
 } from "../schemas"
 import type { RecurringIncomeFormState } from "../types"
 
-const AMOUNT_FORMAT = new Intl.NumberFormat("es-CO", {
-  maximumFractionDigits: 2
-})
+/** "enero" → "Enero" */
+const capitalize = (text: string) =>
+  text.charAt(0).toUpperCase() + text.slice(1)
 
-const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1)
+const MONTH_OPTIONS = Array.from({ length: 12 }, (_, index) => ({
+  value: String(index + 1),
+  label: capitalize(monthName(index + 1))
+}))
 
-const WEEKDAYS = Array.from({ length: 7 }, (_, index) => index + 1)
+const WEEKDAY_OPTIONS = Array.from({ length: 7 }, (_, index) => ({
+  value: String(index + 1),
+  label: capitalize(weekdayName(index + 1))
+}))
 
 export const FREQUENCY_LABELS: Record<IncomeFrequency, string> = {
   weekly: "Semanal",
@@ -56,6 +57,11 @@ export const FREQUENCY_LABELS: Record<IncomeFrequency, string> = {
   every_n_days: "Cada N días",
   none: "Sin fecha fija"
 }
+
+const FREQUENCY_OPTIONS = INCOME_FREQUENCIES.map((value) => ({
+  value,
+  label: FREQUENCY_LABELS[value]
+}))
 
 const FREQUENCY_HINTS: Record<IncomeFrequency, string> = {
   weekly: "Llega una vez por semana, como el rendimiento de una inversión.",
@@ -146,7 +152,7 @@ interface RecurringIncomeDialogProps {
   /** Si llega, el diálogo edita este ingreso fijo */
   income?: RecurringIncome
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
@@ -160,46 +166,32 @@ export function RecurringIncomeDialog({
   open: controlledOpen,
   onOpenChange
 }: RecurringIncomeDialogProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
-  const open = controlledOpen ?? uncontrolledOpen
-  const setOpen = onOpenChange ?? setUncontrolledOpen
   const isEditing = income !== undefined
 
   return (
-    <Modal
-      isOpen={open}
-      onOpenChange={setOpen}
+    <FormDialog
+      trigger={trigger}
+      open={controlledOpen}
+      onOpenChange={onOpenChange}
+      className="sm:max-w-md"
+      title={isEditing ? "Editar ingreso fijo" : "Nuevo ingreso fijo"}
+      description={
+        isEditing
+          ? "Cambia los datos del ingreso fijo."
+          : "Un ingreso que se repite, como tu salario, un arriendo que recibes o un proyecto."
+      }
     >
-      {trigger}
-      <Modal.Backdrop>
-        <Modal.Container scroll="outside">
-          <Modal.Dialog className="sm:max-w-md">
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>
-                {isEditing ? "Editar ingreso fijo" : "Nuevo ingreso fijo"}
-              </Modal.Heading>
-              <p className="text-sm text-muted">
-                {isEditing
-                  ? "Cambia los datos del ingreso fijo."
-                  : "Un ingreso que se repite, como tu salario, un arriendo que recibes o un proyecto."}
-              </p>
-            </Modal.Header>
-            <Modal.Body>
-              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-              <RecurringIncomeForm
-                workspaceId={workspaceId}
-                categories={categories}
-                accounts={accounts}
-                income={income}
-                onSaved={() => setOpen(false)}
-                onCancel={() => setOpen(false)}
-              />
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+      {(close) => (
+        <RecurringIncomeForm
+          workspaceId={workspaceId}
+          categories={categories}
+          accounts={accounts}
+          income={income}
+          onSaved={close}
+          onCancel={close}
+        />
+      )}
+    </FormDialog>
   )
 }
 
@@ -253,9 +245,7 @@ function RecurringIncomeForm({
   const [intervalDays, setIntervalDays] = useState(
     dayText(income?.interval_days)
   )
-  const [amount, setAmount] = useState(
-    income ? AMOUNT_FORMAT.format(income.amount) : ""
-  )
+  const [amount, setAmount] = useState(amountInput(income?.amount))
   const [startsOn, setStartsOn] = useState(
     () => income?.starts_on ?? todayISO()
   )
@@ -278,9 +268,8 @@ function RecurringIncomeForm({
     return result
   }, {})
 
-  function handleFrequencyChange(key: React.Key | null) {
-    if (key == null || key === frequency) return
-    const next = key as IncomeFrequency
+  function handleFrequencyChange(next: IncomeFrequency) {
+    if (next === frequency) return
     setFrequency(next)
     // Quincenal: propone 15 y 30 si los días están vacíos
     if (next === "biweekly") {
@@ -327,38 +316,30 @@ function RecurringIncomeForm({
         value={frequency}
       />
 
-      <TextField
+      <TextInputField
         name="name"
+        label="Nombre"
+        help="recurringIncome.name"
         maxLength={60}
+        placeholder="Salario"
         defaultValue={values?.name ?? income?.name}
         isRequired
-        isInvalid={Boolean(errors?.name)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="recurringIncome.name">Nombre</FieldLabel>
-        <Input placeholder="Salario" />
-        <FieldError>{errors?.name?.[0]}</FieldError>
-      </TextField>
+        error={errors?.name?.[0]}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
+        <TextInputField
           name="amount"
+          label="Monto esperado"
+          help="recurringIncome.expected"
           inputMode="decimal"
           autoComplete="off"
+          placeholder="0"
           value={amount}
-          onChange={setAmount}
+          onChange={(event) => setAmount(event.target.value)}
           isRequired
-          isInvalid={Boolean(errors?.amount)}
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="recurringIncome.expected">
-            Monto esperado
-          </FieldLabel>
-          <Input placeholder="0" />
-          <FieldError>{errors?.amount?.[0]}</FieldError>
-        </TextField>
+          error={errors?.amount?.[0]}
+        />
 
         <CategorySelectField
           name="category_id"
@@ -371,7 +352,7 @@ function RecurringIncomeForm({
           error={errors?.category_id?.[0]}
         >
           {currentCategoryArchived && !categoryId && (
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted-foreground">
               La categoría de este ingreso fijo está archivada. Elige otra.
             </p>
           )}
@@ -391,186 +372,103 @@ function RecurringIncomeForm({
       />
 
       <div className="flex flex-col gap-2">
-        <Select
-          fullWidth
+        <SelectField
+          label="Frecuencia"
+          help="common.frequency"
           value={frequency}
           onChange={handleFrequencyChange}
-          isInvalid={Boolean(errors?.frequency)}
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="common.frequency">Frecuencia</FieldLabel>
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              {INCOME_FREQUENCIES.map((option) => (
-                <ListBox.Item
-                  key={option}
-                  id={option}
-                  textValue={FREQUENCY_LABELS[option]}
-                >
-                  {FREQUENCY_LABELS[option]}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-          <FieldError>{errors?.frequency?.[0]}</FieldError>
-        </Select>
-        <p className="text-sm text-muted">{FREQUENCY_HINTS[frequency]}</p>
+          options={FREQUENCY_OPTIONS}
+          error={errors?.frequency?.[0]}
+        />
+        <p className="text-sm text-muted-foreground">
+          {FREQUENCY_HINTS[frequency]}
+        </p>
       </div>
 
       {/* Cada frecuencia pide solo los datos que le aplican */}
       {frequency === "weekly" && (
-        <Select
+        <SelectField
           name="day_of_week"
-          fullWidth
+          label="Día de la semana"
+          help="recurringIncome.weekday"
           placeholder="Elige un día"
-          value={dayOfWeek || null}
-          onChange={(key) => setDayOfWeek(key == null ? "" : String(key))}
-          isInvalid={Boolean(errors?.day_of_week)}
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="recurringIncome.weekday">
-            Día de la semana
-          </FieldLabel>
-          <Select.Trigger className="capitalize">
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              {WEEKDAYS.map((day) => (
-                <ListBox.Item
-                  key={day}
-                  id={String(day)}
-                  textValue={weekdayName(day)}
-                  className="capitalize"
-                >
-                  {weekdayName(day)}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-          <FieldError>{errors?.day_of_week?.[0]}</FieldError>
-        </Select>
+          value={dayOfWeek}
+          onChange={setDayOfWeek}
+          options={WEEKDAY_OPTIONS}
+          error={errors?.day_of_week?.[0]}
+        />
       )}
 
       {frequency === "every_n_days" && (
-        <TextField
+        <TextInputField
           name="interval_days"
+          label="Cada cuántos días"
+          help="recurringIncome.everyDays"
+          type="number"
           inputMode="numeric"
+          min={INTERVAL_DAYS_MIN}
+          max={INTERVAL_DAYS_MAX}
+          placeholder="14"
           value={intervalDays}
-          onChange={setIntervalDays}
+          onChange={(event) => setIntervalDays(event.target.value)}
           isRequired
-          isInvalid={Boolean(errors?.interval_days)}
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="recurringIncome.everyDays">
-            Cada cuántos días
-          </FieldLabel>
-          <Input
-            type="number"
-            min={INTERVAL_DAYS_MIN}
-            max={INTERVAL_DAYS_MAX}
-            placeholder="14"
-          />
-          <FieldError>{errors?.interval_days?.[0]}</FieldError>
-        </TextField>
+          error={errors?.interval_days?.[0]}
+        />
       )}
 
       {hasMonthDay && (
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextField
+          <TextInputField
             name="day_of_month"
+            label={
+              frequency === "biweekly" ? "Primer día de pago" : "Día de pago"
+            }
+            help="recurringIncome.day"
+            helpLabel="Día de pago"
+            type="number"
             inputMode="numeric"
+            min={1}
+            max={31}
+            placeholder="30"
             value={dayOfMonth}
-            onChange={setDayOfMonth}
+            onChange={(event) => setDayOfMonth(event.target.value)}
             isRequired
-            isInvalid={Boolean(errors?.day_of_month)}
-            validationBehavior="aria"
-            className="flex flex-col gap-2"
-          >
-            <FieldLabel
-              help="recurringIncome.day"
-              helpLabel="Día de pago"
-            >
-              {frequency === "biweekly" ? "Primer día de pago" : "Día de pago"}
-            </FieldLabel>
-            <Input
+            error={errors?.day_of_month?.[0]}
+          />
+
+          {frequency === "biweekly" && (
+            <TextInputField
+              name="second_day_of_month"
+              label="Segundo día de pago"
+              help="recurringIncome.secondDay"
               type="number"
+              inputMode="numeric"
               min={1}
               max={31}
               placeholder="30"
-            />
-            <FieldError>{errors?.day_of_month?.[0]}</FieldError>
-          </TextField>
-
-          {frequency === "biweekly" && (
-            <TextField
-              name="second_day_of_month"
-              inputMode="numeric"
               value={secondDay}
-              onChange={setSecondDay}
+              onChange={(event) => setSecondDay(event.target.value)}
               isRequired
-              isInvalid={Boolean(errors?.second_day_of_month)}
-              validationBehavior="aria"
-              className="flex flex-col gap-2"
-            >
-              <FieldLabel help="recurringIncome.secondDay">
-                Segundo día de pago
-              </FieldLabel>
-              <Input
-                type="number"
-                min={1}
-                max={31}
-                placeholder="30"
-              />
-              <FieldError>{errors?.second_day_of_month?.[0]}</FieldError>
-            </TextField>
+              error={errors?.second_day_of_month?.[0]}
+            />
           )}
 
           {frequency === "yearly" && (
-            <Select
+            <SelectField
               name="month_of_year"
-              fullWidth
+              label="Mes de pago"
+              help="recurringIncome.month"
               placeholder="Elige un mes"
-              value={monthOfYear || null}
-              onChange={(key) => setMonthOfYear(key == null ? "" : String(key))}
-              isInvalid={Boolean(errors?.month_of_year)}
-              className="flex flex-col gap-2"
-            >
-              <FieldLabel help="recurringIncome.month">Mes de pago</FieldLabel>
-              <Select.Trigger className="capitalize">
-                <Select.Value />
-                <Select.Indicator />
-              </Select.Trigger>
-              <Select.Popover>
-                <ListBox>
-                  {MONTHS.map((month) => (
-                    <ListBox.Item
-                      key={month}
-                      id={String(month)}
-                      textValue={monthName(month)}
-                      className="capitalize"
-                    >
-                      {monthName(month)}
-                      <ListBox.ItemIndicator />
-                    </ListBox.Item>
-                  ))}
-                </ListBox>
-              </Select.Popover>
-              <FieldError>{errors?.month_of_year?.[0]}</FieldError>
-            </Select>
+              value={monthOfYear}
+              onChange={setMonthOfYear}
+              options={MONTH_OPTIONS}
+              error={errors?.month_of_year?.[0]}
+            />
           )}
         </div>
       )}
       {hasMonthDay && (
-        <p className="-mt-2 text-sm text-muted">
+        <p className="-mt-2 text-sm text-muted-foreground">
           Si el mes no tiene ese día, cuenta el último día del mes.
         </p>
       )}
@@ -598,10 +496,11 @@ function RecurringIncomeForm({
           />
           {endsOn && (
             <Button
+              type="button"
               variant="ghost"
-              isIconOnly
+              size="icon"
               aria-label="Quitar fecha de fin"
-              onPress={() => setEndsOn("")}
+              onClick={() => setEndsOn("")}
             >
               <X />
             </Button>
@@ -612,7 +511,7 @@ function RecurringIncomeForm({
       {summary && (
         <p
           aria-live="polite"
-          className="rounded-2xl bg-default px-4 py-3 text-sm font-medium first-letter:uppercase"
+          className="rounded-2xl bg-subtle px-4 py-3 text-sm font-medium first-letter:uppercase"
         >
           {summary}
           {summaryAmount > 0 && (
@@ -627,7 +526,7 @@ function RecurringIncomeForm({
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error}
         </p>
@@ -635,14 +534,15 @@ function RecurringIncomeForm({
 
       <div className="flex justify-end gap-2">
         <Button
+          type="button"
           variant="ghost"
-          onPress={onCancel}
+          onClick={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          isDisabled={pending}
+          disabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear"}
         </Button>

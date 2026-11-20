@@ -40,7 +40,7 @@ export function IncomeReceiptPreview({
     return (
       <p
         aria-live="polite"
-        className="text-sm text-danger"
+        className="text-sm text-destructive"
       >
         {error}
       </p>
@@ -50,7 +50,7 @@ export function IncomeReceiptPreview({
   return (
     <p
       aria-live="polite"
-      className="text-sm text-muted"
+      className="text-sm text-muted-foreground"
     >
       {covered.length > 0 && <>Cubre {describeOccurrences(covered)}</>}
       {covered.length > 0 && partial && " · "}

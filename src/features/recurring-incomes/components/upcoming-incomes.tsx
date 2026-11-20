@@ -1,7 +1,8 @@
-import { cn } from "@heroui/react"
 import { Amount } from "@/components/dashboard/amount"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
+import { cn } from "@/libs/cn"
 import { formatDate } from "@/libs/format"
 import type { IncomeMonthRow, IncomeSummaryRow } from "../month-rows"
 import type { IncomeOccurrenceStatus } from "../occurrences"
@@ -31,8 +32,8 @@ function RowAmount({
     <p
       className={cn(
         "shrink-0 font-medium whitespace-nowrap",
-        isReceived && "text-(--income)",
-        status === "overdue" && "text-(--expense)",
+        isReceived && TONE_TEXT_CLASSES.success,
+        status === "overdue" && TONE_TEXT_CLASSES.danger,
         className
       )}
     >
@@ -66,7 +67,7 @@ function RowLayout({ name, status, amount, meta, action }: RowLayoutProps) {
           {/* < 768 px: el monto va junto al nombre */}
           <div className="md:hidden">{amount}</div>
         </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
           {meta}
         </div>
       </div>

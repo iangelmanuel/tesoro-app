@@ -1,7 +1,7 @@
 "use client"
 
 import { useTransition } from "react"
-import { toast } from "@heroui/react"
+import { toast } from "@/components/ui/sonner"
 import { deleteRecurringIncome, toggleRecurringIncome } from "../actions"
 import type { RecurringIncome } from "../queries"
 
@@ -16,7 +16,7 @@ export function useRecurringIncomeActions(income: RecurringIncome) {
     startTransition(async () => {
       const result = await toggleRecurringIncome(income.id, !income.is_active)
       if (result.error) {
-        toast.danger(result.error)
+        toast.error(result.error)
       } else {
         toast.success(
           income.is_active ? "Ingreso fijo pausado" : "Ingreso fijo reanudado"
@@ -29,7 +29,7 @@ export function useRecurringIncomeActions(income: RecurringIncome) {
     startTransition(async () => {
       const result = await deleteRecurringIncome(income.id)
       if (result.error) {
-        toast.danger(result.error)
+        toast.error(result.error)
       } else {
         toast.success("Ingreso fijo eliminado")
         onDeleted?.()

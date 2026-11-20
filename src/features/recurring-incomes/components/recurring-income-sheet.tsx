@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Button, Chip, cn } from "@heroui/react"
 import { Check, Pause, Pencil, Play, Trash2 } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
@@ -17,12 +16,19 @@ import {
   useSortableList
 } from "@/components/dashboard/sortable-list"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import {
+  TONE_BADGE_CLASSES,
+  TONE_TEXT_CLASSES
+} from "@/components/dashboard/tone"
+import { ToneBadge } from "@/components/dashboard/tone-badge"
+import { Button } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { moveLedgerEntry } from "@/features/transactions/actions"
 import { RecordedPaymentActions } from "@/features/transactions/components/recorded-payment-actions"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
+import { cn } from "@/libs/cn"
 import { todayISO } from "@/libs/dates"
 import { formatDate, formatShortDate } from "@/libs/format"
 import { loadRecurringIncomeHistory } from "../actions"
@@ -124,16 +130,15 @@ export function RecurringIncomeSheet({
         onOpenChange={onOpenChange}
         title={income.name}
         status={
-          income.is_active ? (
-            <Chip size="sm">Activo</Chip>
-          ) : (
-            <Chip
-              size="sm"
-              variant="tertiary"
-            >
-              Pausado
-            </Chip>
-          )
+          <ToneBadge
+            className={
+              income.is_active
+                ? TONE_BADGE_CLASSES.success
+                : TONE_BADGE_CLASSES.neutral
+            }
+          >
+            {income.is_active ? "Activo" : "Pausado"}
+          </ToneBadge>
         }
         figure={
           <Amount
@@ -146,7 +151,7 @@ export function RecurringIncomeSheet({
         summary={
           hasSchedule &&
           (error !== null ? (
-            <p className="text-sm text-danger">{error}</p>
+            <p className="text-sm text-destructive">{error}</p>
           ) : (
             history && (
               <DetailStats
@@ -159,7 +164,7 @@ export function RecurringIncomeSheet({
                         currency={currency}
                       />
                     ),
-                    className: "text-(--income)"
+                    className: TONE_TEXT_CLASSES.success
                   },
                   {
                     label: "Por cobrar a la fecha",
@@ -170,7 +175,9 @@ export function RecurringIncomeSheet({
                       />
                     ),
                     className:
-                      history.dueToDate > 0 ? "text-(--expense)" : undefined
+                      history.dueToDate > 0
+                        ? TONE_TEXT_CLASSES.danger
+                        : undefined
                   },
                   {
                     label: "Próximo por recibir",
@@ -194,8 +201,8 @@ export function RecurringIncomeSheet({
         action={
           !income.is_active ? (
             <Button
-              isDisabled={pending}
-              onPress={toggle}
+              disabled={pending}
+              onClick={toggle}
             >
               <Play />
               Reanudar
@@ -203,7 +210,7 @@ export function RecurringIncomeSheet({
           ) : (
             canReceive &&
             nextOpen && (
-              <Button onPress={() => setReceiving(nextOpen)}>
+              <Button onClick={() => setReceiving(nextOpen)}>
                 <Check />
                 Recibir {shortOccurrenceDate(nextOpen.dueOn)}
               </Button>
@@ -247,8 +254,7 @@ export function RecurringIncomeSheet({
             <Button
               size="sm"
               variant="secondary"
-              className="max-md:min-h-11"
-              onPress={() => setEditing(true)}
+              onClick={() => setEditing(true)}
             >
               <Pencil />
               Editar
@@ -257,9 +263,8 @@ export function RecurringIncomeSheet({
               <Button
                 size="sm"
                 variant="secondary"
-                className="max-md:min-h-11"
-                isDisabled={pending}
-                onPress={toggle}
+                disabled={pending}
+                onClick={toggle}
               >
                 <Pause />
                 Pausar
@@ -267,10 +272,9 @@ export function RecurringIncomeSheet({
             )}
             <Button
               size="sm"
-              variant="danger-soft"
-              className="max-md:min-h-11"
-              isDisabled={pending}
-              onPress={() => setDeleting(true)}
+              variant="destructive"
+              disabled={pending}
+              onClick={() => setDeleting(true)}
             >
               <Trash2 />
               Eliminar
@@ -293,7 +297,7 @@ export function RecurringIncomeSheet({
         title="¿Eliminar este ingreso fijo?"
         onConfirm={() => remove(() => onOpenChange(false))}
       >
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted-foreground">
           &ldquo;{income.name}&rdquo; dejará de aparecer en tus próximos
           ingresos y en el registro de ingresos. Los movimientos que ya
           registraste se conservan en Movimientos.
@@ -333,7 +337,7 @@ export function RecurringIncomeSheet({
 function IncomeDetails({ income }: { income: RecurringIncome }) {
   return (
     <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-      <dt className="text-muted">Categoría</dt>
+      <dt className="text-muted-foreground">Categoría</dt>
       <dd className="min-w-0">
         <CategoryBadge
           name={
@@ -345,11 +349,11 @@ function IncomeDetails({ income }: { income: RecurringIncome }) {
           color={income.category.color}
         />
       </dd>
-      <dt className="text-muted">Frecuencia</dt>
+      <dt className="text-muted-foreground">Frecuencia</dt>
       <dd>{incomeFrequencyLabel(income)}</dd>
-      <dt className="text-muted">Cuenta</dt>
+      <dt className="text-muted-foreground">Cuenta</dt>
       <dd>{income.accountName ?? "Sin cuenta"}</dd>
-      <dt className="text-muted">Vigencia</dt>
+      <dt className="text-muted-foreground">Vigencia</dt>
       <dd>
         {income.ends_on
           ? `${formatDate(income.starts_on)} – ${formatDate(income.ends_on)}`
@@ -387,7 +391,7 @@ function HistoryList({
   return (
     <div className="flex flex-col gap-3">
       {history.occurrences.length === 0 ? (
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted-foreground">
           Aún no tiene periodos: empieza más adelante.
         </p>
       ) : (
@@ -408,8 +412,8 @@ function HistoryList({
         <Button
           variant="ghost"
           size="sm"
-          className="self-start max-md:min-h-11"
-          onPress={onShowMore}
+          className="self-start"
+          onClick={onShowMore}
         >
           Ver más
         </Button>
@@ -442,7 +446,7 @@ function HistoryRow({
             <IncomeStatusBadge status={row.status} />
           </div>
           {row.status === "partial" && (
-            <p className="text-xs text-muted">
+            <p className="text-xs text-muted-foreground">
               <PartialDetail
                 received={row.receivedAmount}
                 expected={row.amount}
@@ -455,7 +459,9 @@ function HistoryRow({
 
         <div className="flex shrink-0 items-center gap-2">
           {isReceived ? (
-            <span className="text-sm font-medium text-(--income)">
+            <span
+              className={cn("text-sm font-medium", TONE_TEXT_CLASSES.success)}
+            >
               <Amount
                 value={row.receivedAmount}
                 currency={currency}
@@ -466,8 +472,7 @@ function HistoryRow({
               <Button
                 size="sm"
                 variant="outline"
-                className="max-md:min-h-11"
-                onPress={() => onReceive(row)}
+                onClick={() => onReceive(row)}
               >
                 <Check />
                 Recibir
@@ -535,7 +540,7 @@ function ReceiptsList({
 
   return (
     <SortableListProvider {...sortable.providerProps}>
-      <ul className="flex flex-col gap-1 text-xs text-muted">
+      <ul className="flex flex-col gap-1 text-xs text-muted-foreground">
         {sortable.items.map((receipt) => (
           <SortableListItem
             key={receipt.transactionId}

@@ -1,9 +1,11 @@
 "use client"
 
-import { Button, FieldError, TimeField } from "@heroui/react"
-import { Time } from "@internationalized/date"
+import { useId } from "react"
 import { X } from "lucide-react"
 import { FieldLabel } from "@/components/forms/field-label"
+import { Button } from "@/components/ui/button"
+import { FieldError } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import type { FieldHelpKey } from "@/config/help"
 
 interface TimePickerFieldProps {
@@ -22,24 +24,17 @@ interface TimePickerFieldProps {
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)(?::[0-5]\d)?$/
 
-function toTime(value: string): Time | null {
+// HH:MM o HH:MM:SS de Postgres → HH:MM del input; "" si no es una hora
+function toInputValue(value: string) {
   const match = TIME_PATTERN.exec(value)
-
-  return match ? new Time(Number(match[1]), Number(match[2])) : null
+  return match ? `${match[1]}:${match[2]}` : ""
 }
 
-// Hora completa en HH:MM; null si el usuario dejó segmentos a medias
-function fromTime(time: Time | null) {
-  if (!time) {
-    return ""
-  }
-
-  return `${String(time.hour).padStart(2, "0")}:${String(time.minute).padStart(2, "0")}`
-}
-
-// Campo de hora opcional armado con el TimeField de HeroUI. Trabaja con
-// HH:MM, igual que la columna `time` de Postgres sin zona horaria. "" es
-// "sin hora"; el botón de la derecha la borra una vez puesta
+// Campo de hora opcional con el <input type="time"> nativo: accesible y con
+// el selector del sistema en móvil. Trabaja con HH:MM, igual que la columna
+// `time` de Postgres sin zona horaria. "" es "sin hora"; el botón de la
+// derecha la quita una vez puesta. El navegador entrega "" mientras la hora
+// esté a medias. Valida el servidor (timeSchema)
 export function TimePickerField({
   name,
   label = "Hora (opcional)",
@@ -49,43 +44,49 @@ export function TimePickerField({
   className = "flex flex-col gap-2",
   help
 }: TimePickerFieldProps) {
-  const time = toTime(value)
+  const id = useId()
+  const errorId = `${id}-error`
+  const time = toInputValue(value)
 
   return (
-    <TimeField
-      name={name}
-      value={time}
-      onChange={(next) => onChange(fromTime(next))}
-      granularity="minute"
-      hourCycle={12}
-      isInvalid={Boolean(error)}
-      validationBehavior="aria"
+    <div
       className={className}
+      data-invalid={error ? true : undefined}
     >
-      <FieldLabel help={help}>{label}</FieldLabel>
-      <TimeField.Group fullWidth>
-        <TimeField.Input>
-          {(segment) => <TimeField.Segment segment={segment} />}
-        </TimeField.Input>
+      <FieldLabel
+        htmlFor={id}
+        help={help}
+        isInvalid={Boolean(error)}
+      >
+        {label}
+      </FieldLabel>
+      <div className="flex items-center gap-1">
+        <Input
+          id={id}
+          type="time"
+          name={name}
+          value={time}
+          onChange={(event) => onChange(event.target.value)}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
+          className="flex-1 tabular-nums scheme-light dark:scheme-dark [&::-webkit-calendar-picker-indicator]:opacity-70"
+        />
         {time ? (
-          <TimeField.Suffix>
-            <Button
-              aria-label="Quitar la hora"
-              className="min-h-11 min-w-11"
-              isIconOnly
-              size="sm"
-              variant="ghost"
-              onPress={() => onChange("")}
-            >
-              <X
-                aria-hidden="true"
-                className="size-4"
-              />
-            </Button>
-          </TimeField.Suffix>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Quitar hora"
+            onClick={() => onChange("")}
+          >
+            <X
+              aria-hidden
+              className="size-4"
+            />
+          </Button>
         ) : null}
-      </TimeField.Group>
-      <FieldError>{error}</FieldError>
-    </TimeField>
+      </div>
+      {error ? <FieldError id={errorId}>{error}</FieldError> : null}
+    </div>
   )
 }

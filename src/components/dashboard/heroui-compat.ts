@@ -1,6 +1,7 @@
 // Convivencia de los paneles de Base UI (Sheet) con HeroUI, hasta SPEC 53.
-// Dentro de un panel hay menús y diálogos de HeroUI que se montan fuera de
-// él. Un panel modal de Base UI les quitaría el foco y los volvería inertes,
+// Hoy solo lo usa el aside móvil (sidebar.tsx): los Sheets de detalle ya son
+// modales desde SPEC 52b. Dentro del panel hay menús y diálogos de HeroUI
+// que se montan fuera de él. Un panel modal de Base UI les quitaría el foco y los volvería inertes,
 // así que esos paneles van con `modal={false}` y este filtro decide qué
 // cierres son del panel: el clic en su fondo, Escape dentro de él y su botón
 // Cerrar. Un clic, el foco o un Escape dentro de un overlay de HeroUI no lo

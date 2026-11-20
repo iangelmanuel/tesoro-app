@@ -1,5 +1,5 @@
-import { Card, CardDescription, CardHeader, CardTitle, cn } from "@heroui/react"
-import { Amount } from "@/components/dashboard/amount"
+import { StatCard, StatCardSkeleton } from "@/components/dashboard/stat-card"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
 import type { BudgetProgress } from "../queries"
 
 interface BudgetTotalsProps {
@@ -7,6 +7,9 @@ interface BudgetTotalsProps {
   budgets: BudgetProgress[]
   currency: string
 }
+
+/** Contenedor de los KPIs y de su skeleton: misma grilla */
+const TOTALS_GRID = "grid gap-4 sm:grid-cols-3"
 
 export function BudgetTotals({ budgets, currency }: BudgetTotalsProps) {
   const budgeted = budgets.reduce(
@@ -16,39 +19,41 @@ export function BudgetTotals({ budgets, currency }: BudgetTotalsProps) {
   const spent = budgets.reduce((sum, row) => sum + row.spent, 0)
   const remaining = budgeted - spent
 
-  const items = [
-    { label: "Presupuestado", value: budgeted, className: undefined },
-    { label: "Gastado", value: spent, className: undefined },
-    {
-      label: "Restante",
-      value: remaining,
-      className: remaining < 0 ? "text-(--expense)" : undefined
-    }
-  ]
-
   return (
     <div
-      className="grid gap-4 sm:grid-cols-3"
+      className={TOTALS_GRID}
       data-tour="budgets-totals"
     >
-      {items.map((item) => (
-        <Card key={item.label}>
-          <CardHeader>
-            <CardDescription>{item.label}</CardDescription>
-            <CardTitle
-              className={cn(
-                "text-2xl font-semibold tabular-nums",
-                item.className
-              )}
-            >
-              <Amount
-                value={item.value}
-                currency={currency}
-              />
-            </CardTitle>
-          </CardHeader>
-        </Card>
-      ))}
+      <StatCard
+        label="Presupuestado"
+        value={budgeted}
+        trend="lower-is-better"
+        currency={currency}
+      />
+      <StatCard
+        label="Gastado"
+        value={spent}
+        trend="lower-is-better"
+        currency={currency}
+      />
+      <StatCard
+        label="Restante"
+        value={remaining}
+        trend="higher-is-better"
+        currency={currency}
+        valueClassName={remaining < 0 ? TONE_TEXT_CLASSES.danger : undefined}
+      />
+    </div>
+  )
+}
+
+/** Los tres KPIs mientras cargan */
+export function BudgetTotalsSkeleton() {
+  return (
+    <div className={TOTALS_GRID}>
+      <StatCardSkeleton />
+      <StatCardSkeleton />
+      <StatCardSkeleton />
     </div>
   )
 }

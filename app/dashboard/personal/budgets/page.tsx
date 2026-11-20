@@ -1,16 +1,16 @@
 import { Suspense } from "react"
 import { redirect } from "next/navigation"
-import { Button } from "@heroui/react"
 import { PiggyBank, Plus } from "lucide-react"
-import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { EmptyState } from "@/components/dashboard/empty-state"
-import { MonthSwitcherSkeleton } from "@/components/dashboard/month-switcher"
 import { SURFACE_LIST } from "@/components/dashboard/surface"
+import { Button } from "@/components/ui/button"
+import { LoadingRegion } from "@/components/ui/skeleton"
 import { BudgetDialog } from "@/features/budgets/components/budget-dialog"
 import { BudgetMonthNav } from "@/features/budgets/components/budget-month-nav"
 import { BudgetProgressRow } from "@/features/budgets/components/budget-progress-row"
 import { BudgetTotals } from "@/features/budgets/components/budget-totals"
 import { BudgetsAndRecurringTabs } from "@/features/budgets/components/budgets-and-recurring-tabs"
+import { BudgetsScreenSkeleton } from "@/features/budgets/components/budgets-screen-skeleton"
 import { CopyPreviousMonthButton } from "@/features/budgets/components/copy-previous-month-button"
 import { UnbudgetedCategories } from "@/features/budgets/components/unbudgeted-categories"
 import { type BudgetMonth, parseBudgetMonth } from "@/features/budgets/month"
@@ -184,14 +184,11 @@ async function BudgetsView({
 
 function BudgetsSkeleton() {
   return (
-    <>
-      <MonthSwitcherSkeleton />
-      <div className="grid gap-4 sm:grid-cols-3">
-        <CardSkeleton className="h-24" />
-        <CardSkeleton className="h-24" />
-        <CardSkeleton className="h-24" />
-      </div>
-      <CardSkeleton className="h-96" />
-    </>
+    <LoadingRegion
+      label="Cargando presupuestos…"
+      className="flex flex-1 flex-col gap-6"
+    >
+      <BudgetsScreenSkeleton />
+    </LoadingRegion>
   )
 }

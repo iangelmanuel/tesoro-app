@@ -1,6 +1,9 @@
 import { Suspense } from "react"
 import { LoadingRegion } from "@/components/ui/skeleton"
-import { BudgetsAndRecurringTabs } from "@/features/budgets/components/budgets-and-recurring-tabs"
+import {
+  BudgetsAndRecurringTabs,
+  BudgetsAndRecurringTabsSkeleton
+} from "@/features/budgets/components/budgets-and-recurring-tabs"
 import { RECURRING_PATH } from "@/features/budgets/tabs"
 import {
   RecurringView,
@@ -52,6 +55,7 @@ function RecurringSkeleton() {
       label="Cargando gastos fijos…"
       className="flex flex-1 flex-col gap-6"
     >
+      <BudgetsAndRecurringTabsSkeleton />
       <RecurringViewSkeleton />
     </LoadingRegion>
   )

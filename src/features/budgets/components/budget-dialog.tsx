@@ -1,27 +1,20 @@
 "use client"
 
-import { Fragment, useActionState, useState } from "react"
-import {
-  Button,
-  FieldError,
-  Input,
-  Modal,
-  TextField,
-  toast
-} from "@heroui/react"
+import { useActionState, useState } from "react"
+import { amountInput } from "@/components/forms/amount-format"
 import { CategorySelectField } from "@/components/forms/category-select-field"
 import { FieldLabel } from "@/components/forms/field-label"
-import type { FieldHelpKey } from "@/config/help"
+import { FormDialog } from "@/components/forms/form-dialog"
+import { TextInputField } from "@/components/forms/text-input-field"
+import { Button } from "@/components/ui/button"
+import { FieldError } from "@/components/ui/field"
+import { toast } from "@/components/ui/sonner"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { upsertBudget } from "../actions"
 import { type BudgetMonth, monthStart } from "../month"
 import type { BudgetProgress } from "../queries"
 import type { BudgetFormState } from "../types"
-
-const AMOUNT_FORMAT = new Intl.NumberFormat("es-CO", {
-  maximumFractionDigits: 2
-})
 
 interface BudgetDialogProps {
   /** Espacio del presupuesto (para crear una categoría desde el select) */
@@ -37,7 +30,7 @@ interface BudgetDialogProps {
   /** Categoría preseleccionada al crear (desde "Sin presupuesto") */
   defaultCategoryId?: string
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
@@ -52,48 +45,34 @@ export function BudgetDialog({
   open: controlledOpen,
   onOpenChange
 }: BudgetDialogProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
-  const open = controlledOpen ?? uncontrolledOpen
-  const setOpen = onOpenChange ?? setUncontrolledOpen
   const isEditing = budget !== undefined
 
   return (
-    <Modal
-      isOpen={open}
-      onOpenChange={setOpen}
+    <FormDialog
+      trigger={trigger}
+      open={controlledOpen}
+      onOpenChange={onOpenChange}
+      className="sm:max-w-md"
+      title={isEditing ? "Editar presupuesto" : "Nuevo presupuesto"}
+      description={
+        <>
+          Cuánto quieres gastar como máximo en{" "}
+          <span className="capitalize">{month.label}</span>.
+        </>
+      }
     >
-      {/* El trigger llega del servidor: dentro de un array con el
-          Backdrop React le pide `key`. Un Fragment lo deja como hijo único */}
-      {trigger && <Fragment>{trigger}</Fragment>}
-      <Modal.Backdrop>
-        <Modal.Container scroll="outside">
-          <Modal.Dialog className="sm:max-w-md">
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>
-                {isEditing ? "Editar presupuesto" : "Nuevo presupuesto"}
-              </Modal.Heading>
-              <p className="text-sm text-muted">
-                Cuánto quieres gastar como máximo en{" "}
-                <span className="capitalize">{month.label}</span>.
-              </p>
-            </Modal.Header>
-            <Modal.Body>
-              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-              <BudgetForm
-                workspaceId={workspaceId}
-                month={month}
-                categories={categories}
-                budget={budget}
-                defaultCategoryId={defaultCategoryId}
-                onSaved={() => setOpen(false)}
-                onCancel={() => setOpen(false)}
-              />
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+      {(close) => (
+        <BudgetForm
+          workspaceId={workspaceId}
+          month={month}
+          categories={categories}
+          budget={budget}
+          defaultCategoryId={defaultCategoryId}
+          onSaved={close}
+          onCancel={close}
+        />
+      )}
+    </FormDialog>
   )
 }
 
@@ -138,6 +117,7 @@ function BudgetForm({
 
   const errors = state.fieldErrors
   const values = state.values
+  const categoryError = errors?.category_id?.[0]
 
   return (
     <form
@@ -152,17 +132,22 @@ function BudgetForm({
       />
 
       {isEditing ? (
-        <Field
-          id="category_id"
-          label="Categoría"
-          help="budget.category"
-          errors={errors?.category_id}
+        // La categoría no cambia al editar: se muestra, no se elige
+        <div
+          className="flex flex-col gap-2"
+          data-invalid={categoryError ? true : undefined}
         >
           <input
             type="hidden"
             name="category_id"
             value={budget.categoryId}
           />
+          <FieldLabel
+            help="budget.category"
+            isInvalid={Boolean(categoryError)}
+          >
+            Categoría
+          </FieldLabel>
           <div>
             <CategoryBadge
               name={budget.name}
@@ -170,7 +155,8 @@ function BudgetForm({
               color={budget.color}
             />
           </div>
-        </Field>
+          {categoryError ? <FieldError>{categoryError}</FieldError> : null}
+        </div>
       ) : (
         <CategorySelectField
           name="category_id"
@@ -183,7 +169,7 @@ function BudgetForm({
           error={errors?.category_id?.[0]}
         >
           {categories.length === 0 && (
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted-foreground">
               Todas tus categorías de salida ya tienen presupuesto este mes.
               Puedes crear una nueva.
             </p>
@@ -191,30 +177,25 @@ function BudgetForm({
         </CategorySelectField>
       )}
 
-      <TextField
+      <TextInputField
         name="amount"
+        label="Monto"
+        help="budget.amount"
         inputMode="decimal"
         autoComplete="off"
+        placeholder="0"
         defaultValue={
           values?.amount ??
-          (budget?.budgetAmount
-            ? AMOUNT_FORMAT.format(budget.budgetAmount)
-            : "")
+          (budget?.budgetAmount ? amountInput(budget.budgetAmount) : "")
         }
         isRequired
-        isInvalid={Boolean(errors?.amount)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="budget.amount">Monto</FieldLabel>
-        <Input placeholder="0" />
-        <FieldError>{errors?.amount?.[0]}</FieldError>
-      </TextField>
+        error={errors?.amount?.[0]}
+      />
 
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error}
         </p>
@@ -222,47 +203,19 @@ function BudgetForm({
 
       <div className="flex justify-end gap-2">
         <Button
+          type="button"
           variant="ghost"
-          onPress={onCancel}
+          onClick={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          isDisabled={pending}
+          disabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear"}
         </Button>
       </div>
     </form>
-  )
-}
-
-function Field({
-  id,
-  label,
-  errors,
-  help,
-  children
-}: {
-  id: string
-  label: string
-  errors?: string[]
-  help?: FieldHelpKey
-  children: React.ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <FieldLabel
-        htmlFor={id}
-        help={help}
-      >
-        {label}
-      </FieldLabel>
-      {children}
-      {errors?.length ? (
-        <p className="text-sm text-danger">{errors[0]}</p>
-      ) : null}
-    </div>
   )
 }

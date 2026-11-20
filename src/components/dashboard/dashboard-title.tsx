@@ -1,6 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
+import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
 import { greeting } from "@/libs/dates"
 import { flattenNav } from "./nav"
@@ -59,8 +60,20 @@ export function DashboardTitle({ userName }: { userName?: string | null }) {
       : getDashboardTitle(pathname)
 
   return (
-    <h1 className="truncate text-base font-semibold tracking-tight sm:text-lg">
+    <h1 className="truncate text-base leading-6 font-bold tracking-[-0.01em] sm:text-lg sm:leading-7">
       {title}
     </h1>
+  )
+}
+
+/** Hueco del título: una línea del alto del h1 */
+export function DashboardTitleSkeleton() {
+  return (
+    <div
+      aria-hidden="true"
+      className="flex h-6 items-center sm:h-7"
+    >
+      <Skeleton className="h-5 w-44" />
+    </div>
   )
 }

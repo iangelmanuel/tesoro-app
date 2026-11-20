@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { Skeleton } from "@heroui/react"
+import { Skeleton } from "@/components/ui/skeleton"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { getCategories } from "@/features/categories/queries"
 import { isActiveDebt } from "@/features/debts/calculations"
@@ -15,6 +15,9 @@ import {
   getPersonalWorkspace
 } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
+import { CommandPalette } from "./command/command-palette"
+import { CommandPaletteProvider } from "./command/command-palette-context"
+import { CommandTrigger } from "./command/command-trigger"
 import { MobileShell } from "./mobile/mobile-shell"
 import {
   type QuickActionsData,
@@ -22,6 +25,7 @@ import {
   type QuickActionsWorkspace
 } from "./quick-actions-context"
 import { QuickActionsMenu } from "./quick-actions-menu"
+import { KeyboardShortcuts } from "./shortcuts/keyboard-shortcuts"
 
 // Lee la sesión: va dentro de un Suspense por cacheComponents. El layout no
 // conoce la ruta en el servidor, así que carga Personal (con sus metas,
@@ -104,19 +108,39 @@ async function QuickActionsLoader() {
 
   return (
     <QuickActionsProvider value={data}>
-      <QuickActionsMenu />
-      <MobileShell />
+      <CommandPaletteProvider>
+        <CommandTrigger />
+        <QuickActionsMenu />
+        <MobileShell />
+        <CommandPalette />
+        <KeyboardShortcuts />
+      </CommandPaletteProvider>
     </QuickActionsProvider>
   )
 }
 
-/** Accesos rápidos del header: el primario del espacio y el menú "Más" */
+/** Accesos rápidos del header: la paleta de comandos, el primario del
+ *  espacio y el menú "Más" */
 export function QuickActions() {
   return (
     // La ruta no se conoce en el shell estático: el placeholder tiene el
     // tamaño del botón primario para que el header no salte al cargar
-    <Suspense fallback={<Skeleton className="h-9 w-40 rounded-3xl" />}>
+    <Suspense fallback={<QuickActionsSkeleton />}>
       <QuickActionsLoader />
     </Suspense>
+  )
+}
+
+/** Hueco de los accesos: el primario y "Más", con su alto y su forma */
+export function QuickActionsSkeleton() {
+  return (
+    <div
+      aria-hidden="true"
+      className="flex items-center gap-2"
+    >
+      <Skeleton className="hidden h-11 w-56 rounded-4xl md:block lg:w-72" />
+      <Skeleton className="h-11 w-11 rounded-4xl sm:w-52" />
+      <Skeleton className="h-11 w-11 rounded-4xl sm:w-20" />
+    </div>
   )
 }

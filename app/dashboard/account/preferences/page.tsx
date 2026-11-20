@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
+import { ShortcutsSettings } from "@/components/dashboard/shortcuts/shortcuts-settings"
 import { AccountSection } from "@/features/account/components/account-section"
 import { CurrencyForm } from "@/features/account/components/currency-form"
 import { getAccount } from "@/features/account/queries"
@@ -38,6 +39,13 @@ async function PreferencesContent() {
         description="Cada sección de Personal tiene un recorrido guiado. Repítelo cuando quieras o reinícialos para que vuelvan a arrancar solos."
       >
         <TutorialsSettings />
+      </AccountSection>
+      {/* La preferencia llega por contexto desde el layout (cookie) */}
+      <AccountSection
+        title="Atajos de teclado"
+        description="Muévete y registra sin soltar el teclado. Pulsa ? para ver todos."
+      >
+        <ShortcutsSettings />
       </AccountSection>
     </>
   )

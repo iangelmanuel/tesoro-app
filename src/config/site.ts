@@ -324,11 +324,13 @@ export const SITE = {
           {
             name: "Resumen",
             href: "/dashboard/personal",
+            shortcut: "R",
             icon: "LayoutDashboard"
           },
           {
             name: "Movimientos",
             href: "/dashboard/personal/transactions",
+            shortcut: "M",
             icon: "ArrowLeftRight"
           }
         ]
@@ -339,27 +341,37 @@ export const SITE = {
           {
             name: "Cuentas",
             href: "/dashboard/personal/accounts",
+            shortcut: "C",
             icon: "Wallet"
           },
           {
             name: "Ingresos fijos",
             href: "/dashboard/personal/recurring-income",
+            shortcut: "I",
             icon: "CalendarPlus"
           },
           {
             name: "Gastos fijos",
             href: "/dashboard/personal/recurring",
+            shortcut: "F",
             icon: "CalendarClock"
           },
           {
             name: "Presupuestos",
             href: "/dashboard/personal/budgets",
+            shortcut: "P",
             icon: "PiggyBank"
           },
-          { name: "Metas", href: "/dashboard/personal/goals", icon: "Target" },
+          {
+            name: "Metas",
+            href: "/dashboard/personal/goals",
+            shortcut: "E",
+            icon: "Target"
+          },
           {
             name: "Deudas",
             href: "/dashboard/personal/debts",
+            shortcut: "D",
             icon: "CreditCard"
           }
         ]
@@ -370,11 +382,13 @@ export const SITE = {
           {
             name: "Reportes",
             href: "/dashboard/personal/reports",
+            shortcut: "O",
             icon: "ChartColumn"
           },
           {
             name: "Recomendaciones",
             href: "/dashboard/personal/recommendations",
+            shortcut: "S",
             icon: "Lightbulb"
           }
         ]
@@ -385,10 +399,16 @@ export const SITE = {
       {
         label: "Día a día",
         items: [
-          { name: "Resumen", segment: "", icon: "LayoutDashboard" },
+          {
+            name: "Resumen",
+            segment: "",
+            shortcut: "R",
+            icon: "LayoutDashboard"
+          },
           {
             name: "Movimientos",
             segment: "/transactions",
+            shortcut: "M",
             icon: "ArrowLeftRight"
           }
         ]
@@ -396,14 +416,29 @@ export const SITE = {
       {
         label: "Tu operación",
         items: [
-          { name: "Cuentas", segment: "/accounts", icon: "Wallet" },
-          { name: "Ajustes", segment: "/settings", icon: "Settings" }
+          {
+            name: "Cuentas",
+            segment: "/accounts",
+            shortcut: "C",
+            icon: "Wallet"
+          },
+          {
+            name: "Ajustes",
+            segment: "/settings",
+            shortcut: "A",
+            icon: "Settings"
+          }
         ]
       },
       {
         label: "Entiende tu negocio",
         items: [
-          { name: "Flujo de caja", segment: "/cash-flow", icon: "Activity" },
+          {
+            name: "Flujo de caja",
+            segment: "/cash-flow",
+            shortcut: "F",
+            icon: "Activity"
+          },
           { name: "Reportes", segment: "/reports", icon: "ChartColumn" },
           {
             name: "Recomendaciones",

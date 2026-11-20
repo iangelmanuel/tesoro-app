@@ -7,7 +7,7 @@ import {
   useOptimistic,
   useTransition
 } from "react"
-import { toast } from "@heroui/react"
+import { toast } from "@/components/ui/sonner"
 import { setHideAmountsAction } from "@/features/account/actions"
 import { AMOUNT_MASK, formatCurrency } from "@/libs/format"
 
@@ -40,7 +40,7 @@ export function HideAmountsProvider({
           const { error } = await setHideAmountsAction(next)
 
           if (error) {
-            toast.danger(error)
+            toast.error(error)
           }
         })
       }

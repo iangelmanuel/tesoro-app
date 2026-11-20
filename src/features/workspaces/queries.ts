@@ -148,3 +148,18 @@ export async function requireWritableWorkspace(
   }
   return workspace
 }
+
+/**
+ * Para Server Actions de lectura: el espacio debe ser del usuario (puede
+ * estar programado para borrarse). Si no, lanza un error. RLS
+ * (is_workspace_owner) lo vuelve a validar en cada consulta.
+ */
+export async function requireWorkspace(id: unknown): Promise<Workspace> {
+  const parsed = idSchema.safeParse(id)
+  const workspace = parsed.success ? await findWorkspace(parsed.data) : null
+
+  if (!workspace) {
+    throw new Error("No encontramos ese espacio")
+  }
+  return workspace
+}

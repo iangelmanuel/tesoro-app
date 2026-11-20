@@ -38,7 +38,9 @@ export function CardHeading({
   return (
     <div className="flex min-h-7 flex-wrap items-center justify-between gap-x-3 gap-y-3">
       <div className="flex min-w-0 items-center gap-1">
-        <h2 className="truncate text-sm font-medium text-muted">{title}</h2>
+        <h2 className="truncate text-sm font-semibold text-muted-foreground">
+          {title}
+        </h2>
         {help && <HelpHint topic={help} />}
       </div>
       {control && (
@@ -51,7 +53,7 @@ export function CardHeading({
         {href && (
           <Link
             href={href as Route}
-            className="inline-flex items-center gap-0.5 rounded-lg text-sm text-muted transition-colors duration-150 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-focus motion-reduce:transition-none"
+            className="touch-hitbox inline-flex items-center gap-0.5 rounded-lg text-sm font-medium text-muted-foreground transition-colors duration-150 outline-none hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             {linkLabel}
             {linkContext && <span className="sr-only"> {linkContext}</span>}

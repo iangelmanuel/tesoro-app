@@ -1,62 +1,34 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button, Dropdown, Label } from "@heroui/react"
+import { ChevronDown, Plus } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import {
-  ChevronDown,
-  CreditCard,
-  FileUp,
-  HandCoins,
-  ListChecks,
-  Plus,
-  Tags,
-  Target
-} from "lucide-react"
-import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
-import { DEBTS_PATH, RECEIVABLES_PATH } from "@/features/debts/calculations"
-import {
-  type DebtOption,
-  PaymentDialog
-} from "@/features/debts/components/payment-dialog"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
 import { ExportButton } from "@/features/exports/components/export-button"
-import {
-  ContributionDialog,
-  type GoalOption
-} from "@/features/goals/components/contribution-dialog"
-import { GOALS_PATH } from "@/features/goals/progress"
-import { IMPORT_PATH } from "@/features/imports/constants"
-import {
-  type PaymentTabsData,
-  TransactionDialog
-} from "@/features/transactions/components/transaction-dialog"
-import { VerifyMovementsDialog } from "@/features/transactions/components/verify-movements-dialog"
-import {
-  type QuickActionsWorkspace,
-  useQuickActions
-} from "./quick-actions-context"
-import { useActiveWorkspace } from "./use-active-workspace"
+import { useQuickActions } from "./quick-actions-context"
 
-type MoreAction =
-  "contribution" | "payment" | "receivable" | "import" | "categories" | "verify"
-
-// En /dashboard/personal/* registra en Personal y en
-// /dashboard/business/[id]/* en esa empresa. En otras rutas (cuenta, estado
+// Accesos rápidos del header. "Registrar movimiento" es el primario del
+// espacio; "Más" despliega el resto de acciones de la misma lista que la
+// hoja móvil y la paleta. En /dashboard/personal/* registra en Personal y en
+// /dashboard/business/[id]/* en esa empresa; en otras rutas (cuenta, estado
 // vacío de Empresa) no hay accesos
 export function QuickActionsMenu() {
-  const { goals, debts, receivables, pendingPayments, incomeSources } =
-    useQuickActions()
-  const workspace = useActiveWorkspace()
+  const { workspace, actions, run } = useQuickActions()
 
   if (!workspace) {
     return null
   }
 
-  const isPersonal = workspace.type === "personal"
   const label = "Registrar movimiento"
-  const paymentTabs = isPersonal
-    ? { debts, receivables, pendingPayments, goals, incomeSources }
-    : undefined
+  const more = actions.filter((action) => action.key !== "movement")
+  const register = more.filter((action) => action.group === "register")
+  const tools = more.filter((action) => action.group === "tool")
 
   return (
     <>
@@ -66,216 +38,57 @@ export function QuickActionsMenu() {
         workspaceId={workspace.id}
         historyStart={workspace.historyStart}
       />
-      <TransactionDialog
-        // Al cambiar de espacio el diálogo empieza de cero
-        key={workspace.id}
-        workspaceId={workspace.id}
-        workspaceType={workspace.type}
-        categories={workspace.categories}
-        accounts={workspace.accounts}
-        // Personal: tabs "Deuda", "Me deben", "Gasto fijo" y "Meta", y el
-        // select "Ingreso fijo" del tab Ingreso (SPEC 25, 30 y 39)
-        paymentTabs={paymentTabs}
-        trigger={
-          <Button
-            size="sm"
-            className="max-md:h-11 max-md:min-w-11"
-            data-tour="header-quick-add"
-          >
-            <Plus className="size-4" />
-            <span className="hidden sm:inline">{label}</span>
-            <span className="sr-only sm:hidden">{label}</span>
-          </Button>
-        }
-      />
-      <MoreMenu
-        // Los diálogos del menú también empiezan de cero al cambiar de espacio
-        key={`more-${workspace.id}`}
-        workspace={workspace}
-        goals={goals}
-        debts={debts}
-        paymentTabs={paymentTabs}
-      />
-    </>
-  )
-}
-
-// Personal: aporte, pago, cobro de Me deben, importar, categorías y
-// verificar. Empresa no tiene metas, deudas ni importación: solo categorías y
-// verificar
-function MoreMenu({
-  workspace,
-  goals,
-  debts,
-  paymentTabs
-}: {
-  workspace: QuickActionsWorkspace
-  goals: GoalOption[]
-  debts: DebtOption[]
-  /** Tabs de pago del diálogo de movimiento (solo Personal) */
-  paymentTabs?: PaymentTabsData
-}) {
-  const router = useRouter()
-  const [contributionOpen, setContributionOpen] = useState(false)
-  const [paymentOpen, setPaymentOpen] = useState(false)
-  const [receivableOpen, setReceivableOpen] = useState(false)
-  const [categoriesOpen, setCategoriesOpen] = useState(false)
-  const [verifyOpen, setVerifyOpen] = useState(false)
-  const { accounts } = workspace
-  const isPersonal = workspace.type === "personal"
-
-  // Sin metas (o sin deudas) el ítem lleva a su página para crear una
-  function onAction(key: React.Key) {
-    switch (key as MoreAction) {
-      case "contribution":
-        if (goals.length > 0) setContributionOpen(true)
-        else router.push(GOALS_PATH)
-        break
-      case "payment":
-        if (debts.length > 0) setPaymentOpen(true)
-        else router.push(DEBTS_PATH)
-        break
-      // Abre el diálogo de movimiento en el tab "Me deben" (SPEC 39)
-      case "receivable":
-        if (paymentTabs && paymentTabs.receivables.length > 0) {
-          setReceivableOpen(true)
-        } else router.push(RECEIVABLES_PATH)
-        break
-      case "import":
-        router.push(IMPORT_PATH)
-        break
-      // Se abren sobre la página actual: no dependen de que haya movimientos
-      case "categories":
-        setCategoriesOpen(true)
-        break
-      case "verify":
-        setVerifyOpen(true)
-        break
-    }
-  }
-
-  return (
-    <>
-      <Dropdown>
-        {/* Button de HeroUI como trigger (igual que en las tarjetas de
-            cuentas): Dropdown.Trigger no aplica el layout del botón */}
-        <Button
-          variant="secondary"
-          size="sm"
-          aria-label="Más acciones"
-          className="max-md:h-11 max-md:min-w-11"
-          data-tour="header-more"
+      <Button
+        data-tour="header-quick-add"
+        onClick={() => run("movement")}
+      >
+        <Plus className="size-4" />
+        <span className="hidden sm:inline">{label}</span>
+        <span className="sr-only sm:hidden">{label}</span>
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="secondary"
+              aria-label="Más acciones"
+              className="max-sm:px-3"
+              data-tour="header-more"
+            />
+          }
         >
           <span className="hidden sm:inline">Más</span>
           <ChevronDown className="size-4" />
-        </Button>
-        <Dropdown.Popover
-          placement="bottom end"
-          className="min-w-52"
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          className="w-auto min-w-60"
         >
-          <Dropdown.Menu
-            aria-label="Más acciones"
-            onAction={onAction}
-          >
-            {isPersonal && (
-              <Dropdown.Item
-                id="contribution"
-                textValue="Aporte a meta"
+          <DropdownMenuGroup>
+            {register.map(({ key, label: itemLabel, icon: Icon }) => (
+              <DropdownMenuItem
+                key={key}
+                onClick={() => run(key)}
               >
-                <Target className="size-4" />
-                <Label>Aporte a meta</Label>
-              </Dropdown.Item>
-            )}
-            {isPersonal && (
-              <Dropdown.Item
-                id="payment"
-                textValue="Movimiento de deuda"
+                <Icon />
+                {itemLabel}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            {tools.map(({ key, label: itemLabel, icon: Icon }) => (
+              <DropdownMenuItem
+                key={key}
+                onClick={() => run(key)}
               >
-                <CreditCard className="size-4" />
-                <Label>Movimiento de deuda</Label>
-              </Dropdown.Item>
-            )}
-            {isPersonal && (
-              <Dropdown.Item
-                id="receivable"
-                textValue="Cobro de Me deben"
-              >
-                <HandCoins className="size-4" />
-                <Label>Cobro de Me deben</Label>
-              </Dropdown.Item>
-            )}
-            {isPersonal && (
-              <Dropdown.Item
-                id="import"
-                textValue="Importar"
-              >
-                <FileUp className="size-4" />
-                <Label>Importar</Label>
-              </Dropdown.Item>
-            )}
-            <Dropdown.Item
-              id="categories"
-              textValue="Categorías"
-            >
-              <Tags className="size-4" />
-              <Label>Categorías</Label>
-            </Dropdown.Item>
-            <Dropdown.Item
-              id="verify"
-              textValue="Verificar movimientos"
-            >
-              <ListChecks className="size-4" />
-              <Label>Verificar movimientos</Label>
-            </Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown.Popover>
-      </Dropdown>
-      {/* Controlados por el menú: no tienen trigger propio */}
-      {isPersonal && (
-        <>
-          <ContributionDialog
-            workspaceId={workspace.id}
-            goals={goals}
-            accounts={accounts}
-            open={contributionOpen}
-            onOpenChange={setContributionOpen}
-          />
-          <PaymentDialog
-            workspaceId={workspace.id}
-            debts={debts}
-            accounts={accounts}
-            open={paymentOpen}
-            onOpenChange={setPaymentOpen}
-          />
-          {receivableOpen && (
-            <TransactionDialog
-              workspaceId={workspace.id}
-              workspaceType={workspace.type}
-              categories={workspace.categories}
-              accounts={accounts}
-              paymentTabs={paymentTabs}
-              initialPanel="receivable"
-              open
-              onOpenChange={setReceivableOpen}
-            />
-          )}
-        </>
-      )}
-      <CategoriesSheet
-        workspaceId={workspace.id}
-        categories={workspace.categories}
-        open={categoriesOpen}
-        onOpenChange={setCategoriesOpen}
-      />
-      <VerifyMovementsDialog
-        workspaceId={workspace.id}
-        accounts={accounts}
-        currency={workspace.currency}
-        // Como en la página de Movimientos: solo Personal filtra por cuenta
-        showAccountFilter={isPersonal}
-        open={verifyOpen}
-        onOpenChange={setVerifyOpen}
-      />
+                <Icon />
+                {itemLabel}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </>
   )
 }

@@ -8,6 +8,7 @@ export {
   SidebarNavLink,
   SidebarProvider,
   SidebarResizeHandle,
+  SidebarStations,
   SidebarTrigger,
   useCloseSidebarOnNavigate,
   useSidebar

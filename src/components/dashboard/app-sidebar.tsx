@@ -12,6 +12,7 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarNavLink,
+  SidebarStations,
   useCloseSidebarOnNavigate
 } from "@/components/dashboard/sidebar"
 import { SITE } from "@/config/site"
@@ -28,6 +29,8 @@ interface NavItem {
   name: string
   href: string
   icon: NavIcon
+  /** Letra tras la G (atajo); es el código de la estación */
+  shortcut?: string
 }
 
 interface NavGroup {
@@ -75,7 +78,8 @@ export function AppSidebar({ user, businesses, width }: AppSidebarProps) {
       items: group.items.map((item) => ({
         name: item.name,
         href: `${base}${item.segment}`,
-        icon: item.icon
+        icon: item.icon,
+        shortcut: "shortcut" in item ? item.shortcut : undefined
       }))
     }))
   }
@@ -89,7 +93,7 @@ export function AppSidebar({ user, businesses, width }: AppSidebarProps) {
         <Link
           href={SITE.routes.dashboardPersonal}
           aria-label={`${SITE.info.name}, ir al Resumen`}
-          className="flex h-9 items-center self-start rounded-xl px-1.5 outline-none focus-visible:ring-2 focus-visible:ring-focus"
+          className="flex h-11 items-center self-start rounded-xl px-2 outline-none focus-visible:outline-2 focus-visible:outline-ring"
         >
           <Logo />
         </Link>
@@ -126,10 +130,7 @@ export function AppSidebar({ user, businesses, width }: AppSidebarProps) {
                   <SidebarGroupLabel id={labelId}>
                     <span className="truncate">{group.label}</span>
                   </SidebarGroupLabel>
-                  <ul
-                    aria-labelledby={labelId}
-                    className="flex flex-col gap-0.5"
-                  >
+                  <SidebarStations aria-labelledby={labelId}>
                     {group.items.map((item) => {
                       const Icon = NAV_ICONS[item.icon]
                       return (
@@ -137,14 +138,16 @@ export function AppSidebar({ user, businesses, width }: AppSidebarProps) {
                           <SidebarNavLink
                             href={item.href as Route}
                             isActive={isActive(pathname, item.href, root)}
+                            // La estación lleva la letra de su atajo G; sin
+                            // atajo, el ícono
+                            marker={item.shortcut ?? <Icon />}
                           >
-                            <Icon />
                             <span className="truncate">{item.name}</span>
                           </SidebarNavLink>
                         </li>
                       )
                     })}
-                  </ul>
+                  </SidebarStations>
                 </div>
               )
             })}

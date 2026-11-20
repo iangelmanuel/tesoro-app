@@ -1,8 +1,10 @@
-import { Card, cn } from "@heroui/react"
 import { ArrowDownRight, ArrowUpRight } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { HelpKey } from "@/config/help"
+import { cn } from "@/libs/cn"
 import { Amount } from "./amount"
 import { HelpHint } from "./help-hint"
+import { CARD } from "./surface"
 import { TONE_BADGE_CLASSES } from "./tone"
 
 export type StatTrend = "higher-is-better" | "lower-is-better"
@@ -56,6 +58,30 @@ export function statChange(
   return ((value - previous) / Math.abs(previous)) * 100
 }
 
+// Contenedor compartido por la tarjeta y su skeleton: mismas filas, alturas
+// y radios, así el cambio de uno a otro no mueve el layout
+function StatCardFrame({
+  size,
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"div"> & { size: "default" | "sm" }) {
+  return (
+    <div
+      data-slot="stat-card"
+      className={cn(CARD, "gap-3", size === "sm" && "p-4", className)}
+      {...props}
+    >
+      {children}
+    </div>
+  )
+}
+
+const VALUE_HEIGHT = {
+  default: "min-h-8 sm:min-h-9",
+  sm: "min-h-7"
+} as const
+
 /**
  * KPI: etiqueta, valor grande y badge con flecha y variación. El color del
  * badge depende del significado, no del signo: con `lower-is-better` (gastos)
@@ -81,16 +107,24 @@ export function StatCard({
   const unit = format === "percent" ? " pp" : " %"
 
   return (
-    <Card className={cn("gap-3", size === "sm" && "p-4", className)}>
+    <StatCardFrame
+      size={size}
+      className={className}
+    >
       <dl className="flex flex-col gap-2">
         <div className="flex min-h-6 items-center gap-1">
-          <dt className="text-sm text-muted">{label}</dt>
+          <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
           {help && <HelpHint topic={help} />}
         </div>
-        <dd className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <dd
+          className={cn(
+            "flex flex-wrap items-baseline gap-x-2 gap-y-1",
+            VALUE_HEIGHT[size]
+          )}
+        >
           <span
             className={cn(
-              "font-semibold tracking-tight tabular-nums",
+              "font-bold tracking-[-0.01em] tabular-nums",
               size === "sm" ? "text-xl" : "text-2xl sm:text-3xl"
             )}
           >
@@ -108,10 +142,10 @@ export function StatCard({
           {rounded !== null && rounded !== 0 && (
             <span
               className={cn(
-                // Texto y flecha del color del significado, con los pares
-                // *-soft de HeroUI (≥ 6.9:1). --income/--expense sobre su
-                // propio tinte no daban 4.5:1
-                "inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums",
+                // Texto y flecha del color del significado, sobre su fondo
+                // suave (≥ 6:1). --income/--expense sobre su propio tinte no
+                // daban 4.5:1
+                "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
                 isGood ? TONE_BADGE_CLASSES.success : TONE_BADGE_CLASSES.danger
               )}
             >
@@ -136,8 +170,46 @@ export function StatCard({
             </span>
           )}
         </dd>
-        {caption && <dd className="text-xs text-muted">{caption}</dd>}
+        {caption && (
+          <dd className="text-xs text-muted-foreground">{caption}</dd>
+        )}
       </dl>
-    </Card>
+    </StatCardFrame>
+  )
+}
+
+/** Hueco de StatCard: mismo contenedor, etiqueta, cifra y (opcional) nota */
+export function StatCardSkeleton({
+  size = "default",
+  caption = false,
+  className
+}: {
+  size?: "default" | "sm"
+  /** Reserva la línea de la nota bajo la cifra */
+  caption?: boolean
+  className?: string
+}) {
+  return (
+    <StatCardFrame
+      size={size}
+      className={className}
+      aria-hidden="true"
+    >
+      <div className="flex flex-col gap-2">
+        <div className="flex min-h-6 items-center">
+          <Skeleton className="h-4 w-28" />
+        </div>
+        <div className={cn("flex items-center", VALUE_HEIGHT[size])}>
+          <Skeleton
+            className={cn("w-40", size === "sm" ? "h-6" : "h-7 sm:h-8")}
+          />
+        </div>
+        {caption && (
+          <div className="flex h-4 items-center">
+            <Skeleton className="h-3 w-24" />
+          </div>
+        )}
+      </div>
+    </StatCardFrame>
   )
 }

@@ -363,6 +363,46 @@ Los espacios están definidos en `SITE.workspaces`.
 - Flujo de caja, Reportes y Recomendaciones (próximamente, SPEC 11)
 - Ajustes: nombre, NIT, sector y eliminar la empresa
 
+### Llegar a cualquier acción (SPEC 51)
+
+La meta: llegar a cualquier acción sin buscarla. Hay cuatro caminos y todos
+leen la misma lista de acciones del espacio activo.
+
+- **Un clic desde el header:** "Registrar movimiento" y "Más" (traspaso,
+  pagar deuda, aportar a meta, cobro de Me deben, importar, categorías,
+  verificar, tema y ocultar cifras). Empresa no tiene deudas, metas ni
+  importación. En el teléfono, la hoja de acciones rápidas muestra la misma
+  lista.
+- **Una búsqueda: paleta de comandos.** Se abre con ⌘K / Ctrl+K, con
+  "Buscar o ejecutar" del header o desde la hoja del teléfono. Tiene tres
+  grupos:
+  - **Acciones**: la lista de arriba, con su atajo a la derecha;
+  - **Ir a**: todas las pantallas del espacio activo y las de Cuenta, con su
+    atajo G + letra;
+  - **Tus datos**: cuentas, deudas y metas activas del espacio, por nombre.
+    Se cargan la primera vez que se abre la paleta (con RLS, solo las del
+    espacio y del usuario) y quedan en memoria hasta cambiar de espacio.
+    Elegir una deuda o meta abre su panel de detalle; una cuenta lleva a
+    Cuentas.
+- **Un atajo de teclado:**
+  - `⌘K` / `Ctrl+K`: paleta;
+  - `N`: nuevo movimiento; `T`: traspaso; `?`: hoja con todos los atajos;
+  - `G` y luego una letra (máximo 1 s entre teclas) va a una pantalla.
+    Personal: `R` Resumen, `M` Movimientos, `C` Cuentas, `I` Ingresos fijos,
+    `F` Gastos fijos, `P` Presupuestos, `E` Metas, `D` Deudas, `O` Reportes,
+    `S` Recomendaciones. Empresa: `R` Resumen, `M` Movimientos, `C` Cuentas,
+    `F` Flujo de caja, `A` Ajustes.
+  - No se disparan escribiendo en un campo ni con un diálogo, panel o menú
+    abierto. Se apagan en **Cuenta → Preferencias → Atajos de teclado**
+    (por navegador, cookie `tesoro-shortcuts`); `⌘K` / `Ctrl+K` sigue
+    activo. Pedido por WCAG 2.1.4.
+- **Un clic derecho desde una fila:** el menú contextual muestra las mismas
+  acciones que el botón ⋯ de la fila; en pantalla táctil, con una pulsación
+  de 500 ms. Las pantallas lo adoptan al migrarse a shadcn (SPEC 52 y 53).
+
+Fuera de alcance por ahora: buscar movimientos sueltos en la paleta y atajos
+configurables por el usuario.
+
 ## Movimientos y categorías
 
 Página `/dashboard/personal/transactions`. Los movimientos son la materia prima

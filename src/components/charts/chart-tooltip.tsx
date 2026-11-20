@@ -1,9 +1,9 @@
 "use client"
 
 import { useMemo } from "react"
-import { cn } from "@heroui/react"
 import { Tooltip, type TooltipValueType } from "recharts"
 import type { DefaultTooltipContentProps } from "recharts"
+import { cn } from "@/libs/cn"
 import { getPayloadConfig, useChart } from "./chart-container"
 
 export const ChartTooltip = Tooltip
@@ -22,7 +22,7 @@ type ChartTooltipContentProps = React.ComponentProps<typeof Tooltip> &
     "accessibilityLayer"
   >
 
-// Tooltip con la superficie flotante de HeroUI (--overlay y su sombra): la
+// Tooltip con la superficie flotante (--popover y su sombra): la
 // fecha o categoría arriba y, por serie, punto de color, nombre y valor
 // completo
 export function ChartTooltipContent({
@@ -88,7 +88,7 @@ export function ChartTooltipContent({
   return (
     <div
       className={cn(
-        "grid min-w-40 items-start gap-2 rounded-2xl bg-overlay px-3 py-2.5 text-xs text-overlay-foreground shadow-overlay",
+        "grid min-w-40 items-start gap-2 rounded-2xl bg-popover px-3 py-2.5 text-xs text-popover-foreground shadow-(--overlay-shadow)",
         className
       )}
     >
@@ -105,7 +105,7 @@ export function ChartTooltipContent({
               <div
                 key={index}
                 className={cn(
-                  "flex w-full flex-wrap items-stretch gap-2 [&>svg]:size-2.5 [&>svg]:text-muted",
+                  "flex w-full flex-wrap items-stretch gap-2 [&>svg]:size-2.5 [&>svg]:text-muted-foreground",
                   indicator === "dot" && "items-center"
                 )}
               >
@@ -144,7 +144,7 @@ export function ChartTooltipContent({
                     >
                       <div className="grid gap-1.5">
                         {nestLabel ? tooltipLabel : null}
-                        <span className="text-muted">
+                        <span className="text-muted-foreground">
                           {itemConfig?.label ?? item.name}
                         </span>
                       </div>

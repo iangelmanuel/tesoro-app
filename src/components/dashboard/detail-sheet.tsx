@@ -1,9 +1,17 @@
 "use client"
 
-import { Drawer, Skeleton, cn } from "@heroui/react"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle
+} from "@/components/ui/sheet"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { HelpKey } from "@/config/help"
 import { useIsMobile } from "@/hooks/use-is-mobile"
+import { cn } from "@/libs/cn"
 import { HelpHint } from "./help-hint"
+import { closesFromSheet } from "./heroui-compat"
 
 interface DetailSheetProps {
   open: boolean
@@ -63,79 +71,85 @@ export function DetailSheet({
   const isMobile = useIsMobile()
 
   return (
-    <Drawer
-      isOpen={open}
-      onOpenChange={onOpenChange}
+    <Sheet
+      open={open}
+      // No modal mientras conviva con HeroUI (ver heroui-compat.ts)
+      modal={false}
+      onOpenChange={(next, details) => {
+        if (!next && !closesFromSheet(details.reason, details.event)) {
+          details.cancel()
+          return
+        }
+        onOpenChange(next)
+      }}
     >
-      <Drawer.Backdrop>
-        <Drawer.Content placement={isMobile ? "bottom" : "right"}>
-          <Drawer.Dialog
-            className={
-              isMobile
-                ? "max-h-[90dvh] pb-[env(safe-area-inset-bottom)]"
-                : "w-full sm:max-w-md"
-            }
+      <SheetContent
+        side={isMobile ? "bottom" : "right"}
+        className={cn(
+          "gap-0",
+          isMobile
+            ? "max-h-[90dvh] rounded-t-4xl pb-[env(safe-area-inset-bottom)]"
+            : "w-full sm:max-w-md"
+        )}
+      >
+        {isMobile && (
+          <span
+            aria-hidden="true"
+            className="mx-auto mt-3 h-1.5 w-10 shrink-0 rounded-full bg-muted-foreground/40"
+          />
+        )}
+        <SheetHeader className="pr-16">
+          <div className="flex min-w-0 items-center gap-3">
+            {leading}
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <SheetTitle className="truncate">{title}</SheetTitle>
+                {status}
+              </div>
+              {figure !== undefined && (
+                <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                  <span className="text-2xl font-bold tracking-[-0.01em] tabular-nums">
+                    {figure}
+                  </span>
+                  {figureCaption && (
+                    <span className="text-sm text-muted-foreground tabular-nums">
+                      {figureCaption}
+                    </span>
+                  )}
+                </p>
+              )}
+              {description && (
+                <p className="text-sm text-pretty text-muted-foreground">
+                  {description}
+                </p>
+              )}
+            </div>
+          </div>
+        </SheetHeader>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-6">
+          <div
+            className="flex flex-col gap-6"
+            aria-busy={loading || undefined}
           >
-            {isMobile && <Drawer.Handle />}
-            <Drawer.CloseTrigger aria-label="Cerrar" />
-            <Drawer.Header>
-              <div className="flex min-w-0 items-center gap-3 pr-8">
-                {leading}
-                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Drawer.Heading className="truncate">
-                      {title}
-                    </Drawer.Heading>
-                    {status}
-                  </div>
-                  {figure !== undefined && (
-                    <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                      <span className="text-2xl font-semibold tracking-tight tabular-nums">
-                        {figure}
-                      </span>
-                      {figureCaption && (
-                        <span className="text-sm text-muted tabular-nums">
-                          {figureCaption}
-                        </span>
-                      )}
-                    </p>
-                  )}
-                  {description && (
-                    <p className="text-sm text-pretty text-muted">
-                      {description}
-                    </p>
-                  )}
-                </div>
+            {loading ? (
+              <DetailSheetSkeleton />
+            ) : (
+              <>
+                {summary}
+                {action && <div className="flex flex-col gap-2">{action}</div>}
+                {history}
+              </>
+            )}
+            {details}
+            {footer && (
+              <div className="flex flex-wrap gap-2 border-t border-border/70 pt-4">
+                {footer}
               </div>
-            </Drawer.Header>
-            <Drawer.Body>
-              <div
-                className="flex flex-col gap-6"
-                aria-busy={loading || undefined}
-              >
-                {loading ? (
-                  <DetailSheetSkeleton />
-                ) : (
-                  <>
-                    {summary}
-                    {action && (
-                      <div className="flex flex-col gap-2">{action}</div>
-                    )}
-                    {history}
-                  </>
-                )}
-                {details}
-                {footer && (
-                  <div className="flex flex-wrap gap-2 border-t border-separator pt-4">
-                    {footer}
-                  </div>
-                )}
-              </div>
-            </Drawer.Body>
-          </Drawer.Dialog>
-        </Drawer.Content>
-      </Drawer.Backdrop>
-    </Drawer>
+            )}
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
   )
 }
 
@@ -161,7 +175,7 @@ export function DetailSection({
     <section className={cn("flex flex-col gap-3", className)}>
       <div className="flex min-h-6 items-center justify-between gap-2">
         <div className="flex items-center gap-1">
-          <h3 className="text-sm font-medium">{title}</h3>
+          <h3 className="text-sm font-semibold">{title}</h3>
           {help && <HelpHint topic={help} />}
         </div>
         {action}
@@ -185,7 +199,7 @@ export function DetailStats({
   }[]
 }) {
   return (
-    <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-2xl bg-surface-secondary p-4 text-sm">
+    <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-2xl bg-secondary p-4 text-sm">
       {items.map((item, index) => (
         <div
           key={index}
@@ -193,8 +207,8 @@ export function DetailStats({
           // la más larga) ocupa la fila entera
           className="flex min-w-0 flex-col gap-0.5 [&:last-child:nth-child(odd)]:col-span-2"
         >
-          <dt className="text-muted">{item.label}</dt>
-          <dd className={cn("font-medium tabular-nums", item.className)}>
+          <dt className="text-muted-foreground">{item.label}</dt>
+          <dd className={cn("font-semibold tabular-nums", item.className)}>
             {item.value}
           </dd>
         </div>
@@ -208,12 +222,12 @@ export function DetailSheetSkeleton() {
   return (
     <div
       aria-hidden="true"
-      className="flex flex-col gap-6 motion-reduce:[&_*]:animate-none"
+      className="flex flex-col gap-6"
     >
       <Skeleton className="h-20 w-full rounded-2xl" />
-      <Skeleton className="h-10 w-full rounded-full" />
+      <Skeleton className="h-11 w-full rounded-full" />
       <div className="flex flex-col gap-3">
-        <Skeleton className="h-4 w-32 rounded-lg" />
+        <Skeleton className="h-4 w-32" />
         <Skeleton className="h-14 w-full rounded-xl" />
         <Skeleton className="h-14 w-full rounded-xl" />
         <Skeleton className="h-14 w-full rounded-xl" />

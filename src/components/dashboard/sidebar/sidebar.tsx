@@ -11,14 +11,22 @@ import {
 import type { Route } from "next"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Button, Drawer, cn } from "@heroui/react"
 import { PanelLeft } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle
+} from "@/components/ui/sheet"
 import { MOBILE_QUERY, useIsMobile } from "@/hooks/use-is-mobile"
+import { cn } from "@/libs/cn"
+import { closesFromSheet } from "../heroui-compat"
 import { SIDEBAR_WIDTH, clampSidebarWidth, saveSidebarWidth } from "./width"
 
-// Sidebar del dashboard armado con primitivas de HeroUI (Button, Drawer) y
-// tokens del tema. En escritorio es una columna fija que se oculta con el
-// trigger o con Ctrl/⌘+B; en móvil es un panel deslizable (Drawer)
+// Sidebar del dashboard con primitivas de shadcn (Button, Sheet) y tokens
+// del tema. En escritorio es una columna fija que se oculta con el trigger o
+// con Ctrl/⌘+B; en móvil es un panel lateral (Sheet)
 
 const KEYBOARD_SHORTCUT = "b"
 const SIDEBAR_ID = "dashboard-sidebar"
@@ -133,7 +141,7 @@ export function Sidebar({
           { "--sidebar-width": `${currentWidth}px` } as React.CSSProperties
         }
         className={cn(
-          "sticky top-0 hidden h-svh shrink-0 overflow-hidden bg-background transition-[width] duration-200 ease-out motion-reduce:transition-none md:block",
+          "sticky top-0 hidden h-svh shrink-0 overflow-hidden bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out motion-reduce:transition-none md:block",
           open ? "w-(--sidebar-width)" : "w-0",
           // La transición queda para abrir y cerrar; al arrastrar sigue al puntero
           isResizing && "transition-none"
@@ -157,21 +165,30 @@ export function Sidebar({
         )}
       </div>
 
-      <Drawer
-        isOpen={openMobile}
-        onOpenChange={setOpenMobile}
+      <Sheet
+        open={openMobile}
+        // No modal mientras conviva con HeroUI (ver heroui-compat.ts): el
+        // menú de cuenta y el selector de empresa abren menús de HeroUI
+        modal={false}
+        onOpenChange={(next, details) => {
+          if (!next && !closesFromSheet(details.reason, details.event)) {
+            details.cancel()
+            return
+          }
+          setOpenMobile(next)
+        }}
       >
-        <Drawer.Backdrop className="md:hidden">
-          <Drawer.Content placement="left">
-            <Drawer.Dialog
-              aria-label="Menú del dashboard"
-              className="flex w-72 flex-col p-0"
-            >
-              {children}
-            </Drawer.Dialog>
-          </Drawer.Content>
-        </Drawer.Backdrop>
-      </Drawer>
+        <SheetContent
+          side="left"
+          className="w-72 gap-0 bg-sidebar p-0 text-sidebar-foreground md:hidden"
+        >
+          <SheetTitle className="sr-only">Menú del dashboard</SheetTitle>
+          <SheetDescription className="sr-only">
+            Espacios, secciones y tu cuenta
+          </SheetDescription>
+          {children}
+        </SheetContent>
+      </Sheet>
     </>
   )
 }
@@ -240,7 +257,7 @@ export function SidebarResizeHandle({
       data-resizing={isResizing || undefined}
       // Invisible en reposo; hover y arrastre muestran una línea fina con el
       // color del foco y el foco de teclado, el anillo (3:1 en claro y oscuro)
-      className="absolute inset-y-0 right-0 z-10 w-2 cursor-col-resize touch-none outline-none after:absolute after:inset-y-0 after:right-0 after:w-0.5 after:bg-transparent after:transition-colors after:duration-150 hover:after:bg-focus focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-inset data-resizing:after:bg-focus motion-reduce:after:transition-none"
+      className="absolute inset-y-0 right-0 z-10 w-2 cursor-col-resize touch-none outline-none after:absolute after:inset-y-0 after:right-0 after:w-0.5 after:bg-transparent after:transition-colors after:duration-150 hover:after:bg-ring focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring data-resizing:after:bg-ring motion-reduce:after:transition-none"
       onKeyDown={(event) => {
         const { min, max, step } = SIDEBAR_WIDTH
         const next =
@@ -290,15 +307,14 @@ export function SidebarTrigger({ className }: { className?: string }) {
   return (
     <Button
       variant="ghost"
-      size="sm"
-      isIconOnly
+      size="icon"
       aria-label="Mostrar u ocultar el menú"
       aria-expanded={isMobile ? openMobile : open}
       // El Drawer móvil se monta solo al abrirse: no hay id que referenciar
       aria-controls={isMobile ? undefined : SIDEBAR_ID}
       className={className}
       data-tour="header-menu"
-      onPress={toggle}
+      onClick={toggle}
     >
       <PanelLeft className="size-4" />
     </Button>
@@ -355,32 +371,72 @@ export function SidebarGroupLabel({
   return (
     <div
       id={id}
-      className="flex h-8 items-center px-2 text-xs font-medium text-muted"
+      className="flex h-8 items-center px-3 text-xs font-semibold text-muted-foreground"
     >
       {children}
     </div>
   )
 }
 
-/** Enlace del menú. El activo va sobre --default; el primario del espacio
- *  queda para las tabs y la acción principal */
+/**
+ * Enlace del menú como estación de la línea del espacio (dirección
+ * "Señalética", SPEC 51): un círculo con el ícono (o la letra del atajo G)
+ * sobre la línea vertical que pinta SidebarStations. La estación activa se
+ * rellena con el color de la línea y la fila va sobre la tarjeta. Alto de
+ * 44 px
+ */
 export function SidebarNavLink({
   href,
   isActive,
+  marker,
   children
-}: Readonly<{ href: Route; isActive: boolean; children: React.ReactNode }>) {
+}: Readonly<{
+  href: Route
+  isActive: boolean
+  /** Contenido del círculo: el ícono o la letra del atajo */
+  marker: React.ReactNode
+  children: React.ReactNode
+}>) {
   return (
     <Link
       href={href}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "flex h-9 items-center gap-2.5 rounded-xl px-2.5 text-sm transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-focus motion-reduce:transition-none [&>svg]:size-4 [&>svg]:shrink-0",
+        "group/station flex h-11 items-center gap-3 rounded-full px-2 text-sm transition-colors duration-150 outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
         isActive
-          ? "bg-default font-medium text-foreground"
-          : "text-muted hover:bg-default hover:text-foreground active:bg-default"
+          ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground shadow-(--surface-shadow)"
+          : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground"
       )}
     >
+      <span
+        aria-hidden="true"
+        className={cn(
+          "relative z-10 grid size-7 shrink-0 place-items-center rounded-full text-xs font-bold ring-[3px] ring-sidebar-primary ring-inset [&>svg]:size-3.5",
+          isActive
+            ? "bg-sidebar-primary text-sidebar-primary-foreground"
+            : "bg-sidebar text-foreground"
+        )}
+      >
+        {marker}
+      </span>
       {children}
     </Link>
+  )
+}
+
+/** Lista de estaciones de un grupo, unidas por la línea del espacio */
+export function SidebarStations({
+  className,
+  ...props
+}: React.ComponentProps<"ul">) {
+  return (
+    <ul
+      className={cn(
+        // La línea pasa por el centro de los círculos (px-2 + 14 px)
+        "relative flex flex-col gap-0.5 before:absolute before:inset-y-5 before:left-[1.375rem] before:w-[3px] before:-translate-x-1/2 before:rounded-full before:bg-sidebar-primary/35",
+        className
+      )}
+      {...props}
+    />
   )
 }

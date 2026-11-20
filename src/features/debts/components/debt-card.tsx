@@ -10,6 +10,7 @@ import {
   RefreshCw
 } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
+import { useDetailFromUrl } from "@/components/dashboard/command/use-detail-from-url"
 import {
   CARD_LINK,
   CARD_OVER_LINK,
@@ -60,7 +61,8 @@ export function DebtCard({
 }: DebtCardProps) {
   const [editing, setEditing] = useState(false)
   const [adjusting, setAdjusting] = useState(false)
-  const [detailOpen, setDetailOpen] = useState(false)
+  // La paleta de comandos puede abrir este panel (SPEC 51)
+  const [detailOpen, setDetailOpen] = useDetailFromUrl(debt.id)
   const [confirmArchive, setConfirmArchive] = useState(false)
   const { pending, run } = useDebtAction(debt)
   const zeroBalance = hasZeroBalance(debt)

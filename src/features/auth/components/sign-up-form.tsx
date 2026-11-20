@@ -2,11 +2,11 @@
 
 import { useActionState } from "react"
 import Link from "next/link"
-import { Button } from "@heroui/react"
+import { TextInputField } from "@/components/forms/text-input-field"
+import { Button } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import { signUp } from "../actions"
 import type { AuthFormState } from "../types"
-import { FormField } from "./form-field"
 import { OAuthButtons } from "./oauth-buttons"
 
 export function SignUpForm() {
@@ -22,17 +22,17 @@ export function SignUpForm() {
         className="flex flex-col gap-4"
         noValidate
       >
-        <FormField
+        <TextInputField
           name="fullName"
           label="Nombre"
           help="profile.name"
           autoComplete="name"
           placeholder="Tu nombre"
           defaultValue={state.values?.fullName}
-          errors={state.fieldErrors?.fullName}
-          required
+          error={state.fieldErrors?.fullName?.[0]}
+          isRequired
         />
-        <FormField
+        <TextInputField
           name="email"
           label="Email"
           help="auth.email"
@@ -40,44 +40,44 @@ export function SignUpForm() {
           autoComplete="email"
           placeholder="tu@email.com"
           defaultValue={state.values?.email}
-          errors={state.fieldErrors?.email}
-          required
+          error={state.fieldErrors?.email?.[0]}
+          isRequired
         />
-        <FormField
+        <TextInputField
           name="password"
           label="Contraseña"
           help="auth.password"
           type="password"
           autoComplete="new-password"
           placeholder="Mínimo 8 caracteres"
-          errors={state.fieldErrors?.password}
-          required
+          error={state.fieldErrors?.password?.[0]}
+          isRequired
         />
         {state.error && (
           <p
             role="alert"
-            className="text-sm text-danger"
+            className="text-sm text-destructive"
           >
             {state.error}
           </p>
         )}
         <Button
           type="submit"
-          fullWidth
-          isDisabled={pending}
+          className="w-full"
+          disabled={pending}
         >
           {pending ? "Creando cuenta..." : "Crear cuenta"}
         </Button>
       </form>
 
-      <div className="flex items-center gap-3 text-xs text-muted uppercase">
+      <div className="flex items-center gap-3 text-xs text-muted-foreground uppercase">
         <span className="h-px flex-1 bg-border" />o
         <span className="h-px flex-1 bg-border" />
       </div>
 
       <OAuthButtons />
 
-      <p className="text-center text-sm text-muted">
+      <p className="text-center text-sm text-muted-foreground">
         ¿Ya tienes cuenta?{" "}
         <Link
           href={SITE.routes.signIn}

@@ -3,12 +3,12 @@
 import { useActionState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { Button } from "@heroui/react"
+import { TextInputField } from "@/components/forms/text-input-field"
+import { Button } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import { formatDeletionDate } from "@/features/account/deletion"
 import { signIn } from "../actions"
 import type { AuthFormState } from "../types"
-import { FormField } from "./form-field"
 import { OAuthButtons } from "./oauth-buttons"
 
 const QUERY_ERRORS: Record<string, string> = {
@@ -38,7 +38,7 @@ export function SignInForm() {
       {deletionNotice && (
         <p
           role="status"
-          className="rounded-lg border bg-default/50 px-4 py-3 text-sm"
+          className="rounded-lg border bg-highlight/50 px-4 py-3 text-sm"
         >
           {deletionNotice}
         </p>
@@ -55,7 +55,7 @@ export function SignInForm() {
             value={next}
           />
         )}
-        <FormField
+        <TextInputField
           name="email"
           label="Email"
           help="auth.email"
@@ -63,43 +63,43 @@ export function SignInForm() {
           autoComplete="email"
           placeholder="tu@email.com"
           defaultValue={state.values?.email}
-          errors={state.fieldErrors?.email}
-          required
+          error={state.fieldErrors?.email?.[0]}
+          isRequired
         />
-        <FormField
+        <TextInputField
           name="password"
           label="Contraseña"
           help="password.current"
           type="password"
           autoComplete="current-password"
-          errors={state.fieldErrors?.password}
-          required
+          error={state.fieldErrors?.password?.[0]}
+          isRequired
         />
         {error && (
           <p
             role="alert"
-            className="text-sm text-danger"
+            className="text-sm text-destructive"
           >
             {error}
           </p>
         )}
         <Button
           type="submit"
-          fullWidth
-          isDisabled={pending}
+          className="w-full"
+          disabled={pending}
         >
           {pending ? "Iniciando sesión..." : "Iniciar sesión"}
         </Button>
       </form>
 
-      <div className="flex items-center gap-3 text-xs text-muted uppercase">
+      <div className="flex items-center gap-3 text-xs text-muted-foreground uppercase">
         <span className="h-px flex-1 bg-border" />o
         <span className="h-px flex-1 bg-border" />
       </div>
 
       <OAuthButtons next={next} />
 
-      <p className="text-center text-sm text-muted">
+      <p className="text-center text-sm text-muted-foreground">
         ¿No tienes cuenta?{" "}
         <Link
           href={SITE.routes.signUp}

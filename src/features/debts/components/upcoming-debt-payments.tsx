@@ -1,8 +1,9 @@
+import { Amount } from "@/components/dashboard/amount"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"
-import { formatCurrency, formatDate } from "@/libs/format"
+import { formatDate } from "@/libs/format"
 import { upcomingPayments } from "../calculations"
 import type { Debt } from "../queries"
 import { PaymentStatusBadge } from "./debt-indicators"
@@ -64,7 +65,10 @@ export function UpcomingDebtPayments({
                 payment.status === "paid" && TONE_TEXT_CLASSES.success
               )}
             >
-              {formatCurrency(payment.amount, currency)}
+              <Amount
+                value={payment.amount}
+                currency={currency}
+              />
             </p>
           )}
         </li>

@@ -1,7 +1,8 @@
 "use client"
 
+import { useHideAmounts } from "@/components/dashboard/hide-amounts-context"
 import { SelectField } from "@/components/forms/select-field"
-import { formatCurrency, formatDate } from "@/libs/format"
+import { AMOUNT_MASK, formatCurrency, formatDate } from "@/libs/format"
 import { OCCURRENCE_STATUS } from "../occurrences"
 import type { UpcomingPayment } from "../queries"
 
@@ -28,6 +29,8 @@ export function OccurrenceSelect({
   selected,
   onChange
 }: OccurrenceSelectProps) {
+  const { hidden } = useHideAmounts()
+
   return (
     <SelectField
       label="Gasto fijo"
@@ -37,7 +40,7 @@ export function OccurrenceSelect({
       options={payments.map((payment) => ({
         value: paymentKey(payment),
         label: `${payment.name} · ${formatDate(payment.dueOn)}`,
-        description: `${formatCurrency(payment.amount)} · ${OCCURRENCE_STATUS[payment.status].label}`
+        description: `${hidden ? AMOUNT_MASK : formatCurrency(payment.amount)} · ${OCCURRENCE_STATUS[payment.status].label}`
       }))}
     />
   )

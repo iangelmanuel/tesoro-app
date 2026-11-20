@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Pause, Pencil, Play, Trash2 } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import {
   type RowAction,
@@ -28,7 +29,7 @@ import type { PaymentAccountOption } from "@/features/accounts/components/paymen
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { cn } from "@/libs/cn"
-import { formatCurrency, formatDate } from "@/libs/format"
+import { formatDate } from "@/libs/format"
 import { frequencyLabel } from "../occurrences"
 import type { RecurringExpense } from "../queries"
 import { RecurringExpenseDialog } from "./recurring-expense-dialog"
@@ -221,7 +222,10 @@ function ExpenseRow({
           />
         </TableCell>
         <TableCell className="text-end font-medium tabular-nums">
-          {formatCurrency(expense.amount, currency)}
+          <Amount
+            value={expense.amount}
+            currency={currency}
+          />
         </TableCell>
         <TableCell>{frequencyLabel(expense)}</TableCell>
         <TableCell className="text-muted-foreground">

@@ -1,7 +1,15 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { Copy, Pencil, PiggyBank, Trash2 } from "lucide-react"
+import {
+  ArrowDown,
+  ArrowUp,
+  Copy,
+  Pencil,
+  PiggyBank,
+  Trash2
+} from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import { RowActions } from "@/components/dashboard/row-actions"
@@ -17,7 +25,7 @@ import { toast } from "@/components/ui/sonner"
 import { activeAccountId } from "@/features/accounts/active-account"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { cn } from "@/libs/cn"
-import { formatCurrency, formatDate, formatTime } from "@/libs/format"
+import { formatDate, formatTime } from "@/libs/format"
 import { deleteContribution, moveContribution } from "../actions"
 import type { GoalContribution } from "../queries"
 import { ContributionDialog } from "./contribution-dialog"
@@ -128,8 +136,22 @@ function ContributionRow({
                   : TONE_TEXT_CLASSES.success
               )}
             >
-              {isWithdrawal ? "−" : "+"}
-              {formatCurrency(Math.abs(contribution.amount), currency)}
+              {isWithdrawal ? (
+                <ArrowDown
+                  aria-hidden
+                  className="mr-0.5 inline size-3.5 align-[-2px]"
+                />
+              ) : (
+                <ArrowUp
+                  aria-hidden
+                  className="mr-0.5 inline size-3.5 align-[-2px]"
+                />
+              )}
+              <Amount
+                value={contribution.amount}
+                currency={currency}
+                signed
+              />
             </span>
             <span className="text-xs text-muted-foreground">
               {formatDate(contribution.occurred_on)}

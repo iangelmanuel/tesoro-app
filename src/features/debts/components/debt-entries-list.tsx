@@ -1,7 +1,16 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { Copy, Link2, Pencil, Receipt, Trash2 } from "lucide-react"
+import {
+  ArrowDown,
+  ArrowUp,
+  Copy,
+  Link2,
+  Pencil,
+  Receipt,
+  Trash2
+} from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { CardEmpty } from "@/components/dashboard/empty-state"
 import { RowActions } from "@/components/dashboard/row-actions"
@@ -22,7 +31,7 @@ import {
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { cn } from "@/libs/cn"
-import { formatCurrency, formatDate, formatTime } from "@/libs/format"
+import { formatDate, formatTime } from "@/libs/format"
 import { deleteEntry, moveDebtEntry } from "../actions"
 import { installmentLabel, installmentProgress } from "../installments"
 import type { Debt, DebtEntry } from "../queries"
@@ -229,8 +238,26 @@ function EntryRow({
                     : TONE_TEXT_CLASSES.danger
                 )}
               >
-                {lowersBalance ? "−" : "+"}{" "}
-                {formatCurrency(Math.abs(entry.amount), currency)}
+                {lowersBalance ? (
+                  <ArrowDown
+                    aria-hidden
+                    className="mr-0.5 inline size-3.5 align-[-2px]"
+                  />
+                ) : (
+                  <ArrowUp
+                    aria-hidden
+                    className="mr-0.5 inline size-3.5 align-[-2px]"
+                  />
+                )}
+                <Amount
+                  value={
+                    lowersBalance
+                      ? -Math.abs(entry.amount)
+                      : Math.abs(entry.amount)
+                  }
+                  currency={currency}
+                  signed
+                />
               </span>
               {entry.transaction_id && (
                 <Tooltip>

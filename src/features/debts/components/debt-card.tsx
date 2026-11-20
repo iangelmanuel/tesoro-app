@@ -33,7 +33,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { cn } from "@/libs/cn"
-import { formatCurrency, formatDate } from "@/libs/format"
+import { formatDate } from "@/libs/format"
 import {
   debtProjection,
   formatMonthYear,
@@ -340,7 +340,11 @@ function NextDue({
         {formatDate(payment.dueOn)}
         {payment.amount !== null && (
           <span className="tabular-nums">
-            · {formatCurrency(payment.amount, currency)}
+            ·{" "}
+            <Amount
+              value={payment.amount}
+              currency={currency}
+            />
           </span>
         )}
         {payment.status && <PaymentStatusBadge status={payment.status} />}

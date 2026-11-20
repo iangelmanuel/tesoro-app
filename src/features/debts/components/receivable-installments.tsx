@@ -7,7 +7,7 @@ import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/libs/cn"
-import { formatCurrency, formatShortDate } from "@/libs/format"
+import { formatShortDate } from "@/libs/format"
 import { formatMonthYear } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
 import {
@@ -102,7 +102,21 @@ function installmentDetail(installment: Installment, currency: string) {
       : `${installment.entries.length} abonos · último el ${formatShortDate(lastEntry.occurred_on)}`
   }
   if (installment.status === "partial") {
-    return `Abonó ${formatCurrency(installment.paid, currency)} de ${formatCurrency(installment.expected, currency)} · vence el ${formatShortDate(installment.due_on)}`
+    return (
+      <>
+        Abonó{" "}
+        <Amount
+          value={installment.paid}
+          currency={currency}
+        />{" "}
+        de{" "}
+        <Amount
+          value={installment.expected}
+          currency={currency}
+        />{" "}
+        · vence el {formatShortDate(installment.due_on)}
+      </>
+    )
   }
   return `Vence el ${formatShortDate(installment.due_on)}`
 }

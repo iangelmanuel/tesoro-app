@@ -38,6 +38,7 @@ export function GoalSummary({ goal, today, currency }: GoalSummaryProps) {
         <GoalProgressBar
           percent={percent}
           status={status}
+          label={`${goal.name}: ${formatPercent(percent)}`}
         />
         <span className="shrink-0 text-sm font-medium whitespace-nowrap tabular-nums">
           {formatPercent(percent)}

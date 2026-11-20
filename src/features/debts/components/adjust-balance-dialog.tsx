@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useState } from "react"
+import { Amount } from "@/components/dashboard/amount"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { FormDialog } from "@/components/forms/form-dialog"
 import { TextInputField } from "@/components/forms/text-input-field"
@@ -8,7 +9,6 @@ import { TimePickerField } from "@/components/forms/time-picker-field"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/sonner"
 import { todayISO } from "@/libs/dates"
-import { formatCurrency } from "@/libs/format"
 import { adjustBalance } from "../actions"
 import type { Debt } from "../queries"
 import type { AdjustBalanceFormState } from "../types"
@@ -44,9 +44,10 @@ export function AdjustBalanceDialog({
       description={
         <>
           Saldo actual:{" "}
-          <span className="tabular-nums">
-            {formatCurrency(debt.balance, currency)}
-          </span>
+          <Amount
+            value={debt.balance}
+            currency={currency}
+          />
           . Escribe el saldo real, por ejemplo el de tu extracto. No crea un
           movimiento.
         </>

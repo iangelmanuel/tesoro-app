@@ -1,5 +1,6 @@
 import type { Route } from "next"
 import { CircleCheck } from "lucide-react"
+import { Amount } from "@/components/dashboard/amount"
 import {
   CardHeading,
   CardHeadingSkeleton
@@ -12,7 +13,7 @@ import { getAccountBalances } from "@/features/accounts/queries"
 import { RECURRING_PATH } from "@/features/budgets/tabs"
 import { getCategories } from "@/features/categories/queries"
 import { cn } from "@/libs/cn"
-import { formatCurrency, formatDate } from "@/libs/format"
+import { formatDate } from "@/libs/format"
 import { getUpcomingPayments } from "../queries"
 import { OccurrenceStatusBadge, PayOccurrenceButton } from "./upcoming-payments"
 
@@ -74,7 +75,10 @@ export async function UpcomingPaymentsCard({
                 </div>
                 <p className="text-sm text-muted-foreground tabular-nums">
                   {formatDate(payment.dueOn)} ·{" "}
-                  {formatCurrency(payment.amount, currency)}
+                  <Amount
+                    value={payment.amount}
+                    currency={currency}
+                  />
                 </p>
               </div>
               <PayOccurrenceButton

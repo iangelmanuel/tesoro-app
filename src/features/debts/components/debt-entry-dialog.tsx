@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useEffect, useId, useState } from "react"
+import { Amount } from "@/components/dashboard/amount"
 import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
 import { AccountSelectField } from "@/components/forms/account-select-field"
 import { amountInput } from "@/components/forms/amount-format"
@@ -23,7 +24,6 @@ import type { Category } from "@/features/categories/queries"
 import { parseAmount } from "@/features/transactions/schemas"
 import { cn } from "@/libs/cn"
 import { todayISO } from "@/libs/dates"
-import { formatCurrency } from "@/libs/format"
 import {
   type EntryEditorDebt,
   loadDebtEntryEditor,
@@ -484,12 +484,26 @@ function DebtEntryForm({
           <p className="tabular-nums">
             Saldo de la deuda:{" "}
             {newBalance === debt.balance ? (
-              <>no cambia ({formatCurrency(debt.balance, currency)})</>
+              <>
+                no cambia (
+                <Amount
+                  value={debt.balance}
+                  currency={currency}
+                />
+                )
+              </>
             ) : (
               <>
-                {formatCurrency(debt.balance, currency)} →{" "}
+                <Amount
+                  value={debt.balance}
+                  currency={currency}
+                />{" "}
+                →{" "}
                 <span className="font-medium text-foreground">
-                  {formatCurrency(newBalance, currency)}
+                  <Amount
+                    value={newBalance}
+                    currency={currency}
+                  />
                 </span>
               </>
             )}

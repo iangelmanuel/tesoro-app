@@ -10,6 +10,11 @@ interface AmountProps {
   currency?: string
   /** Fuerza los decimales (p. ej. 2 al conciliar) */
   fractionDigits?: number
+  /**
+   * Muestra el signo también en positivo ("+ $ 50.000") y lo lee como "más"
+   * o "menos": para movimientos que suben o bajan un saldo
+   */
+  signed?: boolean
   className?: string
 }
 
@@ -53,6 +58,7 @@ export function Amount({
   value,
   currency = "COP",
   fractionDigits,
+  signed = false,
   className
 }: Readonly<AmountProps>) {
   const { hidden } = useHideAmounts()
@@ -69,14 +75,19 @@ export function Amount({
     )
   }
 
+  // Con signo: "+ $ 50.000" / "− $ 50.000", leído "más" / "menos"
+  const visible = signed
+    ? `${value < 0 ? "−" : "+"} ${formatCurrency(Math.abs(value), currency, fractionDigits)}`
+    : formatCurrency(value, currency, fractionDigits)
+  const spoken =
+    signed && value >= 0
+      ? `más ${spokenAmount(value, currency, fractionDigits)}`
+      : spokenAmount(value, currency, fractionDigits)
+
   return (
     <span className={cn("tabular-nums", className)}>
-      <span aria-hidden="true">
-        {formatCurrency(value, currency, fractionDigits)}
-      </span>
-      <span className="sr-only">
-        {spokenAmount(value, currency, fractionDigits)}
-      </span>
+      <span aria-hidden="true">{visible}</span>
+      <span className="sr-only">{spoken}</span>
     </span>
   )
 }

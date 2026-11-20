@@ -87,15 +87,19 @@ export function DebtBar({ percent, tone, label, className }: DebtBarProps) {
 /** Barra de utilización coloreada por nivel */
 export function UtilizationBar({
   percent,
+  label,
   className
 }: {
   percent: number
+  /** Nombre accesible de la barra */
+  label?: string
   className?: string
 }) {
   return (
     <DebtBar
       percent={percent}
       tone={UTILIZATION_LEVELS[utilizationLevel(percent)].tone}
+      label={label}
       className={className}
     />
   )

@@ -12,7 +12,7 @@ import type { PaymentAccountOption } from "@/features/accounts/components/paymen
 import type { Category } from "@/features/categories/queries"
 import { parseAmount } from "@/features/transactions/schemas"
 import { cn } from "@/libs/cn"
-import { formatCurrency, formatDate } from "@/libs/format"
+import { formatDate } from "@/libs/format"
 import {
   type DebtProjection,
   cardMonthlyPayment,
@@ -380,7 +380,10 @@ function NextFee({
     <p className="text-sm text-muted-foreground tabular-nums">
       Próxima cuota: {formatDayMonth(dueOn)} ·{" "}
       <span className="font-medium text-foreground">
-        {formatCurrency(debt.fee_amount, currency)}
+        <Amount
+          value={debt.fee_amount}
+          currency={currency}
+        />
       </span>
     </p>
   )
@@ -409,9 +412,14 @@ function DebtDetails({ debt, currency }: { debt: Debt; currency: string }) {
           ["Tasa", rate ?? "Sin tasa"],
           [
             "Pago mínimo",
-            debt.min_payment !== null
-              ? formatCurrency(debt.min_payment, currency)
-              : "Sin pago mínimo"
+            debt.min_payment !== null ? (
+              <Amount
+                value={debt.min_payment}
+                currency={currency}
+              />
+            ) : (
+              "Sin pago mínimo"
+            )
           ],
           ["Día de pago", debt.due_day !== null ? `Día ${debt.due_day}` : null],
           [
@@ -424,9 +432,12 @@ function DebtDetails({ debt, currency }: { debt: Debt; currency: string }) {
             ["Entidad", debt.counterparty],
             [
               "Cuota",
-              debt.installment !== null
-                ? formatCurrency(debt.installment, currency)
-                : null
+              debt.installment !== null ? (
+                <Amount
+                  value={debt.installment}
+                  currency={currency}
+                />
+              ) : null
             ],
             ["Tasa", rate],
             [
@@ -435,9 +446,12 @@ function DebtDetails({ debt, currency }: { debt: Debt; currency: string }) {
             ],
             [
               "Monto original",
-              debt.original_amount !== null
-                ? formatCurrency(debt.original_amount, currency)
-                : null
+              debt.original_amount !== null ? (
+                <Amount
+                  value={debt.original_amount}
+                  currency={currency}
+                />
+              ) : null
             ],
             [
               "Plazo",
@@ -484,7 +498,11 @@ function DebtDetails({ debt, currency }: { debt: Debt; currency: string }) {
               ["Deudor", debt.counterparty],
               [
                 "Monto prestado",
-                formatCurrency(debt.opening_balance, currency)
+                <Amount
+                  key="opening"
+                  value={debt.opening_balance}
+                  currency={currency}
+                />
               ],
               [
                 "Fecha esperada",

@@ -198,6 +198,7 @@ export function BudgetProgressRow({
           spent={budget.spent}
           committed={budget.committed}
           budget={budget.budgetAmount}
+          label={`${budget.name}: ${formatPercent(percent)}`}
         />
         <div className="flex flex-wrap justify-between gap-2 text-sm">
           <span

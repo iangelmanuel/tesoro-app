@@ -1,27 +1,43 @@
 "use client"
 
 import type { ComponentProps, ReactNode } from "react"
-import { Label, Tooltip, cn } from "@heroui/react"
 import { MessageCircleQuestionMark } from "lucide-react"
+import { LabelContext, useSlottedContext } from "react-aria-components"
+import { HeroUIPortalBridge } from "@/components/dashboard/heroui-portal-bridge"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/components/ui/popover"
 import { FIELD_HELP, type FieldHelpKey } from "@/config/help"
+import { cn } from "@/libs/cn"
 
-type FieldLabelProps = ComponentProps<typeof Label> & {
-  children: ReactNode
-  /** Clave de FIELD_HELP. Sin ella, se comporta como un Label normal */
-  help?: FieldHelpKey
-  /** Texto de la ayuda accesible cuando la etiqueta no es texto plano */
-  helpLabel?: string
+type LabelStateProps = {
+  /** Marca el campo como requerido (asterisco) */
+  isRequired?: boolean
+  /** Pinta la etiqueta en rojo */
+  isInvalid?: boolean
+  isDisabled?: boolean
 }
 
+type FieldLabelProps = ComponentProps<typeof Label> &
+  LabelStateProps & {
+    children: ReactNode
+    /** Clave de FIELD_HELP. Sin ella, se comporta como un Label normal */
+    help?: FieldHelpKey
+    /** Texto de la ayuda accesible cuando la etiqueta no es texto plano */
+    helpLabel?: string
+  }
+
 /**
- * Ícono (?) con la ayuda de un campo. Es un Tooltip: se abre al pasar el
- * mouse o al llegar con Tab. El disparador es Tooltip.Trigger (un div con
- * role="button" enfocable) y no un Button: dentro de Select, DatePicker o
- * NumberField un Button tomaría el ButtonContext del campo y abriría el
- * campo en vez del tooltip. El ícono usa text-muted/80 (≥ 3.6:1 sobre
- * --surface y --overlay en claro y oscuro, ver docs/ui.md) y text-muted al
- * pasar el mouse o con foco. Se usa suelto solo donde la etiqueta no es un
- * Label (p. ej. el texto de un Switch); en el resto, FieldLabel
+ * Ícono (?) con la ayuda de un campo. Es un Popover, como HelpHint: se abre
+ * con clic, toque o teclado, no solo al pasar el mouse. Se dibuja de 24 px y
+ * su área táctil llega a 44 px (touch-hitbox). El ícono usa
+ * text-muted-foreground (AA sobre --card y --popover en claro y oscuro, ver
+ * docs/ui.md). Se usa suelto solo donde la etiqueta no es un Label (p. ej.
+ * el texto de un Switch); en el resto, FieldLabel
  */
 export function FieldHelp({
   help,
@@ -34,24 +50,93 @@ export function FieldHelp({
   className?: string
 }) {
   return (
-    <Tooltip delay={300}>
-      <Tooltip.Trigger
-        aria-label={label ? `Ayuda: ${label}` : "Ayuda"}
+    <HeroUIPortalBridge>
+      <Popover>
+        <PopoverTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              aria-label={label ? `Ayuda: ${label}` : "Ayuda"}
+              className={cn(
+                "-my-1 size-6 shrink-0 cursor-help text-muted-foreground hover:text-foreground",
+                className
+              )}
+            />
+          }
+        >
+          <MessageCircleQuestionMark
+            aria-hidden
+            className="size-3.5"
+          />
+        </PopoverTrigger>
+        <PopoverContent
+          side="top"
+          className="w-auto max-w-72 gap-0 p-3 text-sm leading-relaxed"
+        >
+          {FIELD_HELP[help]}
+        </PopoverContent>
+      </Popover>
+    </HeroUIPortalBridge>
+  )
+}
+
+/**
+ * Label de `ui/`. Dentro de un campo de HeroUI (TextField, Select…, hasta
+ * SPEC 53) toma de React Aria el `id` y el `htmlFor` que el campo espera: el
+ * input apunta a la etiqueta con aria-labelledby. Fuera de HeroUI no hay
+ * contexto y es un <label> normal. La clase `label` conserva el estilo de
+ * HeroUI (asterisco de requerido, rojo si es inválido) en esos campos
+ */
+function ContextLabel({
+  className,
+  children,
+  isRequired,
+  isInvalid,
+  isDisabled,
+  ...props
+}: ComponentProps<typeof Label> & LabelStateProps) {
+  const context = useSlottedContext(LabelContext)
+
+  if (context) {
+    return (
+      <Label
+        id={context.id}
+        htmlFor={context.htmlFor}
         className={cn(
-          "-my-1 inline-flex size-6 shrink-0 cursor-help items-center justify-center rounded-full text-muted/80 outline-none",
-          "hover:text-muted focus-visible:text-muted focus-visible:ring-2 focus-visible:ring-focus",
+          "label",
+          isRequired && "label--required",
+          isInvalid && "label--invalid",
+          isDisabled && "label--disabled",
           className
         )}
+        {...props}
       >
-        <MessageCircleQuestionMark
+        {children}
+      </Label>
+    )
+  }
+
+  return (
+    <Label
+      data-disabled={isDisabled || undefined}
+      className={cn(
+        isInvalid && "text-destructive",
+        isDisabled && "opacity-50",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      {isRequired ? (
+        <span
           aria-hidden
-          className="size-3.5"
-        />
-      </Tooltip.Trigger>
-      <Tooltip.Content className="max-w-72 text-sm leading-relaxed">
-        {FIELD_HELP[help]}
-      </Tooltip.Content>
-    </Tooltip>
+          className="-ml-1.5 text-destructive"
+        >
+          *
+        </span>
+      ) : null}
+    </Label>
   )
 }
 
@@ -65,23 +150,23 @@ export function FieldLabel({
 }: FieldLabelProps) {
   if (!help) {
     return (
-      <Label
+      <ContextLabel
         className={className}
         {...props}
       >
         {children}
-      </Label>
+      </ContextLabel>
     )
   }
 
   return (
     <span className="inline-flex w-fit items-center gap-0.5">
-      <Label
+      <ContextLabel
         className={className}
         {...props}
       >
         {children}
-      </Label>
+      </ContextLabel>
       <FieldHelp
         help={help}
         label={helpLabel ?? (typeof children === "string" ? children : "")}

@@ -1,7 +1,7 @@
 import type { Route } from "next"
 import Link from "next/link"
-import { Button, buttonVariants } from "@heroui/react"
 import { CircleCheck } from "lucide-react"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { IMPORT_TARGETS } from "../targets"
 import type { ImportStats, ImportTarget } from "../types"
 
@@ -25,10 +25,13 @@ export function SummaryStep({ target, stats, onRestart }: SummaryStepProps) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
-        <CircleCheck className="size-6 text-accent" />
+        <CircleCheck
+          aria-hidden="true"
+          className="size-6 text-(--income)"
+        />
         <div className="flex flex-col">
           <p className="font-medium">Importación completada · {label}</p>
-          <p className="text-sm text-muted">
+          <p className="text-sm text-muted-foreground">
             Puedes deshacerla desde el historial cuando quieras.
           </p>
         </div>
@@ -38,9 +41,9 @@ export function SummaryStep({ target, stats, onRestart }: SummaryStepProps) {
         {items.map((item) => (
           <div
             key={item.label}
-            className="flex flex-col gap-1 rounded-lg border p-4"
+            className="flex flex-col gap-1 rounded-2xl bg-subtle p-4"
           >
-            <dt className="text-sm text-muted">{item.label}</dt>
+            <dt className="text-sm text-muted-foreground">{item.label}</dt>
             <dd className="text-2xl font-semibold tabular-nums">
               {item.value.toLocaleString("es-CO")}
             </dd>
@@ -56,8 +59,9 @@ export function SummaryStep({ target, stats, onRestart }: SummaryStepProps) {
           Ver {label.toLowerCase()}
         </Link>
         <Button
+          type="button"
           variant="outline"
-          onPress={onRestart}
+          onClick={onRestart}
         >
           Importar otro archivo
         </Button>

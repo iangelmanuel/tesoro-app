@@ -2,9 +2,12 @@
 
 import { useTransition } from "react"
 import Link from "next/link"
-import { Button, buttonVariants, toast } from "@heroui/react"
+import { CARD_ROW } from "@/components/dashboard/surface"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { toast } from "@/components/ui/sonner"
 import { ToneBadge } from "@/features/debts/components/debt-indicators"
 import type { OccurrenceTone } from "@/features/recurring-expenses/occurrences"
+import { cn } from "@/libs/cn"
 import { dismissRecommendation } from "../actions"
 import { SEVERITY_LABELS } from "../constants"
 import type { Recommendation, Severity } from "../types"
@@ -47,7 +50,7 @@ export function RecommendationItem({
         recommendation.entityKey
       )
       if (result.error) {
-        toast.danger(result.error)
+        toast.error(result.error)
       } else {
         toast.success("Oculta hasta el próximo mes")
       }
@@ -55,12 +58,12 @@ export function RecommendationItem({
   }
 
   return (
-    <li className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0">
+    <li className={cn("flex flex-col gap-2", CARD_ROW)}>
       <div className="flex flex-wrap items-center gap-2">
         <SeverityBadge severity={recommendation.severity} />
         <p className="font-medium">{recommendation.title}</p>
       </div>
-      <p className="text-sm text-muted">{recommendation.evidence}</p>
+      <p className="text-sm text-muted-foreground">{recommendation.evidence}</p>
       <div className="flex flex-wrap gap-2">
         <Link
           href={recommendation.href}
@@ -73,9 +76,9 @@ export function RecommendationItem({
           <Button
             variant="ghost"
             size="sm"
-            isDisabled={pending}
+            disabled={pending}
             data-tour="recommendations-dismiss"
-            onPress={dismiss}
+            onClick={dismiss}
           >
             Ocultar este mes
           </Button>

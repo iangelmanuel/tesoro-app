@@ -1,11 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { Button, Chip, Header, ListBox, Select, Separator } from "@heroui/react"
 import { LoaderCircle } from "lucide-react"
-import { CREATE_OPTION, CreateOption } from "@/components/forms/create-option"
+import { CARD_LIST } from "@/components/dashboard/surface"
+import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
+import { ToneBadge } from "@/components/dashboard/tone-badge"
+import { Button } from "@/components/ui/button"
 import { AccountDialog } from "@/features/accounts/components/account-dialog"
 import { CategoryDialog } from "@/features/categories/components/category-dialog"
+import { cn } from "@/libs/cn"
 import { MAX_ACCOUNT_NAME_LENGTH, MAX_CATEGORY_NAME_LENGTH } from "../constants"
 import { EMPTY_LINK_LABEL } from "../normalize"
 import type {
@@ -16,6 +19,7 @@ import type {
   CategoryPair,
   CategoryTarget
 } from "../types"
+import { RowTargetSelect } from "./row-target-select"
 
 const NEW = "new"
 const SKIP = "skip"
@@ -147,7 +151,7 @@ export function CategoriesStep({
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h2 className="text-sm font-medium">Categorías</h2>
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted-foreground">
           {expenseOnly
             ? "Elige a qué categoría de salida va cada valor de tu archivo. Marca «No importar» para omitir sus gastos fijos."
             : "Elige a qué categoría va cada valor de tu archivo. Marca «No importar» para omitir filas como traspasos entre tus cuentas o saldos iniciales."}
@@ -155,12 +159,12 @@ export function CategoriesStep({
       </div>
 
       {pairs.length === 0 ? (
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted-foreground">
           No hay filas válidas para importar. Vuelve al paso anterior y revisa
           el mapeo de columnas.
         </p>
       ) : (
-        <ul className="flex flex-col divide-y rounded-lg border">
+        <ul className={cn(CARD_LIST, "rounded-2xl bg-subtle px-4")}>
           {pairs.map((pair) => {
             const options = categoryOptions.filter(
               (category) =>
@@ -171,74 +175,47 @@ export function CategoriesStep({
             return (
               <li
                 key={pair.key}
-                className="flex flex-wrap items-center justify-between gap-3 px-3 py-2"
+                className="flex flex-wrap items-center justify-between gap-3 py-2"
               >
                 <span className="flex flex-wrap items-center gap-2 text-sm">
                   {!expenseOnly && (
-                    <Chip
-                      size="sm"
-                      variant={
-                        pair.type === "income" ? "secondary" : "tertiary"
+                    <ToneBadge
+                      className={
+                        pair.type === "income"
+                          ? TONE_BADGE_CLASSES.success
+                          : TONE_BADGE_CLASSES.neutral
                       }
                     >
                       {TYPE_LABELS[pair.type]}
-                    </Chip>
+                    </ToneBadge>
                   )}
                   {pair.label}
-                  <span className="text-muted">
+                  <span className="text-muted-foreground">
                     · {pair.count === 1 ? "1 fila" : `${pair.count} filas`}
                   </span>
                 </span>
-                <Select
-                  value={targetValue(targets[pair.key]) || null}
-                  onChange={(key) => {
-                    if (key === CREATE_OPTION) {
-                      setCreateRequest({ kind: "category", pair })
-                    } else if (key != null) {
-                      handleChange(pair, String(key))
-                    }
-                  }}
-                  fullWidth
-                  className="sm:w-56"
+                <RowTargetSelect
                   aria-label={`Categoría para ${pair.label}`}
-                >
-                  <Select.Trigger>
-                    <Select.Value />
-                    <Select.Indicator />
-                  </Select.Trigger>
-                  <Select.Popover>
-                    <ListBox>
-                      <ListBox.Section>
-                        <Header>Tus categorías</Header>
-                        {options.map((category) => (
-                          <ListBox.Item
-                            key={category.id}
-                            id={`${EXISTING_PREFIX}${category.id}`}
-                            textValue={String(category.name)}
-                          >
-                            {category.name}
-                            <ListBox.ItemIndicator />
-                          </ListBox.Item>
-                        ))}
-                      </ListBox.Section>
-                      <Separator />
-                      <ListBox.Item
-                        id={NEW}
-                        textValue={`Crear «${newName(pair)}»`}
-                      >
-                        Crear «{newName(pair)}»<ListBox.ItemIndicator />
-                      </ListBox.Item>
-                      <ListBox.Item
-                        id={SKIP}
-                        textValue="No importar"
-                      >
-                        No importar
-                        <ListBox.ItemIndicator />
-                      </ListBox.Item>
-                      <CreateOption label="Crear categoría" />
-                    </ListBox>
-                  </Select.Popover>
-                </Select>
+                  value={targetValue(targets[pair.key])}
+                  onChange={(next) => handleChange(pair, next)}
+                  groups={[
+                    {
+                      label: "Tus categorías",
+                      options: options.map((category) => ({
+                        value: `${EXISTING_PREFIX}${category.id}`,
+                        label: category.name
+                      }))
+                    },
+                    {
+                      options: [
+                        { value: NEW, label: `Crear «${newName(pair)}»` },
+                        { value: SKIP, label: "No importar" }
+                      ]
+                    }
+                  ]}
+                  createLabel="Crear categoría"
+                  onCreate={() => setCreateRequest({ kind: "category", pair })}
+                />
               </li>
             )
           })}
@@ -250,12 +227,12 @@ export function CategoriesStep({
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1">
             <h2 className="text-sm font-medium">Cuentas</h2>
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted-foreground">
               Elige a qué cuenta va cada valor de la columna Método. Los
               movimientos sin cuenta se importan igual.
             </p>
           </div>
-          <ul className="flex flex-col divide-y rounded-lg border">
+          <ul className={cn(CARD_LIST, "rounded-2xl bg-subtle px-4")}>
             {accountValues.map((value) => {
               const name = newAccountName(value)
               const label = value.label || EMPTY_LINK_LABEL
@@ -263,72 +240,40 @@ export function CategoriesStep({
               return (
                 <li
                   key={value.key}
-                  className="flex flex-wrap items-center justify-between gap-3 px-3 py-2"
+                  className="flex flex-wrap items-center justify-between gap-3 py-2"
                 >
                   <span className="flex flex-wrap items-center gap-2 text-sm">
                     {label}
-                    <span className="text-muted">
+                    <span className="text-muted-foreground">
                       · {value.count === 1 ? "1 fila" : `${value.count} filas`}
                     </span>
                   </span>
-                  <Select
-                    value={
-                      accountTargetValue(accountTargets[value.key]) || null
-                    }
-                    onChange={(key) => {
-                      if (key === CREATE_OPTION) {
-                        setCreateRequest({ kind: "account", value })
-                      } else if (key != null) {
-                        handleAccountChange(value, String(key))
-                      }
-                    }}
-                    fullWidth
-                    className="sm:w-56"
+                  <RowTargetSelect
                     aria-label={`Cuenta para ${label}`}
-                  >
-                    <Select.Trigger>
-                      <Select.Value />
-                      <Select.Indicator />
-                    </Select.Trigger>
-                    <Select.Popover>
-                      <ListBox>
-                        {accountOptions.length > 0 && (
-                          <>
-                            <ListBox.Section>
-                              <Header>Tus cuentas</Header>
-                              {accountOptions.map((account) => (
-                                <ListBox.Item
-                                  key={account.id}
-                                  id={`${EXISTING_PREFIX}${account.id}`}
-                                  textValue={String(account.name)}
-                                >
-                                  {account.name}
-                                  <ListBox.ItemIndicator />
-                                </ListBox.Item>
-                              ))}
-                            </ListBox.Section>
-                            <Separator />
-                          </>
-                        )}
-                        {name && (
-                          <ListBox.Item
-                            id={NEW}
-                            textValue={`Crear «${name}»`}
-                          >
-                            Crear «{name}»<ListBox.ItemIndicator />
-                          </ListBox.Item>
-                        )}
-                        <ListBox.Item
-                          id={NO_ACCOUNT}
-                          textValue="Sin cuenta"
-                        >
-                          Sin cuenta
-                          <ListBox.ItemIndicator />
-                        </ListBox.Item>
-                        <CreateOption label="Crear cuenta" />
-                      </ListBox>
-                    </Select.Popover>
-                  </Select>
+                    value={accountTargetValue(accountTargets[value.key])}
+                    onChange={(next) => handleAccountChange(value, next)}
+                    groups={[
+                      {
+                        label: "Tus cuentas",
+                        options: accountOptions.map((account) => ({
+                          value: `${EXISTING_PREFIX}${account.id}`,
+                          label: account.name
+                        }))
+                      },
+                      {
+                        options: [
+                          ...(name
+                            ? [{ value: NEW, label: `Crear «${name}»` }]
+                            : []),
+                          { value: NO_ACCOUNT, label: "Sin cuenta" }
+                        ]
+                      }
+                    ]}
+                    createLabel="Crear cuenta"
+                    onCreate={() =>
+                      setCreateRequest({ kind: "account", value })
+                    }
+                  />
                 </li>
               )
             })}
@@ -339,7 +284,7 @@ export function CategoriesStep({
       {error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {error}
         </p>
@@ -347,17 +292,24 @@ export function CategoriesStep({
 
       <div className="flex flex-wrap justify-between gap-2">
         <Button
+          type="button"
           variant="outline"
-          isDisabled={loading}
-          onPress={onBack}
+          disabled={loading}
+          onClick={onBack}
         >
           Atrás
         </Button>
         <Button
-          isDisabled={rowCount === 0 || loading}
-          onPress={onNext}
+          type="button"
+          disabled={rowCount === 0 || loading}
+          onClick={onNext}
         >
-          {loading && <LoaderCircle className="animate-spin" />}
+          {loading && (
+            <LoaderCircle
+              aria-hidden="true"
+              className="animate-spin motion-reduce:animate-none"
+            />
+          )}
           Ver vista previa
         </Button>
       </div>

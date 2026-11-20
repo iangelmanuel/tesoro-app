@@ -120,10 +120,17 @@ apunta los tokens de HeroUI a los nuevos (`--surface` → `--card`,
 `--destructive`). Así las pantallas aún en HeroUI toman la paleta nueva.
 `--accent` y `--focus` se vuelven a declarar en el contenedor del espacio.
 
-El único panel de Base UI que aún aloja menús de HeroUI es el aside móvil:
-va con `modal={false}` y el filtro de cierre `closesFromSheet` de
-`src/components/dashboard/heroui-compat.ts`. SPEC 53 borra el puente y el
-filtro.
+**Aside móvil modal (SPEC 52c).** Con `BusinessSwitcher` en
+`DropdownMenu`, el aside ya no aloja menús de HeroUI: su `Sheet` es modal
+(foco atrapado, Escape y clic afuera lo cierran) y `heroui-compat.ts` se
+borró.
+
+**Personal sin HeroUI (SPEC 52c).** Nada alcanzable desde
+`app/dashboard/layout.tsx` ni desde `app/dashboard/personal/**` importa
+`@heroui/react`. Por eso el `ToastProvider` de HeroUI salió del layout del
+dashboard y lo montan `app/dashboard/business/layout.tsx` y
+`app/dashboard/account/layout.tsx`, las pantallas que aún lanzan toasts de
+HeroUI. Personal solo usa sonner.
 
 **Puentes retirados en SPEC 52b.** `DetailSheet` (los cinco Sheets de
 detalle) volvió a ser modal y `FormDialog` perdió `hostsHeroUI` y
@@ -131,7 +138,7 @@ detalle) volvió a ser modal y `FormDialog` perdió `hostsHeroUI` y
 tabs. Tab no sale de un Sheet ni de un diálogo, y Escape los cierra.
 
 **Puente de portales (SPEC 52a).** Al revés: un Popover, Combobox, Select o
-Dialog de Base UI abierto desde un `Modal` de HeroUI (pantallas de 52c y 53) quedaría inerte, porque React Aria vuelve `inert` todo lo que está fuera
+Dialog de Base UI abierto desde un `Modal` de HeroUI (pantallas de SPEC 53) quedaría inerte, porque React Aria vuelve `inert` todo lo que está fuera
 del modal y le quita el foco.
 
 - `HeroUIPortalHost` (en `WorkspaceThemeRoot`) es un nodo vacío con
@@ -191,6 +198,12 @@ OKLCH → sRGB, SPEC 51). Mínimos: 4.5:1 texto, 3:1 gráficos y foco.
 | `foreground` / filtro aplicado E. (primario 14 % en `card`) | 14.79 | 14.61  |
 | `muted-foreground` / filtro aplicado P.                     | 5.14  | 6.95   |
 | `muted-foreground` / filtro aplicado E.                     | 5.17  | 6.92   |
+| `foreground` / opción elegida P. (primario 10 % en `card`)  | 15.56 | 15.17  |
+| `foreground` / opción elegida E. (primario 10 % en `card`)  | 15.39 | 15.43  |
+| `muted-foreground` / opción elegida P.                      | 5.44  | 7.18   |
+| `muted-foreground` / opción elegida E.                      | 5.38  | 7.30   |
+| anillo de opción elegida (`primary`) / `card` P.            | 5.37  | 3.34   |
+| anillo de opción elegida (`primary`) / `card` E.            | 5.23  | 3.42   |
 
 Las gráficas nunca dependen solo del color: llevan leyenda, orden fijo de
 series y el monto en el tooltip y en la tabla `sr-only`.
@@ -853,7 +866,7 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
 | Campos de `forms/`, categorías                            | shadcn (SPEC 52a) |
 | Resumen, Movimientos y Cuentas de Personal y sus diálogos | shadcn (SPEC 52a) |
 | Gastos e Ingresos fijos, Presupuestos, Metas y Deudas     | shadcn (SPEC 52b) |
-| Reportes, Recomendaciones e Importar                      | HeroUI (SPEC 52c) |
+| Reportes, Recomendaciones e Importar                      | shadcn (SPEC 52c) |
 | Empresa (salvo lo compartido), cuenta, auth y públicas    | HeroUI (SPEC 53)  |
 
 ## Móvil
@@ -990,7 +1003,8 @@ Piezas en `src/components/dashboard/mobile/`:
   recorrido de funciones.
 - **Reduced motion y sin JS:** no hay estado oculto; todo se ve en su estado
   final y el hero se queda en el póster.
-- **Peso de la landing:** `ToastProvider` solo en `app/dashboard/layout.tsx`,
+- **Peso de la landing:** `ToastProvider` de HeroUI solo en los layouts de
+  Empresa y cuenta (SPEC 52c),
   enlaces a auth con `prefetch={false}` y cajón móvil del header cargado al
   abrirlo. Así la landing no carga react-aria al inicio.
 

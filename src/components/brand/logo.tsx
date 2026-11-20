@@ -1,5 +1,5 @@
-import { cn } from "@heroui/react"
 import { SITE } from "@/config/site"
+import { cn } from "@/libs/cn"
 
 type LogoTone = "ink" | "color"
 

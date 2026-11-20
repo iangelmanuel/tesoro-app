@@ -1,7 +1,6 @@
 import { Suspense, cache } from "react"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { ToastProvider } from "@heroui/react"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { AppSidebarSkeleton } from "@/components/dashboard/app-sidebar-skeleton"
 import {
@@ -116,11 +115,10 @@ export default function DashboardLayout({
       <WorkspaceThemeRoot>
         {/* Los toasts solo existen en el dashboard: fuera de aquí, react-aria no
           entra en el JS de la landing (SPEC 24) */}
-        {/* Toasts de shadcn (sonner). El ToastProvider de HeroUI sigue para
-            las pantallas aún en HeroUI, en la misma esquina (SPEC 53 lo
-            retira) */}
+        {/* Toasts de shadcn (sonner). El ToastProvider de HeroUI vive en los
+            layouts de Empresa y cuenta, aún en HeroUI (SPEC 52c); SPEC 53 lo
+            retira */}
         <Toaster />
-        <ToastProvider placement="bottom end" />
         <SidebarProvider>
           {/* Primer elemento enfocable: salta el aside y el header y lleva el
               foco a main */}

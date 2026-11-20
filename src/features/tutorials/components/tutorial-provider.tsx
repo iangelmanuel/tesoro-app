@@ -9,7 +9,7 @@ import {
   useState,
   useTransition
 } from "react"
-import { toast } from "@heroui/react"
+import { toast } from "@/components/ui/sonner"
 import type { TutorialSection } from "@/config/tutorials"
 import { completeTutorialAction, resetTutorialsAction } from "../actions"
 
@@ -70,7 +70,7 @@ export function TutorialProvider({
           const { error } = await completeTutorialAction(section)
 
           if (error) {
-            toast.danger(error)
+            toast.error(error)
           }
         })
       },
@@ -80,7 +80,7 @@ export function TutorialProvider({
           const { error } = await resetTutorialsAction()
 
           if (error) {
-            toast.danger(error)
+            toast.error(error)
           } else {
             toast.success("Tutoriales reiniciados")
           }

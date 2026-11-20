@@ -1,8 +1,11 @@
 "use client"
 
-import { Button, Header, ListBox, Select, Separator } from "@heroui/react"
 import { LoaderCircle } from "lucide-react"
+import { CARD_LIST } from "@/components/dashboard/surface"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/libs/cn"
 import type { LinkTarget } from "../types"
+import { RowTargetSelect } from "./row-target-select"
 
 const SKIP = "skip"
 
@@ -45,7 +48,7 @@ export function LinkStep({
         <h2 className="text-sm font-medium">
           {kind === "debt" ? "Deudas" : "Metas"}
         </h2>
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted-foreground">
           Elige a qué {noun} va cada valor de tu archivo. Solo aparecen las{" "}
           {kind === "debt" ? "deudas" : "metas"} activas. Marca «No importar»
           para omitir sus filas.
@@ -53,76 +56,48 @@ export function LinkStep({
       </div>
 
       {values.length === 0 ? (
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted-foreground">
           No hay filas válidas para importar. Vuelve al paso anterior y revisa
           el mapeo de columnas.
         </p>
       ) : (
-        <ul className="flex flex-col divide-y rounded-lg border">
+        <ul className={cn(CARD_LIST, "rounded-2xl bg-subtle px-4")}>
           {values.map((value) => {
             const target = targets[value.key]
 
             return (
               <li
                 key={value.key}
-                className="flex flex-wrap items-center justify-between gap-3 px-3 py-2"
+                className="flex flex-wrap items-center justify-between gap-3 py-2"
               >
                 <span className="text-sm">
                   {value.label}{" "}
-                  <span className="text-muted">
+                  <span className="text-muted-foreground">
                     · {value.count === 1 ? "1 fila" : `${value.count} filas`}
                   </span>
                 </span>
-                <Select
-                  value={
-                    (target?.kind === "existing" ? target.id : SKIP) || null
-                  }
-                  onChange={(key) =>
-                    key != null &&
-                    ((next) =>
-                      onTargetChange(
-                        value.key,
-                        next === SKIP
-                          ? { kind: "skip" }
-                          : { kind: "existing", id: next }
-                      ))(String(key))
-                  }
-                  fullWidth
-                  className="sm:w-56"
+                <RowTargetSelect
                   aria-label={`${kind === "debt" ? "Deuda" : "Meta"} para ${value.label}`}
-                >
-                  <Select.Trigger>
-                    <Select.Value />
-                    <Select.Indicator />
-                  </Select.Trigger>
-                  <Select.Popover>
-                    <ListBox>
-                      <ListBox.Section>
-                        <Header>
-                          {kind === "debt" ? "Tus deudas" : "Tus metas"}
-                        </Header>
-                        {options.map((option) => (
-                          <ListBox.Item
-                            key={option.id}
-                            id={option.id}
-                            textValue={String(option.name)}
-                          >
-                            {option.name}
-                            <ListBox.ItemIndicator />
-                          </ListBox.Item>
-                        ))}
-                      </ListBox.Section>
-                      <Separator />
-                      <ListBox.Item
-                        id={SKIP}
-                        textValue="No importar"
-                      >
-                        No importar
-                        <ListBox.ItemIndicator />
-                      </ListBox.Item>
-                    </ListBox>
-                  </Select.Popover>
-                </Select>
+                  value={target?.kind === "existing" ? target.id : SKIP}
+                  onChange={(next) =>
+                    onTargetChange(
+                      value.key,
+                      next === SKIP
+                        ? { kind: "skip" }
+                        : { kind: "existing", id: next }
+                    )
+                  }
+                  groups={[
+                    {
+                      label: kind === "debt" ? "Tus deudas" : "Tus metas",
+                      options: options.map((option) => ({
+                        value: option.id,
+                        label: option.name
+                      }))
+                    },
+                    { options: [{ value: SKIP, label: "No importar" }] }
+                  ]}
+                />
               </li>
             )
           })}
@@ -132,7 +107,7 @@ export function LinkStep({
       {error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {error}
         </p>
@@ -140,17 +115,24 @@ export function LinkStep({
 
       <div className="flex flex-wrap justify-between gap-2">
         <Button
+          type="button"
           variant="outline"
-          isDisabled={loading}
-          onPress={onBack}
+          disabled={loading}
+          onClick={onBack}
         >
           Atrás
         </Button>
         <Button
-          isDisabled={rowCount === 0 || loading}
-          onPress={onNext}
+          type="button"
+          disabled={rowCount === 0 || loading}
+          onClick={onNext}
         >
-          {loading && <LoaderCircle className="animate-spin" />}
+          {loading && (
+            <LoaderCircle
+              aria-hidden="true"
+              className="animate-spin motion-reduce:animate-none"
+            />
+          )}
           Ver vista previa
         </Button>
       </div>

@@ -1,10 +1,13 @@
-import { Card, Skeleton } from "@heroui/react"
 import { TriangleAlert } from "lucide-react"
-import { ChartCard } from "@/components/charts/chart-card"
+import { ChartCard, ChartCardSkeleton } from "@/components/charts/chart-card"
 import { Amount } from "@/components/dashboard/amount"
-import { CardHeading } from "@/components/dashboard/card-heading"
-import { CardSkeleton } from "@/components/dashboard/card-skeleton"
-import { StatCard } from "@/components/dashboard/stat-card"
+import {
+  CardHeading,
+  CardHeadingSkeleton
+} from "@/components/dashboard/card-heading"
+import { StatCard, StatCardSkeleton } from "@/components/dashboard/stat-card"
+import { CARD, CONTROL_SURFACE } from "@/components/dashboard/surface"
+import { Skeleton } from "@/components/ui/skeleton"
 import { WorkspaceNoTransactions } from "@/features/transactions/components/workspace-no-transactions"
 import type { SearchParams } from "@/features/transactions/filters"
 import { hasAnyTransactions } from "@/features/transactions/queries"
@@ -13,6 +16,7 @@ import {
   workspaceTransactionsPath
 } from "@/features/workspaces/paths"
 import type { Workspace } from "@/features/workspaces/queries"
+import { cn } from "@/libs/cn"
 import { monthRange, shiftMonth } from "@/libs/dates"
 import { TOP_CATEGORIES, buildTopCategories } from "../chart-data"
 import { getPeriodComparison } from "../comparison"
@@ -21,7 +25,10 @@ import { savingsRate } from "../metrics"
 import { parseReportParams } from "../period"
 import { getCategoryTotals, getMonthlyTotals } from "../queries"
 import { incomeExpenseLegend } from "../series"
-import { CategorySummaryTable } from "./category-summary-table"
+import {
+  CategorySummaryTable,
+  CategorySummaryTableSkeleton
+} from "./category-summary-table"
 import { IncomeExpenseChart } from "./income-expense-chart"
 import { NoPeriodData } from "./no-period-data"
 import { ReportPeriodPicker } from "./report-period-picker"
@@ -206,8 +213,8 @@ export async function ReportsView({
                 <NoPeriodData message={noTypeData} />
               )}
             </ChartCard>
-            <Card
-              className="gap-3 lg:col-span-3"
+            <section
+              className={cn(CARD, "gap-3 lg:col-span-3")}
               data-tour="reports-categories"
             >
               <CardHeading title={`${typeLabel} por categoría`} />
@@ -221,7 +228,7 @@ export async function ReportsView({
               ) : (
                 <NoPeriodData message={noTypeData} />
               )}
-            </Card>
+            </section>
           </div>
         </>
       )}
@@ -229,25 +236,49 @@ export async function ReportsView({
   )
 }
 
+/** Hueco de Reportes: barra de periodo y tipo, KPIs, tendencia y categorías */
 export function ReportsViewSkeleton() {
   return (
     <>
-      <div className="flex flex-wrap justify-between gap-2">
-        <Skeleton className="h-9 w-80 rounded-3xl" />
-        <Skeleton className="h-8 w-44 rounded-3xl" />
+      <div
+        aria-hidden="true"
+        className="flex flex-wrap items-center justify-between gap-2"
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <Skeleton className="h-11 w-40 rounded-4xl" />
+          <div
+            className={cn(
+              "flex min-h-11 items-center rounded-3xl p-0.5",
+              CONTROL_SURFACE
+            )}
+          >
+            <span className="size-11 md:size-10" />
+            <span className="flex min-w-32 justify-center px-1">
+              <Skeleton className="h-4 w-24" />
+            </span>
+            <span className="size-11 md:size-10" />
+          </div>
+        </div>
+        <Skeleton className="h-11 w-44 rounded-4xl" />
       </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }, (_, index) => (
-          <CardSkeleton
+          <StatCardSkeleton
             key={index}
-            className="h-28"
+            caption
           />
         ))}
       </div>
-      <CardSkeleton className="h-96" />
+      <ChartCardSkeleton chartClassName="aspect-auto h-72" />
       <div className="grid gap-4 lg:grid-cols-5">
-        <CardSkeleton className="h-80 lg:col-span-2" />
-        <CardSkeleton className="h-80 lg:col-span-3" />
+        <ChartCardSkeleton className="lg:col-span-2" />
+        <div
+          aria-hidden="true"
+          className={cn(CARD, "gap-3 lg:col-span-3")}
+        >
+          <CardHeadingSkeleton />
+          <CategorySummaryTableSkeleton />
+        </div>
       </div>
     </>
   )

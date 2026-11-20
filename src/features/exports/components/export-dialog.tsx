@@ -1,13 +1,15 @@
 "use client"
 
-import { useId, useState } from "react"
+import { useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { Button, ListBox, Modal, Select, Tabs, toast } from "@heroui/react"
 import { useHideAmounts } from "@/components/dashboard/hide-amounts-context"
-import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
+import { FormDialog } from "@/components/forms/form-dialog"
+import { SegmentedField } from "@/components/forms/segmented-field"
+import { SelectField } from "@/components/forms/select-field"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/sonner"
 import type { FieldHelpKey } from "@/config/help"
 import { parseReportParams } from "@/features/reports/period"
-import { useIsMobile } from "@/hooks/use-is-mobile"
 import { todayISO } from "@/libs/dates"
 import {
   PDF_MONTHS_ERROR,
@@ -34,6 +36,12 @@ const PERIOD_LABELS: Record<Period, string> = {
   range: "Rango de meses",
   all: "Todo el historial"
 }
+
+const FORMAT_OPTIONS: { value: ExportFormat; label: string }[] = [
+  { value: "xlsx", label: "Excel" },
+  { value: "csv", label: "CSV" },
+  { value: "pdf", label: "PDF" }
+]
 
 const PDF_SIZE_LABELS: Record<PdfOptions["size"], string> = {
   a4: "A4",
@@ -142,40 +150,25 @@ export function ExportDialog({
   open,
   onOpenChange
 }: ExportDialogProps) {
-  const isMobile = useIsMobile()
-
   return (
-    <Modal
-      isOpen={open}
+    <FormDialog
+      open={open}
       onOpenChange={onOpenChange}
+      bottomOnMobile
+      className="sm:max-w-md"
+      title="Exportar"
+      description="Descarga tus datos mes a mes para trabajarlos en Excel o Google Sheets."
     >
-      <Modal.Backdrop>
-        <Modal.Container
-          scroll="outside"
-          placement={isMobile ? "bottom" : "center"}
-        >
-          <Modal.Dialog className="sm:max-w-md">
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>Exportar</Modal.Heading>
-              <p className="text-sm text-muted">
-                Descarga tus datos mes a mes para trabajarlos en Excel o Google
-                Sheets.
-              </p>
-            </Modal.Header>
-            <Modal.Body>
-              {/* Se desmonta al cerrar: cada apertura toma el periodo actual */}
-              <ExportForm
-                workspaceId={workspaceId}
-                historyStart={historyStart}
-                onDone={() => onOpenChange(false)}
-                onCancel={() => onOpenChange(false)}
-              />
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+      {/* Se desmonta al cerrar: cada apertura toma el periodo actual */}
+      {(close) => (
+        <ExportForm
+          workspaceId={workspaceId}
+          historyStart={historyStart}
+          onDone={close}
+          onCancel={close}
+        />
+      )}
+    </FormDialog>
   )
 }
 
@@ -269,7 +262,7 @@ function ExportForm({
         const body = (await response.json().catch(() => null)) as {
           error?: string
         } | null
-        toast.danger(
+        toast.error(
           body?.error ?? "No se pudo generar el archivo. Intenta de nuevo"
         )
         return
@@ -288,7 +281,7 @@ function ExportForm({
       toast.success("Archivo descargado")
       onDone()
     } catch {
-      toast.danger(
+      toast.error(
         "No se pudo descargar el archivo. Revisa tu conexión e intenta de nuevo"
       )
     } finally {
@@ -298,34 +291,13 @@ function ExportForm({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-1">
-        <Tabs
-          className="min-w-0 flex-1"
-          selectedKey={format}
-          onSelectionChange={(key) => setFormat(key as ExportFormat)}
-        >
-          <Tabs.ListContainer>
-            <Tabs.List aria-label="Formato">
-              <Tabs.Tab id="xlsx">
-                Excel (.xlsx)
-                <Tabs.Indicator />
-              </Tabs.Tab>
-              <Tabs.Tab id="csv">
-                CSV (.csv)
-                <Tabs.Indicator />
-              </Tabs.Tab>
-              <Tabs.Tab id="pdf">
-                PDF (.pdf)
-                <Tabs.Indicator />
-              </Tabs.Tab>
-            </Tabs.List>
-          </Tabs.ListContainer>
-        </Tabs>
-        <FieldHelp
-          help="export.format"
-          label="Formato"
-        />
-      </div>
+      <SegmentedField
+        label="Formato"
+        help="export.format"
+        value={format}
+        onChange={setFormat}
+        options={FORMAT_OPTIONS}
+      />
 
       <PeriodSelect
         label="Periodo"
@@ -335,11 +307,11 @@ function ExportForm({
         options={PERIODS.map((period) => ({
           id: period,
           label: PERIOD_LABELS[period],
-          isDisabled: period === "all" && allDisabled
+          disabled: period === "all" && allDisabled
         }))}
       />
       {historyMonths > maxMonths && (
-        <p className="-mt-2 text-sm text-muted">
+        <p className="-mt-2 text-sm text-muted-foreground">
           {isPdf
             ? `Tu historial tiene ${historyMonths} meses. El PDF admite hasta ${MAX_PDF_MONTHS}.`
             : `Tu historial tiene ${historyMonths} meses. Exporta por rangos de hasta ${MAX_EXPORT_MONTHS}.`}
@@ -474,13 +446,13 @@ function ExportForm({
         {parsed.success ? (
           <>
             {format === "xlsx" && (
-              <p className="text-muted">
+              <p className="text-muted-foreground">
                 Se crearán {monthCount} {monthCount === 1 ? "hoja" : "hojas"} de
                 mes
               </p>
             )}
             {isPdf && (
-              <p className="text-muted">
+              <p className="text-muted-foreground">
                 Incluye {monthCount} {monthCount === 1 ? "mes" : "meses"} de
                 detalle
               </p>
@@ -489,7 +461,7 @@ function ExportForm({
         ) : (
           <p
             role="alert"
-            className="text-danger"
+            className="text-destructive"
           >
             {parsed.error === PDF_MONTHS_ERROR
               ? `${PDF_MONTHS_ERROR} Usa Excel para periodos más largos.`
@@ -503,16 +475,16 @@ function ExportForm({
 
       <div className="flex justify-end gap-2">
         <Button
+          type="button"
           variant="ghost"
-          onPress={onCancel}
-          className="max-md:min-h-11"
+          onClick={onCancel}
         >
           Cancelar
         </Button>
         <Button
-          onPress={download}
-          isDisabled={pending || !parsed.success}
-          className="max-md:min-h-11"
+          type="button"
+          onClick={download}
+          disabled={pending || !parsed.success}
         >
           {pending ? "Generando…" : "Descargar"}
         </Button>
@@ -532,40 +504,24 @@ function PeriodSelect({
   help: FieldHelpKey
   value: string
   onChange: (value: string) => void
-  options: { id: string; label: string; isDisabled?: boolean }[]
+  options: { id: string; label: string; disabled?: boolean }[]
 }) {
   return (
-    <Select
-      fullWidth
+    <SelectField
+      label={label}
+      help={help}
       value={value}
-      onChange={(key) => key !== null && onChange(String(key))}
-      className="flex flex-col gap-2"
-    >
-      <FieldLabel help={help}>{label}</FieldLabel>
-      <Select.Trigger className="min-h-11">
-        <Select.Value />
-        <Select.Indicator />
-      </Select.Trigger>
-      <Select.Popover>
-        <ListBox>
-          {options.map((option) => (
-            <ListBox.Item
-              key={option.id}
-              id={option.id}
-              textValue={option.label}
-              isDisabled={option.isDisabled}
-            >
-              {option.label}
-              <ListBox.ItemIndicator />
-            </ListBox.Item>
-          ))}
-        </ListBox>
-      </Select.Popover>
-    </Select>
+      onChange={onChange}
+      options={options.map((option) => ({
+        value: option.id,
+        label: option.label,
+        disabled: option.disabled
+      }))}
+    />
   )
 }
 
-/** Tabs con etiqueta visible, para opciones de pocas alternativas */
+/** Tabs segmentadas con etiqueta visible, para opciones de pocas alternativas */
 function OptionTabs({
   label,
   help,
@@ -581,41 +537,19 @@ function OptionTabs({
   options: { id: string; label: string }[]
   hint?: string
 }) {
-  const labelId = useId()
-
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-0.5">
-        <span
-          id={labelId}
-          className="text-sm font-medium"
-        >
-          {label}
-        </span>
-        <FieldHelp
-          help={help}
-          label={label}
-        />
-      </div>
-      <Tabs
-        selectedKey={value}
-        onSelectionChange={(key) => onChange(String(key))}
-      >
-        <Tabs.ListContainer>
-          <Tabs.List aria-labelledby={labelId}>
-            {options.map((option) => (
-              <Tabs.Tab
-                key={option.id}
-                id={option.id}
-              >
-                {option.label}
-                <Tabs.Indicator />
-              </Tabs.Tab>
-            ))}
-          </Tabs.List>
-        </Tabs.ListContainer>
-      </Tabs>
-      {hint && <p className="text-sm text-muted">{hint}</p>}
+      <SegmentedField
+        label={label}
+        help={help}
+        value={value}
+        onChange={onChange}
+        options={options.map((option) => ({
+          value: option.id,
+          label: option.label
+        }))}
+      />
+      {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
     </div>
   )
 }

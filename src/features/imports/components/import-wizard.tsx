@@ -1,8 +1,10 @@
 "use client"
 
 import { useMemo, useReducer, useState, useTransition } from "react"
-import { cn } from "@heroui/react"
 import { Check } from "lucide-react"
+import { CARD } from "@/components/dashboard/surface"
+import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/libs/cn"
 import { formatCurrency } from "@/libs/format"
 import {
   type ConfirmImportResult,
@@ -507,7 +509,7 @@ export function ImportWizard({
   }
 
   return (
-    <div className="flex flex-col gap-6 rounded-xl border p-4 sm:p-6">
+    <div className={cn(CARD, "gap-6 sm:p-6")}>
       <StepIndicator
         current={state.step}
         target={state.target}
@@ -655,7 +657,10 @@ function StepIndicator({
   const currentIndex = STEPS.findIndex((step) => step.id === current)
 
   return (
-    <ol className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+    <ol
+      aria-label="Pasos de la importación"
+      className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm"
+    >
       {STEPS.map((step, index) => {
         const done = index < currentIndex
         const active = index === currentIndex
@@ -665,24 +670,66 @@ function StepIndicator({
             key={step.id}
             aria-current={active ? "step" : undefined}
             className={cn(
-              "flex items-center gap-2",
-              active ? "font-medium text-foreground" : "text-muted"
+              "flex min-h-8 items-center gap-2",
+              active ? "font-semibold text-foreground" : "text-muted-foreground"
             )}
           >
             <span
+              aria-hidden="true"
               className={cn(
-                "flex size-6 items-center justify-center rounded-full border text-xs",
-                active && "border-accent bg-accent text-accent-foreground",
-                done &&
-                  "border-accent bg-accent-soft text-accent-soft-foreground"
+                "flex size-7 shrink-0 items-center justify-center rounded-full text-xs tabular-nums",
+                active && "bg-primary text-primary-foreground",
+                done && "bg-success-soft text-success-soft-foreground",
+                !active && !done && "bg-subtle"
               )}
             >
               {done ? <Check className="size-3.5" /> : index + 1}
             </span>
-            {stepLabel(step.id, target)}
+            {/* En el teléfono solo se lee el paso actual; los demás quedan
+                para el lector de pantalla */}
+            <span className={cn(!active && "max-sm:sr-only")}>
+              {stepLabel(step.id, target)}
+              {done && <span className="sr-only"> (completado)</span>}
+            </span>
           </li>
         )
       })}
     </ol>
+  )
+}
+
+/** Hueco del asistente: pasos, destinos y la zona del archivo (paso 1) */
+export function ImportWizardSkeleton() {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(CARD, "gap-6 sm:p-6")}
+    >
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        {Array.from({ length: STEPS.length }, (_, index) => (
+          <div
+            key={index}
+            className="flex min-h-8 items-center gap-2"
+          >
+            <Skeleton className="size-7 rounded-full" />
+            <Skeleton
+              className={cn("h-4 w-20", index > 0 && "max-sm:hidden")}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-5 w-44" />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }, (_, index) => (
+            <Skeleton
+              key={index}
+              className="h-20 rounded-2xl"
+            />
+          ))}
+        </div>
+        <Skeleton className="h-56 rounded-3xl" />
+      </div>
+    </div>
   )
 }

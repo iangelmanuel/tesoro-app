@@ -3,9 +3,11 @@
 import { useRef, useState } from "react"
 import type { Route } from "next"
 import Link from "next/link"
-import { Button, Radio, RadioGroup, cn } from "@heroui/react"
 import { FileSpreadsheet, LoaderCircle, Upload } from "lucide-react"
 import { FieldHelp } from "@/components/forms/field-label"
+import { Button } from "@/components/ui/button"
+import { RadioGroup } from "@/components/ui/radio-group"
+import { cn } from "@/libs/cn"
 import {
   ImportFileError,
   type SheetCells,
@@ -14,6 +16,7 @@ import {
 } from "../read-file"
 import { IMPORT_TARGETS } from "../targets"
 import type { ImportTarget } from "../types"
+import { RadioCard } from "./radio-card"
 
 const TARGET_HINTS: Record<ImportTarget, string> = {
   transactions: "Entradas y salidas",
@@ -89,54 +92,47 @@ export function FileStep({
         aria-labelledby="import-target"
         className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
         value={target}
-        onChange={(value) => onTargetChange(value as ImportTarget)}
+        onValueChange={(value) => onTargetChange(value as ImportTarget)}
       >
         {(Object.keys(IMPORT_TARGETS) as ImportTarget[]).map((value) => {
           const disabled = unavailable.includes(value)
           const requirement = TARGET_REQUIREMENTS[value]
+          const id = `import-target-${value}`
 
           return (
-            <Radio
+            <RadioCard
               key={value}
+              id={id}
               value={value}
-              isDisabled={disabled}
-            >
-              {({ isSelected }) => (
-                <Radio.Content
-                  className={cn(
-                    "flex h-full w-full cursor-pointer items-start gap-2 rounded-xl border border-border p-3 transition-colors data-[selected=true]:border-accent data-[selected=true]:bg-accent-soft",
-                    disabled && "cursor-default opacity-60"
-                  )}
-                  data-selected={isSelected}
-                >
-                  <Radio.Control className="mt-0.5">
-                    <Radio.Indicator />
-                  </Radio.Control>
-                  <span className="flex flex-col gap-0.5 text-sm">
-                    <span className="font-medium">
-                      {IMPORT_TARGETS[value].label}
-                    </span>
-                    {disabled && requirement ? (
-                      <Link
-                        href={IMPORT_TARGETS[value].href as Route}
-                        className="text-link underline underline-offset-4"
-                      >
-                        {requirement}
-                      </Link>
-                    ) : (
-                      <span className="text-muted">{TARGET_HINTS[value]}</span>
-                    )}
+              disabled={disabled}
+              label={IMPORT_TARGETS[value].label}
+              hint={
+                disabled && requirement ? (
+                  <Link
+                    id={`${id}-hint`}
+                    href={IMPORT_TARGETS[value].href as Route}
+                    className="relative z-10 inline-flex min-h-11 w-fit items-center rounded-md font-medium underline decoration-ring decoration-2 underline-offset-4 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >
+                    {requirement}
+                  </Link>
+                ) : (
+                  <span
+                    id={`${id}-hint`}
+                    className="text-muted-foreground"
+                  >
+                    {TARGET_HINTS[value]}
                   </span>
-                </Radio.Content>
-              )}
-            </Radio>
+                )
+              }
+            />
           )
         })}
       </RadioGroup>
       <div
         className={cn(
-          "flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-10 text-center transition-colors",
-          dragging && "border-accent bg-accent-soft"
+          "flex flex-col items-center justify-center gap-3 rounded-3xl bg-subtle p-10 text-center transition-colors duration-150 motion-reduce:transition-none",
+          dragging &&
+            "bg-primary/10 outline-2 -outline-offset-2 outline-primary"
         )}
         onDragOver={(event) => {
           event.preventDefault()
@@ -151,12 +147,18 @@ export function FileStep({
       >
         {reading ? (
           <>
-            <LoaderCircle className="size-8 animate-spin text-muted" />
-            <p className="text-sm text-muted">Leyendo archivo…</p>
+            <LoaderCircle
+              aria-hidden="true"
+              className="size-8 animate-spin text-muted-foreground motion-reduce:animate-none"
+            />
+            <p className="text-sm text-muted-foreground">Leyendo archivo…</p>
           </>
         ) : (
           <>
-            <FileSpreadsheet className="size-8 text-muted" />
+            <FileSpreadsheet
+              aria-hidden="true"
+              className="size-8 text-muted-foreground"
+            />
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-center gap-0.5">
                 <p className="font-medium">Arrastra tu archivo aquí</p>
@@ -165,14 +167,15 @@ export function FileStep({
                   label="Archivo"
                 />
               </div>
-              <p className="text-sm text-muted">
+              <p className="text-sm text-muted-foreground">
                 Excel (.xlsx) o CSV, de hasta 5 MB. Se lee en tu navegador: el
                 archivo no sale de tu equipo.
               </p>
             </div>
             <Button
+              type="button"
               variant="outline"
-              onPress={() => inputRef.current?.click()}
+              onClick={() => inputRef.current?.click()}
             >
               <Upload />
               Elegir archivo
@@ -192,7 +195,7 @@ export function FileStep({
       {error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {error}
         </p>

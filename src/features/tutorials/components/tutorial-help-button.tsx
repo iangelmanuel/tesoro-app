@@ -1,8 +1,9 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { Button, toast } from "@heroui/react"
 import { CircleHelp } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/sonner"
 import { type TutorialSection, getTutorialSection } from "@/config/tutorials"
 import { useTutorial } from "../use-tutorial"
 
@@ -32,14 +33,12 @@ function HelpButton({ section }: Readonly<{ section: TutorialSection }>) {
   return (
     <Button
       variant="ghost"
-      size="sm"
-      isIconOnly
+      size="icon"
       aria-label="Ver tutorial de esta sección"
-      className="max-md:size-11"
       data-tour="header-help"
-      onPress={() => {
+      onClick={() => {
         start().catch(() => {
-          toast.danger("No se pudo abrir el tutorial. Intenta de nuevo")
+          toast.error("No se pudo abrir el tutorial. Intenta de nuevo")
         })
       }}
     >

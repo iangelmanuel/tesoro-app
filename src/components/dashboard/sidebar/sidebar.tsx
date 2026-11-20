@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/sheet"
 import { MOBILE_QUERY, useIsMobile } from "@/hooks/use-is-mobile"
 import { cn } from "@/libs/cn"
-import { closesFromSheet } from "../heroui-compat"
 import { SIDEBAR_WIDTH, clampSidebarWidth, saveSidebarWidth } from "./width"
 
 // Sidebar del dashboard con primitivas de shadcn (Button, Sheet) y tokens
@@ -167,16 +166,7 @@ export function Sidebar({
 
       <Sheet
         open={openMobile}
-        // No modal mientras conviva con HeroUI (ver heroui-compat.ts): el
-        // menú de cuenta y el selector de empresa abren menús de HeroUI
-        modal={false}
-        onOpenChange={(next, details) => {
-          if (!next && !closesFromSheet(details.reason, details.event)) {
-            details.cancel()
-            return
-          }
-          setOpenMobile(next)
-        }}
+        onOpenChange={setOpenMobile}
       >
         <SheetContent
           side="left"

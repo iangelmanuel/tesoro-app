@@ -69,6 +69,7 @@ export function RecurringIncomesList({
   return (
     <ScrollTable
       minWidth={MIN_WIDTH}
+      tour="income-list"
       className={TABLE_SURFACE}
     >
       <Table aria-label="Ingresos fijos">
@@ -178,6 +179,7 @@ function IncomeRow({
           {/* El nombre es el control de teclado que abre el detalle */}
           <button
             type="button"
+            data-tour="income-detail"
             title={income.name}
             onClick={(event) => {
               event.stopPropagation()

@@ -10,6 +10,7 @@ export const TUTORIAL_SECTIONS = [
   "transactions",
   "accounts",
   "recurring",
+  "recurring_income",
   "budgets",
   "goals",
   "debts",
@@ -40,6 +41,10 @@ export const TUTORIAL_SECTION_INFO: Record<
   },
   accounts: { label: "Cuentas", href: "/dashboard/personal/accounts" },
   recurring: { label: "Gastos fijos", href: "/dashboard/personal/recurring" },
+  recurring_income: {
+    label: "Ingresos fijos",
+    href: "/dashboard/personal/recurring-income"
+  },
   budgets: { label: "Presupuestos", href: "/dashboard/personal/budgets" },
   goals: { label: "Metas", href: "/dashboard/personal/goals" },
   debts: { label: "Deudas", href: "/dashboard/personal/debts" },
@@ -350,6 +355,55 @@ export const TUTORIALS: Record<TutorialSection, readonly TutorialStep[]> = {
       title: "Edita, pausa o elimina",
       description:
         "Pausa un gasto que no vas a pagar por un tiempo; reanúdalo cuando vuelva."
+    }
+  ],
+  recurring_income: [
+    {
+      title: "Tus ingresos fijos",
+      description:
+        "Tu salario, un arriendo que recibes, un proyecto o una inversión: la plata que te entra cada cierto tiempo. Tesoro te muestra qué ya recibiste y qué falta."
+    },
+    {
+      target: "income-create",
+      title: "Agrega un ingreso fijo",
+      description:
+        "Ponle nombre, monto esperado, categoría y cada cuánto llega: cada semana, cada quincena, cada mes o sin fecha fija."
+    },
+    {
+      target: "income-month",
+      title: "Elige el mes",
+      description:
+        "Las flechas te llevan a los meses anteriores: ves qué recibiste y qué quedó pendiente en cada uno."
+    },
+    {
+      target: "income-upcoming",
+      title: "Lo que llega este mes",
+      description:
+        "Los próximos ingresos y los que ya recibiste, con lo recibido en verde y lo atrasado en rojo."
+    },
+    {
+      target: "income-receive",
+      title: "Regístralo al recibirlo",
+      description:
+        "Anota el monto real y la cuenta a la que entró. Queda como entrada en tus movimientos."
+    },
+    {
+      target: "income-list",
+      title: "Todos tus ingresos fijos",
+      description:
+        "Cada uno con su monto, frecuencia y estado. En el teléfono, desliza la tabla hacia los lados."
+    },
+    {
+      target: "income-detail",
+      title: "Abre el detalle",
+      description:
+        "Toca el nombre para ver sus periodos y lo que recibiste en cada uno. Si te pagan en partes, los cobros del mismo día se pueden reordenar."
+    },
+    {
+      target: "row-actions",
+      title: "Edita, pausa o elimina",
+      description:
+        "Pausa un ingreso que dejó de llegar por un tiempo; reanúdalo cuando vuelva."
     }
   ],
   budgets: [

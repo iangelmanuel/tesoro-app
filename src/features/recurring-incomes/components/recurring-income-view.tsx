@@ -69,7 +69,7 @@ export async function RecurringIncomeView({
       categories={categories}
       accounts={accounts}
       trigger={
-        <Button>
+        <Button data-tour="income-create">
           <Plus />
           Nuevo ingreso fijo
         </Button>
@@ -139,6 +139,7 @@ export async function RecurringIncomeView({
             month.isCurrent ? "Próximos ingresos" : `Ingresos de ${month.label}`
           }
           className={CARD}
+          data-tour="income-upcoming"
         >
           <CardHeading
             title={
@@ -149,6 +150,7 @@ export async function RecurringIncomeView({
             help="upcomingIncomes"
             control={
               <MonthNav
+                data-tour="income-month"
                 path={SITE.routes.personalRecurringIncome}
                 label={month.label}
                 prev={month.prev}

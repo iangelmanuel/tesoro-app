@@ -3,24 +3,18 @@
 import { useActionState, useEffect, useId, useRef, useState } from "react"
 import type { Route } from "next"
 import Link from "next/link"
-import {
-  Button,
-  FieldError,
-  Input,
-  Modal,
-  TextArea,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-  buttonVariants,
-  cn,
-  toast
-} from "@heroui/react"
 import { AccountSelectField } from "@/components/forms/account-select-field"
 import { CategorySelectField } from "@/components/forms/category-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { FieldLabel } from "@/components/forms/field-label"
+import { FormDialog } from "@/components/forms/form-dialog"
+import { TextInputField } from "@/components/forms/text-input-field"
 import { TimePickerField } from "@/components/forms/time-picker-field"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { FieldDescription, FieldError } from "@/components/ui/field"
+import { toast } from "@/components/ui/sonner"
+import { Textarea } from "@/components/ui/textarea"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { selectableAccounts } from "@/features/accounts/components/account-select"
 import {
   type PaymentAccountOption,
@@ -58,6 +52,7 @@ import {
   incomeReceiptValues
 } from "@/features/recurring-incomes/receipt"
 import type { WorkspaceType } from "@/features/workspaces/queries"
+import { cn } from "@/libs/cn"
 import { todayISO } from "@/libs/dates"
 import { createTransaction, updateTransaction } from "../actions"
 import type { TransactionType } from "../filters"
@@ -141,7 +136,7 @@ interface TransactionDialogProps {
    */
   initialPanel?: FormPanel
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
@@ -161,9 +156,6 @@ export function TransactionDialog({
   open: controlledOpen,
   onOpenChange
 }: TransactionDialogProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
-  const open = controlledOpen ?? uncontrolledOpen
-  const setOpen = onOpenChange ?? setUncontrolledOpen
   const isEditing = transaction !== undefined
   const isPayment = !isEditing && recurring !== undefined
   // Empresa no tiene deudas ni gastos fijos; al editar o pagar una
@@ -174,66 +166,57 @@ export function TransactionDialog({
     !isEditing &&
     !isPayment
 
-  // `trigger` debe ser un Button de HeroUI: el Modal lo conecta por React Aria
   return (
-    <Modal
-      isOpen={open}
-      onOpenChange={setOpen}
+    <FormDialog
+      trigger={trigger}
+      open={controlledOpen}
+      onOpenChange={onOpenChange}
+      // Los tabs Deuda, Me deben, Meta y Gasto fijo, y el select de ingreso
+      // fijo, siguen en HeroUI hasta SPEC 52b
+      hostsHeroUI
+      // Con 7 tabs el diálogo se ensancha un poco para que quepan
+      className={showPaymentTabs ? "sm:max-w-lg" : undefined}
+      title={
+        isEditing
+          ? "Editar movimiento"
+          : isPayment
+            ? "Registrar pago"
+            : "Nuevo movimiento"
+      }
+      description={
+        isEditing
+          ? "Cambia los datos del movimiento."
+          : isPayment
+            ? "Confirma los datos del pago. Puedes ajustar el monto."
+            : COPY[workspaceType].description
+      }
     >
-      {trigger}
-      <Modal.Backdrop>
-        <Modal.Container scroll="outside">
-          <Modal.Dialog
-            // Con 7 tabs el diálogo se ensancha un poco para que quepan
-            className={showPaymentTabs ? "sm:max-w-lg" : "sm:max-w-md"}
-          >
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>
-                {isEditing
-                  ? "Editar movimiento"
-                  : isPayment
-                    ? "Registrar pago"
-                    : "Nuevo movimiento"}
-              </Modal.Heading>
-              <p className="text-sm text-muted">
-                {isEditing
-                  ? "Cambia los datos del movimiento."
-                  : isPayment
-                    ? "Confirma los datos del pago. Puedes ajustar el monto."
-                    : COPY[workspaceType].description}
-              </p>
-            </Modal.Header>
-            {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-            <Modal.Body>
-              <TransactionForm
-                workspaceId={workspaceId}
-                workspaceType={workspaceType}
-                categories={categories}
-                accounts={accounts}
-                transaction={transaction}
-                initialValues={isEditing ? undefined : initialValues}
-                recurring={isEditing ? undefined : recurring}
-                paymentTabs={showPaymentTabs ? paymentTabs : undefined}
-                // El traspaso existe en ambos espacios (atajo T, SPEC 51)
-                initialPanel={
-                  showPaymentTabs || initialPanel === "transfer"
-                    ? initialPanel
-                    : undefined
-                }
-                incomeSources={
-                  workspaceType === "personal" && !isPayment
-                    ? (incomeSources ?? paymentTabs?.incomeSources)
-                    : undefined
-                }
-                onSaved={() => setOpen(false)}
-                onCancel={() => setOpen(false)}
-              />
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+      {(close) => (
+        <TransactionForm
+          workspaceId={workspaceId}
+          workspaceType={workspaceType}
+          categories={categories}
+          accounts={accounts}
+          transaction={transaction}
+          initialValues={isEditing ? undefined : initialValues}
+          recurring={isEditing ? undefined : recurring}
+          paymentTabs={showPaymentTabs ? paymentTabs : undefined}
+          // El traspaso existe en ambos espacios (atajo T, SPEC 51)
+          initialPanel={
+            showPaymentTabs || initialPanel === "transfer"
+              ? initialPanel
+              : undefined
+          }
+          incomeSources={
+            workspaceType === "personal" && !isPayment
+              ? (incomeSources ?? paymentTabs?.incomeSources)
+              : undefined
+          }
+          onSaved={close}
+          onCancel={close}
+        />
+      )}
+    </FormDialog>
   )
 }
 
@@ -388,8 +371,9 @@ function TransactionForm({
         category.id === transaction?.category_id)
   )
 
-  function handleTypeChange(keys: Set<React.Key>) {
-    const [value] = [...keys]
+  function handleTypeChange(values: unknown[]) {
+    const [value] = values
+    // Un tab ya elegido no se apaga: siempre hay uno activo
     if (!value) return
     if (
       value === "transfer" ||
@@ -441,7 +425,7 @@ function TransactionForm({
   const activeTab = panel ?? type
   useEffect(() => {
     tabsRef.current
-      ?.querySelector<HTMLElement>('[data-selected="true"]')
+      ?.querySelector<HTMLElement>("[data-pressed]")
       ?.scrollIntoView({ block: "nearest", inline: "nearest" })
   }, [activeTab])
 
@@ -455,22 +439,16 @@ function TransactionForm({
     : undefined
   const showTransfer = !isEditing && type === "expense" && !isBusiness
   const typeLabelId = useId()
+  const noteId = useId()
 
-  const expenseTab = (
-    <ToggleButton
-      id="expense"
-      className="flex-1 whitespace-nowrap"
+  const tab = (id: TransactionType | FormPanel, label: string) => (
+    <ToggleGroupItem
+      key={id}
+      value={id}
+      className="h-full flex-1 px-3 whitespace-nowrap data-pressed:bg-card data-pressed:font-semibold data-pressed:text-foreground data-pressed:shadow-(--surface-shadow) dark:data-pressed:bg-highlight"
     >
-      {copy.expense}
-    </ToggleButton>
-  )
-  const incomeTab = (
-    <ToggleButton
-      id="income"
-      className="flex-1 whitespace-nowrap"
-    >
-      {copy.income}
-    </ToggleButton>
+      {label}
+    </ToggleGroupItem>
   )
 
   // Orden de los tabs (SPEC 30, 39 y 41). Personal: Gasto, Ingreso,
@@ -493,59 +471,29 @@ function TransactionForm({
             "-mx-1 [scrollbar-width:none] overflow-x-auto px-1 [&::-webkit-scrollbar]:hidden"
         )}
       >
-        <ToggleButtonGroup
-          selectionMode="single"
-          disallowEmptySelection
-          selectedKeys={[panel ?? type]}
-          onSelectionChange={handleTypeChange}
-          isDisabled={isLinked}
-          fullWidth
+        <ToggleGroup
+          value={[panel ?? type]}
+          onValueChange={handleTypeChange}
+          disabled={isLinked}
           aria-labelledby={typeLabelId}
-          className={cn(paymentTabs && "w-max min-w-full")}
+          spacing={1}
+          className={cn(
+            "h-12 w-full rounded-4xl bg-subtle p-0.5 dark:bg-card",
+            paymentTabs && "w-max min-w-full"
+          )}
         >
-          {isBusiness ? incomeTab : expenseTab}
-          {isBusiness ? expenseTab : incomeTab}
-          {canTransfer && (
-            <ToggleButton
-              id="transfer"
-              className="flex-1 whitespace-nowrap"
-            >
-              Traspaso
-            </ToggleButton>
-          )}
-          {paymentTabs && (
-            <ToggleButton
-              id="recurring"
-              className="flex-1 whitespace-nowrap"
-            >
-              Gasto fijo
-            </ToggleButton>
-          )}
-          {paymentTabs && (
-            <ToggleButton
-              id="debt_payment"
-              className="flex-1 whitespace-nowrap"
-            >
-              Deuda
-            </ToggleButton>
-          )}
-          {paymentTabs && (
-            <ToggleButton
-              id="receivable"
-              className="flex-1 whitespace-nowrap"
-            >
-              Me deben
-            </ToggleButton>
-          )}
-          {paymentTabs && (
-            <ToggleButton
-              id="goal"
-              className="flex-1 whitespace-nowrap"
-            >
-              Meta
-            </ToggleButton>
-          )}
-        </ToggleButtonGroup>
+          {isBusiness
+            ? tab("income", copy.income)
+            : tab("expense", copy.expense)}
+          {isBusiness
+            ? tab("expense", copy.expense)
+            : tab("income", copy.income)}
+          {canTransfer && tab("transfer", "Traspaso")}
+          {paymentTabs && tab("recurring", "Gasto fijo")}
+          {paymentTabs && tab("debt_payment", "Deuda")}
+          {paymentTabs && tab("receivable", "Me deben")}
+          {paymentTabs && tab("goal", "Meta")}
+        </ToggleGroup>
       </div>
     </div>
   )
@@ -554,7 +502,7 @@ function TransactionForm({
     return (
       <div className="flex flex-col gap-4">
         {typeToggle}
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted-foreground">
           Mueve plata entre tus cuentas. No cuenta como entrada ni salida.
         </p>
         <TransferForm
@@ -718,21 +666,18 @@ function TransactionForm({
         />
       )}
 
-      <TextField
+      <TextInputField
         name="amount"
+        label="Monto"
+        help="common.amount"
         inputMode="decimal"
         autoComplete="off"
+        placeholder="0"
         value={amountText}
-        onChange={setAmountText}
-        isInvalid={Boolean(errors?.amount)}
+        onChange={(event) => setAmountText(event.target.value)}
         isRequired
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="common.amount">Monto</FieldLabel>
-        <Input placeholder="0" />
-        <FieldError>{errors?.amount?.[0]}</FieldError>
-      </TextField>
+        error={errors?.amount?.[0]}
+      />
       {incomeSource && (
         <IncomeReceiptPreview
           source={incomeSource}
@@ -777,9 +722,9 @@ function TransactionForm({
         error={errors?.category_id?.[0]}
       >
         {initialCategoryUnavailable && !categoryId && (
-          <p className="text-sm text-muted">
+          <FieldDescription>
             La categoría de este gasto fijo está archivada. Elige otra.
-          </p>
+          </FieldDescription>
         )}
       </CategorySelectField>
 
@@ -815,25 +760,26 @@ function TransactionForm({
         />
       )}
 
-      <TextField
+      <TextInputField
         name="description"
+        label="Descripción"
+        help="common.description"
         maxLength={120}
+        placeholder={copy.placeholder[type]}
         value={description}
-        onChange={setDescription}
-        isInvalid={Boolean(errors?.description)}
+        onChange={(event) => setDescription(event.target.value)}
         isRequired
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="common.description">Descripción</FieldLabel>
-        <Input placeholder={copy.placeholder[type]} />
-        <FieldError>{errors?.description?.[0]}</FieldError>
-      </TextField>
+        error={errors?.description?.[0]}
+      />
 
       {isBusiness && (
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextField
+          <TextInputField
             name="counterparty"
+            label={
+              type === "income" ? "Cliente (opcional)" : "Proveedor (opcional)"
+            }
+            help="transaction.counterparty"
             maxLength={80}
             autoComplete="off"
             defaultValue={
@@ -842,56 +788,53 @@ function TransactionForm({
               initialValues?.counterparty ??
               ""
             }
-            isInvalid={Boolean(errors?.counterparty)}
-            validationBehavior="aria"
-            className="flex flex-col gap-2"
-          >
-            <FieldLabel help="transaction.counterparty">
-              {type === "income"
-                ? "Cliente (opcional)"
-                : "Proveedor (opcional)"}
-            </FieldLabel>
-            <Input />
-            <FieldError>{errors?.counterparty?.[0]}</FieldError>
-          </TextField>
+            error={errors?.counterparty?.[0]}
+          />
 
-          <TextField
+          <TextInputField
             name="invoice_ref"
+            label="N.º de factura (opcional)"
+            help="transaction.invoice"
             maxLength={40}
             autoComplete="off"
+            placeholder="FV-001"
             defaultValue={values?.invoice_ref ?? transaction?.invoice_ref ?? ""}
-            isInvalid={Boolean(errors?.invoice_ref)}
-            validationBehavior="aria"
-            className="flex flex-col gap-2"
-          >
-            <FieldLabel help="transaction.invoice">
-              N.º de factura (opcional)
-            </FieldLabel>
-            <Input placeholder="FV-001" />
-            <FieldError>{errors?.invoice_ref?.[0]}</FieldError>
-          </TextField>
+            error={errors?.invoice_ref?.[0]}
+          />
         </div>
       )}
 
-      <TextField
-        name="note"
-        maxLength={500}
-        defaultValue={
-          values?.note ?? transaction?.note ?? initialValues?.note ?? ""
-        }
-        isInvalid={Boolean(errors?.note)}
-        validationBehavior="aria"
+      <div
         className="flex flex-col gap-2"
+        data-invalid={errors?.note ? true : undefined}
       >
-        <FieldLabel help="common.note">Nota (opcional)</FieldLabel>
-        <TextArea rows={3} />
-        <FieldError>{errors?.note?.[0]}</FieldError>
-      </TextField>
+        <FieldLabel
+          htmlFor={noteId}
+          help="common.note"
+          isInvalid={Boolean(errors?.note)}
+        >
+          Nota (opcional)
+        </FieldLabel>
+        <Textarea
+          id={noteId}
+          name="note"
+          rows={3}
+          maxLength={500}
+          defaultValue={
+            values?.note ?? transaction?.note ?? initialValues?.note ?? ""
+          }
+          aria-invalid={errors?.note ? true : undefined}
+          aria-describedby={errors?.note ? `${noteId}-error` : undefined}
+        />
+        {errors?.note ? (
+          <FieldError id={`${noteId}-error`}>{errors.note[0]}</FieldError>
+        ) : null}
+      </div>
 
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error}
         </p>
@@ -899,14 +842,15 @@ function TransactionForm({
 
       <div className="flex justify-end gap-2">
         <Button
+          type="button"
           variant="ghost"
-          onPress={onCancel}
+          onClick={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          isDisabled={pending}
+          disabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Registrar"}
         </Button>
@@ -986,7 +930,7 @@ function PanelEmpty({
 }) {
   return (
     <div className="flex flex-col items-start gap-3 py-2">
-      <p className="text-sm text-muted">{text}</p>
+      <p className="text-sm text-muted-foreground">{text}</p>
       <Link
         href={href}
         className={buttonVariants({ variant: "secondary" })}

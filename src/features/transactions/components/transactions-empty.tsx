@@ -1,8 +1,8 @@
 import type { Route } from "next"
 import Link from "next/link"
-import { Button, buttonVariants } from "@heroui/react"
 import { FileUp, Plus, ReceiptText, SearchX } from "lucide-react"
 import { EmptyState } from "@/components/dashboard/empty-state"
+import { Button, buttonVariants } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { IMPORT_PATH } from "@/features/imports/constants"
@@ -65,7 +65,7 @@ export function NoTransactions({
             href={IMPORT_PATH}
             className={buttonVariants({ variant: "secondary" })}
           >
-            <FileUp className="size-4" />
+            <FileUp />
             Importar
           </Link>
         )}

@@ -1,8 +1,9 @@
-import { Button, Chip, cn } from "@heroui/react"
+import { Chip, cn } from "@heroui/react"
 import { Check } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import { TONE_BADGE_CLASSES as TONE_BADGE } from "@/components/dashboard/tone"
+import { Button } from "@/components/ui/button"
 import { activeAccountId } from "@/features/accounts/active-account"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
@@ -91,10 +92,7 @@ export function PayOccurrenceButton({
       accounts={accounts}
       {...occurrencePaymentProps(payment, accounts)}
       trigger={
-        // key: el Modal de HeroUI recorre sus hijos como lista y, con el
-        // botón creado en otro componente, React avisa de la falta de key
         <Button
-          key="pay-occurrence"
           size="sm"
           variant="outline"
           className={className}

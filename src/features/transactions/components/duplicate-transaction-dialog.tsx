@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useEffectEvent, useState } from "react"
-import { toast } from "@heroui/react"
+import { toast } from "@/components/ui/sonner"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
@@ -48,7 +48,7 @@ export function DuplicateTransactionDialog({
   const [duplicate, setDuplicate] = useState<Duplicate | null>(null)
   // Sin periodo pendiente u otro error: toast y se cierra sin abrir nada
   const onLoadError = useEffectEvent((message: string) => {
-    toast.danger(message)
+    toast.error(message)
     onOpenChange(false)
   })
 

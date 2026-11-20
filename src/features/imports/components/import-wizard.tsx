@@ -3,6 +3,7 @@
 import { useMemo, useReducer, useState, useTransition } from "react"
 import { Check } from "lucide-react"
 import { CARD } from "@/components/dashboard/surface"
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"
 import { formatCurrency } from "@/libs/format"
 import {
@@ -694,5 +695,41 @@ function StepIndicator({
         )
       })}
     </ol>
+  )
+}
+
+/** Hueco del asistente: pasos, destinos y la zona del archivo (paso 1) */
+export function ImportWizardSkeleton() {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(CARD, "gap-6 sm:p-6")}
+    >
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        {Array.from({ length: STEPS.length }, (_, index) => (
+          <div
+            key={index}
+            className="flex min-h-8 items-center gap-2"
+          >
+            <Skeleton className="size-7 rounded-full" />
+            <Skeleton
+              className={cn("h-4 w-20", index > 0 && "max-sm:hidden")}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-5 w-44" />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }, (_, index) => (
+            <Skeleton
+              key={index}
+              className="h-20 rounded-2xl"
+            />
+          ))}
+        </div>
+        <Skeleton className="h-56 rounded-3xl" />
+      </div>
+    </div>
   )
 }

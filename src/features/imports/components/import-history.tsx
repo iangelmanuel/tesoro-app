@@ -19,6 +19,7 @@ import {
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "@/components/ui/sonner"
 import { cn } from "@/libs/cn"
 import { TIME_ZONE } from "@/libs/dates"
@@ -185,5 +186,38 @@ function UndoImportButton({ item }: { item: ImportRecord }) {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+  )
+}
+
+/** Hueco del historial: título y dos importaciones */
+export function ImportHistorySkeleton() {
+  return (
+    <section
+      aria-hidden="true"
+      className="flex flex-col gap-3"
+    >
+      <Skeleton className="h-7 w-24" />
+      <ul className={SURFACE_LIST}>
+        {Array.from({ length: 2 }, (_, index) => (
+          <li
+            key={index}
+            className={cn(
+              "flex flex-wrap items-center justify-between gap-3",
+              SURFACE_ROW
+            )}
+          >
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-6 w-24 rounded-4xl" />
+              </div>
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+            <Skeleton className="h-9 w-28 rounded-4xl" />
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }

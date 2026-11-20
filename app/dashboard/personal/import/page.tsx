@@ -1,13 +1,15 @@
 import { Suspense } from "react"
-import type { Route } from "next"
-import Link from "next/link"
-import { buttonVariants } from "@heroui/react"
-import { ArrowLeft } from "lucide-react"
-import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { getCategories } from "@/features/categories/queries"
-import { ImportHistory } from "@/features/imports/components/import-history"
-import { ImportWizard } from "@/features/imports/components/import-wizard"
+import { ImportHeader } from "@/features/imports/components/import-header"
+import {
+  ImportHistory,
+  ImportHistorySkeleton
+} from "@/features/imports/components/import-history"
+import {
+  ImportWizard,
+  ImportWizardSkeleton
+} from "@/features/imports/components/import-wizard"
 import { IMPORT_PATH } from "@/features/imports/constants"
 import {
   getActiveDebtOptions,
@@ -15,7 +17,6 @@ import {
   getImports
 } from "@/features/imports/queries"
 import { parseImportTarget } from "@/features/imports/targets"
-import { TRANSACTIONS_PATH } from "@/features/transactions/filters"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { buildMetadata } from "@/libs/seo"
 
@@ -30,21 +31,7 @@ type ImportPageProps = PageProps<"/dashboard/personal/import">
 export default function ImportPage({ searchParams }: ImportPageProps) {
   return (
     <section className="flex flex-1 flex-col gap-6">
-      <header className="flex flex-col gap-3">
-        <Link
-          href={TRANSACTIONS_PATH as Route}
-          className={`${buttonVariants({ variant: "ghost", size: "sm" })} self-start`}
-        >
-          <ArrowLeft className="size-4" />
-          Movimientos
-        </Link>
-        {/* El título "Importar" lo pone el header del dashboard */}
-        <p className="text-sm text-muted">
-          Trae tus movimientos, gastos fijos, pagos de deudas o aportes a metas
-          desde un Excel o un CSV. Revisas todo antes de guardar y puedes
-          deshacer la importación.
-        </p>
-      </header>
+      <ImportHeader />
       {/* searchParams y la sesión son dinámicos: van dentro de Suspense */}
       <Suspense fallback={<ImportSkeleton />}>
         <ImportContent searchParams={searchParams} />
@@ -87,11 +74,11 @@ async function ImportContent({
   )
 }
 
-function ImportSkeleton() {
+export function ImportSkeleton() {
   return (
     <>
-      <CardSkeleton className="h-80" />
-      <CardSkeleton className="h-40" />
+      <ImportWizardSkeleton />
+      <ImportHistorySkeleton />
     </>
   )
 }

@@ -1,12 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Button, cn, toast } from "@heroui/react"
 import { Check, Copy } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/sonner"
+import { cn } from "@/libs/cn"
 
 interface CopyButtonProps {
   value: string
-  /** Toast al copiar (solo se ve donde hay ToastProvider: el dashboard) */
+  /** Toast al copiar (solo se ve donde hay Toaster: el dashboard) */
   toastMessage?: string
   /** Nombre accesible cuando el botón es solo ícono */
   label?: string
@@ -16,7 +18,7 @@ interface CopyButtonProps {
 }
 
 // Copia un texto al portapapeles. El botón confirma por sí mismo ("Copiado"
-// con un check durante 2 s): en las páginas públicas no hay ToastProvider.
+// con un check durante 2 s): en las páginas públicas no hay Toaster.
 export function CopyButton({
   value,
   toastMessage,
@@ -39,7 +41,7 @@ export function CopyButton({
       setCopied(true)
       if (toastMessage) toast.success(toastMessage)
     } catch {
-      toast.danger("No se pudo copiar. Selecciónalo y cópialo a mano")
+      toast.error("No se pudo copiar. Selecciónalo y cópialo a mano")
     }
   }
 
@@ -47,11 +49,12 @@ export function CopyButton({
 
   return (
     <Button
+      type="button"
       variant={variant}
-      isIconOnly={iconOnly}
+      size={iconOnly ? "icon" : "default"}
       aria-label={iconOnly ? (copied ? "Copiado" : label) : undefined}
-      className={cn("min-h-11 shrink-0 md:min-h-10", className)}
-      onPress={copy}
+      className={cn("shrink-0", className)}
+      onClick={copy}
     >
       <Icon
         aria-hidden="true"

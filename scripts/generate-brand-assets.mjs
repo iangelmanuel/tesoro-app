@@ -47,7 +47,8 @@ const ICO_SIZES = [16, 32, 48]
 // rasteriza a 128 para que se vea nítido con zoom.
 const EXPORT_LOGO_TARGET = ["src/features/exports/workbook/logo-data.ts", 128]
 
-// Reportes PDF (SPEC 33): el logo va como SVG vectorial y la fuente Inter en
+// Reportes PDF (SPEC 33): el logo va como SVG vectorial y la fuente de la UI
+// (Atkinson Hyperlegible Next, OFL, SPEC 51) en
 // base64, por la misma razón (sin fs en el despliegue). Solo cuatro pesos.
 const PDF_BRAND_TARGET = [
   "mark-color.svg",
@@ -55,10 +56,10 @@ const PDF_BRAND_TARGET = [
 ]
 const PDF_FONTS_TARGET = "src/features/exports/pdf/fonts-data.ts"
 const PDF_FONTS = [
-  ["INTER_REGULAR", "Inter-Regular.ttf"],
-  ["INTER_SEMIBOLD", "Inter-SemiBold.ttf"],
-  ["INTER_BOLD", "Inter-Bold.ttf"],
-  ["INTER_ITALIC", "Inter-Italic.ttf"]
+  ["FONT_REGULAR", "AtkinsonHyperlegibleNext-Regular.ttf"],
+  ["FONT_SEMIBOLD", "AtkinsonHyperlegibleNext-SemiBold.ttf"],
+  ["FONT_BOLD", "AtkinsonHyperlegibleNext-Bold.ttf"],
+  ["FONT_ITALIC", "AtkinsonHyperlegibleNext-Italic.ttf"]
 ]
 
 // Lee un SVG fuente con el color de marca vigente
@@ -195,7 +196,7 @@ async function main() {
   await writeFile(
     path.join(ROOT, PDF_FONTS_TARGET),
     [
-      "// Generado por `pnpm brand:assets` desde assets/fonts/ (Inter, licencia OFL). No editar.",
+      "// Generado por `pnpm brand:assets` desde assets/fonts/ (Atkinson Hyperlegible Next, licencia OFL). No editar.",
       ...fonts,
       ""
     ].join("\n")

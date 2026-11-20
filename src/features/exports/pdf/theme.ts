@@ -134,7 +134,14 @@ export function pdfTheme(
   const accent = hex(palette.accent)
   const accentDark = hex(palette.accentDark)
   const text = hex(COLORS.ink)
-  const defaultStyle: Style = { font: FONT, fontSize: 10, color: text }
+  // Cifras tabulares (tnum): Atkinson trae dígitos proporcionales por
+  // defecto y los montos de las tablas no quedarían alineados
+  const defaultStyle: Style = {
+    font: FONT,
+    fontSize: 10,
+    color: text,
+    fontFeatures: ["tnum"]
+  }
 
   if (variant === "ink") {
     return {

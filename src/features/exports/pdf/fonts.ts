@@ -1,27 +1,28 @@
 import pdfmake from "pdfmake"
 import PdfmakeDocument from "pdfmake/js/PDFDocument"
 import {
-  INTER_BOLD,
-  INTER_ITALIC,
-  INTER_REGULAR,
-  INTER_SEMIBOLD
+  FONT_BOLD,
+  FONT_ITALIC,
+  FONT_REGULAR,
+  FONT_SEMIBOLD as FONT_SEMIBOLD_DATA
 } from "./fonts-data"
 
-// Registra Inter en pdfmake (SPEC 33). Las fuentes viven en memoria (sistema
+// Registra la fuente de la UI, Atkinson Hyperlegible Next (OFL, SPEC 51),
+// en pdfmake (SPEC 33). Las fuentes viven en memoria (sistema
 // de archivos virtual de pdfmake), así que el PDF no lee archivos del disco
 // ni descarga nada: ambas políticas de acceso niegan todo.
 //
 // pdfmake solo distingue normal, bold, italics y bolditalics. SemiBold es
 // una familia aparte: los estilos que lo usan fijan `font: FONT_SEMIBOLD`.
 
-export const FONT = "Inter"
-export const FONT_SEMIBOLD = "InterSemiBold"
+export const FONT = "AtkinsonHyperlegibleNext"
+export const FONT_SEMIBOLD = "AtkinsonHyperlegibleNextSemiBold"
 
 const FILES = {
-  regular: ["Inter-Regular.ttf", INTER_REGULAR],
-  semibold: ["Inter-SemiBold.ttf", INTER_SEMIBOLD],
-  bold: ["Inter-Bold.ttf", INTER_BOLD],
-  italic: ["Inter-Italic.ttf", INTER_ITALIC]
+  regular: ["AtkinsonHyperlegibleNext-Regular.ttf", FONT_REGULAR],
+  semibold: ["AtkinsonHyperlegibleNext-SemiBold.ttf", FONT_SEMIBOLD_DATA],
+  bold: ["AtkinsonHyperlegibleNext-Bold.ttf", FONT_BOLD],
+  italic: ["AtkinsonHyperlegibleNext-Italic.ttf", FONT_ITALIC]
 } as const
 
 // `virtualfs` existe en la API de Node de pdfmake 0.3, pero sus tipos no lo
@@ -32,7 +33,7 @@ interface VirtualFs {
 
 /**
  * Las gráficas SVG (svg-to-pdfkit) piden la fuente a PDFKit por nombre
- * ("Inter-Regular.ttf") y PDFKit la buscaría en disco. Antes de eso, el
+ * ("AtkinsonHyperlegibleNext-Regular.ttf") y PDFKit la buscaría en disco. Antes de eso, el
  * documento la registra con ese nombre desde el sistema de archivos virtual
  * de pdfmake. Solo cambia algo para nombres que existen en ese sistema.
  */

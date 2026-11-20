@@ -102,7 +102,10 @@ usa.
 - **Daltonismo:** ingreso (turquesa) y gasto (coral) se separan en el eje
   azul–amarillo, el que conserva la visión rojo-verde (ΔE ≥ 8 simulado con
   deuteranopía y protanopía); balance va en tinta. Además llevan signo e
-  ícono, y `Amount` los lee en palabras.
+  ícono, y `Amount` los lee en palabras. Con `signed`, `Amount` muestra el
+  signo también en positivo ("+ $ 50.000") y lo lee "más" o "menos" (el
+  historial de una deuda y los aportes de una meta). Todo monto visible va
+  por `Amount`, así respeta "Ocultar cifras".
 - **Tipografía:** Atkinson Hyperlegible Next (OFL), hecha para baja visión,
   local con `next/font/local` en `app/layout.tsx` (`--font-sans`). Montos,
   KPIs, tablas y ejes con `tabular-nums` (la fuente trae `tnum`). Los PDF
@@ -117,17 +120,18 @@ apunta los tokens de HeroUI a los nuevos (`--surface` → `--card`,
 `--destructive`). Así las pantallas aún en HeroUI toman la paleta nueva.
 `--accent` y `--focus` se vuelven a declarar en el contenedor del espacio.
 
-Los paneles de Base UI que alojan menús o diálogos de HeroUI (`DetailSheet`
-y el aside móvil) van con `modal={false}` y el filtro de cierre de
-`src/components/dashboard/heroui-compat.ts`. Mientras tanto, Tab puede salir
-del panel. SPEC 53 borra el puente y el filtro.
+El único panel de Base UI que aún aloja menús de HeroUI es el aside móvil:
+va con `modal={false}` y el filtro de cierre `closesFromSheet` de
+`src/components/dashboard/heroui-compat.ts`. SPEC 53 borra el puente y el
+filtro.
 
-El diálogo de movimiento hace lo mismo hasta SPEC 52b, porque sus tabs
-Deuda, Me deben, Meta y Gasto fijo y el select de ingreso fijo siguen en
-HeroUI: `FormDialog` con `hostsHeroUI` (no modal) y `closesFromDialog`.
+**Puentes retirados en SPEC 52b.** `DetailSheet` (los cinco Sheets de
+detalle) volvió a ser modal y `FormDialog` perdió `hostsHeroUI` y
+`closesFromDialog`: el diálogo de movimiento atrapa el foco en todas sus
+tabs. Tab no sale de un Sheet ni de un diálogo, y Escape los cierra.
 
 **Puente de portales (SPEC 52a).** Al revés: un Popover, Combobox, Select o
-Dialog de Base UI abierto desde un `Modal` de HeroUI (pantallas de 52b, 52c y 53) quedaría inerte, porque React Aria vuelve `inert` todo lo que está fuera
+Dialog de Base UI abierto desde un `Modal` de HeroUI (pantallas de 52c y 53) quedaría inerte, porque React Aria vuelve `inert` todo lo que está fuera
 del modal y le quita el foco.
 
 - `HeroUIPortalHost` (en `WorkspaceThemeRoot`) es un nodo vacío con
@@ -145,7 +149,7 @@ del modal y le quita el foco.
   `LabelContext` de `react-aria-components` (dependencia directa hasta
   SPEC 53), así el input sigue nombrado.
 
-SPEC 53 borra el puente, `closesFromDialog` y `react-aria-components`.
+SPEC 53 borra el puente y `react-aria-components`.
 
 ## Contraste
 
@@ -373,12 +377,12 @@ Cada campo de formulario con etiqueta visible explica qué escribir con un
 ícono (?) a la derecha de la etiqueta. Es distinto de `HelpHint`: el (i)
 explica un concepto con un clic; el (?) dice qué poner en un campo.
 
-| Pieza                                                 | Qué hace                                                                                                                                                                                                                                                       |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `FieldLabel` (`src/components/forms/field-label.tsx`) | `Label` + (?). `<FieldLabel help="debt.creditLimit">Cupo</FieldLabel>`. Sin `help` es un `Label` normal. `helpLabel` nombra la ayuda cuando la etiqueta no es texto plano                                                                                      |
-| `FieldHelp` (mismo archivo)                           | El (?) suelto, para lo que no tiene un `Label`: texto de un `Switch` o `Checkbox`, títulos en `<p>`, `<legend>` y grupos de tabs sin etiqueta (va al final de la fila)                                                                                         |
-| `FIELD_HELP` (`src/config/help.ts`)                   | Textos de ayuda, una frase en tuteo. Clave `"<formulario>.<campo>"` o `"common.<campo>"`; `FieldHelpKey` tipa la prop. Toda clave debe usarse: se verifica con `grep`. Los mínimos y formatos se comparan con los esquemas de Zod                              |
-| Campos compartidos                                    | `AccountSelectField`, `CategorySelectField`, `DatePickerField`, `TimePickerField`, `FormField` (auth), `Field` (deudas), `AmountField` y `DayField` reciben `help?: FieldHelpKey`. `PaymentAccountSection` recibe `accountHelp` (por defecto `common.account`) |
+| Pieza                                                 | Qué hace                                                                                                                                                                                                                                                                                                              |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FieldLabel` (`src/components/forms/field-label.tsx`) | `Label` + (?). `<FieldLabel help="debt.creditLimit">Cupo</FieldLabel>`. Sin `help` es un `Label` normal. `helpLabel` nombra la ayuda cuando la etiqueta no es texto plano                                                                                                                                             |
+| `FieldHelp` (mismo archivo)                           | El (?) suelto, para lo que no tiene un `Label`: texto de un `Switch` o `Checkbox`, títulos en `<p>`, `<legend>` y grupos de tabs sin etiqueta (va al final de la fila)                                                                                                                                                |
+| `FIELD_HELP` (`src/config/help.ts`)                   | Textos de ayuda, una frase en tuteo. Clave `"<formulario>.<campo>"` o `"common.<campo>"`; `FieldHelpKey` tipa la prop. Toda clave debe usarse: se verifica con `grep`. Los mínimos y formatos se comparan con los esquemas de Zod                                                                                     |
+| Campos compartidos                                    | `AccountSelectField`, `CategorySelectField`, `DatePickerField`, `TimePickerField`, `FormField` (auth), `Field` (solo `business-dialog`, hasta SPEC 53), `TextInputField`, `SelectField` y `SegmentedField` reciben `help?: FieldHelpKey`. `PaymentAccountSection` recibe `accountHelp` (por defecto `common.account`) |
 
 - Desde SPEC 52a es un `Popover` de Base UI, como `HelpHint`: se abre con
   clic, toque o teclado (antes era un `Tooltip` de HeroUI que no abría con
@@ -398,13 +402,15 @@ Validan en el servidor: el error llega por `error`, el campo lleva
 | Pieza                 | Qué hace                                                                                                                                                                     |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `TextInputField`      | `FieldLabel` + `Input` + `FieldError` (+ `description`). Los montos lo usan con `inputMode="decimal"`; el texto no cambia y el parseo es del esquema                         |
-| `SelectField`         | Select corto sin búsqueda (`Tipo` de cuenta, filtro de Verificar)                                                                                                            |
+| `SelectField`         | Select corto sin búsqueda (`Tipo` de cuenta, filtro de Verificar). Cada opción admite `description` (línea de apoyo en la lista) y el campo un `placeholder`                 |
+| `SegmentedField`      | 2 o 3 opciones como tabs (`ToggleGroup`) con etiqueta y error: Aporte/Retiro, Sube/Baja, tipo de deuda, frecuencia de gasto fijo                                             |
+| `amount-format.ts`    | `amountInput` y `rateInput`: texto inicial de un monto ("1.500.000") o una tasa ("28,5") en un campo                                                                         |
 | `CreatableSelect`     | Combobox de Base UI: el botón muestra la opción; el buscador va dentro de la lista y no distingue tildes. "+ Crear …" siempre al final, nunca queda como valor               |
 | `AccountSelectField`  | `CreatableSelect` de cuentas con "Sin cuenta" opcional y `AccountDialog` para crear                                                                                          |
 | `CategorySelectField` | `CreatableSelect` de categorías con `CategoryDialog` para crear (la nueva queda elegida)                                                                                     |
 | `DatePickerField`     | Botón con la fecha ("20 nov 2026") y `Calendar` en `Popover`: lunes primero, mes y año en selects, `minValue`/`maxValue` deshabilitan días. Celdas de 44 px; a 320 px, 40 px |
 | `TimePickerField`     | `<input type="time">` nativo (12 o 24 h según el sistema) y "Quitar hora"                                                                                                    |
-| `FormDialog`          | Dialog con título, descripción y el formulario; `bottomOnMobile` lo pega abajo en el teléfono; `hostsHeroUI` (hasta 52b) lo deja no modal                                    |
+| `FormDialog`          | Dialog con título, descripción y el formulario; `bottomOnMobile` lo pega abajo en el teléfono. Siempre modal (foco atrapado)                                                 |
 
 El tipo de movimiento usa un `ToggleGroup` con forma de tabs. Los chips de
 estado de las tarjetas son `ToneBadge` (`src/components/dashboard/tone-badge.tsx`)
@@ -827,28 +833,28 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
 
 ## Dónde vive cada pantalla
 
-| Pantalla         | Ruta                                                           | Piezas                                                                                                                                                                                                                                                                                                                                         |
-| ---------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Shell            | `app/dashboard/layout.tsx`                                     | Aside, header con título y accesos, `<main id="contenido">` y "Saltar al contenido"                                                                                                                                                                                                                                                            |
-| Resumen Personal | `app/dashboard/personal/page.tsx`                              | 4 `StatCard` → gráfica + columna (score, cuentas) → últimos movimientos → 4 tarjetas. shadcn (SPEC 52a), `Suspense` por tarjeta y `loading.tsx`                                                                                                                                                                                                |
-| Movimientos      | `app/dashboard/personal/transactions`                          | Barra de filtros pill (Sheet en el teléfono), KPIs pequeñas, tabla compacta con `RowContextMenu` y reordenamiento por el asa (`src/features/transactions/`). shadcn (SPEC 52a)                                                                                                                                                                 |
-| Cuentas          | `app/dashboard/personal/accounts`                              | "Nueva cuenta", total y tarjetas con `RowContextMenu`, Archivadas en un `Collapsible` (`src/features/accounts/`). shadcn (SPEC 52a)                                                                                                                                                                                                            |
-| Gastos fijos     | `app/dashboard/personal/recurring`                             | Acciones con "N atrasados" (`OverdueIndicator`), Próximos pagos con `MonthNav` y "Pagado $ X de $ Y", y lista; la fila abre `RecurringExpenseSheet` (derecha en escritorio, hoja inferior en móvil). Selector móvil `BudgetsAndRecurringTabs`                                                                                                  |
-| Ingresos fijos   | `app/dashboard/personal/recurring-income`                      | Acciones con "N atrasados" (`OverdueIndicator` con `path`), Próximos ingresos con `MonthNav` y "Recibido $ X de $ Y" (diaria y cada N días en una fila resumen), Sin fecha fija y lista; la fila (o el nombre de la fila resumen) abre `RecurringIncomeSheet` vía `IncomeSheetProvider`. Bajo el monto del tab Ingreso, `IncomeReceiptPreview` |
-| Presupuestos     | `app/dashboard/personal/budgets`                               | Mes, totales y filas de progreso; `?tab=recurring` redirige a Gastos fijos                                                                                                                                                                                                                                                                     |
-| Reportes         | `src/features/reports/components/reports-view.tsx`             | Barra de periodo y tipo, 4 KPI, tendencia, top 5 + tabla de categorías                                                                                                                                                                                                                                                                         |
-| Cuenta           | `app/dashboard/account/{general,security,privacy,preferences}` | Aside interno (`AccountNav`) y una `AccountSection` por tema                                                                                                                                                                                                                                                                                   |
+| Pantalla         | Ruta                                                           | Piezas                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shell            | `app/dashboard/layout.tsx`                                     | Aside, header con título y accesos, `<main id="contenido">` y "Saltar al contenido"                                                                                                                                                                                                                                                                                                                           |
+| Resumen Personal | `app/dashboard/personal/page.tsx`                              | 4 `StatCard` → gráfica + columna (score, cuentas) → últimos movimientos → 4 tarjetas. shadcn (SPEC 52a), `Suspense` por tarjeta y `loading.tsx`                                                                                                                                                                                                                                                               |
+| Movimientos      | `app/dashboard/personal/transactions`                          | Barra de filtros pill (Sheet en el teléfono), KPIs pequeñas, tabla compacta con `RowContextMenu` y reordenamiento por el asa (`src/features/transactions/`). shadcn (SPEC 52a)                                                                                                                                                                                                                                |
+| Cuentas          | `app/dashboard/personal/accounts`                              | "Nueva cuenta", total y tarjetas con `RowContextMenu`, Archivadas en un `Collapsible` (`src/features/accounts/`). shadcn (SPEC 52a)                                                                                                                                                                                                                                                                           |
+| Gastos fijos     | `app/dashboard/personal/recurring`                             | Acciones con "N atrasados" (`OverdueIndicator`), Próximos pagos con `MonthNav` y "Pagado $ X de $ Y", y lista; la fila abre `RecurringExpenseSheet` (derecha en escritorio, hoja inferior en móvil). Selector móvil `BudgetsAndRecurringTabs`. shadcn (SPEC 52b): filas con `RowContextMenu` y `loading.tsx`                                                                                                  |
+| Ingresos fijos   | `app/dashboard/personal/recurring-income`                      | Acciones con "N atrasados" (`OverdueIndicator` con `path`), Próximos ingresos con `MonthNav` y "Recibido $ X de $ Y" (diaria y cada N días en una fila resumen), Sin fecha fija y lista; la fila (o el nombre de la fila resumen) abre `RecurringIncomeSheet` vía `IncomeSheetProvider`. Bajo el monto del tab Ingreso, `IncomeReceiptPreview`. shadcn (SPEC 52b): filas con `RowContextMenu` y `loading.tsx` |
+| Presupuestos     | `app/dashboard/personal/budgets`                               | Mes, totales y filas de progreso; `?tab=recurring` redirige a Gastos fijos. shadcn (SPEC 52b): filas con `RowContextMenu` y `loading.tsx`                                                                                                                                                                                                                                                                     |
+| Reportes         | `src/features/reports/components/reports-view.tsx`             | Barra de periodo y tipo, 4 KPI, tendencia, top 5 + tabla de categorías                                                                                                                                                                                                                                                                                                                                        |
+| Cuenta           | `app/dashboard/account/{general,security,privacy,preferences}` | Aside interno (`AccountNav`) y una `AccountSection` por tema                                                                                                                                                                                                                                                                                                                                                  |
 
 ### Estado de la migración a shadcn
 
-| Pantalla                                                  | Estado                               |
-| --------------------------------------------------------- | ------------------------------------ |
-| Shell, aside, header, menús rápidos, compartidos          | shadcn (SPEC 51)                     |
-| Campos de `forms/`, categorías                            | shadcn (SPEC 52a)                    |
-| Resumen, Movimientos y Cuentas de Personal y sus diálogos | shadcn (SPEC 52a)                    |
-| Gastos e Ingresos fijos, Presupuestos, Metas y Deudas     | HeroUI, con campos de 52a (SPEC 52b) |
-| Reportes, Recomendaciones e Importar                      | HeroUI (SPEC 52c)                    |
-| Empresa (salvo lo compartido), cuenta, auth y públicas    | HeroUI (SPEC 53)                     |
+| Pantalla                                                  | Estado            |
+| --------------------------------------------------------- | ----------------- |
+| Shell, aside, header, menús rápidos, compartidos          | shadcn (SPEC 51)  |
+| Campos de `forms/`, categorías                            | shadcn (SPEC 52a) |
+| Resumen, Movimientos y Cuentas de Personal y sus diálogos | shadcn (SPEC 52a) |
+| Gastos e Ingresos fijos, Presupuestos, Metas y Deudas     | shadcn (SPEC 52b) |
+| Reportes, Recomendaciones e Importar                      | HeroUI (SPEC 52c) |
+| Empresa (salvo lo compartido), cuenta, auth y públicas    | HeroUI (SPEC 53)  |
 
 ## Móvil
 

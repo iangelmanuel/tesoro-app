@@ -1,6 +1,6 @@
 # SPEC 52b — Personal en shadcn: Ingresos fijos, Gastos fijos, Presupuestos, Metas y Deudas
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 27, SPEC 37, SPEC 38, SPEC 45, SPEC 51, SPEC 52a
 > **Fecha:** 2026-11-20
 > **Objetivo:** Migrar a shadcn (Base UI) Ingresos fijos, Gastos fijos, Presupuestos, Metas y Deudas de Personal, con sus Sheets, diálogos, skeletons y un tour nuevo de Ingresos fijos, sin cambiar las server actions.
@@ -184,43 +184,43 @@ export function rateInput(value: number | null | undefined): string
 
 Verificables en código o con `check`, `eslint`, `prettier:check` y `build`:
 
-- [ ] Ningún archivo de `src/features/{recurring-incomes,recurring-expenses,budgets,goals,debts}/components/*` importa `@heroui/react` ni `@internationalized/date`, salvo `debts/components/field.tsx` si lo necesita para `business-dialog`.
-- [ ] Tampoco lo importan `app/dashboard/personal/{recurring-income,recurring,budgets,goals,debts}/page.tsx` ni sus `loading.tsx`.
-- [ ] Ningún archivo migrado usa `CardSkeleton`, `onPress` ni `isDisabled` de HeroUI.
-- [ ] Cada componente migrado que carga datos exporta su `…Skeleton` en el mismo archivo.
-- [ ] Existen `loading.tsx` en `personal/recurring-income/`, `personal/recurring/`, `personal/budgets/`, `personal/goals/` y `personal/debts/`, cada uno con `LoadingRegion`.
-- [ ] `actions.ts`, `schemas.ts`, `queries.ts` y los servicios compartidos con el MCP de las cinco features no cambian.
-- [ ] `FormDialog` ya no tiene las props `hostsHeroUI` ni `closesFromDialog`, y nadie las usa.
-- [ ] `DetailSheet` no pasa `modal={false}` ni usa `heroui-compat.ts`.
-- [ ] `amountInput` y `rateInput` viven en `src/components/forms/amount-format.ts`; `debts/components/field.tsx` solo exporta `Field` y solo lo importa `business-dialog.tsx`.
-- [ ] La migración del tour existe y `tutorial_progress.section` acepta `'recurring_income'`.
-- [ ] `TUTORIAL_SECTIONS` incluye `recurring_income` y `getTutorialSection("/dashboard/personal/recurring-income")` la devuelve.
-- [ ] Cada `target` de los tours `recurring`, `recurring_income`, `budgets`, `goals` y `debts` aparece como `data-tour` en un componente migrado.
-- [ ] Todo par texto/fondo nuevo queda en la tabla de contraste de `docs/ui.md` y pasa AA en claro y oscuro.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan, con el lockfile sincronizado.
+- [x] Ningún archivo de `src/features/{recurring-incomes,recurring-expenses,budgets,goals,debts}/components/*` importa `@heroui/react` ni `@internationalized/date`, salvo `debts/components/field.tsx` si lo necesita para `business-dialog`.
+- [x] Tampoco lo importan `app/dashboard/personal/{recurring-income,recurring,budgets,goals,debts}/page.tsx` ni sus `loading.tsx`.
+- [x] Ningún archivo migrado usa `CardSkeleton`, `onPress` ni `isDisabled` de HeroUI.
+- [x] Cada componente migrado que carga datos exporta su `…Skeleton` en el mismo archivo.
+- [x] Existen `loading.tsx` en `personal/recurring-income/`, `personal/recurring/`, `personal/budgets/`, `personal/goals/` y `personal/debts/`, cada uno con `LoadingRegion`.
+- [x] `actions.ts`, `schemas.ts`, `queries.ts` y los servicios compartidos con el MCP de las cinco features no cambian.
+- [x] `FormDialog` ya no tiene las props `hostsHeroUI` ni `closesFromDialog`, y nadie las usa.
+- [x] `DetailSheet` no pasa `modal={false}` ni usa `heroui-compat.ts`.
+- [x] `amountInput` y `rateInput` viven en `src/components/forms/amount-format.ts`; `debts/components/field.tsx` solo exporta `Field` y solo lo importa `business-dialog.tsx`.
+- [x] La migración del tour existe y `tutorial_progress.section` acepta `'recurring_income'`.
+- [x] `TUTORIAL_SECTIONS` incluye `recurring_income` y `getTutorialSection("/dashboard/personal/recurring-income")` la devuelve.
+- [x] Cada `target` de los tours `recurring`, `recurring_income`, `budgets`, `goals` y `debts` aparece como `data-tour` en un componente migrado.
+- [x] Todo par texto/fondo nuevo queda en la tabla de contraste de `docs/ui.md` y pasa AA en claro y oscuro.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan, con el lockfile sincronizado.
 
 Verificables en navegador (los prueba el usuario a mano):
 
-- [ ] Crear, editar, pausar y eliminar un ingreso fijo y un gasto fijo funciona, y el toast sale de sonner.
-- [ ] Recibir un ingreso fijo (también un segundo cobro del mismo mes) y pagar un gasto fijo crean su movimiento.
-- [ ] Cambiar de mes en Ingresos fijos, Gastos fijos y Presupuestos muestra el historial de ese mes.
-- [ ] Crear, editar y eliminar un presupuesto, y "Copiar mes anterior" con su confirmación, funcionan.
-- [ ] Crear, editar, pausar, completar y archivar una meta; registrar un aporte y un retiro funciona.
-- [ ] Crear, editar, ajustar saldo y archivar una deuda; registrar un pago y cada tipo de entrada de SPEC 46; duplicar y editar una entrada funciona.
-- [ ] Crear un cobro de Me deben y registrar un cobro parcial y uno de varios meses funciona.
-- [ ] Desde Movimientos, las tabs Deuda, Me deben, Meta y Gasto fijo y el select de ingreso fijo funcionan, y Tab no sale del diálogo.
-- [ ] `PaymentDialog` y `ContributionDialog` abiertos desde acciones rápidas, desde Movimientos y desde Empresa funcionan.
-- [ ] En los cinco Sheets de detalle, Tab no sale del Sheet y Escape lo cierra.
-- [ ] Reordenar entradas de deuda, aportes de meta y cobros de un ingreso fijo guarda el orden tras recargar, y no abre el menú contextual.
-- [ ] Clic derecho sobre una tarjeta de deuda, cobro o meta, o una fila de gastos fijos, ingresos fijos o presupuestos, muestra las mismas acciones que su botón ⋯; en táctil, una pulsación de 500 ms también.
-- [ ] Un error de Zod del servidor se muestra bajo su campo y el lector lo anuncia.
-- [ ] Al pasar de skeleton a contenido, el CLS medido con Lighthouse es ≤ 0.05 en las cinco pantallas.
-- [ ] Los tours de Gastos fijos, Ingresos fijos, Presupuestos, Metas y Deudas recorren todos sus pasos sin saltarse ninguno, en escritorio y móvil.
-- [ ] El tour de Ingresos fijos aparece en la lista de tutoriales de la cuenta y se marca como visto.
-- [ ] Todo control interactivo de las cinco pantallas, sus diálogos y Sheets mide 44 × 44 px o más de área en móvil, tablet y escritorio.
-- [ ] Las cinco pantallas y sus diálogos no tienen scroll horizontal a 320 px de ancho ni a 200 % de zoom en 1280 px (las tablas se deslizan dentro de `ScrollTable`).
-- [ ] Un lector de pantalla lee un pago como "menos" seguido del monto completo, y "Monto oculto" con montos ocultos.
-- [ ] `/impeccable audit` de cada pantalla no deja hallazgos críticos ni altos abiertos.
+- [x] Crear, editar, pausar y eliminar un ingreso fijo y un gasto fijo funciona, y el toast sale de sonner.
+- [x] Recibir un ingreso fijo (también un segundo cobro del mismo mes) y pagar un gasto fijo crean su movimiento.
+- [x] Cambiar de mes en Ingresos fijos, Gastos fijos y Presupuestos muestra el historial de ese mes.
+- [x] Crear, editar y eliminar un presupuesto, y "Copiar mes anterior" con su confirmación, funcionan.
+- [x] Crear, editar, pausar, completar y archivar una meta; registrar un aporte y un retiro funciona.
+- [x] Crear, editar, ajustar saldo y archivar una deuda; registrar un pago y cada tipo de entrada de SPEC 46; duplicar y editar una entrada funciona.
+- [x] Crear un cobro de Me deben y registrar un cobro parcial y uno de varios meses funciona.
+- [x] Desde Movimientos, las tabs Deuda, Me deben, Meta y Gasto fijo y el select de ingreso fijo funcionan, y Tab no sale del diálogo.
+- [x] `PaymentDialog` y `ContributionDialog` abiertos desde acciones rápidas, desde Movimientos y desde Empresa funcionan.
+- [x] En los cinco Sheets de detalle, Tab no sale del Sheet y Escape lo cierra.
+- [x] Reordenar entradas de deuda, aportes de meta y cobros de un ingreso fijo guarda el orden tras recargar, y no abre el menú contextual.
+- [x] Clic derecho sobre una tarjeta de deuda, cobro o meta, o una fila de gastos fijos, ingresos fijos o presupuestos, muestra las mismas acciones que su botón ⋯; en táctil, una pulsación de 500 ms también.
+- [x] Un error de Zod del servidor se muestra bajo su campo y el lector lo anuncia.
+- [x] Al pasar de skeleton a contenido, el CLS medido con Lighthouse es ≤ 0.05 en las cinco pantallas.
+- [x] Los tours de Gastos fijos, Ingresos fijos, Presupuestos, Metas y Deudas recorren todos sus pasos sin saltarse ninguno, en escritorio y móvil.
+- [x] El tour de Ingresos fijos aparece en la lista de tutoriales de la cuenta y se marca como visto.
+- [x] Todo control interactivo de las cinco pantallas, sus diálogos y Sheets mide 44 × 44 px o más de área en móvil, tablet y escritorio.
+- [x] Las cinco pantallas y sus diálogos no tienen scroll horizontal a 320 px de ancho ni a 200 % de zoom en 1280 px (las tablas se deslizan dentro de `ScrollTable`).
+- [x] Un lector de pantalla lee un pago como "menos" seguido del monto completo, y "Monto oculto" con montos ocultos.
+- [x] `/impeccable audit` de cada pantalla no deja hallazgos críticos ni altos abiertos.
 
 ## Decisiones
 

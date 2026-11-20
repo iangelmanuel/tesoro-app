@@ -160,6 +160,9 @@ export function DatePickerField({
               required={isRequired}
               aria-label={label}
               autoFocus
+              // Siete celdas de 44 px no caben en un teléfono de 320 px: por
+              // debajo de ~350 px la celda se ajusta al ancho (40 px a 320)
+              className="[--cell-size:min(--spacing(11),calc((100vw-2.5rem)/7))]"
               onSelect={(date: Date | undefined) => {
                 onChange(date ? fromDate(date) : "")
                 setOpen(false)

@@ -11,7 +11,9 @@ export function CreateOption({ label }: { label: string }) {
   return (
     <ComboboxItem
       value={CREATE_OPTION}
-      className="font-medium text-primary data-highlighted:text-primary"
+      // --ring y no --primary: el tono 700 del espacio no llega a AA como
+      // texto sobre el popover oscuro; el anillo sí (docs/ui.md)
+      className="font-medium text-ring"
     >
       <Plus
         aria-hidden

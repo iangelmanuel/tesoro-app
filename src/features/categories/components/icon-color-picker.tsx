@@ -21,9 +21,10 @@ interface IconColorPickerProps {
   colorErrors?: string[]
 }
 
-// Elegido: relleno suave y contorno en el primario del espacio
+// Elegido: relleno suave y contorno con --ring (el color del espacio que da
+// 3:1 en claro y oscuro; el tono 700 de --primary no llega en oscuro)
 const ITEM_CLASS =
-  "size-9 min-w-9 p-0 data-pressed:bg-highlight data-pressed:outline-2 data-pressed:outline-primary"
+  "size-9 min-w-9 p-0 data-pressed:bg-highlight data-pressed:outline-2 data-pressed:outline-ring"
 
 // Selector de icono y color con las paletas de categorías. Envía la
 // elección en los campos ocultos "icon" y "color" del formulario.

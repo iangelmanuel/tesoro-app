@@ -69,6 +69,7 @@ Con `BusinessSwitcher` migrado, el aside móvil ya no aloja menús de HeroUI y p
 - **`BusinessSwitcher`** (aside): `Dropdown` → `DropdownMenu` de `ui/`, en sitio. Mismas opciones y misma navegación.
 - **`Logo`**: `cn` de `@/libs/cn`.
 - **Aside móvil:** el `Sheet` de `sidebar.tsx` vuelve a modal (sin `modal={false}` ni `closesFromSheet`). `heroui-compat.ts` queda sin consumidores y se borra.
+- **`ToastProvider` de HeroUI:** sale de `app/dashboard/layout.tsx` y pasa a `app/dashboard/business/layout.tsx` (nuevo) y `app/dashboard/account/layout.tsx`, las pantallas que aún lanzan toasts de HeroUI. Personal solo usa sonner.
 - Se quedan hasta SPEC 53: `HeroUIPortalBridge`, `HeroUIPortalHost`, `heroui-bridge.css` y el `LabelContext` de `FieldLabel` (los usan Empresa y cuenta).
 
 ### 6. Reglas comunes (iguales a SPEC 52b §9)
@@ -142,6 +143,7 @@ Verificables en código o con `check`, `eslint`, `prettier:check` y `build`:
 - [ ] `app/dashboard/personal/{reports,recommendations,import}/page.tsx` y sus `loading.tsx` no importan `@heroui/react`.
 - [ ] `TutorialHelpButton`, `TutorialProvider`, `TutorialAutoStart`, `BusinessSwitcher` y `Logo` no importan `@heroui/react`.
 - [ ] Ningún módulo alcanzable (import estático) desde `app/dashboard/layout.tsx` o desde cualquier `app/dashboard/personal/**` importa `@heroui/react`.
+- [ ] `app/dashboard/layout.tsx` no monta el `ToastProvider` de HeroUI; lo montan `app/dashboard/business/layout.tsx` y `app/dashboard/account/layout.tsx`.
 - [ ] `src/components/dashboard/heroui-compat.ts` no existe y el `Sheet` del aside móvil no pasa `modal={false}`.
 - [ ] Ningún archivo de este spec usa `CardSkeleton`, `onPress` ni `isDisabled`.
 - [ ] Cada componente migrado que carga datos exporta su `…Skeleton` en el mismo archivo.
@@ -184,6 +186,7 @@ Verificables en navegador (los prueba el usuario a mano):
 - **Sí:** Reportes con la misma UX. **No:** rango personalizado con calendario; cambia `searchParams` y consultas.
 - **Sí:** `BusinessSwitcher` y `Logo` en este spec, aunque sean de Empresa y marca, porque los monta el aside de Personal.
 - **Sí:** volver modal el aside móvil y borrar `heroui-compat.ts`. Tras migrar `BusinessSwitcher` no aloja HeroUI, y el foco atrapado es requisito de accesibilidad.
+- **Sí:** mover el `ToastProvider` de HeroUI a los layouts de Empresa y cuenta (decidido al implementar el paso 4). **No:** dejarlo en el layout del dashboard; Personal seguiría cargando HeroUI.
 - **No:** retirar `HeroUIPortalBridge`, `HeroUIPortalHost`, `heroui-bridge.css` ni el `LabelContext` de `FieldLabel`. Los usan Empresa y cuenta (SPEC 53).
 - **No:** migrar `TutorialsSettings`; es pantalla de cuenta (SPEC 53).
 - **Sí:** `/impeccable` corrige directo dentro de la dirección de SPEC 51; los cambios grandes se preguntan.

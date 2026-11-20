@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { usePathname } from "next/navigation"
-import { Button } from "@heroui/react"
 import { Download } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import { ExportDialog } from "./export-dialog"
 
@@ -23,7 +23,7 @@ function isReportsRoute(pathname: string) {
 }
 
 // Acceso rápido del header, solo en Reportes. Con texto desde 640 px; en
-// pantallas menores, solo ícono de 44 px.
+// pantallas menores, solo ícono (44 px de alto, como "Más").
 export function ExportButton({ workspaceId, historyStart }: ExportButtonProps) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
@@ -36,10 +36,9 @@ export function ExportButton({ workspaceId, historyStart }: ExportButtonProps) {
     <>
       <Button
         variant="secondary"
-        size="sm"
         aria-label="Exportar"
-        className="max-sm:h-11 max-sm:min-w-11"
-        onPress={() => setOpen(true)}
+        className="max-sm:px-3"
+        onClick={() => setOpen(true)}
       >
         <Download className="size-4" />
         <span className="hidden sm:inline">Exportar</span>

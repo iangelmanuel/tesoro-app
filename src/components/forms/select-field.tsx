@@ -19,6 +19,8 @@ export interface SelectFieldOption<T extends string> {
   label: string
   /** Texto de apoyo bajo la etiqueta, solo en la lista */
   description?: string
+  /** Se ve en la lista pero no se puede elegir */
+  disabled?: boolean
 }
 
 interface SelectFieldProps<T extends string> {
@@ -92,6 +94,7 @@ export function SelectField<T extends string>({
               <SelectItem
                 key={option.value}
                 value={option.value}
+                disabled={option.disabled}
               >
                 {option.description ? (
                   <span className="flex flex-col py-0.5 whitespace-normal">

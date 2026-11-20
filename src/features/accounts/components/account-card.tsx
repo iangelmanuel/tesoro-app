@@ -4,14 +4,6 @@ import { useState } from "react"
 import type { Route } from "next"
 import Link from "next/link"
 import {
-  Button,
-  Card,
-  Dropdown,
-  Label,
-  buttonVariants,
-  cn
-} from "@heroui/react"
-import {
   Archive,
   EllipsisVertical,
   List,
@@ -20,9 +12,27 @@ import {
   Scale
 } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
-import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
+import {
+  type RowAction,
+  RowContextMenu,
+  RowMenuBoundary
+} from "@/components/dashboard/row-actions"
+import { SURFACE_ITEM } from "@/components/dashboard/surface"
+import {
+  TONE_BADGE_CLASSES,
+  TONE_TEXT_CLASSES
+} from "@/components/dashboard/tone"
+import { Button, buttonVariants } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
+import { Skeleton } from "@/components/ui/skeleton"
 import { GoalIcon } from "@/features/goals/components/goal-icon"
 import { TRANSACTIONS_PATH } from "@/features/transactions/filters"
+import { cn } from "@/libs/cn"
 import { ACCOUNT_KIND_META } from "../constants"
 import { isNegativeAccount } from "../negative-balance"
 import type { AccountWithBalance } from "../types"
@@ -38,6 +48,9 @@ export function accountTransactionsHref(
 ) {
   return `${transactionsPath}?month=all&account=${accountId}` as Route
 }
+
+/** Contenedor de la tarjeta y de su skeleton: misma superficie y espacios */
+const CARD_FRAME = cn(SURFACE_ITEM, "flex flex-col gap-4")
 
 interface AccountCardProps {
   /** Cuenta activa */
@@ -60,159 +73,201 @@ export function AccountCard({
   // Billeteras y bancos no deberían quedar en rojo; efectivo y otras sí pueden
   const warnNegative = isNegativeAccount(account)
 
-  return (
-    // Misma superficie que el resto de tarjetas: sin borde, radio grande
-    <Card
-      render={(props) => <li {...(props as React.ComponentProps<"li">)} />}
-      className="gap-4"
-      data-tour="accounts-card"
-    >
-      <div className="flex items-start gap-3">
-        <GoalIcon
-          icon={account.icon}
-          color={account.color}
-        />
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="truncate font-medium">{account.name}</span>
-          <span className="text-sm text-muted">
-            {ACCOUNT_KIND_META[account.kind].label}
-          </span>
-        </div>
+  // Las mismas acciones en el botón ⋯ y en el menú contextual (clic derecho
+  // y pulsación larga)
+  const actions: RowAction[] = [
+    {
+      id: "edit",
+      label: "Editar",
+      icon: <Pencil />,
+      onAction: () => setEditing(true)
+    },
+    {
+      id: "archive",
+      label: "Archivar",
+      icon: <Archive />,
+      onAction: () => run("archive"),
+      isDisabled: pending
+    }
+  ]
 
-        <Dropdown>
-          <Button
-            variant="ghost"
-            isIconOnly
-            size="sm"
-            aria-label={`Acciones de ${account.name}`}
-            isDisabled={pending}
-            data-tour="accounts-menu"
-          >
-            <EllipsisVertical />
-          </Button>
-          <Dropdown.Popover placement="bottom end">
-            <Dropdown.Menu
-              aria-label={`Acciones de ${account.name}`}
-              onAction={(key) =>
-                key === "edit" ? setEditing(true) : run("archive")
+  return (
+    <RowContextMenu
+      label={account.name}
+      actions={actions}
+    >
+      <li
+        className={CARD_FRAME}
+        data-tour="accounts-card"
+      >
+        <div className="flex items-start gap-3">
+          <GoalIcon
+            icon={account.icon}
+            color={account.color}
+          />
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <span className="truncate font-medium">{account.name}</span>
+            <span className="text-sm text-muted-foreground">
+              {ACCOUNT_KIND_META[account.kind].label}
+            </span>
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Acciones de ${account.name}`}
+                  disabled={pending}
+                  data-tour="accounts-menu"
+                  className="-mt-2 -mr-2"
+                />
               }
             >
-              <Dropdown.Item
-                id="edit"
-                textValue="Editar"
-              >
-                <Pencil className="size-4" />
-                <Label>Editar</Label>
-              </Dropdown.Item>
-              <Dropdown.Item
-                id="archive"
-                textValue="Archivar"
-              >
-                <Archive className="size-4" />
-                <Label>Archivar</Label>
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown.Popover>
-        </Dropdown>
-        <AccountDialog
-          workspaceId={account.workspace_id}
-          account={account}
-          open={editing}
-          onOpenChange={setEditing}
-        />
-        <AdjustBalanceDialog
-          account={account}
-          currency={currency}
-          open={adjusting}
-          onOpenChange={setAdjusting}
-        />
-        <ReconcileDialog
-          account={account}
-          currency={currency}
-          open={reconciling}
-          onOpenChange={setReconciling}
-        />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <span
-          className={cn(
-            "text-2xl font-semibold tracking-tight tabular-nums",
-            account.balance < 0 && "text-danger"
-          )}
-        >
-          <Amount
-            value={account.balance}
-            currency={currency}
-          />
-        </span>
-        {hasScheduled && (
-          <span className="text-sm text-muted tabular-nums">
-            Con lo programado:{" "}
-            <span
-              className={cn(
-                "font-medium text-foreground",
-                account.scheduled_balance < 0 && "text-danger"
-              )}
+              <EllipsisVertical />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-auto min-w-44"
             >
-              <Amount
-                value={account.scheduled_balance}
-                currency={currency}
-              />
-            </span>
-          </span>
-        )}
-      </div>
+              {actions.map((action) => (
+                <DropdownMenuItem
+                  key={action.id}
+                  disabled={action.isDisabled}
+                  onClick={action.onAction}
+                >
+                  {action.icon}
+                  {action.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
-      {warnNegative && (
-        <div
-          role="status"
-          className={cn(
-            "flex flex-wrap items-center justify-between gap-2 rounded-2xl p-3 text-sm",
-            TONE_BADGE_CLASSES.danger
+        <div className="flex flex-col gap-1">
+          <span
+            className={cn(
+              "text-2xl font-semibold tracking-tight tabular-nums",
+              account.balance < 0 && TONE_TEXT_CLASSES.danger
+            )}
+          >
+            <Amount
+              value={account.balance}
+              currency={currency}
+            />
+          </span>
+          {hasScheduled && (
+            <span className="text-sm text-muted-foreground tabular-nums">
+              Con lo programado:{" "}
+              <span
+                className={cn(
+                  "font-medium text-foreground",
+                  account.scheduled_balance < 0 && TONE_TEXT_CLASSES.danger
+                )}
+              >
+                <Amount
+                  value={account.scheduled_balance}
+                  currency={currency}
+                />
+              </span>
+            </span>
           )}
-        >
-          <span>Saldo negativo: probablemente faltan movimientos.</span>
+        </div>
+
+        {warnNegative && (
+          <div
+            role="status"
+            className={cn(
+              "flex flex-wrap items-center justify-between gap-2 rounded-2xl p-3 text-sm",
+              TONE_BADGE_CLASSES.danger
+            )}
+          >
+            <span>Saldo negativo: probablemente faltan movimientos.</span>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setReconciling(true)}
+            >
+              Cuadrar saldo
+            </Button>
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="secondary"
             size="sm"
-            className="max-md:h-11"
-            onPress={() => setReconciling(true)}
+            data-tour="accounts-update-balance"
+            onClick={() => setAdjusting(true)}
           >
+            <RefreshCw />
+            Actualizar saldo
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            data-tour="accounts-reconcile"
+            onClick={() => setReconciling(true)}
+          >
+            <Scale />
             Cuadrar saldo
           </Button>
+          <Link
+            href={accountTransactionsHref(account.id, transactionsPath)}
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
+            data-tour="accounts-transactions"
+          >
+            <List />
+            Ver movimientos
+          </Link>
         </div>
-      )}
 
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant="secondary"
-          size="sm"
-          data-tour="accounts-update-balance"
-          onPress={() => setAdjusting(true)}
-        >
-          <RefreshCw />
-          Actualizar saldo
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          className="max-md:h-11"
-          data-tour="accounts-reconcile"
-          onPress={() => setReconciling(true)}
-        >
-          <Scale />
-          Cuadrar saldo
-        </Button>
-        <Link
-          href={accountTransactionsHref(account.id, transactionsPath)}
-          className={buttonVariants({ variant: "ghost", size: "sm" })}
-          data-tour="accounts-transactions"
-        >
-          <List className="size-4" />
-          Ver movimientos
-        </Link>
+        {/* Los diálogos se pintan en un portal; RowMenuBoundary evita que
+              un clic derecho dentro de ellos abra el menú de la tarjeta */}
+        <RowMenuBoundary>
+          <AccountDialog
+            workspaceId={account.workspace_id}
+            account={account}
+            open={editing}
+            onOpenChange={setEditing}
+          />
+          <AdjustBalanceDialog
+            account={account}
+            currency={currency}
+            open={adjusting}
+            onOpenChange={setAdjusting}
+          />
+          <ReconcileDialog
+            account={account}
+            currency={currency}
+            open={reconciling}
+            onOpenChange={setReconciling}
+          />
+        </RowMenuBoundary>
+      </li>
+    </RowContextMenu>
+  )
+}
+
+/** Misma tarjeta mientras carga: cabecera, saldo y fila de botones */
+export function AccountCardSkeleton() {
+  return (
+    <li className={CARD_FRAME}>
+      <div className="flex items-start gap-3">
+        <Skeleton className="size-9 rounded-full" />
+        <div className="flex flex-1 flex-col gap-1">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-5 w-20" />
+        </div>
+        <Skeleton className="-mt-2 -mr-2 size-11 rounded-full" />
       </div>
-    </Card>
+      <Skeleton className="h-8 w-40" />
+      <div className="flex flex-wrap gap-2">
+        <Skeleton className="h-9 w-40 rounded-4xl" />
+        <Skeleton className="h-9 w-36 rounded-4xl" />
+        <Skeleton className="h-9 w-40 rounded-4xl" />
+      </div>
+    </li>
   )
 }

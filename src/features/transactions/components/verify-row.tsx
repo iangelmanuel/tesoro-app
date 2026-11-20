@@ -1,5 +1,6 @@
-import { cn } from "@heroui/react"
 import { ArrowDown, ArrowLeftRight, ArrowUp } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/libs/cn"
 import { formatCurrency, formatDate, formatTime } from "@/libs/format"
 import type { VerifyEntry } from "../queries"
 
@@ -8,7 +9,7 @@ type Tone = "income" | "expense" | "neutral"
 const TONE_CLASS: Record<Tone, string> = {
   income: "text-(--income)",
   expense: "text-(--expense)",
-  neutral: "text-muted"
+  neutral: "text-muted-foreground"
 }
 
 const TONE_ICON = {
@@ -94,6 +95,8 @@ function describe(
   }
 }
 
+const ROW = "flex items-start gap-3 px-4 py-2.5"
+
 /** Fila compacta de solo lectura de Verificar movimientos: máximo dos líneas */
 export function VerifyRow({
   entry,
@@ -122,10 +125,10 @@ export function VerifyRow({
     .join(" · ")
 
   return (
-    <li className="flex items-start gap-3 px-4 py-2.5">
+    <li className={ROW}>
       <span
         className={cn(
-          "mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-default",
+          "mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-subtle",
           TONE_CLASS[view.tone]
         )}
       >
@@ -150,7 +153,23 @@ export function VerifyRow({
             {formatCurrency(Math.abs(entry.amount), currency)}
           </span>
         </p>
-        <p className="truncate text-xs text-muted">{details}</p>
+        <p className="truncate text-xs text-muted-foreground">{details}</p>
+      </div>
+    </li>
+  )
+}
+
+/** Misma fila mientras carga: ícono, título con monto y detalle */
+export function VerifyRowSkeleton() {
+  return (
+    <li className={ROW}>
+      <Skeleton className="mt-0.5 size-6 shrink-0 rounded-full" />
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex items-baseline justify-between gap-3">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-5 w-20" />
+        </div>
+        <Skeleton className="h-4 w-56 max-w-full" />
       </div>
     </li>
   )

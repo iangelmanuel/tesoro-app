@@ -1,8 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { FieldError, ListBox, Select } from "@heroui/react"
-import { FieldLabel } from "@/components/forms/field-label"
+import { CreatableSelect } from "@/components/forms/creatable-select"
 import type { FieldHelpKey } from "@/config/help"
 import { AccountDialog } from "@/features/accounts/components/account-dialog"
 import {
@@ -10,7 +9,6 @@ import {
   type AccountOption,
   accountName
 } from "@/features/accounts/components/account-select"
-import { CREATE_OPTION, CreateOption } from "./create-option"
 
 // "Sin cuenta" usa este centinela como clave y el campo oculto envía ""
 const NONE = "__none__"
@@ -37,7 +35,7 @@ interface AccountSelectFieldProps {
 }
 
 /**
- * Select de cuenta con "+ Crear cuenta" al final. La opción abre el diálogo
+ * Select de cuenta con búsqueda y "+ Crear cuenta" al final. La opción abre el diálogo
  * de cuenta encima del formulario (una cuenta necesita tipo y saldo); al
  * guardar, la nueva queda elegida y el resto del formulario no se toca. El
  * valor viaja en un input oculto para poder enviar "" (sin cuenta).
@@ -64,14 +62,6 @@ export function AccountSelectField({
     )
   ]
 
-  function handleChange(key: React.Key | null) {
-    if (key === CREATE_OPTION) {
-      setDialogOpen(true)
-      return
-    }
-    onChange(key === NONE || key == null ? "" : String(key))
-  }
-
   function handleCreated(account: AccountOption) {
     setCreated((current) => [...current, account])
     onChange(account.id)
@@ -84,45 +74,27 @@ export function AccountSelectField({
         name={name}
         value={value}
       />
-      <Select
-        fullWidth
-        placeholder={placeholder}
+      <CreatableSelect
+        label={label}
+        help={help}
         value={value || (allowNone ? NONE : null)}
-        onChange={handleChange}
-        isInvalid={Boolean(error)}
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help={help}>{label}</FieldLabel>
-        <Select.Trigger>
-          <Select.Value />
-          <Select.Indicator />
-        </Select.Trigger>
-        <Select.Popover>
-          <ListBox>
-            {allowNone ? (
-              <ListBox.Item
-                id={NONE}
-                textValue="Sin cuenta"
-              >
-                Sin cuenta
-                <ListBox.ItemIndicator />
-              </ListBox.Item>
-            ) : null}
-            {options.map((account) => (
-              <ListBox.Item
-                key={account.id}
-                id={account.id}
-                textValue={accountName(account)}
-              >
-                <AccountLabel account={account} />
-                <ListBox.ItemIndicator />
-              </ListBox.Item>
-            ))}
-            <CreateOption label="Crear cuenta" />
-          </ListBox>
-        </Select.Popover>
-        <FieldError>{error}</FieldError>
-      </Select>
+        onChange={(key) => onChange(key === NONE ? "" : key)}
+        onCreate={() => setDialogOpen(true)}
+        options={[
+          ...(allowNone
+            ? [{ id: NONE, text: "Sin cuenta", node: "Sin cuenta" }]
+            : []),
+          ...options.map((account) => ({
+            id: account.id,
+            text: accountName(account),
+            node: <AccountLabel account={account} />
+          }))
+        ]}
+        createLabel="Crear cuenta"
+        searchLabel="Buscar cuenta"
+        placeholder={placeholder}
+        error={error}
+      />
       <AccountDialog
         workspaceId={workspaceId}
         open={dialogOpen}

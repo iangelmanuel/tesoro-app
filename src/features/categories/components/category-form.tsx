@@ -1,8 +1,12 @@
 "use client"
 
-import { useActionState } from "react"
-import { Button, cn, toast } from "@heroui/react"
-import { FormField } from "@/features/auth/components/form-field"
+import { useActionState, useId } from "react"
+import { FieldLabel } from "@/components/forms/field-label"
+import { Button } from "@/components/ui/button"
+import { FieldError } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { toast } from "@/components/ui/sonner"
+import { cn } from "@/libs/cn"
 import { createCategory, updateCategory } from "../actions"
 import type { Category } from "../queries"
 import type { CategoryFormState } from "../types"
@@ -31,6 +35,7 @@ export function CategoryForm({
   onCancel,
   inDialog = false
 }: CategoryFormProps) {
+  const id = useId()
   const isEditing = category !== null && category.type === type
 
   const [state, formAction, pending] = useActionState<
@@ -48,12 +53,14 @@ export function CategoryForm({
     return result
   }, {})
 
+  const nameError = state.fieldErrors?.name?.[0]
+
   return (
     <form
       action={formAction}
       className={cn(
-        "flex flex-col gap-4",
-        !inDialog && "rounded-xl border border-border p-4"
+        "flex flex-col gap-5",
+        !inDialog && "rounded-3xl bg-subtle p-4"
       )}
       // Puede abrirse encima de otro formulario (selects con creación): el
       // submit no debe propagarse por el árbol de React hasta el de abajo
@@ -61,7 +68,7 @@ export function CategoryForm({
       noValidate
     >
       {!inDialog && (
-        <h3 className="text-sm font-medium">
+        <h3 className="text-sm font-semibold">
           {isEditing ? `Editar "${category.name}"` : "Nueva categoría"}
         </h3>
       )}
@@ -84,18 +91,30 @@ export function CategoryForm({
         value={type}
       />
 
-      <FormField
-        name="name"
-        label="Nombre"
-        help="category.name"
-        maxLength={40}
-        placeholder={type === "expense" ? "Mascotas" : "Arriendos"}
-        defaultValue={
-          state.values?.name ?? (isEditing ? category.name : undefined)
-        }
-        errors={state.fieldErrors?.name}
-        required
-      />
+      <div className="flex flex-col gap-2">
+        <FieldLabel
+          htmlFor={`${id}-name`}
+          help="category.name"
+          isRequired
+          isInvalid={Boolean(nameError)}
+        >
+          Nombre
+        </FieldLabel>
+        <Input
+          id={`${id}-name`}
+          name="name"
+          maxLength={40}
+          placeholder={type === "expense" ? "Mascotas" : "Arriendos"}
+          defaultValue={
+            state.values?.name ?? (isEditing ? category.name : undefined)
+          }
+          aria-invalid={nameError ? true : undefined}
+          aria-describedby={nameError ? `${id}-name-error` : undefined}
+        />
+        {nameError ? (
+          <FieldError id={`${id}-name-error`}>{nameError}</FieldError>
+        ) : null}
+      </div>
 
       <IconColorPicker
         defaultIcon={isEditing ? category.icon : undefined}
@@ -107,7 +126,7 @@ export function CategoryForm({
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error}
         </p>
@@ -116,15 +135,16 @@ export function CategoryForm({
       <div className="flex justify-end gap-2">
         {(isEditing || inDialog) && (
           <Button
+            type="button"
             variant="ghost"
-            onPress={onCancel}
+            onClick={onCancel}
           >
             Cancelar
           </Button>
         )}
         <Button
           type="submit"
-          isDisabled={pending}
+          disabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear"}
         </Button>

@@ -1,6 +1,7 @@
 import type { Route } from "next"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { HelpKey } from "@/config/help"
 import { HelpHint } from "./help-hint"
 
@@ -64,6 +65,16 @@ export function CardHeading({
           </Link>
         )}
       </div>
+    </div>
+  )
+}
+
+/** Hueco de CardHeading: título y enlace, con su misma altura */
+export function CardHeadingSkeleton() {
+  return (
+    <div className="flex min-h-7 items-center justify-between gap-3">
+      <Skeleton className="h-5 w-32" />
+      <Skeleton className="h-5 w-20" />
     </div>
   )
 }

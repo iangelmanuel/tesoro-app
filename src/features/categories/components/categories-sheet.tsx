@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { Button, Tabs, cn, toast } from "@heroui/react"
 import { Archive, ArchiveRestore, Pencil } from "lucide-react"
 import { DetailSection, DetailSheet } from "@/components/dashboard/detail-sheet"
 import {
@@ -10,6 +9,10 @@ import {
   SortableListProvider,
   useSortableList
 } from "@/components/dashboard/sortable-list"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/sonner"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { cn } from "@/libs/cn"
 import { archiveCategory, moveCategory, restoreCategory } from "../actions"
 import type { Category } from "../queries"
 import { CategoryBadge } from "./category-badge"
@@ -42,7 +45,7 @@ export function CategoriesSheet({
   // Cambia tras cada guardado para remontar el formulario vacío
   const [formVersion, setFormVersion] = useState(0)
 
-  function handleTypeChange(value: React.Key) {
+  function handleTypeChange(value: unknown) {
     setType(value as TransactionType)
     setEditing(null)
   }
@@ -60,31 +63,27 @@ export function CategoriesSheet({
       description="Las del sistema son fijas. Las tuyas se pueden editar, archivar y restaurar."
       action={
         <Tabs
-          selectedKey={type}
-          onSelectionChange={handleTypeChange}
+          value={type}
+          onValueChange={handleTypeChange}
         >
-          <Tabs.ListContainer>
-            <Tabs.List
-              aria-label="Tipo de categoría"
-              className="w-full"
-            >
-              {(["expense", "income"] as const).map((tabType) => (
-                <Tabs.Tab
-                  key={tabType}
-                  id={tabType}
-                  className="flex-1"
-                >
-                  {TYPE_LABELS[tabType]}
-                  <Tabs.Indicator />
-                </Tabs.Tab>
-              ))}
-            </Tabs.List>
-          </Tabs.ListContainer>
+          <TabsList
+            aria-label="Tipo de categoría"
+            className="w-full"
+          >
+            {(["expense", "income"] as const).map((tabType) => (
+              <TabsTrigger
+                key={tabType}
+                value={tabType}
+              >
+                {TYPE_LABELS[tabType]}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
           {(["expense", "income"] as const).map((tabType) => (
-            <Tabs.Panel
+            <TabsContent
               key={tabType}
-              id={tabType}
+              value={tabType}
               className="flex flex-col gap-6 pt-4"
             >
               <CategoryForm
@@ -101,7 +100,7 @@ export function CategoriesSheet({
                 editingId={editing?.id}
                 onEdit={setEditing}
               />
-            </Tabs.Panel>
+            </TabsContent>
           ))}
         </Tabs>
       }
@@ -140,7 +139,7 @@ function CategoryList({
     <div className="flex flex-col gap-6">
       <CategoryGroup title="Tus categorías">
         {active.length === 0 ? (
-          <p className="text-sm text-muted">
+          <p className="text-sm text-muted-foreground">
             Aún no tienes categorías propias.
           </p>
         ) : (
@@ -153,11 +152,10 @@ function CategoryList({
               >
                 <Button
                   variant="ghost"
-                  size="sm"
-                  isIconOnly
+                  size="icon"
                   aria-label={`Editar ${category.name}`}
                   aria-pressed={editingId === category.id}
-                  onPress={() => onEdit(category)}
+                  onClick={() => onEdit(category)}
                 >
                   <Pencil />
                 </Button>
@@ -229,7 +227,7 @@ function CategoryRow({
   return (
     <SortableListItem
       config={sortable}
-      className="flex min-h-8 items-center justify-between gap-2 rounded-lg"
+      className="flex min-h-11 items-center justify-between gap-2 rounded-2xl"
     >
       {(handle) => (
         <>
@@ -268,7 +266,7 @@ function ArchiveButton({
         : await archiveCategory(workspaceId, category.id)
 
       if (result.error) {
-        toast.danger(result.error)
+        toast.error(result.error)
       } else {
         toast.success(
           isArchived
@@ -282,13 +280,12 @@ function ArchiveButton({
   return (
     <Button
       variant="ghost"
-      size="sm"
-      isIconOnly
+      size="icon"
       aria-label={
         isArchived ? `Restaurar ${category.name}` : `Archivar ${category.name}`
       }
-      isDisabled={pending}
-      onPress={handleClick}
+      disabled={pending}
+      onClick={handleClick}
     >
       {isArchived ? <ArchiveRestore /> : <Archive />}
     </Button>

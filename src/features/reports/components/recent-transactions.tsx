@@ -1,17 +1,33 @@
-import { Card, CardContent, Table, cn } from "@heroui/react"
-import { CardHeading } from "@/components/dashboard/card-heading"
-import { ScrollTable } from "@/components/dashboard/scroll-table"
+import {
+  CardHeading,
+  CardHeadingSkeleton
+} from "@/components/dashboard/card-heading"
+import {
+  ScrollTable,
+  ScrollTableSkeleton
+} from "@/components/dashboard/scroll-table"
+import { CARD } from "@/components/dashboard/surface"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import {
   TRANSACTIONS_PATH,
   buildFiltersQuery
 } from "@/features/transactions/filters"
 import type { TransactionWithCategory } from "@/features/transactions/queries"
+import { cn } from "@/libs/cn"
 import { formatCurrency, formatDate } from "@/libs/format"
 
 // Los últimos movimientos pueden ser de meses anteriores: "Ver todos" abre
 // Movimientos con todos los meses
 const ALL_MONTHS_QUERY = buildFiltersQuery({ month: "all", page: 1 })
+const MIN_WIDTH = "36rem"
 
 interface RecentTransactionsProps {
   rows: TransactionWithCategory[]
@@ -26,70 +42,84 @@ export function RecentTransactions({
   transactionsPath = TRANSACTIONS_PATH
 }: RecentTransactionsProps) {
   return (
-    <Card data-tour="summary-recent">
+    <section
+      aria-label="Últimos movimientos"
+      className={CARD}
+      data-tour="summary-recent"
+    >
       <CardHeading
         title="Últimos movimientos"
         href={`${transactionsPath}?${ALL_MONTHS_QUERY}`}
         linkLabel="Ver todos"
         linkContext="los movimientos"
       />
-      <CardContent>
-        <ScrollTable minWidth="36rem">
-          <Table>
-            <Table.ScrollContainer>
-              <Table.Content aria-label="Últimos movimientos">
-                <Table.Header>
-                  <Table.Column className="w-32 whitespace-nowrap">
-                    Fecha
-                  </Table.Column>
-                  <Table.Column isRowHeader>Descripción</Table.Column>
-                  <Table.Column className="whitespace-nowrap">
-                    Categoría
-                  </Table.Column>
-                  <Table.Column className="text-end whitespace-nowrap">
-                    Monto
-                  </Table.Column>
-                </Table.Header>
-                <Table.Body>
-                  {rows.map((transaction) => (
-                    <Table.Row key={transaction.id}>
-                      <Table.Cell className="whitespace-nowrap text-muted">
-                        {formatDate(transaction.occurred_on)}
-                      </Table.Cell>
-                      <Table.Cell className="max-w-64 min-w-44">
-                        <p
-                          title={transaction.description}
-                          className="line-clamp-3 font-medium break-words"
-                        >
-                          {transaction.description}
-                        </p>
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap">
-                        <CategoryBadge
-                          name={transaction.category.name}
-                          icon={transaction.category.icon}
-                          color={transaction.category.color}
-                        />
-                      </Table.Cell>
-                      <Table.Cell
-                        className={cn(
-                          "text-right font-medium whitespace-nowrap tabular-nums",
-                          transaction.type === "income"
-                            ? "text-(--income)"
-                            : "text-(--expense)"
-                        )}
-                      >
-                        {transaction.type === "income" ? "+" : "−"}
-                        {formatCurrency(transaction.amount, currency)}
-                      </Table.Cell>
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Content>
-            </Table.ScrollContainer>
-          </Table>
-        </ScrollTable>
-      </CardContent>
-    </Card>
+      <ScrollTable minWidth={MIN_WIDTH}>
+        <Table aria-label="Últimos movimientos">
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-32">Fecha</TableHead>
+              <TableHead>Descripción</TableHead>
+              <TableHead>Categoría</TableHead>
+              <TableHead className="text-end">Monto</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((transaction) => {
+              const isIncome = transaction.type === "income"
+              return (
+                <TableRow key={transaction.id}>
+                  <TableCell className="text-muted-foreground">
+                    {formatDate(transaction.occurred_on)}
+                  </TableCell>
+                  <TableCell className="max-w-64 min-w-44 whitespace-normal">
+                    <p
+                      title={transaction.description}
+                      className="line-clamp-3 font-medium break-words"
+                    >
+                      {transaction.description}
+                    </p>
+                  </TableCell>
+                  <TableCell>
+                    <CategoryBadge
+                      name={transaction.category.name}
+                      icon={transaction.category.icon}
+                      color={transaction.category.color}
+                    />
+                  </TableCell>
+                  <TableCell
+                    className={cn(
+                      "text-end font-medium tabular-nums",
+                      isIncome ? "text-(--income)" : "text-(--expense)"
+                    )}
+                  >
+                    {/* El signo se lee: "más" o "menos" y el monto completo */}
+                    <span aria-hidden="true">{isIncome ? "+" : "−"}</span>
+                    <span className="sr-only">
+                      {isIncome ? "más " : "menos "}
+                    </span>
+                    {formatCurrency(transaction.amount, currency)}
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </ScrollTable>
+    </section>
+  )
+}
+
+/** Últimos movimientos mientras cargan: cabecera y cinco filas */
+export function RecentTransactionsSkeleton({ rows = 5 }: { rows?: number }) {
+  return (
+    <div className={CARD}>
+      <CardHeadingSkeleton />
+      <ScrollTableSkeleton
+        columns={4}
+        rows={rows}
+        minWidth={MIN_WIDTH}
+        className="bg-transparent px-0 shadow-none"
+      />
+    </div>
   )
 }

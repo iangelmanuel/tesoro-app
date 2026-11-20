@@ -1,9 +1,17 @@
 "use client"
 
 import Link from "next/link"
-import { Button, Disclosure, buttonVariants } from "@heroui/react"
+import { ChevronRight } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
+import { SURFACE_LIST, SURFACE_ROW } from "@/components/dashboard/surface"
+import { Button, buttonVariants } from "@/components/ui/button"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from "@/components/ui/collapsible"
 import { GoalIcon } from "@/features/goals/components/goal-icon"
+import { cn } from "@/libs/cn"
 import { ACCOUNT_KIND_META } from "../constants"
 import type { AccountWithBalance } from "../types"
 import { accountTransactionsHref } from "./account-card"
@@ -23,18 +31,26 @@ export function ArchivedAccounts({
   transactionsPath
 }: ArchivedAccountsProps) {
   return (
-    <Disclosure className="flex flex-col gap-3">
-      <Disclosure.Heading>
-        <Disclosure.Trigger
-          className="flex w-fit items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-default"
+    <Collapsible className="flex flex-col gap-3">
+      <h2 className="w-fit">
+        <CollapsibleTrigger
+          render={
+            <Button
+              variant="ghost"
+              className="group/archived px-3"
+            />
+          }
           data-tour="accounts-archived"
         >
-          <Disclosure.Indicator />
+          <ChevronRight
+            aria-hidden
+            className="group-data-panel-open/archived:rotate-90 motion-safe:transition-transform"
+          />
           Archivadas ({accounts.length})
-        </Disclosure.Trigger>
-      </Disclosure.Heading>
-      <Disclosure.Content>
-        <ul className="divide-y divide-separator rounded-3xl bg-surface px-2 shadow-(--surface-shadow)">
+        </CollapsibleTrigger>
+      </h2>
+      <CollapsibleContent>
+        <ul className={SURFACE_LIST}>
           {accounts.map((account) => (
             <ArchivedAccountRow
               key={account.id}
@@ -44,8 +60,8 @@ export function ArchivedAccounts({
             />
           ))}
         </ul>
-      </Disclosure.Content>
-    </Disclosure>
+      </CollapsibleContent>
+    </Collapsible>
   )
 }
 
@@ -61,14 +77,14 @@ function ArchivedAccountRow({
   const { pending, run } = useAccountAction(account)
 
   return (
-    <li className="flex flex-wrap items-center gap-3 p-4">
+    <li className={cn(SURFACE_ROW, "flex flex-wrap items-center gap-3")}>
       <GoalIcon
         icon={account.icon}
         color={account.color}
       />
       <span className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="truncate font-medium">{account.name}</span>
-        <span className="text-sm text-muted tabular-nums">
+        <span className="text-sm text-muted-foreground tabular-nums">
           {ACCOUNT_KIND_META[account.kind].label} ·{" "}
           <Amount
             value={account.balance}
@@ -83,10 +99,10 @@ function ArchivedAccountRow({
         Ver movimientos
       </Link>
       <Button
-        variant="outline"
+        variant="secondary"
         size="sm"
-        isDisabled={pending}
-        onPress={() => run("restore")}
+        disabled={pending}
+        onClick={() => run("restore")}
       >
         Restaurar
       </Button>

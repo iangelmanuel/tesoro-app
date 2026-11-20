@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { toast } from "@heroui/react"
 import { Copy, Pencil, Trash2 } from "lucide-react"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import { RowActions } from "@/components/dashboard/row-actions"
+import { toast } from "@/components/ui/sonner"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
@@ -61,7 +61,7 @@ export function RecordedPaymentActions({
     startTransition(async () => {
       const result = await loadEditableTransaction(workspaceId, transactionId)
       if ("error" in result) {
-        toast.danger(result.error)
+        toast.error(result.error)
       } else {
         setTransaction(result.transaction)
       }
@@ -72,7 +72,7 @@ export function RecordedPaymentActions({
     startTransition(async () => {
       const result = await deleteTransaction(workspaceId, transactionId)
       if (result.error) {
-        toast.danger(result.error)
+        toast.error(result.error)
       } else {
         toast.success(noun === "pago" ? "Pago eliminado" : "Cobro eliminado")
         onChanged()
@@ -150,7 +150,7 @@ export function RecordedPaymentActions({
         title={`¿Eliminar este ${noun}?`}
         onConfirm={remove}
       >
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted-foreground">
           También se elimina de Movimientos y {deleteEffect}. Esta acción no se
           puede deshacer.
         </p>

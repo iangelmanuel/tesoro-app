@@ -3,14 +3,39 @@
 import { useEffect, useState, useTransition } from "react"
 import type { Route } from "next"
 import { useRouter } from "next/navigation"
-import { Button, Drawer, ListBox, SearchField, Select, cn } from "@heroui/react"
-import { SlidersHorizontal, X } from "lucide-react"
-import { MonthSwitcher } from "@/components/dashboard/month-switcher"
+import { Search, SlidersHorizontal, X } from "lucide-react"
+import {
+  MonthSwitcher,
+  MonthSwitcherSkeleton
+} from "@/components/dashboard/month-switcher"
 import { CONTROL_BUTTON } from "@/components/dashboard/surface"
 import { FieldHelp } from "@/components/forms/field-label"
+import { Button } from "@/components/ui/button"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput
+} from "@/components/ui/input-group"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select"
+import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle
+} from "@/components/ui/sheet"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import { NO_ACCOUNT } from "@/features/accounts/constants"
 import type { Category } from "@/features/categories/queries"
+import { cn } from "@/libs/cn"
 import { currentMonth } from "@/libs/dates"
 import {
   type LedgerFilterType,
@@ -206,19 +231,34 @@ export function TransactionsFilters({
         data-tour="transactions-search"
       >
         <div className="flex w-full items-center gap-1 md:min-w-72 md:flex-1 md:basis-72">
-          <SearchField
-            aria-label="Buscar en descripción o nota"
-            value={q}
-            onChange={setQ}
-            className="min-w-0 flex-1"
-          >
-            {/* Mismo gris que las tarjetas y tablas (`bg-surface`). `bg-field` lo fija el CSS de HeroUI directo, no por la variable */}
-            <SearchField.Group className="h-11 bg-surface [--search-field-group-bg-focus:var(--surface)] [--search-field-group-bg-hover:var(--surface-secondary)] [--search-field-group-bg:var(--surface)] focus-within:bg-surface hover:bg-surface-secondary">
-              <SearchField.SearchIcon />
-              <SearchField.Input placeholder="Buscar" />
-              <SearchField.ClearButton />
-            </SearchField.Group>
-          </SearchField>
+          {/* Mismo tono que las tarjetas y tablas (bg-card) */}
+          <InputGroup className="min-w-0 flex-1 bg-card shadow-(--surface-shadow) hover:bg-card">
+            <InputGroupAddon>
+              <Search aria-hidden />
+            </InputGroupAddon>
+            <InputGroupInput
+              type="search"
+              aria-label="Buscar en descripción o nota"
+              placeholder="Buscar"
+              value={q}
+              onChange={(event) => setQ(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape" && q) setQ("")
+              }}
+              className="[&::-webkit-search-cancel-button]:hidden"
+            />
+            {q ? (
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton
+                  size="icon-sm"
+                  aria-label="Borrar búsqueda"
+                  onClick={() => setQ("")}
+                >
+                  <X />
+                </InputGroupButton>
+              </InputGroupAddon>
+            ) : null}
+          </InputGroup>
           <FieldHelp
             help="filters.search"
             label="Buscar"
@@ -242,16 +282,16 @@ export function TransactionsFilters({
 
         <Button
           variant="ghost"
-          className={cn("min-h-11 shrink-0 md:hidden", CONTROL_BUTTON)}
+          className={cn("shrink-0 md:hidden", CONTROL_BUTTON)}
           data-tour="transactions-filters-sheet"
-          onPress={() => setSheetOpen(true)}
+          onClick={() => setSheetOpen(true)}
         >
           <SlidersHorizontal />
           Filtros
           {sheetFilterCount > 0 && (
             <span
               aria-label={`${sheetFilterCount} activos`}
-              className="min-w-5 rounded-full bg-accent px-1.5 text-center text-xs font-medium text-accent-foreground tabular-nums"
+              className="min-w-5 rounded-full bg-primary px-1.5 text-center text-xs font-medium text-primary-foreground tabular-nums"
             >
               {sheetFilterCount}
             </span>
@@ -267,8 +307,9 @@ export function TransactionsFilters({
         <Button
           variant="ghost"
           size="sm"
+          className={CONTROL_BUTTON}
           aria-pressed={isAllMonths}
-          onPress={() => navigate({ month: isAllMonths ? month : ALL })}
+          onClick={() => navigate({ month: isAllMonths ? month : ALL })}
         >
           {isAllMonths ? "Ver por mes" : "Todos los meses"}
         </Button>
@@ -281,7 +322,7 @@ export function TransactionsFilters({
           <Button
             variant="ghost"
             size="sm"
-            onPress={() => {
+            onClick={() => {
               setQ("")
               navigate({
                 type: undefined,
@@ -298,66 +339,58 @@ export function TransactionsFilters({
       </div>
 
       {/* < 768 px: hoja inferior. Aplica al elegir, sin botón "Aplicar" */}
-      <Drawer
-        isOpen={sheetOpen}
+      <Sheet
+        open={sheetOpen}
         onOpenChange={setSheetOpen}
       >
-        <Drawer.Backdrop className="md:hidden">
-          <Drawer.Content placement="bottom">
-            <Drawer.Dialog
-              aria-label="Filtros de movimientos"
-              className="pb-[env(safe-area-inset-bottom)]"
+        <SheetContent
+          side="bottom"
+          className="max-h-[90dvh] rounded-t-4xl pb-[env(safe-area-inset-bottom)] md:hidden"
+        >
+          <SheetHeader className="pb-2">
+            <SheetTitle>Filtros</SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col gap-3 overflow-y-auto px-6 py-1">
+            {typeSelect(true)}
+            {categorySelect(true)}
+            {accountSelect(true)}
+            <Button
+              variant="secondary"
+              className="w-full"
+              aria-pressed={isAllMonths}
+              onClick={() => navigate({ month: isAllMonths ? month : ALL })}
             >
-              <Drawer.Handle />
-              <Drawer.Header>
-                <Drawer.Heading>Filtros</Drawer.Heading>
-              </Drawer.Header>
-              <Drawer.Body className="flex flex-col gap-3">
-                {typeSelect(true)}
-                {categorySelect(true)}
-                {accountSelect(true)}
-                <Button
-                  variant="secondary"
-                  fullWidth
-                  className="min-h-11"
-                  aria-pressed={isAllMonths}
-                  onPress={() => navigate({ month: isAllMonths ? month : ALL })}
-                >
-                  {isAllMonths ? "Ver por mes" : "Todos los meses"}
-                </Button>
-              </Drawer.Body>
-              <Drawer.Footer className="items-center justify-between gap-3">
-                {sheetFilterCount > 0 ? (
-                  <Button
-                    variant="ghost"
-                    className="min-h-11"
-                    onPress={() =>
-                      navigate({
-                        type: undefined,
-                        categoryId: undefined,
-                        accountId: undefined,
-                        month: currentMonth()
-                      })
-                    }
-                  >
-                    <X />
-                    Limpiar filtros
-                  </Button>
-                ) : (
-                  <span />
-                )}
-                <Button
-                  variant="ghost"
-                  className="min-h-11 min-w-11"
-                  onPress={() => setSheetOpen(false)}
-                >
-                  Cerrar
-                </Button>
-              </Drawer.Footer>
-            </Drawer.Dialog>
-          </Drawer.Content>
-        </Drawer.Backdrop>
-      </Drawer>
+              {isAllMonths ? "Ver por mes" : "Todos los meses"}
+            </Button>
+          </div>
+          <SheetFooter className="flex-row items-center justify-between gap-3">
+            {sheetFilterCount > 0 ? (
+              <Button
+                variant="ghost"
+                onClick={() =>
+                  navigate({
+                    type: undefined,
+                    categoryId: undefined,
+                    accountId: undefined,
+                    month: currentMonth()
+                  })
+                }
+              >
+                <X />
+                Limpiar filtros
+              </Button>
+            ) : (
+              <span />
+            )}
+            <Button
+              variant="ghost"
+              onClick={() => setSheetOpen(false)}
+            >
+              Cerrar
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }
@@ -379,45 +412,77 @@ function FilterSelect({
 }) {
   const isActive = value !== ALL
 
+  const items = options.map((option) => ({
+    value: option.id,
+    label: option.label
+  }))
+
   return (
     <Select
-      aria-label={label}
+      items={items}
       value={value}
-      onChange={(key) => key != null && onChange(String(key))}
-      className={fullWidth ? "w-full" : "w-auto"}
+      onValueChange={(next) => next != null && onChange(String(next))}
     >
-      <Select.Trigger
+      <SelectTrigger
+        aria-label={label}
+        size={fullWidth ? "default" : "sm"}
         className={cn(
-          "min-h-8 gap-1.5 rounded-3xl py-1 text-sm",
-          fullWidth &&
-            "relative min-h-11 w-full justify-center px-10 text-base",
+          "gap-1.5",
+          fullWidth ? "w-full flex-1 text-base" : "max-w-64",
           !fullWidth && !isActive && CONTROL_BUTTON,
-          isActive && "bg-accent-soft text-accent-soft-foreground"
+          // Filtro aplicado: tinte del primario del espacio
+          isActive &&
+            "bg-[color-mix(in_oklab,var(--primary)_14%,var(--card))] hover:bg-[color-mix(in_oklab,var(--primary)_20%,var(--card))]"
         )}
       >
-        <span className={cn(!isActive && "text-muted")}>{label}:</span>
-        <Select.Value
+        <span className={cn(!isActive && "text-muted-foreground")}>
+          {label}:
+        </span>
+        <SelectValue
           className={cn(
-            "truncate font-medium",
-            fullWidth ? "min-w-0" : "max-w-40"
+            "min-w-0 truncate font-medium",
+            !fullWidth && "max-w-40"
           )}
         />
-        <Select.Indicator className={cn(fullWidth && "absolute right-4")} />
-      </Select.Trigger>
-      <Select.Popover className="min-w-48">
-        <ListBox>
-          {options.map((option) => (
-            <ListBox.Item
-              key={option.id}
-              id={option.id}
-              textValue={option.label}
-            >
-              {option.label}
-              <ListBox.ItemIndicator />
-            </ListBox.Item>
-          ))}
-        </ListBox>
-      </Select.Popover>
+      </SelectTrigger>
+      <SelectContent
+        alignItemWithTrigger={false}
+        className="min-w-48"
+      >
+        {items.map((option) => (
+          <SelectItem
+            key={option.value}
+            value={option.value}
+          >
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
     </Select>
+  )
+}
+
+/**
+ * Misma barra mientras carga: buscador, mes, botón Filtros (< 768 px) y la
+ * fila de filtros (>= 768 px), con sus alturas
+ */
+export function TransactionsFiltersSkeleton() {
+  return (
+    <div
+      aria-hidden="true"
+      className="flex min-w-0 flex-1 flex-col gap-2"
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <Skeleton className="h-11 w-full rounded-4xl md:min-w-72 md:flex-1 md:basis-72" />
+        <MonthSwitcherSkeleton className="w-auto flex-1 md:flex-none" />
+        <Skeleton className="h-11 w-28 rounded-4xl md:hidden" />
+      </div>
+      <div className="hidden flex-wrap items-center gap-2 md:flex">
+        <Skeleton className="h-9 w-36 rounded-4xl" />
+        <Skeleton className="h-9 w-32 rounded-4xl" />
+        <Skeleton className="h-9 w-40 rounded-4xl" />
+        <Skeleton className="h-9 w-36 rounded-4xl" />
+      </div>
+    </div>
   )
 }

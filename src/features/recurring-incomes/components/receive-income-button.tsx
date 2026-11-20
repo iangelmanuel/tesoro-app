@@ -1,7 +1,7 @@
 "use client"
 
-import { Button } from "@heroui/react"
 import { Check } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
@@ -86,10 +86,7 @@ export function ReceiveIncomeButton({
         incomeSources
       )}
       trigger={
-        // key: el Modal de HeroUI recorre sus hijos como lista y, con el
-        // botón creado en otro componente, React avisa de la falta de key
         <Button
-          key="receive-income"
           size="sm"
           variant="outline"
           className="max-md:min-h-11 max-md:w-full"

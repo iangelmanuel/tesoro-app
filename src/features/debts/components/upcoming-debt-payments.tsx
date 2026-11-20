@@ -1,5 +1,5 @@
-import { cn } from "@heroui/react"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import { cn } from "@/libs/cn"
 import { formatCurrency, formatDate } from "@/libs/format"
 import { upcomingPayments } from "../calculations"
 import type { Debt } from "../queries"
@@ -28,7 +28,7 @@ export function UpcomingDebtPayments({
 
   if (items.length === 0) {
     return (
-      <p className="py-2 text-sm text-muted">
+      <p className="py-2 text-sm text-muted-foreground">
         No tienes pagos de deudas pendientes
       </p>
     )
@@ -50,7 +50,9 @@ export function UpcomingDebtPayments({
               {/* Tarjeta sin pago mínimo: solo fecha, sin estado */}
               {payment.status && <PaymentStatusBadge status={payment.status} />}
             </div>
-            <p className="text-sm text-muted">{formatDate(payment.dueOn)}</p>
+            <p className="text-sm text-muted-foreground">
+              {formatDate(payment.dueOn)}
+            </p>
           </div>
           {payment.amount !== null && (
             <p

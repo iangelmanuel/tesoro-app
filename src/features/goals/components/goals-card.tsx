@@ -1,10 +1,16 @@
 import Link from "next/link"
-import { Card, CardContent, buttonVariants } from "@heroui/react"
 import { Target } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
-import { CardHeading } from "@/components/dashboard/card-heading"
+import {
+  CardHeading,
+  CardHeadingSkeleton
+} from "@/components/dashboard/card-heading"
 import { CardEmpty } from "@/components/dashboard/empty-state"
+import { CARD, CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import { buttonVariants } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { formatPercent } from "@/features/budgets/progress"
+import { cn } from "@/libs/cn"
 import { todayISO } from "@/libs/dates"
 import {
   GOALS_PATH,
@@ -33,14 +39,17 @@ export async function GoalsCard({ workspaceId, currency }: GoalsCardProps) {
     .slice(0, MAX_GOALS)
 
   return (
-    <Card>
+    <section
+      aria-label="Metas de ahorro"
+      className={CARD}
+    >
       <CardHeading
         title="Metas de ahorro"
         href={GOALS_PATH}
         linkLabel="Ver todas"
         linkContext="las metas"
       />
-      <CardContent>
+      <div>
         {active.length === 0 && (
           <CardEmpty
             icon={Target}
@@ -56,14 +65,14 @@ export async function GoalsCard({ workspaceId, currency }: GoalsCardProps) {
             }
           />
         )}
-        <ul className="flex flex-col divide-y">
+        <ul className={CARD_LIST}>
           {active.map((goal) => {
             const percent = goalPercent(goal.saved, goal.target_amount)
             const status = goalStatus(goal, today)
             return (
               <li
                 key={goal.id}
-                className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0"
+                className={cn("flex flex-col gap-2", CARD_ROW)}
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <GoalIcon
@@ -82,7 +91,7 @@ export async function GoalsCard({ workspaceId, currency }: GoalsCardProps) {
                   status={status}
                   label={`${goal.name}: ${formatPercent(percent)}`}
                 />
-                <p className="text-sm text-muted tabular-nums">
+                <p className="text-sm text-muted-foreground tabular-nums">
                   <Amount
                     value={goal.saved}
                     currency={currency}
@@ -97,7 +106,32 @@ export async function GoalsCard({ workspaceId, currency }: GoalsCardProps) {
             )
           })}
         </ul>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
+  )
+}
+
+/** Metas mientras carga: tres filas con su barra */
+export function GoalsCardSkeleton() {
+  return (
+    <div className={CARD}>
+      <CardHeadingSkeleton />
+      <ul className={CARD_LIST}>
+        {Array.from({ length: 3 }, (_, index) => (
+          <li
+            key={index}
+            className={cn("flex flex-col gap-2", CARD_ROW)}
+          >
+            <div className="flex items-center gap-2">
+              <Skeleton className="size-7 rounded-full" />
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="ml-auto h-5 w-12" />
+            </div>
+            <Skeleton className="h-2 w-full rounded-full" />
+            <Skeleton className="h-5 w-40" />
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }

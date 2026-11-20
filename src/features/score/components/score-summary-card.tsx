@@ -1,5 +1,9 @@
-import { Card, CardContent } from "@heroui/react"
-import { CardHeading } from "@/components/dashboard/card-heading"
+import {
+  CardHeading,
+  CardHeadingSkeleton
+} from "@/components/dashboard/card-heading"
+import { CARD } from "@/components/dashboard/surface"
+import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
 import { shiftMonth, todayISO } from "@/libs/dates"
 import { computeScore } from "../calculations"
@@ -74,7 +78,11 @@ export function ScoreSummary<K extends string>({
   recommendations
 }: ScoreSummaryProps<K>) {
   return (
-    <Card data-tour="summary-score">
+    <section
+      aria-label={title}
+      className={CARD}
+      data-tour="summary-score"
+    >
       <CardHeading
         title={title}
         help="score"
@@ -82,7 +90,7 @@ export function ScoreSummary<K extends string>({
         linkLabel="Ver todas"
         linkContext="las recomendaciones"
       />
-      <CardContent
+      <div
         className={
           layout === "side"
             ? "flex flex-col gap-5"
@@ -96,7 +104,9 @@ export function ScoreSummary<K extends string>({
                 <span className="text-4xl font-semibold tracking-tight tabular-nums">
                   {current.score}
                 </span>
-                <span className="pb-1 text-sm text-muted">/ 100</span>
+                <span className="pb-1 text-sm text-muted-foreground">
+                  / 100
+                </span>
               </p>
               <span className="pb-1.5">
                 <BandBadge band={current.band} />
@@ -112,7 +122,33 @@ export function ScoreSummary<K extends string>({
           recommendations={recommendations.slice(0, SUMMARY_RECOMMENDATIONS)}
           compact
         />
-      </CardContent>
-    </Card>
+      </div>
+    </section>
+  )
+}
+
+/** "Salud financiera" mientras carga: cifra, banda, variación y 3 filas */
+export function ScoreSummaryCardSkeleton() {
+  return (
+    <div className={CARD}>
+      <CardHeadingSkeleton />
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-end gap-3">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="mb-1.5 h-6 w-16 rounded-4xl" />
+          </div>
+          <Skeleton className="h-5 w-48" />
+        </div>
+        <div className="flex flex-col gap-3">
+          {Array.from({ length: 3 }, (_, index) => (
+            <Skeleton
+              key={index}
+              className="h-12 w-full"
+            />
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }

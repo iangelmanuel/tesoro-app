@@ -1,9 +1,10 @@
-import { Chip, cn } from "@heroui/react"
 import {
   TONE_BADGE_CLASSES as TONE_BADGE,
   TONE_BAR_CLASSES as TONE_BAR
 } from "@/components/dashboard/tone"
+import { ToneBadge as Badge } from "@/components/dashboard/tone-badge"
 import type { OccurrenceTone } from "@/features/recurring-expenses/occurrences"
+import { cn } from "@/libs/cn"
 import {
   PAYMENT_STATUS,
   type PaymentStatus,
@@ -32,16 +33,7 @@ export function ToneBadge({
   tone: OccurrenceTone
   children: React.ReactNode
 }) {
-  return (
-    <Chip
-      size="sm"
-      className={TONE_BADGE_CLASSES[tone]}
-      color="accent"
-      variant="primary"
-    >
-      {children}
-    </Chip>
-  )
+  return <Badge className={TONE_BADGE_CLASSES[tone]}>{children}</Badge>
 }
 
 export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {

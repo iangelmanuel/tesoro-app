@@ -1,10 +1,13 @@
 import { Suspense } from "react"
-import { Button, Skeleton } from "@heroui/react"
 import { Plus, Wallet } from "lucide-react"
-import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { EmptyState } from "@/components/dashboard/empty-state"
+import { Button } from "@/components/ui/button"
+import { LoadingRegion } from "@/components/ui/skeleton"
 import { AccountDialog } from "@/features/accounts/components/account-dialog"
-import { AccountsGrid } from "@/features/accounts/components/accounts-grid"
+import {
+  AccountsGrid,
+  AccountsScreenSkeleton
+} from "@/features/accounts/components/accounts-grid"
 import { ArchivedAccounts } from "@/features/accounts/components/archived-accounts"
 import { ACCOUNTS_PATH } from "@/features/accounts/constants"
 import { getAccountBalances } from "@/features/accounts/queries"
@@ -82,14 +85,11 @@ async function AccountsContent() {
 
 function AccountsSkeleton() {
   return (
-    <>
-      <Skeleton className="h-9 w-40 rounded-3xl" />
-      <CardSkeleton className="h-24" />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <CardSkeleton className="h-44" />
-        <CardSkeleton className="h-44" />
-        <CardSkeleton className="h-44" />
-      </div>
-    </>
+    <LoadingRegion
+      label="Cargando cuentas…"
+      className="flex flex-1 flex-col gap-6"
+    >
+      <AccountsScreenSkeleton />
+    </LoadingRegion>
   )
 }

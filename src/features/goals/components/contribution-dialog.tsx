@@ -1,21 +1,16 @@
 "use client"
 
-import { useActionState, useState } from "react"
-import {
-  Button,
-  FieldError,
-  Input,
-  ListBox,
-  Modal,
-  Select,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-  toast
-} from "@heroui/react"
+import { useActionState, useId, useState } from "react"
+import { amountInput } from "@/components/forms/amount-format"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { FieldLabel } from "@/components/forms/field-label"
+import { FormDialog } from "@/components/forms/form-dialog"
+import { SelectField } from "@/components/forms/select-field"
+import { TextInputField } from "@/components/forms/text-input-field"
 import { TimePickerField } from "@/components/forms/time-picker-field"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/sonner"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
   type PaymentAccountOption,
   PaymentAccountSection,
@@ -26,10 +21,6 @@ import { createContribution, updateContribution } from "../actions"
 import type { GoalContribution } from "../queries"
 import type { ContributionKind } from "../schemas"
 import type { ContributionFormState } from "../types"
-
-const AMOUNT_FORMAT = new Intl.NumberFormat("es-CO", {
-  maximumFractionDigits: 2
-})
 
 const KIND_LABELS: Record<ContributionKind, string> = {
   deposit: "Aporte",
@@ -78,7 +69,7 @@ interface ContributionDialogProps {
   /** Cuentas con saldo para el aporte; solo al registrar */
   accounts?: PaymentAccountOption[]
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
@@ -95,9 +86,6 @@ export function ContributionDialog({
   open: controlledOpen,
   onOpenChange
 }: ContributionDialogProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
-  const open = controlledOpen ?? uncontrolledOpen
-  const setOpen = onOpenChange ?? setUncontrolledOpen
   const isEditing = contribution !== undefined
   const initialKind: ContributionKind = contribution
     ? contribution.amount < 0
@@ -106,45 +94,34 @@ export function ContributionDialog({
     : kind
 
   return (
-    <Modal
-      isOpen={open}
-      onOpenChange={setOpen}
+    <FormDialog
+      trigger={trigger}
+      open={controlledOpen}
+      onOpenChange={onOpenChange}
+      className="sm:max-w-md"
+      title={
+        isEditing
+          ? `Editar ${KIND_LABELS[initialKind].toLowerCase()}`
+          : initialKind === "withdrawal"
+            ? "Retirar de la meta"
+            : "Aportar a la meta"
+      }
+      description="Un aporte no es una salida. Con cuenta, solo mueve su saldo."
     >
-      {trigger}
-      <Modal.Backdrop>
-        <Modal.Container scroll="outside">
-          <Modal.Dialog className="sm:max-w-md">
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>
-                {isEditing
-                  ? `Editar ${KIND_LABELS[initialKind].toLowerCase()}`
-                  : initialKind === "withdrawal"
-                    ? "Retirar de la meta"
-                    : "Aportar a la meta"}
-              </Modal.Heading>
-              <p className="text-sm text-muted">
-                Un aporte no es una salida. Con cuenta, solo mueve su saldo.
-              </p>
-            </Modal.Header>
-            <Modal.Body>
-              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-              <ContributionForm
-                workspaceId={workspaceId}
-                goalId={goalId}
-                goals={goals}
-                initialKind={initialKind}
-                contribution={contribution}
-                initialValues={isEditing ? undefined : initialValues}
-                accounts={accounts}
-                onSaved={() => setOpen(false)}
-                onCancel={() => setOpen(false)}
-              />
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+      {(close) => (
+        <ContributionForm
+          workspaceId={workspaceId}
+          goalId={goalId}
+          goals={goals}
+          initialKind={initialKind}
+          contribution={contribution}
+          initialValues={isEditing ? undefined : initialValues}
+          accounts={accounts}
+          onSaved={close}
+          onCancel={close}
+        />
+      )}
+    </FormDialog>
   )
 }
 
@@ -172,6 +149,7 @@ function ContributionForm({
   onCancel
 }: ContributionFormProps) {
   const isEditing = contribution !== undefined
+  const kindLabelId = useId()
   const [kind, setKind] = useState<ContributionKind>(initialKind)
   // Sin meta fija arranca con la primera de la lista
   const [selectedGoalId, setSelectedGoalId] = useState(
@@ -209,11 +187,13 @@ function ContributionForm({
   const [amountText, setAmountText] = useState(
     () =>
       values?.amount ??
-      (contribution
-        ? AMOUNT_FORMAT.format(Math.abs(contribution.amount))
-        : initialValues
-          ? AMOUNT_FORMAT.format(Math.abs(initialValues.amount))
-          : "")
+      amountInput(
+        contribution
+          ? Math.abs(contribution.amount)
+          : initialValues
+            ? Math.abs(initialValues.amount)
+            : null
+      )
   )
 
   return (
@@ -237,35 +217,14 @@ function ContributionForm({
       )}
 
       {showGoalSelect && (
-        <Select
-          fullWidth
-          placeholder="Elige una meta"
-          value={selectedGoalId || null}
-          onChange={(key) => setSelectedGoalId(key == null ? "" : String(key))}
-          isInvalid={Boolean(errors?.goal_id)}
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="contribution.goal">Meta</FieldLabel>
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              {goals.map((goal) => (
-                <ListBox.Item
-                  key={goal.id}
-                  id={goal.id}
-                  textValue={goal.name}
-                >
-                  {goal.name}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-          <FieldError>{errors?.goal_id?.[0]}</FieldError>
-        </Select>
+        <SelectField
+          label="Meta"
+          help="contribution.goal"
+          value={selectedGoalId}
+          onChange={setSelectedGoalId}
+          options={goals.map((goal) => ({ value: goal.id, label: goal.name }))}
+          error={errors?.goal_id?.[0]}
+        />
       )}
       <input
         type="hidden"
@@ -275,52 +234,45 @@ function ContributionForm({
 
       <div className="flex flex-col gap-2">
         <FieldLabel
-          id="contribution-kind-label"
+          id={kindLabelId}
           help="contribution.type"
         >
           Tipo
         </FieldLabel>
-        <ToggleButtonGroup
-          aria-labelledby="contribution-kind-label"
-          selectionMode="single"
-          disallowEmptySelection
-          selectedKeys={[kind]}
-          onSelectionChange={(keys) => {
-            const [value] = [...keys]
+        <ToggleGroup
+          value={[kind]}
+          onValueChange={(next) => {
+            const [value] = next
             if (value) setKind(value as ContributionKind)
           }}
-          fullWidth
+          aria-labelledby={kindLabelId}
+          spacing={1}
+          className="h-12 w-full rounded-4xl bg-subtle p-0.5 dark:bg-card"
         >
-          <ToggleButton
-            id="deposit"
-            className="flex-1"
-          >
-            Aporte
-          </ToggleButton>
-          <ToggleButton
-            id="withdrawal"
-            className="flex-1"
-          >
-            Retiro
-          </ToggleButton>
-        </ToggleButtonGroup>
+          {(["deposit", "withdrawal"] as const).map((value) => (
+            <ToggleGroupItem
+              key={value}
+              value={value}
+              className="h-full flex-1 px-3 data-pressed:bg-card data-pressed:font-semibold data-pressed:text-foreground data-pressed:shadow-(--surface-shadow) dark:data-pressed:bg-highlight"
+            >
+              {KIND_LABELS[value]}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
       </div>
 
-      <TextField
+      <TextInputField
         name="amount"
+        label="Monto"
+        help="common.amount"
         inputMode="decimal"
         autoComplete="off"
+        placeholder="0"
         value={amountText}
-        onChange={setAmountText}
+        onChange={(event) => setAmountText(event.target.value)}
         isRequired
-        isInvalid={Boolean(errors?.amount)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="common.amount">Monto</FieldLabel>
-        <Input placeholder="0" />
-        <FieldError>{errors?.amount?.[0]}</FieldError>
-      </TextField>
+        error={errors?.amount?.[0]}
+      />
 
       <div className="grid gap-4 md:grid-cols-2">
         <DatePickerField
@@ -343,20 +295,17 @@ function ContributionForm({
         />
       </div>
 
-      <TextField
+      <TextInputField
         name="note"
+        label="Nota (opcional)"
+        help="common.note"
         maxLength={120}
+        placeholder="Prima de diciembre"
         defaultValue={
           values?.note ?? contribution?.note ?? initialValues?.note ?? ""
         }
-        isInvalid={Boolean(errors?.note)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="common.note">Nota (opcional)</FieldLabel>
-        <Input placeholder="Prima de diciembre" />
-        <FieldError>{errors?.note?.[0]}</FieldError>
-      </TextField>
+        error={errors?.note?.[0]}
+      />
 
       {/* La cuenta se elige al registrar; al editar solo cambian monto, fecha y
           nota. Un retiro entra a la cuenta y no lleva traspaso */}
@@ -381,7 +330,7 @@ function ContributionForm({
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error}
         </p>
@@ -389,14 +338,15 @@ function ContributionForm({
 
       <div className="flex justify-end gap-2">
         <Button
+          type="button"
           variant="ghost"
-          onPress={onCancel}
+          onClick={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          isDisabled={pending}
+          disabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Registrar"}
         </Button>

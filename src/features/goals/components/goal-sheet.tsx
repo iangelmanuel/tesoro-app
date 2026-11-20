@@ -1,9 +1,9 @@
 "use client"
 
-import { Button } from "@heroui/react"
 import { Minus, Plus } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { DetailSection, DetailSheet } from "@/components/dashboard/detail-sheet"
+import { Button } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { goalStatus } from "../progress"
 import type { Goal, GoalContribution } from "../queries"
@@ -119,8 +119,8 @@ export function GoalSheet({
               variant="secondary"
               size="sm"
               className="max-md:min-h-11"
-              isDisabled={pending}
-              onPress={() => run("reactivate")}
+              disabled={pending}
+              onClick={() => run("reactivate")}
             >
               Reactivar
             </Button>

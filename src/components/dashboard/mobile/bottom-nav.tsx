@@ -27,7 +27,7 @@ interface BottomNavProps {
 }
 
 const ITEM_CLASSES =
-  "flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[0.6875rem] leading-tight outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+  "flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-xs leading-tight outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
 
 // Barra inferior del teléfono (< 768 px): cuatro destinos del espacio y el
 // botón [+] al centro. Fuera de un espacio (cuenta, estado vacío de Empresa)

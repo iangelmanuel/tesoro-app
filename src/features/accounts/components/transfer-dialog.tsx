@@ -1,18 +1,13 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import {
-  Button,
-  FieldError,
-  Input,
-  Modal,
-  TextField,
-  toast
-} from "@heroui/react"
 import { AccountSelectField } from "@/components/forms/account-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
-import { FieldLabel } from "@/components/forms/field-label"
+import { FormDialog } from "@/components/forms/form-dialog"
+import { TextInputField } from "@/components/forms/text-input-field"
 import { TimePickerField } from "@/components/forms/time-picker-field"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/sonner"
 import { amountInput } from "@/features/debts/components/field"
 import { todayISO } from "@/libs/dates"
 import { createTransfer, updateTransfer } from "../actions"
@@ -50,7 +45,7 @@ interface TransferDialogProps {
   /** Prellenado de un traspaso nuevo; se ignora al editar */
   initialValues?: TransferInitialValues
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
@@ -64,44 +59,27 @@ export function TransferDialog({
   open: controlledOpen,
   onOpenChange
 }: TransferDialogProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
-  const open = controlledOpen ?? uncontrolledOpen
-  const setOpen = onOpenChange ?? setUncontrolledOpen
   const isEditing = transfer !== undefined
 
   return (
-    <Modal
-      isOpen={open}
-      onOpenChange={setOpen}
+    <FormDialog
+      trigger={trigger}
+      open={controlledOpen}
+      onOpenChange={onOpenChange}
+      title={isEditing ? "Editar traspaso" : "Nuevo traspaso"}
+      description="Mueve plata entre tus cuentas. No cuenta como entrada ni salida."
     >
-      {trigger}
-      <Modal.Backdrop>
-        <Modal.Container scroll="outside">
-          <Modal.Dialog className="sm:max-w-md">
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>
-                {isEditing ? "Editar traspaso" : "Nuevo traspaso"}
-              </Modal.Heading>
-              <p className="text-sm text-muted">
-                Mueve plata entre tus cuentas. No cuenta como entrada ni salida.
-              </p>
-            </Modal.Header>
-            <Modal.Body>
-              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-              <TransferForm
-                workspaceId={workspaceId}
-                accounts={accounts}
-                transfer={transfer}
-                initialValues={isEditing ? undefined : initialValues}
-                onSaved={() => setOpen(false)}
-                onCancel={() => setOpen(false)}
-              />
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+      {(close) => (
+        <TransferForm
+          workspaceId={workspaceId}
+          accounts={accounts}
+          transfer={transfer}
+          initialValues={isEditing ? undefined : initialValues}
+          onSaved={close}
+          onCancel={close}
+        />
+      )}
+    </FormDialog>
   )
 }
 
@@ -200,23 +178,20 @@ export function TransferForm({
         />
       </div>
 
-      <TextField
+      <TextInputField
         name="amount"
+        label="Monto"
+        help="transfer.amount"
         inputMode="decimal"
         autoComplete="off"
+        placeholder="0"
         defaultValue={
           values?.amount ??
           amountInput(transfer?.amount ?? initialValues?.amount)
         }
         isRequired
-        isInvalid={Boolean(errors?.amount)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="transfer.amount">Monto</FieldLabel>
-        <Input placeholder="0" />
-        <FieldError>{errors?.amount?.[0]}</FieldError>
-      </TextField>
+        error={errors?.amount?.[0]}
+      />
 
       <div className="grid gap-4 md:grid-cols-2">
         <DatePickerField
@@ -238,25 +213,22 @@ export function TransferForm({
         />
       </div>
 
-      <TextField
+      <TextInputField
         name="note"
+        label="Nota (opcional)"
+        help="common.note"
         maxLength={120}
+        placeholder="Retiro en cajero"
         defaultValue={
           values?.note ?? transfer?.note ?? initialValues?.note ?? ""
         }
-        isInvalid={Boolean(errors?.note)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="common.note">Nota (opcional)</FieldLabel>
-        <Input placeholder="Retiro en cajero" />
-        <FieldError>{errors?.note?.[0]}</FieldError>
-      </TextField>
+        error={errors?.note?.[0]}
+      />
 
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error}
         </p>
@@ -264,14 +236,15 @@ export function TransferForm({
 
       <div className="flex justify-end gap-2">
         <Button
+          type="button"
           variant="ghost"
-          onPress={onCancel}
+          onClick={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          isDisabled={pending}
+          disabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Registrar"}
         </Button>

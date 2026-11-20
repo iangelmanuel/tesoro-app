@@ -1,10 +1,12 @@
 "use client"
 
-import { useState } from "react"
-import { FieldError, Input, Switch, TextField } from "@heroui/react"
+import { useId, useState } from "react"
 import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
 import { AccountSelectField } from "@/components/forms/account-select-field"
-import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
+import { FieldHelp } from "@/components/forms/field-label"
+import { TextInputField } from "@/components/forms/text-input-field"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import type { FieldHelpKey } from "@/config/help"
 import { amountInput } from "@/features/debts/components/field"
 import { parseAmount } from "@/features/transactions/schemas"
@@ -70,6 +72,7 @@ export function PaymentAccountSection({
   defaultAccountId = "",
   onAccountChange
 }: PaymentAccountSectionProps) {
+  const switchId = useId()
   const [accountId, setAccountId] = useState(defaultAccountId)
   // null = sigue la sugerencia (faltante → encendido); true/false = decisión
   const [transferChoice, setTransferChoice] = useState<boolean | null>(null)
@@ -112,7 +115,7 @@ export function PaymentAccountSection({
       {selected && (
         <p
           role="status"
-          className="text-sm text-muted"
+          className="text-sm text-muted-foreground"
         >
           {shortfall > 0 ? (
             <span className={TONE_TEXT_CLASSES.warning}>
@@ -142,17 +145,18 @@ export function PaymentAccountSection({
       )}
 
       {canTransfer && (
-        <div className="flex items-center gap-0.5">
+        <div className="flex min-h-11 items-center gap-0.5">
           <Switch
-            isSelected={transferOn}
-            onChange={setTransferChoice}
-            className="min-h-11"
+            id={switchId}
+            checked={transferOn}
+            onCheckedChange={setTransferChoice}
+          />
+          <Label
+            htmlFor={switchId}
+            className="min-h-11 pl-3 font-normal"
           >
-            <Switch.Control>
-              <Switch.Thumb />
-            </Switch.Control>
-            <Switch.Content>Traspasar fondos antes</Switch.Content>
-          </Switch>
+            Traspasar fondos antes
+          </Label>
           <FieldHelp
             help="transfer.before"
             label="Traspasar fondos antes"
@@ -175,20 +179,17 @@ export function PaymentAccountSection({
             }))}
             error={errors?.transfer_from}
           />
-          <TextField
+          <TextInputField
             name="transfer_amount"
+            label="Monto del traspaso"
+            help="transfer.amount"
             inputMode="decimal"
             autoComplete="off"
+            placeholder="0"
             value={transferValue}
-            onChange={setTransferInput}
-            isInvalid={Boolean(errors?.transfer_amount)}
-            validationBehavior="aria"
-            className="flex flex-col gap-2"
-          >
-            <FieldLabel help="transfer.amount">Monto del traspaso</FieldLabel>
-            <Input placeholder="0" />
-            <FieldError>{errors?.transfer_amount}</FieldError>
-          </TextField>
+            onChange={(event) => setTransferInput(event.target.value)}
+            error={errors?.transfer_amount}
+          />
         </div>
       ) : (
         <>

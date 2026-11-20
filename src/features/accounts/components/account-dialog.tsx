@@ -1,18 +1,13 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import {
-  Button,
-  FieldError,
-  Input,
-  ListBox,
-  Modal,
-  Select,
-  TextField,
-  toast
-} from "@heroui/react"
 import { DatePickerField } from "@/components/forms/date-picker-field"
-import { FieldLabel } from "@/components/forms/field-label"
+import { FormDialog } from "@/components/forms/form-dialog"
+import { SelectField } from "@/components/forms/select-field"
+import { TextInputField } from "@/components/forms/text-input-field"
+import { Button } from "@/components/ui/button"
+import { FieldDescription } from "@/components/ui/field"
+import { toast } from "@/components/ui/sonner"
 import { IconColorPicker } from "@/features/categories/components/icon-color-picker"
 import { amountInput } from "@/features/debts/components/field"
 import { todayISO } from "@/libs/dates"
@@ -31,7 +26,7 @@ interface AccountDialogProps {
   /** Si llega, el diálogo edita esta cuenta */
   account?: AccountWithBalance
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
   open?: boolean
   onOpenChange?: (open: boolean) => void
   /** Recibe la cuenta creada (selects con creación la dejan seleccionada) */
@@ -46,47 +41,32 @@ export function AccountDialog({
   onOpenChange,
   onCreated
 }: AccountDialogProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
-  const open = controlledOpen ?? uncontrolledOpen
-  const setOpen = onOpenChange ?? setUncontrolledOpen
   const isEditing = account !== undefined
 
   return (
-    <Modal
-      isOpen={open}
-      onOpenChange={setOpen}
+    <FormDialog
+      trigger={trigger}
+      open={controlledOpen}
+      onOpenChange={onOpenChange}
+      title={isEditing ? "Editar cuenta" : "Nueva cuenta"}
+      description={
+        isEditing
+          ? "Cambia los datos de la cuenta. Sus movimientos no cambian."
+          : "Donde guardas tu plata: efectivo, un banco o una billetera como Nequi."
+      }
     >
-      {trigger}
-      <Modal.Backdrop>
-        <Modal.Container scroll="outside">
-          <Modal.Dialog className="sm:max-w-md">
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>
-                {isEditing ? "Editar cuenta" : "Nueva cuenta"}
-              </Modal.Heading>
-              <p className="text-sm text-muted">
-                {isEditing
-                  ? "Cambia los datos de la cuenta. Sus movimientos no cambian."
-                  : "Donde guardas tu plata: efectivo, un banco o una billetera como Nequi."}
-              </p>
-            </Modal.Header>
-            <Modal.Body>
-              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-              <AccountForm
-                workspaceId={workspaceId}
-                account={account}
-                onSaved={(created) => {
-                  if (created) onCreated?.(created)
-                  setOpen(false)
-                }}
-                onCancel={() => setOpen(false)}
-              />
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+      {(close) => (
+        <AccountForm
+          workspaceId={workspaceId}
+          account={account}
+          onSaved={(created) => {
+            if (created) onCreated?.(created)
+            close()
+          }}
+          onCancel={close}
+        />
+      )}
+    </FormDialog>
   )
 }
 
@@ -157,65 +137,42 @@ function AccountForm({
         value={kind}
       />
 
-      <TextField
+      <TextInputField
         name="name"
+        label="Nombre"
+        help="account.name"
         maxLength={40}
+        placeholder="Nequi"
         defaultValue={values?.name ?? account?.name}
         isRequired
-        isInvalid={Boolean(errors?.name)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="account.name">Nombre</FieldLabel>
-        <Input placeholder="Nequi" />
-        <FieldError>{errors?.name?.[0]}</FieldError>
-      </TextField>
+        error={errors?.name?.[0]}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Select
-          fullWidth
+        <SelectField
+          label="Tipo"
+          help="account.type"
           value={kind}
-          onChange={(value) => value && setKind(value as AccountKind)}
-          isInvalid={Boolean(errors?.kind)}
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="account.type">Tipo</FieldLabel>
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              {ACCOUNT_KINDS.map((value) => (
-                <ListBox.Item
-                  key={value}
-                  id={value}
-                  textValue={ACCOUNT_KIND_META[value].label}
-                >
-                  {ACCOUNT_KIND_META[value].label}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-          <FieldError>{errors?.kind?.[0]}</FieldError>
-        </Select>
+          onChange={setKind}
+          options={ACCOUNT_KINDS.map((value) => ({
+            value,
+            label: ACCOUNT_KIND_META[value].label
+          }))}
+          error={errors?.kind?.[0]}
+        />
 
-        <TextField
+        <TextInputField
           name="opening_balance"
+          label="Saldo inicial"
+          help="account.openingBalance"
           inputMode="decimal"
           autoComplete="off"
+          placeholder="0"
           defaultValue={
             values?.opening_balance ?? amountInput(account?.opening_balance)
           }
-          isInvalid={Boolean(errors?.opening_balance)}
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="account.openingBalance">Saldo inicial</FieldLabel>
-          <Input placeholder="0" />
-          <FieldError>{errors?.opening_balance?.[0]}</FieldError>
-        </TextField>
+          error={errors?.opening_balance?.[0]}
+        />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -228,10 +185,10 @@ function AccountForm({
           error={errors?.opening_balance_on?.[0]}
           maxValue={todayISO()}
         />
-        <p className="text-xs text-muted">
+        <FieldDescription>
           Opcional. Sin fecha, el saldo inicial cuenta desde el primer
           movimiento.
-        </p>
+        </FieldDescription>
       </div>
 
       {/* Al crear, cambiar el tipo reinicia el icono y el color a los del tipo */}
@@ -250,7 +207,7 @@ function AccountForm({
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error}
         </p>
@@ -258,14 +215,15 @@ function AccountForm({
 
       <div className="flex justify-end gap-2">
         <Button
+          type="button"
           variant="ghost"
-          onPress={onCancel}
+          onClick={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          isDisabled={pending}
+          disabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear"}
         </Button>

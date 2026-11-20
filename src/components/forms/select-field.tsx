@@ -1,0 +1,100 @@
+"use client"
+
+import { useId } from "react"
+import { HeroUIPortalBridge } from "@/components/dashboard/heroui-portal-bridge"
+import { FieldLabel } from "@/components/forms/field-label"
+import { FieldError } from "@/components/ui/field"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select"
+import type { FieldHelpKey } from "@/config/help"
+import { cn } from "@/libs/cn"
+
+export interface SelectFieldOption<T extends string> {
+  value: T
+  label: string
+}
+
+interface SelectFieldProps<T extends string> {
+  /** Si llega, el formulario recibe el valor con este nombre */
+  name?: string
+  label: string
+  help?: FieldHelpKey
+  value: T
+  onChange: (value: T) => void
+  options: readonly SelectFieldOption<T>[]
+  error?: string
+  disabled?: boolean
+  className?: string
+}
+
+/**
+ * Select corto (sin búsqueda) de los formularios: FieldLabel + Select de
+ * `ui/` + FieldError. Para listas largas o con "+ Crear", CreatableSelect.
+ * Valida el servidor: el error se anuncia con aria-invalid +
+ * aria-describedby
+ */
+export function SelectField<T extends string>({
+  name,
+  label,
+  help,
+  value,
+  onChange,
+  options,
+  error,
+  disabled,
+  className
+}: SelectFieldProps<T>) {
+  const id = useId()
+  const errorId = `${id}-error`
+
+  return (
+    <div
+      className={cn("flex flex-col gap-2", className)}
+      data-invalid={error ? true : undefined}
+    >
+      <FieldLabel
+        htmlFor={id}
+        help={help}
+        isInvalid={Boolean(error)}
+      >
+        {label}
+      </FieldLabel>
+      <HeroUIPortalBridge>
+        <Select
+          name={name}
+          items={options}
+          value={value}
+          onValueChange={(next) => {
+            if (next != null) onChange(next as T)
+          }}
+          disabled={disabled}
+        >
+          <SelectTrigger
+            id={id}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? errorId : undefined}
+            className="w-full"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) => (
+              <SelectItem
+                key={option.value}
+                value={option.value}
+              >
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </HeroUIPortalBridge>
+      {error ? <FieldError id={errorId}>{error}</FieldError> : null}
+    </div>
+  )
+}

@@ -1,20 +1,14 @@
 "use client"
 
 import { useActionState, useEffect, useState } from "react"
-import {
-  Button,
-  FieldError,
-  Input,
-  Modal,
-  TextField,
-  toast
-} from "@heroui/react"
 import { HelpHint } from "@/components/dashboard/help-hint"
 import { TONE_TEXT_CLASSES, type Tone } from "@/components/dashboard/tone"
 import { DatePickerField } from "@/components/forms/date-picker-field"
-import { FieldLabel } from "@/components/forms/field-label"
+import { FormDialog } from "@/components/forms/form-dialog"
+import { TextInputField } from "@/components/forms/text-input-field"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/sonner"
 import { SITE } from "@/config/site"
-import { useIsMobile } from "@/hooks/use-is-mobile"
 import { todayISO } from "@/libs/dates"
 import { formatCurrency } from "@/libs/format"
 import { getReconcileBalanceAction, reconcileAccountAction } from "../actions"
@@ -25,7 +19,7 @@ interface ReconcileDialogProps {
   account: Pick<AccountWithBalance, "id" | "workspace_id" | "name" | "balance">
   currency: string
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
@@ -35,7 +29,7 @@ const roundCents = (value: number) => Math.round(value * 100) / 100
 /**
  * Cuadrar saldo (SPEC 21 y 48): el usuario escribe el saldo de su banco a una fecha, el
  * diálogo muestra el saldo que calcula Tesoro y la diferencia, y "Crear
- * ajuste" guarda esa diferencia. En móvil se abre como hoja inferior.
+ * ajuste" guarda esa diferencia. En el teléfono se pega abajo, como hoja.
  */
 export function ReconcileDialog({
   account,
@@ -44,47 +38,29 @@ export function ReconcileDialog({
   open: controlledOpen,
   onOpenChange
 }: ReconcileDialogProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
-  const open = controlledOpen ?? uncontrolledOpen
-  const setOpen = onOpenChange ?? setUncontrolledOpen
-  const isMobile = useIsMobile()
-
   return (
-    <Modal
-      isOpen={open}
-      onOpenChange={setOpen}
+    <FormDialog
+      trigger={trigger}
+      open={controlledOpen}
+      onOpenChange={onOpenChange}
+      bottomOnMobile
+      title={
+        <span className="flex items-center gap-1">
+          Cuadrar saldo de {account.name}
+          <HelpHint topic="reconciliation" />
+        </span>
+      }
+      description="Escribe el saldo que ves en tu banco o billetera y la fecha. Tesoro crea un ajuste por la diferencia."
     >
-      {trigger}
-      <Modal.Backdrop>
-        <Modal.Container
-          scroll="outside"
-          placement={isMobile ? "bottom" : "center"}
-        >
-          <Modal.Dialog className="sm:max-w-md">
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading className="flex items-center gap-1">
-                Cuadrar saldo de {account.name}
-                <HelpHint topic="reconciliation" />
-              </Modal.Heading>
-              <p className="text-sm text-muted">
-                Escribe el saldo que ves en tu banco o billetera y la fecha.
-                Tesoro crea un ajuste por la diferencia.
-              </p>
-            </Modal.Header>
-            <Modal.Body>
-              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-              <ReconcileForm
-                account={account}
-                currency={currency}
-                onSaved={() => setOpen(false)}
-                onCancel={() => setOpen(false)}
-              />
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+      {(close) => (
+        <ReconcileForm
+          account={account}
+          currency={currency}
+          onSaved={close}
+          onCancel={close}
+        />
+      )}
+    </FormDialog>
   )
 }
 
@@ -194,24 +170,18 @@ function ReconcileForm({
         value={account.id}
       />
 
-      <TextField
+      <TextInputField
         name="balance"
+        label="Saldo en tu banco"
+        help="balance.real"
         inputMode="decimal"
         autoComplete="off"
+        placeholder="0"
         value={real}
-        onChange={setReal}
+        onChange={(event) => setReal(event.target.value)}
         isRequired
-        isInvalid={Boolean(errors?.balance)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="balance.real">Saldo en tu banco</FieldLabel>
-        <Input
-          placeholder="0"
-          className="min-h-11"
-        />
-        <FieldError>{errors?.balance?.[0]}</FieldError>
-      </TextField>
+        error={errors?.balance?.[0]}
+      />
 
       <DatePickerField
         name="occurred_on"
@@ -225,11 +195,11 @@ function ReconcileForm({
       />
 
       <dl
-        className="flex flex-col gap-2 rounded-2xl bg-default p-4 text-sm"
+        className="flex flex-col gap-2 rounded-2xl bg-subtle p-4 text-sm"
         aria-live="polite"
       >
         <div className="flex items-baseline justify-between gap-4">
-          <dt className="text-muted">Saldo calculado por Tesoro</dt>
+          <dt className="text-muted-foreground">Saldo calculado por Tesoro</dt>
           <dd className="font-medium tabular-nums">
             {loading
               ? "Calculando..."
@@ -239,7 +209,7 @@ function ReconcileForm({
           </dd>
         </div>
         <div className="flex items-baseline justify-between gap-4">
-          <dt className="text-muted">Diferencia</dt>
+          <dt className="text-muted-foreground">Diferencia</dt>
           <dd
             className={`font-semibold tabular-nums ${TONE_TEXT_CLASSES[tone]}`}
           >
@@ -253,7 +223,7 @@ function ReconcileForm({
       {balanced && (
         <p
           role="status"
-          className="text-sm text-muted"
+          className="text-sm text-muted-foreground"
         >
           La cuenta ya cuadra
         </p>
@@ -262,7 +232,7 @@ function ReconcileForm({
       {warn && (
         <p
           role="status"
-          className="text-sm text-warning"
+          className={`text-sm ${TONE_TEXT_CLASSES.warning}`}
         >
           Probablemente faltan movimientos por registrar
         </p>
@@ -271,7 +241,7 @@ function ReconcileForm({
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error}
         </p>
@@ -279,16 +249,15 @@ function ReconcileForm({
 
       <div className="flex justify-end gap-2">
         <Button
+          type="button"
           variant="ghost"
-          onPress={onCancel}
-          className="max-md:min-h-11"
+          onClick={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          isDisabled={pending || difference === null || balanced}
-          className="max-md:min-h-11"
+          disabled={pending || difference === null || balanced}
         >
           {pending ? "Guardando..." : "Crear ajuste"}
         </Button>

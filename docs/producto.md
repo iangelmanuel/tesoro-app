@@ -129,12 +129,19 @@ SPEC 24:
 
 ## Marca
 
-- **Isotipo**: un cofre blanco sobre un cuadro redondeado del acento. Fuente
-  en `assets/brand/mark.svg`; `app/icon.svg` es una copia.
-- **Wordmark**: "Tesoro" en SemiBold. En la UI (`Logo`) usa Inter, la fuente
-  de la app; los SVG de `assets/brand/` conservan sus trazos en Geist.
-- **Color de marca**: `--brand` (emerald-500, `#10b981`), igual en claro y
-  oscuro. Lo usan el logo, el isotipo, el favicon y la imagen OG. Para texto
+- **Isotipo** (SPEC 50): monograma T sobre una retícula de 64 × 64. El asta
+  son dos barras que suben, como una gráfica; la alta sostiene el travesaño.
+  Dos paths, sin cuadro ni fondo. Versiones: **tinta** (`mark.svg`, el
+  foreground claro `#151820`; en la UI, `currentColor`) y **color**
+  (`mark-color.svg`, la misma T en `#059669`). `app/icon.svg` sale de
+  `mark-color.svg`.
+- **Wordmark**: "Tesoro" en paths propios, sobre Inter Bold con una T
+  geométrica sin remates y el espaciado corregido a mano. No depende de la
+  fuente de la UI.
+- **Color de marca**: en la UI, `--brand` (emerald-500, `#10b981`), igual en
+  claro y oscuro. Los assets generados usan `BRAND_HEX` (`#059669`,
+  emerald-600) del script, que da ≥ 3:1 sobre blanco y sobre oscuro; SPEC 51
+  re-afina los dos. Para texto
   pequeño se usa la utilidad `text-brand` (`--brand` mezclado con el
   foreground), que cumple contraste AA en claro y oscuro.
 - **Primario de la UI** (`--accent` de HeroUI), según dónde estés:
@@ -157,23 +164,33 @@ SPEC 24:
   mismo matiz que el claro), niveles de superficie más separados y la
   elevación sale de un brillo superior de 1 px más una sombra difusa, sin
   bordes.
-- **Componente** `Logo` (`src/components/brand/logo.tsx`): isotipo inline y
-  wordmark, con variante solo isotipo (`variant="mark"`) y tamaños `default` y
-  `lg`. Si cambia `mark.svg`, se actualiza también aquí.
+- **Componente** `Logo` (`src/components/brand/logo.tsx`): isotipo y
+  wordmark inline en paths, con variante solo isotipo (`variant="mark"`),
+  tamaños `default` y `lg`, y `tone` (`"ink"` por defecto, `"color"`). Si
+  cambia `mark.svg`, se actualiza también aquí.
 
 ### Assets
 
 `pnpm brand:assets` (`scripts/generate-brand-assets.mjs`, con sharp) genera
 desde los SVG fuente de `assets/brand/`:
 
-| Archivo                       | Fuente          | Tamaño     |
-| ----------------------------- | --------------- | ---------- |
-| `public/opengraph-image.png`  | `opengraph.svg` | 1200×630   |
-| `public/brand/logo.png`       | `logo.svg`      | 512×512    |
-| `public/apple-touch-icon.png` | `mark.svg`      | 180×180    |
-| `public/icons/icon-192.png`   | `mark.svg`      | 192×192    |
-| `public/icons/icon-512.png`   | `mark.svg`      | 512×512    |
-| `app/favicon.ico`             | `mark.svg`      | 16, 32, 48 |
+| Archivo                              | Fuente                        | Tamaño     |
+| ------------------------------------ | ----------------------------- | ---------- |
+| `public/opengraph-image.png`         | `opengraph.svg`               | 1200×630   |
+| `public/brand/logo.png`              | `logo.svg`                    | 512×512    |
+| `public/apple-touch-icon.png`        | `mark-color.svg` sobre blanco | 180×180    |
+| `public/icons/icon-192.png`          | `mark-color.svg` sobre blanco | 192×192    |
+| `public/icons/icon-512.png`          | `mark-color.svg` sobre blanco | 512×512    |
+| `public/icons/icon-maskable-512.png` | `mark-color.svg` al 80 %      | 512×512    |
+| `app/favicon.ico`                    | `mark-color.svg`              | 16, 32, 48 |
+| `app/icon.svg`                       | `mark-color.svg`              | 64×64      |
+| `workbook/logo-data.ts` (Excel)      | `mark-color.svg`              | 128×128    |
+| `pdf/brand-data.ts` (PDF)            | `mark-color.svg`              | SVG        |
+
+- El color de marca de toda la salida es `BRAND_HEX` del script: los SVG
+  fuente se dibujan con `SOURCE_BRAND_HEX` y el script lo cambia al generar.
+  Los íconos que no admiten transparencia van sobre `ICON_BACKGROUND`
+  (blanco).
 
 - Los textos de `logo.svg` y `opengraph.svg` van convertidos a trazos, así el
   rasterizado no depende de las fuentes del sistema.

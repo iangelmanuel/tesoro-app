@@ -30,6 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- New logo (SPEC 50): the chest is replaced by a geometric **T monogram** whose stem is two rising bars, like a chart. Drawn by hand on a 64 × 64 grid snapped to 4 units so it stays crisp at 16 px; two paths, one color, no tile or background.
+  - Two versions: **ink** (`assets/brand/mark.svg`; `currentColor` in the UI) and **color** (new `mark-color.svg`, the same T in emerald-600 `#059669`, ≥ 3:1 on white and on dark). The "Tesoro" wordmark is now hand-tuned paths (Inter Bold base, custom T, corrected spacing) in `logo.svg`, `opengraph.svg` and the component.
+  - `pnpm brand:assets` takes a single `BRAND_HEX` (replaces `MASKABLE_BACKGROUND`) and builds the favicon, `app/icon.svg`, the Excel logo and the PDF mark from `mark-color.svg`; apple-touch, PWA and maskable icons put the color T on white, the maskable one inside the 80 % safe zone.
+  - `Logo` gains `tone: "ink" | "color"` (default `ink`) and draws the wordmark as paths, so it no longer depends on the UI font; `LogoMark` is exported. `variant` and `size` are unchanged. `/account-deleted` now shows the logo instead of plain text.
+  - Landing videos and posters still show the old chest until their own spec.
 - Copy audit for clarity (SPEC 48). New **Voz** section in `docs/ui.md` with 8 checkable rules (buttons, titles, toasts, errors, empty states, one word per concept, sentences of 20 words or fewer). Ambiguous or technical wording is renamed:
   - Budgets: "Avance" becomes **Progreso** (Avance is only the card cash advance).
   - Habitual account becomes **Cuenta por defecto** in debts, receivables and recurring expenses, matching recurring incomes; the MCP tool descriptions follow.

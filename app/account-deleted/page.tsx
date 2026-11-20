@@ -8,6 +8,7 @@ import {
   CardTitle,
   Skeleton
 } from "@heroui/react"
+import { Logo } from "@/components/brand/logo"
 import { SITE } from "@/config/site"
 import { AccountDeletedActions } from "@/features/account/components/account-deleted-actions"
 import {
@@ -29,9 +30,10 @@ export default function AccountDeletedPage() {
   return (
     <main className="flex min-h-svh flex-col items-center justify-center bg-default p-6 md:p-10">
       <div className="flex w-full max-w-sm flex-col gap-6">
-        <span className="self-center text-2xl font-semibold tracking-tight">
-          {SITE.info.name}
-        </span>
+        <Logo
+          size="lg"
+          className="self-center"
+        />
         <Card>
           {/* La sesión es dinámica: va dentro de Suspense */}
           <Suspense fallback={<Skeleton className="m-6 h-48" />}>

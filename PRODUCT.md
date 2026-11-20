@@ -65,8 +65,12 @@ vistazo y sabe qué hacer después, sin aprender contabilidad.
 ## Brand Commitments
 
 - Nombre "Tesoro". Slogan: "Tus finanzas, claras desde el primer registro."
-- Isotipo: un cofre sobre un cuadro redondeado (`assets/brand/mark.svg`).
-  Color de marca `--brand` (emerald-500).
+- Isotipo: monograma T geométrico (SPEC 50). El asta son dos barras que
+  suben, como una gráfica; la alta sostiene el travesaño. Va sin cuadro ni
+  fondo, a un solo color: en tinta (el color del texto) en la UI y en el
+  emerald de marca (`#059669`) en favicon, íconos de app, logo y OG
+  (`assets/brand/mark.svg` y `mark-color.svg`). Wordmark "Tesoro" en paths.
+  Color de marca de la UI `--brand` (emerald-500; SPEC 51 lo re-afina).
 - Voz: cercana, en tuteo, frases cortas, verbos de acción y sin jerga
   financiera sin explicar. Tranquila con las cifras, nunca alarmista.
 - Restricciones visuales fijadas por SPEC 14 (se registran aquí, el detalle

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Personal forms, Summary, Transactions and Accounts on shadcn** (SPEC 52a). Migrated in place, so Business and screens still on HeroUI inherit them. Server actions, schemas and queries are unchanged.
+  - Shared fields in `src/components/forms/` with the same public props: `DatePickerField` is a button plus shadcn `Calendar` in a `Popover` (Monday first, month and year selects, `YYYY-MM-DD` drawn at local noon); `TimePickerField` is a native `<input type="time">` with **Quitar hora**; `AccountSelectField` and `CategorySelectField` are a Base UI `Combobox` with accent-insensitive search and the "+ Crear …" option; `FieldLabel` uses the `ui/` `Label`, and `FieldHelp` became a `Popover` that opens on tap. New `TextInputField`, `SelectField`, `CreatableSelect` and `FormDialog`. Server errors use `aria-invalid` + `aria-describedby` with `FieldError` (`role="alert"`).
+  - **Portal bridge** until SPEC 53: Base UI overlays opened inside a HeroUI `Modal` mount in `HeroUIPortalHost` (`data-react-aria-top-layer`) through `HeroUIPortalBridge`, so they are not inert and Escape only closes the overlay. `FieldLabel` reads `id`/`htmlFor` from `react-aria-components`' `LabelContext` inside HeroUI fields (new direct dependency `react-aria-components` 1.22.1, removed in SPEC 53). The movement dialog stays non-modal (`hostsHeroUI`, `closesFromDialog`) while its Debt, Owed to me, Goal and Recurring tabs are still HeroUI (SPEC 52b).
+  - Categories: badge, form, dialog, icon and color picker (`ToggleGroup`) and the categories sheet (`Tabs`).
+  - Accounts: `AccountDialog`, `AdjustBalanceDialog`, `ReconcileDialog` (bottom sheet on mobile), `TransferDialog`, `PaymentAccountSection` (Base UI `Switch`), cards with a `DropdownMenu` and `RowContextMenu` (right click and 500 ms long press), archived accounts in a `Collapsible`. New `ui/collapsible`.
+  - Transactions: movement dialog with a tab-shaped `ToggleGroup` (Transfer included), duplicate, verify movements (full screen on mobile, skeleton rows), filters (`InputGroup` search, Base UI `Select` pills, bottom `Sheet` on mobile), pagination as real links, and the table on the shadcn `Table` with `RowContextMenu` on every row. Row actions come from one `useEntryActions` hook shared by the ⋯ button and the context menu; the drag handle stops long press and right click so reordering never opens the menu. `RowMenuBoundary` keeps clicks inside row dialogs from opening the row menu.
+  - Summary: every card (score, accounts, upcoming payments, budgets at risk, goals, debts, recent transactions) on `CARD` / `CardHeading`; status chips use the new `ToneBadge`.
+  - Each data component exports its `…Skeleton` in the same file; new `SummarySkeleton`, `TransactionsScreenSkeleton` and `AccountsScreenSkeleton`, and `loading.tsx` in `personal/`, `personal/transactions/` and `personal/accounts/`, each in `LoadingRegion`. `CardSkeleton` is no longer used on these screens.
+  - Toasts of migrated components use sonner (`toast.error` with `role="alert"`). Income and expense amounts read as "más"/"menos" plus the full amount.
+  - Accessibility: the workspace color as text or outline uses `--ring` (AA in light and dark) instead of the 700 `--primary`; the calendar fits a 320 px screen. Contrast of the active filter pill added to `docs/ui.md`.
+  - Buttons passed as `trigger` to these dialogs are now a `ReactElement` (the `ui/` `Button`); callers in recurring expenses, recurring incomes and the Business accounts and transactions pages were updated.
+
 ### Added
 
 - **shadcn foundation, new palette and dashboard shell** (SPEC 51).

@@ -1,6 +1,6 @@
 # SPEC 52a — Personal en shadcn: formularios, Resumen, Movimientos y Cuentas
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 27, SPEC 47, SPEC 49, SPEC 51
 > **Fecha:** 2026-11-20
 > **Objetivo:** Migrar a shadcn (Base UI) los formularios compartidos y las pantallas Resumen, Movimientos y Cuentas de Personal, con sus diálogos, Sheets, skeletons y menú contextual, sin cambiar las server actions.
@@ -142,16 +142,17 @@ interface DatePickerFieldProps {
 
 Verificables en código o con `check`, `eslint`, `prettier:check` y `build`:
 
-- [ ] Ningún archivo de `src/components/forms/*`, `src/features/categories/components/*`, `src/features/accounts/components/*` ni `src/features/transactions/components/*` importa `@heroui/react` ni `@internationalized/date`.
-- [ ] Tampoco lo importan las tarjetas de Resumen del §3 ni `app/dashboard/personal/page.tsx`, `transactions/page.tsx` y `accounts/page.tsx`.
-- [ ] Ningún archivo migrado usa `CardSkeleton`, `onPress` ni `isDisabled`.
-- [ ] Cada componente migrado que carga datos exporta su `…Skeleton` en el mismo archivo.
-- [ ] Existen `loading.tsx` en `app/dashboard/personal/`, `personal/transactions/` y `personal/accounts/`, cada uno con `LoadingRegion`.
-- [ ] `actions.ts`, `schemas.ts` y `queries.ts` de `transactions`, `accounts` y `categories` no cambian.
-- [ ] Las props públicas de `DatePickerField`, `TimePickerField`, `AccountSelectField`, `CategorySelectField` y `CategoryBadge` no cambian.
-- [ ] Cada `target` de los tours `summary`, `transactions` y `accounts` en `src/config/tutorials.ts` aparece como `data-tour` en un componente migrado.
-- [ ] Todo par texto/fondo nuevo queda en la tabla de contraste de `docs/ui.md` y pasa AA en claro y oscuro.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan, con el lockfile sincronizado.
+- [x] Ningún archivo de `src/components/forms/*`, `src/features/categories/components/*`, `src/features/accounts/components/*` ni `src/features/transactions/components/*` importa `@heroui/react` ni `@internationalized/date`.
+- [x] Tampoco lo importan las tarjetas de Resumen del §3 ni `app/dashboard/personal/page.tsx`, `transactions/page.tsx` y `accounts/page.tsx`.
+- [x] Ningún archivo migrado usa `CardSkeleton`, `onPress` ni `isDisabled`.
+      Quedan tres `isDisabled` que no son de HeroUI: la prop pública de `CategorySelectField` (otro criterio la congela), `RowAction.isDisabled` de SPEC 51 y el estado de `FieldLabel` dentro de campos de HeroUI.
+- [x] Cada componente migrado que carga datos exporta su `…Skeleton` en el mismo archivo.
+- [x] Existen `loading.tsx` en `app/dashboard/personal/`, `personal/transactions/` y `personal/accounts/`, cada uno con `LoadingRegion`.
+- [x] `actions.ts`, `schemas.ts` y `queries.ts` de `transactions`, `accounts` y `categories` no cambian.
+- [x] Las props públicas de `DatePickerField`, `TimePickerField`, `AccountSelectField`, `CategorySelectField` y `CategoryBadge` no cambian.
+- [x] Cada `target` de los tours `summary`, `transactions` y `accounts` en `src/config/tutorials.ts` aparece como `data-tour` en un componente migrado.
+- [x] Todo par texto/fondo nuevo queda en la tabla de contraste de `docs/ui.md` y pasa AA en claro y oscuro.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan, con el lockfile sincronizado.
 
 Verificables en navegador (los prueba el usuario a mano):
 

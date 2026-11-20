@@ -215,14 +215,35 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   apunta sus tokens a los nuevos; `heroui-compat.ts` deja los paneles de
   Base UI con `modal={false}` para que alojen menús de HeroUI. SPEC 53 borra
   ambos.
-- Formularios: `useActionState` + Zod. Cada campo es `TextField` / `Select` /
-  `DatePicker` con `Label` y `FieldError` dentro y
-  `validationBehavior="aria"` (valida el servidor).
-- Fechas: `DatePickerField` (`src/components/forms/date-picker-field.tsx`),
-  que trabaja con `YYYY-MM-DD`. Hora opcional de un evento: `TimePickerField`
-  (`HH:MM` o `""`) y `timeSchema`; se muestra con `formatTime`. Toasts: `toast`
-  de `@/components/ui/sonner` (errores con `role="alert"`); el `toast` de
-  HeroUI sigue en las pantallas no migradas.
+- Formularios (SPEC 52a): `useActionState` + Zod, con las piezas de
+  `src/components/forms/`:
+  - `TextInputField` (`FieldLabel` + `Input` + `FieldError`), `SelectField`
+    (Select corto) y `CreatableSelect` (Combobox con búsqueda y "+ Crear …",
+    base de `AccountSelectField` y `CategorySelectField`);
+  - `FormDialog` (Dialog de shadcn con título, descripción y el formulario;
+    controlado o con `trigger`, que es un `ReactElement`);
+  - el error del servidor va por `error` y se anuncia con `aria-invalid` +
+    `aria-describedby` hacia `FieldError` (`role="alert"`); el cliente no
+    valida antes.
+    `FieldLabel` usa el `Label` de `ui/` y, dentro de un campo de HeroUI, toma
+    `id` y `htmlFor` del `LabelContext` de `react-aria-components`. El patrón
+    HeroUI (`TextField`, `validationBehavior="aria"`) sigue solo en las
+    pantallas sin migrar.
+- Fechas: `DatePickerField` (`src/components/forms/date-picker-field.tsx`):
+  botón + `Calendar` (react-day-picker) en un `Popover`, semana desde el lunes,
+  con `YYYY-MM-DD` (pasa a `Date` local a mediodía solo para pintar). Hora
+  opcional de un evento: `TimePickerField`, `<input type="time">` nativo con
+  "Quitar hora" (`HH:MM` o `""`) y `timeSchema`; se muestra con `formatTime`.
+  Toasts: `toast` de `@/components/ui/sonner` (errores con `toast.error`, en
+  `role="alert"`); el `toast` de HeroUI sigue en las pantallas no migradas.
+- **Puente de portales (hasta SPEC 53):** un campo o diálogo de Base UI que
+  puede abrirse dentro de un `Modal` de HeroUI va en `HeroUIPortalBridge`
+  (`src/components/dashboard/heroui-portal-bridge.tsx`); su overlay se monta
+  en `HeroUIPortalHost` (`data-react-aria-top-layer`), que React Aria no
+  vuelve inerte. Los campos de `forms/`, `SelectField` y `FormDialog` ya lo
+  traen. Al revés, un `FormDialog` que aloja controles de HeroUI va con
+  `hostsHeroUI` (no modal + `closesFromDialog`); hoy solo el diálogo de
+  movimiento, hasta SPEC 52b.
 - Gráficas: Recharts con `src/components/charts/*`: `ChartCard` (cabecera
   con leyenda y cifra), `ChartContainer`, las props de `chart-style.ts` y los
   montos abreviados de `chart-format.ts`. Colores siempre desde tokens.

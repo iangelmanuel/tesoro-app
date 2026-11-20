@@ -122,44 +122,79 @@ y el aside móvil) van con `modal={false}` y el filtro de cierre de
 `src/components/dashboard/heroui-compat.ts`. Mientras tanto, Tab puede salir
 del panel. SPEC 53 borra el puente y el filtro.
 
+El diálogo de movimiento hace lo mismo hasta SPEC 52b, porque sus tabs
+Deuda, Me deben, Meta y Gasto fijo y el select de ingreso fijo siguen en
+HeroUI: `FormDialog` con `hostsHeroUI` (no modal) y `closesFromDialog`.
+
+**Puente de portales (SPEC 52a).** Al revés: un Popover, Combobox, Select o
+Dialog de Base UI abierto desde un `Modal` de HeroUI (pantallas de 52b, 52c y 53) quedaría inerte, porque React Aria vuelve `inert` todo lo que está fuera
+del modal y le quita el foco.
+
+- `HeroUIPortalHost` (en `WorkspaceThemeRoot`) es un nodo vacío con
+  `data-react-aria-top-layer`, por encima del modal y presente antes de
+  abrirlo: React Aria no lo vuelve inerte, deja moverle el foco y no cuenta
+  sus clics como "afuera".
+- `HeroUIPortalBridge` envuelve el campo o diálogo. Si está dentro de un
+  modal de HeroUI (o de algo ya montado en el host), su portal va al host;
+  si no, al contenedor de siempre. Escape cierra solo el overlay, no el
+  modal de abajo.
+- Lo traen `DatePickerField`, `CreatableSelect` (cuentas y categorías),
+  `SelectField`, `FieldHelp` y `FormDialog`. `CategorySelectField` envuelve
+  su `CategoryDialog`.
+- `FieldLabel` dentro de un campo de HeroUI toma `id` y `htmlFor` del
+  `LabelContext` de `react-aria-components` (dependencia directa hasta
+  SPEC 53), así el input sigue nombrado.
+
+SPEC 53 borra el puente, `closesFromDialog` y `react-aria-components`.
+
 ## Contraste
 
 Pares calculados con los tokens de `src/styles/globals.css` (WCAG 2.x,
 OKLCH → sRGB, SPEC 51). Mínimos: 4.5:1 texto, 3:1 gráficos y foco.
 
-| Par                                                   | Claro | Oscuro |
-| ----------------------------------------------------- | ----- | ------ |
-| `foreground` / `background`                           | 16.19 | 18.15  |
-| `foreground` / `card`                                 | 17.91 | 16.42  |
-| `muted-foreground` / `card`                           | 6.26  | 7.77   |
-| `muted-foreground` / `popover`                        | 6.26  | 7.04   |
-| `muted-foreground` / `highlight`                      | 5.09  | 6.12   |
-| `muted-foreground` / `background`                     | 5.65  | 8.59   |
-| `muted-foreground` / `field-background`               | 5.38  | 6.12   |
-| `foreground` / `field-background`                     | 15.39 | 12.94  |
-| `income` / `card`                                     | 5.58  | 9.42   |
-| `income` / `background`                               | 5.04  | 10.41  |
-| `income` / `highlight`                                | 4.54  | 7.42   |
-| `expense` / `card`                                    | 5.85  | 6.96   |
-| `expense` / `background`                              | 5.28  | 7.69   |
-| `expense` / `highlight`                               | 4.76  | 5.48   |
-| `destructive` / `card`                                | 5.86  | 6.18   |
-| `*-soft-foreground` / `*-soft` (mínimo de los tres)   | 6.38  | 6.09   |
-| blanco / `primary` Personal                           | 5.22  | 5.22   |
-| blanco / `primary` Empresa                            | 5.08  | 5.08   |
-| `primary-foreground` / `primary` neutro               | 17.16 | 17.24  |
-| `ring` / `background` Personal                        | 4.85  | 9.83   |
-| `ring` / `background` Empresa                         | 4.73  | 8.46   |
-| `ring` / `popover` Personal                           | 5.37  | 8.05   |
-| `ring` / `popover` Empresa                            | 5.23  | 6.93   |
-| `ring` / `background` neutro                          | 16.19 | 18.15  |
-| línea del aside (`sidebar-primary`) / `background` P. | 4.85  | 9.83   |
-| línea del aside (`sidebar-primary`) / `background` E. | 4.73  | 8.46   |
-| `--category-*` / `card` y `background` (mínimo)       | 3.31  | 5.67   |
-| `--chart-*` / `card` (mínimo)                         | 3.36  | 3.68   |
+| Par                                                         | Claro | Oscuro |
+| ----------------------------------------------------------- | ----- | ------ |
+| `foreground` / `background`                                 | 16.19 | 18.15  |
+| `foreground` / `card`                                       | 17.91 | 16.42  |
+| `muted-foreground` / `card`                                 | 6.26  | 7.77   |
+| `muted-foreground` / `popover`                              | 6.26  | 7.04   |
+| `muted-foreground` / `highlight`                            | 5.09  | 6.12   |
+| `muted-foreground` / `background`                           | 5.65  | 8.59   |
+| `muted-foreground` / `field-background`                     | 5.38  | 6.12   |
+| `foreground` / `field-background`                           | 15.39 | 12.94  |
+| `income` / `card`                                           | 5.58  | 9.42   |
+| `income` / `background`                                     | 5.04  | 10.41  |
+| `income` / `highlight`                                      | 4.54  | 7.42   |
+| `expense` / `card`                                          | 5.85  | 6.96   |
+| `expense` / `background`                                    | 5.28  | 7.69   |
+| `expense` / `highlight`                                     | 4.76  | 5.48   |
+| `destructive` / `card`                                      | 5.86  | 6.18   |
+| `*-soft-foreground` / `*-soft` (mínimo de los tres)         | 6.38  | 6.09   |
+| blanco / `primary` Personal                                 | 5.22  | 5.22   |
+| blanco / `primary` Empresa                                  | 5.08  | 5.08   |
+| `primary-foreground` / `primary` neutro                     | 17.16 | 17.24  |
+| `ring` / `background` Personal                              | 4.85  | 9.83   |
+| `ring` / `background` Empresa                               | 4.73  | 8.46   |
+| `ring` / `popover` Personal                                 | 5.37  | 8.05   |
+| `ring` / `popover` Empresa                                  | 5.23  | 6.93   |
+| `ring` / `background` neutro                                | 16.19 | 18.15  |
+| línea del aside (`sidebar-primary`) / `background` P.       | 4.85  | 9.83   |
+| línea del aside (`sidebar-primary`) / `background` E.       | 4.73  | 8.46   |
+| `--category-*` / `card` y `background` (mínimo)             | 3.31  | 5.67   |
+| `--chart-*` / `card` (mínimo)                               | 3.36  | 3.68   |
+| `foreground` / filtro aplicado P. (primario 14 % en `card`) | 14.72 | 14.69  |
+| `foreground` / filtro aplicado E. (primario 14 % en `card`) | 14.79 | 14.61  |
+| `muted-foreground` / filtro aplicado P.                     | 5.14  | 6.95   |
+| `muted-foreground` / filtro aplicado E.                     | 5.17  | 6.92   |
 
 Las gráficas nunca dependen solo del color: llevan leyenda, orden fijo de
 series y el monto en el tooltip y en la tabla `sr-only`.
+
+`--primary` (el tono 700 del espacio) es un relleno: con texto blanco da AA,
+pero como texto o contorno sobre superficies oscuras no llega (≈ 2.4:1). Para
+texto o contornos en el color del espacio se usa `--ring` (por ejemplo
+"+ Crear …" en los selects, el ícono elegido de una categoría y la vista
+previa al arrastrar), que da AA en claro y oscuro (`ring` / `popover`).
 
 Las auditorías de abajo (SPEC 23) son de la paleta anterior y quedan como
 historial.
@@ -283,7 +318,16 @@ y con el **mismo contenedor** (mismas filas, columnas, alturas y radios);
 solo cambia el contenido por bloques `Skeleton`. Hoy: `StatCardSkeleton`,
 `ChartCardSkeleton`, `ScrollTableSkeleton`, `DetailSheetSkeleton`,
 `MonthSwitcherSkeleton`, `AppSidebarSkeleton`, `DashboardHeaderSkeleton`,
-`DashboardTitleSkeleton` y `QuickActionsSkeleton`.
+`DashboardTitleSkeleton`, `QuickActionsSkeleton` y `CardHeadingSkeleton`.
+SPEC 52a suma los de Resumen (`ScoreSummaryCardSkeleton`,
+`AccountsCardSkeleton`, `UpcomingPaymentsCardSkeleton`,
+`BudgetsAtRiskCardSkeleton`, `GoalsCardSkeleton`, `DebtsCardSkeleton`,
+`RecentTransactionsSkeleton`, compuestos en `SummarySkeleton`), Movimientos
+(`TransactionsFiltersSkeleton`, `TransactionsTotalsSkeleton`,
+`TransactionsTableSkeleton`, `WorkspaceNoTransactionsSkeleton`,
+`VerifyRowSkeleton`, en `TransactionsScreenSkeleton`) y Cuentas
+(`AccountCardSkeleton`, `AccountsGridSkeleton`, `AccountsScreenSkeleton`).
+Resumen, Movimientos y Cuentas tienen su `loading.tsx`.
 
 - Streaming: `Suspense` por tarjeta y un `loading.tsx` por ruta que compone
   los skeletons de esa pantalla. `app/dashboard/loading.tsx` es el genérico.
@@ -335,16 +379,35 @@ explica un concepto con un clic; el (?) dice qué poner en un campo.
 | `FIELD_HELP` (`src/config/help.ts`)                   | Textos de ayuda, una frase en tuteo. Clave `"<formulario>.<campo>"` o `"common.<campo>"`; `FieldHelpKey` tipa la prop. Toda clave debe usarse: se verifica con `grep`. Los mínimos y formatos se comparan con los esquemas de Zod                              |
 | Campos compartidos                                    | `AccountSelectField`, `CategorySelectField`, `DatePickerField`, `TimePickerField`, `FormField` (auth), `Field` (deudas), `AmountField` y `DayField` reciben `help?: FieldHelpKey`. `PaymentAccountSection` recibe `accountHelp` (por defecto `common.account`) |
 
-- Es un `Tooltip` de HeroUI: se abre al pasar el mouse (300 ms) y al llegar
-  con Tab. En móvil no abre con un toque (decisión del spec).
-- El disparador es `Tooltip.Trigger` (un `div` con `role="button"`), no un
-  `Button`: dentro de `Select`, `DatePicker` o `NumberField` un `Button`
-  tomaría el `ButtonContext` del campo y abriría el campo.
-- Botón de 24 px (`size-6`) con `-my-1`: no cambia la altura del campo.
-- Ícono `MessageCircleQuestionMark` (`size-3.5`) en `text-muted/80`, que da
-  3.83:1 sobre `--surface` y `--overlay` en claro, 3.65:1 sobre la superficie
-  del sitio, y 4.98:1 / 4.49:1 sobre `--surface` / `--overlay` en oscuro. Al
-  pasar el mouse o con foco, `text-muted`.
+- Desde SPEC 52a es un `Popover` de Base UI, como `HelpHint`: se abre con
+  clic, toque o teclado (antes era un `Tooltip` de HeroUI que no abría con
+  un toque). Va en `HeroUIPortalBridge` para funcionar en modales de HeroUI.
+- Botón de 24 px (`size-6`, `touch-hitbox` hasta 44 px) con `-my-1`: no
+  cambia la altura del campo.
+- Ícono `MessageCircleQuestionMark` (`size-3.5`) en `text-muted-foreground`
+  (AA sobre `card` y `popover` en claro y oscuro); `text-foreground` al
+  pasar el mouse.
+
+### Campos de formulario (SPEC 52a)
+
+Viven en `src/components/forms/` y son la base de los formularios migrados.
+Validan en el servidor: el error llega por `error`, el campo lleva
+`aria-invalid` y `aria-describedby` hacia `FieldError` (`role="alert"`).
+
+| Pieza                 | Qué hace                                                                                                                                                                     |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TextInputField`      | `FieldLabel` + `Input` + `FieldError` (+ `description`). Los montos lo usan con `inputMode="decimal"`; el texto no cambia y el parseo es del esquema                         |
+| `SelectField`         | Select corto sin búsqueda (`Tipo` de cuenta, filtro de Verificar)                                                                                                            |
+| `CreatableSelect`     | Combobox de Base UI: el botón muestra la opción; el buscador va dentro de la lista y no distingue tildes. "+ Crear …" siempre al final, nunca queda como valor               |
+| `AccountSelectField`  | `CreatableSelect` de cuentas con "Sin cuenta" opcional y `AccountDialog` para crear                                                                                          |
+| `CategorySelectField` | `CreatableSelect` de categorías con `CategoryDialog` para crear (la nueva queda elegida)                                                                                     |
+| `DatePickerField`     | Botón con la fecha ("20 nov 2026") y `Calendar` en `Popover`: lunes primero, mes y año en selects, `minValue`/`maxValue` deshabilitan días. Celdas de 44 px; a 320 px, 40 px |
+| `TimePickerField`     | `<input type="time">` nativo (12 o 24 h según el sistema) y "Quitar hora"                                                                                                    |
+| `FormDialog`          | Dialog con título, descripción y el formulario; `bottomOnMobile` lo pega abajo en el teléfono; `hostsHeroUI` (hasta 52b) lo deja no modal                                    |
+
+El tipo de movimiento usa un `ToggleGroup` con forma de tabs. Los chips de
+estado de las tarjetas son `ToneBadge` (`src/components/dashboard/tone-badge.tsx`)
+con las clases de `tone.ts`.
 
 ### Vocabulario (SPEC 47)
 
@@ -766,13 +829,25 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
 | Pantalla         | Ruta                                                           | Piezas                                                                                                                                                                                                                                                                                                                                         |
 | ---------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Shell            | `app/dashboard/layout.tsx`                                     | Aside, header con título y accesos, `<main id="contenido">` y "Saltar al contenido"                                                                                                                                                                                                                                                            |
-| Resumen Personal | `app/dashboard/personal/page.tsx`                              | 4 `StatCard` → gráfica + columna (score, cuentas) → últimos movimientos → 4 tarjetas                                                                                                                                                                                                                                                           |
-| Movimientos      | `app/dashboard/personal/transactions`                          | Barra de filtros pill, KPIs pequeñas, tabla compacta (`src/features/transactions/`)                                                                                                                                                                                                                                                            |
+| Resumen Personal | `app/dashboard/personal/page.tsx`                              | 4 `StatCard` → gráfica + columna (score, cuentas) → últimos movimientos → 4 tarjetas. shadcn (SPEC 52a), `Suspense` por tarjeta y `loading.tsx`                                                                                                                                                                                                |
+| Movimientos      | `app/dashboard/personal/transactions`                          | Barra de filtros pill (Sheet en el teléfono), KPIs pequeñas, tabla compacta con `RowContextMenu` y reordenamiento por el asa (`src/features/transactions/`). shadcn (SPEC 52a)                                                                                                                                                                 |
+| Cuentas          | `app/dashboard/personal/accounts`                              | "Nueva cuenta", total y tarjetas con `RowContextMenu`, Archivadas en un `Collapsible` (`src/features/accounts/`). shadcn (SPEC 52a)                                                                                                                                                                                                            |
 | Gastos fijos     | `app/dashboard/personal/recurring`                             | Acciones con "N atrasados" (`OverdueIndicator`), Próximos pagos con `MonthNav` y "Pagado $ X de $ Y", y lista; la fila abre `RecurringExpenseSheet` (derecha en escritorio, hoja inferior en móvil). Selector móvil `BudgetsAndRecurringTabs`                                                                                                  |
 | Ingresos fijos   | `app/dashboard/personal/recurring-income`                      | Acciones con "N atrasados" (`OverdueIndicator` con `path`), Próximos ingresos con `MonthNav` y "Recibido $ X de $ Y" (diaria y cada N días en una fila resumen), Sin fecha fija y lista; la fila (o el nombre de la fila resumen) abre `RecurringIncomeSheet` vía `IncomeSheetProvider`. Bajo el monto del tab Ingreso, `IncomeReceiptPreview` |
 | Presupuestos     | `app/dashboard/personal/budgets`                               | Mes, totales y filas de progreso; `?tab=recurring` redirige a Gastos fijos                                                                                                                                                                                                                                                                     |
 | Reportes         | `src/features/reports/components/reports-view.tsx`             | Barra de periodo y tipo, 4 KPI, tendencia, top 5 + tabla de categorías                                                                                                                                                                                                                                                                         |
 | Cuenta           | `app/dashboard/account/{general,security,privacy,preferences}` | Aside interno (`AccountNav`) y una `AccountSection` por tema                                                                                                                                                                                                                                                                                   |
+
+### Estado de la migración a shadcn
+
+| Pantalla                                                  | Estado                               |
+| --------------------------------------------------------- | ------------------------------------ |
+| Shell, aside, header, menús rápidos, compartidos          | shadcn (SPEC 51)                     |
+| Campos de `forms/`, categorías                            | shadcn (SPEC 52a)                    |
+| Resumen, Movimientos y Cuentas de Personal y sus diálogos | shadcn (SPEC 52a)                    |
+| Gastos e Ingresos fijos, Presupuestos, Metas y Deudas     | HeroUI, con campos de 52a (SPEC 52b) |
+| Reportes, Recomendaciones e Importar                      | HeroUI (SPEC 52c)                    |
+| Empresa (salvo lo compartido), cuenta, auth y públicas    | HeroUI (SPEC 53)                     |
 
 ## Móvil
 

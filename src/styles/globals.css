@@ -284,6 +284,10 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  /* Campos con relleno suave (también los declara HeroUI; quedan al
+     retirarlo en SPEC 53) */
+  --color-field: var(--field-background);
+  --color-field-hover: var(--field-hover);
 }
 
 @layer base {
@@ -310,6 +314,24 @@
    el texto pequeño cumpla contraste AA (5.1:1 en claro, 11:1 en oscuro) */
 @utility text-brand {
   color: color-mix(in oklch, var(--brand) 60%, var(--foreground));
+}
+
+/* Área táctil de 44 × 44 px como mínimo (SPEC 51 §7) sin cambiar el dibujo
+   del control: un ::before invisible y centrado que crece hasta 44 px. Para
+   controles que se dibujan más chicos (casillas, interruptores, botones
+   pequeños e íconos) */
+@utility touch-hitbox {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    translate: -50% -50%;
+  }
 }
 
 /* Aparición de las tarjetas del dashboard: corta (180 ms), desde casi
@@ -527,5 +549,17 @@
 
   ::-webkit-scrollbar-thumb:hover {
     background: var(--scrollbar-hover) padding-box;
+  }
+}
+
+/* Movimiento reducido en los componentes de shadcn (todos llevan data-slot):
+   sin entradas, salidas ni brillos animados; solo el estado final */
+@media (prefers-reduced-motion: reduce) {
+  [data-slot],
+  [data-slot]::before,
+  [data-slot]::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

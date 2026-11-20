@@ -10,6 +10,7 @@ import {
   Pencil
 } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
+import { useDetailFromUrl } from "@/components/dashboard/command/use-detail-from-url"
 import {
   CARD_LINK,
   CARD_OVER_LINK,
@@ -45,7 +46,8 @@ export function GoalCard({
   accounts
 }: GoalCardProps) {
   const [editing, setEditing] = useState(false)
-  const [detailOpen, setDetailOpen] = useState(false)
+  // La paleta de comandos puede abrir este panel (SPEC 51)
+  const [detailOpen, setDetailOpen] = useDetailFromUrl(goal.id)
   const { pending, run } = useGoalAction(goal)
 
   return (

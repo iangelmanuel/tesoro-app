@@ -1,8 +1,16 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import type { Route } from "next"
 import { useRouter } from "next/navigation"
-import { CornerDownLeft, type LucideIcon, UserRound } from "lucide-react"
+import {
+  CornerDownLeft,
+  CreditCard,
+  type LucideIcon,
+  Target,
+  UserRound,
+  Wallet
+} from "lucide-react"
 import {
   Command,
   CommandEmpty,
@@ -22,7 +30,74 @@ import { SITE } from "@/config/site"
 import { workspaceBasePath } from "@/features/workspaces/paths"
 import { NAV_ICONS } from "../nav"
 import { useQuickActions } from "../quick-actions-context"
+import { type CommandEntity, loadCommandEntities } from "./actions"
 import { useCommandPalette } from "./command-palette-context"
+import { DETAIL_PARAM, OPEN_DETAIL_EVENT } from "./detail-param"
+
+const ENTITY_ICONS: Record<CommandEntity["kind"], LucideIcon> = {
+  account: Wallet,
+  debt: CreditCard,
+  goal: Target
+}
+
+const ENTITY_KINDS: Record<CommandEntity["kind"], string> = {
+  account: "Cuenta",
+  debt: "Deuda",
+  goal: "Meta"
+}
+
+type EntitiesState =
+  | { status: "loading"; workspaceId: string }
+  | { status: "ready"; workspaceId: string; entities: CommandEntity[] }
+  | { status: "error"; workspaceId: string }
+
+/**
+ * "Tus datos": cuentas, deudas y metas del espacio activo. Se cargan la
+ * primera vez que se abre la paleta (no pesan en cada navegación) y quedan en
+ * memoria hasta cambiar de espacio
+ */
+function useCommandEntities(open: boolean, workspaceId: string | undefined) {
+  const [state, setState] = useState<EntitiesState | null>(null)
+  const stale = workspaceId !== undefined && state?.workspaceId !== workspaceId
+
+  useEffect(() => {
+    if (!open || !workspaceId || !stale) return
+    let cancelled = false
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- marca la carga al abrir
+    setState({ status: "loading", workspaceId })
+    loadCommandEntities(workspaceId)
+      .then((entities) => {
+        if (!cancelled) setState({ status: "ready", workspaceId, entities })
+      })
+      .catch(() => {
+        if (!cancelled) setState({ status: "error", workspaceId })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [open, workspaceId, stale])
+
+  return workspaceId && !stale ? state : null
+}
+
+/**
+ * Abre el detalle de una entidad: si su página ya está abierta (misma ruta y
+ * pestaña), avisa al panel con un evento; si no, navega con ?detalle=<id>
+ */
+function openEntity(entity: CommandEntity, push: (href: Route) => void) {
+  const target = new URL(entity.href, window.location.origin)
+  const id = target.searchParams.get(DETAIL_PARAM)
+  const current = new URL(window.location.href)
+  const samePage =
+    target.pathname === current.pathname &&
+    target.searchParams.get("tab") === current.searchParams.get("tab")
+
+  if (id && samePage) {
+    window.dispatchEvent(new CustomEvent(OPEN_DETAIL_EVENT, { detail: { id } }))
+    return
+  }
+  push(entity.href)
+}
 
 interface GoToItem {
   name: string
@@ -88,6 +163,7 @@ export function CommandPalette() {
   const { open, setOpen } = useCommandPalette()
   const { actions, run, workspace } = useQuickActions()
   const goTo = useGoToItems()
+  const entities = useCommandEntities(open, workspace?.id)
 
   function select(callback: () => void) {
     setOpen(false)
@@ -135,6 +211,48 @@ export function CommandPalette() {
               </CommandGroup>
             )}
             {actions.length > 0 && <CommandSeparator />}
+            {entities && (
+              <CommandGroup heading="Tus datos">
+                {entities.status === "loading" && (
+                  <CommandItem
+                    disabled
+                    value="tus datos cargando"
+                  >
+                    Cargando tus datos…
+                  </CommandItem>
+                )}
+                {entities.status === "error" && (
+                  <CommandItem
+                    disabled
+                    value="tus datos error"
+                  >
+                    No pudimos cargar tus datos. Cierra y vuelve a abrir.
+                  </CommandItem>
+                )}
+                {entities.status === "ready" &&
+                  entities.entities.map((entity) => {
+                    const Icon = ENTITY_ICONS[entity.kind]
+                    return (
+                      <CommandItem
+                        key={entity.id}
+                        value={`dato ${entity.id} ${entity.name}`}
+                        keywords={[ENTITY_KINDS[entity.kind]]}
+                        onSelect={() =>
+                          select(() =>
+                            openEntity(entity, (href) => router.push(href))
+                          )
+                        }
+                      >
+                        <Icon />
+                        <span className="truncate">{entity.name}</span>
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          {ENTITY_KINDS[entity.kind]}
+                        </span>
+                      </CommandItem>
+                    )
+                  })}
+              </CommandGroup>
+            )}
             <CommandGroup heading="Ir a">
               {goTo.map(({ name, href, icon: Icon, group }) => (
                 <CommandItem

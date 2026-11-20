@@ -108,17 +108,17 @@ export function GoalSheet({
             />
           </div>
         ) : (
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-surface-secondary p-4">
-            <p className="text-sm text-muted">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-subtle p-4">
+            <p className="text-sm text-muted-foreground">
               {goal.status === "completed"
                 ? "Meta cumplida."
                 : "Meta archivada."}{" "}
               Reactívala para registrar aportes.
             </p>
             <Button
+              type="button"
               variant="secondary"
               size="sm"
-              className="max-md:min-h-11"
               disabled={pending}
               onClick={() => run("reactivate")}
             >

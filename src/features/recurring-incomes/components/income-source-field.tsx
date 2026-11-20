@@ -1,7 +1,6 @@
 "use client"
 
-import { ListBox, Select } from "@heroui/react"
-import { FieldLabel } from "@/components/forms/field-label"
+import { SelectField } from "@/components/forms/select-field"
 import { OTHER_INCOME } from "../constants"
 import type { IncomeSourceOption } from "../queries"
 
@@ -48,49 +47,18 @@ export function IncomeSourceField({
         name="recurring_income_id"
         value={value}
       />
-      <Select
-        fullWidth
+      <SelectField
+        label="Ingreso fijo"
+        help="recurringIncome.source"
         value={value}
-        onChange={(key) => onChange(key == null ? OTHER_INCOME : String(key))}
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="recurringIncome.source">Ingreso fijo</FieldLabel>
-        <Select.Trigger>
-          <Select.Value />
-          <Select.Indicator />
-        </Select.Trigger>
-        <Select.Popover>
-          <ListBox>
-            <ListBox.Item
-              id={OTHER_INCOME}
-              textValue="Otra entrada"
-            >
-              Otra entrada
-              <ListBox.ItemIndicator />
-            </ListBox.Item>
-            {showCurrent ? (
-              <ListBox.Item
-                id={current.id}
-                textValue={CURRENT_LABEL}
-              >
-                {CURRENT_LABEL}
-                <ListBox.ItemIndicator />
-              </ListBox.Item>
-            ) : null}
-            {sources.map((source) => (
-              <ListBox.Item
-                key={source.id}
-                id={source.id}
-                textValue={source.name}
-              >
-                {source.name}
-                <ListBox.ItemIndicator />
-              </ListBox.Item>
-            ))}
-          </ListBox>
-        </Select.Popover>
-      </Select>
-      {hint && <p className="text-sm text-muted">{hint}</p>}
+        onChange={onChange}
+        options={[
+          { value: OTHER_INCOME, label: "Otra entrada" },
+          ...(showCurrent ? [{ value: current.id, label: CURRENT_LABEL }] : []),
+          ...sources.map((source) => ({ value: source.id, label: source.name }))
+        ]}
+      />
+      {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
     </div>
   )
 }

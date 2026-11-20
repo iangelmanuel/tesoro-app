@@ -1,7 +1,6 @@
 "use client"
 
-import { ListBox, Select } from "@heroui/react"
-import { FieldLabel } from "@/components/forms/field-label"
+import { SelectField } from "@/components/forms/select-field"
 import { formatCurrency, formatDate } from "@/libs/format"
 import { OCCURRENCE_STATUS } from "../occurrences"
 import type { UpcomingPayment } from "../queries"
@@ -30,42 +29,16 @@ export function OccurrenceSelect({
   onChange
 }: OccurrenceSelectProps) {
   return (
-    <Select
-      fullWidth
-      placeholder="Elige un pago"
-      value={selected ? paymentKey(selected) : null}
-      onChange={(key) => onChange(key == null ? "" : String(key))}
-      className="flex flex-col gap-2"
-    >
-      <FieldLabel help="occurrence.select">Gasto fijo</FieldLabel>
-      <Select.Trigger>
-        <Select.Value />
-        <Select.Indicator />
-      </Select.Trigger>
-      <Select.Popover>
-        <ListBox>
-          {payments.map((payment) => {
-            const key = paymentKey(payment)
-            const text = `${payment.name} · ${formatDate(payment.dueOn)}`
-            return (
-              <ListBox.Item
-                key={key}
-                id={key}
-                textValue={text}
-              >
-                <div className="flex flex-col">
-                  <span>{text}</span>
-                  <span className="text-xs text-muted tabular-nums">
-                    {formatCurrency(payment.amount)} ·{" "}
-                    {OCCURRENCE_STATUS[payment.status].label}
-                  </span>
-                </div>
-                <ListBox.ItemIndicator />
-              </ListBox.Item>
-            )
-          })}
-        </ListBox>
-      </Select.Popover>
-    </Select>
+    <SelectField
+      label="Gasto fijo"
+      help="occurrence.select"
+      value={selected ? paymentKey(selected) : ""}
+      onChange={onChange}
+      options={payments.map((payment) => ({
+        value: paymentKey(payment),
+        label: `${payment.name} · ${formatDate(payment.dueOn)}`,
+        description: `${formatCurrency(payment.amount)} · ${OCCURRENCE_STATUS[payment.status].label}`
+      }))}
+    />
   )
 }

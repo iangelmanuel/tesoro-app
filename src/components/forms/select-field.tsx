@@ -93,7 +93,7 @@ export function SelectField<T extends string>({
                 {option.description ? (
                   <span className="flex flex-col py-0.5 whitespace-normal">
                     <span className="font-medium">{option.label}</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground tabular-nums">
                       {option.description}
                     </span>
                   </span>

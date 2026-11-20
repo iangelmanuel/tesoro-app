@@ -7,7 +7,6 @@ import {
   DragOverlay
 } from "@dnd-kit/react"
 import { isSortable, useSortable } from "@dnd-kit/react/sortable"
-import { Table, cn, toast } from "@heroui/react"
 import {
   ArrowLeftRight,
   Banknote,
@@ -20,8 +19,26 @@ import {
   Trash2
 } from "lucide-react"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
-import { RowActions } from "@/components/dashboard/row-actions"
-import { ScrollTable } from "@/components/dashboard/scroll-table"
+import {
+  type RowAction,
+  RowActions,
+  RowContextMenu,
+  RowMenuBoundary
+} from "@/components/dashboard/row-actions"
+import {
+  ScrollTable,
+  ScrollTableSkeleton
+} from "@/components/dashboard/scroll-table"
+import { SURFACE_LIST } from "@/components/dashboard/surface"
+import { toast } from "@/components/ui/sonner"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table"
 import { deleteAdjustment, deleteTransfer } from "@/features/accounts/actions"
 import { activeAccountId } from "@/features/accounts/active-account"
 import { AccountLabel } from "@/features/accounts/components/account-select"
@@ -39,6 +56,7 @@ import { deleteContribution } from "@/features/goals/actions"
 import { ContributionDialog } from "@/features/goals/components/contribution-dialog"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
 import type { WorkspaceType } from "@/features/workspaces/queries"
+import { cn } from "@/libs/cn"
 import { formatCurrency, formatDate, formatTime } from "@/libs/format"
 import { deleteTransaction, moveLedgerEntry } from "../actions"
 import {
@@ -64,10 +82,13 @@ interface TransactionsTableProps {
   incomeSources?: IncomeSourceOption[]
 }
 
-// En móvil la tabla se muestra completa y se desliza en horizontal: fecha,
-// categoría, cuenta y monto no se parten en varias líneas
-const NOWRAP = "whitespace-nowrap"
+// En móvil la tabla se muestra completa y se desliza en horizontal: las
+// celdas no se parten en varias líneas (TableCell ya es whitespace-nowrap),
+// salvo la descripción y el cliente o proveedor
 const ACTIONS_COLUMN = "w-28 md:w-16"
+// La tabla en su superficie: sin borde, con las filas a la vista
+const TABLE_SURFACE = cn(SURFACE_LIST, "divide-y-0 px-2")
+const MIN_WIDTH = { personal: "46rem", business: "64rem" } as const
 
 /** Reordenar una fila dentro de su día arrastrando su asa (⋮⋮) */
 interface Reorder {
@@ -130,6 +151,7 @@ function reorderRows(
   return next
 }
 
+type TransactionEntry = Extract<LedgerEntry, { transaction: unknown }>
 type TransferEntry = Extract<LedgerEntry, { kind: "transfer" }>
 type AdjustmentEntry = Extract<LedgerEntry, { kind: "adjustment" }>
 type AccountMovementEntry = Extract<LedgerEntry, { kind: AccountMovementKind }>
@@ -204,7 +226,7 @@ export function TransactionsTable({
         entryId(target)
       )
       if (result.error) {
-        toast.danger(result.error)
+        toast.error(result.error)
       }
     })
   }
@@ -241,7 +263,7 @@ export function TransactionsTable({
     if (!draggingDay) {
       return undefined
     }
-    return day === draggingDay ? "bg-accent/10" : "opacity-40"
+    return day === draggingDay ? "bg-primary/10" : "opacity-40"
   }
 
   // Posición de cada fila entre las de su día, para el orden de dnd-kit
@@ -281,210 +303,253 @@ export function TransactionsTable({
       onDragEnd={handleDragEnd}
     >
       <ScrollTable
-        minWidth={isBusiness ? "64rem" : "46rem"}
+        minWidth={MIN_WIDTH[workspaceType]}
         tour="transactions-table"
+        className={TABLE_SURFACE}
       >
-        <Table>
-          <Table.ScrollContainer>
-            <Table.Content
-              aria-label="Movimientos"
-              className="[&_tbody_td]:py-2.5 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150 motion-reduce:[&_tbody_tr]:transition-none [&_tbody_tr:hover]:bg-default/40"
-            >
-              <Table.Header>
-                {canReorder ? (
-                  <Table.Column className="w-7 ps-2 pe-0">
-                    <span className="sr-only">Orden</span>
-                  </Table.Column>
-                ) : null}
-                <Table.Column className={cn("w-32", NOWRAP)}>
-                  Fecha
-                </Table.Column>
-                <Table.Column isRowHeader>Descripción</Table.Column>
-                <Table.Column className={NOWRAP}>Categoría</Table.Column>
-                {isBusiness ? (
-                  <Table.Column className={NOWRAP}>
-                    Cliente o proveedor
-                  </Table.Column>
-                ) : null}
-                <Table.Column className={NOWRAP}>Cuenta</Table.Column>
-                <Table.Column className={cn("text-end", NOWRAP)}>
-                  Monto
-                </Table.Column>
-                <Table.Column className={ACTIONS_COLUMN}>
-                  <span className="sr-only">Acciones</span>
-                </Table.Column>
-              </Table.Header>
-              <Table.Body>
-                {orderedRows.map((row, index) => {
-                  if (row.kind === "transfer") {
-                    return (
-                      <TransferRow
-                        key={row.id}
-                        workspaceId={workspaceId}
-                        showCounterparty={isBusiness}
-                        transfer={row}
-                        reorder={reorderFor(index)}
-                        label={`${accountName(row.from_account_id)} → ${accountName(row.to_account_id)}`}
-                        accounts={accounts}
-                        currency={currency}
-                      />
-                    )
-                  }
-                  if (isAccountMovement(row)) {
-                    return (
-                      <AccountMovementRow
-                        key={row.id}
-                        workspaceId={workspaceId}
-                        showCounterparty={isBusiness}
-                        entry={row}
-                        reorder={reorderFor(index)}
-                        account={accountsById.get(row.account_id)}
-                        accounts={accounts}
-                        categories={categories}
-                        currency={currency}
-                      />
-                    )
-                  }
-                  if (row.kind === "adjustment") {
-                    return (
-                      <AdjustmentRow
-                        key={row.id}
-                        workspaceId={workspaceId}
-                        showCounterparty={isBusiness}
-                        adjustment={row}
-                        reorder={reorderFor(index)}
-                        label={`Ajuste de saldo · ${accountName(row.account_id)}`}
-                        currency={currency}
-                      />
-                    )
-                  }
+        <Table
+          aria-label="Movimientos"
+          className="[&_tbody_td]:py-2.5 motion-reduce:[&_tbody_tr]:transition-none"
+        >
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              {canReorder ? (
+                <TableHead className="w-7 ps-2 pe-0">
+                  <span className="sr-only">Orden</span>
+                </TableHead>
+              ) : null}
+              <TableHead className="w-32">Fecha</TableHead>
+              <TableHead>Descripción</TableHead>
+              <TableHead>Categoría</TableHead>
+              {isBusiness ? <TableHead>Cliente o proveedor</TableHead> : null}
+              <TableHead>Cuenta</TableHead>
+              <TableHead className="text-end">Monto</TableHead>
+              <TableHead className={ACTIONS_COLUMN}>
+                <span className="sr-only">Acciones</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {orderedRows.map((row, index) => {
+              if (row.kind === "transfer") {
+                return (
+                  <TransferRow
+                    key={row.id}
+                    workspaceId={workspaceId}
+                    showCounterparty={isBusiness}
+                    transfer={row}
+                    reorder={reorderFor(index)}
+                    label={`${accountName(row.from_account_id)} → ${accountName(row.to_account_id)}`}
+                    accounts={accounts}
+                    currency={currency}
+                  />
+                )
+              }
+              if (isAccountMovement(row)) {
+                return (
+                  <AccountMovementRow
+                    key={row.id}
+                    workspaceId={workspaceId}
+                    showCounterparty={isBusiness}
+                    entry={row}
+                    reorder={reorderFor(index)}
+                    account={accountsById.get(row.account_id)}
+                    accounts={accounts}
+                    categories={categories}
+                    currency={currency}
+                  />
+                )
+              }
+              if (row.kind === "adjustment") {
+                return (
+                  <AdjustmentRow
+                    key={row.id}
+                    workspaceId={workspaceId}
+                    showCounterparty={isBusiness}
+                    adjustment={row}
+                    reorder={reorderFor(index)}
+                    label={`Ajuste de saldo · ${accountName(row.account_id)}`}
+                    currency={currency}
+                  />
+                )
+              }
 
-                  const transaction = row.transaction
-                  const reorder = reorderFor(index)
-                  const category = categoriesById.get(transaction.category_id)
-                  const account = transaction.account_id
-                    ? accountsById.get(transaction.account_id)
-                    : undefined
-
-                  return (
-                    <SortableRow
-                      key={transaction.id}
-                      reorder={reorder}
-                    >
-                      <DateCell
-                        date={transaction.occurred_on}
-                        time={row.occurred_time}
-                      />
-                      <DescriptionCell
-                        title={transaction.description}
-                        note={transaction.note}
-                        // Ingreso de un avance de tarjeta (SPEC 36)
-                        icon={
-                          row.debt_entry?.kind === "advance"
-                            ? Banknote
-                            : undefined
-                        }
-                      />
-                      <Table.Cell className={NOWRAP}>
-                        {category && (
-                          <CategoryBadge
-                            name={category.name}
-                            icon={category.icon}
-                            color={category.color}
-                          />
-                        )}
-                      </Table.Cell>
-                      {isBusiness && (
-                        <CounterpartyCell
-                          counterparty={transaction.counterparty}
-                          invoiceRef={transaction.invoice_ref}
-                        />
-                      )}
-                      <Table.Cell className={NOWRAP}>
-                        {account ? (
-                          <AccountLabel account={account} />
-                        ) : (
-                          <span className="text-muted">Sin cuenta</span>
-                        )}
-                      </Table.Cell>
-                      <Table.Cell
-                        className={cn(
-                          "text-end font-medium tabular-nums",
-                          NOWRAP,
-                          transaction.type === "income"
-                            ? "text-(--income)"
-                            : "text-(--expense)"
-                        )}
-                      >
-                        {transaction.type === "income" ? "+" : "−"}
-                        {formatCurrency(transaction.amount, currency)}
-                      </Table.Cell>
-                      <Table.Cell>
-                        {row.debt_entry ? (
-                          <LinkedPaymentActions
-                            label={transaction.description}
-                            entry={row.debt_entry}
-                            accounts={accounts}
-                            categories={categories}
-                            currency={currency}
-                          />
-                        ) : (
-                          <EntryActions
-                            label={transaction.description}
-                            remove={{
-                              title: "¿Eliminar este movimiento?",
-                              success: "Movimiento eliminado",
-                              onDelete: () =>
-                                deleteTransaction(workspaceId, transaction.id)
-                            }}
-                            renderEdit={(dialog) => (
-                              <TransactionDialog
-                                workspaceId={workspaceId}
-                                workspaceType={workspaceType}
-                                categories={categories}
-                                accounts={accounts}
-                                transaction={transaction}
-                                incomeSources={incomeSources}
-                                open={dialog.open}
-                                onOpenChange={dialog.onOpenChange}
-                              />
-                            )}
-                            renderDuplicate={(dialog) =>
-                              dialog.open && (
-                                <DuplicateTransactionDialog
-                                  workspaceId={workspaceId}
-                                  workspaceType={workspaceType}
-                                  transactionId={transaction.id}
-                                  categories={categories}
-                                  accounts={accounts}
-                                  incomeSources={incomeSources}
-                                  onOpenChange={dialog.onOpenChange}
-                                />
-                              )
-                            }
-                          />
-                        )}
-                      </Table.Cell>
-                    </SortableRow>
-                  )
-                })}
-              </Table.Body>
-            </Table.Content>
-          </Table.ScrollContainer>
+              const transaction = row.transaction
+              return (
+                <TransactionRow
+                  key={transaction.id}
+                  workspaceId={workspaceId}
+                  workspaceType={workspaceType}
+                  row={row}
+                  reorder={reorderFor(index)}
+                  category={categoriesById.get(transaction.category_id)}
+                  account={
+                    transaction.account_id
+                      ? accountsById.get(transaction.account_id)
+                      : undefined
+                  }
+                  categories={categories}
+                  accounts={accounts}
+                  currency={currency}
+                  incomeSources={incomeSources}
+                />
+              )
+            })}
+          </TableBody>
         </Table>
       </ScrollTable>
       <DragOverlay>
         {(source) => (
-          <div className="flex w-fit max-w-full items-center gap-2 rounded-2xl bg-surface px-4 py-2.5 text-sm font-medium shadow-overlay ring-1 ring-accent">
+          <div className="flex w-fit max-w-full items-center gap-2 rounded-2xl bg-popover px-4 py-2.5 text-sm font-medium shadow-(--overlay-shadow) ring-1 ring-primary">
             <GripVertical
               aria-hidden="true"
-              className="size-4 text-muted"
+              className="size-4 text-muted-foreground"
             />
             {String(source.data?.title ?? "")}
           </div>
         )}
       </DragOverlay>
     </DragDropProvider>
+  )
+}
+
+/**
+ * La tabla mientras carga, con la misma superficie, cabecera y filas. En
+ * Empresa suma la columna de cliente o proveedor
+ */
+export function TransactionsTableSkeleton({
+  workspaceType = "personal",
+  rows = 8
+}: {
+  workspaceType?: WorkspaceType
+  rows?: number
+}) {
+  return (
+    <ScrollTableSkeleton
+      columns={workspaceType === "business" ? 7 : 6}
+      rows={rows}
+      minWidth={MIN_WIDTH[workspaceType]}
+      amountColumn={false}
+    />
+  )
+}
+
+// Movimiento suelto (entrada o salida), o el de un pago enlazado a una deuda
+function TransactionRow({
+  workspaceId,
+  workspaceType,
+  row,
+  reorder,
+  category,
+  account,
+  categories,
+  accounts,
+  currency,
+  incomeSources
+}: {
+  workspaceId: string
+  workspaceType: WorkspaceType
+  row: TransactionEntry
+  reorder: Reorder | undefined
+  category: Category | undefined
+  account: PaymentAccountOption | undefined
+  categories: Category[]
+  accounts: PaymentAccountOption[]
+  currency: string
+  incomeSources?: IncomeSourceOption[]
+}) {
+  const transaction = row.transaction
+  const isIncome = transaction.type === "income"
+  const entry: EntryConfig = row.debt_entry
+    ? linkedPaymentEntry({
+        label: transaction.description,
+        entry: row.debt_entry,
+        accounts,
+        categories,
+        currency
+      })
+    : {
+        label: transaction.description,
+        remove: {
+          title: "¿Eliminar este movimiento?",
+          success: "Movimiento eliminado",
+          onDelete: () => deleteTransaction(workspaceId, transaction.id)
+        },
+        renderEdit: (dialog) => (
+          <TransactionDialog
+            workspaceId={workspaceId}
+            workspaceType={workspaceType}
+            categories={categories}
+            accounts={accounts}
+            transaction={transaction}
+            incomeSources={incomeSources}
+            open={dialog.open}
+            onOpenChange={dialog.onOpenChange}
+          />
+        ),
+        renderDuplicate: (dialog) =>
+          dialog.open && (
+            <DuplicateTransactionDialog
+              workspaceId={workspaceId}
+              workspaceType={workspaceType}
+              transactionId={transaction.id}
+              categories={categories}
+              accounts={accounts}
+              incomeSources={incomeSources}
+              onOpenChange={dialog.onOpenChange}
+            />
+          )
+      }
+
+  return (
+    <SortableRow
+      reorder={reorder}
+      entry={entry}
+    >
+      <DateCell
+        date={transaction.occurred_on}
+        time={row.occurred_time}
+      />
+      <DescriptionCell
+        title={transaction.description}
+        note={transaction.note}
+        // Ingreso de un avance de tarjeta (SPEC 36)
+        icon={row.debt_entry?.kind === "advance" ? Banknote : undefined}
+      />
+      <TableCell>
+        {category && (
+          <CategoryBadge
+            name={category.name}
+            icon={category.icon}
+            color={category.color}
+          />
+        )}
+      </TableCell>
+      {workspaceType === "business" && (
+        <CounterpartyCell
+          counterparty={transaction.counterparty}
+          invoiceRef={transaction.invoice_ref}
+        />
+      )}
+      <TableCell>
+        {account ? (
+          <AccountLabel account={account} />
+        ) : (
+          <span className="text-muted-foreground">Sin cuenta</span>
+        )}
+      </TableCell>
+      <TableCell
+        className={cn(
+          "text-end font-medium tabular-nums",
+          isIncome ? "text-(--income)" : "text-(--expense)"
+        )}
+      >
+        {/* El signo se lee: "más" o "menos" antes del monto completo */}
+        <span aria-hidden="true">{isIncome ? "+" : "−"}</span>
+        <span className="sr-only">{isIncome ? "más " : "menos "}</span>
+        {formatCurrency(transaction.amount, currency)}
+      </TableCell>
+    </SortableRow>
   )
 }
 
@@ -498,29 +563,34 @@ function CounterpartyCell({
 }) {
   if (!counterparty && !invoiceRef) {
     return (
-      <Table.Cell className={NOWRAP}>
-        <span className="text-muted">—</span>
-      </Table.Cell>
+      <TableCell>
+        <span className="text-muted-foreground">—</span>
+      </TableCell>
     )
   }
   return (
-    <Table.Cell className="max-w-48">
+    <TableCell className="max-w-48 whitespace-normal">
       {counterparty && <p className="truncate">{counterparty}</p>}
       {invoiceRef && (
-        <p className="truncate text-sm text-muted">{invoiceRef}</p>
+        <p className="truncate text-sm text-muted-foreground">{invoiceRef}</p>
       )}
-    </Table.Cell>
+    </TableCell>
   )
 }
 
 // Fila ordenable con dnd-kit: el asa (⋮⋮) a la izquierda inicia el arrastre
 // con mouse, dedo (mantener presionado) o teclado. Sin `reorder` la tabla no
-// se puede reordenar (búsqueda activa o sin permiso de escritura).
+// se puede reordenar (búsqueda activa o sin permiso de escritura). La fila
+// entera lleva el menú contextual (clic derecho y pulsación larga) con las
+// mismas acciones que su botón ⋯; el asa no lo abre, así arrastrar y la
+// pulsación larga no chocan
 function SortableRow({
   reorder,
+  entry,
   children
 }: {
   reorder: Reorder | undefined
+  entry: EntryConfig
   children: React.ReactNode
 }) {
   const fallbackId = useId()
@@ -534,53 +604,70 @@ function SortableRow({
     data: { title: reorder?.title },
     disabled: !reorder?.canDrag
   })
+  const { actions, dialogs } = useEntryActions(entry)
 
   return (
-    <Table.Row
-      // Solo una fila arrastrable se registra en el <tr>. Deshabilitada,
-      // dnd-kit le pone aria-disabled="true" y HeroUI la atenúa con
-      // pointer-events: none: el menú de acciones quedaba inalcanzable en
-      // las filas solas en su día o con búsqueda activa (SPEC 26)
-      ref={reorder?.canDrag ? ref : undefined}
-      className={cn(
-        reorder?.className,
-        // La fila original queda como hueco en el lugar de destino
-        isDragSource && "bg-accent/15 opacity-50"
-      )}
+    <RowContextMenu
+      label={entry.label}
+      actions={actions}
     >
-      {reorder ? (
-        <Table.Cell className="ps-2 pe-0">
-          {reorder.canDrag ? (
-            <button
-              ref={handleRef}
-              type="button"
-              aria-label="Reordenar dentro del día"
-              data-tour="transactions-reorder"
-              className={cn(
-                "grid h-6 w-5 touch-none place-items-center rounded-md text-muted/50 outline-none select-none hover:bg-default hover:text-foreground focus-visible:ring-2 focus-visible:ring-focus pointer-coarse:h-11 pointer-coarse:w-7",
-                isDragging ? "cursor-grabbing" : "cursor-grab"
-              )}
-            >
-              <GripVertical
-                aria-hidden="true"
-                className="size-4"
-              />
-            </button>
-          ) : null}
-        </Table.Cell>
-      ) : null}
-      {children}
-    </Table.Row>
+      <TableRow
+        // Solo una fila arrastrable se registra en el <tr>. Deshabilitada,
+        // dnd-kit le pone aria-disabled="true": el menú de acciones debe
+        // seguir alcanzable en las filas solas en su día (SPEC 26)
+        ref={reorder?.canDrag ? ref : undefined}
+        className={cn(
+          "duration-150",
+          reorder?.className,
+          // La fila original queda como hueco en el lugar de destino
+          isDragSource && "bg-primary/15 opacity-50"
+        )}
+      >
+        {reorder ? (
+          <TableCell className="ps-2 pe-0">
+            {reorder.canDrag ? (
+              <button
+                ref={handleRef}
+                type="button"
+                aria-label="Reordenar dentro del día"
+                data-tour="transactions-reorder"
+                // El asa es solo para arrastrar: ni la pulsación larga ni el
+                // clic derecho abren el menú de la fila desde aquí
+                onTouchStart={(event) => event.stopPropagation()}
+                onContextMenu={(event) => event.stopPropagation()}
+                className={cn(
+                  "grid h-6 w-5 touch-none place-items-center rounded-md text-muted-foreground/70 outline-none select-none hover:bg-highlight hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring pointer-coarse:h-11 pointer-coarse:w-7",
+                  isDragging ? "cursor-grabbing" : "cursor-grab"
+                )}
+              >
+                <GripVertical
+                  aria-hidden="true"
+                  className="size-4"
+                />
+              </button>
+            ) : null}
+          </TableCell>
+        ) : null}
+        {children}
+        <TableCell>
+          <RowActions
+            label={entry.label}
+            actions={actions}
+          />
+          <RowMenuBoundary>{dialogs}</RowMenuBoundary>
+        </TableCell>
+      </TableRow>
+    </RowContextMenu>
   )
 }
 
 // Fecha y, debajo, la hora si el usuario la puso
 function DateCell({ date, time }: { date: string; time: string | null }) {
   return (
-    <Table.Cell className={cn("text-muted", NOWRAP)}>
+    <TableCell className="text-muted-foreground">
       {formatDate(date)}
       {time && <span className="block text-xs">{formatTime(time)}</span>}
-    </Table.Cell>
+    </TableCell>
   )
 }
 
@@ -596,23 +683,49 @@ function DescriptionCell({
   // Sin truncar a una línea: el texto envuelve (máximo 3 líneas) y el
   // completo queda en `title` y en el diálogo de edición
   return (
-    <Table.Cell className="max-w-72 min-w-56">
+    <TableCell className="max-w-72 min-w-56 whitespace-normal">
       <p
         title={title}
         className="flex items-start gap-2 font-medium"
       >
-        {Icon && <Icon className="mt-0.5 size-4 shrink-0 text-muted" />}
+        {Icon && (
+          <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+        )}
         <span className="line-clamp-3 min-w-0 break-words">{title}</span>
       </p>
       {note && (
         <p
           title={note}
-          className="line-clamp-3 text-xs break-words text-muted"
+          className="line-clamp-3 text-xs break-words text-muted-foreground"
         >
           {note}
         </p>
       )}
-    </Table.Cell>
+    </TableCell>
+  )
+}
+
+// Monto neutro (traspasos, ajustes, pagos con cuenta): gris, con el signo
+// leído como "más" o "menos" cuando lo hay
+function NeutralAmountCell({
+  sign,
+  amount,
+  currency
+}: {
+  sign: "+" | "−" | null
+  amount: number
+  currency: string
+}) {
+  return (
+    <TableCell className="text-end font-medium text-muted-foreground tabular-nums">
+      {sign ? (
+        <>
+          <span aria-hidden="true">{sign}</span>
+          <span className="sr-only">{sign === "+" ? "más " : "menos "}</span>
+        </>
+      ) : null}
+      {formatCurrency(amount, currency)}
+    </TableCell>
   )
 }
 
@@ -634,8 +747,49 @@ function TransferRow({
   currency: string
   reorder: Reorder | undefined
 }) {
+  const entry: EntryConfig = {
+    label: `Traspaso ${label}`,
+    remove: {
+      title: "¿Eliminar este traspaso?",
+      success: "Traspaso eliminado",
+      onDelete: () => deleteTransfer(workspaceId, transfer.id)
+    },
+    renderEdit: (dialog) => (
+      <TransferDialog
+        workspaceId={workspaceId}
+        accounts={accounts}
+        transfer={transfer}
+        open={dialog.open}
+        onOpenChange={dialog.onOpenChange}
+      />
+    ),
+    renderDuplicate: (dialog) =>
+      dialog.open && (
+        <TransferDialog
+          workspaceId={workspaceId}
+          accounts={accounts}
+          // Mismas cuentas (si siguen activas), monto y nota; fecha de
+          // hoy y hora vacía (SPEC 49)
+          initialValues={{
+            from_account_id: activeAccountId(
+              accounts,
+              transfer.from_account_id
+            ),
+            to_account_id: activeAccountId(accounts, transfer.to_account_id),
+            amount: transfer.amount,
+            note: transfer.note ?? ""
+          }}
+          open
+          onOpenChange={dialog.onOpenChange}
+        />
+      )
+  }
+
   return (
-    <SortableRow reorder={reorder}>
+    <SortableRow
+      reorder={reorder}
+      entry={entry}
+    >
       <DateCell
         date={transfer.occurred_on}
         time={transfer.occurred_time}
@@ -645,57 +799,14 @@ function TransferRow({
         note={transfer.note}
         icon={ArrowLeftRight}
       />
-      <Table.Cell className={cn("text-muted", NOWRAP)}>Traspaso</Table.Cell>
-      {showCounterparty && <Table.Cell />}
-      <Table.Cell />
-      <Table.Cell
-        className={cn("text-end font-medium text-muted tabular-nums", NOWRAP)}
-      >
-        {formatCurrency(transfer.amount, currency)}
-      </Table.Cell>
-      <Table.Cell>
-        <EntryActions
-          label={`Traspaso ${label}`}
-          remove={{
-            title: "¿Eliminar este traspaso?",
-            success: "Traspaso eliminado",
-            onDelete: () => deleteTransfer(workspaceId, transfer.id)
-          }}
-          renderEdit={(dialog) => (
-            <TransferDialog
-              workspaceId={workspaceId}
-              accounts={accounts}
-              transfer={transfer}
-              open={dialog.open}
-              onOpenChange={dialog.onOpenChange}
-            />
-          )}
-          renderDuplicate={(dialog) =>
-            dialog.open && (
-              <TransferDialog
-                workspaceId={workspaceId}
-                accounts={accounts}
-                // Mismas cuentas (si siguen activas), monto y nota; fecha de
-                // hoy y hora vacía (SPEC 49)
-                initialValues={{
-                  from_account_id: activeAccountId(
-                    accounts,
-                    transfer.from_account_id
-                  ),
-                  to_account_id: activeAccountId(
-                    accounts,
-                    transfer.to_account_id
-                  ),
-                  amount: transfer.amount,
-                  note: transfer.note ?? ""
-                }}
-                open
-                onOpenChange={dialog.onOpenChange}
-              />
-            )
-          }
-        />
-      </Table.Cell>
+      <TableCell className="text-muted-foreground">Traspaso</TableCell>
+      {showCounterparty && <TableCell />}
+      <TableCell />
+      <NeutralAmountCell
+        sign={null}
+        amount={transfer.amount}
+        currency={currency}
+      />
     </SortableRow>
   )
 }
@@ -735,8 +846,91 @@ function AccountMovementRow({
 }) {
   const { title, type, icon, increases } = describeAccountMovement(entry)
 
+  const config: EntryConfig =
+    entry.kind === "goal_contribution"
+      ? {
+          label: title,
+          remove: {
+            title: `¿Eliminar este ${type.toLowerCase()}?`,
+            success: `${entry.amount < 0 ? "Retiro" : "Aporte"} eliminado`,
+            onDelete: () => deleteContribution(entry.id)
+          },
+          renderEdit: (dialog) => (
+            <ContributionDialog
+              workspaceId={workspaceId}
+              goalId={entry.parent_id}
+              contribution={{
+                id: entry.id,
+                amount: entry.amount,
+                occurred_on: entry.occurred_on,
+                occurred_time: entry.occurred_time,
+                note: entry.note
+              }}
+              open={dialog.open}
+              onOpenChange={dialog.onOpenChange}
+            />
+          ),
+          renderDuplicate:
+            // Solo con la meta activa: cumplida o archivada no recibe aportes
+            entry.parent_active
+              ? (dialog) =>
+                  dialog.open && (
+                    <ContributionDialog
+                      workspaceId={workspaceId}
+                      goalId={entry.parent_id}
+                      kind={entry.amount < 0 ? "withdrawal" : "deposit"}
+                      accounts={accounts}
+                      initialValues={{
+                        amount: Math.abs(entry.amount),
+                        account_id: activeAccountId(accounts, entry.account_id),
+                        note: entry.note ?? ""
+                      }}
+                      open
+                      onOpenChange={dialog.onOpenChange}
+                    />
+                  )
+              : undefined
+        }
+      : {
+          label: title,
+          remove: {
+            title: `¿Eliminar este ${type.toLowerCase()}?`,
+            success: `${entry.kind === "debt_advance" ? "Avance" : entry.is_extra_payment ? "Abono" : "Pago"} eliminado`,
+            onDelete: () => deleteEntry(entry.id)
+          },
+          renderEdit: (dialog) =>
+            // El mismo editor que el Sheet de la deuda (SPEC 42)
+            dialog.open && (
+              <DebtEntryDialog
+                workspaceId={workspaceId}
+                entryId={entry.id}
+                accounts={accounts}
+                categories={categories}
+                currency={currency}
+                open
+                onOpenChange={dialog.onOpenChange}
+              />
+            ),
+          renderDuplicate:
+            // Pago o avance antiguo de tarjeta: solo con la deuda activa
+            entry.parent_active
+              ? (dialog) =>
+                  dialog.open && (
+                    <DuplicateDebtEntryLoader
+                      workspaceId={workspaceId}
+                      entryId={entry.id}
+                      accounts={accounts}
+                      onOpenChange={dialog.onOpenChange}
+                    />
+                  )
+              : undefined
+        }
+
   return (
-    <SortableRow reorder={reorder}>
+    <SortableRow
+      reorder={reorder}
+      entry={config}
+    >
       <DateCell
         date={entry.occurred_on}
         time={entry.occurred_time}
@@ -746,105 +940,14 @@ function AccountMovementRow({
         note={entry.note}
         icon={icon}
       />
-      <Table.Cell className={cn("text-muted", NOWRAP)}>{type}</Table.Cell>
-      {showCounterparty && <Table.Cell />}
-      <Table.Cell className={NOWRAP}>
-        {account && <AccountLabel account={account} />}
-      </Table.Cell>
-      <Table.Cell
-        className={cn("text-end font-medium text-muted tabular-nums", NOWRAP)}
-      >
-        {increases ? "+" : "−"}
-        {formatCurrency(Math.abs(entry.amount), currency)}
-      </Table.Cell>
-      <Table.Cell>
-        {entry.kind === "goal_contribution" ? (
-          <EntryActions
-            label={title}
-            remove={{
-              title: `¿Eliminar este ${type.toLowerCase()}?`,
-              success: `${entry.amount < 0 ? "Retiro" : "Aporte"} eliminado`,
-              onDelete: () => deleteContribution(entry.id)
-            }}
-            renderEdit={(dialog) => (
-              <ContributionDialog
-                workspaceId={workspaceId}
-                goalId={entry.parent_id}
-                contribution={{
-                  id: entry.id,
-                  amount: entry.amount,
-                  occurred_on: entry.occurred_on,
-                  occurred_time: entry.occurred_time,
-                  note: entry.note
-                }}
-                open={dialog.open}
-                onOpenChange={dialog.onOpenChange}
-              />
-            )}
-            renderDuplicate={
-              // Solo con la meta activa: cumplida o archivada no recibe aportes
-              entry.parent_active
-                ? (dialog) =>
-                    dialog.open && (
-                      <ContributionDialog
-                        workspaceId={workspaceId}
-                        goalId={entry.parent_id}
-                        kind={entry.amount < 0 ? "withdrawal" : "deposit"}
-                        accounts={accounts}
-                        initialValues={{
-                          amount: Math.abs(entry.amount),
-                          account_id: activeAccountId(
-                            accounts,
-                            entry.account_id
-                          ),
-                          note: entry.note ?? ""
-                        }}
-                        open
-                        onOpenChange={dialog.onOpenChange}
-                      />
-                    )
-                : undefined
-            }
-          />
-        ) : (
-          <EntryActions
-            label={title}
-            remove={{
-              title: `¿Eliminar este ${type.toLowerCase()}?`,
-              success: `${entry.kind === "debt_advance" ? "Avance" : entry.is_extra_payment ? "Abono" : "Pago"} eliminado`,
-              onDelete: () => deleteEntry(entry.id)
-            }}
-            renderEdit={(dialog) =>
-              // El mismo editor que el Sheet de la deuda (SPEC 42)
-              dialog.open && (
-                <DebtEntryDialog
-                  workspaceId={workspaceId}
-                  entryId={entry.id}
-                  accounts={accounts}
-                  categories={categories}
-                  currency={currency}
-                  open
-                  onOpenChange={dialog.onOpenChange}
-                />
-              )
-            }
-            renderDuplicate={
-              // Pago o avance antiguo de tarjeta: solo con la deuda activa
-              entry.parent_active
-                ? (dialog) =>
-                    dialog.open && (
-                      <DuplicateDebtEntryLoader
-                        workspaceId={workspaceId}
-                        entryId={entry.id}
-                        accounts={accounts}
-                        onOpenChange={dialog.onOpenChange}
-                      />
-                    )
-                : undefined
-            }
-          />
-        )}
-      </Table.Cell>
+      <TableCell className="text-muted-foreground">{type}</TableCell>
+      {showCounterparty && <TableCell />}
+      <TableCell>{account && <AccountLabel account={account} />}</TableCell>
+      <NeutralAmountCell
+        sign={increases ? "+" : "−"}
+        amount={Math.abs(entry.amount)}
+        currency={currency}
+      />
     </SortableRow>
   )
 }
@@ -853,7 +956,7 @@ function AccountMovementRow({
 // avance de tarjeta (SPEC 36). El abono es la fuente de verdad: se edita con
 // su diálogo y el trigger copia monto, fecha y hora al movimiento; eliminarlo
 // borra los dos juntos.
-function LinkedPaymentActions({
+function linkedPaymentEntry({
   label,
   entry,
   accounts,
@@ -865,7 +968,7 @@ function LinkedPaymentActions({
   accounts: PaymentAccountOption[]
   categories: Category[]
   currency: string
-}) {
+}): EntryConfig {
   const noun =
     entry.kind === "advance"
       ? "avance"
@@ -873,54 +976,50 @@ function LinkedPaymentActions({
         ? "cobro"
         : "pago"
 
-  return (
-    <EntryActions
-      label={label}
-      remove={{
-        title: `¿Eliminar este ${noun}?`,
-        success: `${noun.charAt(0).toUpperCase()}${noun.slice(1)} eliminado`,
-        onDelete: () => deleteEntry(entry.id)
-      }}
-      renderEdit={(dialog) =>
-        // El mismo editor que el Sheet de la deuda (SPEC 42)
-        dialog.open && (
-          <DebtEntryDialog
-            workspaceId={entry.workspace_id}
-            entryId={entry.id}
-            accounts={accounts}
-            categories={categories}
-            currency={currency}
-            open
-            onOpenChange={dialog.onOpenChange}
-          />
-        )
-      }
-      renderDuplicate={
-        // Solo con la deuda activa. El cobro de un Me deben mensual va por su
-        // diálogo, a la cuota pendiente siguiente (toast si no queda)
-        entry.debt_status === "active"
-          ? (dialog) =>
-              dialog.open &&
-              (entry.debt_kind === "receivable" &&
-              entry.debt_schedule === "monthly" ? (
-                <DuplicateReceivableLoader
-                  workspaceId={entry.workspace_id}
-                  entryId={entry.id}
-                  accounts={accounts}
-                  onOpenChange={dialog.onOpenChange}
-                />
-              ) : (
-                <DuplicateDebtEntryLoader
-                  workspaceId={entry.workspace_id}
-                  entryId={entry.id}
-                  accounts={accounts}
-                  onOpenChange={dialog.onOpenChange}
-                />
-              ))
-          : undefined
-      }
-    />
-  )
+  return {
+    label,
+    remove: {
+      title: `¿Eliminar este ${noun}?`,
+      success: `${noun.charAt(0).toUpperCase()}${noun.slice(1)} eliminado`,
+      onDelete: () => deleteEntry(entry.id)
+    },
+    renderEdit: (dialog) =>
+      // El mismo editor que el Sheet de la deuda (SPEC 42)
+      dialog.open && (
+        <DebtEntryDialog
+          workspaceId={entry.workspace_id}
+          entryId={entry.id}
+          accounts={accounts}
+          categories={categories}
+          currency={currency}
+          open
+          onOpenChange={dialog.onOpenChange}
+        />
+      ),
+    renderDuplicate:
+      // Solo con la deuda activa. El cobro de un Me deben mensual va por su
+      // diálogo, a la cuota pendiente siguiente (toast si no queda)
+      entry.debt_status === "active"
+        ? (dialog) =>
+            dialog.open &&
+            (entry.debt_kind === "receivable" &&
+            entry.debt_schedule === "monthly" ? (
+              <DuplicateReceivableLoader
+                workspaceId={entry.workspace_id}
+                entryId={entry.id}
+                accounts={accounts}
+                onOpenChange={dialog.onOpenChange}
+              />
+            ) : (
+              <DuplicateDebtEntryLoader
+                workspaceId={entry.workspace_id}
+                entryId={entry.id}
+                accounts={accounts}
+                onOpenChange={dialog.onOpenChange}
+              />
+            ))
+        : undefined
+  }
 }
 
 // Ajuste de saldo: neutro, con signo. Solo se elimina.
@@ -939,8 +1038,20 @@ function AdjustmentRow({
   currency: string
   reorder: Reorder | undefined
 }) {
+  const entry: EntryConfig = {
+    label,
+    remove: {
+      title: "¿Eliminar este ajuste?",
+      success: "Ajuste eliminado",
+      onDelete: () => deleteAdjustment(workspaceId, adjustment.id)
+    }
+  }
+
   return (
-    <SortableRow reorder={reorder}>
+    <SortableRow
+      reorder={reorder}
+      entry={entry}
+    >
       <DateCell
         date={adjustment.occurred_on}
         time={adjustment.occurred_time}
@@ -950,25 +1061,14 @@ function AdjustmentRow({
         note={adjustment.note}
         icon={RefreshCw}
       />
-      <Table.Cell className={cn("text-muted", NOWRAP)}>Ajuste</Table.Cell>
-      {showCounterparty && <Table.Cell />}
-      <Table.Cell />
-      <Table.Cell
-        className={cn("text-end font-medium text-muted tabular-nums", NOWRAP)}
-      >
-        {adjustment.amount > 0 ? "+" : "−"}
-        {formatCurrency(Math.abs(adjustment.amount), currency)}
-      </Table.Cell>
-      <Table.Cell>
-        <EntryActions
-          label={label}
-          remove={{
-            title: "¿Eliminar este ajuste?",
-            success: "Ajuste eliminado",
-            onDelete: () => deleteAdjustment(workspaceId, adjustment.id)
-          }}
-        />
-      </Table.Cell>
+      <TableCell className="text-muted-foreground">Ajuste</TableCell>
+      {showCounterparty && <TableCell />}
+      <TableCell />
+      <NeutralAmountCell
+        sign={adjustment.amount > 0 ? "+" : "−"}
+        amount={Math.abs(adjustment.amount)}
+        currency={currency}
+      />
     </SortableRow>
   )
 }
@@ -984,59 +1084,61 @@ interface RowDialogControl {
   onOpenChange: (open: boolean) => void
 }
 
-// Acciones de una fila: Editar y Duplicar (si hay diálogo) y Eliminar. Los
-// diálogos se controlan desde aquí porque el menú de escritorio no puede
-// alojar triggers
-function EntryActions({
-  label,
-  remove,
-  renderEdit,
-  renderDuplicate
-}: {
+/** Acciones de una fila: Editar y Duplicar (si hay diálogo) y Eliminar */
+interface EntryConfig {
+  /** Nombre de la fila para los avisos y los menús */
   label: string
   remove: RemoveConfig
   renderEdit?: (dialog: RowDialogControl) => React.ReactNode
   /** Diálogo de crear prellenado con los datos de la fila (SPEC 49) */
   renderDuplicate?: (dialog: RowDialogControl) => React.ReactNode
-}) {
+}
+
+// La misma lista sirve al botón ⋯ (o los botones en línea en el teléfono) y
+// al menú contextual de la fila. Los diálogos se controlan desde aquí porque
+// los menús no pueden alojar triggers
+function useEntryActions({
+  label,
+  remove,
+  renderEdit,
+  renderDuplicate
+}: EntryConfig) {
   const [editing, setEditing] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
-  return (
-    <>
-      <RowActions
-        label={label}
-        actions={[
-          ...(renderEdit
-            ? [
-                {
-                  id: "edit",
-                  label: "Editar",
-                  icon: <Pencil className="size-4" />,
-                  onAction: () => setEditing(true)
-                }
-              ]
-            : []),
-          ...(renderDuplicate
-            ? [
-                {
-                  id: "duplicate",
-                  label: "Duplicar",
-                  icon: <Copy className="size-4" />,
-                  onAction: () => setDuplicating(true)
-                }
-              ]
-            : []),
+  const actions: RowAction[] = [
+    ...(renderEdit
+      ? [
           {
-            id: "delete",
-            label: "Eliminar",
-            icon: <Trash2 className="size-4" />,
-            destructive: true,
-            onAction: () => setDeleting(true)
+            id: "edit",
+            label: "Editar",
+            icon: <Pencil />,
+            onAction: () => setEditing(true)
           }
-        ]}
-      />
+        ]
+      : []),
+    ...(renderDuplicate
+      ? [
+          {
+            id: "duplicate",
+            label: "Duplicar",
+            icon: <Copy />,
+            onAction: () => setDuplicating(true)
+          }
+        ]
+      : []),
+    {
+      id: "delete",
+      label: "Eliminar",
+      icon: <Trash2 />,
+      destructive: true,
+      onAction: () => setDeleting(true)
+    }
+  ]
+
+  const dialogs = (
+    <>
       {renderEdit?.({ open: editing, onOpenChange: setEditing })}
       {renderDuplicate?.({ open: duplicating, onOpenChange: setDuplicating })}
       <DeleteEntryDialog
@@ -1047,6 +1149,8 @@ function EntryActions({
       />
     </>
   )
+
+  return { actions, dialogs }
 }
 
 function DeleteEntryDialog({
@@ -1067,7 +1171,7 @@ function DeleteEntryDialog({
     startTransition(async () => {
       const result = await onDelete()
       if (result.error) {
-        toast.danger(result.error)
+        toast.error(result.error)
       } else {
         toast.success(success)
       }

@@ -4,7 +4,7 @@ import { useState } from "react"
 import dynamic from "next/dynamic"
 import { MenuIcon } from "lucide-react"
 
-// El cajón (HeroUI Drawer) se pide recién al primer toque del botón
+// El cajón (Sheet de ui/) se pide recién al primer toque del botón
 const MobileNavDrawer = dynamic(() => import("./mobile-nav-drawer"), {
   ssr: false
 })

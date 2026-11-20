@@ -3,6 +3,7 @@ import {
   TONE_TEXT_CLASSES as TONE_TEXT
 } from "@/components/dashboard/tone"
 import { ToneBadge } from "@/components/dashboard/tone-badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"
 import { formatDate } from "@/libs/format"
 import type { BandTone } from "../constants"
@@ -79,15 +80,35 @@ export function ScoreOverview({
         >
           {score}
         </span>
-        <span className="pb-1.5 text-sm text-muted">/ 100</span>
+        <span className="pb-1.5 text-sm text-muted-foreground">/ 100</span>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <BandBadge band={band} />
         <ScoreVariation variation={variation} />
       </div>
-      <p className="text-xs text-muted">
+      <p className="text-xs text-muted-foreground">
         Calculado con tus datos hasta hoy, {formatDate(today)}
       </p>
+    </div>
+  )
+}
+
+/** Hueco de ScoreOverview: cifra, banda, variación y fecha */
+export function ScoreOverviewSkeleton() {
+  return (
+    <div
+      aria-hidden="true"
+      className="flex flex-col gap-3"
+    >
+      <div className="flex h-12 items-end gap-2">
+        <Skeleton className="h-11 w-20" />
+        <Skeleton className="mb-1.5 h-4 w-10" />
+      </div>
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-6 w-16 rounded-4xl" />
+        <Skeleton className="h-4 w-40" />
+      </div>
+      <Skeleton className="h-3 w-52" />
     </div>
   )
 }

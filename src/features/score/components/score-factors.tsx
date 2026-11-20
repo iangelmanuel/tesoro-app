@@ -1,3 +1,6 @@
+import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/libs/cn"
 import { isIncluded } from "../curves"
 import type { FactorResult } from "../types"
 
@@ -33,21 +36,23 @@ export function ScoreFactors<K extends string>({
   monthFactors
 }: ScoreFactorsProps<K>) {
   return (
-    <ul className="flex flex-col divide-y">
+    <ul className={CARD_LIST}>
       {factors.map((factor) => {
         const label = labels[factor.key]
 
         return (
           <li
             key={factor.key}
-            className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0"
+            className={cn("flex flex-col gap-2", CARD_ROW)}
           >
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
               <p className="font-medium">{label}</p>
-              <p className="text-xs text-muted">Peso {factor.weight}</p>
+              <p className="text-xs text-muted-foreground">
+                Peso {factor.weight}
+              </p>
               {isIncluded(factor) ? (
                 <p className="ml-auto text-sm tabular-nums">
-                  <span className="text-muted">
+                  <span className="text-muted-foreground">
                     {formatFactorValue(
                       factor.value,
                       monthFactors.includes(factor.key)
@@ -59,7 +64,9 @@ export function ScoreFactors<K extends string>({
                   </span>
                 </p>
               ) : (
-                <p className="ml-auto text-sm text-muted">Excluido</p>
+                <p className="ml-auto text-sm text-muted-foreground">
+                  Excluido
+                </p>
               )}
             </div>
             {isIncluded(factor) ? (
@@ -69,19 +76,43 @@ export function ScoreFactors<K extends string>({
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-valuenow={Math.round(factor.points)}
-                className="flex h-2 w-full overflow-hidden rounded-full bg-default"
+                className="flex h-2 w-full overflow-hidden rounded-full bg-subtle"
               >
                 <div
-                  className="h-full bg-accent transition-all"
+                  className="h-full bg-primary transition-[width] duration-300 motion-reduce:transition-none"
                   style={{ width: `${factor.points}%` }}
                 />
               </div>
             ) : (
-              <p className="text-sm text-muted">{factor.excluded}</p>
+              <p className="text-sm text-muted-foreground">{factor.excluded}</p>
             )}
           </li>
         )
       })}
+    </ul>
+  )
+}
+
+/** Hueco de ScoreFactors: filas con nombre, dato y barra */
+export function ScoreFactorsSkeleton({ rows = 5 }: { rows?: number }) {
+  return (
+    <ul
+      aria-hidden="true"
+      className={CARD_LIST}
+    >
+      {Array.from({ length: rows }, (_, index) => (
+        <li
+          key={index}
+          className={cn("flex flex-col gap-2", CARD_ROW)}
+        >
+          <div className="flex h-6 items-center gap-2">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-14" />
+            <Skeleton className="ml-auto h-4 w-24" />
+          </div>
+          <Skeleton className="h-2 w-full rounded-full" />
+        </li>
+      ))}
     </ul>
   )
 }

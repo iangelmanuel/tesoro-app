@@ -1,6 +1,6 @@
 # SPEC 51 — Base shadcn, tema nuevo, shell, menús rápidos y skeletons
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 13, SPEC 14, SPEC 15, SPEC 20, SPEC 22, SPEC 27, SPEC 31, SPEC 40, SPEC 50
 > **Fecha:** 2026-11-19
 > **Objetivo:** Montar shadcn (Base UI, estilo Maia personalizado) con una paleta y tipografía nuevas, y migrar a él el shell del dashboard y sus piezas compartidas, con paleta de comandos, atajos, menú contextual y el patrón de skeletons.
@@ -187,31 +187,37 @@ interface RowAction {
 
 ## Criterios de aceptación
 
-- [ ] El usuario eligió una de las direcciones de Impeccable antes de escribir tokens.
-- [ ] `components.json` declara Base UI y el estilo Maia; las primitivas viven en `src/components/ui/`.
-- [ ] Ningún archivo de `src/components/dashboard/**`, `src/components/charts/**` ni `src/components/ui/**` importa `@heroui/react`.
+Marcados: verificados en código, con contraste calculado o con `check`,
+`eslint`, `prettier:check` y `build`. Sin marcar: implementados, pero se
+prueban con sesión en el navegador (no hay usuario de prueba en el entorno
+de la implementación); `RowContextMenu` se prueba cuando una pantalla lo
+adopte (SPEC 52).
+
+- [x] El usuario eligió una de las direcciones de Impeccable antes de escribir tokens.
+- [x] `components.json` declara Base UI y el estilo Maia; las primitivas viven en `src/components/ui/`.
+- [x] Ningún archivo de `src/components/dashboard/**`, `src/components/charts/**` ni `src/components/ui/**` importa `@heroui/react`.
 - [ ] Las pantallas aún en HeroUI se ven con la paleta nueva y siguen funcionando (registrar, editar y eliminar un movimiento en Personal y en Empresa).
 - [ ] En `/dashboard/personal/**` el primario es emerald; en `/dashboard/business/[id]/**`, naranja; en `/dashboard/account/**`, neutro.
-- [ ] Todo par texto/fondo y el anillo de foco listados en `docs/ui.md` pasan AA en claro y oscuro.
+- [x] Todo par texto/fondo y el anillo de foco listados en `docs/ui.md` pasan AA en claro y oscuro.
 - [ ] Ctrl+K (⌘K en macOS) abre la paleta desde cualquier pantalla del dashboard, aun con los atajos apagados.
 - [ ] Buscar el nombre de una cuenta, deuda o meta del espacio activo la muestra en Tus datos y al elegirla abre su detalle.
-- [ ] La paleta no muestra entidades de otro espacio ni de otro usuario.
+- [x] La paleta no muestra entidades de otro espacio ni de otro usuario.
 - [ ] `N` abre el diálogo de nuevo movimiento y `G` luego `M` va a Movimientos, en Personal y en Empresa.
-- [ ] Escribir "n" o "g" dentro de un campo de texto no dispara ningún atajo.
+- [x] Escribir "n" o "g" dentro de un campo de texto no dispara ningún atajo.
 - [ ] Con "Atajos de teclado" apagado en Preferencias, `N`, `T`, `?` y `G`+letra no hacen nada, y sigue así al recargar.
-- [ ] `?` abre la hoja de atajos con todos los de `SHORTCUTS` y los `G`+letra del espacio activo.
+- [x] `?` abre la hoja de atajos con todos los de `SHORTCUTS` y los `G`+letra del espacio activo.
 - [ ] Clic derecho sobre una fila que usa `RowContextMenu` muestra las mismas acciones que su botón ⋯; en táctil, una pulsación de 500 ms también.
-- [ ] El botón de acción rápida, la hoja móvil y el grupo Acciones de la paleta muestran las mismas acciones.
-- [ ] Cada componente migrado que carga datos exporta su `…Skeleton` en el mismo archivo.
+- [x] El botón de acción rápida, la hoja móvil y el grupo Acciones de la paleta muestran las mismas acciones.
+- [x] Cada componente migrado que carga datos exporta su `…Skeleton` en el mismo archivo.
 - [ ] Al pasar de skeleton a contenido en `/dashboard/personal`, el CLS medido con Lighthouse es ≤ 0.05.
-- [ ] Con `prefers-reduced-motion: reduce`, los skeletons no animan.
+- [x] Con `prefers-reduced-motion: reduce`, los skeletons no animan.
 - [ ] Tab desde la carga muestra primero "Saltar al contenido" y lleva el foco a `main`.
 - [ ] Todo control interactivo del shell mide 44 × 44 px o más de área en móvil, tablet y escritorio.
 - [ ] Un lector de pantalla lee un gasto como "menos" seguido del monto completo, y "Monto oculto" con montos ocultos.
 - [ ] El shell no tiene scroll horizontal a 320 px de ancho ni a 200 % de zoom en 1280 px.
-- [ ] Los tours de SPEC 27 que pasan por el aside y el header siguen apuntando a su elemento.
-- [ ] El Excel y el PDF exportados usan los colores nuevos de ingresos, gastos y gráficas.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan, con el lockfile sincronizado.
+- [x] Los tours de SPEC 27 que pasan por el aside y el header siguen apuntando a su elemento.
+- [x] El Excel y el PDF exportados usan los colores nuevos de ingresos, gastos y gráficas.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan, con el lockfile sincronizado.
 
 ## Decisiones
 

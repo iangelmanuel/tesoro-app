@@ -6,8 +6,8 @@ import { Plus, RefreshCw } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { DetailSection, DetailSheet } from "@/components/dashboard/detail-sheet"
 import { HelpHint } from "@/components/dashboard/help-hint"
-// Triggers de PaymentDialog y AdjustBalanceDialog (FormDialog); el resto
-// del Sheet migra en el paso 7
+// Triggers de los diálogos ya en FormDialog; el resto del Sheet migra en
+// el paso 7
 import { Button as UiButton } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
@@ -160,10 +160,10 @@ export function DebtSheet({
                 receivable={collectable}
                 accounts={accounts ?? []}
                 trigger={
-                  <Button isDisabled={!isOpenEnded && debt.balance <= 0}>
+                  <UiButton disabled={!isOpenEnded && debt.balance <= 0}>
                     <Plus />
                     Registrar cobro
-                  </Button>
+                  </UiButton>
                 }
               />
               {!isMonthly && (

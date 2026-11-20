@@ -26,29 +26,3 @@ export function closesFromSheet(reason: string, event: Event | undefined) {
   }
   return true
 }
-
-/**
- * Lo mismo para un Dialog de Base UI que aloja controles de HeroUI (el
- * diálogo de movimiento con los tabs de Deuda, Me deben, Meta y Gasto fijo,
- * hasta SPEC 52b): va con `modal={false}` y solo lo cierran su fondo,
- * Escape dentro de él y su botón Cerrar
- */
-export function closesFromDialog(reason: string, event: Event | undefined) {
-  if (reason === "focus-out") {
-    return false
-  }
-  const target = event?.target
-  if (!(target instanceof Element)) {
-    return true
-  }
-  if (reason === "outside-press") {
-    return target.closest("[data-slot=dialog-overlay]") !== null
-  }
-  if (reason === "escape-key") {
-    return (
-      target.closest("[data-slot=dialog-content]") !== null ||
-      target === document.body
-    )
-  }
-  return true
-}

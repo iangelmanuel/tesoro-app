@@ -171,9 +171,6 @@ export function TransactionDialog({
       trigger={trigger}
       open={controlledOpen}
       onOpenChange={onOpenChange}
-      // El tab Me deben (ReceivableCollectForm) sigue en HeroUI hasta el
-      // paso 6 de SPEC 52b; ahí se quita
-      hostsHeroUI
       // Con 7 tabs el diálogo se ensancha un poco para que quepan
       className={showPaymentTabs ? "sm:max-w-lg" : undefined}
       title={

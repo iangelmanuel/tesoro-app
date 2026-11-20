@@ -1,6 +1,5 @@
 import { Suspense } from "react"
 import {
-  Button,
   Card,
   CardContent,
   CardDescription,
@@ -13,8 +12,7 @@ import { Amount } from "@/components/dashboard/amount"
 import { CardHeading } from "@/components/dashboard/card-heading"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { EmptyState } from "@/components/dashboard/empty-state"
-// Trigger de DebtDialog (FormDialog); la página migra en el paso 8
-import { Button as UiButton } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { type Category, getCategories } from "@/features/categories/queries"
@@ -270,10 +268,10 @@ function PayablesTab({
       workspaceId={workspace.id}
       accounts={accounts}
       trigger={
-        <UiButton data-tour="debts-create">
+        <Button data-tour="debts-create">
           <Plus />
           Nueva deuda
-        </UiButton>
+        </Button>
       }
     />
   )

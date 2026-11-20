@@ -1,5 +1,6 @@
 "use client"
 
+import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
@@ -13,6 +14,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
+import { useCommandPalette } from "../command/command-palette-context"
 import { type QuickAction, useQuickActions } from "../quick-actions-context"
 
 interface QuickSheetProps {
@@ -36,6 +38,7 @@ export function QuickSheet({
   onAutoOpenChange
 }: QuickSheetProps) {
   const { workspace, actions, run } = useQuickActions()
+  const palette = useCommandPalette()
 
   if (!workspace) {
     return null
@@ -78,6 +81,17 @@ export function QuickSheet({
           </DrawerDescription>
         </DrawerHeader>
         <div className="flex min-h-0 flex-col gap-2 overflow-y-auto px-4">
+          <Button
+            variant="secondary"
+            className="min-h-12 w-full justify-start gap-3 rounded-2xl text-muted-foreground"
+            onClick={() => {
+              onOpenChange(false)
+              palette.setOpen(true)
+            }}
+          >
+            <Search className="size-5" />
+            Buscar o ejecutar
+          </Button>
           {register.map(renderAction)}
           <Separator className="my-1" />
           {tools.map(renderAction)}

@@ -1,12 +1,19 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Button, ListBox, Modal, Select } from "@heroui/react"
-import { FieldLabel } from "@/components/forms/field-label"
+import { SelectField } from "@/components/forms/select-field"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { loadVerifyEntries } from "../actions"
 import type { VerifyEntry } from "../queries"
-import { VerifyRow } from "./verify-row"
+import { VerifyRow, VerifyRowSkeleton } from "./verify-row"
 
 const ALL_ACCOUNTS = "__all__"
 
@@ -37,37 +44,28 @@ export function VerifyMovementsDialog({
   onOpenChange
 }: VerifyMovementsDialogProps) {
   return (
-    <Modal
-      isOpen={open}
+    <Dialog
+      open={open}
       onOpenChange={onOpenChange}
     >
-      <Modal.Backdrop>
-        <Modal.Container
-          scroll="inside"
-          className="max-md:p-0"
-        >
-          <Modal.Dialog className="max-md:h-full max-md:max-h-full max-md:rounded-none md:max-w-xl">
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>Verificar movimientos</Modal.Heading>
-              <p className="text-sm text-muted">
-                Todo tu historial, del más reciente al más antiguo, para
-                compararlo con el extracto del banco. Solo lectura.
-              </p>
-            </Modal.Header>
-            <Modal.Body>
-              {/* El cuerpo se monta al abrir y carga la primera página */}
-              <VerifyMovementsBody
-                workspaceId={workspaceId}
-                accounts={accounts}
-                currency={currency}
-                showAccountFilter={showAccountFilter}
-              />
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+      {/* Pantalla completa en el teléfono; ventana ancha desde md */}
+      <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col gap-4 max-md:inset-0 max-md:h-dvh max-md:max-h-dvh max-md:max-w-full max-md:translate-x-0 max-md:translate-y-0 max-md:rounded-none md:max-w-xl">
+        <DialogHeader className="pr-10">
+          <DialogTitle>Verificar movimientos</DialogTitle>
+          <DialogDescription>
+            Todo tu historial, del más reciente al más antiguo, para compararlo
+            con el extracto del banco. Solo lectura.
+          </DialogDescription>
+        </DialogHeader>
+        {/* El cuerpo se monta al abrir y carga la primera página */}
+        <VerifyMovementsBody
+          workspaceId={workspaceId}
+          accounts={accounts}
+          currency={currency}
+          showAccountFilter={showAccountFilter}
+        />
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -150,44 +148,21 @@ function VerifyMovementsBody({
   const isLoading = status === "loading"
 
   return (
-    <>
+    <div className="-mx-6 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6">
       {showAccountFilter && accounts.length > 0 ? (
-        <Select
-          fullWidth
-          aria-label="Cuenta"
+        <SelectField
+          label="Cuenta"
+          help="verify.account"
           value={accountKey}
-          onChange={(key) =>
-            handleAccountChange(key == null ? ALL_ACCOUNTS : String(key))
-          }
-          className="mb-4 flex flex-col gap-2"
-        >
-          <FieldLabel help="verify.account">Cuenta</FieldLabel>
-          <Select.Trigger>
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              <ListBox.Item
-                id={ALL_ACCOUNTS}
-                textValue="Todas"
-              >
-                Todas
-                <ListBox.ItemIndicator />
-              </ListBox.Item>
-              {accounts.map((account) => (
-                <ListBox.Item
-                  key={account.id}
-                  id={account.id}
-                  textValue={account.name}
-                >
-                  {account.name}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-        </Select>
+          onChange={handleAccountChange}
+          options={[
+            { value: ALL_ACCOUNTS, label: "Todas" },
+            ...accounts.map((account) => ({
+              value: account.id,
+              label: account.name
+            }))
+          ]}
+        />
       ) : null}
 
       <p
@@ -198,7 +173,7 @@ function VerifyMovementsBody({
       </p>
 
       {rows.length > 0 ? (
-        <ul className="flex flex-col divide-y divide-separator">
+        <ul className="-mx-4 flex flex-col divide-y divide-border/70">
           {rows.map((entry) => (
             <VerifyRow
               key={entry.key}
@@ -210,7 +185,7 @@ function VerifyMovementsBody({
           ))}
         </ul>
       ) : status === "idle" ? (
-        <p className="py-8 text-center text-sm text-muted">
+        <p className="py-8 text-center text-sm text-muted-foreground">
           No hay movimientos para mostrar.
         </p>
       ) : null}
@@ -218,27 +193,33 @@ function VerifyMovementsBody({
       {status === "error" ? (
         <p
           role="alert"
-          className="py-4 text-center text-sm text-danger"
+          className="py-4 text-center text-sm text-destructive"
         >
           No se pudieron cargar los movimientos.
         </p>
       ) : null}
 
       {isLoading && rows.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted">Cargando...</p>
+        <ul
+          aria-hidden="true"
+          className="-mx-4 flex flex-col divide-y divide-border/70"
+        >
+          {Array.from({ length: 8 }, (_, index) => (
+            <VerifyRowSkeleton key={index} />
+          ))}
+        </ul>
       ) : null}
 
       {hasMore || (status === "error" && rows.length > 0) ? (
         <Button
           variant="secondary"
-          fullWidth
-          className="mt-4 min-h-11"
-          isDisabled={isLoading}
-          onPress={() => void load(selectedAccountId, rows.length)}
+          className="w-full shrink-0"
+          disabled={isLoading}
+          onClick={() => void load(selectedAccountId, rows.length)}
         >
           {isLoading ? "Cargando..." : "Cargar más"}
         </Button>
       ) : null}
-    </>
+    </div>
   )
 }

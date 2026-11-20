@@ -38,9 +38,9 @@ const PERIOD_LABELS: Record<Period, string> = {
 }
 
 const FORMAT_OPTIONS: { value: ExportFormat; label: string }[] = [
-  { value: "xlsx", label: "Excel (.xlsx)" },
-  { value: "csv", label: "CSV (.csv)" },
-  { value: "pdf", label: "PDF (.pdf)" }
+  { value: "xlsx", label: "Excel" },
+  { value: "csv", label: "CSV" },
+  { value: "pdf", label: "PDF" }
 ]
 
 const PDF_SIZE_LABELS: Record<PdfOptions["size"], string> = {

@@ -59,7 +59,7 @@ export function ReportTypeToggle({
       data-tour="reports-type"
       className={cn(
         SEGMENT_TRACK_CLASS,
-        "h-11 w-auto bg-card transition-opacity duration-150 motion-reduce:transition-none dark:bg-card",
+        "h-11 w-auto transition-opacity duration-150 motion-reduce:transition-none",
         pending && "opacity-60"
       )}
     >

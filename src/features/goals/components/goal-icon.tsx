@@ -1,9 +1,9 @@
-import { cn } from "@heroui/react"
 import { Tag } from "lucide-react"
 import {
   CATEGORY_COLORS,
   CATEGORY_ICONS
 } from "@/features/categories/constants"
+import { cn } from "@/libs/cn"
 
 interface GoalIconProps {
   icon: string
@@ -27,7 +27,10 @@ export function GoalIcon({ icon, color, className }: GoalIconProps) {
         className
       )}
     >
-      <Icon className="size-4" />
+      <Icon
+        aria-hidden
+        className="size-4"
+      />
     </span>
   )
 }

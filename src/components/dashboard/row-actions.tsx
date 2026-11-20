@@ -191,3 +191,21 @@ export function RowContextMenu({
     </ContextMenu>
   )
 }
+
+/**
+ * Corta el menú contextual de la fila para lo que vive dentro de ella pero
+ * se pinta en un portal (diálogos de editar, ajustar…): los eventos de React
+ * suben por el portal hasta la fila, y un clic derecho o una pulsación larga
+ * dentro del diálogo abriría el menú de la fila. No agrega caja (`contents`)
+ */
+export function RowMenuBoundary({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className="contents"
+      onContextMenu={(event) => event.stopPropagation()}
+      onTouchStart={(event) => event.stopPropagation()}
+    >
+      {children}
+    </div>
+  )
+}

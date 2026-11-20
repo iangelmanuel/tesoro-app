@@ -209,13 +209,16 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   se dibuja más chico); foco con `outline-2 outline-offset-2 outline-ring`.
   `src/components/dashboard/**`, `charts/**` y `ui/**` no importan
   `@heroui/react`.
-- **HeroUI v3 convive hasta SPEC 53** en las pantallas aún no migradas
-  (`@heroui/react` directo, sin Provider, componentes compuestos como
-  `Modal.Header`, `onPress` / `isDisabled`). `src/styles/heroui-bridge.css`
-  apunta sus tokens a los nuevos; `heroui-compat.ts` deja el aside móvil
-  (Sheet de Base UI) con `modal={false}` para que aloje menús de HeroUI.
-  SPEC 53 borra ambos. Los Sheets de detalle (`DetailSheet`) son modales
-  desde SPEC 52b.
+- **HeroUI v3 convive hasta SPEC 53** en Empresa (salvo lo compartido),
+  cuenta, auth y públicas (`@heroui/react` directo, sin Provider,
+  componentes compuestos como `Modal.Header`, `onPress` / `isDisabled`).
+  Desde SPEC 52c **nada de lo que pinta `/dashboard/personal/**` importa
+  `@heroui/react`, ni de forma transitiva** (layout, header y aside
+  incluidos). `src/styles/heroui-bridge.css` apunta sus tokens a los
+  nuevos. El `ToastProvider` de HeroUI vive en
+  `app/dashboard/business/layout.tsx` y `app/dashboard/account/layout.tsx`,
+  no en el layout del dashboard. El aside móvil y los Sheets de detalle
+  (`DetailSheet`) son modales.
 - Formularios (SPEC 52a): `useActionState` + Zod, con las piezas de
   `src/components/forms/`:
   - `TextInputField` (`FieldLabel` + `Input` + `FieldError`), `SelectField`

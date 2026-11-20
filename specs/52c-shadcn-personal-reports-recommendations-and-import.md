@@ -1,6 +1,6 @@
 # SPEC 52c — Personal en shadcn: Reportes, Recomendaciones e Importar
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 03, SPEC 07, SPEC 08, SPEC 08b, SPEC 27, SPEC 32, SPEC 33, SPEC 51, SPEC 52a, SPEC 52b
 > **Fecha:** 2026-11-20
 > **Objetivo:** Migrar a shadcn (Base UI) Reportes, Recomendaciones, Importar y las piezas del shell que aún traen HeroUI, para que nada de lo que se pinta en `/dashboard/personal/**` importe `@heroui/react`.
@@ -139,20 +139,20 @@ Las APIs públicas de los componentes compartidos con Empresa no cambian:
 
 Verificables en código o con `check`, `eslint`, `prettier:check` y `build`:
 
-- [ ] Ningún archivo de `src/features/{reports,score,imports,exports}/components/*` importa `@heroui/react` ni `@internationalized/date`.
-- [ ] `app/dashboard/personal/{reports,recommendations,import}/page.tsx` y sus `loading.tsx` no importan `@heroui/react`.
-- [ ] `TutorialHelpButton`, `TutorialProvider`, `TutorialAutoStart`, `BusinessSwitcher` y `Logo` no importan `@heroui/react`.
-- [ ] Ningún módulo alcanzable (import estático) desde `app/dashboard/layout.tsx` o desde cualquier `app/dashboard/personal/**` importa `@heroui/react`.
-- [ ] `app/dashboard/layout.tsx` no monta el `ToastProvider` de HeroUI; lo montan `app/dashboard/business/layout.tsx` y `app/dashboard/account/layout.tsx`.
-- [ ] `src/components/dashboard/heroui-compat.ts` no existe y el `Sheet` del aside móvil no pasa `modal={false}`.
-- [ ] Ningún archivo de este spec usa `CardSkeleton`, `onPress` ni `isDisabled`.
-- [ ] Cada componente migrado que carga datos exporta su `…Skeleton` en el mismo archivo.
-- [ ] Existen `loading.tsx` en `personal/reports/`, `personal/recommendations/` y `personal/import/`, cada uno con `LoadingRegion`.
-- [ ] `actions.ts`, `schemas.ts`, `queries.ts`, `wizard-state.ts`, los parsers de importación, `exports/workbook/*`, `exports/pdf/*` y `app/api/export/[workspaceId]/route.ts` no cambian.
-- [ ] Las props públicas de `ReportsView`, `ScoreRecommendationsView`, `ExportButton` y `BusinessSwitcher` no cambian.
-- [ ] Cada `target` de los tours `reports` y `recommendations`, y `import-button`, aparece como `data-tour` en un componente migrado.
-- [ ] Todo par texto/fondo nuevo queda en la tabla de contraste de `docs/ui.md` y pasa AA en claro y oscuro.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan, con el lockfile sincronizado.
+- [x] Ningún archivo de `src/features/{reports,score,imports,exports}/components/*` importa `@heroui/react` ni `@internationalized/date`.
+- [x] `app/dashboard/personal/{reports,recommendations,import}/page.tsx` y sus `loading.tsx` no importan `@heroui/react`.
+- [x] `TutorialHelpButton`, `TutorialProvider`, `TutorialAutoStart`, `BusinessSwitcher` y `Logo` no importan `@heroui/react`.
+- [x] Ningún módulo alcanzable (import estático) desde `app/dashboard/layout.tsx` o desde cualquier `app/dashboard/personal/**` importa `@heroui/react`.
+- [x] `app/dashboard/layout.tsx` no monta el `ToastProvider` de HeroUI; lo montan `app/dashboard/business/layout.tsx` y `app/dashboard/account/layout.tsx`.
+- [x] `src/components/dashboard/heroui-compat.ts` no existe y el `Sheet` del aside móvil no pasa `modal={false}`.
+- [x] Ningún archivo de este spec usa `CardSkeleton`, `onPress` ni `isDisabled`.
+- [x] Cada componente migrado que carga datos exporta su `…Skeleton` en el mismo archivo.
+- [x] Existen `loading.tsx` en `personal/reports/`, `personal/recommendations/` y `personal/import/`, cada uno con `LoadingRegion`.
+- [x] `actions.ts`, `schemas.ts`, `queries.ts`, `wizard-state.ts`, los parsers de importación, `exports/workbook/*`, `exports/pdf/*` y `app/api/export/[workspaceId]/route.ts` no cambian.
+- [x] Las props públicas de `ReportsView`, `ScoreRecommendationsView`, `ExportButton` y `BusinessSwitcher` no cambian.
+- [x] Cada `target` de los tours `reports` y `recommendations`, y `import-button`, aparece como `data-tour` en un componente migrado.
+- [x] Todo par texto/fondo nuevo queda en la tabla de contraste de `docs/ui.md` y pasa AA en claro y oscuro.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan, con el lockfile sincronizado.
 
 Verificables en navegador (los prueba el usuario a mano):
 

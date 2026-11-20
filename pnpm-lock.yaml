@@ -234,8 +234,8 @@ importers:
         specifier: 4.4.0
         version: 4.4.0
       html-to-pdfmake:
-        specifier: 2.5.36
-        version: 2.5.36
+        specifier: 2.6.0
+        version: 2.6.0
       jsdom:
         specifier: 31.0.0
         version: 31.0.0(@noble/hashes@1.8.0)
@@ -2742,8 +2742,8 @@ packages:
     resolution: {integrity: sha512-UikN5yr7xsCDAq87Or5or0PAlD3HJJOKVzM05az588WnpDJ4Ux7a2A53Qi6gofGg2/EtvF/H4hCi/TXfCW4Y6w==}
     engines: {node: ^22.13.0 || >=24.0.0}
 
-  html-to-pdfmake@2.5.36:
-    resolution: {integrity: sha512-kq0ZvOitu1cJoGjHYEtKj+rLW3TaqRDFw97R2q5w9OW7VexSXl7CzUjmNS+0E7gRS+2uxyjEf3WT7Kkhu2BBgw==}
+  html-to-pdfmake@2.6.0:
+    resolution: {integrity: sha512-7kW9xn6FZg1SfX4Zl6jFj3mMdQeR4GymfJYN91ihZXj/FgGLEHygUlGgTCHCGvKs8lWIj7gzhYqUyWzMAS2Hug==}
 
   http-errors@2.0.1:
     resolution: {integrity: sha512-4FbRdAX+bSdmo4AUFuS0WNiPz8NgFt+r8ThgNWmlrjQjt1Q7ZR9+zTlce2859x4KSXrwIsaeTqDoKQmtP8pLmQ==}
@@ -7140,7 +7140,7 @@ snapshots:
     transitivePeerDependencies:
       - '@noble/hashes'
 
-  html-to-pdfmake@2.5.36: {}
+  html-to-pdfmake@2.6.0: {}
 
   http-errors@2.0.1:
     dependencies:

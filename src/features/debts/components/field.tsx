@@ -1,7 +1,10 @@
 import { FieldLabel } from "@/components/forms/field-label"
 import type { FieldHelpKey } from "@/config/help"
 
-/** Etiqueta, control y primer error. Lo comparten los diálogos de deudas. */
+/**
+ * Etiqueta, control y primer error para campos de HeroUI. Solo lo usa
+ * `business-dialog.tsx`; SPEC 53 lo borra al migrar Empresa.
+ */
 export function Field({
   id,
   label,
@@ -30,27 +33,4 @@ export function Field({
       ) : null}
     </div>
   )
-}
-
-const AMOUNT_FORMAT = new Intl.NumberFormat("es-CO", {
-  maximumFractionDigits: 2
-})
-
-const RATE_INPUT_FORMAT = new Intl.NumberFormat("es-CO", {
-  maximumFractionDigits: 3,
-  useGrouping: false
-})
-
-/** Monto para un input en es-CO ("1.500.000"); "" si no hay */
-export function amountInput(value: number | null | undefined) {
-  return value === null || value === undefined
-    ? ""
-    : AMOUNT_FORMAT.format(value)
-}
-
-/** Tasa para un input con coma decimal ("28,5"); "" si no hay */
-export function rateInput(value: number | null | undefined) {
-  return value === null || value === undefined
-    ? ""
-    : RATE_INPUT_FORMAT.format(value)
 }

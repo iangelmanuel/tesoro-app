@@ -18,6 +18,7 @@ import {
 } from "@heroui/react"
 import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
 import { AccountSelectField } from "@/components/forms/account-select-field"
+import { amountInput } from "@/components/forms/amount-format"
 import { CategorySelectField } from "@/components/forms/category-select-field"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
@@ -45,7 +46,6 @@ import {
 import { MAX_INSTALLMENTS } from "../installments"
 import type { DebtEntry, LinkableTransaction } from "../queries"
 import type { PaymentFormState } from "../types"
-import { amountInput } from "./field"
 import { LinkableTransactionsField } from "./linkable-transactions-field"
 
 /** Movimiento y deuda que edita el diálogo */

@@ -14,6 +14,7 @@ import {
 } from "@heroui/react"
 import { X } from "lucide-react"
 import { AccountSelectField } from "@/components/forms/account-select-field"
+import { amountInput } from "@/components/forms/amount-format"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
 import {
@@ -33,7 +34,6 @@ import {
 } from "../receivable-schedule"
 import type { ReceivableSchedule } from "../schemas"
 import type { DebtFormState } from "../types"
-import { amountInput } from "./field"
 
 interface ReceivableDialogProps {
   /** Espacio (para crear una cuenta desde el select) */

@@ -14,6 +14,7 @@ import {
   toast
 } from "@heroui/react"
 import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
+import { amountInput } from "@/components/forms/amount-format"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
 import { TimePickerField } from "@/components/forms/time-picker-field"
@@ -35,7 +36,6 @@ import { MAX_INSTALLMENTS } from "../installments"
 import type { DebtPaymentDescriptions } from "../payment-description"
 import type { Debt } from "../queries"
 import type { PaymentFormState } from "../types"
-import { amountInput } from "./field"
 
 type PaymentDebt = Pick<Debt, "id" | "kind"> & {
   /** Cuenta por defecto (SPEC 41): se prellena al registrar si sigue activa */

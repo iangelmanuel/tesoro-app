@@ -3,12 +3,12 @@
 import { useId, useState } from "react"
 import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
 import { AccountSelectField } from "@/components/forms/account-select-field"
+import { amountInput } from "@/components/forms/amount-format"
 import { FieldHelp } from "@/components/forms/field-label"
 import { TextInputField } from "@/components/forms/text-input-field"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import type { FieldHelpKey } from "@/config/help"
-import { amountInput } from "@/features/debts/components/field"
 import { parseAmount } from "@/features/transactions/schemas"
 import { formatCurrency } from "@/libs/format"
 import {

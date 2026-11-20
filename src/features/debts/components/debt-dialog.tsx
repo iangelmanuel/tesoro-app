@@ -13,6 +13,7 @@ import {
 } from "@heroui/react"
 import { HelpHint } from "@/components/dashboard/help-hint"
 import { AccountSelectField } from "@/components/forms/account-select-field"
+import { amountInput, rateInput } from "@/components/forms/amount-format"
 import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
 import type { FieldHelpKey } from "@/config/help"
 import {
@@ -23,7 +24,6 @@ import { createDebt, updateDebt } from "../actions"
 import type { Debt } from "../queries"
 import type { RateType } from "../schemas"
 import type { DebtFormState } from "../types"
-import { amountInput, rateInput } from "./field"
 
 type PayableKind = "credit_card" | "loan"
 

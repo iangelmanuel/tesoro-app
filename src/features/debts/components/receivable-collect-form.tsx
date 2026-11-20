@@ -16,6 +16,7 @@ import {
 } from "@heroui/react"
 import { Amount } from "@/components/dashboard/amount"
 import { useHideAmounts } from "@/components/dashboard/hide-amounts-context"
+import { amountInput } from "@/components/forms/amount-format"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
 import { activeAccountId } from "@/features/accounts/active-account"
@@ -46,7 +47,6 @@ import {
   type ReceivableCollectMode
 } from "../schemas"
 import type { PaymentFormState } from "../types"
-import { amountInput } from "./field"
 
 const MODE_LABELS: Record<ReceivableCollectMode, string> = {
   partial: "Abono",

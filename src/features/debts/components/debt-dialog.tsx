@@ -1,31 +1,44 @@
 "use client"
 
-import { useActionState, useState } from "react"
-import {
-  Button,
-  FieldError,
-  Input,
-  Modal,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-  toast
-} from "@heroui/react"
+import { useActionState, useId, useState } from "react"
 import { HelpHint } from "@/components/dashboard/help-hint"
 import { AccountSelectField } from "@/components/forms/account-select-field"
 import { amountInput, rateInput } from "@/components/forms/amount-format"
 import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
+import { FormDialog } from "@/components/forms/form-dialog"
+import {
+  SEGMENT_ITEM_CLASS,
+  SEGMENT_TRACK_CLASS,
+  SegmentedField
+} from "@/components/forms/segmented-field"
+import { TextInputField } from "@/components/forms/text-input-field"
+import { Button } from "@/components/ui/button"
+import { FieldError } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { toast } from "@/components/ui/sonner"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import type { FieldHelpKey } from "@/config/help"
 import {
   type AccountOption,
   selectableAccounts
 } from "@/features/accounts/components/account-select"
+import { cn } from "@/libs/cn"
 import { createDebt, updateDebt } from "../actions"
 import type { Debt } from "../queries"
 import type { RateType } from "../schemas"
 import type { DebtFormState } from "../types"
 
 type PayableKind = "credit_card" | "loan"
+
+const KIND_OPTIONS = [
+  { value: "credit_card", label: "Tarjeta de crédito" },
+  { value: "loan", label: "Préstamo" }
+] as const satisfies readonly { value: PayableKind; label: string }[]
+
+const RATE_TYPE_OPTIONS = [
+  { value: "ea", label: "E.A." },
+  { value: "mv", label: "M.V." }
+] as const satisfies readonly { value: RateType; label: string }[]
 
 interface DebtDialogProps {
   /** Espacio de la deuda (para crear una cuenta desde el select) */
@@ -35,7 +48,7 @@ interface DebtDialogProps {
   /** Si llega, el diálogo edita esta tarjeta o préstamo */
   debt?: Debt
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
@@ -45,48 +58,34 @@ export function DebtDialog({
   accounts,
   debt,
   trigger,
-  open: controlledOpen,
+  open,
   onOpenChange
 }: DebtDialogProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
-  const open = controlledOpen ?? uncontrolledOpen
-  const setOpen = onOpenChange ?? setUncontrolledOpen
   const isEditing = debt !== undefined
 
   return (
-    <Modal
-      isOpen={open}
-      onOpenChange={setOpen}
+    <FormDialog
+      trigger={trigger}
+      open={open}
+      onOpenChange={onOpenChange}
+      className="sm:max-w-lg"
+      title={isEditing ? "Editar deuda" : "Nueva deuda"}
+      description={
+        isEditing
+          ? "Cambia los datos de la deuda. Sus pagos y ajustes no cambian."
+          : "Una tarjeta de crédito o un préstamo que estás pagando."
+      }
     >
-      {trigger}
-      <Modal.Backdrop>
-        <Modal.Container scroll="outside">
-          <Modal.Dialog className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>
-                {isEditing ? "Editar deuda" : "Nueva deuda"}
-              </Modal.Heading>
-              <p className="text-sm text-muted">
-                {isEditing
-                  ? "Cambia los datos de la deuda. Sus pagos y ajustes no cambian."
-                  : "Una tarjeta de crédito o un préstamo que estás pagando."}
-              </p>
-            </Modal.Header>
-            <Modal.Body>
-              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-              <DebtForm
-                workspaceId={workspaceId}
-                accounts={accounts}
-                debt={debt}
-                onSaved={() => setOpen(false)}
-                onCancel={() => setOpen(false)}
-              />
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+      {(close) => (
+        <DebtForm
+          workspaceId={workspaceId}
+          accounts={accounts}
+          debt={debt}
+          onSaved={close}
+          onCancel={close}
+        />
+      )}
+    </FormDialog>
   )
 }
 
@@ -140,6 +139,9 @@ function DebtForm({
     (values?.rate_type as RateType | undefined) || debt?.rate_type || "ea"
   )
   const isCard = kind === "credit_card"
+  const rateId = useId()
+  const rateErrorId = `${rateId}-error`
+  const rateError = (errors?.interest_rate ?? errors?.rate_type)?.[0]
 
   return (
     <form
@@ -167,70 +169,37 @@ function DebtForm({
       />
 
       {!isEditing && (
-        <div className="flex flex-col gap-2">
-          <FieldLabel
-            id="debt-kind-label"
-            help="debt.kind"
-          >
-            Tipo
-          </FieldLabel>
-          <ToggleButtonGroup
-            aria-labelledby="debt-kind-label"
-            selectionMode="single"
-            disallowEmptySelection
-            selectedKeys={[kind]}
-            onSelectionChange={(keys) => {
-              const [value] = [...keys]
-              if (value) setKind(value as PayableKind)
-            }}
-            fullWidth
-          >
-            <ToggleButton
-              id="credit_card"
-              className="flex-1"
-            >
-              Tarjeta de crédito
-            </ToggleButton>
-            <ToggleButton
-              id="loan"
-              className="flex-1"
-            >
-              Préstamo
-            </ToggleButton>
-          </ToggleButtonGroup>
-          {errors?.kind && (
-            <p className="text-sm text-danger">{errors.kind[0]}</p>
-          )}
-        </div>
+        <SegmentedField
+          label="Tipo"
+          help="debt.kind"
+          value={kind}
+          onChange={setKind}
+          options={KIND_OPTIONS}
+          error={errors?.kind?.[0]}
+        />
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
+        <TextInputField
           name="name"
+          label="Nombre"
+          help="debt.name"
           maxLength={60}
+          placeholder={isCard ? "Visa" : "Crédito de vehículo"}
           defaultValue={values?.name ?? debt?.name}
           isRequired
-          isInvalid={Boolean(errors?.name)}
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="debt.name">Nombre</FieldLabel>
-          <Input placeholder={isCard ? "Visa" : "Crédito de vehículo"} />
-          <FieldError>{errors?.name?.[0]}</FieldError>
-        </TextField>
+          error={errors?.name?.[0]}
+        />
 
-        <TextField
+        <TextInputField
           name="counterparty"
+          label="Entidad (opcional)"
+          help="debt.institution"
           maxLength={60}
+          placeholder="Banco"
           defaultValue={values?.counterparty ?? debt?.counterparty ?? ""}
-          isInvalid={Boolean(errors?.counterparty)}
-          validationBehavior="aria"
-          className="flex flex-col gap-2"
-        >
-          <FieldLabel help="debt.institution">Entidad (opcional)</FieldLabel>
-          <Input placeholder="Banco" />
-          <FieldError>{errors?.counterparty?.[0]}</FieldError>
-        </TextField>
+          error={errors?.counterparty?.[0]}
+        />
       </div>
 
       <AccountSelectField
@@ -281,64 +250,66 @@ function DebtForm({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {/* min-w-0 en la celda, el campo y el input: sin él, el ancho
-            intrínseco del input más el toggle desbordan la celda y el toggle
-            se monta sobre Día de pago */}
-        <div className="flex min-w-0 flex-col gap-2">
+        {/* min-w-0 en la celda y el input: sin él, el ancho intrínseco del
+            input más el toggle desbordan la celda y el toggle se monta sobre
+            Día de pago */}
+        <div
+          className="flex min-w-0 flex-col gap-2"
+          data-invalid={rateError ? true : undefined}
+        >
           {/* El label va sobre el campo y el tipo de tasa juntos: dentro del
               campo se partía en tres líneas */}
           <FieldLabel
-            id="debt-rate-label"
+            htmlFor={rateId}
             isRequired={!isCard}
+            isInvalid={Boolean(rateError)}
             help="debt.interestRate"
             helpLabel="Tasa de interés"
           >
             {isCard ? "Tasa de interés (opcional)" : "Tasa de interés"}
           </FieldLabel>
-          <div className="flex min-w-0 items-end gap-2">
-            <TextField
+          <div className="flex min-w-0 items-center gap-2">
+            <Input
+              id={rateId}
               name="interest_rate"
-              aria-labelledby="debt-rate-label"
               inputMode="decimal"
               autoComplete="off"
+              placeholder={isCard ? "28,5" : "0 si no tiene"}
               defaultValue={
                 values?.interest_rate ?? rateInput(debt?.interest_rate)
               }
-              isRequired={!isCard}
-              isInvalid={Boolean(errors?.interest_rate ?? errors?.rate_type)}
-              validationBehavior="aria"
-              className="flex min-w-0 flex-1 flex-col gap-2"
-            >
-              <Input
-                className="w-full min-w-0"
-                placeholder={isCard ? "28,5" : "0 si no tiene"}
-              />
-            </TextField>
-            <ToggleButtonGroup
-              className="shrink-0"
-              aria-label="Tipo de tasa"
-              selectionMode="single"
-              disallowEmptySelection
-              selectedKeys={[rateType]}
-              onSelectionChange={(keys) => {
-                const [value] = [...keys]
+              aria-invalid={rateError ? true : undefined}
+              aria-describedby={rateError ? rateErrorId : undefined}
+              className="min-w-0 flex-1"
+            />
+            <ToggleGroup
+              value={[rateType]}
+              onValueChange={(next) => {
+                const [value] = next
                 if (value) setRateType(value as RateType)
               }}
+              aria-label="Tipo de tasa"
+              spacing={1}
+              className={cn(SEGMENT_TRACK_CLASS, "h-11 w-auto shrink-0")}
             >
-              <ToggleButton id="ea">E.A.</ToggleButton>
-              <ToggleButton id="mv">M.V.</ToggleButton>
-            </ToggleButtonGroup>
+              {RATE_TYPE_OPTIONS.map((option) => (
+                <ToggleGroupItem
+                  key={option.value}
+                  value={option.value}
+                  className={SEGMENT_ITEM_CLASS}
+                >
+                  {option.label}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
             <FieldHelp
               help="debt.rateType"
               label="Tipo de tasa"
-              className="self-center"
             />
           </div>
-          {(errors?.interest_rate ?? errors?.rate_type) && (
-            <p className="text-sm text-danger">
-              {(errors?.interest_rate ?? errors?.rate_type)?.[0]}
-            </p>
-          )}
+          {rateError ? (
+            <FieldError id={rateErrorId}>{rateError}</FieldError>
+          ) : null}
         </div>
 
         <DayField
@@ -399,7 +370,7 @@ function DebtForm({
                 defaultValue={values?.fee_day ?? debt?.fee_day ?? undefined}
               />
             </div>
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted-foreground">
               Desde hoy se cobra sola. No la registres a mano.
             </p>
           </div>
@@ -415,35 +386,28 @@ function DebtForm({
               values?.original_amount ?? amountInput(debt?.original_amount)
             }
           />
-          <TextField
+          <TextInputField
             name="term_months"
+            label="Plazo en meses (opcional)"
+            help="debt.termMonths"
+            type="number"
             inputMode="numeric"
+            min={1}
+            max={600}
+            placeholder="36"
             defaultValue={
               values?.term_months ??
               (debt?.term_months != null ? String(debt.term_months) : undefined)
             }
-            isInvalid={Boolean(errors?.term_months)}
-            validationBehavior="aria"
-            className="flex flex-col gap-2"
-          >
-            <FieldLabel help="debt.termMonths">
-              Plazo en meses (opcional)
-            </FieldLabel>
-            <Input
-              type="number"
-              min={1}
-              max={600}
-              placeholder="36"
-            />
-            <FieldError>{errors?.term_months?.[0]}</FieldError>
-          </TextField>
+            error={errors?.term_months?.[0]}
+          />
         </div>
       )}
 
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error}
         </p>
@@ -451,14 +415,15 @@ function DebtForm({
 
       <div className="flex justify-end gap-2">
         <Button
+          type="button"
           variant="ghost"
-          onPress={onCancel}
+          onClick={onCancel}
         >
           Cancelar
         </Button>
         <Button
           type="submit"
-          isDisabled={pending}
+          disabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear"}
         </Button>
@@ -483,20 +448,17 @@ function AmountField({
   help?: FieldHelpKey
 }) {
   return (
-    <TextField
+    <TextInputField
       name={id}
+      label={label}
+      help={help}
       inputMode="decimal"
       autoComplete="off"
+      placeholder="0"
       defaultValue={defaultValue}
       isRequired={required}
-      isInvalid={Boolean(errors)}
-      validationBehavior="aria"
-      className="flex flex-col gap-2"
-    >
-      <FieldLabel help={help}>{label}</FieldLabel>
-      <Input placeholder="0" />
-      <FieldError>{errors?.[0]}</FieldError>
-    </TextField>
+      error={errors?.[0]}
+    />
   )
 }
 
@@ -516,25 +478,20 @@ function DayField({
   help?: FieldHelpKey
 }) {
   return (
-    <TextField
+    <TextInputField
       name={id}
+      label={label}
+      help={help}
+      type="number"
       inputMode="numeric"
+      min={1}
+      max={31}
+      placeholder="15"
       defaultValue={
         defaultValue === undefined ? undefined : String(defaultValue)
       }
       isRequired={required}
-      isInvalid={Boolean(errors)}
-      validationBehavior="aria"
-      className="flex flex-col gap-2"
-    >
-      <FieldLabel help={help}>{label}</FieldLabel>
-      <Input
-        type="number"
-        min={1}
-        max={31}
-        placeholder="15"
-      />
-      <FieldError>{errors?.[0]}</FieldError>
-    </TextField>
+      error={errors?.[0]}
+    />
   )
 }

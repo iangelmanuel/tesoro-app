@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useId, useState } from "react"
-import { FieldError, Radio, RadioGroup } from "@heroui/react"
 import { Amount } from "@/components/dashboard/amount"
+import { FieldError } from "@/components/ui/field"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { formatDate, formatTime } from "@/libs/format"
 import { listLinkableTransactions } from "../actions"
 import type { EntryType } from "../entry-types"
@@ -50,6 +51,8 @@ export function LinkableTransactionsField({
   error
 }: LinkableTransactionsFieldProps) {
   const labelId = useId()
+  const descriptionId = useId()
+  const errorId = useId()
   const [candidates, setCandidates] = useState<LinkableTransaction[]>([])
 
   useEffect(() => {
@@ -90,15 +93,20 @@ export function LinkableTransactionsField({
           >
             ¿Ya lo registraste?
           </p>
-          <p className="text-sm text-muted">
+          <p
+            id={descriptionId}
+            className="text-sm text-muted-foreground"
+          >
             Hay una {noun} del mismo monto en esas fechas. Elígelo para no
             contar el dinero dos veces.
           </p>
           <RadioGroup
             aria-labelledby={labelId}
+            aria-describedby={
+              error ? `${descriptionId} ${errorId}` : descriptionId
+            }
             value={value}
-            onChange={handleChange}
-            isInvalid={Boolean(error)}
+            onValueChange={(next) => handleChange(String(next))}
             className="flex flex-col gap-2"
           >
             {candidates.map((row) => (
@@ -110,7 +118,7 @@ export function LinkableTransactionsField({
                   <span className="truncate font-medium">
                     {row.description}
                   </span>
-                  <span className="text-muted">
+                  <span className="text-muted-foreground">
                     {formatDate(row.occurred_on)}
                     {row.occurred_time && ` · ${formatTime(row.occurred_time)}`}
                     {` · ${row.account_name ?? "Fuera de cuentas"}`}
@@ -126,8 +134,8 @@ export function LinkableTransactionsField({
             <CandidateOption value={CREATE_NEW}>
               <span className="text-sm font-medium">{noneLabel}</span>
             </CandidateOption>
-            <FieldError>{error}</FieldError>
           </RadioGroup>
+          {error ? <FieldError id={errorId}>{error}</FieldError> : null}
         </div>
       )}
     </>
@@ -142,18 +150,9 @@ function CandidateOption({
   children: React.ReactNode
 }) {
   return (
-    <Radio value={value}>
-      {({ isSelected }) => (
-        <Radio.Content
-          data-selected={isSelected}
-          className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-xl bg-default p-3 transition-colors data-[selected=true]:bg-accent-soft"
-        >
-          <Radio.Control>
-            <Radio.Indicator />
-          </Radio.Control>
-          {children}
-        </Radio.Content>
-      )}
-    </Radio>
+    <label className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-2xl bg-subtle p-3 transition-colors has-data-checked:bg-highlight">
+      <RadioGroupItem value={value} />
+      {children}
+    </label>
   )
 }

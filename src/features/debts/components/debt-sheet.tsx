@@ -6,7 +6,8 @@ import { Plus, RefreshCw } from "lucide-react"
 import { Amount } from "@/components/dashboard/amount"
 import { DetailSection, DetailSheet } from "@/components/dashboard/detail-sheet"
 import { HelpHint } from "@/components/dashboard/help-hint"
-// Trigger de PaymentDialog (FormDialog); el resto del Sheet migra en el paso 7
+// Triggers de PaymentDialog y AdjustBalanceDialog (FormDialog); el resto
+// del Sheet migra en el paso 7
 import { Button as UiButton } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
@@ -170,10 +171,10 @@ export function DebtSheet({
                   debt={debt}
                   currency={currency}
                   trigger={
-                    <Button variant="secondary">
+                    <UiButton variant="secondary">
                       <RefreshCw />
                       Actualizar saldo
-                    </Button>
+                    </UiButton>
                   }
                 />
               )}
@@ -201,10 +202,10 @@ export function DebtSheet({
                 debt={debt}
                 currency={currency}
                 trigger={
-                  <Button variant="secondary">
+                  <UiButton variant="secondary">
                     <RefreshCw />
                     Actualizar saldo
-                  </Button>
+                  </UiButton>
                 }
               />
             </div>

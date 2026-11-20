@@ -1,16 +1,15 @@
 "use client"
 
-import { useActionState, useId, useState } from "react"
+import { useActionState, useState } from "react"
 import { amountInput } from "@/components/forms/amount-format"
 import { DatePickerField } from "@/components/forms/date-picker-field"
-import { FieldLabel } from "@/components/forms/field-label"
 import { FormDialog } from "@/components/forms/form-dialog"
+import { SegmentedField } from "@/components/forms/segmented-field"
 import { SelectField } from "@/components/forms/select-field"
 import { TextInputField } from "@/components/forms/text-input-field"
 import { TimePickerField } from "@/components/forms/time-picker-field"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/sonner"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
   type PaymentAccountOption,
   PaymentAccountSection,
@@ -26,6 +25,11 @@ const KIND_LABELS: Record<ContributionKind, string> = {
   deposit: "Aporte",
   withdrawal: "Retiro"
 }
+
+const KIND_OPTIONS = (["deposit", "withdrawal"] as const).map((value) => ({
+  value,
+  label: KIND_LABELS[value]
+}))
 
 /** Meta que se puede elegir en el diálogo (acceso rápido del header) */
 export interface GoalOption {
@@ -149,7 +153,6 @@ function ContributionForm({
   onCancel
 }: ContributionFormProps) {
   const isEditing = contribution !== undefined
-  const kindLabelId = useId()
   const [kind, setKind] = useState<ContributionKind>(initialKind)
   // Sin meta fija arranca con la primera de la lista
   const [selectedGoalId, setSelectedGoalId] = useState(
@@ -232,34 +235,13 @@ function ContributionForm({
         value={kind}
       />
 
-      <div className="flex flex-col gap-2">
-        <FieldLabel
-          id={kindLabelId}
-          help="contribution.type"
-        >
-          Tipo
-        </FieldLabel>
-        <ToggleGroup
-          value={[kind]}
-          onValueChange={(next) => {
-            const [value] = next
-            if (value) setKind(value as ContributionKind)
-          }}
-          aria-labelledby={kindLabelId}
-          spacing={1}
-          className="h-12 w-full rounded-4xl bg-subtle p-0.5 dark:bg-card"
-        >
-          {(["deposit", "withdrawal"] as const).map((value) => (
-            <ToggleGroupItem
-              key={value}
-              value={value}
-              className="h-full flex-1 px-3 data-pressed:bg-card data-pressed:font-semibold data-pressed:text-foreground data-pressed:shadow-(--surface-shadow) dark:data-pressed:bg-highlight"
-            >
-              {KIND_LABELS[value]}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
-      </div>
+      <SegmentedField
+        label="Tipo"
+        help="contribution.type"
+        value={kind}
+        onChange={setKind}
+        options={KIND_OPTIONS}
+      />
 
       <TextInputField
         name="amount"

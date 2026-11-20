@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useEffectEvent, useState } from "react"
-import { toast } from "@heroui/react"
+import { toast } from "@/components/ui/sonner"
 import { activeAccountId } from "@/features/accounts/active-account"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import {
@@ -114,7 +114,7 @@ export function DuplicateDebtEntryLoader({
 }) {
   const [data, setData] = useState<DebtEntryDuplicateData | null>(null)
   const onLoadError = useEffectEvent((message: string) => {
-    toast.danger(message)
+    toast.error(message)
     onOpenChange(false)
   })
 
@@ -172,7 +172,7 @@ export function DuplicateReceivableLoader({
     periodOn: string
   } | null>(null)
   const onLoadError = useEffectEvent((message: string) => {
-    toast.danger(message)
+    toast.error(message)
     onOpenChange(false)
   })
 

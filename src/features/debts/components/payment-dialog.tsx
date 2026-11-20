@@ -4,8 +4,9 @@ import { useActionState, useId, useState } from "react"
 import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
 import { amountInput } from "@/components/forms/amount-format"
 import { DatePickerField } from "@/components/forms/date-picker-field"
-import { FieldHelp, FieldLabel } from "@/components/forms/field-label"
+import { FieldHelp } from "@/components/forms/field-label"
 import { FormDialog } from "@/components/forms/form-dialog"
+import { SegmentedField } from "@/components/forms/segmented-field"
 import { SelectField } from "@/components/forms/select-field"
 import { TextInputField } from "@/components/forms/text-input-field"
 import { TimePickerField } from "@/components/forms/time-picker-field"
@@ -13,7 +14,6 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/components/ui/sonner"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { activeAccountId } from "@/features/accounts/active-account"
 import {
   type PaymentAccountOption,
@@ -238,6 +238,11 @@ interface PaymentFormProps {
 const EXTRA_EFFECT =
   "No cubre el pago del mes: el próximo pago sigue pendiente."
 
+const DIRECTION_OPTIONS = [
+  { value: "up", label: "Sube" },
+  { value: "down", label: "Baja" }
+] as const satisfies readonly { value: AdjustmentDirection; label: string }[]
+
 const TOASTS: Record<PaymentMode, string> = {
   payment: "Pago registrado",
   extra: "Abono registrado",
@@ -296,7 +301,6 @@ function PaymentForm({
   const [occurredOn, setOccurredOn] = useState(() => todayISO())
   const [time, setTime] = useState("")
   const [direction, setDirection] = useState<AdjustmentDirection>("up")
-  const directionLabelId = useId()
   const createTransactionId = useId()
 
   const [state, formAction, pending] = useActionState<
@@ -436,44 +440,14 @@ function PaymentForm({
       )}
 
       {mode === "adjustment" && (
-        <div className="flex flex-col gap-2">
-          <FieldLabel
-            id={directionLabelId}
-            help="debtEntry.direction"
-          >
-            El ajuste
-          </FieldLabel>
-          <ToggleGroup
-            value={[direction]}
-            onValueChange={(next) => {
-              const [value] = next
-              if (value) setDirection(value as AdjustmentDirection)
-            }}
-            aria-labelledby={directionLabelId}
-            spacing={1}
-            className="h-12 w-full rounded-4xl bg-subtle p-0.5 dark:bg-card"
-          >
-            {(
-              [
-                ["up", "Sube"],
-                ["down", "Baja"]
-              ] as const
-            ).map(([value, label]) => (
-              <ToggleGroupItem
-                key={value}
-                value={value}
-                className="h-full flex-1 px-3 data-pressed:bg-card data-pressed:font-semibold data-pressed:text-foreground data-pressed:shadow-(--surface-shadow) dark:data-pressed:bg-highlight"
-              >
-                {label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-          <input
-            type="hidden"
-            name="direction"
-            value={direction}
-          />
-        </div>
+        <SegmentedField
+          name="direction"
+          label="El ajuste"
+          help="debtEntry.direction"
+          value={direction}
+          onChange={setDirection}
+          options={DIRECTION_OPTIONS}
+        />
       )}
 
       <TextInputField

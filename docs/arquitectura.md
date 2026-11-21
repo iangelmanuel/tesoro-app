@@ -61,8 +61,8 @@ De abajo arriba. Cada capa importa solo de las de abajo:
 
 1. **`src/libs` y `src/config`.** La base. No importan de `src/components`,
    `src/features` ni `app/`.
-2. **`src/components/ui`.** Solo importa de `src/libs` y de otros archivos de
-   `ui/`.
+2. **`src/components/ui`.** Solo importa de `src/libs`, de hooks genéricos de
+   `src/hooks` y de otros archivos de `ui/`.
 3. **`src/components/{forms,charts,dashboard,site,brand,seo,theme}`.**
    Importan de las capas de abajo. **Excepción documentada:** `dashboard/` y
    `forms/` pueden importar de `src/features` para componer el shell (las
@@ -72,8 +72,13 @@ De abajo arriba. Cada capa importa solo de las de abajo:
 5. **`app/`.** Solo rutas: compone features. Nada en `src/` importa de
    `app/`.
 
-ESLint lo hace cumplir con `no-restricted-imports` por zonas
-(`eslint.config.mjs`). Además:
+ESLint hace cumplir con `no-restricted-imports` por zonas
+(`eslint.config.mjs`) las fronteras de las capas 1, 2 y 5: `src/libs` y
+`src/config` no importan de `features` ni de `components`; `components/ui`
+no importa de `features` ni de otras carpetas de `components` (sí de
+`src/hooks` genéricos, como `use-is-mobile` en `sonner.tsx`); y nada en
+`src/` importa de `app/`. La capa 3 todavía depende de la revisión del PR.
+Además:
 
 - `exceljs` solo se importa desde `src/features/exports/workbook/`;
 - `pdfmake`, `html-to-pdfmake` y `jsdom`, solo desde

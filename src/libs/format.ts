@@ -115,7 +115,7 @@ const PERCENT = new Intl.NumberFormat(LOCALE, {
   maximumFractionDigits: 1
 })
 
-/** Porcentaje en escala 0–100 con un decimal: 12.34 → "12,3 %" */
+/** Porcentaje en escala 0–100 con un decimal: 12.34 → "12,3%" */
 export function formatPercent(value: number) {
   return PERCENT.format(value / 100)
 }
@@ -126,7 +126,7 @@ const COMPACT_COUNT = new Intl.NumberFormat(LOCALE, {
 })
 
 /**
- * Conteo abreviado de Intl (p. ej. estrellas de GitHub): 1234 → "1,2 mil".
+ * Conteo abreviado de Intl (p. ej. estrellas de GitHub): 1234 → "1,2 K" (15000 → "15 k": así lo da ICU).
  * Los ejes de gráficas usan `formatCompactNumber` de `chart-format.ts`.
  */
 export function formatCompactCount(value: number) {

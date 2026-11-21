@@ -1,3 +1,4 @@
+import "server-only"
 import { revalidatePath } from "next/cache"
 import { SITE } from "@/config/site"
 import { workspaceBasePath } from "./paths"

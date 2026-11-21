@@ -45,8 +45,11 @@ export function installmentStartMonth(
   return month
 }
 
-/** Meses de `from` a `to` (YYYY-MM): positivo si `to` es posterior */
-function monthsBetween(from: string, to: string) {
+/**
+ * Meses que separan `from` de `to` (YYYY-MM), sin contar `from`: positivo si
+ * `to` es posterior. Es `countMonths(from, to) - 1`
+ */
+function monthOffset(from: string, to: string) {
   const [fromYear, fromMonth] = from.split("-").map(Number)
   const [toYear, toMonth] = to.split("-").map(Number)
   return (toYear - fromYear) * 12 + (toMonth - fromMonth)
@@ -79,7 +82,7 @@ export function installmentProgress(
     card.due_day,
     card.closing_day
   )
-  const index = monthsBetween(start, nextDueOn.slice(0, 7))
+  const index = monthOffset(start, nextDueOn.slice(0, 7))
 
   if (index < 0) return { kind: "upcoming", total }
   if (index >= total) return { kind: "done", total }

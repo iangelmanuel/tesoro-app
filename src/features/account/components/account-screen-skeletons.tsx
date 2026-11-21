@@ -5,7 +5,7 @@ import { OperationsListSkeleton } from "@/features/mcp/components/operations-lis
 import { cn } from "@/libs/cn"
 import { AccountFieldSkeleton, AccountSectionSkeleton } from "./account-section"
 
-// Skeletons de cada sección de Cuenta (SPEC 53): los usan el `loading.tsx`
+// Skeletons de cada sección de Cuenta: los usan el `loading.tsx`
 // de cada ruta y el fallback del Suspense de cada página
 
 function ButtonSkeleton({ className }: { className?: string }) {

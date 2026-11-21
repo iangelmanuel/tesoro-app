@@ -25,7 +25,7 @@ function isEditable(target: EventTarget | null) {
   )
 }
 
-// Ni con un diálogo, panel o menú abierto (de shadcn o de HeroUI)
+// Ni con un diálogo, panel o menú abierto
 function hasOpenOverlay() {
   return (
     document.querySelector(

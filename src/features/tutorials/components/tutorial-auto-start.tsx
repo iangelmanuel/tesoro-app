@@ -22,10 +22,10 @@ function hasBlockingOverlay() {
   return document.querySelector(BLOCKING_OVERLAY) !== null
 }
 
-// Los Suspense de la página muestran esqueletos de HeroUI mientras cargan;
-// arrancar antes dejaría fuera los pasos de lo que aún no está en pantalla
+// Los Suspense de la página muestran skeletons mientras cargan; arrancar
+// antes dejaría fuera los pasos de lo que aún no está en pantalla
 function isContentLoading() {
-  return document.querySelector("#contenido .skeleton") !== null
+  return document.querySelector("#contenido [data-slot=skeleton]") !== null
 }
 
 /**

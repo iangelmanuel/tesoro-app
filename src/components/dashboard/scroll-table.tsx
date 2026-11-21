@@ -20,13 +20,12 @@ interface ScrollTableProps {
   className?: string
   /** Ancla `data-tour` de los tutoriales guiados (SPEC 27) */
   tour?: string
-  /** La tabla: `Table` de shadcn o, hasta SPEC 53, la de HeroUI con su
-   *  `Table.ScrollContainer` */
+  /** La tabla: `Table` de shadcn */
   children: React.ReactNode
 }
 
-// El contenedor que se desliza: el de shadcn o el de HeroUI
-const SCROLLER = "[data-slot=table-container], .table__scroll-container"
+// El contenedor que se desliza: el de la `Table` de shadcn
+const SCROLLER = "[data-slot=table-container]"
 
 /**
  * Envuelve una tabla para que en móvil se lea completa y se deslice en

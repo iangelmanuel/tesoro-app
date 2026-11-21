@@ -1,3 +1,6 @@
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
+
 const LOCALE = "es-CO"
 
 // Las fechas usan espacio duro para no partirse en varias líneas
@@ -67,6 +70,14 @@ export function formatTime(time: string) {
   })
     .format(value)
     .replace(WHITESPACE, " ")
+}
+
+/**
+ * Mes YYYY-MM como "noviembre 2026", en minúscula. Se arma a mediodía local
+ * para que la zona horaria no corra el mes.
+ */
+export function formatMonthYear(month: string) {
+  return format(new Date(`${month}-01T12:00:00`), "MMMM yyyy", { locale: es })
 }
 
 export interface NumberFormatOptions {

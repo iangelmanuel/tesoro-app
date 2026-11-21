@@ -5,6 +5,7 @@ import {
   formatCompactCount,
   formatCurrency,
   formatDate,
+  formatMonthYear,
   formatNumber,
   formatPercent,
   formatShortDate,
@@ -110,5 +111,12 @@ describe("currencySymbol", () => {
     expect(currencySymbol("COP")).toBe("$")
     expect(currencySymbol("USD")).toBe("$")
     expect(currencySymbol("EUR")).toBe("€")
+  })
+})
+
+describe("formatMonthYear", () => {
+  it("nombra el mes en minúscula con su año", () => {
+    expect(formatMonthYear("2026-11")).toBe("noviembre 2026")
+    expect(formatMonthYear("2027-01")).toBe("enero 2027")
   })
 })

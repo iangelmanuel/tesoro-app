@@ -1,10 +1,9 @@
 import { Suspense } from "react"
-import { format } from "date-fns"
-import { es } from "date-fns/locale"
 import { ChartCard } from "@/components/charts/chart-card"
 import { Amount } from "@/components/dashboard/data/amount"
 import { SITE } from "@/config/site"
 import { getAccountBalances } from "@/features/accounts/queries"
+import { activeAccountsBalance } from "@/features/accounts/totals"
 import { BusinessScoreSummaryCard } from "@/features/business-score/components/business-score-summary-card"
 import { BusinessSummaryCards } from "@/features/business/components/business-summary-cards"
 import {
@@ -23,11 +22,13 @@ import {
   getRecentTransactions
 } from "@/features/reports/queries"
 import { incomeExpenseLegend } from "@/features/reports/series"
+import { monthlyTrendSummary } from "@/features/reports/summary"
 import { ScoreSummaryCardSkeleton } from "@/features/score/components/score-summary-card"
 import { WorkspaceNoTransactions } from "@/features/transactions/components/workspace-no-transactions"
 import { workspaceTransactionsPath } from "@/features/workspaces/paths"
 import { getWorkspace } from "@/features/workspaces/queries"
 import { currentMonth, monthRange, shiftMonth } from "@/libs/dates"
+import { formatMonthYear } from "@/libs/format"
 import { buildMetadata } from "@/libs/seo"
 
 export const metadata = buildMetadata({
@@ -69,9 +70,7 @@ async function SummaryContent({
   const month = currentMonth()
   const { from, to } = monthRange(month)
   const trendFrom = monthRange(shiftMonth(month, -(TREND_MONTHS - 1))).from
-  const monthLabel = format(new Date(`${month}-01T12:00:00`), "MMMM yyyy", {
-    locale: es
-  })
+  const monthLabel = formatMonthYear(month)
 
   // monthly_totals con o sin cuenta: ventas = ingresos, costos y gastos =
   // gastos. Traspasos y ajustes no cuentan
@@ -92,15 +91,13 @@ async function SummaryContent({
     )
   }
 
-  // monthly_totals rellena los meses vacíos: el último es el actual y el
-  // penúltimo el anterior
-  const current = monthly[monthly.length - 1]
-  const previous = monthly[monthly.length - 2]
-  const accountsBalance = accounts
-    .filter((account) => account.archived_at === null)
-    .reduce((sum, account) => sum + account.balance, 0)
-  const isEmptyTrend = monthly.every((row) => row.txCount === 0)
-  const trendProfit = monthly.reduce((sum, row) => sum + row.balance, 0)
+  const {
+    current,
+    previous,
+    isEmptyTrend,
+    trendBalance: trendProfit
+  } = monthlyTrendSummary(monthly)
+  const accountsBalance = activeAccountsBalance(accounts)
 
   return (
     <>

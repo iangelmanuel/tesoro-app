@@ -1,6 +1,4 @@
 import { Suspense } from "react"
-import { format } from "date-fns"
-import { es } from "date-fns/locale"
 import { LoadingRegion } from "@/components/ui/skeleton"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { getCategories } from "@/features/categories/queries"
@@ -23,6 +21,10 @@ import {
   getTransactions,
   hasAnyLedgerEntries
 } from "@/features/transactions/queries"
+import {
+  previousTotalsOrNull,
+  transactionsScope
+} from "@/features/transactions/scope"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { shiftMonth } from "@/libs/dates"
 import { buildMetadata } from "@/libs/seo"
@@ -34,13 +36,6 @@ export const metadata = buildMetadata({
 })
 
 type TransactionsPageProps = PageProps<"/dashboard/personal/transactions">
-
-function monthLabel(month: string) {
-  const label = format(new Date(`${month}-01T12:00:00`), "MMMM yyyy", {
-    locale: es
-  })
-  return label.charAt(0).toUpperCase() + label.slice(1)
-}
 
 // El título lo pone el header del dashboard. "Registrar movimiento" también
 // vive allí: la página no lo repite
@@ -90,14 +85,8 @@ async function TransactionsContent({
         }),
     getIncomeSources(workspace.id)
   ])
-  const previous =
-    previousTotals && (previousTotals.income || previousTotals.expense)
-      ? previousTotals
-      : null
-  const hasExtraFilters = Boolean(
-    filters.type || filters.categoryId || filters.accountId || filters.q
-  )
-  const scope = `${isAllMonths ? "Todos los meses" : monthLabel(filters.month)}${hasExtraFilters ? " · con filtros" : ""}`
+  const previous = previousTotalsOrNull(previousTotals)
+  const scope = transactionsScope(filters)
   // Solo se consulta cuando los filtros no devuelven nada
   const isEmptyWorkspace =
     rows.length === 0 && !(await hasAnyLedgerEntries(workspace.id))

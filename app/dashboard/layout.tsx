@@ -1,6 +1,5 @@
-import { Suspense, cache } from "react"
+import { Suspense } from "react"
 import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
 import { HideAmountsProvider } from "@/components/dashboard/hide-amounts/hide-amounts-context"
 import { HideAmountsToggle } from "@/components/dashboard/hide-amounts/hide-amounts-toggle"
 import { QuickActions } from "@/components/dashboard/quick-actions/quick-actions"
@@ -27,39 +26,12 @@ import {
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { SHORTCUTS_COOKIE, parseShortcutsCookie } from "@/config/shortcuts"
-import { SITE } from "@/config/site"
+import { getDashboardUser } from "@/features/account/dashboard-user"
 import { TutorialAutoStart } from "@/features/tutorials/components/tutorial-auto-start"
 import { TutorialHelpButton } from "@/features/tutorials/components/tutorial-help-button"
 import { TutorialProvider } from "@/features/tutorials/components/tutorial-provider"
 import { getCompletedTutorials } from "@/features/tutorials/queries"
 import { getBusinessWorkspaces } from "@/features/workspaces/queries"
-import { createClient } from "@/libs/supabase/server"
-
-// Lee la sesión (cookies): va dentro de un Suspense por cacheComponents.
-// cache() la comparte entre el aside y el título del header en el request
-const getDashboardUser = cache(async () => {
-  const supabase = await createClient()
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect(SITE.routes.signIn)
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, avatar_url, hide_amounts")
-    .eq("id", user.id)
-    .single()
-
-  return {
-    name: profile?.full_name ?? user.email ?? "",
-    email: user.email ?? "",
-    avatarUrl: profile?.avatar_url ?? null,
-    hideAmounts: profile?.hide_amounts ?? false
-  }
-})
 
 async function DashboardSidebar() {
   const [user, businesses, cookieStore] = await Promise.all([

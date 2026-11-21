@@ -5,6 +5,10 @@ import { SURFACE_LIST } from "@/components/dashboard/data/surface"
 import { EmptyState } from "@/components/dashboard/feedback/empty-state"
 import { Button } from "@/components/ui/button"
 import { LoadingRegion } from "@/components/ui/skeleton"
+import {
+  availableBudgetCategories,
+  isBudgeted
+} from "@/features/budgets/budget-rows"
 import { BudgetDialog } from "@/features/budgets/components/budget-dialog"
 import { BudgetMonthNav } from "@/features/budgets/components/budget-month-nav"
 import { BudgetProgressRow } from "@/features/budgets/components/budget-progress-row"
@@ -14,11 +18,7 @@ import { BudgetsScreenSkeleton } from "@/features/budgets/components/budgets-scr
 import { CopyPreviousMonthButton } from "@/features/budgets/components/copy-previous-month-button"
 import { UnbudgetedCategories } from "@/features/budgets/components/unbudgeted-categories"
 import { type BudgetMonth, parseBudgetMonth } from "@/features/budgets/month"
-import {
-  type BudgetProgress,
-  getBudgetProgress,
-  hasBudgets
-} from "@/features/budgets/queries"
+import { getBudgetProgress, hasBudgets } from "@/features/budgets/queries"
 import { BUDGETS_PATH, RECURRING_PATH } from "@/features/budgets/tabs"
 import { getCategories } from "@/features/categories/queries"
 import {
@@ -69,12 +69,6 @@ async function BudgetsContent({
   )
 }
 
-type BudgetedRow = BudgetProgress & { budgetId: string; budgetAmount: number }
-
-function isBudgeted(row: BudgetProgress): row is BudgetedRow {
-  return row.budgetId !== null && row.budgetAmount !== null
-}
-
 async function BudgetsView({
   workspace,
   month
@@ -92,15 +86,7 @@ async function BudgetsView({
   const canCopyPrevious =
     budgets.length === 0 && (await hasBudgets(workspace.id, month.prev))
 
-  // El selector solo lista categorías de gasto activas sin presupuesto en el
-  // mes
-  const budgetedIds = new Set(budgets.map((row) => row.categoryId))
-  const available = categories.filter(
-    (category) =>
-      category.type === "expense" &&
-      category.archived_at === null &&
-      !budgetedIds.has(category.id)
-  )
+  const available = availableBudgetCategories(categories, budgets)
 
   return (
     <>

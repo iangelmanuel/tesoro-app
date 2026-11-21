@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest"
 import {
   AMOUNT_MASK,
+  currencySymbol,
+  formatCompactCount,
   formatCurrency,
   formatDate,
+  formatNumber,
+  formatPercent,
   formatShortDate,
   formatTime
 } from "./format"
@@ -66,5 +70,45 @@ describe("formatTime", () => {
 describe("AMOUNT_MASK", () => {
   it("es la máscara de cifras ocultas", () => {
     expect(AMOUNT_MASK).toBe("***")
+  })
+})
+
+describe("formatNumber", () => {
+  it("usa miles con punto y hasta tres decimales por defecto", () => {
+    expect(formatNumber(1500000)).toBe("1.500.000")
+    expect(formatNumber(1.23456)).toBe("1,235")
+    expect(formatNumber(-0.5)).toBe("-0,5")
+  })
+
+  it("respeta las opciones de decimales y de miles", () => {
+    expect(formatNumber(1234.5, { maximumFractionDigits: 1 })).toBe("1.234,5")
+    expect(formatNumber(5, { minimumFractionDigits: 2 })).toBe("5,00")
+    expect(formatNumber(1500.25, { useGrouping: false })).toBe("1500,25")
+  })
+})
+
+describe("formatPercent", () => {
+  it("recibe la escala 0–100 y deja un decimal", () => {
+    expect(formatPercent(12.34)).toBe("12,3%")
+    expect(formatPercent(0)).toBe("0%")
+    expect(formatPercent(100)).toBe("100%")
+    expect(formatPercent(-5.55)).toBe("-5,6%")
+  })
+})
+
+describe("formatCompactCount", () => {
+  it("abrevia con la notación compacta de Intl", () => {
+    expect(formatCompactCount(999)).toBe("999")
+    expect(formatCompactCount(1234)).toBe(`1,2${NBSP}K`)
+    expect(formatCompactCount(15000)).toBe(`15${NBSP}k`)
+    expect(formatCompactCount(2500000)).toBe(`2,5${NBSP}M`)
+  })
+})
+
+describe("currencySymbol", () => {
+  it("da el símbolo corto de la moneda", () => {
+    expect(currencySymbol("COP")).toBe("$")
+    expect(currencySymbol("USD")).toBe("$")
+    expect(currencySymbol("EUR")).toBe("€")
   })
 })

@@ -1,12 +1,8 @@
 import { StarIcon } from "lucide-react"
 import { SITE } from "@/config/site"
 import { cn } from "@/libs/cn"
+import { formatCompactCount } from "@/libs/format"
 import { getRepoStars } from "@/libs/github"
-
-const COMPACT = new Intl.NumberFormat(SITE.site.locale, {
-  notation: "compact",
-  maximumFractionDigits: 1
-})
 
 // Logo de GitHub (marca oficial, solo para enlazar al repositorio)
 function GitHubMark({ className }: { className?: string }) {
@@ -48,7 +44,7 @@ export async function GitHubStars({ className }: { className?: string }) {
             aria-hidden="true"
             className="size-3.5 transition-colors group-hover:fill-current group-hover:text-warning"
           />
-          {COMPACT.format(stars)}
+          {formatCompactCount(stars)}
         </span>
       )}
     </a>

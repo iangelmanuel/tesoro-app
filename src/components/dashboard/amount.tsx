@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/libs/cn"
-import { AMOUNT_MASK, formatCurrency } from "@/libs/format"
+import { AMOUNT_MASK, formatCurrency, formatNumber } from "@/libs/format"
 import { useHideAmounts } from "./hide-amounts-context"
 
 interface AmountProps {
@@ -40,10 +40,10 @@ export function spokenAmount(
   currency = "COP",
   fractionDigits?: number
 ) {
-  const number = new Intl.NumberFormat("es-CO", {
+  const number = formatNumber(Math.abs(value), {
     minimumFractionDigits: fractionDigits ?? 0,
     maximumFractionDigits: fractionDigits ?? 2
-  }).format(Math.abs(value))
+  })
   const name = CURRENCY_NAMES[currency] ?? currency
   return `${value < 0 ? "menos " : ""}${number} ${name}`
 }

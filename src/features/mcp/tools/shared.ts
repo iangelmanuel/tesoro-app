@@ -84,11 +84,6 @@ export async function resolveWorkspace(
   }
 }
 
-/** "14:30:00" → "14:30"; sin hora, null */
-export function formatTime(value: string | null) {
-  return value ? value.slice(0, 5) : null
-}
-
 // Cursor del orden de la lista de movimientos (SPEC 19): occurred_on desc,
 // day_position asc, created_at desc, id asc. Es opaco para el agente.
 const cursorPayload = z.object({

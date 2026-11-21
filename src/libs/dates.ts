@@ -63,3 +63,24 @@ export function fromLocalDate(date: Date) {
   const day = String(date.getDate()).padStart(2, "0")
   return `${date.getFullYear()}-${month}-${day}`
 }
+
+/** Meses YYYY-MM de `from` a `to`, inclusive; vacío si `from` > `to` */
+export function listMonths(from: string, to: string): string[] {
+  const months: string[] = []
+  for (let month = from; month <= to; month = shiftMonth(month, 1)) {
+    months.push(month)
+  }
+  return months
+}
+
+/** Cuántos meses hay de `from` a `to` (YYYY-MM), ambos incluidos */
+export function countMonths(from: string, to: string): number {
+  const [fromYear, fromMonth] = from.split("-").map(Number)
+  const [toYear, toMonth] = to.split("-").map(Number)
+  return (toYear - fromYear) * 12 + (toMonth - fromMonth) + 1
+}
+
+/** "14:30:00" → "14:30"; sin hora, null */
+export function trimSeconds(value: string | null): string | null {
+  return value ? value.slice(0, 5) : null
+}

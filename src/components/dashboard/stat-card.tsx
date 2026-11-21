@@ -2,6 +2,7 @@ import { ArrowDownRight, ArrowUpRight } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { HelpKey } from "@/config/help"
 import { cn } from "@/libs/cn"
+import { formatNumber, formatPercent } from "@/libs/format"
 import { Amount } from "./amount"
 import { HelpHint } from "./help-hint"
 import { CARD } from "./surface"
@@ -31,17 +32,10 @@ interface StatCardProps {
   className?: string
 }
 
-const PERCENT = new Intl.NumberFormat("es-CO", {
-  style: "percent",
-  maximumFractionDigits: 1
-})
-const NUMBER = new Intl.NumberFormat("es-CO")
-const CHANGE = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 1 })
-
 // Los montos (`currency`) los formatea <Amount />, que puede ocultarlos
 function formatValue(value: number, format: Exclude<StatFormat, "currency">) {
-  if (format === "percent") return PERCENT.format(value / 100)
-  return NUMBER.format(value)
+  if (format === "percent") return formatPercent(value)
+  return formatNumber(value)
 }
 
 /**
@@ -169,7 +163,7 @@ export function StatCard({
                 />
               )}
               <span className="sr-only">{isUp ? "Subió" : "Bajó"}</span>
-              {CHANGE.format(Math.abs(rounded))}
+              {formatNumber(Math.abs(rounded), { maximumFractionDigits: 1 })}
               {unit}
               <span className="sr-only">
                 {" "}

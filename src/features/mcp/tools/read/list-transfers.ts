@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { trimSeconds } from "@/libs/dates"
 import { toolError, toolResult } from "../result"
 import {
   INVALID_CURSOR,
@@ -8,7 +9,6 @@ import {
   decodeCursor,
   defineTool,
   encodeCursor,
-  formatTime,
   limitSchema,
   resolveWorkspace,
   workspaceIdSchema
@@ -100,7 +100,7 @@ export const listTransfers = defineTool({
           id: row.id,
           amount: Number(row.amount),
           occurred_on: row.occurred_on,
-          time: formatTime(row.occurred_time),
+          time: trimSeconds(row.occurred_time),
           note: row.note,
           from_account: row.from_account,
           to_account: row.to_account

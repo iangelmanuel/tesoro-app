@@ -11,18 +11,14 @@ import {
   type TransactionRow,
   deleteTransactionRecord
 } from "@/features/transactions/service"
+import { trimSeconds } from "@/libs/dates"
 import {
   type RowChange,
   commitOperation,
   compensateOperation
 } from "../../operations"
 import { toolError, toolResult } from "../result"
-import {
-  defineTool,
-  formatTime,
-  resolveWorkspace,
-  workspaceIdSchema
-} from "../shared"
+import { defineTool, resolveWorkspace, workspaceIdSchema } from "../shared"
 import {
   type RowError,
   batchError,
@@ -124,7 +120,7 @@ export const deleteTransactions = defineTool({
               type: plan.row.type,
               amount: Number(plan.row.amount),
               occurred_on: plan.row.occurred_on,
-              time: formatTime(plan.row.occurred_time),
+              time: trimSeconds(plan.row.occurred_time),
               description: plan.row.description,
               with_debt_entry: plan.kind === "linked"
             },

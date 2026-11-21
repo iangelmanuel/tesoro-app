@@ -69,6 +69,70 @@ export function formatTime(time: string) {
     .replace(WHITESPACE, " ")
 }
 
+export interface NumberFormatOptions {
+  minimumFractionDigits?: number
+  /** Por defecto 3, como `Intl.NumberFormat` */
+  maximumFractionDigits?: number
+  /** `false` quita el separador de miles (p. ej. tasas en un input) */
+  useGrouping?: boolean
+}
+
+// Un formateador por combinación de opciones: crearlos es lo costoso
+const NUMBER_FORMATS = new Map<string, Intl.NumberFormat>()
+
+/** Número en es-CO sin moneda: 1500000 → "1.500.000", 28.5 → "28,5" */
+export function formatNumber(value: number, options: NumberFormatOptions = {}) {
+  const key = JSON.stringify(options)
+  let format = NUMBER_FORMATS.get(key)
+  if (!format) {
+    format = new Intl.NumberFormat(LOCALE, options)
+    NUMBER_FORMATS.set(key, format)
+  }
+  return format.format(value)
+}
+
+const PERCENT = new Intl.NumberFormat(LOCALE, {
+  style: "percent",
+  maximumFractionDigits: 1
+})
+
+/** Porcentaje en escala 0–100 con un decimal: 12.34 → "12,3 %" */
+export function formatPercent(value: number) {
+  return PERCENT.format(value / 100)
+}
+
+const COMPACT_COUNT = new Intl.NumberFormat(LOCALE, {
+  notation: "compact",
+  maximumFractionDigits: 1
+})
+
+/**
+ * Conteo abreviado de Intl (p. ej. estrellas de GitHub): 1234 → "1,2 mil".
+ * Los ejes de gráficas usan `formatCompactNumber` de `chart-format.ts`.
+ */
+export function formatCompactCount(value: number) {
+  return COMPACT_COUNT.format(value)
+}
+
+const CURRENCY_SYMBOLS = new Map<string, string>()
+
+/** Símbolo corto de la moneda en es-CO ("$" para COP y USD, "€" para EUR) */
+export function currencySymbol(currency: string) {
+  let symbol = CURRENCY_SYMBOLS.get(currency)
+  if (!symbol) {
+    symbol =
+      new Intl.NumberFormat(LOCALE, {
+        style: "currency",
+        currency,
+        currencyDisplay: "narrowSymbol"
+      })
+        .formatToParts(0)
+        .find((part) => part.type === "currency")?.value ?? currency
+    CURRENCY_SYMBOLS.set(currency, symbol)
+  }
+  return symbol
+}
+
 // Lo que se muestra en lugar de saldos y totales cuando el usuario oculta las
 // cifras (ojo del header)
 export const AMOUNT_MASK = "***"

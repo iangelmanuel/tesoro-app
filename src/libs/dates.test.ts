@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest"
 import {
   TIME_ZONE,
+  countMonths,
   currentMonth,
   fromLocalDate,
   greeting,
+  listMonths,
   monthRange,
   shiftMonth,
   toLocalDate,
-  todayISO
+  todayISO,
+  trimSeconds
 } from "./dates"
 
 // America/Bogota es UTC-5 todo el año (sin horario de verano)
@@ -84,5 +87,56 @@ describe("toLocalDate / fromLocalDate", () => {
 
   it("rellena mes y día con cero", () => {
     expect(fromLocalDate(new Date(2026, 0, 5))).toBe("2026-01-05")
+  })
+})
+
+// Antes `monthsBetween` de score/curves.ts (SPEC 54)
+describe("listMonths", () => {
+  it("lista los meses de `from` a `to`, inclusive", () => {
+    expect(listMonths("2026-10", "2027-02")).toEqual([
+      "2026-10",
+      "2026-11",
+      "2026-12",
+      "2027-01",
+      "2027-02"
+    ])
+  })
+
+  it("da un solo mes si coinciden", () => {
+    expect(listMonths("2026-05", "2026-05")).toEqual(["2026-05"])
+  })
+
+  it("da vacío si `from` va después de `to`", () => {
+    expect(listMonths("2026-06", "2026-05")).toEqual([])
+  })
+})
+
+// Antes `monthsBetween` de mcp/tools/read/report-helpers.ts (SPEC 54)
+describe("countMonths", () => {
+  it("cuenta los meses de `from` a `to`, ambos incluidos", () => {
+    expect(countMonths("2026-10", "2027-02")).toBe(5)
+    expect(countMonths("2026-01", "2026-12")).toBe(12)
+  })
+
+  it("da 1 si coinciden", () => {
+    expect(countMonths("2026-05", "2026-05")).toBe(1)
+  })
+
+  it("da cero o negativo si `from` va después de `to`", () => {
+    expect(countMonths("2026-06", "2026-05")).toBe(0)
+    expect(countMonths("2026-08", "2026-05")).toBe(-2)
+  })
+})
+
+// Antes `formatTime` de mcp/tools/shared.ts (SPEC 54)
+describe("trimSeconds", () => {
+  it("recorta los segundos de Postgres", () => {
+    expect(trimSeconds("14:30:00")).toBe("14:30")
+    expect(trimSeconds("08:05")).toBe("08:05")
+  })
+
+  it("da null sin hora", () => {
+    expect(trimSeconds(null)).toBeNull()
+    expect(trimSeconds("")).toBeNull()
   })
 })

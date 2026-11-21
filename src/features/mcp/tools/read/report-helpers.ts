@@ -1,7 +1,7 @@
 import { savingsRate } from "@/features/reports/metrics"
 import type { CategoryTotal, MonthlyTotal } from "@/features/reports/queries"
 import type { WorkspaceType } from "@/features/workspaces/types"
-import { currentMonth, monthRange, shiftMonth } from "@/libs/dates"
+import { countMonths, currentMonth, monthRange, shiftMonth } from "@/libs/dates"
 import { monthSchema } from "../shared"
 
 // Totales de un mes con los nombres de cada espacio (SPEC 34): Personal
@@ -62,13 +62,6 @@ export const monthInput = monthSchema
   .optional()
   .describe("Mes YYYY-MM. Por defecto, el mes actual.")
 
-/** Meses entre `from` y `to` (YYYY-MM), ambos incluidos */
-export function monthsBetween(from: string, to: string) {
-  const [fromYear, fromMonth] = from.split("-").map(Number)
-  const [toYear, toMonth] = to.split("-").map(Number)
-  return (toYear - fromYear) * 12 + (toMonth - fromMonth) + 1
-}
-
 export type MonthRange =
   | { from: string; to: string; dateFrom: string; dateTo: string }
   | { error: string }
@@ -84,7 +77,7 @@ export function resolveMonthRange(
 ): MonthRange {
   const end = to ?? currentMonth()
   const start = from ?? shiftMonth(end, -(defaultMonths - 1))
-  const count = monthsBetween(start, end)
+  const count = countMonths(start, end)
 
   if (count < 1) {
     return { error: "El mes de inicio (from) debe ser anterior o igual a to." }

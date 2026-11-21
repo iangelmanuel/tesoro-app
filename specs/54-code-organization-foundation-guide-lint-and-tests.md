@@ -1,6 +1,6 @@
 # SPEC 54 — Base de organización del código: guía, lint, tipos y tests
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 51, SPEC 52a, SPEC 52b, SPEC 52c, SPEC 53
 > **Fecha:** 2026-11-21
 > **Objetivo:** Fijar las reglas de organización del código (guía de arquitectura, ESLint, tsconfig, `server-only` y Vitest) y aplicarlas a la capa compartida (`src/libs`, `src/config`, `src/components`, `src/hooks` y `app/`) como base de la refactorización por áreas.
@@ -230,25 +230,25 @@ Cada paso deja `check`, `eslint`, `prettier:check`, `test` y `build` en verde, y
 
 Verificables en código o con los scripts:
 
-- [ ] `pnpm test` corre Vitest y pasa; `.github/workflows/ci.yml` incluye `test` en la matriz de `quality`.
-- [ ] Existen `dates.test.ts`, `format.test.ts`, `allocate.test.ts` y `payment-description.test.ts` en `src/libs/`, más `chart-format.test.ts` y `amount-format.test.ts`.
-- [ ] `tsconfig.json` tiene `noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch` y `noImplicitOverride` en `true`, y `pnpm check` pasa.
-- [ ] `pnpm eslint` termina sin errores; los únicos warnings son de `max-lines` dentro de `src/features/`.
-- [ ] Un import de prueba de `@/features/x` dentro de `src/libs/` o de `exceljs` fuera de `exports/workbook/` hace fallar `pnpm eslint` (se comprueba y se revierte).
-- [ ] `grep -rL '^import "server-only"' src/features/*/queries.ts src/features/*/service.ts src/features/*/*-service.ts src/libs/supabase/server.ts` no devuelve archivos.
-- [ ] `grep -rE 'from "@/(features|components)' src/libs src/config` no devuelve resultados.
-- [ ] No existen `src/libs/revalidate.ts`, `src/libs/service-result.ts`, `src/components/seo/JsonLd.tsx` ni `src/components/dashboard/sidebar/index.ts`.
-- [ ] No hay archivos sueltos en `src/components/dashboard/`; solo las carpetas `command/`, `data/`, `feedback/`, `hide-amounts/`, `mobile/`, `overlays/`, `quick-actions/`, `shell/`, `shortcuts/` y `sidebar/`.
-- [ ] `grep -rnE "export function (monthsBetween|formatTime)\b" src` devuelve solo `formatTime` de `src/libs/format.ts`.
-- [ ] `grep -rnE "Intl\.(NumberFormat|DateTimeFormat)|toLocaleString" src/components` devuelve solo `ui/calendar.tsx`.
-- [ ] Todo export de `src/libs/*.ts` tiene JSDoc.
-- [ ] Existe `docs/arquitectura.md` con las secciones de §1, y `README.md`, `CONTRIBUTING.md` y `CLAUDE.md` lo enlazan.
-- [ ] `CLAUDE.md` y `docs/ui.md` no citan rutas que ya no existen (`components/dashboard/surface.ts`, `seo/JsonLd.tsx`, `libs/revalidate.ts`, etc.) ni dicen "Aún no hay tests".
-- [ ] `git diff` no toca `supabase/migrations/`, `src/types/database.ts`, textos de `src/config/help.ts` ni las descripciones o esquemas de `src/features/mcp/tools/**`.
-- [ ] `CHANGELOG.md` tiene la entrada en `[Unreleased]`.
-- [ ] `package.json` usa versiones exactas para `vitest`, `server-only` y `eslint-plugin-unicorn`, y `pnpm install --frozen-lockfile` pasa.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
-- [ ] `/code-review high` no deja hallazgos abiertos.
+- [x] `pnpm test` corre Vitest y pasa; `.github/workflows/ci.yml` incluye `test` en la matriz de `quality`.
+- [x] Existen `dates.test.ts`, `format.test.ts`, `allocate.test.ts` y `payment-description.test.ts` en `src/libs/`, más `chart-format.test.ts` y `amount-format.test.ts`.
+- [x] `tsconfig.json` tiene `noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch` y `noImplicitOverride` en `true`, y `pnpm check` pasa.
+- [x] `pnpm eslint` termina sin errores; los únicos warnings son de `max-lines` dentro de `src/features/`.
+- [x] Un import de prueba de `@/features/x` dentro de `src/libs/` o de `exceljs` fuera de `exports/workbook/` hace fallar `pnpm eslint` (se comprueba y se revierte).
+- [x] `grep -rL '^import "server-only"' src/features/*/queries.ts src/features/*/service.ts src/features/*/*-service.ts src/libs/supabase/server.ts` no devuelve archivos.
+- [x] `grep -rE 'from "@/(features|components)' src/libs src/config` no devuelve resultados.
+- [x] No existen `src/libs/revalidate.ts`, `src/libs/service-result.ts`, `src/components/seo/JsonLd.tsx` ni `src/components/dashboard/sidebar/index.ts`.
+- [x] No hay archivos sueltos en `src/components/dashboard/`; solo las carpetas `command/`, `data/`, `feedback/`, `hide-amounts/`, `mobile/`, `overlays/`, `quick-actions/`, `shell/`, `shortcuts/` y `sidebar/`.
+- [x] `grep -rnE "export function (monthsBetween|formatTime)\b" src` devuelve solo `formatTime` de `src/libs/format.ts`.
+- [x] `grep -rnE "Intl\.(NumberFormat|DateTimeFormat)|toLocaleString" src/components` devuelve solo `ui/calendar.tsx`.
+- [x] Todo export de `src/libs/*.ts` tiene JSDoc.
+- [x] Existe `docs/arquitectura.md` con las secciones de §1, y `README.md`, `CONTRIBUTING.md` y `CLAUDE.md` lo enlazan.
+- [x] `CLAUDE.md` y `docs/ui.md` no citan rutas que ya no existen (`components/dashboard/surface.ts`, `seo/JsonLd.tsx`, `libs/revalidate.ts`, etc.) ni dicen "Aún no hay tests".
+- [x] `git diff` no toca `supabase/migrations/`, `src/types/database.ts`, textos de `src/config/help.ts` ni las descripciones o esquemas de `src/features/mcp/tools/**`.
+- [x] `CHANGELOG.md` tiene la entrada en `[Unreleased]`.
+- [x] `package.json` usa versiones exactas para `vitest`, `server-only` y `eslint-plugin-unicorn`, y `pnpm install --frozen-lockfile` pasa.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
+- [x] `/code-review high` no deja hallazgos abiertos.
 
 Verificables en navegador (los prueba el usuario a mano):
 

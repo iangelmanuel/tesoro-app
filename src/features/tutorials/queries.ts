@@ -1,3 +1,4 @@
+import "server-only"
 import { cache } from "react"
 import { TUTORIAL_SECTIONS, type TutorialSection } from "@/config/tutorials"
 import { createClient } from "@/libs/supabase/server"

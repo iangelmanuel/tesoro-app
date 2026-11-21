@@ -1,3 +1,4 @@
+import "server-only"
 import { getCategoryTotals, getMonthlyTotals } from "@/features/reports/queries"
 import { historyMonths, monthsBetween } from "@/features/score/curves"
 import { getFirstTransactionOn } from "@/features/score/queries"

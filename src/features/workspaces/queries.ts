@@ -1,3 +1,4 @@
+import "server-only"
 import { cache } from "react"
 import { notFound, redirect } from "next/navigation"
 import { z } from "zod"

@@ -1,3 +1,4 @@
+import "server-only"
 import { getMonthlyTotals } from "@/features/reports/queries"
 import { createClient } from "@/libs/supabase/server"
 

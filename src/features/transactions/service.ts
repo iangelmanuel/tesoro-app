@@ -1,3 +1,4 @@
+import "server-only"
 import type { PostgrestError } from "@supabase/supabase-js"
 import type { z } from "zod"
 import type { IncomeAllocation } from "@/features/recurring-incomes/types"

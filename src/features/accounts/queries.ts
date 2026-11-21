@@ -1,3 +1,4 @@
+import "server-only"
 import { cache } from "react"
 import { createClient } from "@/libs/supabase/server"
 import type { AccountWithBalance } from "./types"

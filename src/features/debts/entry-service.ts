@@ -1,3 +1,4 @@
+import "server-only"
 import { validateCategory } from "@/features/transactions/service"
 import {
   type ServiceFailure,

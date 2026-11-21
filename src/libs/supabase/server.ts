@@ -1,3 +1,4 @@
+import "server-only"
 import { cookies } from "next/headers"
 import { connection } from "next/server"
 import { createServerClient } from "@supabase/ssr"

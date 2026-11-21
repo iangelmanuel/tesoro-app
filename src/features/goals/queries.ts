@@ -1,3 +1,4 @@
+import "server-only"
 import { createClient } from "@/libs/supabase/server"
 import type { Database } from "@/types/database"
 

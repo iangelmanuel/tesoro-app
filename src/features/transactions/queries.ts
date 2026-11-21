@@ -1,3 +1,4 @@
+import "server-only"
 import { NO_ACCOUNT } from "@/features/accounts/constants"
 import { TRANSACTION_TYPES } from "@/features/categories/constants"
 import type { DebtStatus } from "@/features/debts/calculations"

@@ -1,3 +1,4 @@
+import "server-only"
 import { cache } from "react"
 import { getWorkspace } from "@/features/workspaces/queries"
 import { createClient } from "@/libs/supabase/server"

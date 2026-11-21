@@ -1,3 +1,4 @@
+import "server-only"
 import type { TransactionType } from "@/features/transactions/filters"
 import type { TransactionWithCategory } from "@/features/transactions/queries"
 import { createClient } from "@/libs/supabase/server"

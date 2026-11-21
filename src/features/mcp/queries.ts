@@ -1,3 +1,4 @@
+import "server-only"
 import { createClient } from "@/libs/supabase/server"
 import type { McpAccess } from "./constants"
 import { canUndo } from "./operations"

@@ -1,3 +1,4 @@
+import "server-only"
 import type { PostgrestError } from "@supabase/supabase-js"
 import {
   type ServiceFailure,

@@ -3,7 +3,6 @@
 import { useId, useState } from "react"
 import { CalendarIcon } from "lucide-react"
 import { es } from "react-day-picker/locale"
-import { HeroUIPortalBridge } from "@/components/dashboard/heroui-portal-bridge"
 import { FieldLabel } from "@/components/forms/field-label"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -112,65 +111,63 @@ export function DatePickerField({
         name={name}
         value={value}
       />
-      <HeroUIPortalBridge>
-        <Popover
-          open={open}
-          onOpenChange={setOpen}
+      <Popover
+        open={open}
+        onOpenChange={setOpen}
+      >
+        <PopoverTrigger
+          render={
+            <Button
+              id={id}
+              variant="ghost"
+              aria-labelledby={`${labelId} ${valueId}`}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? errorId : undefined}
+              className={cn(
+                "w-full justify-between rounded-4xl border border-transparent bg-field px-4 font-normal tabular-nums hover:bg-field-hover aria-expanded:bg-field-hover aria-invalid:border-destructive",
+                !selected && "text-muted-foreground"
+              )}
+            />
+          }
         >
-          <PopoverTrigger
-            render={
-              <Button
-                id={id}
-                variant="ghost"
-                aria-labelledby={`${labelId} ${valueId}`}
-                aria-invalid={error ? true : undefined}
-                aria-describedby={error ? errorId : undefined}
-                className={cn(
-                  "w-full justify-between rounded-4xl border border-transparent bg-field px-4 font-normal tabular-nums hover:bg-field-hover aria-expanded:bg-field-hover aria-invalid:border-destructive",
-                  !selected && "text-muted-foreground"
-                )}
-              />
-            }
+          <span
+            id={valueId}
+            className="truncate"
           >
-            <span
-              id={valueId}
-              className="truncate"
-            >
-              {selected ? formatDate(value) : "Elige una fecha"}
-            </span>
-            <CalendarIcon
-              aria-hidden
-              className="size-4 shrink-0 text-muted-foreground"
-            />
-          </PopoverTrigger>
-          <PopoverContent
-            align="start"
-            className="w-auto p-0"
-          >
-            <Calendar
-              mode="single"
-              locale={es}
-              weekStartsOn={1}
-              captionLayout="dropdown"
-              selected={selected}
-              defaultMonth={selected ?? max ?? undefined}
-              startMonth={startMonth}
-              endMonth={endMonth}
-              disabled={disabled}
-              required={isRequired}
-              aria-label={label}
-              autoFocus
-              // Siete celdas de 44 px no caben en un teléfono de 320 px: por
-              // debajo de ~350 px la celda se ajusta al ancho (40 px a 320)
-              className="[--cell-size:min(--spacing(11),calc((100vw-2.5rem)/7))]"
-              onSelect={(date: Date | undefined) => {
-                onChange(date ? fromDate(date) : "")
-                setOpen(false)
-              }}
-            />
-          </PopoverContent>
-        </Popover>
-      </HeroUIPortalBridge>
+            {selected ? formatDate(value) : "Elige una fecha"}
+          </span>
+          <CalendarIcon
+            aria-hidden
+            className="size-4 shrink-0 text-muted-foreground"
+          />
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          className="w-auto p-0"
+        >
+          <Calendar
+            mode="single"
+            locale={es}
+            weekStartsOn={1}
+            captionLayout="dropdown"
+            selected={selected}
+            defaultMonth={selected ?? max ?? undefined}
+            startMonth={startMonth}
+            endMonth={endMonth}
+            disabled={disabled}
+            required={isRequired}
+            aria-label={label}
+            autoFocus
+            // Siete celdas de 44 px no caben en un teléfono de 320 px: por
+            // debajo de ~350 px la celda se ajusta al ancho (40 px a 320)
+            className="[--cell-size:min(--spacing(11),calc((100vw-2.5rem)/7))]"
+            onSelect={(date: Date | undefined) => {
+              onChange(date ? fromDate(date) : "")
+              setOpen(false)
+            }}
+          />
+        </PopoverContent>
+      </Popover>
       {error ? <FieldError id={errorId}>{error}</FieldError> : null}
     </div>
   )

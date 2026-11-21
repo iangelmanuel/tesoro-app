@@ -1,7 +1,6 @@
 "use client"
 
 import { useId } from "react"
-import { HeroUIPortalBridge } from "@/components/dashboard/heroui-portal-bridge"
 import { FieldLabel } from "@/components/forms/field-label"
 import { Button } from "@/components/ui/button"
 import {
@@ -114,65 +113,63 @@ export function CreatableSelect({
       >
         {label}
       </FieldLabel>
-      <HeroUIPortalBridge>
-        <Combobox
-          items={items}
-          value={value}
-          onValueChange={handleValueChange}
-          filter={filter}
-          itemToStringLabel={(key: string) =>
-            key === CREATE_OPTION ? createLabel : (byId.get(key)?.text ?? "")
-          }
-          disabled={disabled}
-        >
-          <ComboboxTrigger
-            render={
-              <Button
-                id={id}
-                variant="ghost"
-                aria-labelledby={`${labelId} ${valueId}`}
-                aria-invalid={error ? true : undefined}
-                aria-describedby={error ? errorId : undefined}
-                className={cn(
-                  "w-full justify-between rounded-4xl border border-transparent bg-field px-4 font-normal hover:bg-field-hover aria-expanded:bg-field-hover aria-invalid:border-destructive",
-                  !selected && "text-muted-foreground"
-                )}
-              />
-            }
-          >
-            <span
-              id={valueId}
-              className="flex min-w-0 items-center truncate"
-            >
-              {selected ? selected.node : placeholder}
-            </span>
-          </ComboboxTrigger>
-          <ComboboxContent className="min-w-64">
-            <ComboboxInput
-              showTrigger={false}
-              placeholder="Buscar…"
-              aria-label={searchLabel}
+      <Combobox
+        items={items}
+        value={value}
+        onValueChange={handleValueChange}
+        filter={filter}
+        itemToStringLabel={(key: string) =>
+          key === CREATE_OPTION ? createLabel : (byId.get(key)?.text ?? "")
+        }
+        disabled={disabled}
+      >
+        <ComboboxTrigger
+          render={
+            <Button
+              id={id}
+              variant="ghost"
+              aria-labelledby={`${labelId} ${valueId}`}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? errorId : undefined}
+              className={cn(
+                "w-full justify-between rounded-4xl border border-transparent bg-field px-4 font-normal hover:bg-field-hover aria-expanded:bg-field-hover aria-invalid:border-destructive",
+                !selected && "text-muted-foreground"
+              )}
             />
-            <ComboboxList>
-              {(key: string) =>
-                key === CREATE_OPTION ? (
-                  <CreateOption
-                    key={key}
-                    label={createLabel}
-                  />
-                ) : (
-                  <ComboboxItem
-                    key={key}
-                    value={key}
-                  >
-                    {byId.get(key)?.node}
-                  </ComboboxItem>
-                )
-              }
-            </ComboboxList>
-          </ComboboxContent>
-        </Combobox>
-      </HeroUIPortalBridge>
+          }
+        >
+          <span
+            id={valueId}
+            className="flex min-w-0 items-center truncate"
+          >
+            {selected ? selected.node : placeholder}
+          </span>
+        </ComboboxTrigger>
+        <ComboboxContent className="min-w-64">
+          <ComboboxInput
+            showTrigger={false}
+            placeholder="Buscar…"
+            aria-label={searchLabel}
+          />
+          <ComboboxList>
+            {(key: string) =>
+              key === CREATE_OPTION ? (
+                <CreateOption
+                  key={key}
+                  label={createLabel}
+                />
+              ) : (
+                <ComboboxItem
+                  key={key}
+                  value={key}
+                >
+                  {byId.get(key)?.node}
+                </ComboboxItem>
+              )
+            }
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
       {error ? <FieldError id={errorId}>{error}</FieldError> : null}
       {children}
     </div>

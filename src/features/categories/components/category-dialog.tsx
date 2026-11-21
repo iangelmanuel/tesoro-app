@@ -20,9 +20,7 @@ interface CategoryDialogProps {
 
 /**
  * Crea una categoría encima de otro formulario (selects con creación). Es un
- * diálogo anidado: Escape cierra solo este y el foco vuelve al select. Si el
- * formulario de abajo es un Modal de HeroUI, quien lo abre lo envuelve en
- * HeroUIPortalBridge para montarse encima
+ * diálogo anidado: Escape cierra solo este y el foco vuelve al select
  */
 export function CategoryDialog({
   workspaceId,

@@ -1,20 +1,14 @@
 import { Suspense } from "react"
 import type { Route } from "next"
 import Link from "next/link"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Skeleton
-} from "@heroui/react"
 import { Info, TriangleAlert } from "lucide-react"
-import { CardSkeleton } from "@/components/dashboard/card-skeleton"
+import { CARD } from "@/components/dashboard/surface"
+import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
 import { SITE } from "@/config/site"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { AccountBalancesList } from "@/features/cash-flow/components/account-balances-list"
 import { CashFlowChart } from "@/features/cash-flow/components/cash-flow-chart"
+import { CashFlowScreenSkeleton } from "@/features/cash-flow/components/cash-flow-screen-skeleton"
 import { CashFlowTable } from "@/features/cash-flow/components/cash-flow-table"
 import { getCashFlow } from "@/features/cash-flow/queries"
 import { NoPeriodData } from "@/features/reports/components/no-period-data"
@@ -28,6 +22,7 @@ import {
   workspaceTransactionsPath
 } from "@/features/workspaces/paths"
 import { getWorkspace } from "@/features/workspaces/queries"
+import { cn } from "@/libs/cn"
 import { buildMetadata } from "@/libs/seo"
 
 export const metadata = buildMetadata({
@@ -48,7 +43,7 @@ export default function BusinessCashFlowPage({
       className="flex flex-1 flex-col gap-6"
     >
       {/* params, searchParams y la sesión son dinámicos: van dentro de Suspense */}
-      <Suspense fallback={<CashFlowSkeleton />}>
+      <Suspense fallback={<CashFlowScreenSkeleton />}>
         <CashFlowContent
           params={params}
           searchParams={searchParams}
@@ -103,7 +98,10 @@ async function CashFlowContent({
       {period.warning && (
         <div
           role="status"
-          className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+          className={cn(
+            "flex items-start gap-2 rounded-2xl p-3 text-sm",
+            TONE_BADGE_CLASSES.warning
+          )}
         >
           <TriangleAlert className="mt-0.5 size-4 shrink-0" />
           <p>{period.warning} Se muestra el mes actual.</p>
@@ -113,9 +111,9 @@ async function CashFlowContent({
       {cashFlow.withoutAccount > 0 && (
         <div
           role="status"
-          className="flex items-start gap-2 rounded-lg border bg-default/50 p-3 text-sm"
+          className="flex items-start gap-2 rounded-2xl bg-card p-3 text-sm shadow-(--surface-shadow)"
         >
-          <Info className="mt-0.5 size-4 shrink-0 text-muted" />
+          <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
           <p>
             {cashFlow.withoutAccount === 1
               ? "1 movimiento del periodo no tiene cuenta y no mueve el saldo."
@@ -136,21 +134,21 @@ async function CashFlowContent({
           className="py-16"
         />
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Entradas y salidas</CardTitle>
-            <CardDescription className="first-letter:uppercase">
+        <section className={CARD}>
+          <header className="flex flex-col gap-1">
+            <h2 className="text-sm font-semibold text-muted-foreground">
+              Entradas y salidas
+            </h2>
+            <p className="text-sm text-muted-foreground first-letter:uppercase">
               {period.label} · con el saldo en cuentas al cierre de cada mes
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CashFlowChart
-              data={cashFlow.months}
-              currency={workspace.currency}
-              className="aspect-auto h-80 w-full"
-            />
-          </CardContent>
-        </Card>
+            </p>
+          </header>
+          <CashFlowChart
+            data={cashFlow.months}
+            currency={workspace.currency}
+            className="aspect-auto h-80 w-full"
+          />
+        </section>
       )}
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -162,38 +160,27 @@ async function CashFlowContent({
             <CashFlowTable
               months={cashFlow.months}
               currency={workspace.currency}
+              workspaceId={workspace.id}
             />
           )}
         </section>
-        <Card className="self-start">
-          <CardHeader>
-            <CardTitle>Saldo a hoy</CardTitle>
-            <CardDescription>
+        <section className={cn(CARD, "self-start")}>
+          <header className="flex flex-col gap-1">
+            <h2 className="text-sm font-semibold text-muted-foreground">
+              Saldo a hoy
+            </h2>
+            <p className="text-sm text-muted-foreground">
               {activeAccounts.length === 1
                 ? "1 cuenta activa"
                 : `${activeAccounts.length} cuentas activas`}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AccountBalancesList
-              accounts={activeAccounts}
-              currency={workspace.currency}
-            />
-          </CardContent>
-        </Card>
-      </div>
-    </>
-  )
-}
-
-function CashFlowSkeleton() {
-  return (
-    <>
-      <Skeleton className="h-9 w-80 rounded-3xl" />
-      <CardSkeleton className="h-96" />
-      <div className="grid gap-4 lg:grid-cols-3">
-        <CardSkeleton className="h-96 lg:col-span-2" />
-        <CardSkeleton className="h-64" />
+            </p>
+          </header>
+          <AccountBalancesList
+            accounts={activeAccounts}
+            currency={workspace.currency}
+            workspaceId={workspace.id}
+          />
+        </section>
       </div>
     </>
   )

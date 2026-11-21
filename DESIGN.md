@@ -9,8 +9,7 @@ colors:
   accent-business-bright: "oklch(74% 0.17 48)"
   workspace-personal: "{colors.accent-personal}"
   workspace-business: "{colors.accent-business}"
-  hero-veil: "oklch(1 0 0 / 0.12–0.34)"
-  hero-accent: "oklch(37.8% 0.077 168.94)"
+  hero-accent: "oklch(0.845 0.143 164.978)"
   accent-neutral-dark: "oklch(0.985 0 0)"
   accent-neutral-light: "oklch(0.21 0.016 265)"
   on-accent: "oklch(0.99 0 0)"
@@ -194,7 +193,7 @@ Neutros fríos de un solo matiz (264), un primario por espacio y una familia sem
 - **Texto** (`night-foreground`) y **texto atenuado** (`night-muted`, 7.06:1 sobre la tarjeta).
 - **Papel gris** (`day-background`, `#f1f2f5`), **tarjeta blanca** (`day-surface`), y sus equivalentes `day-*`: la misma estructura en claro, en el dashboard y la auth.
 - **Blanco de sitio** (`site-background-day`, `#FFFFFF`) y **tarjeta de sitio** (`site-surface-day`): las páginas públicas en claro (`data-surface="site"`). La tarjeta baja a un gris muy suave para seguir separándose del blanco, sin borde y con la misma sombra.
-- **Velo del hero** (`hero-veil`): blanco suave, 12 % arriba y hasta 34 % en la mitad baja, donde va el texto, más un fundido corto que empalma con la sección siguiente. Se midió sobre el render: con él, el texto oscuro da ≥ 4,5:1 incluso sobre el 5 % más oscuro de esa zona. **Verde del hero** (`hero-accent`, emerald-900): la segunda parte del slogan, porque `--brand` no llega a 3:1 sobre el video.
+- **Sombra del hero** (`hero-shade`): verde casi negro (`oklch(0.16 0.012 165)`), 55 % → 0 en el 18 % de arriba y 92 % → 0 desde abajo hasta el 72 %. **Verde del hero** (`hero-accent`, emerald-300): la segunda parte del slogan sobre esa sombra.
 
 ### Named Rules
 
@@ -291,7 +290,7 @@ Firmes y redondos; el color solo aparece en el principal.
 
 ### Navigation
 
-- **Header público:** una sola línea, sin pastillas ni divisores: logo, navegación como texto atenuado, GitHub con estrellas, "Iniciar sesión" como texto y "Crear cuenta" compacto (36 px). Sin selector de tema: las páginas públicas van siempre en claro. Sticky: transparente arriba (la franja blanca del velo del hero le da fondo) y, con scroll, el fondo de la página al 70–80 % con desenfoque y una línea de 1 px de `--border` como sombra (no borde, para no sumar alto), en 300 ms.
+- **Header público:** una sola línea, sin pastillas ni divisores: logo, navegación como texto atenuado, GitHub con estrellas, "Iniciar sesión" como texto y "Crear cuenta" compacto (36 px). Sin selector de tema: las páginas públicas van siempre en claro. Sticky: transparente y en blanco mientras está sobre el video del hero (`.on-media`) y, con scroll, el fondo de la página al 70–80 % con desenfoque y una línea de 1 px de `--border` como sombra (no borde, para no sumar alto), en 300 ms.
 - **Aside del dashboard:** logo, pestañas Personal / Empresa, navegación con el ítem activo en `--highlight`; abajo solo el menú de cuenta. En móvil, Drawer más barra inferior de 4 destinos y [+].
 - **Menú de cuenta:** cabecera con avatar → Cuenta → Ayuda (↗, issues de GitHub) → Tema → Cerrar sesión. El tema es una píldora Claro / Oscuro dentro del mismo menú (selección única, no cierra el menú, se recorre con flechas); la opción activa va en superficie con sombra.
 
@@ -321,7 +320,7 @@ Personal y Empresa lado a lado, cada uno con un punto de su color real y, debajo
 
 ### Hero (landing)
 
-Toda la primera pantalla (`100svh`, mínimo 36 rem), clara como el resto de la landing, desde y = 0 y detrás del header. De abajo arriba: el póster (primer fotograma, es el LCP y lo único que se ve con reduced motion, ahorro de datos o sin JS), el video de ambiente de 15 s en loop (stock libre en color natural, solo más luminoso: sombras levantadas, menos contraste y un poco menos de saturación, sin tinte ni viñeta; sin texto, logo ni caras; recorte vertical en móvil), que entra asentándose de 1.06 a 1 en 2,4 s, y el velo blanco suave. El video se ve completo. Encima, el texto oscuro apoyado abajo a la izquierda: el slogan hasta 4,5 rem con tracking −0.035em e interlineado 0.95, con su segunda parte en verde profundo (`hero-accent`); la bajada en 1.25 rem y las promesas en el color de texto completo (no el atenuado, para dar AA sobre el video); "Crear cuenta" en el primario neutro y "Ver la demo" en blanco translúcido con la sombra de tarjeta. Nada en el hero depende de JS para su tamaño.
+Toda la primera pantalla (`100svh`, mínimo 38 rem), desde y = 0 y detrás del header. Es la única foto oscura de la landing: el resto sigue en claro. De abajo arriba: el póster (primer fotograma, es el LCP y lo único que se ve con reduced motion, ahorro de datos o sin JS), el video de ambiente de 15 s en loop (stock libre en color natural, sin lavado, tinte ni viñeta; sin texto, logo ni caras; recorte vertical en móvil), que entra asentándose de 1.06 a 1 en 2,4 s, y la sombra `hero-shade`: solo oscuro, nunca blanco (una banda corta arriba para el header y un degradado verde casi negro que sube desde abajo hasta un poco más de la mitad). Encima, el texto en blanco apoyado abajo a la izquierda: el slogan hasta 4,5 rem con tracking −0.035em e interlineado 0.95, con su segunda parte en emerald-300 (`hero-accent`); la bajada en 1.25 rem; "Crear cuenta" en blanco con texto tinta y "Ver la demo" con borde blanco; las promesas sobre una línea blanca translúcida. La clase `.on-media` cambia los tokens (texto, primario, borde, hover, foco) dentro de la sección, y el header la toma mientras está sobre el video (CSS con `:has`, así ya sale bien en el HTML). Nada en el hero depende de JS para su tamaño.
 
 ### Footer
 

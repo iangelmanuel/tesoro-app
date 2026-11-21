@@ -526,32 +526,64 @@
   }
 }
 
-/* Velo del hero (SPEC 40): el video ya viene claro (gradación duotono de
-   verde medio a casi blanco, sin negros ni viñeta), así que el velo no lo
-   tapa: solo un blanco muy leve encima, que sube un poco el contraste del
-   texto oscuro, y un fundido corto abajo que empalma con la sección
-   siguiente */
-/* Verde del slogan en el hero: emerald-900, que da 3:1 (texto grande) sobre
-   las zonas más oscuras del video con su velo; --brand se pierde encima */
-.hero-accent {
-  color: oklch(37.8% 0.077 168.94);
+/* Hero sobre video (SPEC 40, rehecho): la sección y el header mientras
+   están encima del video cambian sus tokens a "texto claro sobre foto
+   oscura". El primario se invierte (botón blanco con texto tinta), el borde
+   y el hover son blanco translúcido y el foco es blanco */
+.on-media,
+:root:has([data-header-tone="on-media"])
+  [data-site-header]:not([data-past-media]) {
+  --foreground: oklch(1 0 0);
+  --muted-foreground: oklch(1 0 0 / 0.8);
+  --primary: oklch(1 0 0);
+  --primary-foreground: oklch(0.21 0.016 265);
+  --border: oklch(1 0 0 / 0.32);
+  --highlight: oklch(1 0 0 / 0.14);
+  --ring: oklch(1 0 0);
+  --hero-dot: oklch(0.845 0.143 164.978);
 }
 
-/* Velo del hero (SPEC 40): el video va en color natural, solo más luminoso
-   (sombras levantadas, menos contraste y saturación, sin tinte ni viñeta).
-   El velo es un blanco suave: 12 % arriba y hasta 32 % en la mitad baja,
-   donde va el texto. Medido sobre el render: con eso el texto oscuro da
-   ≥ 4,5:1 y el título ≥ 3:1 incluso sobre el 5 % más oscuro de esa zona.
-   Al final, un fundido corto empalma con la sección siguiente */
-.hero-veil {
-  background: linear-gradient(
-    to bottom,
-    oklch(1 0 0 / 0.12) 0%,
-    oklch(1 0 0 / 0.12) 38%,
-    oklch(1 0 0 / 0.3) 58%,
-    oklch(1 0 0 / 0.34) 86%,
-    oklch(1 0 0) 100%
-  );
+/* Verde del slogan sobre la sombra del hero: emerald-300 */
+.hero-accent {
+  color: oklch(0.845 0.143 164.978);
+}
+
+/* Sombra del hero: solo oscuro, nunca blanco. Una banda corta arriba para
+   el header y, abajo, un degradado verde casi negro que sube hasta un poco
+   más de la mitad, donde va el texto. Más alto en el teléfono, donde el
+   texto ocupa más */
+.hero-shade {
+  background:
+    linear-gradient(
+      to bottom,
+      oklch(0.16 0.012 165 / 0.55) 0%,
+      oklch(0.16 0.012 165 / 0) 18%
+    ),
+    linear-gradient(
+      to top,
+      oklch(0.16 0.012 165 / 0.92) 0%,
+      oklch(0.16 0.012 165 / 0.78) 28%,
+      oklch(0.16 0.012 165 / 0.35) 52%,
+      oklch(0.16 0.012 165 / 0) 72%
+    );
+}
+
+@media (max-width: 767px) {
+  .hero-shade {
+    background:
+      linear-gradient(
+        to bottom,
+        oklch(0.16 0.012 165 / 0.55) 0%,
+        oklch(0.16 0.012 165 / 0) 16%
+      ),
+      linear-gradient(
+        to top,
+        oklch(0.16 0.012 165 / 0.94) 0%,
+        oklch(0.16 0.012 165 / 0.82) 45%,
+        oklch(0.16 0.012 165 / 0.3) 70%,
+        oklch(0.16 0.012 165 / 0) 85%
+      );
+  }
 }
 
 /* Scrollbar de todo el proyecto: fina, sin flechas ni carril visible, con el

@@ -82,8 +82,8 @@ póster WebP del segundo 12,9.
 
 El video del hero (SPEC 40) tampoco graba la app: es un proyecto aparte en
 `video/hero/` con tomas de stock (Pexels, créditos en
-`docs/creditos-media.md`) en color natural, aclaradas con `adjust` de
-`hyperframes media-treatment` (sin LUT ni viñeta).
+`docs/creditos-media.md`) en color natural, con un `adjust` suave de
+`hyperframes media-treatment` (sin lavado, LUT ni viñeta).
 
 ```bash
 cd video/hero

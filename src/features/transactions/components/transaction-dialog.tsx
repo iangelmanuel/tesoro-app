@@ -171,8 +171,8 @@ export function TransactionDialog({
       trigger={trigger}
       open={controlledOpen}
       onOpenChange={onOpenChange}
-      // Con 7 tabs el diálogo se ensancha un poco para que quepan
-      className={showPaymentTabs ? "sm:max-w-lg" : undefined}
+      // Con 7 tabs el diálogo se ensancha para que quepan en escritorio
+      className={showPaymentTabs ? "sm:max-w-xl" : undefined}
       title={
         isEditing
           ? "Editar movimiento"
@@ -442,7 +442,7 @@ function TransactionForm({
     <ToggleGroupItem
       key={id}
       value={id}
-      className="h-full flex-1 px-3 whitespace-nowrap data-pressed:bg-card data-pressed:font-semibold data-pressed:text-foreground data-pressed:shadow-(--surface-shadow) dark:data-pressed:bg-highlight"
+      className="h-full flex-1 px-2.5 whitespace-nowrap data-pressed:bg-card data-pressed:font-semibold data-pressed:text-foreground data-pressed:shadow-(--surface-shadow) dark:data-pressed:bg-highlight"
     >
       {label}
     </ToggleGroupItem>

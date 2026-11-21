@@ -716,21 +716,26 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
   guarda igual y vuelve en el dashboard. El header público no tiene
   selector de tema (`site-theme-toggle.tsx` se borró).
 - **Hero** (`hero.tsx`, componente de servidor, y `hero-video.tsx`): toda
-  la primera pantalla (`min-h-[max(36rem,100svh)]`), clara, con `-mt-16`
-  para empezar en y = 0 bajo el header y el texto oscuro apoyado abajo a la
-  izquierda. Capas, de abajo arriba: pósters en `<picture>`
-  (`hero-poster.webp` / `hero-mobile-poster.webp`, `fetchPriority="high"`,
-  son el LCP), el `<video>` (autoplay, muted, loop, `preload="metadata"`,
-  WebM/MP4 por `media`), ambos dentro de `.hero-media` (entra de 1.06 a 1),
-  y el velo `.hero-veil` (`globals.css`): blanco al 12 % arriba y hasta
-  34 % en la mitad baja, más un fundido corto abajo. El video va en color
-  natural, corregido en Hyperframes con `adjust` (exposición +0,12,
-  contraste −0,2, sombras +0,35, negros +0,3, saturación −0,2; sin LUT ni
-  viñeta). Medido sobre el render, el 5 % más oscuro de la zona del texto
-  queda en Y ≥ 0,038; con el velo, la bajada y las promesas en
-  `text-foreground` dan ≥ 4,5:1 y el slogan en `.hero-accent` (emerald-900)
-  ≥ 3:1. La navegación del header, "Iniciar sesión" y las estrellas de
-  GitHub también van en `text-foreground`.
+  la primera pantalla (`min-h-[max(38rem,100svh)]`), con `-mt-16` para
+  empezar en y = 0 bajo el header. Es la única foto oscura de la landing.
+  Capas, de abajo arriba: pósters en `<picture>` (`hero-poster.webp` /
+  `hero-mobile-poster.webp`, `fetchPriority="high"`, son el LCP), el
+  `<video>` (autoplay, muted, loop, `preload="metadata"`, WebM/MP4 por
+  `media`), ambos en `.hero-media` (entra de 1.06 a 1), y `.hero-shade`
+  (`globals.css`): solo oscuro, una banda corta arriba para el header y
+  un degradado verde casi negro desde abajo (92 % → 0 hasta el 72 %; más
+  alto en móvil). Nunca blanco sobre el video. El texto va en blanco
+  abajo a la izquierda; `.on-media` cambia `--foreground`,
+  `--muted-foreground`, `--primary` (blanco con texto tinta), `--border`,
+  `--highlight` y `--ring` dentro de la sección, así los `ui/` sirven
+  tal cual. El slogan lleva `.hero-accent` (emerald-300) y "Ver la demo"
+  es `outline` con borde blanco al 50 %. El header (`site-header-shell.tsx`)
+  toma `.on-media` por CSS (`:root:has([data-header-tone="on-media"])
+[data-site-header]:not([data-past-media])`) y JS solo marca
+  `data-past-media` cuando el video sale por arriba; desde ahí usa el
+  fondo translúcido de siempre. El video va en color natural, con
+  `adjust` de Hyperframes (contraste +0,1, altas −0,1, temperatura +0,04,
+  viveza +0,15; sin lavado, LUT ni viñeta).
   `hero-video.tsx` solo pausa fuera de pantalla y, con reduced motion o
   Save-Data, quita las fuentes y marca `data-paused` (CSS oculta el video y
   queda el póster). Ningún tamaño depende de JS.

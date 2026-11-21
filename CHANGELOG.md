@@ -7,7 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-11-21
+
+### Fixed
+
+- **New movement dialog no longer scrolls sideways.** `DialogContent` now uses a `minmax(0, 1fr)` grid column, so a wide child (the 7-tab type selector) can't stretch the dialog. With the payment tabs the dialog grows to `sm:max-w-xl` and the tabs fit on desktop; on narrow phones they still scroll inside their own row.
+- **Command palette shortcuts line up on the right.** `ShortcutKeys` now carries `data-slot="command-shortcut"`, which hides `CommandItem`'s invisible check icon; both had `ml-auto`, so the keys (N, T, G luego M) floated in the middle of the row.
+
 ### Changed
+
+- **Debt detail history reads like a bank statement.** Entries are grouped by month; each row shows a direction icon (balance down or up), the concept (linked movement description or note) as the title with the amount right-aligned, and type · date · account below. Notes that differ from the title stay as a second line.
+- **Cinematic hero.** The landing hero is a full-screen video in full color with white copy over a dark shade (`.hero-shade`: a short band at the top for the header and a near-black green gradient rising from the bottom). The white veil is gone. A new `.on-media` class swaps the text, primary, border, hover and ring tokens inside the hero, so the `ui/` buttons work as-is (white "Crear cuenta", white-outlined "Ver la demo"); the slogan accent is emerald-300. The public header takes `.on-media` through CSS (`:has`) while it sits over the video and switches to its usual translucent background once the video scrolls past (`data-past-media`). The rest of the landing stays light. The footage is no longer lifted and desaturated (exposure, shadows and blacks back to neutral, slight contrast and vibrance); re-encoded `hero*` videos and posters.
+- **Landing demo and feature clips re-recorded with the new UI.** The main video (~94 s) now walks through the summary, registering a movement step by step, accounts and budgets, a goal contribution, a card's statement, reports with the score and recommendations, and the Business space. The five feature clips were re-recorded (registering a movement, reports, score breakdown and recommendations, score card, switching spaces), and the scenes and the agents clip use the T monogram instead of the old icon. `SITE.landing.demo.durationSeconds` is now 94.
 
 - **Business, account, auth and public pages on shadcn; HeroUI and React Aria removed** (SPEC 53). The whole app now runs on shadcn + Base UI. Server actions, schemas, queries, Route Handlers and the MCP services are unchanged.
   - Business: empty state and scheduled-deletion screen on `EmptyState`, restore with sonner; `BusinessDialog` on `FormDialog` (`trigger` is now a `ReactElement`) with `TextInputField` and `SelectField`; `DeleteBusinessDialog` on `AlertDialog`. Summary KPIs on `StatCard` (profit change now in %, like Personal's balance) and charts on `ChartCard` with a headline figure. Cash flow: month table on the shadcn `Table` in `ScrollTable` and account balances on `CARD_LIST`, both with `RowContextMenu` (navigation only: **Ver movimientos / entradas / salidas del mes** and **Ver movimientos de la cuenta** / **Ir a Cuentas**, using the `filters.ts` params); both now take `workspaceId`. Period and missing-account notices use `tone.ts`.

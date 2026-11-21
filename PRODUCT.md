@@ -83,7 +83,8 @@ vistazo y sabe qué hacer después, sin aprender contabilidad.
     encendida del aside;
   - en el dashboard, oscuro por defecto sobre una base casi negra, con
     claro disponible; las páginas públicas (landing, legales) siempre en
-    claro sobre blanco (SPEC 40);
+    claro sobre blanco (SPEC 40), salvo la foto oscura del video del hero,
+    con el texto en blanco;
   - un solo acento por espacio: neutro fuera de los espacios, emerald en
     Personal y naranja en Empresa, aplicado por ruta y nunca por props;
   - simplicidad y densidad media, tarjetas sin borde y campos con relleno;
@@ -99,10 +100,10 @@ vistazo y sabe qué hacer después, sin aprender contabilidad.
 - Videos de la landing (SPEC 24) en `public/videos/`: la app real grabada
   con un usuario demo y datos de ejemplo, en un escritorio estilo macOS propio
   (sin marcas de Apple), renderizados con Hyperframes. Un video principal de
-  ~56 s y 5 clips de funciones, todos con la nota "Datos de ejemplo".
+  ~94 s y 5 clips de funciones, todos con la nota "Datos de ejemplo".
 - Ejemplo del score con datos ficticios que lo dicen (`score-visual.tsx`).
 - Video de ambiente del hero (SPEC 40): tomas de stock con licencia libre
-  (Pexels), sin caras ni marcas, con tinte verde. No muestra la app; sus
+  (Pexels), sin caras ni marcas, en color natural. No muestra la app; sus
   créditos están en `docs/creditos-media.md`.
 - No hay testimonios, clientes, métricas de uso ni prensa. No se inventan.
 

@@ -7,10 +7,11 @@ seguridad en serio y agradecemos cualquier reporte responsable.
 
 | Versión | Soportada          |
 | ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
+| 0.3.x   | :white_check_mark: |
+| < 0.3   | :x:                |
 
-**Versión actual**: 0.1.0 — base del proyecto (configuración, SEO y
-documentación).
+**Versión actual**: 0.3.0 — app sobre shadcn + Base UI, nueva paleta,
+hero de video y demo de la landing regrabada.
 
 ## Reportar una vulnerabilidad
 

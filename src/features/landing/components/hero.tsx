@@ -49,18 +49,19 @@ const {
 const delay = (ms: number) =>
   ({ "--hero-delay": `${ms}ms` }) as React.CSSProperties
 
-// Hero (SPEC 40): el video ocupa toda la pantalla, también detrás del
-// header (sube 4 rem con -mt-16), y el texto oscuro se apoya abajo a la
-// izquierda directamente sobre el video, que viene claro (la landing va
-// siempre en claro). Bajada y promesas en el color de texto completo, no el
-// atenuado, para dar AA sobre el verde medio de las sombras del video. Todo tamaño sale de CSS: ni el video ni la isla
-// cambian el layout
+// Hero (SPEC 40, rehecho): video a pantalla completa y a todo color, también
+// detrás del header (sube 4 rem con -mt-16). Sobre el video solo hay
+// sombra, nunca blanco: un degradado oscuro corto arriba para el header y
+// otro abajo, donde va el texto en blanco (`.on-media` cambia los tokens de
+// texto, primario y borde dentro de la sección). La página sigue en claro;
+// el hero es una foto oscura. Todo tamaño sale de CSS
 export function Hero() {
   return (
     <section
       id="hero"
       aria-labelledby="hero-title"
-      className="relative isolate -mt-16 flex min-h-[max(36rem,100svh)] flex-col overflow-hidden bg-background text-foreground"
+      data-header-tone="on-media"
+      className="on-media relative isolate -mt-16 flex min-h-[max(38rem,100svh)] flex-col overflow-hidden bg-[oklch(0.16_0.012_165)] text-foreground"
     >
       <div
         aria-hidden="true"
@@ -84,11 +85,11 @@ export function Hero() {
           </picture>
           <HeroVideo />
         </div>
-        <div className="hero-veil absolute inset-0" />
+        <div className="hero-shade absolute inset-0" />
       </div>
 
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-end px-4 pt-32 sm:px-6">
-        <div className="flex max-w-4xl flex-col items-start gap-7 pb-12 sm:pb-16">
+        <div className="flex max-w-3xl flex-col items-start gap-7 pb-10 sm:pb-14">
           <h1
             id="hero-title"
             className="hero-enter text-5xl leading-[0.95] font-semibold tracking-[-0.035em] text-balance sm:text-6xl lg:text-7xl"
@@ -102,7 +103,7 @@ export function Hero() {
             )}
           </h1>
           <p
-            className="hero-enter max-w-xl text-lg text-pretty text-foreground sm:text-xl"
+            className="hero-enter max-w-xl text-lg text-pretty text-foreground/90 sm:text-xl"
             style={delay(80)}
           >
             Anota lo que entra y lo que sale, en casa y en tu negocio.{" "}
@@ -127,8 +128,8 @@ export function Hero() {
               <a
                 href="#demo"
                 className={cn(
-                  buttonVariants({ size: "lg", variant: "ghost" }),
-                  "bg-white/75 text-foreground shadow-(--surface-shadow) backdrop-blur-md hover:bg-white"
+                  buttonVariants({ size: "lg", variant: "outline" }),
+                  "border-white/50 hover:border-white/70"
                 )}
               >
                 <PlayIcon className="size-4" />
@@ -140,7 +141,7 @@ export function Hero() {
 
         {/* Pie del hero: las promesas sobre una línea fina */}
         <ul
-          className="hero-enter flex flex-wrap gap-x-6 gap-y-2 border-t border-foreground/15 py-5 text-sm font-medium text-foreground"
+          className="hero-enter flex flex-wrap gap-x-6 gap-y-2 border-t border-border py-5 text-sm font-medium text-muted-foreground"
           style={delay(240)}
         >
           {PROMISES.map((item) => (
@@ -150,7 +151,7 @@ export function Hero() {
             >
               <span
                 aria-hidden="true"
-                className="size-1.5 rounded-full bg-(--income)"
+                className="size-1.5 rounded-full bg-(--hero-dot)"
               />
               {item}
             </li>

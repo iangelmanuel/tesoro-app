@@ -21,7 +21,10 @@ import {
   useSortableList
 } from "@/components/dashboard/sortable-list"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
-import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
+import {
+  TONE_BADGE_CLASSES,
+  TONE_TEXT_CLASSES
+} from "@/components/dashboard/tone"
 import { toast } from "@/components/ui/sonner"
 import {
   Tooltip,
@@ -31,8 +34,9 @@ import {
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { cn } from "@/libs/cn"
-import { formatDate, formatTime } from "@/libs/format"
+import { formatDate, formatShortDate, formatTime } from "@/libs/format"
 import { deleteEntry, moveDebtEntry } from "../actions"
+import { formatMonthYear } from "../calculations"
 import { installmentLabel, installmentProgress } from "../installments"
 import type { Debt, DebtEntry } from "../queries"
 import {
@@ -119,24 +123,54 @@ export function DebtEntriesList({
 
   return (
     <SortableListProvider {...sortable.providerProps}>
-      <ul className={CARD_LIST}>
-        {sortable.items.map((entry) => (
-          <EntryRow
-            key={entry.id}
-            debt={debt}
-            entry={entry}
-            accounts={accounts}
-            categories={categories}
-            currency={currency}
-            cycleCovered={cycleCovered}
-            collectable={collectable}
-            readOnly={readOnly}
-            sortable={sortable.configFor(entry)}
-          />
+      {/* Como un extracto: por mes, del más reciente al más antiguo. El orden
+          manual es dentro del día, así que nunca cruza de un mes a otro */}
+      <div className="flex flex-col gap-5">
+        {groupByMonth(sortable.items).map(([month, monthEntries]) => (
+          <section
+            key={month}
+            aria-label={formatMonthYear(month)}
+            className="flex flex-col gap-2"
+          >
+            <h4 className="text-xs font-medium text-muted-foreground first-letter:uppercase">
+              {formatMonthYear(month)}
+            </h4>
+            <ul className={CARD_LIST}>
+              {monthEntries.map((entry) => (
+                <EntryRow
+                  key={entry.id}
+                  debt={debt}
+                  entry={entry}
+                  accounts={accounts}
+                  categories={categories}
+                  currency={currency}
+                  cycleCovered={cycleCovered}
+                  collectable={collectable}
+                  readOnly={readOnly}
+                  sortable={sortable.configFor(entry)}
+                />
+              ))}
+            </ul>
+          </section>
         ))}
-      </ul>
+      </div>
     </SortableListProvider>
   )
+}
+
+/** Movimientos agrupados por mes (YYYY-MM), conservando su orden */
+function groupByMonth(entries: DebtEntry[]) {
+  const groups = new Map<string, DebtEntry[]>()
+  for (const entry of entries) {
+    const month = entry.occurred_on.slice(0, 7)
+    const group = groups.get(month)
+    if (group) {
+      group.push(entry)
+    } else {
+      groups.set(month, [entry])
+    }
+  }
+  return [...groups]
 }
 
 function EntryRow({
@@ -170,6 +204,10 @@ function EntryRow({
   // Compra o avance (SPEC 42): con cuenta es un avance; sin ella, una compra
   const isPurchase = isAdvance && entry.payment_account_id === null
   const label = entryLabel(debt, entry)
+  // Como en un extracto, la fila se nombra por su concepto (descripción del
+  // movimiento o nota) y el tipo pasa a la línea de abajo
+  const title = entry.description ?? entry.note ?? label
+  const note = entry.note && entry.note !== title ? entry.note : null
   // Cobro de un Me deben mensual: el duplicado cubre la cuota pendiente
   // siguiente a la última que cubrió el original; sin ella no se duplica
   const isMonthlyCollect =
@@ -222,33 +260,33 @@ function EntryRow({
       {(handle) => (
         <>
           {handle}
-          <div className="flex min-w-0 flex-1 flex-col">
-            <span className="flex items-center gap-2">
-              <span className="text-sm font-medium">{label}</span>
-              {isFee && entry.generated && (
-                <span className="text-xs text-muted-foreground">
-                  · automática
-                </span>
-              )}
+          {/* Dirección del saldo: baja (pago) o sube (compra, avance, cargo) */}
+          <span
+            aria-hidden
+            className={cn(
+              "flex size-9 shrink-0 items-center justify-center rounded-full",
+              lowersBalance
+                ? TONE_BADGE_CLASSES.success
+                : TONE_BADGE_CLASSES.danger
+            )}
+          >
+            {lowersBalance ? (
+              <ArrowDown className="size-4" />
+            ) : (
+              <ArrowUp className="size-4" />
+            )}
+          </span>
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="truncate text-sm font-medium">{title}</span>
               <span
                 className={cn(
-                  "font-medium tabular-nums",
+                  "shrink-0 text-sm font-semibold tabular-nums",
                   lowersBalance
                     ? TONE_TEXT_CLASSES.success
                     : TONE_TEXT_CLASSES.danger
                 )}
               >
-                {lowersBalance ? (
-                  <ArrowDown
-                    aria-hidden
-                    className="mr-0.5 inline size-3.5 align-[-2px]"
-                  />
-                ) : (
-                  <ArrowUp
-                    aria-hidden
-                    className="mr-0.5 inline size-3.5 align-[-2px]"
-                  />
-                )}
                 <Amount
                   value={
                     lowersBalance
@@ -259,28 +297,32 @@ function EntryRow({
                   signed
                 />
               </span>
+            </div>
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="min-w-0 truncate">
+                {label}
+                {isFee && entry.generated && " automática"}
+                {` · ${formatShortDate(entry.occurred_on)}`}
+                {entry.occurred_time && ` · ${formatTime(entry.occurred_time)}`}
+                {accountText && ` · ${accountText}`}
+                {installmentsText && ` · ${installmentsText}`}
+              </span>
               {entry.transaction_id && (
                 <Tooltip>
                   <TooltipTrigger
                     delay={500}
                     aria-label="Tiene un movimiento enlazado"
-                    className="touch-hitbox rounded-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    className="touch-hitbox shrink-0 rounded-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
-                    <Link2 className="size-4 text-muted-foreground" />
+                    <Link2 className="size-3.5" />
                   </TooltipTrigger>
                   <TooltipContent>Tiene un movimiento enlazado</TooltipContent>
                 </Tooltip>
               )}
             </span>
-            <span className="text-xs text-muted-foreground">
-              {formatDate(entry.occurred_on)}
-              {entry.occurred_time && ` · ${formatTime(entry.occurred_time)}`}
-              {accountText && ` · ${accountText}`}
-              {installmentsText && ` · ${installmentsText}`}
-            </span>
-            {entry.note && (
-              <span className="line-clamp-3 text-sm break-words text-muted-foreground">
-                {entry.note}
+            {note && (
+              <span className="line-clamp-2 text-xs break-words text-muted-foreground">
+                {note}
               </span>
             )}
           </div>

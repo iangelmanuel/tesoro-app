@@ -21,7 +21,12 @@ export function ShortcutKeys({
   const mod = useModKey()
 
   return (
-    <span className={cn("ml-auto flex items-center gap-1", className)}>
+    // El slot oculta el ✓ de CommandItem, que también va con ml-auto: sin
+    // él, ambos se reparten el espacio y las teclas quedan a mitad de fila
+    <span
+      data-slot="command-shortcut"
+      className={cn("ml-auto flex shrink-0 items-center gap-1", className)}
+    >
       {keys.map((key, index) => (
         <span
           key={`${key}-${index}`}

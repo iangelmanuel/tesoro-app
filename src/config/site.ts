@@ -10,7 +10,7 @@ export const SITE = {
       "Gestor y recomendador de finanzas personales y empresariales. Registra tus movimientos y Tesoro los convierte en gráficas claras, recomendaciones accionables y un score de salud financiera.",
     slogan: "Tus finanzas, claras desde el primer registro.",
     founded: 2026,
-    version: "0.1.0",
+    version: "0.3.0",
     license: "MIT",
     openSource: true
   },
@@ -225,9 +225,9 @@ export const SITE = {
     demo: {
       title: "Tesoro en acción",
       description:
-        "Un recorrido por el resumen, los presupuestos, las metas, las deudas, el score y el espacio Empresa.",
-      uploadDate: "2026-11-04",
-      durationSeconds: 56,
+        "Un recorrido por el resumen, cómo registrar un movimiento, las cuentas y los presupuestos, un aporte a una meta, el extracto de una tarjeta, los reportes con el score y el espacio Empresa.",
+      uploadDate: "2026-11-20",
+      durationSeconds: 94,
       width: 1920,
       height: 1080,
       sources: {

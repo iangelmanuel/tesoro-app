@@ -1,7 +1,8 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import { Button, Tabs } from "@heroui/react"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { approveMcpAuthorization, denyMcpAuthorization } from "../actions"
 import {
   MCP_ACCESS_OPTIONS,
@@ -35,29 +36,25 @@ export function ConsentForm({ authorizationId }: ConsentFormProps) {
       <div className="flex flex-col gap-2">
         <p className="text-sm font-medium">Acceso</p>
         <Tabs
-          selectedKey={access}
-          onSelectionChange={(key) => setAccess(key as McpAccess)}
+          value={access}
+          onValueChange={(value) => setAccess(value as McpAccess)}
         >
-          <Tabs.ListContainer>
-            <Tabs.List
-              aria-label="Acceso del agente"
-              className="w-full"
-            >
-              {MCP_ACCESS_VALUES.map((value) => (
-                <Tabs.Tab
-                  key={value}
-                  id={value}
-                  className="flex-1"
-                >
-                  {MCP_ACCESS_OPTIONS[value].label}
-                  <Tabs.Indicator />
-                </Tabs.Tab>
-              ))}
-            </Tabs.List>
-          </Tabs.ListContainer>
+          <TabsList
+            aria-label="Acceso del agente"
+            className="w-full"
+          >
+            {MCP_ACCESS_VALUES.map((value) => (
+              <TabsTrigger
+                key={value}
+                value={value}
+              >
+                {MCP_ACCESS_OPTIONS[value].label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
         </Tabs>
         <p
-          className="text-sm text-muted"
+          className="text-sm text-muted-foreground"
           aria-live="polite"
         >
           {MCP_ACCESS_OPTIONS[access].description}
@@ -67,7 +64,7 @@ export function ConsentForm({ authorizationId }: ConsentFormProps) {
       {error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {error}
         </p>
@@ -83,8 +80,8 @@ export function ConsentForm({ authorizationId }: ConsentFormProps) {
           <Button
             type="submit"
             variant="secondary"
-            fullWidth
-            isDisabled={pending}
+            className="w-full"
+            disabled={pending}
           >
             {denying ? "Cancelando..." : "Cancelar"}
           </Button>
@@ -102,8 +99,8 @@ export function ConsentForm({ authorizationId }: ConsentFormProps) {
           />
           <Button
             type="submit"
-            fullWidth
-            isDisabled={pending}
+            className="w-full"
+            disabled={pending}
           >
             {approving ? "Autorizando..." : "Autorizar"}
           </Button>

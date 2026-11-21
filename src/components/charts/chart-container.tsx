@@ -4,7 +4,7 @@ import { createContext, useContext, useId } from "react"
 import { ResponsiveContainer } from "recharts"
 import { cn } from "@/libs/cn"
 
-// Contenedor de las gráficas de Recharts con los tokens del tema de HeroUI:
+// Contenedor de las gráficas de Recharts con los tokens del tema:
 // ticks con --muted-foreground, grilla con --border y cursor con --highlight. Cada
 // serie expone su color como --color-<clave> para usarlo en fill/stroke.
 // Las props de forma (grilla, ejes, barras, líneas) están en chart-style.ts

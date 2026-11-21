@@ -104,7 +104,7 @@ export function useSortableList<T>({
       // se atenúa mientras se arrastra
       className: draggingGroup
         ? group === draggingGroup
-          ? "bg-accent/10"
+          ? "bg-primary/10"
           : "opacity-40"
         : undefined
     })

@@ -4,7 +4,7 @@ import { useState } from "react"
 import dynamic from "next/dynamic"
 import { MenuIcon } from "lucide-react"
 
-// El cajón (HeroUI Drawer) se pide recién al primer toque del botón
+// El cajón (Sheet de ui/) se pide recién al primer toque del botón
 const MobileNavDrawer = dynamic(() => import("./mobile-nav-drawer"), {
   ssr: false
 })
@@ -25,7 +25,7 @@ export function MobileNav({ children }: { children: React.ReactNode }) {
           setLoaded(true)
           setOpen(true)
         }}
-        className="flex size-11 items-center justify-center rounded-full text-foreground transition-colors outline-none hover:bg-default focus-visible:ring-2 focus-visible:ring-focus md:hidden"
+        className="flex size-11 items-center justify-center rounded-full text-foreground transition-colors outline-none hover:bg-highlight focus-visible:ring-2 focus-visible:ring-ring md:hidden"
       >
         <MenuIcon
           aria-hidden="true"

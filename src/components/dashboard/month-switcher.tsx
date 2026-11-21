@@ -14,7 +14,7 @@ interface MonthSwitcherProps {
   onNext: (() => void) | null
   /** Atenúa el control mientras navega */
   pending?: boolean
-  /** Sobre qué va: el fondo de la página (bg-surface, como la barra de
+  /** Sobre qué va: el fondo de la página (bg-card, como la barra de
    *  Movimientos) o una tarjeta (un nivel más, para que no se pierda) */
   on?: "page" | "card"
   className?: string

@@ -9,7 +9,7 @@ import type { CategoryTotal } from "./queries"
 // los client components solo los dibujan.
 
 export const OTHERS_KEY = "others"
-export const OTHERS_COLOR = "var(--muted)"
+export const OTHERS_COLOR = "var(--muted-foreground)"
 
 /** Porciones de la dona: top 6 + "Otras" */
 export const DONUT_SLICES = 6

@@ -87,7 +87,7 @@ export function AccountCard({
       label: "Archivar",
       icon: <Archive />,
       onAction: () => run("archive"),
-      isDisabled: pending
+      disabled: pending
     }
   ]
 
@@ -134,7 +134,7 @@ export function AccountCard({
               {actions.map((action) => (
                 <DropdownMenuItem
                   key={action.id}
-                  disabled={action.isDisabled}
+                  disabled={action.disabled}
                   onClick={action.onAction}
                 >
                   {action.icon}

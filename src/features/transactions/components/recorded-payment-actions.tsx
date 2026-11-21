@@ -89,7 +89,7 @@ export function RecordedPaymentActions({
             id: "edit",
             label: "Editar",
             icon: <Pencil className="size-4" />,
-            isDisabled: pending,
+            disabled: pending,
             onAction: edit
           },
           ...(canDuplicate
@@ -98,7 +98,7 @@ export function RecordedPaymentActions({
                   id: "duplicate",
                   label: "Duplicar",
                   icon: <Copy className="size-4" />,
-                  isDisabled: pending,
+                  disabled: pending,
                   onAction: () => setDuplicating(true)
                 }
               ]
@@ -108,7 +108,7 @@ export function RecordedPaymentActions({
             label: "Eliminar",
             icon: <Trash2 className="size-4" />,
             destructive: true,
-            isDisabled: pending,
+            disabled: pending,
             onAction: () => setDeleting(true)
           }
         ]}

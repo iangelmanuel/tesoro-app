@@ -28,7 +28,7 @@ export interface RowAction {
   onAction: () => void
   /** Acción destructiva: va al final del menú y con tono `danger` */
   destructive?: boolean
-  isDisabled?: boolean
+  disabled?: boolean
 }
 
 interface RowActionsProps {
@@ -71,7 +71,7 @@ export function RowActions({ label, actions }: RowActionsProps) {
             variant="ghost"
             size="icon"
             aria-label={`${action.label}: ${label}`}
-            disabled={action.isDisabled}
+            disabled={action.disabled}
             onClick={action.onAction}
             className={cn(action.destructive && "text-destructive")}
           >
@@ -104,7 +104,7 @@ export function RowActions({ label, actions }: RowActionsProps) {
             {regular.map((action) => (
               <DropdownMenuItem
                 key={action.id}
-                disabled={action.isDisabled}
+                disabled={action.disabled}
                 onClick={action.onAction}
               >
                 {action.icon}
@@ -118,7 +118,7 @@ export function RowActions({ label, actions }: RowActionsProps) {
               <DropdownMenuItem
                 key={action.id}
                 variant="destructive"
-                disabled={action.isDisabled}
+                disabled={action.disabled}
                 onClick={action.onAction}
               >
                 {action.icon}
@@ -144,7 +144,7 @@ interface RowContextMenuProps extends RowActionsProps {
 /**
  * Menú contextual de una fila: clic derecho en escritorio y pulsación larga
  * (500 ms) en táctil, con las mismas acciones y el mismo orden que el botón
- * ⋯ de RowActions. Cada pantalla envuelve sus filas al migrarse (SPEC 52 y
+ * ⋯ de RowActions. Cada lista o tabla envuelve sus filas en él (SPEC 52 y
  * 53); el botón ⋯ sigue siendo la vía visible y de teclado
  */
 export function RowContextMenu({
@@ -165,7 +165,7 @@ export function RowContextMenu({
           {regular.map((action) => (
             <ContextMenuItem
               key={action.id}
-              disabled={action.isDisabled}
+              disabled={action.disabled}
               onClick={action.onAction}
             >
               {action.icon}
@@ -180,7 +180,7 @@ export function RowContextMenu({
           <ContextMenuItem
             key={action.id}
             variant="destructive"
-            disabled={action.isDisabled}
+            disabled={action.disabled}
             onClick={action.onAction}
           >
             {action.icon}

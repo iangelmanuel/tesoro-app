@@ -33,8 +33,8 @@ definan detalles, por ejemplo los factores y pesos del score.
 
 ## Comandos
 
-Usa pnpm **12.16.1** (`packageManager`) con Node ≥ 24.19.0. Si el pnpm global
-de la máquina es más viejo, antepone `npx -y pnpm@12.16.1`.
+Usa pnpm **12.18.0** (`packageManager`) con Node ≥ 24.19.0. Si el pnpm global
+de la máquina es más viejo, antepone `npx -y pnpm@12.18.0`.
 
 ```bash
 pnpm dev              # servidor de desarrollo (localhost:3000)
@@ -191,8 +191,9 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
 - **Skeletons** (SPEC 51): cada componente que carga datos exporta su
   `…Skeleton` en el mismo archivo y con el mismo contenedor (mismas filas,
   alturas y radios). `Suspense` por tarjeta y un `loading.tsx` por ruta que
-  los compone dentro de `LoadingRegion` (`aria-busy`). `CardSkeleton` es
-  genérico y en retiro: solo para pantallas aún en HeroUI.
+  los compone dentro de `LoadingRegion` (`aria-busy`). Las pantallas
+  arman su skeleton en un archivo `…-screen-skeleton.tsx` (o junto al
+  componente) para reusarlo en el `Suspense` y en el `loading.tsx`.
 - Listas y tarjetas de grilla con las clases de
   `src/components/dashboard/surface.ts`, sin `rounded-xl border` ni
   `border-dashed`. Los campos de formulario van con relleno suave y sin borde
@@ -207,18 +208,10 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   `cn` sale de `@/libs/cn` (`clsx` + `tailwind-merge`). Botones con
   `onClick` y `disabled`; 44 px de área táctil (`touch-hitbox` para lo que
   se dibuja más chico); foco con `outline-2 outline-offset-2 outline-ring`.
-  `src/components/dashboard/**`, `charts/**` y `ui/**` no importan
-  `@heroui/react`.
-- **HeroUI v3 convive hasta SPEC 53** en Empresa (salvo lo compartido),
-  cuenta, auth y públicas (`@heroui/react` directo, sin Provider,
-  componentes compuestos como `Modal.Header`, `onPress` / `isDisabled`).
-  Desde SPEC 52c **nada de lo que pinta `/dashboard/personal/**` importa
-  `@heroui/react`, ni de forma transitiva** (layout, header y aside
-  incluidos). `src/styles/heroui-bridge.css` apunta sus tokens a los
-  nuevos. El `ToastProvider` de HeroUI vive en
-  `app/dashboard/business/layout.tsx` y `app/dashboard/account/layout.tsx`,
-  no en el layout del dashboard. El aside móvil y los Sheets de detalle
-  (`DetailSheet`) son modales.
+  Toda la app (dashboard, cuenta, auth, OAuth y públicas) usa solo shadcn +
+  Base UI (SPEC 53). Las props de estado son las nativas (`disabled`,
+  `onClick`); `RowAction` también usa `disabled`. El aside móvil, los Sheets
+  de detalle (`DetailSheet`) y el menú móvil público son modales.
 - Formularios (SPEC 52a): `useActionState` + Zod, con las piezas de
   `src/components/forms/`:
   - `TextInputField` (`FieldLabel` + `Input` + `FieldError`), `SelectField`
@@ -233,24 +226,17 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   - el error del servidor va por `error` y se anuncia con `aria-invalid` +
     `aria-describedby` hacia `FieldError` (`role="alert"`); el cliente no
     valida antes.
-    `FieldLabel` usa el `Label` de `ui/` y, dentro de un campo de HeroUI, toma
-    `id` y `htmlFor` del `LabelContext` de `react-aria-components`. El patrón
-    HeroUI (`TextField`, `validationBehavior="aria"`) sigue solo en las
-    pantallas sin migrar.
+    `FieldLabel` es el `Label` de `ui/` con asterisco (`isRequired`), rojo
+    (`isInvalid`) y atenuado (`disabled`), más el (?) de `FieldHelp`.
 - Fechas: `DatePickerField` (`src/components/forms/date-picker-field.tsx`):
   botón + `Calendar` (react-day-picker) en un `Popover`, semana desde el lunes,
   con `YYYY-MM-DD` (pasa a `Date` local a mediodía solo para pintar). Hora
   opcional de un evento: `TimePickerField`, `<input type="time">` nativo con
   "Quitar hora" (`HH:MM` o `""`) y `timeSchema`; se muestra con `formatTime`.
   Toasts: `toast` de `@/components/ui/sonner` (errores con `toast.error`, en
-  `role="alert"`); el `toast` de HeroUI sigue en las pantallas no migradas.
-- **Puente de portales (hasta SPEC 53):** un campo o diálogo de Base UI que
-  puede abrirse dentro de un `Modal` de HeroUI va en `HeroUIPortalBridge`
-  (`src/components/dashboard/heroui-portal-bridge.tsx`); su overlay se monta
-  en `HeroUIPortalHost` (`data-react-aria-top-layer`), que React Aria no
-  vuelve inerte. Los campos de `forms/`, `SelectField` y `FormDialog` ya lo
-  traen. `FormDialog` siempre es modal: desde SPEC 52b ninguno aloja
-  controles de HeroUI.
+  `role="alert"`). El `Toaster` vive en el layout del dashboard; fuera de
+  él solo lo monta `app/account-deleted/layout.tsx`. `FormDialog` siempre es
+  modal.
 - Gráficas: Recharts con `src/components/charts/*`: `ChartCard` (cabecera
   con leyenda y cifra), `ChartContainer`, las props de `chart-style.ts` y los
   montos abreviados de `chart-format.ts`. Colores siempre desde tokens.
@@ -259,8 +245,9 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
 - Tokens en `globals.css` con los nombres de shadcn (`--background`,
   `--card`, `--popover`, `--primary`, `--secondary`, `--muted-foreground`,
   `--destructive`, `--border`, `--input`, `--ring`, `--sidebar-*`,
-  `--chart-*`, `--radius`), con dos renombres para no chocar con HeroUI:
-  `--highlight` (el `--accent` de shadcn) y `--subtle` (su `--muted`). Más
+  `--chart-*`, `--radius`), con dos renombres: `--highlight` (el `--accent`
+  de shadcn) y `--subtle` (su `--muted`); el texto atenuado es
+  `text-muted-foreground`. Más
   los propios `--brand`, `--income` (turquesa), `--expense` (coral),
   `--balance` (tinta), `--category-*`, `--field-*`, `*-soft` de estados y
   las sombras.

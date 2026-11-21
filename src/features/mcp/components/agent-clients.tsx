@@ -1,9 +1,9 @@
-import { cn } from "@heroui/react"
 import {
   AI_CLIENT_NAMES,
   type AiClient,
   AiLogo
 } from "@/components/brand/ai-logos"
+import { cn } from "@/libs/cn"
 
 interface AgentClientsProps {
   clients: readonly AiClient[]
@@ -29,7 +29,9 @@ export function AgentClients({ clients, className }: AgentClientsProps) {
           {AI_CLIENT_NAMES[client]}
         </li>
       ))}
-      <li className="text-sm font-normal text-muted">y otros clientes MCP</li>
+      <li className="text-sm font-normal text-muted-foreground">
+        y otros clientes MCP
+      </li>
     </ul>
   )
 }

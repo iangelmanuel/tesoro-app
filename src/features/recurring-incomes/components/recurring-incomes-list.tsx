@@ -152,7 +152,7 @@ function IncomeRow({
       label: income.is_active ? "Pausar" : "Reanudar",
       icon: income.is_active ? <Pause /> : <Play />,
       onAction: handleToggle,
-      isDisabled: pending
+      disabled: pending
     },
     {
       id: "delete",

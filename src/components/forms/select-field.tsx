@@ -1,7 +1,6 @@
 "use client"
 
 import { useId } from "react"
-import { HeroUIPortalBridge } from "@/components/dashboard/heroui-portal-bridge"
 import { FieldLabel } from "@/components/forms/field-label"
 import { FieldDescription, FieldError } from "@/components/ui/field"
 import {
@@ -83,46 +82,44 @@ export function SelectField<T extends string>({
       >
         {label}
       </FieldLabel>
-      <HeroUIPortalBridge>
-        <Select
-          name={name}
-          items={options}
-          value={value}
-          onValueChange={(next) => {
-            if (next != null) onChange(next as T)
-          }}
-          disabled={disabled}
+      <Select
+        name={name}
+        items={options}
+        value={value}
+        onValueChange={(next) => {
+          if (next != null) onChange(next as T)
+        }}
+        disabled={disabled}
+      >
+        <SelectTrigger
+          id={id}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
+          className="w-full"
         >
-          <SelectTrigger
-            id={id}
-            aria-invalid={error ? true : undefined}
-            aria-describedby={describedBy}
-            className="w-full"
-          >
-            <SelectValue placeholder={placeholder} />
-          </SelectTrigger>
-          <SelectContent>
-            {options.map((option) => (
-              <SelectItem
-                key={option.value}
-                value={option.value}
-                disabled={option.disabled}
-              >
-                {option.description ? (
-                  <span className="flex flex-col py-0.5 whitespace-normal">
-                    <span className="font-medium">{option.label}</span>
-                    <span className="text-xs text-muted-foreground tabular-nums">
-                      {option.description}
-                    </span>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem
+              key={option.value}
+              value={option.value}
+              disabled={option.disabled}
+            >
+              {option.description ? (
+                <span className="flex flex-col py-0.5 whitespace-normal">
+                  <span className="font-medium">{option.label}</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {option.description}
                   </span>
-                ) : (
-                  option.label
-                )}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </HeroUIPortalBridge>
+                </span>
+              ) : (
+                option.label
+              )}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       {description ? (
         <FieldDescription id={descriptionId}>{description}</FieldDescription>
       ) : null}

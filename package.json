@@ -55,9 +55,6 @@
   "dependencies": {
     "@base-ui/react": "1.9.0",
     "@dnd-kit/react": "0.5.3",
-    "@heroui/react": "3.2.7",
-    "@heroui/styles": "3.2.7",
-    "@internationalized/date": "3.12.4",
     "@modelcontextprotocol/sdk": "1.32.2",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.119.0",
@@ -76,8 +73,6 @@
     "papaparse": "5.7.0",
     "pdfmake": "0.3.14",
     "react": "19.3.1",
-    "react-aria": "3.53.1",
-    "react-aria-components": "1.22.1",
     "react-day-picker": "10.0.2",
     "react-dom": "19.3.1",
     "read-excel-file": "9.3.14",

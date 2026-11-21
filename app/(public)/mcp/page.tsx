@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { buttonVariants, cn } from "@heroui/react"
 import {
   ArrowRightIcon,
   ChartColumnIcon,
@@ -17,6 +16,7 @@ import {
 } from "lucide-react"
 import { AI_CLIENTS } from "@/components/brand/ai-logos"
 import { JsonLd } from "@/components/seo/JsonLd"
+import { buttonVariants } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import { RevealObserver } from "@/features/landing/components/reveal-observer"
 import { MCP_GROUP_LABELS, getMcpCatalog } from "@/features/mcp/catalog"
@@ -28,6 +28,7 @@ import { McpUrlField } from "@/features/mcp/components/mcp-url-field"
 import { MCP_AGENTS_PATH } from "@/features/mcp/constants"
 import { MCP_RESOURCE_URL } from "@/features/mcp/discovery"
 import type { McpToolDefinition } from "@/features/mcp/types"
+import { cn } from "@/libs/cn"
 import { buildBreadcrumbSchema, buildMetadata } from "@/libs/seo"
 
 export const metadata = buildMetadata({
@@ -141,7 +142,9 @@ function Section({
           {title}
         </h2>
         {description && (
-          <p className="max-w-2xl text-pretty text-muted">{description}</p>
+          <p className="max-w-[52ch] text-pretty text-muted-foreground">
+            {description}
+          </p>
         )}
       </div>
       {children}
@@ -168,11 +171,11 @@ function ToolCatalog() {
         >
           <h3 className="flex items-baseline gap-2 text-lg font-semibold">
             {label}
-            <span className="text-sm font-normal text-muted tabular-nums">
+            <span className="text-sm font-normal text-muted-foreground tabular-nums">
               {tools.length}
             </span>
           </h3>
-          <dl className="flex flex-col divide-y divide-separator overflow-hidden rounded-3xl bg-surface shadow-(--surface-shadow)">
+          <dl className="flex flex-col divide-y divide-border/70 overflow-hidden rounded-3xl bg-card shadow-(--surface-shadow)">
             {tools.map((tool) => (
               <div
                 key={tool.name}
@@ -180,11 +183,11 @@ function ToolCatalog() {
               >
                 <dt className="flex flex-col gap-1">
                   <span className="font-medium">{tool.title}</span>
-                  <code className="self-start rounded-md bg-default px-1.5 py-0.5 font-mono text-xs break-all text-muted">
+                  <code className="self-start rounded-md bg-highlight px-1.5 py-0.5 font-mono text-xs break-all text-muted-foreground">
                     {tool.name}
                   </code>
                 </dt>
-                <dd className="text-sm text-pretty text-muted">
+                <dd className="max-w-[56ch] text-sm text-pretty text-muted-foreground">
                   {tool.description}
                 </dd>
               </div>
@@ -215,7 +218,7 @@ export default function McpPage() {
             <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
               Conecta tu agente de IA a {SITE.info.name}
             </h1>
-            <p className="max-w-xl text-lg text-pretty text-muted">
+            <p className="max-w-xl text-lg text-pretty text-muted-foreground">
               Con una URL, tu agente registra movimientos y responde con tus
               cifras reales. Inicias sesión con tu cuenta y decides qué puede
               hacer.
@@ -236,12 +239,12 @@ export default function McpPage() {
           className="hidden lg:sticky lg:top-24 lg:block lg:self-start"
         >
           <p className="mb-3 text-sm font-medium">En esta página</p>
-          <ol className="flex flex-col gap-1 border-l border-separator text-sm">
+          <ol className="flex flex-col gap-1 border-l border-border/70 text-sm">
             {SECTIONS.map((section) => (
               <li key={section.id}>
                 <a
                   href={`#${section.id}`}
-                  className="-ml-px flex min-h-9 items-center border-l-2 border-transparent pl-4 text-muted transition-colors hover:border-(--income) hover:text-foreground focus-visible:text-foreground"
+                  className="-ml-px flex min-h-9 items-center border-l-2 border-transparent pl-4 text-muted-foreground transition-colors hover:border-(--income) hover:text-foreground focus-visible:text-foreground"
                 >
                   {section.title}
                 </a>
@@ -273,7 +276,7 @@ export default function McpPage() {
                     className="size-5 text-(--income)"
                   />
                   <p className="font-semibold">{title}</p>
-                  <p className="text-pretty text-muted">{text}</p>
+                  <p className="text-pretty text-muted-foreground">{text}</p>
                 </li>
               ))}
             </ul>
@@ -283,7 +286,7 @@ export default function McpPage() {
             id="ideas"
             description="Cópialas tal cual o cámbialas a tu manera: el agente entiende lenguaje natural."
           >
-            <ul className="flex flex-col divide-y divide-separator overflow-hidden rounded-3xl bg-surface shadow-(--surface-shadow)">
+            <ul className="flex flex-col divide-y divide-border/70 overflow-hidden rounded-3xl bg-card shadow-(--surface-shadow)">
               {IDEAS.map((idea) => (
                 <li
                   key={idea}
@@ -310,7 +313,7 @@ export default function McpPage() {
                 >
                   <Icon
                     aria-hidden="true"
-                    className="mt-0.5 size-5 shrink-0 text-muted"
+                    className="mt-0.5 size-5 shrink-0 text-muted-foreground"
                   />
                   <p className="text-pretty">{text}</p>
                 </li>
@@ -327,7 +330,7 @@ export default function McpPage() {
 
           <section
             aria-labelledby="mcp-cta-title"
-            className="flex flex-col gap-6 rounded-3xl bg-surface p-6 shadow-(--surface-shadow) sm:p-8"
+            className="flex flex-col gap-6 rounded-3xl bg-card p-6 shadow-(--surface-shadow) sm:p-8"
           >
             <div className="flex flex-col gap-2">
               <h2
@@ -336,7 +339,7 @@ export default function McpPage() {
               >
                 Empieza con tu cuenta de {SITE.info.name}
               </h2>
-              <p className="max-w-xl text-pretty text-muted">
+              <p className="max-w-xl text-pretty text-muted-foreground">
                 Crea tu cuenta y conecta tu agente. Si ya la tienes, revisa tus
                 agentes y su historial en Cuenta → Agentes IA.
               </p>
@@ -354,7 +357,7 @@ export default function McpPage() {
               </Link>
               <Link
                 href={MCP_AGENTS_PATH}
-                className={buttonVariants({ size: "lg", variant: "tertiary" })}
+                className={buttonVariants({ size: "lg", variant: "secondary" })}
               >
                 Ir a Agentes IA
               </Link>

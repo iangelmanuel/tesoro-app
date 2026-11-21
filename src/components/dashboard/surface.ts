@@ -1,7 +1,7 @@
 // Superficies del dashboard sin borde: las separa el escalón fondo →
 // tarjeta y una sombra contenida (--surface-shadow)
 
-/** Tarjeta del dashboard (lo que era Card de HeroUI): columna con aire,
+/** Tarjeta del dashboard: columna con aire,
  *  24 px de radio y 20 px de relleno */
 export const CARD =
   "flex flex-col gap-4 rounded-3xl bg-card p-5 text-card-foreground shadow-(--surface-shadow)"

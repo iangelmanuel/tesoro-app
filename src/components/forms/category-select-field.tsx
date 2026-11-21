@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { HeroUIPortalBridge } from "@/components/dashboard/heroui-portal-bridge"
 import { CreatableSelect } from "@/components/forms/creatable-select"
 import type { FieldHelpKey } from "@/config/help"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
@@ -24,7 +23,7 @@ interface CategorySelectFieldProps {
   placeholder?: string
   /** Error de Zod del campo */
   error?: string
-  isDisabled?: boolean
+  disabled?: boolean
   /** Ayuda del (?) junto a la etiqueta (FIELD_HELP) */
   help?: FieldHelpKey
   /** Ayuda o aviso debajo del campo */
@@ -48,7 +47,7 @@ export function CategorySelectField({
   type,
   placeholder = "Elige una categoría",
   error,
-  isDisabled,
+  disabled,
   help,
   children
 }: CategorySelectFieldProps) {
@@ -102,20 +101,17 @@ export function CategorySelectField({
         searchLabel="Buscar categoría"
         placeholder={placeholder}
         error={error}
-        disabled={isDisabled}
+        disabled={disabled}
       >
         {children}
       </CreatableSelect>
-      {/* Si el formulario es un Modal de HeroUI, el diálogo va encima */}
-      <HeroUIPortalBridge>
-        <CategoryDialog
-          workspaceId={workspaceId}
-          type={type}
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          onCreated={handleCreated}
-        />
-      </HeroUIPortalBridge>
+      <CategoryDialog
+        workspaceId={workspaceId}
+        type={type}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onCreated={handleCreated}
+      />
     </>
   )
 }

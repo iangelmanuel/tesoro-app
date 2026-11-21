@@ -1,11 +1,5 @@
 import Link from "next/link"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@heroui/react"
+import { CARD } from "@/components/dashboard/surface"
 import { SITE, legalHref } from "@/config/site"
 import { SignUpForm } from "@/features/auth/components/sign-up-form"
 import { buildMetadata } from "@/libs/seo"
@@ -20,16 +14,16 @@ const LEGAL_LINK_CLASSES = "underline underline-offset-4 hover:text-foreground"
 
 export default function SignUpPage() {
   return (
-    <Card>
-      <CardHeader className="text-center">
-        <CardTitle className="text-xl">Crea tu cuenta</CardTitle>
-        <CardDescription>
+    <section className={CARD}>
+      <header className="flex flex-col gap-1 text-center">
+        <h1 className="text-xl font-semibold">Crea tu cuenta</h1>
+        <p className="text-sm text-muted-foreground">
           Tu espacio Personal queda listo al registrarte
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+        </p>
+      </header>
+      <div>
         <SignUpForm />
-        <p className="mt-6 text-center text-xs text-balance text-muted">
+        <p className="mt-6 text-center text-xs text-balance text-muted-foreground">
           Al crear tu cuenta aceptas los{" "}
           <Link
             href={legalHref("terms")}
@@ -46,7 +40,7 @@ export default function SignUpPage() {
           </Link>
           .
         </p>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   )
 }

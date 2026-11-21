@@ -1,7 +1,8 @@
 "use client"
 
 import { useTransition } from "react"
-import { Button, toast } from "@heroui/react"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/sonner"
 import { cancelBusinessDeletion } from "../actions"
 
 /** "Restaurar empresa" de la pantalla de borrado programado */
@@ -16,15 +17,15 @@ export function RestoreBusinessButton({
     startTransition(async () => {
       const result = await cancelBusinessDeletion(workspaceId)
       if (result?.error) {
-        toast.danger(result.error)
+        toast.error(result.error)
       }
     })
   }
 
   return (
     <Button
-      isDisabled={pending}
-      onPress={restore}
+      disabled={pending}
+      onClick={restore}
     >
       {pending ? "Restaurando..." : "Restaurar empresa"}
     </Button>

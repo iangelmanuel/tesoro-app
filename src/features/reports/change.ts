@@ -23,6 +23,6 @@ export function formatPercentChange(change: number | null) {
 
 // Verde si el cambio es bueno y rojo si es malo. En gastos subir es malo.
 export function changeTone(change: number | null, inverted = false) {
-  if (!change) return "text-muted"
+  if (!change) return "text-muted-foreground"
   return change > 0 !== inverted ? POSITIVE : NEGATIVE
 }

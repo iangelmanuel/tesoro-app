@@ -1,7 +1,8 @@
 "use client"
 
 import { useTransition } from "react"
-import { Button, toast } from "@heroui/react"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/sonner"
 import { signOut } from "@/features/auth/actions"
 import { cancelAccountDeletion } from "../actions"
 
@@ -13,7 +14,7 @@ export function AccountDeletedActions() {
     startTransition(async () => {
       const result = await cancelAccountDeletion()
       if (result?.error) {
-        toast.danger(result.error)
+        toast.error(result.error)
       }
     })
   }
@@ -21,15 +22,15 @@ export function AccountDeletedActions() {
   return (
     <div className="flex flex-col gap-2">
       <Button
-        isDisabled={pending}
-        onPress={restore}
+        disabled={pending}
+        onClick={restore}
       >
         {pending ? "Restaurando..." : "Restaurar cuenta"}
       </Button>
       <Button
         variant="ghost"
-        isDisabled={pending}
-        onPress={() => startTransition(() => signOut())}
+        disabled={pending}
+        onClick={() => startTransition(() => signOut())}
       >
         Cerrar sesión
       </Button>

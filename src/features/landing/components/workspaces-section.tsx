@@ -27,7 +27,7 @@ export function WorkspacesSection() {
   return (
     <section
       aria-labelledby="espacios-title"
-      className="bg-default/40"
+      className="bg-highlight/40"
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-20 sm:px-6 sm:py-24">
         <SectionHeading
@@ -50,18 +50,18 @@ export function WorkspacesSection() {
                   />
                   {workspace.name}
                 </h3>
-                <p className="text-pretty text-muted">
+                <p className="text-pretty text-muted-foreground">
                   {workspace.description} {NOTES[workspace.id]}
                 </p>
               </div>
 
-              <div className="flex flex-col gap-5 rounded-3xl bg-surface p-5 shadow-(--surface-shadow)">
+              <div className="flex flex-col gap-5 rounded-3xl bg-card p-5 shadow-(--surface-shadow)">
                 {NAV[workspace.id].map((group) => (
                   <div
                     key={group.label}
                     className="flex flex-col gap-1"
                   >
-                    <h4 className="px-3 text-xs font-medium text-muted">
+                    <h4 className="px-3 text-xs font-medium text-muted-foreground">
                       {group.label}
                     </h4>
                     <ul className="flex flex-col">

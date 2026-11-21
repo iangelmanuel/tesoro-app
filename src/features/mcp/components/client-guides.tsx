@@ -1,12 +1,12 @@
 "use client"
 
-import { Tabs } from "@heroui/react"
 import {
   AI_CLIENTS,
   AI_CLIENT_NAMES,
   type AiClient,
   AiLogo
 } from "@/components/brand/ai-logos"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CopyButton } from "./copy-button"
 
 interface Guide {
@@ -61,9 +61,9 @@ function guides(url: string, appName: string): Record<AiClient, Guide> {
 
 function CodeBlock({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl bg-surface-secondary">
+    <div className="flex flex-col overflow-hidden rounded-2xl bg-secondary">
       <div className="flex items-center justify-between gap-3 py-1.5 pr-1.5 pl-4">
-        <span className="text-sm text-muted">{label}</span>
+        <span className="text-sm text-muted-foreground">{label}</span>
         <CopyButton
           value={value}
           label={`Copiar ${label.toLowerCase()}`}
@@ -89,40 +89,37 @@ export function ClientGuides({ url, appName }: ClientGuidesProps) {
   const content = guides(url, appName)
 
   return (
-    <Tabs defaultSelectedKey="claude">
+    <Tabs defaultValue="claude">
       {/* En el teléfono, 2 × 2: cuatro nombres no caben en una fila */}
-      <Tabs.ListContainer>
-        <Tabs.List
-          aria-label="Cliente"
-          className="grid w-full grid-cols-2 rounded-3xl sm:flex sm:rounded-full"
-        >
-          {AI_CLIENTS.map((client) => (
-            <Tabs.Tab
-              key={client}
-              id={client}
-              className="min-h-11 flex-1 gap-2 px-4 whitespace-nowrap"
-            >
-              <AiLogo
-                client={client}
-                className="size-4"
-              />
-              {AI_CLIENT_NAMES[client]}
-              <Tabs.Indicator />
-            </Tabs.Tab>
-          ))}
-        </Tabs.List>
-      </Tabs.ListContainer>
+      <TabsList
+        aria-label="Cliente"
+        className="grid h-auto w-full grid-cols-2 rounded-3xl sm:flex sm:h-11 sm:rounded-4xl"
+      >
+        {AI_CLIENTS.map((client) => (
+          <TabsTrigger
+            key={client}
+            value={client}
+            className="min-h-11 gap-2 px-4"
+          >
+            <AiLogo
+              client={client}
+              className="size-4"
+            />
+            {AI_CLIENT_NAMES[client]}
+          </TabsTrigger>
+        ))}
+      </TabsList>
 
       {AI_CLIENTS.map((client) => {
         const guide = content[client]
         const [first, ...rest] = guide.steps
         return (
-          <Tabs.Panel
+          <TabsContent
             key={client}
-            id={client}
-            className="pt-5"
+            value={client}
+            className="pt-3"
           >
-            <ol className="flex flex-col gap-4 rounded-3xl bg-surface p-5 shadow-(--surface-shadow) sm:p-6">
+            <ol className="flex flex-col gap-4 rounded-3xl bg-card p-5 shadow-(--surface-shadow) sm:p-6">
               <Step number={1}>
                 <p>{first}</p>
                 {guide.code && <CodeBlock {...guide.code} />}
@@ -136,7 +133,7 @@ export function ClientGuides({ url, appName }: ClientGuidesProps) {
                 </Step>
               ))}
             </ol>
-          </Tabs.Panel>
+          </TabsContent>
         )
       })}
     </Tabs>
@@ -154,7 +151,7 @@ function Step({
     <li className="grid grid-cols-[1.75rem_1fr] gap-3">
       <span
         aria-hidden="true"
-        className="flex size-7 items-center justify-center rounded-full bg-default text-sm font-semibold tabular-nums"
+        className="flex size-7 items-center justify-center rounded-full bg-highlight text-sm font-semibold tabular-nums"
       >
         {number}
       </span>

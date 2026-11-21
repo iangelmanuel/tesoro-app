@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { cn } from "@heroui/react"
 import { SITE } from "@/config/site"
+import { cn } from "@/libs/cn"
 
 type NetworkInformation = { saveData?: boolean }
 

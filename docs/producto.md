@@ -144,7 +144,7 @@ SPEC 24:
   re-afina los dos. Para texto
   pequeño se usa la utilidad `text-brand` (`--brand` mezclado con el
   foreground), que cumple contraste AA en claro y oscuro.
-- **Primario de la UI** (`--accent` de HeroUI), según dónde estés:
+- **Primario de la UI** (`--primary`), según dónde estés:
   - **Neutro** fuera de los espacios (landing, auth, legales, cuenta y el
     estado vacío de Empresa): casi negro en claro, casi blanco en oscuro.
   - **Emerald** en `/dashboard/personal/**` (emerald-600 en claro, un emerald
@@ -155,8 +155,8 @@ SPEC 24:
   - Lo decide la ruta: `WorkspaceThemeRoot` (layout del dashboard) pinta un
     marcador `data-workspace` y `globals.css` cambia el primario con
     `:has()`. Ningún componente recibe un color por props.
-  - Los overlays de HeroUI (diálogos, menús, drawers) se montan dentro de ese
-    contenedor (`UNSAFE_PortalProvider`), así también toman el primario.
+  - Los overlays de Base UI (diálogos, menús, hojas) se montan dentro de ese
+    contenedor (`PortalContainerProvider`), así también toman el primario.
 - **Neutros**: negros y grises azulados (fondo, superficie, bordes, texto y
   texto atenuado), con AA en claro y oscuro. En claro, tarjetas blancas sin
   borde sobre un gris suave, con sombra en dos capas (`--surface-shadow`,
@@ -475,8 +475,8 @@ su origen, que valida igual que al registrar y recalcula el saldo:
   movimiento (monto, fecha y hora) los abonos que quedaron desfasados antes de
   SPEC 26. Los que violan un trigger se reportan y quedan igual.
 - Una fila que no se puede arrastrar (sola en su día o con búsqueda) no se
-  registra en dnd-kit: deshabilitada, recibía `aria-disabled` y HeroUI le
-  quitaba los clics, así que su menú no abría.
+  registra en dnd-kit: deshabilitada, recibía `aria-disabled` y la tabla de
+  entonces le quitaba los clics, así que su menú no abría.
 
 ### Duplicar movimientos (SPEC 49)
 

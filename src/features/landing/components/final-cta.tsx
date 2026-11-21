@@ -1,7 +1,7 @@
 import Link from "next/link"
-import { buttonVariants } from "@heroui/react"
 import { ArrowRightIcon } from "lucide-react"
 import { Logo } from "@/components/brand/logo"
+import { buttonVariants } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import { Reveal } from "./reveal"
 
@@ -22,7 +22,7 @@ export function FinalCta() {
         >
           {SITE.info.slogan}
         </h2>
-        <p className="max-w-lg text-pretty text-muted">
+        <p className="max-w-lg text-pretty text-muted-foreground">
           Crear tu cuenta es gratis y tu espacio Personal queda listo al
           instante.
         </p>
@@ -40,7 +40,7 @@ export function FinalCta() {
           <Link
             href={SITE.navigation.secondary.href}
             prefetch={false}
-            className="inline-flex min-h-11 items-center rounded-md text-sm font-medium text-muted underline-offset-4 transition-colors outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-focus"
+            className="inline-flex min-h-11 items-center rounded-md text-sm font-medium text-muted-foreground underline-offset-4 transition-colors outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring"
           >
             Ya tengo cuenta
           </Link>

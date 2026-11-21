@@ -2,8 +2,6 @@
 
 import type { ComponentProps, ReactNode } from "react"
 import { MessageCircleQuestionMark } from "lucide-react"
-import { LabelContext, useSlottedContext } from "react-aria-components"
-import { HeroUIPortalBridge } from "@/components/dashboard/heroui-portal-bridge"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import {
@@ -19,7 +17,7 @@ type LabelStateProps = {
   isRequired?: boolean
   /** Pinta la etiqueta en rojo */
   isInvalid?: boolean
-  isDisabled?: boolean
+  disabled?: boolean
 }
 
 type FieldLabelProps = ComponentProps<typeof Label> &
@@ -50,79 +48,51 @@ export function FieldHelp({
   className?: string
 }) {
   return (
-    <HeroUIPortalBridge>
-      <Popover>
-        <PopoverTrigger
-          render={
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              aria-label={label ? `Ayuda: ${label}` : "Ayuda"}
-              className={cn(
-                "-my-1 size-6 shrink-0 cursor-help text-muted-foreground hover:text-foreground",
-                className
-              )}
-            />
-          }
-        >
-          <MessageCircleQuestionMark
-            aria-hidden
-            className="size-3.5"
+    <Popover>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label={label ? `Ayuda: ${label}` : "Ayuda"}
+            className={cn(
+              "-my-1 size-6 shrink-0 cursor-help text-muted-foreground hover:text-foreground",
+              className
+            )}
           />
-        </PopoverTrigger>
-        <PopoverContent
-          side="top"
-          className="w-auto max-w-72 gap-0 p-3 text-sm leading-relaxed"
-        >
-          {FIELD_HELP[help]}
-        </PopoverContent>
-      </Popover>
-    </HeroUIPortalBridge>
+        }
+      >
+        <MessageCircleQuestionMark
+          aria-hidden
+          className="size-3.5"
+        />
+      </PopoverTrigger>
+      <PopoverContent
+        side="top"
+        className="w-auto max-w-72 gap-0 p-3 text-sm leading-relaxed"
+      >
+        {FIELD_HELP[help]}
+      </PopoverContent>
+    </Popover>
   )
 }
 
-/**
- * Label de `ui/`. Dentro de un campo de HeroUI (TextField, Select…, hasta
- * SPEC 53) toma de React Aria el `id` y el `htmlFor` que el campo espera: el
- * input apunta a la etiqueta con aria-labelledby. Fuera de HeroUI no hay
- * contexto y es un <label> normal. La clase `label` conserva el estilo de
- * HeroUI (asterisco de requerido, rojo si es inválido) en esos campos
- */
-function ContextLabel({
+/** Label de `ui/` con el estado del campo: asterisco si es requerido, rojo
+ *  si es inválido y atenuado si está deshabilitado */
+function StateLabel({
   className,
   children,
   isRequired,
   isInvalid,
-  isDisabled,
+  disabled,
   ...props
 }: ComponentProps<typeof Label> & LabelStateProps) {
-  const context = useSlottedContext(LabelContext)
-
-  if (context) {
-    return (
-      <Label
-        id={context.id}
-        htmlFor={context.htmlFor}
-        className={cn(
-          "label",
-          isRequired && "label--required",
-          isInvalid && "label--invalid",
-          isDisabled && "label--disabled",
-          className
-        )}
-        {...props}
-      >
-        {children}
-      </Label>
-    )
-  }
-
   return (
     <Label
-      data-disabled={isDisabled || undefined}
+      data-disabled={disabled || undefined}
       className={cn(
         isInvalid && "text-destructive",
-        isDisabled && "opacity-50",
+        disabled && "opacity-50",
         className
       )}
       {...props}
@@ -150,23 +120,23 @@ export function FieldLabel({
 }: FieldLabelProps) {
   if (!help) {
     return (
-      <ContextLabel
+      <StateLabel
         className={className}
         {...props}
       >
         {children}
-      </ContextLabel>
+      </StateLabel>
     )
   }
 
   return (
     <span className="inline-flex w-fit items-center gap-0.5">
-      <ContextLabel
+      <StateLabel
         className={className}
         {...props}
       >
         {children}
-      </ContextLabel>
+      </StateLabel>
       <FieldHelp
         help={help}
         label={helpLabel ?? (typeof children === "string" ? children : "")}

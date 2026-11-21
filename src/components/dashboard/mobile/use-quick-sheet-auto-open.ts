@@ -97,7 +97,7 @@ export function useQuickSheetAutoOpen({
   // Solo al montar el shell: una carga completa. Navegar entre páginas no lo
   // vuelve a ejecutar porque el layout del dashboard se conserva.
   // La apertura espera a que terminen de hidratar los Suspense de la página:
-  // al abrir el overlay, React Aria marca como `inert` el resto del DOM y un
+  // al abrir el overlay modal, el resto del DOM queda `inert` y un
   // bloque aún sin hidratar vería ese atributo y fallaría la hidratación
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- la preferencia vive en localStorage: solo se puede leer en el cliente

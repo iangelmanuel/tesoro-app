@@ -1,11 +1,11 @@
 import { Suspense } from "react"
 import type { Route } from "next"
 import Link from "next/link"
-import { buttonVariants } from "@heroui/react"
 import { Bot, History } from "lucide-react"
-import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { CardEmpty } from "@/components/dashboard/empty-state"
+import { buttonVariants } from "@/components/ui/button"
 import { SITE } from "@/config/site"
+import { AgentsListsSkeleton } from "@/features/account/components/account-screen-skeletons"
 import { AccountSection } from "@/features/account/components/account-section"
 import { ConnectionsList } from "@/features/mcp/components/connections-list"
 import { McpUrlField } from "@/features/mcp/components/mcp-url-field"
@@ -37,14 +37,7 @@ export default function AccountAgentsPage() {
       </AccountSection>
 
       {/* La sesión es dinámica: va dentro de Suspense */}
-      <Suspense
-        fallback={
-          <>
-            <CardSkeleton className="h-48" />
-            <CardSkeleton className="h-64" />
-          </>
-        }
-      >
+      <Suspense fallback={<AgentsListsSkeleton />}>
         <AgentsContent />
       </Suspense>
     </>

@@ -10,7 +10,13 @@ export const SCORE_BANDS: {
   tone: Tone
   color: string
 }[] = [
-  { label: "Débil", from: 0, to: 39, tone: "danger", color: "var(--danger)" },
+  {
+    label: "Débil",
+    from: 0,
+    to: 39,
+    tone: "danger",
+    color: "var(--destructive)"
+  },
   {
     label: "Regular",
     from: 40,

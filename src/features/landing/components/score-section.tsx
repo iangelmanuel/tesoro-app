@@ -74,7 +74,7 @@ export function ScoreSection() {
                     style={{ backgroundColor: shade(index) }}
                   />
                   <span className="min-w-0 flex-1">{factor.label}</span>
-                  <span className="text-muted tabular-nums">
+                  <span className="text-muted-foreground tabular-nums">
                     {factor.weight}&nbsp;%
                   </span>
                 </li>

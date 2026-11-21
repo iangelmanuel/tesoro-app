@@ -3,7 +3,7 @@ import { cn } from "@/libs/cn"
 /**
  * Chip de estado ("Vencido", "Bueno", "En riesgo"…). El color sale de
  * `tone.ts` (TONE_BADGE_CLASSES o las clases de estado de cada feature),
- * nunca de la paleta cruda de Tailwind. Reemplaza el Chip de HeroUI
+ * nunca de la paleta cruda de Tailwind
  */
 export function ToneBadge({
   className,

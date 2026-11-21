@@ -1,25 +1,6 @@
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-  cn
-} from "@heroui/react"
-import { Amount } from "@/components/dashboard/amount"
-import {
-  EMPTY,
-  NEGATIVE,
-  PERCENT,
-  POSITIVE,
-  changeTone,
-  formatPercentChange
-} from "@/features/reports/change"
-import {
-  balanceDifference,
-  percentChange,
-  savingsRate
-} from "@/features/reports/metrics"
+import { StatCard, StatCardSkeleton } from "@/components/dashboard/stat-card"
+import { NEGATIVE, POSITIVE } from "@/features/reports/change"
+import { savingsRate } from "@/features/reports/metrics"
 import type { MonthlyTotal } from "@/features/reports/queries"
 
 interface BusinessSummaryCardsProps {
@@ -34,9 +15,14 @@ interface BusinessSummaryCardsProps {
   currency: string
 }
 
+// Las dos filas de KPI: tres del mes (con variación) y dos de contexto
+const MAIN_GRID = "grid gap-4 sm:grid-cols-3"
+const SECONDARY_GRID = "grid gap-4 sm:grid-cols-2"
+
 /**
- * Ventas, costos y gastos, y utilidad (ventas − costos) del mes con su
- * variación vs. el mes anterior, más margen y saldo en cuentas
+ * Entradas, salidas y utilidad (entradas − salidas) del mes con su
+ * variación vs. el mes anterior, más margen y saldo en cuentas. Sin
+ * movimientos el mes anterior, no hay badge (como en Personal)
  */
 export function BusinessSummaryCards({
   current,
@@ -45,124 +31,79 @@ export function BusinessSummaryCards({
   monthLabel,
   currency
 }: BusinessSummaryCardsProps) {
-  const salesChange = percentChange(current.income, previous.income)
-  const costsChange = percentChange(current.expense, previous.expense)
-  const profitChange = balanceDifference(current.balance, previous.balance)
-  // Utilidad / ventas × 100: la misma cuenta que la tasa de ahorro de Personal
+  const base = previous.txCount > 0 ? previous : null
+  const month = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)
+  // Utilidad / entradas × 100: la misma cuenta que la tasa de ahorro
   const margin = savingsRate(current.income, current.expense)
-
-  const main = [
-    {
-      title: "Entradas",
-      value: (
-        <Amount
-          value={current.income}
-          currency={currency}
-        />
-      ),
-      change: formatPercentChange(salesChange),
-      changeClassName: changeTone(salesChange)
-    },
-    {
-      title: "Salidas",
-      value: (
-        <Amount
-          value={current.expense}
-          currency={currency}
-        />
-      ),
-      change: formatPercentChange(costsChange),
-      changeClassName: changeTone(costsChange, true)
-    },
-    {
-      title: "Utilidad",
-      value: (
-        <Amount
-          value={current.balance}
-          currency={currency}
-        />
-      ),
-      valueClassName: current.balance < 0 ? NEGATIVE : POSITIVE,
-      change: (
-        <>
-          {profitChange > 0 ? "+" : ""}
-          <Amount
-            value={profitChange}
-            currency={currency}
-          />
-        </>
-      ),
-      changeClassName: changeTone(profitChange)
-    }
-  ]
-
-  const secondary = [
-    {
-      title: "Margen",
-      value: margin === null ? EMPTY : PERCENT.format(margin / 100),
-      valueClassName: margin !== null && margin < 0 ? NEGATIVE : undefined,
-      hint: "Utilidad sobre las entradas del mes"
-    },
-    {
-      title: "Saldo en cuentas",
-      value: (
-        <Amount
-          value={accountsBalance}
-          currency={currency}
-        />
-      ),
-      valueClassName: accountsBalance < 0 ? NEGATIVE : undefined,
-      hint: "Hoy, en las cuentas activas"
-    }
-  ]
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-4 sm:grid-cols-3">
-        {main.map((card) => (
-          <Card key={card.title}>
-            <CardHeader>
-              <CardDescription>
-                {card.title} ·{" "}
-                <span className="first-letter:uppercase">{monthLabel}</span>
-              </CardDescription>
-              <CardTitle
-                className={cn(
-                  "text-2xl font-semibold tabular-nums",
-                  card.valueClassName
-                )}
-              >
-                {card.value}
-              </CardTitle>
-            </CardHeader>
-            <CardFooter className="gap-1 text-sm">
-              <span
-                className={cn("font-medium tabular-nums", card.changeClassName)}
-              >
-                {card.change}
-              </span>
-              <span className="text-muted">vs. mes anterior</span>
-            </CardFooter>
-          </Card>
-        ))}
+      <div className={MAIN_GRID}>
+        <StatCard
+          label={`Entradas · ${month}`}
+          value={current.income}
+          previous={base?.income}
+          trend="higher-is-better"
+          currency={currency}
+        />
+        <StatCard
+          label={`Salidas · ${month}`}
+          value={current.expense}
+          previous={base?.expense}
+          trend="lower-is-better"
+          currency={currency}
+        />
+        <StatCard
+          label={`Utilidad · ${month}`}
+          value={current.balance}
+          previous={base?.balance}
+          trend="higher-is-better"
+          currency={currency}
+          valueClassName={current.balance < 0 ? NEGATIVE : POSITIVE}
+        />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        {secondary.map((card) => (
-          <Card key={card.title}>
-            <CardHeader>
-              <CardDescription>{card.title}</CardDescription>
-              <CardTitle
-                className={cn(
-                  "text-xl font-semibold tabular-nums",
-                  card.valueClassName
-                )}
-              >
-                {card.value}
-              </CardTitle>
-            </CardHeader>
-            <CardFooter className="text-sm text-muted">{card.hint}</CardFooter>
-          </Card>
-        ))}
+      <div className={SECONDARY_GRID}>
+        <StatCard
+          label="Margen"
+          value={margin}
+          trend="higher-is-better"
+          format="percent"
+          caption="Utilidad sobre las entradas del mes"
+          valueClassName={margin !== null && margin < 0 ? NEGATIVE : undefined}
+          size="sm"
+        />
+        <StatCard
+          label="Saldo en cuentas"
+          value={accountsBalance}
+          trend="higher-is-better"
+          currency={currency}
+          caption="Hoy, en las cuentas activas"
+          valueClassName={accountsBalance < 0 ? NEGATIVE : undefined}
+          size="sm"
+        />
+      </div>
+    </div>
+  )
+}
+
+/** KPI del Resumen de Empresa mientras cargan: mismas grillas y tarjetas */
+export function BusinessSummaryCardsSkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className={MAIN_GRID}>
+        <StatCardSkeleton />
+        <StatCardSkeleton />
+        <StatCardSkeleton />
+      </div>
+      <div className={SECONDARY_GRID}>
+        <StatCardSkeleton
+          size="sm"
+          caption
+        />
+        <StatCardSkeleton
+          size="sm"
+          caption
+        />
       </div>
     </div>
   )

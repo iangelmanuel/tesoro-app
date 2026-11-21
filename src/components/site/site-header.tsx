@@ -17,7 +17,7 @@ export function SiteHeader() {
         <Link
           href={SITE.routes.home}
           aria-label={`${SITE.info.name}, inicio`}
-          className="w-fit rounded-md focus-visible:ring-3 focus-visible:ring-focus/50 focus-visible:outline-none"
+          className="w-fit rounded-md focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
           <Logo />
         </Link>
@@ -31,7 +31,7 @@ export function SiteHeader() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="flex h-9 items-center rounded-full px-3 text-sm font-medium text-foreground outline-none hover:opacity-70 focus-visible:ring-2 focus-visible:ring-focus"
+                  className="flex h-9 items-center rounded-full px-3 text-sm font-medium text-foreground outline-none hover:opacity-70 focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {item.name}
                 </Link>

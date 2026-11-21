@@ -92,7 +92,7 @@ export function ScoreHistoryChart({ data }: { data: ScoreHistoryPoint[] }) {
             label={{
               value: "Bueno",
               position: "insideTopRight",
-              className: "fill-muted text-xs"
+              className: "fill-muted-foreground text-xs"
             }}
           />
           <ChartTooltip

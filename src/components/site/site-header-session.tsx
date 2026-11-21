@@ -1,15 +1,16 @@
 import { Suspense } from "react"
 import Link from "next/link"
-import { buttonVariants, cn } from "@heroui/react"
 import { ArrowRightIcon } from "lucide-react"
+import { buttonVariants } from "@/components/ui/button"
 import { SITE } from "@/config/site"
+import { cn } from "@/libs/cn"
 import { createClient } from "@/libs/supabase/server"
 
 // Botones de sesión del header. El fallback es el estado sin sesión, así el
 // shell prerenderizado ya trae enlaces útiles mientras la isla resuelve.
-// Son enlaces con el estilo del Button de HeroUI, sin prefetch al cargar: las
-// rutas de auth y del dashboard traen react-aria y se precargan al pasar el
-// mouse (rendimiento de la landing). La flecha del primario se
+// Son enlaces con el estilo del Button de ui/, sin prefetch al cargar: las
+// rutas de auth y del dashboard traen su propio JS y se precargan al pasar
+// el mouse (rendimiento de la landing). La flecha del primario se
 // desliza un poco al pasar el mouse
 const PRIMARY = cn(
   buttonVariants(),
@@ -23,7 +24,7 @@ const COMPACT_PRIMARY = cn(
   "group h-9 gap-1 pr-3 pl-4 whitespace-nowrap [&_svg]:transition-transform hover:[&_svg]:translate-x-0.5 motion-reduce:[&_svg]:transition-none"
 )
 const COMPACT_SECONDARY =
-  "flex h-9 items-center rounded-full px-3 text-sm font-medium whitespace-nowrap text-foreground outline-none hover:opacity-70 focus-visible:ring-2 focus-visible:ring-focus"
+  "flex h-9 items-center rounded-full px-3 text-sm font-medium whitespace-nowrap text-foreground outline-none hover:opacity-70 focus-visible:ring-2 focus-visible:ring-ring"
 
 export type SessionSize = "default" | "compact"
 

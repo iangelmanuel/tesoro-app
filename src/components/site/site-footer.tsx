@@ -36,7 +36,7 @@ function FooterColumn({
               href={link.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-muted transition-colors hover:text-foreground"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               {link.name}
             </a>
@@ -49,7 +49,7 @@ function FooterColumn({
 
 export function SiteFooter() {
   return (
-    <footer className="border-t bg-default/40">
+    <footer className="border-t bg-highlight/40">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-3 sm:px-6 md:grid-cols-[2fr_1fr_1fr_1fr]">
         <div className="flex flex-col gap-3 sm:col-span-3 md:col-span-1">
           <Link
@@ -59,7 +59,9 @@ export function SiteFooter() {
           >
             <Logo />
           </Link>
-          <p className="max-w-xs text-sm text-muted">{SITE.info.slogan}</p>
+          <p className="max-w-xs text-sm text-muted-foreground">
+            {SITE.info.slogan}
+          </p>
         </div>
 
         <div className="flex flex-col gap-3">
@@ -69,7 +71,7 @@ export function SiteFooter() {
               <li key={document.slug}>
                 <Link
                   href={legalHref(document.slug)}
-                  className="text-sm text-muted transition-colors hover:text-foreground"
+                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {document.title}
                 </Link>
@@ -90,7 +92,7 @@ export function SiteFooter() {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="-mx-1 flex w-fit items-center gap-2 rounded-md px-1 text-sm text-muted transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-focus focus-visible:outline-none max-md:min-h-11"
+                  className="-mx-1 flex w-fit items-center gap-2 rounded-md px-1 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none max-md:min-h-11"
                 >
                   <Icon
                     aria-hidden="true"
@@ -105,7 +107,7 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p>
             © {SITE.info.founded} {SITE.info.name}. Licencia {SITE.info.license}{" "}
             · v{SITE.info.version}

@@ -1,13 +1,14 @@
 import type { Route } from "next"
 import Link from "next/link"
-import { buttonVariants, cn } from "@heroui/react"
 import { ArrowRightIcon } from "lucide-react"
 import { AI_CLIENTS } from "@/components/brand/ai-logos"
+import { buttonVariants } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import { AgentClients } from "@/features/mcp/components/agent-clients"
 import { AgentDemoVideo } from "@/features/mcp/components/agent-demo-video"
 import { McpUrlField } from "@/features/mcp/components/mcp-url-field"
 import { MCP_RESOURCE_URL } from "@/features/mcp/discovery"
+import { cn } from "@/libs/cn"
 import { Reveal } from "./reveal"
 import { SectionHeading } from "./section-heading"
 
@@ -32,7 +33,9 @@ export function AgentsSection() {
           />
 
           <Reveal className="flex flex-col gap-4">
-            <p className="text-sm font-medium text-muted">Funciona con</p>
+            <p className="text-sm font-medium text-muted-foreground">
+              Funciona con
+            </p>
             <AgentClients clients={AI_CLIENTS} />
           </Reveal>
 

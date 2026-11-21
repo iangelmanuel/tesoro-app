@@ -173,7 +173,7 @@ function ExpenseRow({
       label: expense.is_active ? "Pausar" : "Reanudar",
       icon: expense.is_active ? <Pause /> : <Play />,
       onAction: handleToggle,
-      isDisabled: pending
+      disabled: pending
     },
     {
       id: "delete",

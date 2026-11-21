@@ -1,18 +1,16 @@
 import { Suspense } from "react"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@heroui/react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { CardSkeleton } from "@/components/dashboard/card-skeleton"
+import { ChartCard } from "@/components/charts/chart-card"
+import { Amount } from "@/components/dashboard/amount"
 import { SITE } from "@/config/site"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { BusinessScoreSummaryCard } from "@/features/business-score/components/business-score-summary-card"
 import { BusinessSummaryCards } from "@/features/business/components/business-summary-cards"
+import {
+  BUSINESS_CHARTS_GRID,
+  BusinessSummarySkeleton
+} from "@/features/business/components/business-summary-skeleton"
 import { buildCategorySlices } from "@/features/reports/chart-data"
 import { CategoryDonutChart } from "@/features/reports/components/category-donut-chart"
 import { IncomeExpenseChart } from "@/features/reports/components/income-expense-chart"
@@ -24,6 +22,8 @@ import {
   getMonthlyTotals,
   getRecentTransactions
 } from "@/features/reports/queries"
+import { incomeExpenseLegend } from "@/features/reports/series"
+import { ScoreSummaryCardSkeleton } from "@/features/score/components/score-summary-card"
 import { WorkspaceNoTransactions } from "@/features/transactions/components/workspace-no-transactions"
 import { workspaceTransactionsPath } from "@/features/workspaces/paths"
 import { getWorkspace } from "@/features/workspaces/queries"
@@ -51,7 +51,7 @@ export default function BusinessSummaryPage({
       className="flex flex-1 flex-col gap-6"
     >
       {/* params, la sesión y la fecha de hoy son dinámicos: van dentro de Suspense */}
-      <Suspense fallback={<SummarySkeleton />}>
+      <Suspense fallback={<BusinessSummarySkeleton />}>
         <SummaryContent params={params} />
       </Suspense>
     </section>
@@ -100,10 +100,11 @@ async function SummaryContent({
     .filter((account) => account.archived_at === null)
     .reduce((sum, account) => sum + account.balance, 0)
   const isEmptyTrend = monthly.every((row) => row.txCount === 0)
+  const trendProfit = monthly.reduce((sum, row) => sum + row.balance, 0)
 
   return (
     <>
-      <Suspense fallback={<CardSkeleton className="h-56" />}>
+      <Suspense fallback={<ScoreSummaryCardSkeleton />}>
         <BusinessScoreSummaryCard workspace={workspace} />
       </Suspense>
       <BusinessSummaryCards
@@ -113,82 +114,68 @@ async function SummaryContent({
         monthLabel={monthLabel}
         currency={workspace.currency}
       />
-      <div className="grid gap-4 lg:grid-cols-5">
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>Entradas vs. salidas</CardTitle>
-            <CardDescription>Últimos {TREND_MONTHS} meses</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isEmptyTrend ? (
-              <NoPeriodData
-                message="No hay movimientos en este periodo"
-                className="h-72"
-              />
-            ) : (
-              <IncomeExpenseChart
-                data={monthly}
-                currency={workspace.currency}
-                labels={labels}
-                className="aspect-auto h-72 w-full"
-              />
-            )}
-          </CardContent>
-        </Card>
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>{labels.expense} por categoría</CardTitle>
-            <CardDescription className="first-letter:uppercase">
-              {monthLabel}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {costsByCategory.length > 0 ? (
-              <CategoryDonutChart
-                slices={buildCategorySlices(costsByCategory)}
-                currency={workspace.currency}
-                title={`${labels.expense} por categoría de ${monthLabel}`}
-              />
-            ) : (
-              <NoPeriodData
-                message={
-                  current.txCount === 0
-                    ? "No hay movimientos en este periodo"
-                    : "No hay salidas en este periodo"
-                }
-                className="h-72"
-              />
-            )}
-          </CardContent>
-        </Card>
+      <div className={BUSINESS_CHARTS_GRID}>
+        <ChartCard
+          title="Entradas vs. salidas"
+          figure={
+            <Amount
+              value={trendProfit}
+              currency={workspace.currency}
+            />
+          }
+          figureCaption={`de utilidad en los últimos ${TREND_MONTHS} meses`}
+          legend={isEmptyTrend ? undefined : incomeExpenseLegend(labels)}
+          className="lg:col-span-3"
+        >
+          {isEmptyTrend ? (
+            <NoPeriodData
+              message="No hay movimientos en este periodo"
+              className="h-72"
+            />
+          ) : (
+            <IncomeExpenseChart
+              data={monthly}
+              currency={workspace.currency}
+              labels={labels}
+              legend="none"
+              className="aspect-auto h-72 w-full"
+            />
+          )}
+        </ChartCard>
+        <ChartCard
+          title={`${labels.expense} por categoría`}
+          figure={
+            <Amount
+              value={current.expense}
+              currency={workspace.currency}
+            />
+          }
+          figureCaption={`en ${monthLabel}`}
+          className="lg:col-span-2"
+        >
+          {costsByCategory.length > 0 ? (
+            <CategoryDonutChart
+              slices={buildCategorySlices(costsByCategory)}
+              currency={workspace.currency}
+              title={`${labels.expense} por categoría de ${monthLabel}`}
+            />
+          ) : (
+            <NoPeriodData
+              message={
+                current.txCount === 0
+                  ? "No hay movimientos en este periodo"
+                  : "No hay salidas en este periodo"
+              }
+              className="h-72"
+            />
+          )}
+        </ChartCard>
       </div>
       <RecentTransactions
         rows={recent}
         currency={workspace.currency}
         transactionsPath={workspaceTransactionsPath(workspace)}
       />
-    </>
-  )
-}
-
-function SummarySkeleton() {
-  return (
-    <>
-      <CardSkeleton className="h-56" />
-      <div className="grid gap-4 sm:grid-cols-3">
-        <CardSkeleton className="h-28" />
-        <CardSkeleton className="h-28" />
-        <CardSkeleton className="h-28" />
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <CardSkeleton className="h-28" />
-        <CardSkeleton className="h-28" />
-      </div>
-      <div className="grid gap-4 lg:grid-cols-5">
-        <CardSkeleton className="h-96 lg:col-span-3" />
-        <CardSkeleton className="h-96 lg:col-span-2" />
-      </div>
-      <CardSkeleton className="h-72" />
     </>
   )
 }

@@ -1,14 +1,8 @@
 import { Suspense } from "react"
 import { redirect } from "next/navigation"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Skeleton
-} from "@heroui/react"
 import { Logo } from "@/components/brand/logo"
+import { CARD } from "@/components/dashboard/surface"
+import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
 import { AccountDeletedActions } from "@/features/account/components/account-deleted-actions"
 import {
@@ -28,18 +22,18 @@ export const metadata = buildMetadata({
 // proxy.ts solo deja entrar a usuarios con la cuenta marcada para borrar
 export default function AccountDeletedPage() {
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center bg-default p-6 md:p-10">
+    <main className="flex min-h-svh flex-col items-center justify-center bg-highlight p-6 md:p-10">
       <div className="flex w-full max-w-sm flex-col gap-6">
         <Logo
           size="lg"
           className="self-center"
         />
-        <Card>
+        <section className={CARD}>
           {/* La sesión es dinámica: va dentro de Suspense */}
-          <Suspense fallback={<Skeleton className="m-6 h-48" />}>
+          <Suspense fallback={<Skeleton className="h-48" />}>
             <AccountDeletedContent />
           </Suspense>
-        </Card>
+        </section>
       </div>
     </main>
   )
@@ -62,17 +56,15 @@ async function AccountDeletedContent() {
 
   return (
     <>
-      <CardHeader className="text-center">
-        <CardTitle className="text-xl">Tu cuenta se va a borrar</CardTitle>
-        <CardDescription>
+      <header className="flex flex-col gap-1 text-center">
+        <h1 className="text-xl font-semibold">Tu cuenta se va a borrar</h1>
+        <p className="text-sm text-muted-foreground">
           El {formatDeletionDate(deletionDate(requestedAt))} borraremos tu
           cuenta y todos tus datos. Si cambiaste de opinión, restáurala ahora:
           todo sigue como lo dejaste, salvo tu foto.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <AccountDeletedActions />
-      </CardContent>
+        </p>
+      </header>
+      <AccountDeletedActions />
     </>
   )
 }

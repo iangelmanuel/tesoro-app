@@ -1,17 +1,11 @@
 import { Suspense } from "react"
 import type { Route } from "next"
 import { redirect } from "next/navigation"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Skeleton
-} from "@heroui/react"
 import { Bot } from "lucide-react"
 import { Logo } from "@/components/brand/logo"
 import { EmptyState } from "@/components/dashboard/empty-state"
+import { CARD } from "@/components/dashboard/surface"
+import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
 import { deletionRequestedAt } from "@/features/account/deletion"
 import { ConsentForm } from "@/features/mcp/components/consent-form"
@@ -36,7 +30,7 @@ export default function OAuthConsentPage({
   searchParams
 }: PageProps<"/oauth/consent">) {
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center gap-6 bg-default p-6 md:p-10">
+    <main className="flex min-h-svh flex-col items-center justify-center gap-6 bg-highlight p-6 md:p-10">
       <div className="flex w-full max-w-md flex-col gap-6">
         <Logo
           size="lg"
@@ -99,20 +93,20 @@ async function ConsentContent({
   const clientName = details.client.name.trim() || "Un agente de IA"
 
   return (
-    <Card>
-      <CardHeader className="text-center">
-        <CardTitle className="text-xl text-balance">
+    <section className={CARD}>
+      <header className="flex flex-col gap-1 text-center">
+        <h1 className="text-xl font-normal text-balance">
           <strong className="font-semibold">{clientName}</strong> quiere acceder
           a tu cuenta de {SITE.info.name}
-        </CardTitle>
-        <CardDescription>
+        </h1>
+        <p className="text-sm text-muted-foreground">
           Sesión iniciada como{" "}
           <span className="font-medium text-foreground">
             {details.user.email || user.email}
           </span>
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-6">
+        </p>
+      </header>
+      <div className="flex flex-col gap-6">
         <ul className="flex flex-col gap-2 text-sm">
           {CAPABILITIES.map((item) => (
             <li
@@ -121,14 +115,14 @@ async function ConsentContent({
             >
               <span
                 aria-hidden="true"
-                className="mt-2 size-1.5 shrink-0 rounded-full bg-muted"
+                className="mt-2 size-1.5 shrink-0 rounded-full bg-muted-foreground"
               />
               <span>{item}</span>
             </li>
           ))}
         </ul>
         <ConsentForm authorizationId={details.authorization_id} />
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   )
 }

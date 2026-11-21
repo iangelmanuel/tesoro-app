@@ -1,6 +1,6 @@
 # SPEC 53 — Empresa, cuenta, auth y públicas en shadcn, y retiro de HeroUI
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 01, SPEC 09, SPEC 10, SPEC 11, SPEC 12, SPEC 22, SPEC 34, SPEC 40, SPEC 50, SPEC 51, SPEC 52a, SPEC 52b, SPEC 52c
 > **Fecha:** 2026-11-20
 > **Objetivo:** Migrar a shadcn (Base UI) todo lo que aún usa HeroUI (Empresa, cuenta, auth, OAuth y públicas) y retirar HeroUI y React Aria del proyecto.
@@ -182,24 +182,24 @@ Dependencias que salen de `package.json`:
 
 Verificables en código o con `check`, `eslint`, `prettier:check` y `build`:
 
-- [ ] `grep -rE "@heroui|react-aria|@internationalized/date" src app` no devuelve resultados.
-- [ ] `package.json` y `pnpm-lock.yaml` no contienen `@heroui/react`, `@heroui/styles`, `react-aria`, `react-aria-components` ni `@internationalized/date` como dependencia directa.
-- [ ] No existen `src/styles/heroui-bridge.css`, `src/components/dashboard/heroui-portal-bridge.tsx`, `src/components/dashboard/card-skeleton.tsx`, `src/components/dashboard/heroui-compat.ts` ni `src/features/auth/components/form-field.tsx`.
-- [ ] `src/styles/globals.css` no importa `@heroui/styles` ni `heroui-bridge.css`.
-- [ ] Ningún layout monta `ToastProvider` de HeroUI.
-- [ ] `WorkspaceThemeRoot` no usa `I18nProvider`, `UNSAFE_PortalProvider` ni `HeroUIPortalHost`.
-- [ ] `FieldLabel` no importa `react-aria-components` ni `HeroUIPortalBridge`.
-- [ ] `src/libs/cn.ts` no menciona `@heroui/react`.
-- [ ] Ningún archivo de `src/` ni `app/` usa `CardSkeleton`, `onPress`, `isDisabled` ni `modal={false}`.
-- [ ] Cada componente migrado que carga datos exporta su `…Skeleton` en el mismo archivo.
-- [ ] Existe `loading.tsx` con `LoadingRegion` en `business/`, `business/[id]/`, `business/[id]/{transactions,accounts,cash-flow,reports,recommendations,settings}/` y `account/{general,preferences,privacy,security,agents}/`.
-- [ ] `CashFlowTable`, `AccountBalancesList`, `ConnectionsList` y `OperationsList` usan `RowContextMenu` con las acciones de §5.
-- [ ] Los enlaces de los menús de Flujo de caja usan los parámetros que lee `src/features/transactions/filters.ts`.
-- [ ] `actions.ts`, `schemas.ts`, `queries.ts`, `app/api/**` y `src/features/mcp/tools/**` no cambian.
-- [ ] `CLAUDE.md`, `docs/ui.md`, `PRODUCT.md`, `README.md` y `docs/producto.md` no mencionan HeroUI ni React Aria.
-- [ ] `CHANGELOG.md` tiene la entrada en `[Unreleased]`.
-- [ ] Todo par texto/fondo nuevo queda en la tabla de contraste de `docs/ui.md` y pasa AA en claro y oscuro.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan, con el lockfile sincronizado (`pnpm install --frozen-lockfile`).
+- [x] `grep -rE "@heroui|react-aria|@internationalized/date" src app` no devuelve resultados.
+- [x] `package.json` y `pnpm-lock.yaml` no contienen `@heroui/react`, `@heroui/styles`, `react-aria`, `react-aria-components` ni `@internationalized/date` como dependencia directa.
+- [x] No existen `src/styles/heroui-bridge.css`, `src/components/dashboard/heroui-portal-bridge.tsx`, `src/components/dashboard/card-skeleton.tsx`, `src/components/dashboard/heroui-compat.ts` ni `src/features/auth/components/form-field.tsx`.
+- [x] `src/styles/globals.css` no importa `@heroui/styles` ni `heroui-bridge.css`.
+- [x] Ningún layout monta `ToastProvider` de HeroUI.
+- [x] `WorkspaceThemeRoot` no usa `I18nProvider`, `UNSAFE_PortalProvider` ni `HeroUIPortalHost`.
+- [x] `FieldLabel` no importa `react-aria-components` ni `HeroUIPortalBridge`.
+- [x] `src/libs/cn.ts` no menciona `@heroui/react`.
+- [x] Ningún archivo de `src/` ni `app/` usa `CardSkeleton`, `onPress`, `isDisabled` ni `modal={false}`.
+- [x] Cada componente migrado que carga datos exporta su `…Skeleton` en el mismo archivo.
+- [x] Existe `loading.tsx` con `LoadingRegion` en `business/`, `business/[id]/`, `business/[id]/{transactions,accounts,cash-flow,reports,recommendations,settings}/` y `account/{general,preferences,privacy,security,agents}/`.
+- [x] `CashFlowTable`, `AccountBalancesList`, `ConnectionsList` y `OperationsList` usan `RowContextMenu` con las acciones de §5.
+- [x] Los enlaces de los menús de Flujo de caja usan los parámetros que lee `src/features/transactions/filters.ts`.
+- [x] `actions.ts`, `schemas.ts`, `queries.ts`, `app/api/**` y `src/features/mcp/tools/**` no cambian.
+- [x] `CLAUDE.md`, `docs/ui.md`, `PRODUCT.md`, `README.md` y `docs/producto.md` no mencionan HeroUI ni React Aria.
+- [x] `CHANGELOG.md` tiene la entrada en `[Unreleased]`.
+- [x] Todo par texto/fondo nuevo queda en la tabla de contraste de `docs/ui.md` y pasa AA en claro y oscuro.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y `pnpm build` pasan, con el lockfile sincronizado (`pnpm install --frozen-lockfile`).
 
 Verificables en navegador (los prueba el usuario a mano):
 

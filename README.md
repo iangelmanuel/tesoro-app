@@ -51,8 +51,9 @@ Autenticación y base de datos corren sobre [Supabase](https://supabase.com/)
 (Postgres + Auth), con Row Level Security para que cada usuario solo vea sus
 propios datos. El SEO (metadata, Open Graph, JSON-LD, `robots.txt`,
 `sitemap.xml` y `manifest.webmanifest`) se genera desde `SITE` con
-`src/libs/seo.ts`. La interfaz usa [HeroUI](https://heroui.com/) v3 (sobre
-React Aria, sin Provider), tema claro/oscuro con
+`src/libs/seo.ts`. La interfaz usa [shadcn/ui](https://ui.shadcn.com/) sobre
+[Base UI](https://base-ui.com/) (primitivas propias en `src/components/ui/`),
+tema claro/oscuro con
 [next-themes](https://github.com/pacocoursey/next-themes), gráficas con
 [Recharts](https://recharts.org/) y validación con [Zod](https://zod.dev/).
 El tema usa neutros negros y grises azulados con un primario por espacio:
@@ -72,11 +73,12 @@ app/                      Rutas (App Router) y archivos de metadata
 proxy.ts                  Refresca la sesión y protege /dashboard/*
 src/
 ├── components/
-│   ├── charts/           Contenedor, tooltip y leyenda de Recharts con HeroUI
+│   ├── charts/           Tarjeta, contenedor, tooltip y leyenda de Recharts
 │   ├── dashboard/        Sidebar propio, tabs de espacio, menú de usuario y
 │   │                     WorkspaceThemeRoot (primario por espacio)
-│   ├── forms/            DatePickerField (DatePicker de HeroUI)
+│   ├── forms/            Campos de formulario (texto, select, fecha) y FormDialog
 │   ├── seo/              <JsonLd />
+│   ├── ui/               Primitivas de shadcn sobre Base UI
 │   └── theme/            ThemeProvider (next-themes)
 ├── config/site.ts        SITE: marca, autor, rutas, navegación, espacios y SEO
 ├── features/auth/        Esquemas Zod, Server Actions y formularios de auth
@@ -85,7 +87,7 @@ src/
 │   ├── supabase/         Clientes de Supabase (navegador, servidor y proxy)
 │   └── workspace-theme.ts getWorkspaceTheme(): espacio según la ruta
 ├── types/database.ts     Tipos generados de la base de datos
-└── styles/globals.css    Tailwind, HeroUI, tokens del tema y primarios por espacio
+└── styles/globals.css    Tailwind, tokens del tema y primarios por espacio
 supabase/                 config.toml y migraciones versionadas
 docs/                     Documentación de producto
 specs/                    Specs de implementación
@@ -96,7 +98,7 @@ specs/                    Specs de implementación
 Requisitos:
 
 - **Node.js** ≥ 24.19.0
-- **pnpm** ≥ 12.16.1 (el repo fija `pnpm@12.16.1` vía `packageManager`)
+- **pnpm** ≥ 12.18.0 (el repo fija `pnpm@12.18.0` vía `packageManager`)
 - Un proyecto de [Supabase](https://supabase.com/dashboard) (gratis)
 
 ```bash

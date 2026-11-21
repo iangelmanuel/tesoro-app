@@ -53,8 +53,8 @@ vistazo y sabe qué hacer después, sin aprender contabilidad.
 ## Capabilities and Constraints
 
 - Next.js (App Router) + React + TypeScript, shadcn con primitivas de
-  Base UI en `src/components/ui/` (SPEC 51; HeroUI v3 convive en las
-  pantallas aún no migradas hasta SPEC 53), Tailwind 4, Recharts, Supabase
+  Base UI en `src/components/ui/` (SPEC 51 a SPEC 53), Tailwind 4,
+  Recharts, Supabase
   con RLS. Detalle en `CLAUDE.md` y
   `docs/producto.md`.
 - Marca, rutas, navegación y textos de marca viven en `src/config/site.ts`

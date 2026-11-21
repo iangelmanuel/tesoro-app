@@ -86,9 +86,9 @@ propios (SPEC 51, dirección "Señalética"). Neutros fríos de un solo matiz
 | `--radius`                              | 0.5rem (escala de radios de Tailwind)                                     |
 
 En Tailwind: `bg-card`, `bg-popover`, `bg-highlight`, `bg-subtle`,
-`text-muted-foreground`, `bg-field`, `outline-ring`… `bg-accent` y
-`text-muted` siguen siendo de HeroUI hasta SPEC 53; el código nuevo no los
-usa.
+`text-muted-foreground`, `bg-field`, `outline-ring`… No existen
+`bg-accent` ni `text-muted`: el hover es `bg-highlight` y el texto atenuado,
+`text-muted-foreground`.
 
 - **Primario por espacio:** `WorkspaceThemeRoot` + `getWorkspaceTheme()`
   ponen `data-workspace` en el contenedor del dashboard y `globals.css`
@@ -111,52 +111,16 @@ usa.
   KPIs, tablas y ejes con `tabular-nums` (la fuente trae `tnum`). Los PDF
   exportados usan la misma fuente.
 
-### Convivencia con HeroUI (hasta SPEC 53)
+### Migración a shadcn cerrada (SPEC 51 a 53)
 
-`src/styles/heroui-bridge.css` se importa después de `@heroui/styles` y
-apunta los tokens de HeroUI a los nuevos (`--surface` → `--card`,
-`--overlay` → `--popover`, `--muted` → `--muted-foreground`, `--default` →
-`--highlight`, `--accent` → `--primary`, `--focus` → `--ring`, `--danger` →
-`--destructive`). Así las pantallas aún en HeroUI toman la paleta nueva.
-`--accent` y `--focus` se vuelven a declarar en el contenedor del espacio.
-
-**Aside móvil modal (SPEC 52c).** Con `BusinessSwitcher` en
-`DropdownMenu`, el aside ya no aloja menús de HeroUI: su `Sheet` es modal
-(foco atrapado, Escape y clic afuera lo cierran) y `heroui-compat.ts` se
-borró.
-
-**Personal sin HeroUI (SPEC 52c).** Nada alcanzable desde
-`app/dashboard/layout.tsx` ni desde `app/dashboard/personal/**` importa
-`@heroui/react`. Por eso el `ToastProvider` de HeroUI salió del layout del
-dashboard y lo montan `app/dashboard/business/layout.tsx` y
-`app/dashboard/account/layout.tsx`, las pantallas que aún lanzan toasts de
-HeroUI. Personal solo usa sonner.
-
-**Puentes retirados en SPEC 52b.** `DetailSheet` (los cinco Sheets de
-detalle) volvió a ser modal y `FormDialog` perdió `hostsHeroUI` y
-`closesFromDialog`: el diálogo de movimiento atrapa el foco en todas sus
-tabs. Tab no sale de un Sheet ni de un diálogo, y Escape los cierra.
-
-**Puente de portales (SPEC 52a).** Al revés: un Popover, Combobox, Select o
-Dialog de Base UI abierto desde un `Modal` de HeroUI (pantallas de SPEC 53) quedaría inerte, porque React Aria vuelve `inert` todo lo que está fuera
-del modal y le quita el foco.
-
-- `HeroUIPortalHost` (en `WorkspaceThemeRoot`) es un nodo vacío con
-  `data-react-aria-top-layer`, por encima del modal y presente antes de
-  abrirlo: React Aria no lo vuelve inerte, deja moverle el foco y no cuenta
-  sus clics como "afuera".
-- `HeroUIPortalBridge` envuelve el campo o diálogo. Si está dentro de un
-  modal de HeroUI (o de algo ya montado en el host), su portal va al host;
-  si no, al contenedor de siempre. Escape cierra solo el overlay, no el
-  modal de abajo.
-- Lo traen `DatePickerField`, `CreatableSelect` (cuentas y categorías),
-  `SelectField`, `FieldHelp` y `FormDialog`. `CategorySelectField` envuelve
-  su `CategoryDialog`.
-- `FieldLabel` dentro de un campo de HeroUI toma `id` y `htmlFor` del
-  `LabelContext` de `react-aria-components` (dependencia directa hasta
-  SPEC 53), así el input sigue nombrado.
-
-SPEC 53 borra el puente y `react-aria-components`.
+Toda la app usa shadcn sobre Base UI. SPEC 53 retiró la librería de
+componentes anterior con sus dependencias, el puente de tokens y el de
+portales (el detalle está en `CHANGELOG.md`). Los
+overlays (Dialog, AlertDialog, Sheet, Drawer, Popover, Select, Combobox,
+menús) son de Base UI, se montan en el contenedor del espacio
+(`PortalContainerProvider`) y los modales atrapan el foco y cierran con
+Escape. Los toasts son de sonner: el `Toaster` vive en el layout del
+dashboard y en `app/account-deleted/layout.tsx`.
 
 ## Contraste
 
@@ -226,7 +190,7 @@ corrió por regex. Se resuelve en los pasos 2 y 3 del spec.
 
 | Prioridad | Hallazgo                                                                                                                                                                                                                                          | Dónde                                                                                                                                                                                              |
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| P1        | La separación tarjeta/fondo es débil: `--background` 0.975 vs `--surface` 1 (ΔL 0.025). La sombra viene de HeroUI (`#0000000a/0f`, negro puro, 3 capas finas) y no da elevación ambiental; el claro se ve plano.                                  | `globals.css` (`--surface-shadow` sin definir), `surface.ts`, `Card`                                                                                                                               |
+| P1        | La separación tarjeta/fondo es débil: `--background` 0.975 vs `--surface` 1 (ΔL 0.025). La sombra venía de la librería de entonces (`#0000000a/0f`, negro puro, 3 capas finas) y no da elevación ambiental; el claro se ve plano.                 | `globals.css` (`--surface-shadow` sin definir), `surface.ts`, `Card`                                                                                                                               |
 | P1        | Cada superficie define su propia sombra (`shadow-(--surface-shadow)`, `shadow-lg`, `shadow-xl shadow-black/5`, `shadow-overlay`). Sin una escala de elevación, las sombras se acumulan en tarjetas anidadas.                                      | `surface.ts`, `transactions-table.tsx` (overlay de arrastre), `chart-tooltip.tsx`                                                                                                                  |
 | P2        | Paleta cruda de Tailwind (`emerald-50`, `amber-100`, `rose-100`…) en avisos y chips, contra la regla "estados con `tone.ts`". Son bloques de color de relleno que ensucian el claro y no cambian con el espacio.                                  | `features/debts/components/{debt-card,receivable-card}.tsx`, `features/goals/components/{goal-card,goal-summary}.tsx`, `categories/constants.ts`, `app/dashboard/business/[id]/cash-flow/page.tsx` |
 | P2        | `--chart-1…5` en claro son slate-600…900: casi sin diferencia de luminosidad entre 3, 4 y 5; las series neutras no se distinguen.                                                                                                                 | `globals.css`                                                                                                                                                                                      |
@@ -241,7 +205,7 @@ gráficas. La grilla se mantiene decorativa (≈ 1.5:1). Pendientes: los colores
 crudos de Tailwind (P2) y la landing (P3).
 
 Sin P0. Lo que ya funciona y se conserva: tarjetas sin borde, tokens con
-nombres de HeroUI, `Amount` y `tabular-nums` en cifras, leyendas y tablas
+nombre propio, `Amount` y `tabular-nums` en cifras, leyendas y tablas
 `sr-only` en gráficas, estados por `tone.ts` en `StatCard`.
 
 ### Auditoría del modo oscuro (SPEC 23, paso 10)
@@ -276,9 +240,8 @@ y tarjetas sin borde.
 
 ## Componentes propios
 
-Todos en `src/components/`. Desde SPEC 51, `dashboard/`, `charts/` y `ui/`
-usan shadcn (Base UI) y no importan `@heroui/react`; las pantallas aún en
-HeroUI lo importan directo hasta SPEC 52 y 53.
+Todos en `src/components/`, sobre las primitivas de shadcn (Base UI) de
+`ui/`.
 
 ### Shell del dashboard (`src/components/dashboard/`)
 
@@ -345,14 +308,19 @@ SPEC 52a suma los de Resumen (`ScoreSummaryCardSkeleton`,
 `TransactionsTableSkeleton`, `WorkspaceNoTransactionsSkeleton`,
 `VerifyRowSkeleton`, en `TransactionsScreenSkeleton`) y Cuentas
 (`AccountCardSkeleton`, `AccountsGridSkeleton`, `AccountsScreenSkeleton`).
-Resumen, Movimientos y Cuentas tienen su `loading.tsx`.
+Resumen, Movimientos y Cuentas tienen su `loading.tsx`. SPEC 53 suma los de
+Empresa (`BusinessSummaryCardsSkeleton` y `BusinessSummarySkeleton`,
+`CashFlowTableSkeleton`, `AccountBalancesListSkeleton` y
+`CashFlowScreenSkeleton`, `BusinessSettingsSkeleton`, `EmptyStateSkeleton`)
+y de Cuenta (`AccountSectionSkeleton`, `AccountFieldSkeleton`,
+`ConnectionsListSkeleton`, `OperationsListSkeleton` y los de
+`account-screen-skeletons.tsx`). Toda ruta de Empresa y de Cuenta tiene su
+`loading.tsx`.
 
 - Streaming: `Suspense` por tarjeta y un `loading.tsx` por ruta que compone
   los skeletons de esa pantalla. `app/dashboard/loading.tsx` es el genérico.
 - La región que carga va en `LoadingRegion` (`aria-busy="true"` y
   "Cargando…" solo para lector); los bloques van con `aria-hidden`.
-- `CardSkeleton` queda para las pantallas aún no migradas; el código nuevo
-  no lo usa (SPEC 53 lo borra).
 
 ### Menús rápidos (SPEC 51 §5)
 
@@ -390,16 +358,16 @@ Cada campo de formulario con etiqueta visible explica qué escribir con un
 ícono (?) a la derecha de la etiqueta. Es distinto de `HelpHint`: el (i)
 explica un concepto con un clic; el (?) dice qué poner en un campo.
 
-| Pieza                                                 | Qué hace                                                                                                                                                                                                                                                                                                              |
-| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `FieldLabel` (`src/components/forms/field-label.tsx`) | `Label` + (?). `<FieldLabel help="debt.creditLimit">Cupo</FieldLabel>`. Sin `help` es un `Label` normal. `helpLabel` nombra la ayuda cuando la etiqueta no es texto plano                                                                                                                                             |
-| `FieldHelp` (mismo archivo)                           | El (?) suelto, para lo que no tiene un `Label`: texto de un `Switch` o `Checkbox`, títulos en `<p>`, `<legend>` y grupos de tabs sin etiqueta (va al final de la fila)                                                                                                                                                |
-| `FIELD_HELP` (`src/config/help.ts`)                   | Textos de ayuda, una frase en tuteo. Clave `"<formulario>.<campo>"` o `"common.<campo>"`; `FieldHelpKey` tipa la prop. Toda clave debe usarse: se verifica con `grep`. Los mínimos y formatos se comparan con los esquemas de Zod                                                                                     |
-| Campos compartidos                                    | `AccountSelectField`, `CategorySelectField`, `DatePickerField`, `TimePickerField`, `FormField` (auth), `Field` (solo `business-dialog`, hasta SPEC 53), `TextInputField`, `SelectField` y `SegmentedField` reciben `help?: FieldHelpKey`. `PaymentAccountSection` recibe `accountHelp` (por defecto `common.account`) |
+| Pieza                                                 | Qué hace                                                                                                                                                                                                                                         |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `FieldLabel` (`src/components/forms/field-label.tsx`) | `Label` + (?). `<FieldLabel help="debt.creditLimit">Cupo</FieldLabel>`. Sin `help` es un `Label` normal. `helpLabel` nombra la ayuda cuando la etiqueta no es texto plano                                                                        |
+| `FieldHelp` (mismo archivo)                           | El (?) suelto, para lo que no tiene un `Label`: texto de un `Switch` o `Checkbox`, títulos en `<p>`, `<legend>` y grupos de tabs sin etiqueta (va al final de la fila)                                                                           |
+| `FIELD_HELP` (`src/config/help.ts`)                   | Textos de ayuda, una frase en tuteo. Clave `"<formulario>.<campo>"` o `"common.<campo>"`; `FieldHelpKey` tipa la prop. Toda clave debe usarse: se verifica con `grep`. Los mínimos y formatos se comparan con los esquemas de Zod                |
+| Campos compartidos                                    | `AccountSelectField`, `CategorySelectField`, `DatePickerField`, `TimePickerField`, `TextInputField`, `SelectField` y `SegmentedField` reciben `help?: FieldHelpKey`. `PaymentAccountSection` recibe `accountHelp` (por defecto `common.account`) |
 
 - Desde SPEC 52a es un `Popover` de Base UI, como `HelpHint`: se abre con
-  clic, toque o teclado (antes era un `Tooltip` de HeroUI que no abría con
-  un toque). Va en `HeroUIPortalBridge` para funcionar en modales de HeroUI.
+  clic, toque o teclado (antes era un `Tooltip` que no abría con un
+  toque).
 - Botón de 24 px (`size-6`, `touch-hitbox` hasta 44 px) con `-my-1`: no
   cambia la altura del campo.
 - Ícono `MessageCircleQuestionMark` (`size-3.5`) en `text-muted-foreground`
@@ -466,13 +434,13 @@ Reglas de toda gráfica:
 
 ### Fecha, hora y orden en Movimientos (SPEC 19)
 
-| Pieza                                             | Qué hace                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `forms/time-picker-field.tsx` (`TimePickerField`) | Hermano de `DatePickerField` sobre el `TimeField` de HeroUI. Trabaja con `HH:MM` o `""` (sin hora), etiqueta "Hora (opcional)" y botón de 44 px para borrarla                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `libs/format.ts` (`formatTime`)                   | `2:30 p. m.` en es-CO con espacio duro. Se muestra solo si el evento tiene hora                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `transactions-table.tsx` (`ReorderCell`)          | Columna angosta a la izquierda de Fecha con solo el asa de arrastre (`GripVertical`, tenue `text-muted/50`; 44 px de alto en táctil). Cada fila es un `useSortable` de dnd-kit (`@dnd-kit/react`) con el asa como `handleRef`, dentro de un `DragDropProvider`; arrastra con mouse, dedo (manteniendo presionada el asa) y teclado. Una `DragOverlay` (tarjeta `bg-surface` con `ring-accent`) sigue al puntero y la fila original queda como hueco (`bg-accent/15 opacity-50`); las filas del mismo día se resaltan (`bg-accent/10`) y el resto baja a `opacity-40`. El modo de retroalimentación por defecto de dnd-kit no se usa con `<tr>`. Sin flechas ni otros botones de orden. Solo existe si hay permiso de escritura y no hay búsqueda; un día de una sola fila no muestra asa |
-| `dashboard/sortable-list.tsx` (`useSortableList`) | Mismo arrastre de Movimientos para listas `<li>` de los paneles laterales (SPEC 45): historial de deudas, aportes de metas, cobros de ingresos fijos y categorías. `SortableListItem` pasa el asa a la fila para ponerla donde vaya; el grupo (día o tipo) limita dónde se suelta. Orden optimista que vuelve atrás con toast si la action falla                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `verify-movements-dialog.tsx`, `verify-row.tsx`   | Modal "Verificar" de solo lectura (pantalla completa en móvil). Fila de dos líneas con flecha `--income` / `--expense` / neutra y texto accesible                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Pieza                                             | Qué hace                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `forms/time-picker-field.tsx` (`TimePickerField`) | Hermano de `DatePickerField`: `<input type="time">` nativo. Trabaja con `HH:MM` o `""` (sin hora), etiqueta "Hora (opcional)" y botón de 44 px para borrarla                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `libs/format.ts` (`formatTime`)                   | `2:30 p. m.` en es-CO con espacio duro. Se muestra solo si el evento tiene hora                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `transactions-table.tsx` (`ReorderCell`)          | Columna angosta a la izquierda de Fecha con solo el asa de arrastre (`GripVertical`, tenue `text-muted-foreground/50`; 44 px de alto en táctil). Cada fila es un `useSortable` de dnd-kit (`@dnd-kit/react`) con el asa como `handleRef`, dentro de un `DragDropProvider`; arrastra con mouse, dedo (manteniendo presionada el asa) y teclado. Una `DragOverlay` (tarjeta `bg-popover` con anillo `ring-ring`) sigue al puntero y la fila original queda como hueco (`bg-primary/15 opacity-50`); las filas del mismo día se resaltan (`bg-primary/10`) y el resto baja a `opacity-40`. El modo de retroalimentación por defecto de dnd-kit no se usa con `<tr>`. Sin flechas ni otros botones de orden. Solo existe si hay permiso de escritura y no hay búsqueda; un día de una sola fila no muestra asa |
+| `dashboard/sortable-list.tsx` (`useSortableList`) | Mismo arrastre de Movimientos para listas `<li>` de los paneles laterales (SPEC 45): historial de deudas, aportes de metas, cobros de ingresos fijos y categorías. `SortableListItem` pasa el asa a la fila para ponerla donde vaya; el grupo (día o tipo) limita dónde se suelta. Orden optimista que vuelve atrás con toast si la action falla                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `verify-movements-dialog.tsx`, `verify-row.tsx`   | Modal "Verificar" de solo lectura (pantalla completa en móvil). Fila de dos líneas con flecha `--income` / `--expense` / neutra y texto accesible                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 Reglas:
 
@@ -567,9 +535,6 @@ Reglas:
   concreta. Con los tabs, el diálogo sube a `max-w-lg` y el selector se
   desplaza en horizontal en anchos chicos, sin barra visible. Aporte a meta
   sigue también en Más.
-- **Modales anidados:** la entrada de HeroUI escala el contenedor desde
-  1.05; `globals.css` pone `overflow-x: hidden` en `.modal__backdrop` para
-  que esa animación no abra un scroll horizontal ni haga saltar el diálogo.
 - **Selects con creación** (`src/components/forms/`): `CategorySelectField`
   y `AccountSelectField` terminan con **+ Crear categoría** / **+ Crear
   cuenta** (`CreateOption`). La opción abre `CategoryDialog` o `AccountDialog`
@@ -583,7 +548,7 @@ Reglas:
   selects de destino (además de "Crear «valor»", que crea al importar).
 - **Tarjetas clicables** (deudas, Me deben y metas): patrón de enlace
   estirado. El `<li>` lleva `SURFACE_ITEM_CLICKABLE` (`relative`, hover
-  `bg-surface-secondary` y anillo de foco cuando el botón está enfocado);
+  `bg-secondary` y anillo de foco cuando el botón está enfocado);
   el botón de detalle lleva `CARD_LINK` y `data-card-link`, y su `::after`
   cubre la tarjeta. El ⋮ y las acciones internas llevan `CARD_OVER_LINK`
   (`relative z-10`) para quedar encima. Un solo elemento abre el Sheet; Tab
@@ -605,9 +570,8 @@ Reglas:
 **Agregar un paso:**
 
 1. Pon `data-tour="<sección>-<elemento>"` en el elemento (nunca se apunta a
-   clases CSS). `Button`, `Card`, `Tabs.List` y `Disclosure.Trigger` de
-   HeroUI pasan el atributo al DOM. `ChartCard` y `ScrollTable` reciben la
-   prop `tour`.
+   clases CSS). Los componentes de `ui/` pasan el atributo al DOM.
+   `ChartCard` y `ScrollTable` reciben la prop `tour`.
 2. Agrega el paso en `TUTORIALS[sección]` con `target` (sin él va centrado),
    `title` y `description` en la voz de `PRODUCT.md` (tuteo, frases cortas).
 3. Si solo aplica en escritorio o en móvil, `viewport: "desktop" | "mobile"`.
@@ -683,9 +647,9 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
     **Desde** / **Hasta** en dos columnas (una en móvil). Controles de 44 px.
   - Con PDF, bajo el periodo: `Select` **Tamaño** (A4 | Carta) y tabs
     **Orientación** (Vertical | Horizontal) y **Tema** (Color | Para
-    imprimir) con una línea en `text-muted` que explica el tema elegido. Las
+    imprimir) con una línea en `text-muted-foreground` que explica el tema elegido. Las
     tabs llevan etiqueta visible (`OptionTabs`, `aria-labelledby`).
-  - Bajo el periodo, en `text-muted`, "Se crearán N hojas de mes" (Excel) o
+  - Bajo el periodo, en `text-muted-foreground`, "Se crearán N hojas de mes" (Excel) o
     "Incluye N meses de detalle" (PDF). Con PDF el tope es de 12 meses: un
     rango mayor muestra "El PDF admite hasta 12 meses. Usa Excel para
     periodos más largos." y no llama al servidor; con un historial de más de
@@ -792,11 +756,11 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
   sitio) y el nombre visible. Filas de 44 px en móvil.
 - **Selector de mes** (`month-switcher.tsx`): una sola píldora para todo el
   dashboard. `on="page"` usa `CONTROL_SURFACE` (Movimientos, Presupuestos);
-  `on="card"` usa `bg-surface-secondary` para no perderse dentro de una
+  `on="card"` usa `bg-secondary` para no perderse dentro de una
   tarjeta (Gastos fijos e Ingresos fijos, en el hueco `control` de
   `CardHeading`: a la derecha en escritorio, a todo el ancho bajo el título
   en móvil). `MonthNav` es el selector conectado a `?month`.
-  `MonthSwitcherSkeleton` y `CardSkeleton withMonth` reservan su forma.
+  `MonthSwitcherSkeleton` y `UpcomingPaymentsCardSkeleton withMonth` reservan su forma.
 - **Paneles de detalle** (`detail-sheet.tsx`): `DetailSheet` es la base de
   `RecurringExpenseSheet`, `RecurringIncomeSheet`, `DebtSheet`, `GoalSheet` y
   `CategoriesSheet`. Derecha en escritorio y abajo con asa en móvil, mismo
@@ -867,7 +831,7 @@ título del header y landing usan la lista plana de `flattenNav` (`nav.ts`).
 | Resumen, Movimientos y Cuentas de Personal y sus diálogos | shadcn (SPEC 52a) |
 | Gastos e Ingresos fijos, Presupuestos, Metas y Deudas     | shadcn (SPEC 52b) |
 | Reportes, Recomendaciones e Importar                      | shadcn (SPEC 52c) |
-| Empresa (salvo lo compartido), cuenta, auth y públicas    | HeroUI (SPEC 53)  |
+| Empresa, cuenta, auth, OAuth y públicas                   | shadcn (SPEC 53)  |
 
 ## Móvil
 
@@ -944,11 +908,10 @@ Piezas en `src/components/dashboard/mobile/`:
 - **Controles de barra (SPEC 20):** el buscador, la pill del mes, Filtros,
   los filtros en pill sin activar, el selector de
   periodo y las flechas de Reportes y Presupuestos usan el mismo gris que las
-  tarjetas y las tablas (`bg-surface`, hover `bg-surface-secondary`). Los
+  tarjetas y las tablas (`bg-card`, hover `bg-highlight`). Los
   botones son `variant="ghost"` más `CONTROL_BUTTON`, y las pills llevan
   `CONTROL_SURFACE`, de `surface.ts`. Nunca `variant="outline"` (con borde) ni
-  `bg-default/60`. El buscador sobrescribe `bg-surface` directo en
-  `SearchField.Group`: HeroUI le fija `bg-field` sin pasar por su variable.
+  `bg-highlight/60`.
   Altura de 44 px en la fila de Movimientos. El filtro activo sigue en
   `accent-soft`.
 - **Filtros de Movimientos (`< 768 px`):** buscador a todo el ancho; debajo,
@@ -970,8 +933,8 @@ Piezas en `src/components/dashboard/mobile/`:
   en los demás diálogos (`{trigger}` junto a `Backdrop`). Revisión visual en
   360 y 390 px de Personal y Empresa.
 - **Táctil:** los controles del shell móvil miden 44 × 44 px o más y las
-  acciones de la hoja, 56 px de alto o más. Los botones `size="sm"` de HeroUI
-  miden 36 px en móvil: en el shell llevan `max-md:h-11 max-md:min-w-11`.
+  acciones de la hoja, 56 px de alto o más. Los botones `size="sm"` miden
+  36 px pero suman 44 px de área táctil con `touch-hitbox`.
   Todo campo de monto usa `inputMode="decimal"`.
 - **Instalable:** `app/manifest.ts` con ícono `maskable` de 512 px
   (`public/icons/icon-maskable-512.png`, de `pnpm brand:assets`), `display:
@@ -980,10 +943,8 @@ Piezas en `src/components/dashboard/mobile/`:
 
 ## Movimiento
 
-- Tarjetas del dashboard: aparición de 180 ms desde casi visible
-  (`#contenido .card` en `globals.css`).
 - Hover de filas, ítems del aside y enlaces: 150 ms.
-- Tabs y diálogos: las transiciones propias de HeroUI.
+- Tabs y diálogos: las transiciones de `ui/` (`tw-animate-css`).
 - Todo con `motion-reduce:transition-none` o dentro de
   `@media (prefers-reduced-motion: no-preference)`.
 - **Landing (SPEC 24): revelados en CSS.** `reveal.tsx` solo marca
@@ -1003,10 +964,10 @@ Piezas en `src/components/dashboard/mobile/`:
   recorrido de funciones.
 - **Reduced motion y sin JS:** no hay estado oculto; todo se ve en su estado
   final y el hero se queda en el póster.
-- **Peso de la landing:** `ToastProvider` de HeroUI solo en los layouts de
-  Empresa y cuenta (SPEC 52c),
-  enlaces a auth con `prefetch={false}` y cajón móvil del header cargado al
-  abrirlo. Así la landing no carga react-aria al inicio.
+- **Peso de la landing:** el `Toaster` solo vive en el dashboard (y en
+  `/account-deleted`), los enlaces a auth van con `prefetch={false}` y el
+  menú móvil del header (`Sheet` de `ui/`) se carga al abrirlo. Así la
+  landing no carga Base UI al inicio.
 
 ## Accesibilidad
 

@@ -97,6 +97,19 @@ const eslintConfig = defineConfig([
       ]
     }
   },
+  {
+    // 400 líneas es la alerta para partir un archivo (SPEC 54). Warning y no
+    // error: los SPEC 55a/b/c parten los de src/features por área. Exentos lo
+    // generado (database.ts) y los datos de src/config
+    files: ["src/**", "app/**"],
+    ignores: ["src/types/database.ts", "src/config/**"],
+    rules: {
+      "max-lines": [
+        "warn",
+        { max: 400, skipBlankLines: true, skipComments: true }
+      ]
+    }
+  },
   // Capas y paquetes, de lo general a lo particular
   {
     rules: { "no-restricted-imports": restrictImports() }

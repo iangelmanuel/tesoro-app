@@ -1,12 +1,13 @@
 import { Suspense } from "react"
-import { Skeleton } from "@heroui/react"
 import { Plus, Wallet } from "lucide-react"
-import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { EmptyState } from "@/components/dashboard/empty-state"
 import { Button } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import { AccountDialog } from "@/features/accounts/components/account-dialog"
-import { AccountsGrid } from "@/features/accounts/components/accounts-grid"
+import {
+  AccountsGrid,
+  AccountsScreenSkeleton
+} from "@/features/accounts/components/accounts-grid"
 import { ArchivedAccounts } from "@/features/accounts/components/archived-accounts"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { workspaceTransactionsPath } from "@/features/workspaces/paths"
@@ -30,7 +31,7 @@ export default function BusinessAccountsPage({
       className="flex flex-1 flex-col gap-6"
     >
       {/* params y la sesión son dinámicos: van dentro de Suspense */}
-      <Suspense fallback={<AccountsSkeleton />}>
+      <Suspense fallback={<AccountsScreenSkeleton />}>
         <AccountsContent params={params} />
       </Suspense>
     </section>
@@ -89,20 +90,6 @@ async function AccountsContent({
           transactionsPath={transactionsPath}
         />
       )}
-    </>
-  )
-}
-
-function AccountsSkeleton() {
-  return (
-    <>
-      <Skeleton className="h-9 w-40 rounded-3xl" />
-      <CardSkeleton className="h-24" />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <CardSkeleton className="h-44" />
-        <CardSkeleton className="h-44" />
-        <CardSkeleton className="h-44" />
-      </div>
     </>
   )
 }

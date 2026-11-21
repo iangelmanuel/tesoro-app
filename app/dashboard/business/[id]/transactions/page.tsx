@@ -1,7 +1,5 @@
 import { Suspense } from "react"
-import { Skeleton } from "@heroui/react"
 import { Plus } from "lucide-react"
-import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { Button } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import { getAccountBalances } from "@/features/accounts/queries"
@@ -13,6 +11,7 @@ import {
 } from "@/features/transactions/components/transactions-empty"
 import { TransactionsFilters } from "@/features/transactions/components/transactions-filters"
 import { TransactionsPagination } from "@/features/transactions/components/transactions-pagination"
+import { TransactionsScreenSkeleton } from "@/features/transactions/components/transactions-screen-skeleton"
 import { TransactionsTable } from "@/features/transactions/components/transactions-table"
 import { TransactionsTotals } from "@/features/transactions/components/transactions-totals"
 import { parseTransactionFilters } from "@/features/transactions/filters"
@@ -44,7 +43,14 @@ export default function BusinessTransactionsPage({
       className="flex flex-1 flex-col gap-6"
     >
       {/* params, searchParams y la sesión son dinámicos: van dentro de Suspense */}
-      <Suspense fallback={<TransactionsSkeleton />}>
+      <Suspense
+        fallback={
+          <TransactionsScreenSkeleton
+            workspaceType="business"
+            createButton
+          />
+        }
+      >
         <TransactionsContent
           params={params}
           searchParams={searchParams}
@@ -134,30 +140,6 @@ async function TransactionsContent({
           />
         </>
       )}
-    </>
-  )
-}
-
-function TransactionsSkeleton() {
-  return (
-    <>
-      <div className="flex gap-2">
-        <Skeleton className="h-8 w-40 rounded-3xl" />
-        <Skeleton className="hidden h-8 w-32 rounded-3xl md:block" />
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {/* Mismo orden que los filtros: buscador; mes + Filtros en el teléfono */}
-        <Skeleton className="h-11 w-full rounded-3xl md:min-w-72 md:flex-1 md:basis-72" />
-        <Skeleton className="h-11 flex-1 rounded-3xl md:w-52 md:flex-none" />
-        <Skeleton className="h-11 w-28 rounded-3xl md:hidden" />
-        <Skeleton className="h-11 w-11 rounded-3xl sm:w-28" />
-      </div>
-      <div className="grid gap-4 sm:grid-cols-3">
-        <CardSkeleton className="h-24" />
-        <CardSkeleton className="h-24" />
-        <CardSkeleton className="h-24" />
-      </div>
-      <CardSkeleton className="h-96" />
     </>
   )
 }

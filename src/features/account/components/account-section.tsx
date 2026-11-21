@@ -1,11 +1,5 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  cn
-} from "@heroui/react"
+import { CARD } from "@/components/dashboard/surface"
+import { cn } from "@/libs/cn"
 
 interface AccountSectionProps {
   title: string
@@ -24,16 +18,21 @@ export function AccountSection({
   children
 }: AccountSectionProps) {
   return (
-    <Card className={cn(destructive && "border-danger/50")}>
-      <CardHeader>
-        <CardTitle className={cn(destructive && "text-danger")}>
+    <section
+      className={cn(CARD, destructive && "border border-destructive/50")}
+    >
+      <header className="flex flex-col gap-1">
+        <h2
+          className={cn(
+            "text-base font-semibold",
+            destructive && "text-destructive"
+          )}
+        >
           {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      {children && (
-        <CardContent className="flex flex-col gap-6">{children}</CardContent>
-      )}
-    </Card>
+        </h2>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </header>
+      {children && <div className="flex flex-col gap-6">{children}</div>}
+    </section>
   )
 }

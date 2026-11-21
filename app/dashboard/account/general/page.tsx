@@ -1,6 +1,7 @@
 import { Suspense } from "react"
-import { Input, Label, TextField } from "@heroui/react"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
+import { FieldLabel } from "@/components/forms/field-label"
+import { Input } from "@/components/ui/input"
 import { AccountSection } from "@/features/account/components/account-section"
 import { AvatarUploader } from "@/features/account/components/avatar-uploader"
 import { ProfileForm } from "@/features/account/components/profile-form"
@@ -36,16 +37,16 @@ async function GeneralContent() {
         avatarUrl={profile.avatarUrl}
       />
       <ProfileForm fullName={profile.fullName} />
-      <TextField
-        name="email"
-        type="email"
-        value={user.email}
-        isReadOnly
-        className="flex flex-col gap-2"
-      >
-        <Label>Email</Label>
-        <Input />
-      </TextField>
+      <div className="flex flex-col gap-2">
+        <FieldLabel htmlFor="account-email">Email</FieldLabel>
+        <Input
+          id="account-email"
+          name="email"
+          type="email"
+          value={user.email ?? ""}
+          readOnly
+        />
+      </div>
     </AccountSection>
   )
 }

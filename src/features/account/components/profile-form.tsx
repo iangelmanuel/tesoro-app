@@ -1,8 +1,9 @@
 "use client"
 
 import { useActionState } from "react"
-import { Button, FieldError, Input, TextField, toast } from "@heroui/react"
-import { FieldLabel } from "@/components/forms/field-label"
+import { TextInputField } from "@/components/forms/text-input-field"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/sonner"
 import { updateProfile } from "../actions"
 import type { ProfileFormState } from "../types"
 
@@ -24,23 +25,19 @@ export function ProfileForm({ fullName }: { fullName: string }) {
       className="flex flex-col gap-4"
       noValidate
     >
-      <TextField
+      <TextInputField
         name="fullName"
+        label="Nombre"
+        help="profile.name"
         autoComplete="name"
         maxLength={80}
         defaultValue={state.values?.fullName ?? fullName}
-        isInvalid={Boolean(state.fieldErrors?.fullName)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="profile.name">Nombre</FieldLabel>
-        <Input />
-        <FieldError>{state.fieldErrors?.fullName?.[0]}</FieldError>
-      </TextField>
+        error={state.fieldErrors?.fullName?.[0]}
+      />
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error}
         </p>
@@ -48,7 +45,7 @@ export function ProfileForm({ fullName }: { fullName: string }) {
       <Button
         type="submit"
         className="self-start"
-        isDisabled={pending}
+        disabled={pending}
       >
         {pending ? "Guardando..." : "Guardar nombre"}
       </Button>

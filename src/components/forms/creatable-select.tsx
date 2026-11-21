@@ -26,21 +26,29 @@ export interface CreatableSelectOption {
 }
 
 interface CreatableSelectProps {
+  /** Etiqueta visible del campo */
   label: string
+  /** Ayuda del (?) junto a la etiqueta (FIELD_HELP) */
   help?: FieldHelpKey
   /** Clave elegida, o null sin elegir */
   value: string | null
   /** Recibe la clave elegida. "+ Crear" llama a onCreate en su lugar */
   onChange: (key: string) => void
+  /** Abre el alta de un elemento nuevo ("+ Crear …") */
   onCreate: () => void
+  /** Opciones de la lista: clave, texto de búsqueda y cómo se pintan */
   options: CreatableSelectOption[]
   /** Texto de la opción final ("Crear cuenta") */
   createLabel: string
   /** Etiqueta accesible del buscador ("Buscar cuenta") */
   searchLabel: string
+  /** Texto del trigger sin opción elegida */
   placeholder: string
+  /** Error de Zod del campo */
   error?: string
+  /** Bloquea el campo */
   disabled?: boolean
+  /** Ayuda o aviso debajo del campo */
   children?: React.ReactNode
 }
 

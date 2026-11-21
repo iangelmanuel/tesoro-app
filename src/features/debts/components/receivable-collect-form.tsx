@@ -1,8 +1,8 @@
 "use client"
 
 import { useActionState, useId, useState } from "react"
-import { Amount } from "@/components/dashboard/amount"
-import { useHideAmounts } from "@/components/dashboard/hide-amounts-context"
+import { Amount } from "@/components/dashboard/data/amount"
+import { useHideAmounts } from "@/components/dashboard/hide-amounts/hide-amounts-context"
 import { amountInput } from "@/components/forms/amount-format"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { FieldHelp } from "@/components/forms/field-label"

@@ -2,7 +2,7 @@
 
 import { useRef, useTransition } from "react"
 import { ImageUp, Trash2 } from "lucide-react"
-import { getInitials } from "@/components/dashboard/user-menu"
+import { getInitials } from "@/components/dashboard/shell/user-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/sonner"

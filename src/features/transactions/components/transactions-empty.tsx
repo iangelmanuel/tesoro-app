@@ -1,13 +1,13 @@
 import type { Route } from "next"
 import Link from "next/link"
 import { FileUp, Plus, ReceiptText, SearchX } from "lucide-react"
-import { EmptyState } from "@/components/dashboard/empty-state"
+import { EmptyState } from "@/components/dashboard/feedback/empty-state"
 import { Button, buttonVariants } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { IMPORT_PATH } from "@/features/imports/constants"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
-import type { WorkspaceType } from "@/features/workspaces/queries"
+import type { WorkspaceType } from "@/features/workspaces/types"
 import {
   TRANSACTIONS_PATH,
   type TransactionFilters,

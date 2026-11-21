@@ -21,8 +21,8 @@ import {
   paymentSchema,
   receivableCollectSchema
 } from "@/features/debts/schemas"
+import type { ServiceFailure } from "@/features/workspaces/service-result"
 import { todayISO } from "@/libs/dates"
-import type { ServiceFailure } from "@/libs/service-result"
 import { type OperationInput, commitOperation } from "../../operations"
 import type { McpContext } from "../../types"
 import { toolError } from "../result"

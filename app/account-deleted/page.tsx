@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 import { redirect } from "next/navigation"
 import { Logo } from "@/components/brand/logo"
-import { CARD } from "@/components/dashboard/surface"
+import { CARD } from "@/components/dashboard/data/surface"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
 import { AccountDeletedActions } from "@/features/account/components/account-deleted-actions"

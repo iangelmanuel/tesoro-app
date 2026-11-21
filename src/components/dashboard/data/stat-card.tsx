@@ -1,0 +1,235 @@
+import { ArrowDownRight, ArrowUpRight } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import type { HelpKey } from "@/config/help"
+import { cn } from "@/libs/cn"
+import { formatNumber, formatPercent } from "@/libs/format"
+import { HelpHint } from "../feedback/help-hint"
+import { TONE_BADGE_CLASSES } from "../feedback/tone"
+import { Amount } from "./amount"
+import { CARD } from "./surface"
+
+export type StatTrend = "higher-is-better" | "lower-is-better"
+export type StatFormat = "currency" | "percent" | "number"
+
+interface StatCardProps {
+  /** Nombre de la KPI */
+  label: string
+  /** En la moneda del espacio; en `percent`, puntos (12.5 = 12,5 %) */
+  value: number | null
+  /** Periodo anterior; null/undefined = sin badge */
+  previous?: number | null
+  /** Si subir es bueno o malo: decide el color del badge */
+  trend: StatTrend
+  /** Cómo se muestra la cifra (por defecto "currency") */
+  format?: StatFormat
+  /** Código ISO de la moneda del espacio (solo `currency`) */
+  currency?: string
+  /** Ayuda (i) junto a la etiqueta */
+  help?: HelpKey
+  /** Texto corto bajo el valor, por ejemplo el alcance de los filtros */
+  caption?: string
+  /** Chip junto a la cifra (p. ej. el nivel de utilización) */
+  badge?: React.ReactNode
+  /** Color de la cifra según su estado (`TONE_TEXT_CLASSES`) */
+  valueClassName?: string
+  /** Tamaño de la tarjeta (por defecto "default") */
+  size?: "default" | "sm"
+  /** Clases de la tarjeta */
+  className?: string
+}
+
+// Los montos (`currency`) los formatea <Amount />, que puede ocultarlos
+function formatValue(value: number, format: Exclude<StatFormat, "currency">) {
+  if (format === "percent") return formatPercent(value)
+  return formatNumber(value)
+}
+
+// Cifra de la tarjeta: raya sin dato, <Amount /> en montos y el resto con
+// formatValue
+function StatValue({
+  value,
+  format,
+  currency
+}: {
+  value: number | null
+  format: StatFormat
+  currency: string
+}) {
+  if (value === null) return "—"
+  if (format === "currency") {
+    return (
+      <Amount
+        value={value}
+        currency={currency}
+      />
+    )
+  }
+  return formatValue(value, format)
+}
+
+/**
+ * Variación contra el periodo anterior. En montos y conteos es relativa
+ * (%); en porcentajes es la diferencia en puntos (pp), porque "+20 % de una
+ * tasa" confunde. null cuando no hay base para comparar.
+ */
+export function statChange(
+  value: number | null,
+  previous: number | null | undefined,
+  format: StatFormat = "currency"
+) {
+  if (value === null || previous === null || previous === undefined) {
+    return null
+  }
+  if (format === "percent") return value - previous
+  if (previous === 0) return null
+  return ((value - previous) / Math.abs(previous)) * 100
+}
+
+// Contenedor compartido por la tarjeta y su skeleton: mismas filas, alturas
+// y radios, así el cambio de uno a otro no mueve el layout
+function StatCardFrame({
+  size,
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"div"> & { size: "default" | "sm" }) {
+  return (
+    <div
+      data-slot="stat-card"
+      className={cn(CARD, "gap-3", size === "sm" && "p-4", className)}
+      {...props}
+    >
+      {children}
+    </div>
+  )
+}
+
+const VALUE_HEIGHT = {
+  default: "min-h-8 sm:min-h-9",
+  sm: "min-h-7"
+} as const
+
+/**
+ * KPI: etiqueta, valor grande y badge con flecha y variación. El color del
+ * badge depende del significado, no del signo: con `lower-is-better` (gastos)
+ * subir se pinta como malo.
+ */
+export function StatCard({
+  label,
+  value,
+  previous,
+  trend,
+  format = "currency",
+  currency = "COP",
+  help,
+  caption,
+  badge,
+  valueClassName,
+  size = "default",
+  className
+}: StatCardProps) {
+  const change = statChange(value, previous, format)
+  // A un decimal, como se muestra: un 0,04 % no merece badge
+  const rounded = change === null ? null : Math.round(change * 10) / 10
+  const isUp = rounded !== null && rounded > 0
+  const isGood = isUp === (trend === "higher-is-better")
+  const unit = format === "percent" ? " pp" : " %"
+  const ArrowIcon = isUp ? ArrowUpRight : ArrowDownRight
+
+  return (
+    <StatCardFrame
+      size={size}
+      className={className}
+    >
+      <dl className="flex flex-col gap-2">
+        <div className="flex min-h-6 items-center gap-1">
+          <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
+          {help && <HelpHint topic={help} />}
+        </div>
+        <dd
+          className={cn(
+            "flex flex-wrap items-baseline gap-x-2 gap-y-1",
+            VALUE_HEIGHT[size]
+          )}
+        >
+          <span
+            className={cn(
+              "font-bold tracking-[-0.01em] tabular-nums",
+              size === "sm" ? "text-xl" : "text-2xl sm:text-3xl",
+              valueClassName
+            )}
+          >
+            <StatValue
+              value={value}
+              format={format}
+              currency={currency}
+            />
+          </span>
+          {badge}
+          {rounded !== null && rounded !== 0 && (
+            <span
+              className={cn(
+                // Texto y flecha del color del significado, sobre su fondo
+                // suave (≥ 6:1). --income/--expense sobre su propio tinte no
+                // daban 4.5:1
+                "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
+                isGood ? TONE_BADGE_CLASSES.success : TONE_BADGE_CLASSES.danger
+              )}
+            >
+              <ArrowIcon
+                aria-hidden="true"
+                className="size-3.5"
+              />
+              <span className="sr-only">{isUp ? "Subió" : "Bajó"}</span>
+              {formatNumber(Math.abs(rounded), { maximumFractionDigits: 1 })}
+              {unit}
+              <span className="sr-only">
+                {" "}
+                frente al periodo anterior, {isGood ? "a favor" : "en contra"}
+              </span>
+            </span>
+          )}
+        </dd>
+        {caption && (
+          <dd className="text-xs text-muted-foreground">{caption}</dd>
+        )}
+      </dl>
+    </StatCardFrame>
+  )
+}
+
+/** Hueco de StatCard: mismo contenedor, etiqueta, cifra y (opcional) nota */
+export function StatCardSkeleton({
+  size = "default",
+  caption = false,
+  className
+}: {
+  size?: "default" | "sm"
+  /** Reserva la línea de la nota bajo la cifra */
+  caption?: boolean
+  className?: string
+}) {
+  return (
+    <StatCardFrame
+      size={size}
+      className={className}
+      aria-hidden="true"
+    >
+      <div className="flex flex-col gap-2">
+        <div className="flex min-h-6 items-center">
+          <Skeleton className="h-4 w-28" />
+        </div>
+        <div className={cn("flex items-center", VALUE_HEIGHT[size])}>
+          <Skeleton
+            className={cn("w-40", size === "sm" ? "h-6" : "h-7 sm:h-8")}
+          />
+        </div>
+        {caption && (
+          <div className="flex h-4 items-center">
+            <Skeleton className="h-3 w-24" />
+          </div>
+        )}
+      </div>
+    </StatCardFrame>
+  )
+}

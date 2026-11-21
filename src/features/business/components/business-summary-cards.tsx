@@ -1,4 +1,7 @@
-import { StatCard, StatCardSkeleton } from "@/components/dashboard/stat-card"
+import {
+  StatCard,
+  StatCardSkeleton
+} from "@/components/dashboard/data/stat-card"
 import { NEGATIVE, POSITIVE } from "@/features/reports/change"
 import { savingsRate } from "@/features/reports/metrics"
 import type { MonthlyTotal } from "@/features/reports/queries"

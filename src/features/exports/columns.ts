@@ -1,4 +1,4 @@
-import type { WorkspaceType } from "@/features/workspaces/queries"
+import type { WorkspaceType } from "@/features/workspaces/types"
 import type { ExportMovementKind, ExportMovementRow } from "./types"
 import type { AmountTone } from "./workbook/theme"
 

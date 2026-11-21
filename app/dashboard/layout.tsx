@@ -1,62 +1,37 @@
-import { Suspense, cache } from "react"
+import { Suspense } from "react"
 import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
-import { AppSidebar } from "@/components/dashboard/app-sidebar"
-import { AppSidebarSkeleton } from "@/components/dashboard/app-sidebar-skeleton"
+import { HideAmountsProvider } from "@/components/dashboard/hide-amounts/hide-amounts-context"
+import { HideAmountsToggle } from "@/components/dashboard/hide-amounts/hide-amounts-toggle"
+import { QuickActions } from "@/components/dashboard/quick-actions/quick-actions"
+import { AppSidebar } from "@/components/dashboard/shell/app-sidebar"
+import { AppSidebarSkeleton } from "@/components/dashboard/shell/app-sidebar-skeleton"
 import {
   DashboardHeader,
   DashboardHeaderSkeleton
-} from "@/components/dashboard/dashboard-header"
+} from "@/components/dashboard/shell/dashboard-header"
 import {
   DashboardTitle,
   DashboardTitleSkeleton
-} from "@/components/dashboard/dashboard-title"
-import { HideAmountsProvider } from "@/components/dashboard/hide-amounts-context"
-import { HideAmountsToggle } from "@/components/dashboard/hide-amounts-toggle"
-import { QuickActions } from "@/components/dashboard/quick-actions"
+} from "@/components/dashboard/shell/dashboard-title"
+import { WorkspaceThemeRoot } from "@/components/dashboard/shell/workspace-theme-root"
 import { ShortcutsPreferenceProvider } from "@/components/dashboard/shortcuts/shortcuts-preference"
-import { SidebarInset, SidebarProvider } from "@/components/dashboard/sidebar"
+import {
+  SidebarInset,
+  SidebarProvider
+} from "@/components/dashboard/sidebar/sidebar"
 import {
   SIDEBAR_WIDTH_COOKIE,
   parseSidebarWidth
 } from "@/components/dashboard/sidebar/width"
-import { WorkspaceThemeRoot } from "@/components/dashboard/workspace-theme-root"
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { SHORTCUTS_COOKIE, parseShortcutsCookie } from "@/config/shortcuts"
-import { SITE } from "@/config/site"
+import { getDashboardUser } from "@/features/account/dashboard-user"
 import { TutorialAutoStart } from "@/features/tutorials/components/tutorial-auto-start"
 import { TutorialHelpButton } from "@/features/tutorials/components/tutorial-help-button"
 import { TutorialProvider } from "@/features/tutorials/components/tutorial-provider"
 import { getCompletedTutorials } from "@/features/tutorials/queries"
 import { getBusinessWorkspaces } from "@/features/workspaces/queries"
-import { createClient } from "@/libs/supabase/server"
-
-// Lee la sesión (cookies): va dentro de un Suspense por cacheComponents.
-// cache() la comparte entre el aside y el título del header en el request
-const getDashboardUser = cache(async () => {
-  const supabase = await createClient()
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect(SITE.routes.signIn)
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, avatar_url, hide_amounts")
-    .eq("id", user.id)
-    .single()
-
-  return {
-    name: profile?.full_name ?? user.email ?? "",
-    email: user.email ?? "",
-    avatarUrl: profile?.avatar_url ?? null,
-    hideAmounts: profile?.hide_amounts ?? false
-  }
-})
 
 async function DashboardSidebar() {
   const [user, businesses, cookieStore] = await Promise.all([

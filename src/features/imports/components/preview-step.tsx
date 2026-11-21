@@ -2,9 +2,12 @@
 
 import { type ReactNode, useId, useMemo, useState } from "react"
 import { LoaderCircle } from "lucide-react"
-import { CARD_LIST } from "@/components/dashboard/surface"
-import { TONE_BADGE_CLASSES, type Tone } from "@/components/dashboard/tone"
-import { ToneBadge } from "@/components/dashboard/tone-badge"
+import { CARD_LIST } from "@/components/dashboard/data/surface"
+import {
+  TONE_BADGE_CLASSES,
+  type Tone
+} from "@/components/dashboard/feedback/tone"
+import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import { FieldHelp } from "@/components/forms/field-label"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"

@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { CARD } from "@/components/dashboard/surface"
+import { CARD } from "@/components/dashboard/data/surface"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
 import { SignInForm } from "@/features/auth/components/sign-in-form"

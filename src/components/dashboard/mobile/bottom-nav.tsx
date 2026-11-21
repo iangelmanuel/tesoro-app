@@ -9,8 +9,8 @@ import { SITE } from "@/config/site"
 import { BUDGETS_PATH, RECURRING_PATH } from "@/features/budgets/tabs"
 import { workspaceBasePath } from "@/features/workspaces/paths"
 import { cn } from "@/libs/cn"
-import { NAV_ICONS, type NavIcon, flattenNav, isActive } from "../nav"
-import { useActiveWorkspace } from "../use-active-workspace"
+import { NAV_ICONS, type NavIcon, flattenNav, isActive } from "../shell/nav"
+import { useActiveWorkspace } from "../shell/use-active-workspace"
 
 const PERSONAL_ITEMS = flattenNav(SITE.navigation.personal)
 const BUSINESS_ITEMS = flattenNav(SITE.navigation.business)

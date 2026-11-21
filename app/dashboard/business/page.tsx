@@ -5,7 +5,7 @@ import { Building2 } from "lucide-react"
 import {
   EmptyState,
   EmptyStateSkeleton
-} from "@/components/dashboard/empty-state"
+} from "@/components/dashboard/feedback/empty-state"
 import { Button } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import { BusinessDialog } from "@/features/business/components/business-dialog"

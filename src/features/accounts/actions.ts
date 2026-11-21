@@ -3,8 +3,8 @@
 import { z } from "zod"
 import { SITE } from "@/config/site"
 import { requireWritableWorkspace } from "@/features/workspaces/queries"
+import { revalidateWorkspacePages } from "@/features/workspaces/revalidate"
 import { todayISO } from "@/libs/dates"
-import { revalidateWorkspacePages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import { getAccountBalanceAt, getAccountBalances } from "./queries"
 import {

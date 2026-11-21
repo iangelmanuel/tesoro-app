@@ -1,8 +1,8 @@
 import {
   TONE_BADGE_CLASSES as TONE_BADGE,
   TONE_BAR_CLASSES as TONE_BAR
-} from "@/components/dashboard/tone"
-import { ToneBadge } from "@/components/dashboard/tone-badge"
+} from "@/components/dashboard/feedback/tone"
+import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import { cn } from "@/libs/cn"
 import { GOAL_STATUS_LABELS, type GoalStatus } from "../progress"
 

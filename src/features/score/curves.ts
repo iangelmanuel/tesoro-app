@@ -1,7 +1,7 @@
 // Mecánica común del score de Personal (SPEC 07) y Empresa (SPEC 11): curvas,
 // bandas, ventana, semanas y ponderación. Funciones puras; los factores de
 // cada espacio viven en su módulo.
-import { monthRange, shiftMonth, todayISO } from "@/libs/dates"
+import { listMonths, monthRange, shiftMonth, todayISO } from "@/libs/dates"
 import {
   BANDS,
   CLOSED_MONTHS,
@@ -36,15 +36,6 @@ function addDays(date: string, days: number) {
 export function isoWeekStart(date: string) {
   const weekday = new Date(`${date}T00:00:00Z`).getUTCDay() // 0 = domingo
   return addDays(date, -((weekday + 6) % 7))
-}
-
-/** Meses YYYY-MM de `from` a `to`, inclusive; vacío si `from` > `to` */
-export function monthsBetween(from: string, to: string) {
-  const months: string[] = []
-  for (let month = from; month <= to; month = shiftMonth(month, 1)) {
-    months.push(month)
-  }
-  return months
 }
 
 /**
@@ -87,7 +78,7 @@ export function windowMonths(month: string, firstTransactionOn: string | null) {
 
   const start = shiftMonth(month, -(WINDOW_MONTHS - 1))
   const firstMonth = firstTransactionOn.slice(0, 7)
-  return monthsBetween(start > firstMonth ? start : firstMonth, month)
+  return listMonths(start > firstMonth ? start : firstMonth, month)
 }
 
 /**
@@ -102,7 +93,7 @@ export function closedMonths(
   if (firstTransactionOn === null) return []
 
   const firstMonth = firstTransactionOn.slice(0, 7)
-  return monthsBetween(shiftMonth(month, -count), shiftMonth(month, -1)).filter(
+  return listMonths(shiftMonth(month, -count), shiftMonth(month, -1)).filter(
     (closed) => closed >= firstMonth
   )
 }
@@ -205,5 +196,5 @@ export function scoreVariation<K extends string>(
 /** Los 12 meses YYYY-MM hasta el actual, del más viejo al más reciente */
 export function historyMonths(today = todayISO()) {
   const current = today.slice(0, 7)
-  return monthsBetween(shiftMonth(current, -(HISTORY_MONTHS - 1)), current)
+  return listMonths(shiftMonth(current, -(HISTORY_MONTHS - 1)), current)
 }

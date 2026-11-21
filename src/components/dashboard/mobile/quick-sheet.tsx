@@ -15,13 +15,19 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { useCommandPalette } from "../command/command-palette-context"
-import { type QuickAction, useQuickActions } from "../quick-actions-context"
+import {
+  type QuickAction,
+  useQuickActions
+} from "../quick-actions/quick-actions-context"
 
 interface QuickSheetProps {
+  /** Hoja abierta */
   open: boolean
+  /** Avisa al abrir o cerrar la hoja */
   onOpenChange: (open: boolean) => void
   /** Apertura automática al entrar (preferencia de este dispositivo) */
   autoOpen: boolean
+  /** Guarda la preferencia de apertura automática */
   onAutoOpenChange: (autoOpen: boolean) => void
 }
 

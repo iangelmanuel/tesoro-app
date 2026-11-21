@@ -1,10 +1,13 @@
 import { CalendarClock, CalendarPlus, CircleCheck, Plus } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
-import { CardHeading } from "@/components/dashboard/card-heading"
-import { CardEmpty, EmptyState } from "@/components/dashboard/empty-state"
-import { MonthNav } from "@/components/dashboard/month-nav"
-import { CARD, CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
-import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
+import { Amount } from "@/components/dashboard/data/amount"
+import { CardHeading } from "@/components/dashboard/data/card-heading"
+import { MonthNav } from "@/components/dashboard/data/month-nav"
+import { CARD, CARD_LIST, CARD_ROW } from "@/components/dashboard/data/surface"
+import {
+  CardEmpty,
+  EmptyState
+} from "@/components/dashboard/feedback/empty-state"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"

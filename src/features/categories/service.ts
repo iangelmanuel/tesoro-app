@@ -1,8 +1,9 @@
+import "server-only"
 import {
   type ServiceResult,
   type ServiceWorkspace,
   fail
-} from "@/libs/service-result"
+} from "@/features/workspaces/service-result"
 import type { AppSupabase } from "@/libs/supabase/types"
 import type { Category } from "./queries"
 import type { CategoryInput } from "./schemas"

@@ -20,7 +20,7 @@ import {
   LINE_PROPS
 } from "@/components/charts/chart-style"
 import { ChartTooltip } from "@/components/charts/chart-tooltip"
-import { useFormatAmount } from "@/components/dashboard/hide-amounts-context"
+import { useFormatAmount } from "@/components/dashboard/hide-amounts/hide-amounts-context"
 import { REPORT_LABELS, type ReportLabels } from "../labels"
 import type { MonthlyTotal } from "../queries"
 import { ChartDataTable } from "./chart-data-table"

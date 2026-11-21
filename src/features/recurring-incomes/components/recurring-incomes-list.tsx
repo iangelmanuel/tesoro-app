@@ -2,21 +2,21 @@
 
 import { useState } from "react"
 import { Pause, Pencil, Play, Trash2 } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
-import { DeleteDialog } from "@/components/dashboard/delete-dialog"
+import { Amount } from "@/components/dashboard/data/amount"
 import {
   type RowAction,
   RowActions,
   RowContextMenu,
   RowMenuBoundary
-} from "@/components/dashboard/row-actions"
+} from "@/components/dashboard/data/row-actions"
 import {
   ScrollTable,
   ScrollTableSkeleton
-} from "@/components/dashboard/scroll-table"
-import { SURFACE_LIST } from "@/components/dashboard/surface"
-import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
-import { ToneBadge } from "@/components/dashboard/tone-badge"
+} from "@/components/dashboard/data/scroll-table"
+import { SURFACE_LIST } from "@/components/dashboard/data/surface"
+import { TONE_BADGE_CLASSES } from "@/components/dashboard/feedback/tone"
+import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
+import { DeleteDialog } from "@/components/dashboard/overlays/delete-dialog"
 import {
   Table,
   TableBody,

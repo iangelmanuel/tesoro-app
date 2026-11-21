@@ -1,6 +1,6 @@
 import { Suspense } from "react"
 import { Plus, Wallet } from "lucide-react"
-import { EmptyState } from "@/components/dashboard/empty-state"
+import { EmptyState } from "@/components/dashboard/feedback/empty-state"
 import { Button } from "@/components/ui/button"
 import { LoadingRegion } from "@/components/ui/skeleton"
 import { AccountDialog } from "@/features/accounts/components/account-dialog"

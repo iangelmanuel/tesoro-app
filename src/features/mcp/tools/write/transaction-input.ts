@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { TRANSACTION_TYPES } from "@/features/categories/constants"
 import { validateCategory } from "@/features/transactions/service"
-import type { WorkspaceType } from "@/features/workspaces/queries"
+import type { WorkspaceType } from "@/features/workspaces/types"
 import type { McpContext } from "../../types"
 import { dateSchema } from "../shared"
 import { type RowError, timeInputSchema } from "./batch"

@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 import { ChartCard } from "@/components/charts/chart-card"
-import { Amount } from "@/components/dashboard/amount"
-import { StatCard } from "@/components/dashboard/stat-card"
+import { Amount } from "@/components/dashboard/data/amount"
+import { StatCard } from "@/components/dashboard/data/stat-card"
 import { LoadingRegion } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
 import {
@@ -36,6 +36,7 @@ import {
   getWorkspaceBalance
 } from "@/features/reports/queries"
 import { incomeExpenseLegend } from "@/features/reports/series"
+import { personalSummaryKpis } from "@/features/reports/summary"
 import {
   ScoreSummaryCard,
   ScoreSummaryCardSkeleton
@@ -100,17 +101,14 @@ async function SummaryContent() {
     )
   }
 
-  // monthly_totals rellena los meses vacíos: el último es el actual y el
-  // penúltimo el anterior. Sin movimientos el mes anterior, no hay badge
-  const current = monthly[monthly.length - 1]
-  const previousMonth = monthly[monthly.length - 2]
-  const previous = previousMonth.txCount > 0 ? previousMonth : null
-  // Saldo acumulado al cierre del mes anterior = el de hoy sin este mes
-  const previousAccumulated = accumulatedBalance - current.balance
-  const hadHistory = previousAccumulated !== 0 || previous !== null
-
-  const isEmptyTrend = monthly.every((row) => row.txCount === 0)
-  const trendBalance = monthly.reduce((sum, row) => sum + row.balance, 0)
+  const {
+    current,
+    previous,
+    previousAccumulated,
+    hadHistory,
+    isEmptyTrend,
+    trendBalance
+  } = personalSummaryKpis(monthly, accumulatedBalance)
   const currency = workspace.currency
 
   return (

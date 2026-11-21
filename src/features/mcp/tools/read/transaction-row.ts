@@ -1,5 +1,5 @@
+import { trimSeconds } from "@/libs/dates"
 import type { Database } from "@/types/database"
-import { formatTime } from "../shared"
 
 // Fila de movimiento tal como la ve el agente (SPEC 34), con su vínculo:
 // pago de préstamo, avance de tarjeta (SPEC 36) o cobro de Me deben
@@ -98,7 +98,7 @@ export function toApiTransaction(row: RawTransaction) {
     type: row.type,
     amount: Number(row.amount),
     occurred_on: row.occurred_on,
-    time: formatTime(row.occurred_time),
+    time: trimSeconds(row.occurred_time),
     description: row.description,
     note: row.note,
     category: row.categories,

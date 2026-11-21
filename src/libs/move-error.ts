@@ -1,6 +1,6 @@
 import type { PostgrestError } from "@supabase/supabase-js"
 
-// Mensaje de las RPC de reordenar (SPEC 19 y 45) para un toast
+/** Mensaje de las RPC de reordenar (SPEC 19 y 45) para un toast */
 export function moveErrorMessage(error: PostgrestError) {
   if (error.code === "42501") {
     return "No tienes permiso para reordenar en este espacio"

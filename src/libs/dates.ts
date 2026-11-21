@@ -1,5 +1,7 @@
-// "Hoy" y "mes actual" se calculan siempre en la zona del producto, no en la
-// del servidor ni la del navegador
+/**
+ * "Hoy" y "mes actual" se calculan siempre en la zona del producto, no en la
+ * del servidor ni la del navegador
+ */
 export const TIME_ZONE = "America/Bogota"
 
 const ISO_DATE = new Intl.DateTimeFormat("en-CA", {
@@ -51,15 +53,39 @@ export function shiftMonth(month: string, delta: number) {
   return date.toISOString().slice(0, 7)
 }
 
-// YYYY-MM-DD ↔ Date local, sin pasar por UTC para no correr el día. Para
-// los selectores de fecha (Calendar trabaja con fechas locales).
+/**
+ * YYYY-MM-DD ↔ Date local, sin pasar por UTC para no correr el día. Para
+ * los selectores de fecha (Calendar trabaja con fechas locales).
+ */
 export function toLocalDate(value: string) {
   const [year, month, day] = value.split("-").map(Number)
   return new Date(year, month - 1, day)
 }
 
+/** Date local → YYYY-MM-DD, sin pasar por UTC (inverso de `toLocalDate`) */
 export function fromLocalDate(date: Date) {
   const month = String(date.getMonth() + 1).padStart(2, "0")
   const day = String(date.getDate()).padStart(2, "0")
   return `${date.getFullYear()}-${month}-${day}`
+}
+
+/** Meses YYYY-MM de `from` a `to`, inclusive; vacío si `from` > `to` */
+export function listMonths(from: string, to: string): string[] {
+  const months: string[] = []
+  for (let month = from; month <= to; month = shiftMonth(month, 1)) {
+    months.push(month)
+  }
+  return months
+}
+
+/** Cuántos meses hay de `from` a `to` (YYYY-MM), ambos incluidos */
+export function countMonths(from: string, to: string): number {
+  const [fromYear, fromMonth] = from.split("-").map(Number)
+  const [toYear, toMonth] = to.split("-").map(Number)
+  return (toYear - fromYear) * 12 + (toMonth - fromMonth) + 1
+}
+
+/** "14:30:00" → "14:30"; sin hora, null */
+export function trimSeconds(value: string | null): string | null {
+  return value ? value.slice(0, 5) : null
 }

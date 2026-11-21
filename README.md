@@ -74,8 +74,8 @@ proxy.ts                  Refresca la sesión y protege /dashboard/*
 src/
 ├── components/
 │   ├── charts/           Tarjeta, contenedor, tooltip y leyenda de Recharts
-│   ├── dashboard/        Sidebar propio, tabs de espacio, menú de usuario y
-│   │                     WorkspaceThemeRoot (primario por espacio)
+│   ├── dashboard/        Shell y piezas compartidas del dashboard, por rol
+│   │                     (shell/, data/, feedback/, overlays/, sidebar/…)
 │   ├── forms/            Campos de formulario (texto, select, fecha) y FormDialog
 │   ├── seo/              <JsonLd />
 │   ├── ui/               Primitivas de shadcn sobre Base UI
@@ -89,9 +89,12 @@ src/
 ├── types/database.ts     Tipos generados de la base de datos
 └── styles/globals.css    Tailwind, tokens del tema y primarios por espacio
 supabase/                 config.toml y migraciones versionadas
-docs/                     Documentación de producto
+docs/                     Documentación de producto, UI y arquitectura
 specs/                    Specs de implementación
 ```
+
+Cómo se organiza el código (capas, anatomía de una feature, nombres y
+tests) está en [docs/arquitectura.md](docs/arquitectura.md).
 
 ## Empezar
 
@@ -131,9 +134,11 @@ variables `NEXT_PUBLIC_*`: la app solo usa la clave publicable.
 | `pnpm eslint:fix`     | Lint con corrección automática          |
 | `pnpm prettier`       | Formatea el código                      |
 | `pnpm prettier:check` | Verifica el formateo sin escribir       |
+| `pnpm test`           | Tests de lógica pura con Vitest         |
+| `pnpm test:watch`     | Vitest en modo watch                    |
 
-CI (`.github/workflows/ci.yml`) corre `check`, `eslint` y `prettier:check` en
-paralelo, y un build, en cada push/PR a `main`.
+CI (`.github/workflows/ci.yml`) corre `check`, `eslint`, `prettier:check` y
+`test` en paralelo, y un build, en cada push/PR a `main`.
 
 ### Supabase
 

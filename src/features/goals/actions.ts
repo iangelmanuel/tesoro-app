@@ -3,8 +3,8 @@
 import { z } from "zod"
 import { parseAmount } from "@/features/transactions/schemas"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
+import { revalidatePersonalPages } from "@/features/workspaces/revalidate"
 import { moveErrorMessage } from "@/libs/move-error"
-import { revalidatePersonalPages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import {
   GOAL_NOT_ACTIVE,

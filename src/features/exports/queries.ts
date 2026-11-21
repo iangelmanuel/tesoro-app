@@ -1,3 +1,4 @@
+import "server-only"
 import { type Debt, getDebts } from "@/features/debts/queries"
 import {
   type EntryAllocation,

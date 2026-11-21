@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { WorkspaceType } from "@/features/workspaces/queries"
+import type { WorkspaceType } from "@/features/workspaces/types"
 import type { McpContext, McpTool } from "../types"
 import { toolResult } from "./result"
 
@@ -82,11 +82,6 @@ export async function resolveWorkspace(
     name: data.name,
     deletionRequestedAt: data.deletion_requested_at
   }
-}
-
-/** "14:30:00" → "14:30"; sin hora, null */
-export function formatTime(value: string | null) {
-  return value ? value.slice(0, 5) : null
 }
 
 // Cursor del orden de la lista de movimientos (SPEC 19): occurred_on desc,

@@ -1,7 +1,7 @@
 "use client"
 
 import { LoaderCircle } from "lucide-react"
-import { CARD_LIST } from "@/components/dashboard/surface"
+import { CARD_LIST } from "@/components/dashboard/data/surface"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/libs/cn"
 import type { LinkTarget } from "../types"

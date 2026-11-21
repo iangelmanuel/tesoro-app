@@ -34,8 +34,11 @@ export function useChart() {
 }
 
 type ChartContainerProps = React.ComponentProps<"div"> & {
+  /** Etiqueta, color e ícono de cada serie (tokens del tema) */
   config: ChartConfig
+  /** La gráfica de Recharts */
   children: React.ComponentProps<typeof ResponsiveContainer>["children"]
+  /** Tamaño antes de medir el contenedor, para el primer render */
   initialDimension?: { width: number; height: number }
 }
 

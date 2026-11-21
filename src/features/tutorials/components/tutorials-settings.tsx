@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation"
 import { RotateCcw } from "lucide-react"
-import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
-import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
+import { CARD_LIST, CARD_ROW } from "@/components/dashboard/data/surface"
+import { TONE_BADGE_CLASSES } from "@/components/dashboard/feedback/tone"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { TUTORIAL_SECTIONS, TUTORIAL_SECTION_INFO } from "@/config/tutorials"

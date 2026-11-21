@@ -1,4 +1,4 @@
-import { MonthNav } from "@/components/dashboard/month-nav"
+import { MonthNav } from "@/components/dashboard/data/month-nav"
 import type { BudgetMonth } from "../month"
 import { BUDGETS_PATH } from "../tabs"
 

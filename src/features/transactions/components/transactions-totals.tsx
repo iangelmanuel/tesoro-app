@@ -1,4 +1,7 @@
-import { StatCard, StatCardSkeleton } from "@/components/dashboard/stat-card"
+import {
+  StatCard,
+  StatCardSkeleton
+} from "@/components/dashboard/data/stat-card"
 import type { TransactionTotals } from "../queries"
 
 interface TransactionsTotalsProps {

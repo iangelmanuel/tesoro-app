@@ -1,13 +1,13 @@
 import Link from "next/link"
 import { CreditCard } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
+import { Amount } from "@/components/dashboard/data/amount"
 import {
   CardHeading,
   CardHeadingSkeleton
-} from "@/components/dashboard/card-heading"
-import { CardEmpty } from "@/components/dashboard/empty-state"
-import { HelpHint } from "@/components/dashboard/help-hint"
-import { CARD, CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+} from "@/components/dashboard/data/card-heading"
+import { CARD, CARD_LIST, CARD_ROW } from "@/components/dashboard/data/surface"
+import { CardEmpty } from "@/components/dashboard/feedback/empty-state"
+import { HelpHint } from "@/components/dashboard/feedback/help-hint"
 import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatPercent } from "@/features/budgets/progress"

@@ -1,6 +1,7 @@
 import { z } from "zod"
 import type { TransferRow } from "@/features/accounts/transfer-service"
-import { dateSchema, formatTime } from "../shared"
+import { trimSeconds } from "@/libs/dates"
+import { dateSchema } from "../shared"
 import { timeInputSchema } from "./batch"
 
 // Forma de un traspaso en las tools de escritura (SPEC 34). Se valida con
@@ -45,7 +46,7 @@ export function transferValuesOf(row: TransferRow): TransferValues {
     to_account_id: row.to_account_id,
     amount: Number(row.amount),
     occurred_on: row.occurred_on,
-    time: formatTime(row.occurred_time),
+    time: trimSeconds(row.occurred_time),
     note: row.note
   }
 }

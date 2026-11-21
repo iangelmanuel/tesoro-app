@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { Check, Plus } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
-import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
-import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
+import { Amount } from "@/components/dashboard/data/amount"
+import { CARD_LIST, CARD_ROW } from "@/components/dashboard/data/surface"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/libs/cn"
 import { formatShortDate } from "@/libs/format"

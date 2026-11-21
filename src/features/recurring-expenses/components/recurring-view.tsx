@@ -1,9 +1,12 @@
 import { CalendarClock, CircleCheck, Plus } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
-import { CardHeading } from "@/components/dashboard/card-heading"
-import { CardEmpty, EmptyState } from "@/components/dashboard/empty-state"
-import { MonthNav } from "@/components/dashboard/month-nav"
-import { CARD } from "@/components/dashboard/surface"
+import { Amount } from "@/components/dashboard/data/amount"
+import { CardHeading } from "@/components/dashboard/data/card-heading"
+import { MonthNav } from "@/components/dashboard/data/month-nav"
+import { CARD } from "@/components/dashboard/data/surface"
+import {
+  CardEmpty,
+  EmptyState
+} from "@/components/dashboard/feedback/empty-state"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getAccountBalances } from "@/features/accounts/queries"

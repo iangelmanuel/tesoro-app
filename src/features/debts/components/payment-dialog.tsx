@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState, useId, useState } from "react"
-import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
+import { TONE_BADGE_CLASSES } from "@/components/dashboard/feedback/tone"
 import { amountInput } from "@/components/forms/amount-format"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { FieldHelp } from "@/components/forms/field-label"

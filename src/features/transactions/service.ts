@@ -1,13 +1,14 @@
+import "server-only"
 import type { PostgrestError } from "@supabase/supabase-js"
 import type { z } from "zod"
 import type { IncomeAllocation } from "@/features/recurring-incomes/types"
-import type { WorkspaceType } from "@/features/workspaces/queries"
 import {
   type ServiceFailure,
   type ServiceResult,
   type ServiceWorkspace,
   fail
-} from "@/libs/service-result"
+} from "@/features/workspaces/service-result"
+import type { WorkspaceType } from "@/features/workspaces/types"
 import type { AppSupabase } from "@/libs/supabase/types"
 import type { Database } from "@/types/database"
 import type { TransactionInput, createTransactionSchema } from "./schemas"

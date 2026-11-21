@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState, useId, useState } from "react"
-import { HelpHint } from "@/components/dashboard/help-hint"
+import { HelpHint } from "@/components/dashboard/feedback/help-hint"
 import { AccountSelectField } from "@/components/forms/account-select-field"
 import { amountInput, rateInput } from "@/components/forms/amount-format"
 import { FieldHelp, FieldLabel } from "@/components/forms/field-label"

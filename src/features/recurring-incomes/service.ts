@@ -1,10 +1,11 @@
+import "server-only"
 import type { PostgrestError } from "@supabase/supabase-js"
 import {
   type ServiceFailure,
   type ServiceResult,
   type ServiceWorkspace,
   fail
-} from "@/libs/service-result"
+} from "@/features/workspaces/service-result"
 import type { AppSupabase } from "@/libs/supabase/types"
 import type { Database } from "@/types/database"
 import type { RecurringIncomeInput } from "./schemas"

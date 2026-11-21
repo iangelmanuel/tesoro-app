@@ -1,4 +1,4 @@
-import type { WorkspaceType } from "@/features/workspaces/queries"
+import type { WorkspaceType } from "@/features/workspaces/types"
 
 export interface ReportLabels {
   /** Serie de ingresos en gráficas, toggle y títulos */

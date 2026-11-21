@@ -1,5 +1,5 @@
-import { CardHeadingSkeleton } from "@/components/dashboard/card-heading"
-import { CARD } from "@/components/dashboard/surface"
+import { CardHeadingSkeleton } from "@/components/dashboard/data/card-heading"
+import { CARD } from "@/components/dashboard/data/surface"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DebtCardSkeleton } from "./debt-card"
 import { DebtTotalsSkeleton } from "./debt-totals"

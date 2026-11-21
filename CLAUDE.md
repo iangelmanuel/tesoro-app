@@ -43,6 +43,7 @@ pnpm check            # tsc --noEmit
 pnpm eslint           # lint (eslint:fix para corregir)
 pnpm prettier         # formatea (prettier:check solo verifica)
 pnpm next typegen     # regenera los tipos de typedRoutes (antes de `check`)
+pnpm test             # Vitest: tests de lógica pura (test:watch en modo watch)
 pnpm brand:assets     # regenera PNG, favicon y logo/fuentes de los exports (assets/)
 ```
 
@@ -99,11 +100,22 @@ Las variables (`DEMO_EMAIL`, `DEMO_PASSWORD`, `SUPABASE_SERVICE_ROLE_KEY`
 local) van en el entorno o en `.env.local`, nunca en el repo. Al
 re-renderizar, actualiza `SITE.landing.demo.durationSeconds`.
 
-Aún no hay tests. El CI (`.github/workflows/ci.yml`) corre `check`, `eslint`,
-`prettier:check` y luego `build` con `pnpm install --frozen-lockfile`. Por eso
-el lockfile tiene que estar siempre sincronizado con `package.json`.
+Tests (SPEC 54): Vitest, solo lógica pura, en `*.test.ts` junto al módulo
+(`vitest.config.mts`, entorno `node`; `server-only` se cambia por un stub).
+Antes de mover o cambiar un cálculo, un test de caracterización fija lo que
+hace hoy. El CI (`.github/workflows/ci.yml`) corre `check`, `eslint`,
+`prettier:check` y `test`, y luego `build` con
+`pnpm install --frozen-lockfile`. Por eso el lockfile tiene que estar siempre
+sincronizado con `package.json`.
 
 ## Arquitectura
+
+La guía completa (capas, anatomía de una feature, flujo de un dato, nombres,
+tests y lista de chequeo de PR) está en
+[`docs/arquitectura.md`](docs/arquitectura.md). ESLint hace cumplir las
+fronteras de capas y de paquetes (`no-restricted-imports` en
+`eslint.config.mjs`), los nombres de archivo en kebab-case y avisa desde 400
+líneas por archivo. Queries y servicios llevan `import "server-only"`.
 
 - **`src/config/site.ts` (`SITE`)** es la fuente única de verdad para marca,
   autor, repo, rutas (`SITE.routes`), espacios (`SITE.workspaces`), funciones
@@ -119,7 +131,7 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
     `@id` (`#application`, `#website`, `#author`), más
     `buildBreadcrumbSchema`.
   - `app/layout.tsx` inyecta los tres primeros vía `<JsonLd />`
-    (`src/components/seo/JsonLd.tsx`).
+    (`src/components/seo/json-ld.tsx`).
 - **Rutas de metadata** en `app/`: `robots.ts`, `sitemap.ts` y `manifest.ts`,
   todas derivadas de `SITE`:
   - `robots.ts` bloquea `/dashboard/`, `/api/`, `/auth/` y `/oauth/`.
@@ -188,6 +200,9 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
 - KPIs con `StatCard`, cabeceras de tarjeta con `CardHeading`, ayudas con
   `HelpHint` (textos en `src/config/help.ts`), vacíos con `EmptyState` /
   `CardEmpty`. Estados con `tone.ts`, nunca con la paleta cruda de Tailwind.
+  Las piezas compartidas del dashboard viven en `src/components/dashboard/`
+  por rol: `shell/`, `quick-actions/`, `hide-amounts/`, `feedback/`, `data/`,
+  `overlays/`, más `command/`, `mobile/`, `shortcuts/` y `sidebar/`.
 - **Skeletons** (SPEC 51): cada componente que carga datos exporta su
   `…Skeleton` en el mismo archivo y con el mismo contenedor (mismas filas,
   alturas y radios). `Suspense` por tarjeta y un `loading.tsx` por ruta que
@@ -195,7 +210,7 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
   arman su skeleton en un archivo `…-screen-skeleton.tsx` (o junto al
   componente) para reusarlo en el `Suspense` y en el `loading.tsx`.
 - Listas y tarjetas de grilla con las clases de
-  `src/components/dashboard/surface.ts`, sin `rounded-xl border` ni
+  `src/components/dashboard/data/surface.ts`, sin `rounded-xl border` ni
   `border-dashed`. Los campos de formulario van con relleno suave y sin borde
   (tokens `--field-*` en `globals.css`).
 - Los traspasos se registran desde el diálogo de movimiento (opción
@@ -260,12 +275,12 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
 - **Aside** (SPEC 31): `SITE.navigation.personal` / `.business` son grupos
   (`{ label, items }`): "Día a día", "Tu plan" / "Tu operación" (donde se
   configura) y "Entiende tu dinero" / "Entiende tu negocio". Los
-  consumidores planos usan `flattenNav` (`nav.ts`). En escritorio el ancho se
+  consumidores planos usan `flattenNav` (`shell/nav.ts`). En escritorio el ancho se
   ajusta (240–360 px) y se guarda en la cookie `tesoro-sidebar-width`
   (`sidebar/width.ts`). Cada ítem lleva su letra de atajo (`shortcut`), que
   el aside muestra como estación de la línea del espacio. Ver `docs/ui.md`.
 - **Menús rápidos** (SPEC 51): una sola lista de acciones en
-  `quick-actions-context.tsx` (`actions` + `run(key)`) para el header, la
+  `quick-actions/quick-actions-context.tsx` (`actions` + `run(key)`) para el header, la
   hoja móvil y la paleta. Paleta de comandos en `dashboard/command/`
   (⌘K / Ctrl+K; Tus datos con `loadCommandEntities` y
   `requireWorkspace`). Atajos en `src/config/shortcuts.ts` +
@@ -313,7 +328,9 @@ el lockfile tiene que estar siempre sincronizado con `package.json`.
 - Las políticas de escritura de las tablas de un espacio usan
   `is_workspace_writable(workspace_id)` (dueño y sin marca de borrado). Las de
   `select` usan `is_workspace_owner`. En las actions, el espacio se resuelve
-  con `requireWritableWorkspace(id)`.
+  con `requireWritableWorkspace(id)` y, tras escribir, se revalida con
+  `revalidateWorkspacePages` (`src/features/workspaces/revalidate.ts`). Los
+  servicios devuelven `ServiceResult` (`workspaces/service-result.ts`).
 - Tesoro no envía correos por ahora: sin confirmación de email, recuperar
   contraseña ni cambio de email. En Supabase, _Confirm email_ va apagado. Al
   integrar un servicio de correo propio se reactivan esos flujos.

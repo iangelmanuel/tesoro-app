@@ -24,6 +24,7 @@
     "prettier-plugin-tailwindcss"
   ],
   "importOrder": [
+    "^server-only$",
     "^react$",
     "^react/(.*)$",
     "^next$",

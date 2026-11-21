@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        task: [check, eslint, "prettier:check"]
+        task: [check, eslint, "prettier:check", test]
 
     steps:
       - uses: actions/checkout@v5

@@ -1,8 +1,9 @@
+import "server-only"
 import { getCategoryTotals, getMonthlyTotals } from "@/features/reports/queries"
-import { historyMonths, monthsBetween } from "@/features/score/curves"
+import { historyMonths } from "@/features/score/curves"
 import { getFirstTransactionOn } from "@/features/score/queries"
 import type { TransactionType } from "@/features/transactions/filters"
-import { monthRange, shiftMonth, todayISO } from "@/libs/dates"
+import { listMonths, monthRange, shiftMonth, todayISO } from "@/libs/dates"
 import { createClient } from "@/libs/supabase/server"
 import { businessInputsStart, businessScoreHistory } from "./calculations"
 import { COST_GROWTH_BASE_MONTHS } from "./constants"
@@ -32,7 +33,7 @@ async function getCategoryCosts(
   if (firstTransactionOn === null) return []
 
   const firstMonth = firstTransactionOn.slice(0, 7)
-  const months = monthsBetween(from > firstMonth ? from : firstMonth, to)
+  const months = listMonths(from > firstMonth ? from : firstMonth, to)
 
   // category_totals es por rango: una llamada por mes, en paralelo
   const totals = await Promise.all(

@@ -4,6 +4,7 @@ import { useMemo } from "react"
 import { Tooltip, type TooltipValueType } from "recharts"
 import type { DefaultTooltipContentProps } from "recharts"
 import { cn } from "@/libs/cn"
+import { formatNumber } from "@/libs/format"
 import { getPayloadConfig, useChart } from "./chart-container"
 
 export const ChartTooltip = Tooltip
@@ -152,7 +153,7 @@ export function ChartTooltipContent({
                         <span className="font-medium text-foreground tabular-nums">
                           {typeof item.value === "number"
                             ? (valueFormatter?.(item.value) ??
-                              item.value.toLocaleString("es-CO"))
+                              formatNumber(item.value))
                             : String(item.value)}
                         </span>
                       )}

@@ -3,12 +3,12 @@
 import type { Route } from "next"
 import { useRouter } from "next/navigation"
 import { List, Wallet } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
+import { Amount } from "@/components/dashboard/data/amount"
 import {
   type RowAction,
   RowContextMenu
-} from "@/components/dashboard/row-actions"
-import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+} from "@/components/dashboard/data/row-actions"
+import { CARD_LIST, CARD_ROW } from "@/components/dashboard/data/surface"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ACCOUNT_KIND_META } from "@/features/accounts/constants"
 import type { AccountWithBalance } from "@/features/accounts/types"

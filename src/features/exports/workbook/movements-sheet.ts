@@ -1,5 +1,5 @@
 import type { Workbook } from "exceljs"
-import type { WorkspaceType } from "@/features/workspaces/queries"
+import type { WorkspaceType } from "@/features/workspaces/types"
 import { movementColumns, movementTone } from "../columns"
 import type { ExportMovementRow } from "../types"
 import { type SectionColumn, writeSection } from "./section"

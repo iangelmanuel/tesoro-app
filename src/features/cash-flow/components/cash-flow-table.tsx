@@ -5,16 +5,16 @@ import { useRouter } from "next/navigation"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { ArrowDownLeft, ArrowUpRight, List } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
+import { Amount } from "@/components/dashboard/data/amount"
 import {
   type RowAction,
   RowContextMenu
-} from "@/components/dashboard/row-actions"
+} from "@/components/dashboard/data/row-actions"
 import {
   ScrollTable,
   ScrollTableSkeleton
-} from "@/components/dashboard/scroll-table"
-import { SURFACE_LIST } from "@/components/dashboard/surface"
+} from "@/components/dashboard/data/scroll-table"
+import { SURFACE_LIST } from "@/components/dashboard/data/surface"
 import {
   Table,
   TableBody,

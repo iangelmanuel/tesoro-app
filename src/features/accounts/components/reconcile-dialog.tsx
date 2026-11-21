@@ -1,8 +1,11 @@
 "use client"
 
 import { useActionState, useEffect, useState } from "react"
-import { HelpHint } from "@/components/dashboard/help-hint"
-import { TONE_TEXT_CLASSES, type Tone } from "@/components/dashboard/tone"
+import { HelpHint } from "@/components/dashboard/feedback/help-hint"
+import {
+  TONE_TEXT_CLASSES,
+  type Tone
+} from "@/components/dashboard/feedback/tone"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { FormDialog } from "@/components/forms/form-dialog"
 import { TextInputField } from "@/components/forms/text-input-field"

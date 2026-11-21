@@ -7,8 +7,8 @@ import { Search, SlidersHorizontal, X } from "lucide-react"
 import {
   MonthSwitcher,
   MonthSwitcherSkeleton
-} from "@/components/dashboard/month-switcher"
-import { CONTROL_BUTTON } from "@/components/dashboard/surface"
+} from "@/components/dashboard/data/month-switcher"
+import { CONTROL_BUTTON } from "@/components/dashboard/data/surface"
 import { FieldHelp } from "@/components/forms/field-label"
 import { Button } from "@/components/ui/button"
 import {

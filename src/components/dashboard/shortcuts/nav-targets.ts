@@ -1,8 +1,8 @@
 import type { LucideIcon } from "lucide-react"
 import { SITE } from "@/config/site"
 import { workspaceBasePath } from "@/features/workspaces/paths"
-import { NAV_ICONS } from "../nav"
-import type { QuickActionsWorkspace } from "../quick-actions-context"
+import type { QuickActionsWorkspace } from "../quick-actions/quick-actions-context"
+import { NAV_ICONS } from "../shell/nav"
 
 export interface NavTarget {
   name: string

@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react"
 import { X } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
+import { Amount } from "@/components/dashboard/data/amount"
 import { AccountSelectField } from "@/components/forms/account-select-field"
 import { amountInput } from "@/components/forms/amount-format"
 import { CategorySelectField } from "@/components/forms/category-select-field"

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { Copy } from "lucide-react"
-import { CONTROL_BUTTON } from "@/components/dashboard/surface"
+import { CONTROL_BUTTON } from "@/components/dashboard/data/surface"
 import {
   AlertDialog,
   AlertDialogAction,

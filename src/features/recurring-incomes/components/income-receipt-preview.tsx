@@ -1,6 +1,6 @@
 "use client"
 
-import { Amount } from "@/components/dashboard/amount"
+import { Amount } from "@/components/dashboard/data/amount"
 import { shortOccurrenceDate } from "../occurrences"
 import type { IncomeSourceOption } from "../queries"
 import { describeOccurrences, previewIncomeReceipt } from "../receipt"

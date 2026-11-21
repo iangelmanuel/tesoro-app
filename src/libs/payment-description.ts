@@ -3,8 +3,10 @@
 // tardío de octubre dice "octubre". Sin año: la fecha del movimiento ya lo dice;
 // el mes basta para distinguir cada cuota
 
+/** Verbo con que empieza la descripción: gasto, ingreso o cobro */
 export type PaymentVerb = "Pago" | "Ingreso" | "Cobro"
 
+/** Periodo que cubre el pago, según la frecuencia de la cuota */
 export type PaymentPeriod =
   /** Cuota mensual: `YYYY-MM-DD` de la cuota */
   | { kind: "month"; on: string }
@@ -95,6 +97,10 @@ function periodLabel(period: PaymentPeriod): string | null {
   }
 }
 
+/**
+ * Descripción prellenada: "Pago Arriendo · octubre", "Ingreso Salario · 1.ª
+ * quincena de noviembre" o, sin frecuencia, "Pago Tarjeta Visa"
+ */
 export function buildPaymentDescription(
   verb: PaymentVerb,
   name: string,

@@ -1,10 +1,12 @@
 import { cacheLife } from "next/cache"
 import { SITE } from "@/config/site"
 
-// Estrellas del repositorio para el header de la landing (SPEC 24). Se piden
-// en el servidor y se cachean por horas: el navegador nunca llama a GitHub,
-// así la landing no hace peticiones externas. Si la API falla o limita, se
-// devuelve null y el header muestra solo el logo.
+/**
+ * Estrellas del repositorio para el header de la landing (SPEC 24). Se piden
+ * en el servidor y se cachean por horas: el navegador nunca llama a GitHub,
+ * así la landing no hace peticiones externas. Si la API falla o limita, se
+ * devuelve null y el header muestra solo el logo.
+ */
 export async function getRepoStars(): Promise<number | null> {
   "use cache"
   cacheLife("hours")

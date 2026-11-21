@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef } from "react"
 import { TUTORIALS, type TutorialSection } from "@/config/tutorials"
 import { useTutorialProgress } from "./components/tutorial-provider"
+import type * as RunTour from "./engine/run-tour"
 
-type TourEngine = typeof import("./engine/run-tour")
+type TourEngine = typeof RunTour
 
 // Una sola descarga de driver.js por sesión, compartida por todas las secciones
 let enginePromise: Promise<TourEngine> | null = null

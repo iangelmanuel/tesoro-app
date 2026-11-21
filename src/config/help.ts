@@ -1,6 +1,8 @@
-// Textos de ayuda en contexto (ícono (i) de HelpHint). Una o dos frases en
-// tuteo, sin jerga: qué es y cuándo está bien. Se reusan en todas las
-// pantallas; si cambia una definición en docs/producto.md, se cambia aquí
+/**
+ * Textos de ayuda en contexto (ícono (i) de HelpHint). Una o dos frases en
+ * tuteo, sin jerga: qué es y cuándo está bien. Se reusan en todas las
+ * pantallas; si cambia una definición en docs/producto.md, se cambia aquí
+ */
 export const HELP = {
   score:
     "Un puntaje de 0 a 100 que resume la salud de tus finanzas. Mira tu ahorro, tus deudas, tu colchón, tus presupuestos, tus metas y qué tan seguido registras. Desde 60 es Bueno y desde 80, Excelente.",
@@ -28,6 +30,7 @@ export const HELP = {
     "Cada compra a cuotas suma su parte (monto entre cuotas) a los pagos de los meses siguientes. El pago del mes es el mayor entre tu pago mínimo y esa suma. Es una estimación sin intereses: si tu extracto dice otra cosa, sube el pago mínimo."
 } as const
 
+/** Concepto con texto de ayuda en `HELP` */
 export type HelpKey = keyof typeof HELP
 
 /** Nombre corto de cada concepto, para la etiqueta accesible del (i) */
@@ -46,9 +49,11 @@ export const HELP_LABELS: Record<HelpKey, string> = {
   cardInstallments: "las compras a cuotas"
 }
 
-// Ayuda de cada campo (ícono ? de FieldLabel). Una frase corta en tuteo,
-// con ejemplo si ayuda. Clave: "<formulario>.<campo>" o "common.<campo>".
-// Los mínimos y formatos se verifican contra los esquemas de Zod
+/**
+ * Ayuda de cada campo (ícono ? de FieldLabel). Una frase corta en tuteo,
+ * con ejemplo si ayuda. Clave: "<formulario>.<campo>" o "common.<campo>".
+ * Los mínimos y formatos se verifican contra los esquemas de Zod
+ */
 export const FIELD_HELP = {
   // Comunes
   "common.amount": "El valor, sin signo de pesos. Ej.: 150.000.",
@@ -237,4 +242,5 @@ export const FIELD_HELP = {
     "Qué puede hacer el agente: solo leer, o también registrar y editar."
 } as const
 
+/** Campo con texto de ayuda en `FIELD_HELP` */
 export type FieldHelpKey = keyof typeof FIELD_HELP

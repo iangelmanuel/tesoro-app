@@ -12,7 +12,7 @@ import {
   ChartLegendContent
 } from "@/components/charts/chart-legend"
 import { ChartTooltip } from "@/components/charts/chart-tooltip"
-import { useFormatAmount } from "@/components/dashboard/hide-amounts-context"
+import { useFormatAmount } from "@/components/dashboard/hide-amounts/hide-amounts-context"
 import { ChartDataTable } from "@/features/reports/components/chart-data-table"
 import { CurrencyTooltipContent } from "@/features/reports/components/currency-tooltip"
 import { AMOUNT_MASK } from "@/libs/format"

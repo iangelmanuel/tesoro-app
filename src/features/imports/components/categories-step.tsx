@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { LoaderCircle } from "lucide-react"
-import { CARD_LIST } from "@/components/dashboard/surface"
-import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
-import { ToneBadge } from "@/components/dashboard/tone-badge"
+import { CARD_LIST } from "@/components/dashboard/data/surface"
+import { TONE_BADGE_CLASSES } from "@/components/dashboard/feedback/tone"
+import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import { Button } from "@/components/ui/button"
 import { AccountDialog } from "@/features/accounts/components/account-dialog"
 import { CategoryDialog } from "@/features/categories/components/category-dialog"

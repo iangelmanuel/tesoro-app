@@ -11,11 +11,13 @@
 // - Lo que no cabe en ningún periodo queda en `leftover`.
 // - Se trabaja en centavos para no arrastrar errores de coma flotante.
 
+/** Periodo con saldo pendiente: una cuota, un mes o un cobro */
 export interface Period {
   key: string // due_on o period_on
   due: number // lo que falta en ese periodo
 }
 
+/** Parte del pago que le toca a un periodo */
 export interface Allocation {
   key: string
   amount: number

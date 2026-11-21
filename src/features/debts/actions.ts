@@ -2,9 +2,9 @@
 
 import { z } from "zod"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
+import { revalidatePersonalPages } from "@/features/workspaces/revalidate"
 import { todayISO } from "@/libs/dates"
 import { moveErrorMessage } from "@/libs/move-error"
-import { revalidatePersonalPages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import { type DebtStatus, nextPayment } from "./calculations"
 import {

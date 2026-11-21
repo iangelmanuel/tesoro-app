@@ -18,8 +18,10 @@ export const TUTORIAL_SECTIONS = [
   "recommendations"
 ] as const
 
+/** Sección de Personal con tutorial guiado */
 export type TutorialSection = (typeof TUTORIAL_SECTIONS)[number]
 
+/** Paso de un tutorial: elemento resaltado, título y descripción */
 export interface TutorialStep {
   /** Valor de data-tour del elemento resaltado; sin él, el paso va centrado */
   target?: string

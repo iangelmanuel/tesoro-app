@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import type { WorkspaceType } from "@/features/workspaces/queries"
+import type { WorkspaceType } from "@/features/workspaces/types"
 import { TransactionsFiltersSkeleton } from "./transactions-filters"
 import { TransactionsTableSkeleton } from "./transactions-table"
 import { TransactionsTotalsSkeleton } from "./transactions-totals"

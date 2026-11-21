@@ -15,7 +15,7 @@ import {
   WalletIcon
 } from "lucide-react"
 import { AI_CLIENTS } from "@/components/brand/ai-logos"
-import { JsonLd } from "@/components/seo/JsonLd"
+import { JsonLd } from "@/components/seo/json-ld"
 import { buttonVariants } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import { RevealObserver } from "@/features/landing/components/reveal-observer"

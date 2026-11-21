@@ -7,7 +7,7 @@ import {
   getPersonalWorkspace,
   requireWritableWorkspace
 } from "@/features/workspaces/queries"
-import { revalidatePersonalPages } from "@/libs/revalidate"
+import { revalidatePersonalPages } from "@/features/workspaces/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import {
   type RecurringIncomeHistory,

@@ -1,5 +1,5 @@
 import { SITE } from "@/config/site"
-import type { WorkspaceType } from "./queries"
+import type { WorkspaceType } from "./types"
 
 /** Ruta base de un espacio: /dashboard/personal o /dashboard/business/[id] */
 export function workspaceBasePath(workspace: {

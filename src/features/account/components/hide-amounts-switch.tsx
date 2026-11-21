@@ -1,7 +1,7 @@
 "use client"
 
 import { useId } from "react"
-import { useHideAmounts } from "@/components/dashboard/hide-amounts-context"
+import { useHideAmounts } from "@/components/dashboard/hide-amounts/hide-amounts-context"
 import { Switch } from "@/components/ui/switch"
 
 /** Mismo estado que el ojo del header: se guarda en `profiles.hide_amounts` */

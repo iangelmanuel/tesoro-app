@@ -1,4 +1,4 @@
-import type { Tone } from "@/components/dashboard/tone"
+import type { Tone } from "@/components/dashboard/feedback/tone"
 
 // Bandas del score (docs/producto.md, "Bandas") para la landing: el medidor de
 // score-visual.tsx y la leyenda de score-section.tsx. Módulo sin "use client"

@@ -23,14 +23,21 @@ export interface SegmentedOption<T extends string> {
 interface SegmentedFieldProps<T extends string> {
   /** Si llega, el formulario recibe el valor con este nombre */
   name?: string
+  /** Etiqueta visible del grupo */
   label: string
+  /** Ayuda del (?) junto a la etiqueta (FIELD_HELP) */
   help?: FieldHelpKey
+  /** Opción elegida */
   value: T
+  /** Recibe la opción elegida */
   onChange: (value: T) => void
+  /** Las 2 o 3 opciones, en el orden en que se muestran */
   options: readonly SegmentedOption<T>[]
   /** Error de Zod del campo (el primero) */
   error?: string
+  /** Bloquea el grupo */
   disabled?: boolean
+  /** Clases del contenedor del campo */
   className?: string
 }
 

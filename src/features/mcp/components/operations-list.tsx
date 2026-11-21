@@ -2,14 +2,17 @@
 
 import { useState, useTransition } from "react"
 import { Undo2 } from "lucide-react"
-import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import {
   type RowAction,
   RowContextMenu,
   RowMenuBoundary
-} from "@/components/dashboard/row-actions"
-import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
-import { TONE_BADGE_CLASSES, type Tone } from "@/components/dashboard/tone"
+} from "@/components/dashboard/data/row-actions"
+import { CARD_LIST, CARD_ROW } from "@/components/dashboard/data/surface"
+import {
+  TONE_BADGE_CLASSES,
+  type Tone
+} from "@/components/dashboard/feedback/tone"
+import { DeleteDialog } from "@/components/dashboard/overlays/delete-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"

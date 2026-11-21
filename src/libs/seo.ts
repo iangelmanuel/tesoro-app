@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { SITE } from "@/config/site"
 
+/** Opciones de `buildMetadata` para la metadata de una página */
 export interface SeoOptions {
   title?: string
   fullTitle?: string
@@ -19,16 +20,26 @@ export interface SeoOptions {
   keywords?: string[]
 }
 
+/** URL absoluta sobre `SITE.seo.url`; una URL http(s) se deja como está */
 export function absoluteUrl(path: string): string {
   return /^https?:\/\//i.test(path)
     ? path
     : new URL(path, `${SITE.seo.url}/`).href
 }
 
+// `@id` de las entidades de JSON-LD, para enlazarlas entre sí
+function entityId(fragment: string): string {
+  return `${SITE.seo.url}/#${fragment}`
+}
+
 function toIso(value?: string | Date): string | undefined {
   return value ? new Date(value).toISOString() : undefined
 }
 
+/**
+ * Metadata de una página: título, canonical, robots, Open Graph y Twitter.
+ * Cada `page.tsx` la usa en vez de armar la metadata a mano.
+ */
 export function buildMetadata(options: SeoOptions = {}): Metadata {
   const {
     title,
@@ -65,7 +76,7 @@ export function buildMetadata(options: SeoOptions = {}): Metadata {
       canonical: cleanPath,
       languages: {
         ...Object.fromEntries(
-          SITE.seo.locales.map((l) => [l.hreflang, cleanPath])
+          SITE.seo.locales.map((locale) => [locale.hreflang, cleanPath])
         ),
         "x-default": cleanPath
       }
@@ -123,13 +134,14 @@ export function buildMetadata(options: SeoOptions = {}): Metadata {
   }
 }
 
+/** JSON-LD `Person` del autor (`#author`) */
 export function buildAuthorSchema(): Record<string, unknown> {
   const sameAs: string[] = Object.values(SITE.social)
 
   return {
     "@context": "https://schema.org",
     "@type": "Person",
-    "@id": `${SITE.seo.url}/#author`,
+    "@id": entityId("author"),
     name: SITE.author.name,
     alternateName: SITE.author.alias,
     url: SITE.author.url,
@@ -137,11 +149,12 @@ export function buildAuthorSchema(): Record<string, unknown> {
   }
 }
 
+/** JSON-LD `WebApplication` de Tesoro (`#application`), enlazado al autor */
 export function buildApplicationSchema(): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "@id": `${SITE.seo.url}/#application`,
+    "@id": entityId("application"),
     name: SITE.info.name,
     alternateName: SITE.info.legalName,
     description: SITE.info.description,
@@ -163,33 +176,36 @@ export function buildApplicationSchema(): Record<string, unknown> {
       price: SITE.seo.price,
       priceCurrency: SITE.seo.currency
     },
-    author: { "@id": `${SITE.seo.url}/#author` },
-    creator: { "@id": `${SITE.seo.url}/#author` }
+    author: { "@id": entityId("author") },
+    creator: { "@id": entityId("author") }
   }
 }
 
+/** JSON-LD `WebSite` (`#website`), enlazado a la app y al autor */
 export function buildWebsiteSchema(): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "@id": `${SITE.seo.url}/#website`,
+    "@id": entityId("website"),
     url: SITE.seo.url,
     name: SITE.info.name,
     description: SITE.seo.description,
     inLanguage: SITE.seo.locale,
-    publisher: { "@id": `${SITE.seo.url}/#author` }
+    publisher: { "@id": entityId("author") }
   }
 }
 
-// Video principal de la landing (SPEC 24). Duración en ISO 8601 y todas las
-// URLs absolutas, como pide Google para los resultados de video
+/**
+ * Video principal de la landing (SPEC 24). Duración en ISO 8601 y todas las
+ * URLs absolutas, como pide Google para los resultados de video
+ */
 export function buildVideoSchema(): Record<string, unknown> {
   const { demo } = SITE.landing
 
   return {
     "@context": "https://schema.org",
     "@type": "VideoObject",
-    "@id": `${SITE.seo.url}/#demo-video`,
+    "@id": entityId("demo-video"),
     name: demo.title,
     description: demo.description,
     thumbnailUrl: [absoluteUrl(demo.sources.poster)],
@@ -201,11 +217,12 @@ export function buildVideoSchema(): Record<string, unknown> {
     height: demo.height,
     inLanguage: SITE.seo.locale,
     isFamilyFriendly: true,
-    about: { "@id": `${SITE.seo.url}/#application` },
-    publisher: { "@id": `${SITE.seo.url}/#author` }
+    about: { "@id": entityId("application") },
+    publisher: { "@id": entityId("author") }
   }
 }
 
+/** JSON-LD `BreadcrumbList` con las migas de una página pública */
 export function buildBreadcrumbSchema(
   crumbs: { label: string; href: string }[]
 ): Record<string, unknown> {

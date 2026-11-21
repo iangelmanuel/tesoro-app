@@ -1,5 +1,8 @@
-import { StatCard, StatCardSkeleton } from "@/components/dashboard/stat-card"
-import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
+import {
+  StatCard,
+  StatCardSkeleton
+} from "@/components/dashboard/data/stat-card"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
 import type { BudgetProgress } from "../queries"
 
 interface BudgetTotalsProps {

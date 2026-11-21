@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useId, useState } from "react"
-import { Amount } from "@/components/dashboard/amount"
+import { Amount } from "@/components/dashboard/data/amount"
 import { FieldError } from "@/components/ui/field"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { formatDate, formatTime } from "@/libs/format"

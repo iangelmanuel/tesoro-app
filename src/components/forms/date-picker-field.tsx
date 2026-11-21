@@ -19,17 +19,21 @@ import { formatDate } from "@/libs/format"
 interface DatePickerFieldProps {
   /** Nombre del campo: el formulario recibe la fecha como YYYY-MM-DD */
   name: string
+  /** Etiqueta visible del campo */
   label: string
   /** Fecha YYYY-MM-DD, o "" sin fecha */
   value: string
+  /** Recibe la fecha YYYY-MM-DD, o "" al borrarla */
   onChange: (value: string) => void
   /** Error de Zod del campo */
   error?: string
+  /** Asterisco en la etiqueta */
   isRequired?: boolean
   /** Fecha mínima YYYY-MM-DD */
   minValue?: string
   /** Fecha máxima YYYY-MM-DD, p. ej. hoy para pagos y ajustes */
   maxValue?: string
+  /** Clases del contenedor del campo */
   className?: string
   /** Ayuda del (?) junto a la etiqueta (FIELD_HELP) */
   help?: FieldHelpKey

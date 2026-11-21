@@ -1,11 +1,11 @@
 import { Check } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
-import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import { Amount } from "@/components/dashboard/data/amount"
+import { CARD_LIST, CARD_ROW } from "@/components/dashboard/data/surface"
 import {
   TONE_BADGE_CLASSES as TONE_BADGE,
   TONE_TEXT_CLASSES
-} from "@/components/dashboard/tone"
-import { ToneBadge } from "@/components/dashboard/tone-badge"
+} from "@/components/dashboard/feedback/tone"
+import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import { Button } from "@/components/ui/button"
 import { activeAccountId } from "@/features/accounts/active-account"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"

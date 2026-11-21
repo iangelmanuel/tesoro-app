@@ -188,9 +188,33 @@ interface SidebarResizeHandleProps {
   width: number
   /** La línea queda visible mientras se arrastra */
   isResizing: boolean
+  /** Recibe el ancho nuevo (px) mientras se arrastra o con el teclado */
   onWidthChange: (width: number) => void
   /** Mientras se arrastra, la columna quita su transición de ancho */
   onResizingChange: (isResizing: boolean) => void
+}
+
+// Devuelve al body la selección de texto y el cursor que quita el arrastre
+function clearDragBodyStyles() {
+  document.body.style.removeProperty("user-select")
+  document.body.style.removeProperty("cursor")
+}
+
+// Ancho al que lleva cada tecla de la agarradera; null si la tecla no aplica
+function getKeyboardWidth(key: string, width: number): number | null {
+  const { min, max, step } = SIDEBAR_WIDTH
+  switch (key) {
+    case "ArrowLeft":
+      return width - step
+    case "ArrowRight":
+      return width + step
+    case "Home":
+      return min
+    case "End":
+      return max
+    default:
+      return null
+  }
 }
 
 /** Agarradera del borde derecho de la columna (solo escritorio, abierta).
@@ -210,8 +234,7 @@ export function SidebarResizeHandle({
     if (!drag.current) return
     const { last } = drag.current
     drag.current = null
-    document.body.style.removeProperty("user-select")
-    document.body.style.removeProperty("cursor")
+    clearDragBodyStyles()
     onResizingChange(false)
     saveSidebarWidth(last)
   }
@@ -220,8 +243,7 @@ export function SidebarResizeHandle({
   // sin selección de texto y la columna recupera su transición
   useEffect(
     () => () => {
-      document.body.style.removeProperty("user-select")
-      document.body.style.removeProperty("cursor")
+      clearDragBodyStyles()
       onResizingChange(false)
     },
     [onResizingChange]
@@ -249,17 +271,7 @@ export function SidebarResizeHandle({
       // color del foco y el foco de teclado, el anillo (3:1 en claro y oscuro)
       className="absolute inset-y-0 right-0 z-10 w-2 cursor-col-resize touch-none outline-none after:absolute after:inset-y-0 after:right-0 after:w-0.5 after:bg-transparent after:transition-colors after:duration-150 hover:after:bg-ring focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring data-resizing:after:bg-ring motion-reduce:after:transition-none"
       onKeyDown={(event) => {
-        const { min, max, step } = SIDEBAR_WIDTH
-        const next =
-          event.key === "ArrowLeft"
-            ? width - step
-            : event.key === "ArrowRight"
-              ? width + step
-              : event.key === "Home"
-                ? min
-                : event.key === "End"
-                  ? max
-                  : null
+        const next = getKeyboardWidth(event.key, width)
         if (next === null) return
         event.preventDefault()
         resizeTo(next)

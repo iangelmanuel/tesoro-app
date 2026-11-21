@@ -14,7 +14,7 @@ type FileExtension = (typeof FILE_EXTENSIONS)[number]
 
 /** Error con un mensaje listo para mostrar al usuario */
 export class ImportFileError extends Error {
-  name = "ImportFileError"
+  override name = "ImportFileError"
 }
 
 function fileExtension(filename: string) {

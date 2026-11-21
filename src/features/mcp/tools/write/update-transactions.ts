@@ -13,18 +13,14 @@ import {
   type UpdateTransactionData,
   updateTransactionRecord
 } from "@/features/transactions/service"
+import { trimSeconds } from "@/libs/dates"
 import {
   type RowChange,
   commitOperation,
   compensateOperation
 } from "../../operations"
 import { toolError, toolResult } from "../result"
-import {
-  defineTool,
-  formatTime,
-  resolveWorkspace,
-  workspaceIdSchema
-} from "../shared"
+import { defineTool, resolveWorkspace, workspaceIdSchema } from "../shared"
 import {
   type RowError,
   accountErrors,
@@ -78,7 +74,7 @@ function valuesOf(row: TransactionRow): TransactionValues {
     category_id: row.category_id,
     account_id: row.account_id,
     occurred_on: row.occurred_on,
-    time: formatTime(row.occurred_time),
+    time: trimSeconds(row.occurred_time),
     description: row.description,
     note: row.note,
     counterparty: row.counterparty,

@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
-import { CARD_LIST } from "@/components/dashboard/surface"
+import { CARD_LIST } from "@/components/dashboard/data/surface"
 import { FieldHelp } from "@/components/forms/field-label"
 import { SelectField } from "@/components/forms/select-field"
 import { Button } from "@/components/ui/button"

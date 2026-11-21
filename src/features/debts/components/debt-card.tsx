@@ -8,20 +8,20 @@ import {
   Pencil,
   RefreshCw
 } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
 import { useDetailFromUrl } from "@/components/dashboard/command/use-detail-from-url"
+import { Amount } from "@/components/dashboard/data/amount"
 import {
   type RowAction,
   RowContextMenu,
   RowMenuBoundary
-} from "@/components/dashboard/row-actions"
+} from "@/components/dashboard/data/row-actions"
 import {
   CARD_LINK,
   CARD_OVER_LINK,
   SURFACE_ITEM,
   SURFACE_ITEM_CLICKABLE
-} from "@/components/dashboard/surface"
-import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
+} from "@/components/dashboard/data/surface"
+import { TONE_BADGE_CLASSES } from "@/components/dashboard/feedback/tone"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,

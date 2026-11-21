@@ -2,13 +2,16 @@
 
 import { useState, useTransition } from "react"
 import { Archive, ArchiveRestore, Pencil } from "lucide-react"
-import { DetailSection, DetailSheet } from "@/components/dashboard/detail-sheet"
 import {
   type SortableConfig,
   SortableListItem,
   SortableListProvider,
   useSortableList
-} from "@/components/dashboard/sortable-list"
+} from "@/components/dashboard/data/sortable-list"
+import {
+  DetailSection,
+  DetailSheet
+} from "@/components/dashboard/overlays/detail-sheet"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"

@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { JsonLd } from "@/components/seo/JsonLd"
+import { JsonLd } from "@/components/seo/json-ld"
 import { type LegalSlug, SITE, legalHref } from "@/config/site"
 import { PRIVACY } from "@/content/legal/privacy"
 import { TERMS } from "@/content/legal/terms"

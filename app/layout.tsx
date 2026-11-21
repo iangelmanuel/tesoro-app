@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import localFont from "next/font/local"
-import { JsonLd } from "@/components/seo/JsonLd"
+import { JsonLd } from "@/components/seo/json-ld"
 import { SITE } from "@/config/site"
 import { cn } from "@/libs/cn"
 import {

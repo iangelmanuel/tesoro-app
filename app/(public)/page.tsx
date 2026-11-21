@@ -1,4 +1,4 @@
-import { JsonLd } from "@/components/seo/JsonLd"
+import { JsonLd } from "@/components/seo/json-ld"
 import { SITE } from "@/config/site"
 import { AgentsSection } from "@/features/landing/components/agents-section"
 import { DemoSection } from "@/features/landing/components/demo-section"

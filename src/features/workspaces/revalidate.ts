@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache"
 import { SITE } from "@/config/site"
-import { workspaceBasePath } from "@/features/workspaces/paths"
-import type { WorkspaceType } from "@/features/workspaces/queries"
+import { workspaceBasePath } from "./paths"
+import type { WorkspaceType } from "./types"
 
 // Movimientos, gastos fijos, presupuestos, metas y deudas se cruzan en
 // Resumen, Movimientos, Presupuestos, Reportes, Metas y Deudas (un pago de

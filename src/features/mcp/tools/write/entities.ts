@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { normalizeText } from "@/features/imports/detect"
-import type { ServiceFailure } from "@/libs/service-result"
+import type { ServiceFailure } from "@/features/workspaces/service-result"
 import {
   type RowChange,
   type SnapshotTable,

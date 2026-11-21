@@ -2,12 +2,10 @@
 
 import { z } from "zod"
 import { BUSINESS_RULE_KEYS } from "@/features/business-score/constants"
-import {
-  type WorkspaceType,
-  requireWritableWorkspace
-} from "@/features/workspaces/queries"
+import { requireWritableWorkspace } from "@/features/workspaces/queries"
+import { revalidateWorkspacePages } from "@/features/workspaces/revalidate"
+import type { WorkspaceType } from "@/features/workspaces/types"
 import { currentMonth } from "@/libs/dates"
-import { revalidateWorkspacePages } from "@/libs/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import { RULE_KEYS } from "./constants"
 

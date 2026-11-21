@@ -1,5 +1,5 @@
 import type { Workbook, Worksheet } from "exceljs"
-import type { WorkspaceType } from "@/features/workspaces/queries"
+import type { WorkspaceType } from "@/features/workspaces/types"
 import { formatGenerated, monthLabel } from "../range"
 import type { ExportRange } from "../types"
 import type { MonthSummaryCells } from "./personal-month-sheet"

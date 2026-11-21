@@ -4,7 +4,7 @@ import {
   type ServiceResult,
   type ServiceWorkspace,
   fail
-} from "@/libs/service-result"
+} from "@/features/workspaces/service-result"
 import type { AppSupabase } from "@/libs/supabase/types"
 import type { AccountInput } from "./schemas"
 import type { AccountRow } from "./types"

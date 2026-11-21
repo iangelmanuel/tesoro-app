@@ -1,4 +1,4 @@
-import type { WorkspaceType } from "@/features/workspaces/queries"
+import type { WorkspaceType } from "./types"
 
 // Contrato de los servicios de escritura (SPEC 34): los usan las Server
 // Actions y el MCP. Reciben un espacio ya resuelto con permiso de escritura

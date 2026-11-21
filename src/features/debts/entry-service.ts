@@ -3,7 +3,7 @@ import {
   type ServiceFailure,
   type ServiceResult,
   fail
-} from "@/libs/service-result"
+} from "@/features/workspaces/service-result"
 import type { AppSupabase } from "@/libs/supabase/types"
 import type { Database } from "@/types/database"
 import { entryKindOf, entryTypesFor } from "./entry-types"

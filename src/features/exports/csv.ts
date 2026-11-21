@@ -1,5 +1,5 @@
 import Papa from "papaparse"
-import type { WorkspaceType } from "@/features/workspaces/queries"
+import type { WorkspaceType } from "@/features/workspaces/types"
 import { movementColumns } from "./columns"
 import type { ExportMovementRow } from "./types"
 

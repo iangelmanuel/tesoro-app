@@ -1,6 +1,6 @@
 import { savingsRate } from "@/features/reports/metrics"
 import type { CategoryTotal, MonthlyTotal } from "@/features/reports/queries"
-import type { WorkspaceType } from "@/features/workspaces/queries"
+import type { WorkspaceType } from "@/features/workspaces/types"
 import { currentMonth, monthRange, shiftMonth } from "@/libs/dates"
 import { monthSchema } from "../shared"
 

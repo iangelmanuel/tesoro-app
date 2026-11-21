@@ -51,7 +51,7 @@ import {
   describeSavedReceipt,
   incomeReceiptValues
 } from "@/features/recurring-incomes/receipt"
-import type { WorkspaceType } from "@/features/workspaces/queries"
+import type { WorkspaceType } from "@/features/workspaces/types"
 import { cn } from "@/libs/cn"
 import { todayISO } from "@/libs/dates"
 import { createTransaction, updateTransaction } from "../actions"

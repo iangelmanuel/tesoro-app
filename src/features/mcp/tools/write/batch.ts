@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { SITE } from "@/config/site"
-import type { ServiceFailure } from "@/libs/service-result"
+import type { ServiceFailure } from "@/features/workspaces/service-result"
 import type { McpContext } from "../../types"
 import { toolError, toolResult } from "../result"
 

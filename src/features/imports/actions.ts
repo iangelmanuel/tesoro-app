@@ -3,7 +3,7 @@
 import { z } from "zod"
 import { DEBT_NOT_ACTIVE, DEBT_NOT_ACTIVE_DB } from "@/features/debts/errors"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
-import { revalidatePersonalPages } from "@/libs/revalidate"
+import { revalidatePersonalPages } from "@/features/workspaces/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import type { DuplicateCandidate } from "./duplicates"
 import {

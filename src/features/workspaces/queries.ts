@@ -3,9 +3,7 @@ import { notFound, redirect } from "next/navigation"
 import { z } from "zod"
 import { SITE } from "@/config/site"
 import { createClient } from "@/libs/supabase/server"
-import type { Database } from "@/types/database"
-
-export type WorkspaceType = Database["public"]["Enums"]["workspace_type"]
+import type { WorkspaceType } from "./types"
 
 export type PersonalWorkspace = {
   id: string

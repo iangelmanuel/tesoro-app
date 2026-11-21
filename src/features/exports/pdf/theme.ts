@@ -1,5 +1,5 @@
 import type { Style, StyleDictionary } from "pdfmake/interfaces"
-import type { WorkspaceType } from "@/features/workspaces/queries"
+import type { WorkspaceType } from "@/features/workspaces/types"
 import type { PdfOptions } from "../types"
 import {
   type AmountTone,

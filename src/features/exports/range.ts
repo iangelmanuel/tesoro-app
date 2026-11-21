@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { WorkspaceType } from "@/features/workspaces/queries"
+import type { WorkspaceType } from "@/features/workspaces/types"
 import { shiftMonth } from "@/libs/dates"
 import {
   DEFAULT_PDF_OPTIONS,

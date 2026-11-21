@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { WorkspaceType } from "@/features/workspaces/queries"
+import type { WorkspaceType } from "@/features/workspaces/types"
 import type { McpContext, McpTool } from "../types"
 import { toolResult } from "./result"
 

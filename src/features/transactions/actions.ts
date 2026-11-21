@@ -7,9 +7,9 @@ import { getRecurringExpenseOccurrences } from "@/features/recurring-expenses/qu
 import { getIncomeSources } from "@/features/recurring-incomes/queries"
 import { incomeReceiptDescription } from "@/features/recurring-incomes/receipt"
 import { requireWritableWorkspace } from "@/features/workspaces/queries"
+import { revalidateWorkspacePages } from "@/features/workspaces/revalidate"
+import type { ServiceFailure } from "@/features/workspaces/service-result"
 import { monthRange, shiftMonth } from "@/libs/dates"
-import { revalidateWorkspacePages } from "@/libs/revalidate"
-import type { ServiceFailure } from "@/libs/service-result"
 import { createClient } from "@/libs/supabase/server"
 import type {
   RecurringOccurrenceLink,

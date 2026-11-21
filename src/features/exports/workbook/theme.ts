@@ -1,5 +1,5 @@
 import type { Worksheet } from "exceljs"
-import type { WorkspaceType } from "@/features/workspaces/queries"
+import type { WorkspaceType } from "@/features/workspaces/types"
 import type { ColumnKind } from "../columns"
 
 // Colores ARGB del libro. Los base copian los valores en claro de globals.css

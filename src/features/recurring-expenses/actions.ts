@@ -3,7 +3,7 @@
 import { z } from "zod"
 import { parseAmount } from "@/features/transactions/schemas"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
-import { revalidatePersonalPages } from "@/libs/revalidate"
+import { revalidatePersonalPages } from "@/features/workspaces/revalidate"
 import { createClient } from "@/libs/supabase/server"
 import {
   type RecurringExpenseHistory,

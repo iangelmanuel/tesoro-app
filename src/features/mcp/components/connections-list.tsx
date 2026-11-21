@@ -1,12 +1,17 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import type { Key } from "react"
-import { Button, Label, ListBox, Select, toast } from "@heroui/react"
-import { Bot } from "lucide-react"
+import { Bot, Unplug } from "lucide-react"
 import { DeleteDialog } from "@/components/dashboard/delete-dialog"
+import {
+  type RowAction,
+  RowContextMenu,
+  RowMenuBoundary
+} from "@/components/dashboard/row-actions"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
-import { FieldHelp } from "@/components/forms/field-label"
+import { SelectField } from "@/components/forms/select-field"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/sonner"
 import { todayISO } from "@/libs/dates"
 import { formatDate } from "@/libs/format"
 import { revokeAgent, updateAgentAccess } from "../actions"
@@ -22,14 +27,18 @@ export function formatTimestamp(value: string) {
   return formatDate(todayISO(new Date(value)))
 }
 
+const ACCESS_OPTIONS = MCP_ACCESS_VALUES.map((value) => ({
+  value,
+  label: MCP_ACCESS_OPTIONS[value].label
+}))
+
 function ConnectionRow({ connection }: { connection: AgentConnection }) {
   const [access, setAccess] = useState<McpAccess>(connection.access)
   const [confirming, setConfirming] = useState(false)
   const [pending, startTransition] = useTransition()
 
-  function changeAccess(key: Key | null) {
-    const next = key as McpAccess | null
-    if (!next || next === access) return
+  function changeAccess(next: McpAccess) {
+    if (next === access) return
     const previous = access
     setAccess(next)
     startTransition(async () => {
@@ -40,7 +49,7 @@ function ConnectionRow({ connection }: { connection: AgentConnection }) {
       )
       if (result.error) {
         setAccess(previous)
-        toast.danger(result.error)
+        toast.error(result.error)
       } else {
         toast.success(`Acceso cambiado a ${MCP_ACCESS_OPTIONS[next].label}`)
       }
@@ -51,93 +60,88 @@ function ConnectionRow({ connection }: { connection: AgentConnection }) {
     startTransition(async () => {
       const result = await revokeAgent(connection.clientId)
       if (result.error) {
-        toast.danger(result.error)
+        toast.error(result.error)
       } else {
         toast.success(`${connection.name} ya no tiene acceso`)
       }
     })
   }
 
+  const actions: RowAction[] = [
+    {
+      id: "revoke",
+      label: "Revocar conexión",
+      icon: <Unplug />,
+      destructive: true,
+      isDisabled: pending,
+      onAction: () => setConfirming(true)
+    }
+  ]
+
   return (
-    <li
-      className={`${CARD_ROW} flex flex-col gap-3 md:flex-row md:items-center md:justify-between`}
+    <RowContextMenu
+      label={connection.name}
+      actions={actions}
     >
-      <div className="flex min-w-0 items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-default text-muted">
-          <Bot className="size-5" />
-        </span>
-        <div className="min-w-0">
-          <p className="truncate font-medium">{connection.name}</p>
-          <p className="text-sm text-muted">
-            {connection.authorizedAt
-              ? `Autorizado el ${formatTimestamp(connection.authorizedAt)}`
-              : "Autorizado"}
-            {" · "}
-            {connection.lastUsedAt
-              ? `Último uso el ${formatTimestamp(connection.lastUsedAt)}`
-              : "Sin uso todavía"}
-          </p>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="flex w-full items-center gap-1 sm:w-auto">
-          <Select
-            aria-label={`Acceso de ${connection.name}`}
-            selectedKey={access}
-            onSelectionChange={changeAccess}
-            isDisabled={pending}
-            className="flex min-w-0 flex-1 flex-col gap-2 sm:w-48 sm:flex-none"
-          >
-            <Label className="sr-only">Acceso</Label>
-            <Select.Trigger className="min-h-11 md:min-h-10">
-              <Select.Value />
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox>
-                {MCP_ACCESS_VALUES.map((value) => (
-                  <ListBox.Item
-                    key={value}
-                    id={value}
-                    textValue={MCP_ACCESS_OPTIONS[value].label}
-                  >
-                    {MCP_ACCESS_OPTIONS[value].label}
-                    <ListBox.ItemIndicator />
-                  </ListBox.Item>
-                ))}
-              </ListBox>
-            </Select.Popover>
-          </Select>
-          <FieldHelp
-            help="mcp.access"
-            label="Acceso"
-          />
-        </div>
-        <Button
-          variant="danger-soft"
-          className="min-h-11 md:min-h-10"
-          isDisabled={pending}
-          onPress={() => setConfirming(true)}
-        >
-          Revocar
-        </Button>
-      </div>
-
-      <DeleteDialog
-        open={confirming}
-        onOpenChange={setConfirming}
-        title={`¿Revocar a ${connection.name}?`}
-        confirmLabel="Revocar"
-        onConfirm={revoke}
+      <li
+        className={`${CARD_ROW} flex flex-col gap-3 md:flex-row md:items-end md:justify-between`}
       >
-        <p>
-          Dejará de tener acceso a tu cuenta desde su siguiente llamada. Para
-          volver a usarlo tendrás que conectarlo de nuevo. Su historial de
-          cambios se conserva.
-        </p>
-      </DeleteDialog>
-    </li>
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-highlight text-muted-foreground">
+            <Bot className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="truncate font-medium">{connection.name}</p>
+            <p className="text-sm text-muted-foreground">
+              {connection.authorizedAt
+                ? `Autorizado el ${formatTimestamp(connection.authorizedAt)}`
+                : "Autorizado"}
+              {" · "}
+              {connection.lastUsedAt
+                ? `Último uso el ${formatTimestamp(connection.lastUsedAt)}`
+                : "Sin uso todavía"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <SelectField
+            label="Acceso"
+            help="mcp.access"
+            value={access}
+            onChange={changeAccess}
+            options={ACCESS_OPTIONS}
+            disabled={pending}
+            className="w-full sm:w-48"
+          />
+          <Button
+            variant="destructive"
+            disabled={pending}
+            onClick={() => setConfirming(true)}
+          >
+            Revocar
+          </Button>
+        </div>
+
+        {/* El diálogo se pinta en un portal; RowMenuBoundary evita que un clic
+        derecho dentro de él abra el menú de la fila */}
+        <RowMenuBoundary>
+          <DeleteDialog
+            open={confirming}
+            onOpenChange={setConfirming}
+            title={`¿Revocar a ${connection.name}?`}
+            confirmLabel="Revocar"
+            onConfirm={revoke}
+          >
+            <p>
+              Dejará de tener acceso a tu cuenta desde su siguiente llamada.
+              Para volver a usarlo tendrás que conectarlo de nuevo. Su historial
+              de cambios se conserva.
+            </p>
+          </DeleteDialog>
+        </RowMenuBoundary>
+      </li>
+    </RowContextMenu>
   )
 }
 

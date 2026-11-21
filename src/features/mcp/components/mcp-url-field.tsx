@@ -1,9 +1,12 @@
 "use client"
 
+import { useId } from "react"
 import type { Route } from "next"
 import Link from "next/link"
-import { Input, Label, TextField, cn } from "@heroui/react"
+import { FieldLabel } from "@/components/forms/field-label"
+import { Input } from "@/components/ui/input"
 import { SITE } from "@/config/site"
+import { cn } from "@/libs/cn"
 import { CopyButton } from "./copy-button"
 
 interface McpUrlFieldProps {
@@ -23,20 +26,21 @@ export function McpUrlField({
   label = "Tu URL de MCP",
   className
 }: McpUrlFieldProps) {
+  const id = useId()
+
   return (
     <div className={cn("flex flex-col gap-2", className)}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-        <TextField
-          value={url}
-          isReadOnly
-          className="flex min-w-0 flex-1 flex-col gap-2"
-        >
-          <Label>{label}</Label>
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <FieldLabel htmlFor={id}>{label}</FieldLabel>
           <Input
+            id={id}
+            value={url}
+            readOnly
             className="font-mono text-sm"
             onFocus={(event) => event.currentTarget.select()}
           />
-        </TextField>
+        </div>
         <CopyButton
           value={url}
           toastMessage="URL copiada"

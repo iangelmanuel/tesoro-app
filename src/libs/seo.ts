@@ -25,6 +25,11 @@ export function absoluteUrl(path: string): string {
     : new URL(path, `${SITE.seo.url}/`).href
 }
 
+// `@id` de las entidades de JSON-LD, para enlazarlas entre sí
+function entityId(fragment: string): string {
+  return `${SITE.seo.url}/#${fragment}`
+}
+
 function toIso(value?: string | Date): string | undefined {
   return value ? new Date(value).toISOString() : undefined
 }
@@ -65,7 +70,7 @@ export function buildMetadata(options: SeoOptions = {}): Metadata {
       canonical: cleanPath,
       languages: {
         ...Object.fromEntries(
-          SITE.seo.locales.map((l) => [l.hreflang, cleanPath])
+          SITE.seo.locales.map((locale) => [locale.hreflang, cleanPath])
         ),
         "x-default": cleanPath
       }
@@ -129,7 +134,7 @@ export function buildAuthorSchema(): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
     "@type": "Person",
-    "@id": `${SITE.seo.url}/#author`,
+    "@id": entityId("author"),
     name: SITE.author.name,
     alternateName: SITE.author.alias,
     url: SITE.author.url,
@@ -141,7 +146,7 @@ export function buildApplicationSchema(): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "@id": `${SITE.seo.url}/#application`,
+    "@id": entityId("application"),
     name: SITE.info.name,
     alternateName: SITE.info.legalName,
     description: SITE.info.description,
@@ -163,8 +168,8 @@ export function buildApplicationSchema(): Record<string, unknown> {
       price: SITE.seo.price,
       priceCurrency: SITE.seo.currency
     },
-    author: { "@id": `${SITE.seo.url}/#author` },
-    creator: { "@id": `${SITE.seo.url}/#author` }
+    author: { "@id": entityId("author") },
+    creator: { "@id": entityId("author") }
   }
 }
 
@@ -172,12 +177,12 @@ export function buildWebsiteSchema(): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "@id": `${SITE.seo.url}/#website`,
+    "@id": entityId("website"),
     url: SITE.seo.url,
     name: SITE.info.name,
     description: SITE.seo.description,
     inLanguage: SITE.seo.locale,
-    publisher: { "@id": `${SITE.seo.url}/#author` }
+    publisher: { "@id": entityId("author") }
   }
 }
 
@@ -189,7 +194,7 @@ export function buildVideoSchema(): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
     "@type": "VideoObject",
-    "@id": `${SITE.seo.url}/#demo-video`,
+    "@id": entityId("demo-video"),
     name: demo.title,
     description: demo.description,
     thumbnailUrl: [absoluteUrl(demo.sources.poster)],
@@ -201,8 +206,8 @@ export function buildVideoSchema(): Record<string, unknown> {
     height: demo.height,
     inLanguage: SITE.seo.locale,
     isFamilyFriendly: true,
-    about: { "@id": `${SITE.seo.url}/#application` },
-    publisher: { "@id": `${SITE.seo.url}/#author` }
+    about: { "@id": entityId("application") },
+    publisher: { "@id": entityId("author") }
   }
 }
 

@@ -74,7 +74,7 @@ async function ImportContent({
   )
 }
 
-export function ImportSkeleton() {
+function ImportSkeleton() {
   return (
     <>
       <ImportWizardSkeleton />

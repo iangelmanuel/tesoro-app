@@ -142,15 +142,12 @@ function ShortcutsHelp({
           </h3>
           <dl className="flex flex-col">
             {general.map((shortcut) => (
-              <div
+              <ShortcutRow
                 key={shortcut.label}
-                className="flex min-h-11 items-center gap-3 border-b border-border/60 last:border-b-0"
+                label={shortcut.label}
               >
-                <dt className="text-sm">{shortcut.label}</dt>
-                <dd className="ml-auto">
-                  <ShortcutKeys keys={shortcut.keys} />
-                </dd>
-              </div>
+                <ShortcutKeys keys={shortcut.keys} />
+              </ShortcutRow>
             ))}
           </dl>
         </section>
@@ -160,22 +157,35 @@ function ShortcutsHelp({
           </h3>
           <dl className="flex flex-col">
             {targets.map((target) => (
-              <div
+              <ShortcutRow
                 key={target.href}
-                className="flex min-h-11 items-center gap-3 border-b border-border/60 last:border-b-0"
+                label={target.name}
               >
-                <dt className="text-sm">{target.name}</dt>
-                <dd className="ml-auto">
-                  <ShortcutKeys
-                    keys={[SHORTCUTS.goPrefix, target.shortcut ?? ""]}
-                    sequence
-                  />
-                </dd>
-              </div>
+                <ShortcutKeys
+                  keys={[SHORTCUTS.goPrefix, target.shortcut ?? ""]}
+                  sequence
+                />
+              </ShortcutRow>
             ))}
           </dl>
         </section>
       </DialogContent>
     </Dialog>
+  )
+}
+
+// Fila de la hoja: nombre del atajo y sus teclas
+function ShortcutRow({
+  label,
+  children
+}: {
+  label: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="flex min-h-11 items-center gap-3 border-b border-border/60 last:border-b-0">
+      <dt className="text-sm">{label}</dt>
+      <dd className="ml-auto">{children}</dd>
+    </div>
   )
 }

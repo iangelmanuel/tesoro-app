@@ -27,31 +27,32 @@ export function formatCurrency(
   }).format(amount)
 }
 
+// Una fecha `date` de Postgres (YYYY-MM-DD) se lee como medianoche UTC
+function toUtcDate(date: string | Date) {
+  return typeof date === "string" ? new Date(`${date}T00:00:00Z`) : date
+}
+
 // Recibe una fecha `date` de Postgres (YYYY-MM-DD) o un Date. Se formatea en
 // UTC para que el día no se corra por la zona horaria del servidor.
 export function formatDate(date: string | Date) {
-  const value = typeof date === "string" ? new Date(`${date}T00:00:00Z`) : date
-
   return new Intl.DateTimeFormat(LOCALE, {
     day: "numeric",
     month: "short",
     year: "numeric",
     timeZone: "UTC"
   })
-    .format(value)
+    .format(toUtcDate(date))
     .replace(WHITESPACE, "\u00A0")
 }
 
 // Fecha corta sin año ("1 nov") para filas compactas en móvil
 export function formatShortDate(date: string | Date) {
-  const value = typeof date === "string" ? new Date(`${date}T00:00:00Z`) : date
-
   return new Intl.DateTimeFormat(LOCALE, {
     day: "numeric",
     month: "short",
     timeZone: "UTC"
   })
-    .format(value)
+    .format(toUtcDate(date))
     .replace(WHITESPACE, "\u00A0")
 }
 
@@ -94,12 +95,12 @@ const NUMBER_FORMATS = new Map<string, Intl.NumberFormat>()
 /** Número en es-CO sin moneda: 1500000 → "1.500.000", 28.5 → "28,5" */
 export function formatNumber(value: number, options: NumberFormatOptions = {}) {
   const key = JSON.stringify(options)
-  let format = NUMBER_FORMATS.get(key)
-  if (!format) {
-    format = new Intl.NumberFormat(LOCALE, options)
-    NUMBER_FORMATS.set(key, format)
+  let formatter = NUMBER_FORMATS.get(key)
+  if (!formatter) {
+    formatter = new Intl.NumberFormat(LOCALE, options)
+    NUMBER_FORMATS.set(key, formatter)
   }
-  return format.format(value)
+  return formatter.format(value)
 }
 
 const PERCENT = new Intl.NumberFormat(LOCALE, {

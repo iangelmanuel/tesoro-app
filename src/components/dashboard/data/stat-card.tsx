@@ -38,6 +38,29 @@ function formatValue(value: number, format: Exclude<StatFormat, "currency">) {
   return formatNumber(value)
 }
 
+// Cifra de la tarjeta: raya sin dato, <Amount /> en montos y el resto con
+// formatValue
+function StatValue({
+  value,
+  format,
+  currency
+}: {
+  value: number | null
+  format: StatFormat
+  currency: string
+}) {
+  if (value === null) return "—"
+  if (format === "currency") {
+    return (
+      <Amount
+        value={value}
+        currency={currency}
+      />
+    )
+  }
+  return formatValue(value, format)
+}
+
 /**
  * Variación contra el periodo anterior. En montos y conteos es relativa
  * (%); en porcentajes es la diferencia en puntos (pp), porque "+20 % de una
@@ -105,6 +128,7 @@ export function StatCard({
   const isUp = rounded !== null && rounded > 0
   const isGood = isUp === (trend === "higher-is-better")
   const unit = format === "percent" ? " pp" : " %"
+  const ArrowIcon = isUp ? ArrowUpRight : ArrowDownRight
 
   return (
     <StatCardFrame
@@ -129,16 +153,11 @@ export function StatCard({
               valueClassName
             )}
           >
-            {value === null ? (
-              "—"
-            ) : format === "currency" ? (
-              <Amount
-                value={value}
-                currency={currency}
-              />
-            ) : (
-              formatValue(value, format)
-            )}
+            <StatValue
+              value={value}
+              format={format}
+              currency={currency}
+            />
           </span>
           {badge}
           {rounded !== null && rounded !== 0 && (
@@ -151,17 +170,10 @@ export function StatCard({
                 isGood ? TONE_BADGE_CLASSES.success : TONE_BADGE_CLASSES.danger
               )}
             >
-              {isUp ? (
-                <ArrowUpRight
-                  aria-hidden="true"
-                  className="size-3.5"
-                />
-              ) : (
-                <ArrowDownRight
-                  aria-hidden="true"
-                  className="size-3.5"
-                />
-              )}
+              <ArrowIcon
+                aria-hidden="true"
+                className="size-3.5"
+              />
               <span className="sr-only">{isUp ? "Subió" : "Bajó"}</span>
               {formatNumber(Math.abs(rounded), { maximumFractionDigits: 1 })}
               {unit}

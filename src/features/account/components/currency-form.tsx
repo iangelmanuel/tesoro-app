@@ -1,18 +1,17 @@
 "use client"
 
-import { useActionState } from "react"
-import {
-  Button,
-  Description,
-  FieldError,
-  ListBox,
-  Select,
-  toast
-} from "@heroui/react"
-import { FieldLabel } from "@/components/forms/field-label"
+import { useActionState, useState } from "react"
+import { SelectField } from "@/components/forms/select-field"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/sonner"
 import { SITE } from "@/config/site"
 import { updateCurrency } from "../actions"
 import type { ProfileFormState } from "../types"
+
+const CURRENCY_OPTIONS = SITE.currencies.map((item) => ({
+  value: item.code as string,
+  label: `${item.code} · ${item.label}`
+}))
 
 export function CurrencyForm({ currency }: { currency: string }) {
   const [state, formAction, pending] = useActionState<
@@ -25,6 +24,7 @@ export function CurrencyForm({ currency }: { currency: string }) {
     }
     return result
   }, {})
+  const [value, setValue] = useState(state.values?.currency ?? currency)
 
   return (
     <form
@@ -32,40 +32,21 @@ export function CurrencyForm({ currency }: { currency: string }) {
       className="flex flex-col gap-4"
       noValidate
     >
-      <Select
+      <SelectField
         name="currency"
-        defaultValue={state.values?.currency ?? currency}
-        isInvalid={Boolean(state.fieldErrors?.currency)}
-        className="flex w-full flex-col gap-2 sm:w-72"
-      >
-        <FieldLabel help="currency.code">Moneda</FieldLabel>
-        <Select.Trigger>
-          <Select.Value />
-          <Select.Indicator />
-        </Select.Trigger>
-        <Select.Popover>
-          <ListBox>
-            {SITE.currencies.map((item) => (
-              <ListBox.Item
-                key={item.code}
-                id={item.code}
-                textValue={`${item.code} · ${item.label}`}
-              >
-                {item.code} · {item.label}
-                <ListBox.ItemIndicator />
-              </ListBox.Item>
-            ))}
-          </ListBox>
-        </Select.Popover>
-        <Description>
-          Solo cambia el formato. Tus montos no se convierten.
-        </Description>
-        <FieldError>{state.fieldErrors?.currency?.[0]}</FieldError>
-      </Select>
+        label="Moneda"
+        help="currency.code"
+        value={value}
+        onChange={setValue}
+        options={CURRENCY_OPTIONS}
+        description="Solo cambia el formato. Tus montos no se convierten."
+        error={state.fieldErrors?.currency?.[0]}
+        className="w-full sm:w-72"
+      />
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error}
         </p>
@@ -73,7 +54,7 @@ export function CurrencyForm({ currency }: { currency: string }) {
       <Button
         type="submit"
         className="self-start"
-        isDisabled={pending}
+        disabled={pending}
       >
         {pending ? "Guardando..." : "Guardar moneda"}
       </Button>

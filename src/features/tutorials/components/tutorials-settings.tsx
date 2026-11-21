@@ -1,10 +1,11 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { Button, Chip } from "@heroui/react"
 import { RotateCcw } from "lucide-react"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { TUTORIAL_SECTIONS, TUTORIAL_SECTION_INFO } from "@/config/tutorials"
 import { useTutorialProgress } from "./tutorial-provider"
 
@@ -30,20 +31,18 @@ export function TutorialsSettings() {
               className={`flex flex-wrap items-center gap-3 ${CARD_ROW}`}
             >
               <span className="min-w-0 flex-1 font-medium">{label}</span>
-              <Chip
-                size="sm"
+              <Badge
                 className={
                   done ? TONE_BADGE_CLASSES.success : TONE_BADGE_CLASSES.neutral
                 }
               >
                 {done ? "Completado" : "Pendiente"}
-              </Chip>
+              </Badge>
               <Button
                 variant="ghost"
                 size="sm"
                 aria-label={`Ver de nuevo el tutorial de ${label}`}
-                className="max-md:min-h-11"
-                onPress={() => {
+                onClick={() => {
                   // El arranque automático de la sección lo toma al entrar
                   requestStart(section)
                   router.push(href)
@@ -58,9 +57,8 @@ export function TutorialsSettings() {
       <div>
         <Button
           variant="secondary"
-          className="max-md:min-h-11"
-          isDisabled={isResetting || completed.size === 0}
-          onPress={reset}
+          disabled={isResetting || completed.size === 0}
+          onClick={reset}
         >
           <RotateCcw />
           Reiniciar todos

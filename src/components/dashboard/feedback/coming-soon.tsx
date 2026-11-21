@@ -1,7 +1,9 @@
 import { Hourglass } from "lucide-react"
 
 interface ComingSoonProps {
+  /** Nombre de la sección que falta */
   title: string
+  /** Qué traerá la sección */
   description?: string
 }
 

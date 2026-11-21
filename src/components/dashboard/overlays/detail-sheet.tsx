@@ -13,7 +13,9 @@ import { cn } from "@/libs/cn"
 import { HelpHint } from "../feedback/help-hint"
 
 interface DetailSheetProps {
+  /** Panel abierto */
   open: boolean
+  /** Avisa al abrir o cerrar el panel */
   onOpenChange: (open: boolean) => void
   /** Nombre del elemento (el título del panel) */
   title: string

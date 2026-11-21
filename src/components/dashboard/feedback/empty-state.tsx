@@ -4,6 +4,7 @@ import { cn } from "@/libs/cn"
 type IconComponent = React.ComponentType<{ className?: string }>
 
 interface EmptyStateProps {
+  /** Ícono de lucide-react del estado vacío */
   icon: IconComponent
   /** Una frase: qué es lo que falta ("Aún no tienes movimientos") */
   title: string
@@ -11,6 +12,7 @@ interface EmptyStateProps {
   description?: string
   /** La acción: el mismo botón o diálogo del acceso rápido del header */
   children?: React.ReactNode
+  /** Clases del contenedor */
   className?: string
 }
 
@@ -49,6 +51,7 @@ export function EmptyState({
 }
 
 interface CardEmptyProps {
+  /** Ícono de lucide-react del estado vacío */
   icon: IconComponent
   /** Qué falta, en una frase */
   message: string

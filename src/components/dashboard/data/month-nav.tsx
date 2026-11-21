@@ -12,8 +12,11 @@ interface MonthNavProps {
   label: string
   /** Mes anterior y siguiente (YYYY-MM); null deshabilita el botón */
   prev: string | null
+  /** Mes siguiente (YYYY-MM); null deshabilita el botón */
   next: string | null
+  /** Sobre qué va: el fondo de la página o una tarjeta */
   on?: "page" | "card"
+  /** Clases del contenedor */
   className?: string
   "data-tour"?: string
 }

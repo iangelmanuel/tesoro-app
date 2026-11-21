@@ -5,6 +5,7 @@ import { AMOUNT_MASK, formatCurrency, formatNumber } from "@/libs/format"
 import { useHideAmounts } from "../hide-amounts/hide-amounts-context"
 
 interface AmountProps {
+  /** Monto a mostrar, con su signo */
   value: number
   /** Código ISO de la moneda del espacio */
   currency?: string
@@ -15,6 +16,7 @@ interface AmountProps {
    * o "menos": para movimientos que suben o bajan un saldo
    */
   signed?: boolean
+  /** Clases del texto del monto */
   className?: string
 }
 

@@ -6,6 +6,7 @@ import type { HelpKey } from "@/config/help"
 import { HelpHint } from "../feedback/help-hint"
 
 interface CardHeadingProps {
+  /** Título de la tarjeta */
   title: string
   /** Ayuda (i) junto al título */
   help?: HelpKey

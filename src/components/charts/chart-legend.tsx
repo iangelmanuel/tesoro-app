@@ -7,7 +7,9 @@ import { getPayloadConfig, useChart } from "./chart-container"
 export const ChartLegend = Legend
 
 type ChartLegendContentProps = React.ComponentProps<"div"> & {
+  /** Muestra el color de la serie en vez de su ícono */
   hideIcon?: boolean
+  /** Campo del dato que da la clave de `config` de cada ítem */
   nameKey?: string
 } & DefaultLegendContentProps
 

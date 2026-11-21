@@ -44,6 +44,7 @@ export function ChartLegendList({
 }
 
 interface ChartCardProps {
+  /** Título de la tarjeta */
   title: string
   /** Selector de rango u otra acción, a la derecha del título */
   action?: React.ReactNode
@@ -53,7 +54,9 @@ interface ChartCardProps {
   figureCaption?: string
   /** Series para la leyenda de la cabecera; con una sola no se muestra */
   legend?: LegendItem[]
+  /** La gráfica (o su estado vacío) */
   children: React.ReactNode
+  /** Clases de la tarjeta */
   className?: string
   /** Ancla `data-tour` de los tutoriales guiados (SPEC 27) */
   tour?: string

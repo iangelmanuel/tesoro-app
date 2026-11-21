@@ -17,6 +17,7 @@ interface ScrollTableProps {
   /** Ancho mínimo de la tabla en móvil (cualquier valor CSS). Por debajo de
    *  él la tabla se desliza en horizontal en vez de comprimir las columnas */
   minWidth?: string
+  /** Clases del contenedor deslizable */
   className?: string
   /** Ancla `data-tour` de los tutoriales guiados (SPEC 27) */
   tour?: string

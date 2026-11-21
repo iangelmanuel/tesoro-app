@@ -20,6 +20,7 @@ interface AccountSelectFieldProps {
   label: string
   /** id de la cuenta, o "" sin cuenta */
   value: string
+  /** Recibe el id elegido, o "" con "Sin cuenta" */
   onChange: (value: string) => void
   /** Cuentas activas, más la archivada que ya tenga la fila */
   accounts: AccountOption[]
@@ -27,6 +28,7 @@ interface AccountSelectFieldProps {
   workspaceId: string
   /** Muestra la opción "Sin cuenta" */
   allowNone?: boolean
+  /** Texto sin cuenta elegida (por defecto "Elige una cuenta") */
   placeholder?: string
   /** Error de Zod del campo */
   error?: string

@@ -21,10 +21,13 @@ import {
 } from "../quick-actions/quick-actions-context"
 
 interface QuickSheetProps {
+  /** Hoja abierta */
   open: boolean
+  /** Avisa al abrir o cerrar la hoja */
   onOpenChange: (open: boolean) => void
   /** Apertura automática al entrar (preferencia de este dispositivo) */
   autoOpen: boolean
+  /** Guarda la preferencia de apertura automática */
   onAutoOpenChange: (autoOpen: boolean) => void
 }
 

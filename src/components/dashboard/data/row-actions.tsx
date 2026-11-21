@@ -34,6 +34,7 @@ export interface RowAction {
 interface RowActionsProps {
   /** Nombre de la fila para el `aria-label` ("Acciones de <fila>") */
   label: string
+  /** Acciones del menú; las `destructive` van al final */
   actions: RowAction[]
 }
 

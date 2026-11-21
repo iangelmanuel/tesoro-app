@@ -27,6 +27,10 @@ export function runWithSupabaseClient<T>(
   return scopedClient.run(client, fn)
 }
 
+/**
+ * Cliente de Supabase del servidor con la sesión de las cookies. Dentro de
+ * `runWithSupabaseClient` devuelve el cliente fijado del agente (MCP).
+ */
 export async function createClient(): Promise<ServerClient> {
   const scoped = scopedClient.getStore()
   if (scoped) {

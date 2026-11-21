@@ -188,6 +188,7 @@ interface SidebarResizeHandleProps {
   width: number
   /** La línea queda visible mientras se arrastra */
   isResizing: boolean
+  /** Recibe el ancho nuevo (px) mientras se arrastra o con el teclado */
   onWidthChange: (width: number) => void
   /** Mientras se arrastra, la columna quita su transición de ancho */
   onResizingChange: (isResizing: boolean) => void

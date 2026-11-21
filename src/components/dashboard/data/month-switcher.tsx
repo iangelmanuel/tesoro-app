@@ -11,12 +11,14 @@ interface MonthSwitcherProps {
   label: string
   /** null deshabilita la flecha */
   onPrev: (() => void) | null
+  /** Va al mes siguiente; null deshabilita la flecha */
   onNext: (() => void) | null
   /** Atenúa el control mientras navega */
   pending?: boolean
   /** Sobre qué va: el fondo de la página (bg-card, como la barra de
    *  Movimientos) o una tarjeta (un nivel más, para que no se pierda) */
   on?: "page" | "card"
+  /** Clases del contenedor */
   className?: string
   "data-tour"?: string
 }

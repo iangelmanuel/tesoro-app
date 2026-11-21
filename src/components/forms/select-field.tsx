@@ -25,12 +25,19 @@ export interface SelectFieldOption<T extends string> {
 interface SelectFieldProps<T extends string> {
   /** Si llega, el formulario recibe el valor con este nombre */
   name?: string
+  /** Etiqueta visible del campo */
   label: string
+  /** Ayuda del (?) junto a la etiqueta (FIELD_HELP) */
   help?: FieldHelpKey
+  /** Opción elegida */
   value: T
+  /** Recibe la opción elegida */
   onChange: (value: T) => void
+  /** Opciones de la lista, con `description` opcional */
   options: readonly SelectFieldOption<T>[]
+  /** Error de Zod del campo */
   error?: string
+  /** Bloquea el campo */
   disabled?: boolean
   /** Texto del trigger sin valor elegido */
   placeholder?: string
@@ -38,6 +45,7 @@ interface SelectFieldProps<T extends string> {
   isRequired?: boolean
   /** Texto de apoyo bajo el campo */
   description?: React.ReactNode
+  /** Clases del contenedor del campo */
   className?: string
 }
 

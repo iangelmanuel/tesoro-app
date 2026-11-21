@@ -3,6 +3,8 @@ const SITE_URL = (
 ).replace(/\/$/, "")
 
 export const SITE = {
+  // Datos de la app: nombre, descripción, eslogan, versión y licencia. La
+  // versión se sube junto con package.json, CHANGELOG.md y SECURITY.md
   info: {
     name: "Tesoro",
     legalName: "Tesoro App",
@@ -15,6 +17,7 @@ export const SITE = {
     openSource: true
   },
 
+  // Autor del proyecto (JSON-LD `Person`, créditos y legales)
   author: {
     name: "Angel De La Torre",
     alias: "Angel DM",
@@ -23,6 +26,7 @@ export const SITE = {
     github: "https://github.com/iangelmanuel"
   },
 
+  // Enlaces del repositorio en GitHub
   repository: {
     url: "https://github.com/iangelmanuel/tesoro-app",
     issues: "https://github.com/iangelmanuel/tesoro-app/issues",
@@ -31,6 +35,7 @@ export const SITE = {
       "https://github.com/iangelmanuel/tesoro-app/blob/master/CONTRIBUTING.md"
   },
 
+  // URL base (NEXT_PUBLIC_SITE_URL), locale, zona horaria y moneda por defecto
   site: {
     url: SITE_URL,
     locale: "es-CO",
@@ -39,11 +44,13 @@ export const SITE = {
     currency: "COP"
   },
 
+  // Correos de contacto y de reportes de seguridad
   contact: {
     email: "iangelmanuel02@gmail.com",
     securityEmail: "iangelmanuel02@gmail.com"
   },
 
+  // Perfiles del autor (`sameAs` del JSON-LD y pie de la landing)
   social: {
     github: "https://github.com/iangelmanuel",
     linkedin: "https://www.linkedin.com/in/iangelmanuel",
@@ -51,6 +58,7 @@ export const SITE = {
     website: "https://angeldm.dev"
   },
 
+  // Espacios Personal y Empresa: el de por defecto y cómo se presentan
   workspaces: {
     default: "personal",
     types: [
@@ -108,6 +116,7 @@ export const SITE = {
     }
   ],
 
+  // Rutas de la app. Se leen de aquí, nunca se escriben a mano
   routes: {
     home: "/",
     signIn: "/sign-in",
@@ -204,6 +213,7 @@ export const SITE = {
     { id: "other", label: "Otro" }
   ],
 
+  // Documentos legales: slug de /legal/[slug], título y fecha de actualización
   legal: [
     {
       slug: "privacy",
@@ -305,6 +315,9 @@ export const SITE = {
     }
   },
 
+  // Navegación: menú público y sus llamados a la acción, grupos del aside de
+  // Personal y Empresa (SPEC 31) con la letra de atajo de cada ítem, y la
+  // barra inferior móvil
   navigation: {
     main: [
       { name: "Demo", href: "/#demo" },
@@ -462,6 +475,7 @@ export const SITE = {
     }
   },
 
+  // Valores de SEO: títulos, descripción, palabras clave, Open Graph y manifest
   seo: {
     title: "Tesoro — Finanzas personales y empresariales claras",
     titleTemplate: "%s | Tesoro",

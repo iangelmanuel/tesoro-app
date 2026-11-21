@@ -17,6 +17,7 @@ type LabelStateProps = {
   isRequired?: boolean
   /** Pinta la etiqueta en rojo */
   isInvalid?: boolean
+  /** Atenúa la etiqueta de un campo deshabilitado */
   disabled?: boolean
 }
 

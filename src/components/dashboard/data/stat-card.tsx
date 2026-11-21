@@ -12,15 +12,19 @@ export type StatTrend = "higher-is-better" | "lower-is-better"
 export type StatFormat = "currency" | "percent" | "number"
 
 interface StatCardProps {
+  /** Nombre de la KPI */
   label: string
   /** En la moneda del espacio; en `percent`, puntos (12.5 = 12,5 %) */
   value: number | null
   /** Periodo anterior; null/undefined = sin badge */
   previous?: number | null
+  /** Si subir es bueno o malo: decide el color del badge */
   trend: StatTrend
+  /** Cómo se muestra la cifra (por defecto "currency") */
   format?: StatFormat
   /** Código ISO de la moneda del espacio (solo `currency`) */
   currency?: string
+  /** Ayuda (i) junto a la etiqueta */
   help?: HelpKey
   /** Texto corto bajo el valor, por ejemplo el alcance de los filtros */
   caption?: string
@@ -28,7 +32,9 @@ interface StatCardProps {
   badge?: React.ReactNode
   /** Color de la cifra según su estado (`TONE_TEXT_CLASSES`) */
   valueClassName?: string
+  /** Tamaño de la tarjeta (por defecto "default") */
   size?: "default" | "sm"
+  /** Clases de la tarjeta */
   className?: string
 }
 

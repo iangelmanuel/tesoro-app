@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { SITE } from "@/config/site"
 
+/** Opciones de `buildMetadata` para la metadata de una página */
 export interface SeoOptions {
   title?: string
   fullTitle?: string
@@ -19,6 +20,7 @@ export interface SeoOptions {
   keywords?: string[]
 }
 
+/** URL absoluta sobre `SITE.seo.url`; una URL http(s) se deja como está */
 export function absoluteUrl(path: string): string {
   return /^https?:\/\//i.test(path)
     ? path
@@ -34,6 +36,10 @@ function toIso(value?: string | Date): string | undefined {
   return value ? new Date(value).toISOString() : undefined
 }
 
+/**
+ * Metadata de una página: título, canonical, robots, Open Graph y Twitter.
+ * Cada `page.tsx` la usa en vez de armar la metadata a mano.
+ */
 export function buildMetadata(options: SeoOptions = {}): Metadata {
   const {
     title,
@@ -128,6 +134,7 @@ export function buildMetadata(options: SeoOptions = {}): Metadata {
   }
 }
 
+/** JSON-LD `Person` del autor (`#author`) */
 export function buildAuthorSchema(): Record<string, unknown> {
   const sameAs: string[] = Object.values(SITE.social)
 
@@ -142,6 +149,7 @@ export function buildAuthorSchema(): Record<string, unknown> {
   }
 }
 
+/** JSON-LD `WebApplication` de Tesoro (`#application`), enlazado al autor */
 export function buildApplicationSchema(): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
@@ -173,6 +181,7 @@ export function buildApplicationSchema(): Record<string, unknown> {
   }
 }
 
+/** JSON-LD `WebSite` (`#website`), enlazado a la app y al autor */
 export function buildWebsiteSchema(): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
@@ -186,8 +195,10 @@ export function buildWebsiteSchema(): Record<string, unknown> {
   }
 }
 
-// Video principal de la landing (SPEC 24). Duración en ISO 8601 y todas las
-// URLs absolutas, como pide Google para los resultados de video
+/**
+ * Video principal de la landing (SPEC 24). Duración en ISO 8601 y todas las
+ * URLs absolutas, como pide Google para los resultados de video
+ */
 export function buildVideoSchema(): Record<string, unknown> {
   const { demo } = SITE.landing
 
@@ -211,6 +222,7 @@ export function buildVideoSchema(): Record<string, unknown> {
   }
 }
 
+/** JSON-LD `BreadcrumbList` con las migas de una página pública */
 export function buildBreadcrumbSchema(
   crumbs: { label: string; href: string }[]
 ): Record<string, unknown> {

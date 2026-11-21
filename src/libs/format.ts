@@ -9,8 +9,10 @@ const WHITESPACE = /\s/g
 // Monedas que la UI muestra sin decimales, aunque la BD guarde centavos
 const ZERO_DECIMAL_CURRENCIES = new Set(["COP", "CLP"])
 
-// `fractionDigits` fuerza los decimales (p. ej. 2 al conciliar, donde importan
-// los centavos)
+/**
+ * `fractionDigits` fuerza los decimales (p. ej. 2 al conciliar, donde importan
+ * los centavos)
+ */
 export function formatCurrency(
   amount: number,
   currency = "COP",
@@ -32,8 +34,10 @@ function toUtcDate(date: string | Date) {
   return typeof date === "string" ? new Date(`${date}T00:00:00Z`) : date
 }
 
-// Recibe una fecha `date` de Postgres (YYYY-MM-DD) o un Date. Se formatea en
-// UTC para que el día no se corra por la zona horaria del servidor.
+/**
+ * Recibe una fecha `date` de Postgres (YYYY-MM-DD) o un Date. Se formatea en
+ * UTC para que el día no se corra por la zona horaria del servidor.
+ */
 export function formatDate(date: string | Date) {
   return new Intl.DateTimeFormat(LOCALE, {
     day: "numeric",
@@ -45,7 +49,7 @@ export function formatDate(date: string | Date) {
     .replace(WHITESPACE, "\u00A0")
 }
 
-// Fecha corta sin año ("1 nov") para filas compactas en móvil
+/** Fecha corta sin año ("1 nov") para filas compactas en móvil */
 export function formatShortDate(date: string | Date) {
   return new Intl.DateTimeFormat(LOCALE, {
     day: "numeric",
@@ -56,9 +60,11 @@ export function formatShortDate(date: string | Date) {
     .replace(WHITESPACE, "\u00A0")
 }
 
-// Hora de un evento ("14:30" o "14:30:00" de Postgres) como "2:30 p. m.". La
-// hora es del día del usuario, sin zona: se formatea en UTC para que no se
-// corra. Espacio duro para no partirse en varias líneas.
+/**
+ * Hora de un evento ("14:30" o "14:30:00" de Postgres) como "2:30 p. m.". La
+ * hora es del día del usuario, sin zona: se formatea en UTC para que no se
+ * corra. Espacio duro para no partirse en varias líneas.
+ */
 export function formatTime(time: string) {
   const [hours, minutes] = time.split(":").map(Number)
   const value = new Date(Date.UTC(1970, 0, 1, hours, minutes))
@@ -81,6 +87,7 @@ export function formatMonthYear(month: string) {
   return format(new Date(`${month}-01T12:00:00`), "MMMM yyyy", { locale: es })
 }
 
+/** Opciones de `formatNumber`: un subconjunto de las de `Intl.NumberFormat` */
 export interface NumberFormatOptions {
   minimumFractionDigits?: number
   /** Por defecto 3, como `Intl.NumberFormat` */
@@ -145,6 +152,8 @@ export function currencySymbol(currency: string) {
   return symbol
 }
 
-// Lo que se muestra en lugar de saldos y totales cuando el usuario oculta las
-// cifras (ojo del header)
+/**
+ * Lo que se muestra en lugar de saldos y totales cuando el usuario oculta las
+ * cifras (ojo del header)
+ */
 export const AMOUNT_MASK = "***"

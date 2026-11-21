@@ -14,12 +14,17 @@ import {
 } from "@/components/ui/alert-dialog"
 
 interface DeleteDialogProps {
+  /** Diálogo abierto */
   open: boolean
+  /** Avisa al abrir o cerrar el diálogo */
   onOpenChange: (open: boolean) => void
+  /** Pregunta de confirmación */
   title: string
   /** Texto del cuerpo: qué se pierde y si se puede deshacer */
   children: React.ReactNode
+  /** Borra el elemento */
   onConfirm: () => void
+  /** Texto del botón destructivo (por defecto "Eliminar") */
   confirmLabel?: string
 }
 

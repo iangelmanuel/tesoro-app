@@ -10,9 +10,11 @@ import type { Category } from "@/features/categories/queries"
 interface CategorySelectFieldProps {
   /** Nombre del campo del formulario */
   name: string
+  /** Etiqueta visible (por defecto "Categoría") */
   label?: string
   /** id de la categoría, o "" sin elegir */
   value: string
+  /** Recibe el id de la categoría elegida o creada */
   onChange: (value: string) => void
   /** Opciones ya filtradas por el formulario (tipo, activas, etc.) */
   categories: Category[]
@@ -20,9 +22,11 @@ interface CategorySelectFieldProps {
   workspaceId: string
   /** Tipo del formulario: la categoría nueva lo hereda */
   type: Category["type"]
+  /** Texto sin categoría elegida (por defecto "Elige una categoría") */
   placeholder?: string
   /** Error de Zod del campo */
   error?: string
+  /** Bloquea el campo */
   disabled?: boolean
   /** Ayuda del (?) junto a la etiqueta (FIELD_HELP) */
   help?: FieldHelpKey

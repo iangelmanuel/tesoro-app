@@ -14,14 +14,19 @@ import { cn } from "@/libs/cn"
 interface FormDialogProps {
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
   trigger?: React.ReactElement
+  /** Abierto, si el diálogo se controla desde afuera */
   open?: boolean
+  /** Avisa al abrir o cerrar, si se controla desde afuera */
   onOpenChange?: (open: boolean) => void
+  /** Título del diálogo */
   title: React.ReactNode
+  /** Texto bajo el título: qué hace el formulario */
   description?: React.ReactNode
   /** El formulario. Se desmonta al cerrar: cada apertura empieza limpia */
   children: (close: () => void) => React.ReactNode
   /** En el teléfono se pega abajo, como hoja */
   bottomOnMobile?: boolean
+  /** Clases del contenido del diálogo */
   className?: string
 }
 

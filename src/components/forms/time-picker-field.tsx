@@ -11,12 +11,15 @@ import type { FieldHelpKey } from "@/config/help"
 interface TimePickerFieldProps {
   /** Nombre del campo: el formulario recibe la hora como HH:MM o "" */
   name: string
+  /** Etiqueta visible (por defecto "Hora (opcional)") */
   label?: string
   /** Hora HH:MM (o HH:MM:SS), o "" sin hora */
   value: string
+  /** Recibe la hora HH:MM, o "" con "Quitar hora" */
   onChange: (value: string) => void
   /** Error de Zod del campo */
   error?: string
+  /** Clases del contenedor del campo */
   className?: string
   /** Ayuda del (?) junto a la etiqueta (FIELD_HELP) */
   help?: FieldHelpKey

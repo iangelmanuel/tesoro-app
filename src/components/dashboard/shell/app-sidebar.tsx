@@ -39,6 +39,7 @@ interface NavGroup {
 }
 
 interface AppSidebarProps {
+  /** Usuario de la sesión: nombre, correo y avatar del menú de cuenta */
   user: DashboardUser
   /** Empresas del usuario, para el menú y el selector de Empresa */
   businesses: BusinessOption[]

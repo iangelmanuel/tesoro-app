@@ -28,7 +28,8 @@ No las reportes en un issue público: sigue [SECURITY.md](SECURITY.md).
 2. **Clona** tu fork localmente
 3. **Crea** una rama (`git checkout -b feat/mi-funcionalidad`)
 4. **Realiza** tus cambios
-5. **Verifica** con `pnpm check`, `pnpm eslint` y `pnpm prettier:check`
+5. **Verifica** con `pnpm check`, `pnpm eslint`, `pnpm prettier:check` y
+   `pnpm test`
 6. **Commit** siguiendo [Conventional Commits](#-estructura-de-commits)
 7. **Push** a tu rama (`git push origin feat/mi-funcionalidad`)
 8. **Abre** un Pull Request hacia `main`
@@ -68,15 +69,25 @@ pnpm dev
 ### Herramientas
 
 - **TypeScript** en modo `strict`: tipado estático requerido
-- **ESLint** (`eslint-config-next` + `eslint-config-prettier`)
+- **ESLint** (`eslint-config-next` + `eslint-config-prettier`), con las
+  fronteras de capas y paquetes, los nombres en kebab-case y el aviso de
+  400 líneas por archivo
 - **Prettier** con orden de imports y clases de Tailwind automáticos
+- **Vitest** para la lógica pura, con `*.test.ts` junto al módulo
 
 ```bash
 pnpm check            # tipos
 pnpm eslint           # lint
 pnpm prettier:check   # formato
 pnpm prettier         # formatea
+pnpm test             # tests
 ```
+
+### Arquitectura
+
+Antes de agregar código, lee [docs/arquitectura.md](docs/arquitectura.md):
+dónde va cada archivo, la dirección de las dependencias, la anatomía de una
+feature, los nombres, los tests y la lista de chequeo de PR.
 
 ### Convenciones de naming
 
@@ -146,6 +157,7 @@ chore(deps): bump next to 16.4.3
 - [ ] `pnpm check` sin errores
 - [ ] `pnpm eslint` sin errores
 - [ ] `pnpm prettier:check` sin cambios pendientes
+- [ ] `pnpm test` pasa
 - [ ] `pnpm build` termina correctamente
 - [ ] Los cambios son responsive
 - [ ] Funciona en modo claro y oscuro

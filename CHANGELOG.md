@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Unit tests with Vitest (SPEC 54).** `pnpm test` / `pnpm test:watch`, `vitest.config.mts` (node environment, `@` alias, `server-only` stubbed) and `test` in the CI `quality` matrix. Characterization tests for `src/libs` (dates, format, allocate, payment description), `chart-format`, `amount-format` and the pure modules extracted from `app/`.
+- **Architecture guide** in `docs/arquitectura.md`: repo map, layers and dependency direction, feature anatomy, data flow, server/client split, naming, shared code, file size, JSDoc, tests, domain glossary, a "new feature" recipe and a PR checklist. Linked from `README.md`, `CONTRIBUTING.md` and `CLAUDE.md`.
+- **Lint and type rules that enforce the architecture.** `noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch` and `noImplicitOverride` in `tsconfig.json`; `consistent-type-imports` (inline style), `unicorn/filename-case` (kebab-case, Next dynamic segments exempt) and `no-restricted-imports` zones (`src/libs` and `src/config` can't import features or components, `components/ui` only imports `ui/` and `libs`, nothing in `src/` imports `app/`, `exceljs` only in `exports/workbook/`, the PDF packages only in `exports/pdf/`, HeroUI and React Aria banned); `max-lines` at 400 as a warning.
+- `import "server-only"` in every feature `queries.ts`, `service.ts` and `*-service.ts` and in `src/libs/supabase/server.ts`, so a client import fails the build.
+- `formatNumber`, `formatPercent`, `formatCompactCount`, `currencySymbol` and `formatMonthYear` in `src/libs/format.ts`; `listMonths`, `countMonths` and `trimSeconds` in `src/libs/dates.ts`.
+
+### Changed
+
+- **Shared layer reorganized (SPEC 54), no visible change.** `src/components/dashboard/` is grouped by role (`shell/`, `quick-actions/`, `hide-amounts/`, `feedback/`, `data/`, `overlays/`) next to `command/`, `mobile/`, `shortcuts/` and `sidebar/`; the `sidebar/index.ts` barrel is gone. `seo/JsonLd.tsx` is now `seo/json-ld.tsx`. `revalidate.ts` and `service-result.ts` moved from `src/libs` to `src/features/workspaces/`, and `WorkspaceType` to `workspaces/types.ts`.
+- The two `monthsBetween` helpers (`score/curves.ts` returned the list of months, the MCP one the count) and the MCP `formatTime` (seconds trimmed) are now `listMonths`, `countMonths` and `trimSeconds`; only `formatTime` of `src/libs/format.ts` keeps that name.
+- Every `Intl` / `toLocaleString` in `src/components/` (except shadcn's `ui/calendar.tsx`) goes through `src/libs/format.ts`.
+- Pages and layouts only read params, call queries and compose: the dashboard user query, the summary KPIs, budget rows, the movements scope label and the legal document lookup moved to their features.
+- JSDoc on every export of `src/libs`, on `src/config` types and constants (one comment per `SITE` section) and on the public props of `forms/`, `charts/` and `dashboard/`.
+
 ## [0.3.0] — 2026-11-21
 
 ### Fixed

@@ -1,3 +1,4 @@
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"
 
 type IconComponent = React.ComponentType<{ className?: string }>
@@ -74,6 +75,34 @@ export function CardEmpty({
         {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
       </div>
       {action}
+    </div>
+  )
+}
+
+/** EmptyState mientras carga: misma superficie, ícono, textos y acción */
+export function EmptyStateSkeleton({
+  action = true,
+  className
+}: {
+  /** Reserva el botón de la acción */
+  action?: boolean
+  className?: string
+}) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "flex flex-col items-center justify-center gap-4 rounded-3xl bg-card px-6 py-12 shadow-(--surface-shadow)",
+        className
+      )}
+    >
+      <Skeleton className="size-12 rounded-2xl" />
+      <div className="flex w-full max-w-sm flex-col items-center gap-1">
+        <Skeleton className="h-6 w-56" />
+        <Skeleton className="h-5 w-full" />
+        <Skeleton className="h-5 w-3/4" />
+      </div>
+      {action && <Skeleton className="h-11 w-40 rounded-4xl" />}
     </div>
   )
 }

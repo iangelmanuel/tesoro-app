@@ -1,9 +1,9 @@
 import { Suspense } from "react"
 import { notFound } from "next/navigation"
-import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { SITE } from "@/config/site"
 import { AccountSection } from "@/features/account/components/account-section"
 import { BusinessForm } from "@/features/business/components/business-dialog"
+import { BusinessSettingsSkeleton } from "@/features/business/components/business-settings-skeleton"
 import { DeleteBusinessDialog } from "@/features/business/components/delete-business-dialog"
 import { getBusinessWorkspaces } from "@/features/workspaces/queries"
 import { buildMetadata } from "@/libs/seo"
@@ -25,7 +25,7 @@ export default function BusinessSettingsPage({
       className="flex flex-1 flex-col gap-6"
     >
       {/* params y la sesión son dinámicos: van dentro de Suspense */}
-      <Suspense fallback={<SettingsSkeleton />}>
+      <Suspense fallback={<BusinessSettingsSkeleton />}>
         <SettingsContent params={params} />
       </Suspense>
     </section>
@@ -72,15 +72,6 @@ async function SettingsContent({
           business={{ id: business.id, name: business.name }}
         />
       </AccountSection>
-    </>
-  )
-}
-
-function SettingsSkeleton() {
-  return (
-    <>
-      <CardSkeleton className="h-80" />
-      <CardSkeleton className="h-32" />
     </>
   )
 }

@@ -2,8 +2,10 @@ import { Suspense } from "react"
 import type { Route } from "next"
 import { redirect } from "next/navigation"
 import { Building2 } from "lucide-react"
-import { CardSkeleton } from "@/components/dashboard/card-skeleton"
-import { EmptyState } from "@/components/dashboard/empty-state"
+import {
+  EmptyState,
+  EmptyStateSkeleton
+} from "@/components/dashboard/empty-state"
 import { Button } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import { BusinessDialog } from "@/features/business/components/business-dialog"
@@ -20,7 +22,7 @@ export const metadata = buildMetadata({
 export default function BusinessPage() {
   return (
     // La sesión es dinámica: va dentro de Suspense
-    <Suspense fallback={<CardSkeleton className="flex-1" />}>
+    <Suspense fallback={<EmptyStateSkeleton className="flex-1" />}>
       <BusinessContent />
     </Suspense>
   )

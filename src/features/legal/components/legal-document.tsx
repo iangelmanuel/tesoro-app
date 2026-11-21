@@ -19,7 +19,7 @@ type LegalDocumentProps = {
 
 // Estilos del cuerpo: párrafos, listas y enlaces de cada sección
 const BODY_CLASSES =
-  "flex flex-col gap-4 text-pretty text-muted-foreground [&_a]:font-medium [&_a]:text-foreground [&_a]:underline [&_a]:underline-offset-4 [&_li]:pl-1 [&_ol]:flex [&_ol]:list-decimal [&_ol]:flex-col [&_ol]:gap-2 [&_ol]:pl-5 [&_strong]:font-medium [&_strong]:text-foreground [&_ul]:flex [&_ul]:list-disc [&_ul]:flex-col [&_ul]:gap-2 [&_ul]:pl-5"
+  "flex max-w-[52ch] flex-col gap-4 text-pretty text-muted-foreground [&_a]:font-medium [&_a]:text-foreground [&_a]:underline [&_a]:underline-offset-4 [&_li]:pl-1 [&_ol]:flex [&_ol]:list-decimal [&_ol]:flex-col [&_ol]:gap-2 [&_ol]:pl-5 [&_strong]:font-medium [&_strong]:text-foreground [&_ul]:flex [&_ul]:list-disc [&_ul]:flex-col [&_ul]:gap-2 [&_ul]:pl-5"
 
 export function LegalDocument({
   title,
@@ -49,7 +49,7 @@ export function LegalDocument({
               <li key={section.id}>
                 <a
                   href={`#${section.id}`}
-                  className="text-muted-foreground transition-colors hover:text-foreground"
+                  className="flex min-h-11 items-center text-muted-foreground transition-colors hover:text-foreground lg:min-h-0"
                 >
                   {index + 1}. {section.title}
                 </a>

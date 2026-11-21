@@ -142,7 +142,7 @@ function Section({
           {title}
         </h2>
         {description && (
-          <p className="max-w-2xl text-pretty text-muted-foreground">
+          <p className="max-w-[52ch] text-pretty text-muted-foreground">
             {description}
           </p>
         )}
@@ -187,7 +187,7 @@ function ToolCatalog() {
                     {tool.name}
                   </code>
                 </dt>
-                <dd className="text-sm text-pretty text-muted-foreground">
+                <dd className="max-w-[56ch] text-sm text-pretty text-muted-foreground">
                   {tool.description}
                 </dd>
               </div>

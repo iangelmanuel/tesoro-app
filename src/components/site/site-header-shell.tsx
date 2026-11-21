@@ -23,7 +23,7 @@ export function SiteHeaderShell({ children }: { children: React.ReactNode }) {
       className={cx(
         "sticky top-0 z-40 transition-[background-color,box-shadow,backdrop-filter] duration-300 ease-out motion-reduce:transition-none",
         scrolled
-          ? "bg-background/80 shadow-[0_1px_0_var(--separator)] backdrop-blur-md supports-backdrop-filter:bg-background/70"
+          ? "bg-background/80 shadow-[0_1px_0_var(--border)] backdrop-blur-md supports-backdrop-filter:bg-background/70"
           : "bg-transparent"
       )}
     >

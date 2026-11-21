@@ -31,12 +31,12 @@ export function OpenSource() {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group inline-flex min-h-11 items-center gap-1.5 rounded-md font-medium underline decoration-(--income)/40 decoration-2 underline-offset-6 transition-colors outline-none hover:decoration-(--income) focus-visible:ring-2 focus-visible:ring-focus"
+                  className="group inline-flex min-h-11 items-center gap-1.5 rounded-md font-medium underline decoration-(--income)/40 decoration-2 underline-offset-6 transition-colors outline-none hover:decoration-(--income) focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {link.label}
                   <ArrowUpRightIcon
                     aria-hidden="true"
-                    className="size-4 text-muted transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 motion-reduce:transition-none"
+                    className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 motion-reduce:transition-none"
                   />
                 </a>
               </li>

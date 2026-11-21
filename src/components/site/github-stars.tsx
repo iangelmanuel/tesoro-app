@@ -37,7 +37,7 @@ export async function GitHubStars({ className }: { className?: string }) {
       rel="noopener noreferrer"
       aria-label={label}
       className={cn(
-        "group inline-flex h-11 items-center gap-2 rounded-full px-3 text-sm font-medium text-muted transition-colors outline-none hover:bg-default hover:text-foreground focus-visible:ring-2 focus-visible:ring-focus",
+        "group inline-flex h-11 items-center gap-2 rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors outline-none hover:bg-highlight hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
         className
       )}
     >

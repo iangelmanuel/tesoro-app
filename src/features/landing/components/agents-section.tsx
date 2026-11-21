@@ -33,7 +33,9 @@ export function AgentsSection() {
           />
 
           <Reveal className="flex flex-col gap-4">
-            <p className="text-sm font-medium text-muted">Funciona con</p>
+            <p className="text-sm font-medium text-muted-foreground">
+              Funciona con
+            </p>
             <AgentClients clients={AI_CLIENTS} />
           </Reveal>
 

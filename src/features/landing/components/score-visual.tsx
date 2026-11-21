@@ -19,7 +19,9 @@ export function LandingScoreVisual() {
         <span className="text-8xl leading-none font-semibold tracking-tight tabular-nums">
           {SCORE}
         </span>
-        <span className="text-2xl text-muted tabular-nums">/ 100</span>
+        <span className="text-2xl text-muted-foreground tabular-nums">
+          / 100
+        </span>
       </p>
       <figcaption className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
         {ACTIVE && (
@@ -32,7 +34,7 @@ export function LandingScoreVisual() {
             {ACTIVE.label}
           </span>
         )}
-        <span className="text-muted">Datos de ejemplo</span>
+        <span className="text-muted-foreground">Datos de ejemplo</span>
       </figcaption>
     </figure>
   )

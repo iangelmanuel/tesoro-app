@@ -69,23 +69,23 @@ export function FeatureTour({ items }: { items: TourItem[] }) {
               onClick={() => setActive(index)}
               onKeyDown={(event) => onKeyDown(event, index)}
               className={cn(
-                "relative flex min-h-11 flex-col gap-1 rounded-3xl px-5 py-4 text-left transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-focus motion-reduce:transition-none",
+                "relative flex min-h-11 flex-col gap-1 rounded-3xl px-5 py-4 text-left transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
                 selected
-                  ? "bg-surface shadow-(--surface-shadow)"
-                  : "hover:bg-default/60"
+                  ? "bg-card shadow-(--surface-shadow)"
+                  : "hover:bg-highlight/60"
               )}
             >
               <span
                 className={cn(
                   "font-medium",
-                  selected ? "text-foreground" : "text-muted"
+                  selected ? "text-foreground" : "text-muted-foreground"
                 )}
               >
                 {item.title}
               </span>
               {selected && (
                 <m.span
-                  className="text-sm text-pretty text-muted"
+                  className="text-sm text-pretty text-muted-foreground"
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}

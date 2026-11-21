@@ -25,7 +25,7 @@ export function MobileNav({ children }: { children: React.ReactNode }) {
           setLoaded(true)
           setOpen(true)
         }}
-        className="flex size-11 items-center justify-center rounded-full text-foreground transition-colors outline-none hover:bg-default focus-visible:ring-2 focus-visible:ring-focus md:hidden"
+        className="flex size-11 items-center justify-center rounded-full text-foreground transition-colors outline-none hover:bg-highlight focus-visible:ring-2 focus-visible:ring-ring md:hidden"
       >
         <MenuIcon
           aria-hidden="true"

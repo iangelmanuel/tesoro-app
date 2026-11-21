@@ -29,7 +29,9 @@ export function AgentClients({ clients, className }: AgentClientsProps) {
           {AI_CLIENT_NAMES[client]}
         </li>
       ))}
-      <li className="text-sm font-normal text-muted">y otros clientes MCP</li>
+      <li className="text-sm font-normal text-muted-foreground">
+        y otros clientes MCP
+      </li>
     </ul>
   )
 }

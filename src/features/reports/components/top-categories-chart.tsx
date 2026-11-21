@@ -96,7 +96,7 @@ export function TopCategoriesChart({
                     className="text-xs"
                   >
                     <tspan className="fill-foreground">{row.name}</tspan>
-                    <tspan className="fill-muted tabular-nums">
+                    <tspan className="fill-muted-foreground tabular-nums">
                       {` · ${money(row.total, currency)}`}
                     </tspan>
                   </text>

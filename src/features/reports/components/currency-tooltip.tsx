@@ -37,7 +37,9 @@ export function CurrencyTooltipContent({
               style={{ backgroundColor: item.payload?.fill ?? item.color }}
             />
             <span className="flex flex-1 items-center justify-between gap-4 leading-none">
-              <span className="text-muted">{labels[key] ?? key}</span>
+              <span className="text-muted-foreground">
+                {labels[key] ?? key}
+              </span>
               <span className="font-medium text-foreground tabular-nums">
                 {money(Number(value), currency)}
               </span>

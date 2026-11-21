@@ -29,7 +29,7 @@ export function Field({
       </FieldLabel>
       {children}
       {errors?.length ? (
-        <p className="text-sm text-danger">{errors[0]}</p>
+        <p className="text-sm text-destructive">{errors[0]}</p>
       ) : null}
     </div>
   )

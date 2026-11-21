@@ -97,7 +97,7 @@ export function CategoryDonutChart({
                     <tspan
                       x={cx}
                       y={(cy ?? 0) + 20}
-                      className="fill-muted text-xs"
+                      className="fill-muted-foreground text-xs"
                     >
                       Total
                     </tspan>
@@ -122,7 +122,7 @@ export function CategoryDonutChart({
               style={{ backgroundColor: slice.color }}
             />
             <span className="flex-1 truncate">{slice.name}</span>
-            <span className="text-muted tabular-nums">
+            <span className="text-muted-foreground tabular-nums">
               {share(slice.total)}
             </span>
             <span className="font-medium tabular-nums">

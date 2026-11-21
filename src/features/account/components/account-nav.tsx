@@ -50,10 +50,10 @@ export function AccountNav() {
                 href={section.href as Route}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-medium whitespace-nowrap transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-focus motion-reduce:transition-none",
+                  "flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-medium whitespace-nowrap transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
                   active
-                    ? "bg-default text-foreground"
-                    : "text-muted hover:bg-default/60 hover:text-foreground"
+                    ? "bg-highlight text-foreground"
+                    : "text-muted-foreground hover:bg-highlight/60 hover:text-foreground"
                 )}
               >
                 <Icon

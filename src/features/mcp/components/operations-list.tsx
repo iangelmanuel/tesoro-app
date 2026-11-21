@@ -12,6 +12,7 @@ import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import { TONE_BADGE_CLASSES, type Tone } from "@/components/dashboard/tone"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "@/components/ui/sonner"
 import { undoAgentOperation } from "../actions"
 import type { AgentOperation } from "../queries"
@@ -118,6 +119,29 @@ export function OperationsList({
           key={operation.id}
           operation={operation}
         />
+      ))}
+    </ul>
+  )
+}
+
+/** Historial mientras carga: misma lista y filas */
+export function OperationsListSkeleton({ rows = 3 }: { rows?: number }) {
+  return (
+    <ul className={CARD_LIST}>
+      {Array.from({ length: rows }, (_, index) => (
+        <li
+          key={index}
+          className={`${CARD_ROW} flex flex-col gap-3 md:flex-row md:items-center md:justify-between`}
+        >
+          <div className="flex min-w-0 flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-6 w-20 rounded-4xl" />
+            </div>
+            <Skeleton className="h-5 w-40" />
+          </div>
+          <Skeleton className="h-11 w-28 self-start rounded-4xl md:self-center" />
+        </li>
       ))}
     </ul>
   )

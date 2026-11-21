@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { SITE } from "@/config/site"
+import { SecurityScreenSkeleton } from "@/features/account/components/account-screen-skeletons"
 import { AccountSection } from "@/features/account/components/account-section"
 import { DeleteAccountDialog } from "@/features/account/components/delete-account-dialog"
 import { PasswordForm } from "@/features/account/components/password-form"
@@ -16,14 +16,7 @@ export const metadata = buildMetadata({
 export default function AccountSecurityPage() {
   return (
     // La sesión es dinámica: va dentro de Suspense
-    <Suspense
-      fallback={
-        <>
-          <CardSkeleton className="h-48" />
-          <CardSkeleton className="h-32" />
-        </>
-      }
-    >
+    <Suspense fallback={<SecurityScreenSkeleton />}>
       <SecurityContent />
     </Suspense>
   )

@@ -1,4 +1,5 @@
 import { CARD } from "@/components/dashboard/surface"
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"
 
 interface AccountSectionProps {
@@ -34,5 +35,32 @@ export function AccountSection({
       </header>
       {children && <div className="flex flex-col gap-6">{children}</div>}
     </section>
+  )
+}
+
+/** Sección mientras carga: misma tarjeta, título y descripción en bloques */
+export function AccountSectionSkeleton({
+  children
+}: {
+  children?: React.ReactNode
+}) {
+  return (
+    <section className={CARD}>
+      <div className="flex flex-col gap-1">
+        <Skeleton className="h-6 w-32" />
+        <Skeleton className="h-5 w-full max-w-80" />
+      </div>
+      {children && <div className="flex flex-col gap-6">{children}</div>}
+    </section>
+  )
+}
+
+/** Campo de formulario mientras carga: etiqueta y control de 44 px */
+export function AccountFieldSkeleton({ className }: { className?: string }) {
+  return (
+    <div className={cn("flex flex-col gap-2", className)}>
+      <Skeleton className="h-5 w-24" />
+      <Skeleton className="h-11 w-full rounded-4xl" />
+    </div>
   )
 }

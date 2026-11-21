@@ -11,6 +11,7 @@ import {
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
 import { SelectField } from "@/components/forms/select-field"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "@/components/ui/sonner"
 import { todayISO } from "@/libs/dates"
 import { formatDate } from "@/libs/format"
@@ -157,6 +158,35 @@ export function ConnectionsList({
           key={connection.clientId}
           connection={connection}
         />
+      ))}
+    </ul>
+  )
+}
+
+/** Agentes conectados mientras carga: misma lista y filas */
+export function ConnectionsListSkeleton({ rows = 2 }: { rows?: number }) {
+  return (
+    <ul className={CARD_LIST}>
+      {Array.from({ length: rows }, (_, index) => (
+        <li
+          key={index}
+          className={`${CARD_ROW} flex flex-col gap-3 md:flex-row md:items-end md:justify-between`}
+        >
+          <div className="flex min-w-0 items-start gap-3">
+            <Skeleton className="size-10 shrink-0 rounded-xl" />
+            <div className="flex flex-col gap-1">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-5 w-56" />
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+            <div className="flex w-full flex-col gap-2 sm:w-48">
+              <Skeleton className="h-5 w-16" />
+              <Skeleton className="h-11 w-full rounded-xl" />
+            </div>
+            <Skeleton className="h-11 w-24 rounded-4xl" />
+          </div>
+        </li>
       ))}
     </ul>
   )

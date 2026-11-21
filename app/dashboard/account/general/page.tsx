@@ -1,7 +1,7 @@
 import { Suspense } from "react"
-import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { FieldLabel } from "@/components/forms/field-label"
 import { Input } from "@/components/ui/input"
+import { GeneralScreenSkeleton } from "@/features/account/components/account-screen-skeletons"
 import { AccountSection } from "@/features/account/components/account-section"
 import { AvatarUploader } from "@/features/account/components/avatar-uploader"
 import { ProfileForm } from "@/features/account/components/profile-form"
@@ -17,7 +17,7 @@ export const metadata = buildMetadata({
 export default function AccountGeneralPage() {
   return (
     // La sesión es dinámica: va dentro de Suspense
-    <Suspense fallback={<CardSkeleton className="h-64" />}>
+    <Suspense fallback={<GeneralScreenSkeleton />}>
       <GeneralContent />
     </Suspense>
   )

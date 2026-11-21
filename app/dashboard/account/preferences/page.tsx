@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { CardSkeleton } from "@/components/dashboard/card-skeleton"
 import { ShortcutsSettings } from "@/components/dashboard/shortcuts/shortcuts-settings"
+import { PreferencesScreenSkeleton } from "@/features/account/components/account-screen-skeletons"
 import { AccountSection } from "@/features/account/components/account-section"
 import { CurrencyForm } from "@/features/account/components/currency-form"
 import { getAccount } from "@/features/account/queries"
@@ -16,7 +16,7 @@ export const metadata = buildMetadata({
 export default function AccountPreferencesPage() {
   return (
     // La sesión es dinámica: va dentro de Suspense
-    <Suspense fallback={<CardSkeleton className="h-48" />}>
+    <Suspense fallback={<PreferencesScreenSkeleton />}>
       <PreferencesContent />
     </Suspense>
   )

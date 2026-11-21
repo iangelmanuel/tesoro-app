@@ -113,11 +113,8 @@ export default function DashboardLayout({
   return (
     <ThemeProvider>
       <WorkspaceThemeRoot>
-        {/* Los toasts solo existen en el dashboard: fuera de aquí, react-aria no
-          entra en el JS de la landing (SPEC 24) */}
-        {/* Toasts de shadcn (sonner). El ToastProvider de HeroUI vive en los
-            layouts de Empresa y cuenta, aún en HeroUI (SPEC 52c); SPEC 53 lo
-            retira */}
+        {/* Toasts (sonner) de todo el dashboard: Personal, Empresa y Cuenta.
+            Solo existen aquí, así no entran en el JS de la landing (SPEC 24) */}
         <Toaster />
         <SidebarProvider>
           {/* Primer elemento enfocable: salta el aside y el header y lleva el

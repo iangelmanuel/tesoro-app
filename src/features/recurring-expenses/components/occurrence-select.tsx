@@ -1,6 +1,6 @@
 "use client"
 
-import { useHideAmounts } from "@/components/dashboard/hide-amounts-context"
+import { useHideAmounts } from "@/components/dashboard/hide-amounts/hide-amounts-context"
 import { SelectField } from "@/components/forms/select-field"
 import { AMOUNT_MASK, formatCurrency, formatDate } from "@/libs/format"
 import { OCCURRENCE_STATUS } from "../occurrences"

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { useHideAmounts } from "@/components/dashboard/hide-amounts-context"
+import { useHideAmounts } from "@/components/dashboard/hide-amounts/hide-amounts-context"
 import { FormDialog } from "@/components/forms/form-dialog"
 import { SegmentedField } from "@/components/forms/segmented-field"
 import { SelectField } from "@/components/forms/select-field"

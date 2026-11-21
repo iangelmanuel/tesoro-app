@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from "react"
 import { Copy, Pencil, Trash2 } from "lucide-react"
-import { DeleteDialog } from "@/components/dashboard/delete-dialog"
-import { RowActions } from "@/components/dashboard/row-actions"
+import { RowActions } from "@/components/dashboard/data/row-actions"
+import { DeleteDialog } from "@/components/dashboard/overlays/delete-dialog"
 import { toast } from "@/components/ui/sonner"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"

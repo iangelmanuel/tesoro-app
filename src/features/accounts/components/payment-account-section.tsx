@@ -1,7 +1,7 @@
 "use client"
 
 import { useId, useState } from "react"
-import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
 import { AccountSelectField } from "@/components/forms/account-select-field"
 import { amountInput } from "@/components/forms/amount-format"
 import { FieldHelp } from "@/components/forms/field-label"

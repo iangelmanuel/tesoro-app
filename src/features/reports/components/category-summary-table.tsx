@@ -1,10 +1,10 @@
 import type { Route } from "next"
 import Link from "next/link"
-import { Amount } from "@/components/dashboard/amount"
+import { Amount } from "@/components/dashboard/data/amount"
 import {
   ScrollTable,
   ScrollTableSkeleton
-} from "@/components/dashboard/scroll-table"
+} from "@/components/dashboard/data/scroll-table"
 import {
   Table,
   TableBody,

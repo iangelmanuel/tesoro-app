@@ -1,4 +1,4 @@
-import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
+import { TONE_BADGE_CLASSES } from "@/components/dashboard/feedback/tone"
 import { cn } from "@/libs/cn"
 import { SCORE_BANDS } from "./score-bands"
 

@@ -2,10 +2,13 @@
 
 import { useState } from "react"
 import { Plus, RefreshCw } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
-import { DetailSection, DetailSheet } from "@/components/dashboard/detail-sheet"
-import { HelpHint } from "@/components/dashboard/help-hint"
-import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
+import { Amount } from "@/components/dashboard/data/amount"
+import { HelpHint } from "@/components/dashboard/feedback/help-hint"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
+import {
+  DetailSection,
+  DetailSheet
+} from "@/components/dashboard/overlays/detail-sheet"
 import { TextInputField } from "@/components/forms/text-input-field"
 import { Button } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"

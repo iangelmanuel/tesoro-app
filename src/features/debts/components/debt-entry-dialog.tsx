@@ -1,8 +1,8 @@
 "use client"
 
 import { useActionState, useEffect, useId, useState } from "react"
-import { Amount } from "@/components/dashboard/amount"
-import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
+import { Amount } from "@/components/dashboard/data/amount"
+import { TONE_BADGE_CLASSES } from "@/components/dashboard/feedback/tone"
 import { AccountSelectField } from "@/components/forms/account-select-field"
 import { amountInput } from "@/components/forms/amount-format"
 import { CategorySelectField } from "@/components/forms/category-select-field"

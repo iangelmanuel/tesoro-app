@@ -1,6 +1,6 @@
 import { TriangleAlert } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
-import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
+import { Amount } from "@/components/dashboard/data/amount"
+import { TONE_BADGE_CLASSES } from "@/components/dashboard/feedback/tone"
 import { formatPercent } from "@/features/budgets/progress"
 import { cn } from "@/libs/cn"
 import { formatDate } from "@/libs/format"

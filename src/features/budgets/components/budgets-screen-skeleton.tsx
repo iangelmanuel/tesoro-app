@@ -1,4 +1,4 @@
-import { MonthSwitcherSkeleton } from "@/components/dashboard/month-switcher"
+import { MonthSwitcherSkeleton } from "@/components/dashboard/data/month-switcher"
 import { Skeleton } from "@/components/ui/skeleton"
 import { BudgetProgressListSkeleton } from "./budget-progress-row"
 import { BudgetTotalsSkeleton } from "./budget-totals"

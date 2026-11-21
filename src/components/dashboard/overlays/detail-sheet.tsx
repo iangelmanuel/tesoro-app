@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import type { HelpKey } from "@/config/help"
 import { useIsMobile } from "@/hooks/use-is-mobile"
 import { cn } from "@/libs/cn"
-import { HelpHint } from "./help-hint"
+import { HelpHint } from "../feedback/help-hint"
 
 interface DetailSheetProps {
   open: boolean

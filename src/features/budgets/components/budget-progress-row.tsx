@@ -2,21 +2,21 @@
 
 import { useState, useTransition } from "react"
 import { Pencil, Trash2 } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
-import { DeleteDialog } from "@/components/dashboard/delete-dialog"
+import { Amount } from "@/components/dashboard/data/amount"
 import {
   type RowAction,
   RowActions,
   RowContextMenu,
   RowMenuBoundary
-} from "@/components/dashboard/row-actions"
-import { SURFACE_LIST, SURFACE_ROW } from "@/components/dashboard/surface"
+} from "@/components/dashboard/data/row-actions"
+import { SURFACE_LIST, SURFACE_ROW } from "@/components/dashboard/data/surface"
 import {
   TONE_BADGE_CLASSES as TONE_BADGE,
   TONE_BAR_CLASSES as TONE_BAR,
   TONE_TEXT_CLASSES as TONE_TEXT
-} from "@/components/dashboard/tone"
-import { ToneBadge } from "@/components/dashboard/tone-badge"
+} from "@/components/dashboard/feedback/tone"
+import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
+import { DeleteDialog } from "@/components/dashboard/overlays/delete-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "@/components/ui/sonner"
 import { CategoryBadge } from "@/features/categories/components/category-badge"

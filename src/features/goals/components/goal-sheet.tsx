@@ -1,8 +1,11 @@
 "use client"
 
 import { Minus, Plus } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
-import { DetailSection, DetailSheet } from "@/components/dashboard/detail-sheet"
+import { Amount } from "@/components/dashboard/data/amount"
+import {
+  DetailSection,
+  DetailSheet
+} from "@/components/dashboard/overlays/detail-sheet"
 import { Button } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { goalStatus } from "../progress"

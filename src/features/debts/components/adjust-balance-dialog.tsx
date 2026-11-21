@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import { Amount } from "@/components/dashboard/amount"
+import { Amount } from "@/components/dashboard/data/amount"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { FormDialog } from "@/components/forms/form-dialog"
 import { TextInputField } from "@/components/forms/text-input-field"

@@ -1,4 +1,4 @@
-import { NAV_ICONS } from "@/components/dashboard/nav"
+import { NAV_ICONS } from "@/components/dashboard/shell/nav"
 import { SITE } from "@/config/site"
 import { RevealItem, RevealList } from "./reveal"
 import { SectionHeading } from "./section-heading"

@@ -11,17 +11,17 @@ import {
   RefreshCw,
   Scale
 } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
+import { Amount } from "@/components/dashboard/data/amount"
 import {
   type RowAction,
   RowContextMenu,
   RowMenuBoundary
-} from "@/components/dashboard/row-actions"
-import { SURFACE_ITEM } from "@/components/dashboard/surface"
+} from "@/components/dashboard/data/row-actions"
+import { SURFACE_ITEM } from "@/components/dashboard/data/surface"
 import {
   TONE_BADGE_CLASSES,
   TONE_TEXT_CLASSES
-} from "@/components/dashboard/tone"
+} from "@/components/dashboard/feedback/tone"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,

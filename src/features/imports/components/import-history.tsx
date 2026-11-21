@@ -2,10 +2,13 @@
 
 import { useState, useTransition } from "react"
 import { FileClock, Undo2 } from "lucide-react"
-import { CardEmpty } from "@/components/dashboard/empty-state"
-import { SURFACE_LIST, SURFACE_ROW } from "@/components/dashboard/surface"
-import { TONE_BADGE_CLASSES, type Tone } from "@/components/dashboard/tone"
-import { ToneBadge } from "@/components/dashboard/tone-badge"
+import { SURFACE_LIST, SURFACE_ROW } from "@/components/dashboard/data/surface"
+import { CardEmpty } from "@/components/dashboard/feedback/empty-state"
+import {
+  TONE_BADGE_CLASSES,
+  type Tone
+} from "@/components/dashboard/feedback/tone"
+import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import {
   AlertDialog,
   AlertDialogAction,

@@ -1,8 +1,8 @@
 import {
   TONE_BADGE_CLASSES as TONE_BADGE,
   TONE_TEXT_CLASSES as TONE_TEXT
-} from "@/components/dashboard/tone"
-import { ToneBadge } from "@/components/dashboard/tone-badge"
+} from "@/components/dashboard/feedback/tone"
+import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"
 import { formatDate } from "@/libs/format"

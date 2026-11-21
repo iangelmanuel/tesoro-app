@@ -2,7 +2,7 @@
 
 import { useMemo, useReducer, useState, useTransition } from "react"
 import { Check } from "lucide-react"
-import { CARD } from "@/components/dashboard/surface"
+import { CARD } from "@/components/dashboard/data/surface"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"
 import { formatCurrency } from "@/libs/format"

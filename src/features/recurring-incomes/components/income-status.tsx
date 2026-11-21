@@ -1,6 +1,6 @@
-import { Amount } from "@/components/dashboard/amount"
-import { TONE_BADGE_CLASSES as TONE_BADGE } from "@/components/dashboard/tone"
-import { ToneBadge } from "@/components/dashboard/tone-badge"
+import { Amount } from "@/components/dashboard/data/amount"
+import { TONE_BADGE_CLASSES as TONE_BADGE } from "@/components/dashboard/feedback/tone"
+import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import {
   INCOME_OCCURRENCE_STATUS,
   type IncomeOccurrenceStatus,

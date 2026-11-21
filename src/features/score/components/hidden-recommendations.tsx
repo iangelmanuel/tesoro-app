@@ -2,7 +2,7 @@
 
 import { useTransition } from "react"
 import { ChevronRight } from "lucide-react"
-import { SURFACE_LIST, SURFACE_ROW } from "@/components/dashboard/surface"
+import { SURFACE_LIST, SURFACE_ROW } from "@/components/dashboard/data/surface"
 import { Button } from "@/components/ui/button"
 import {
   Collapsible,

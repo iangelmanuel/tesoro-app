@@ -2,7 +2,7 @@
 
 import { cn } from "@/libs/cn"
 import { AMOUNT_MASK, formatCurrency, formatNumber } from "@/libs/format"
-import { useHideAmounts } from "./hide-amounts-context"
+import { useHideAmounts } from "../hide-amounts/hide-amounts-context"
 
 interface AmountProps {
   value: number

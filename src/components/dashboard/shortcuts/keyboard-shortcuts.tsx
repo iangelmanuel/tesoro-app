@@ -11,7 +11,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog"
 import { GO_SEQUENCE_TIMEOUT_MS, SHORTCUTS } from "@/config/shortcuts"
-import { useQuickActions } from "../quick-actions-context"
+import { useQuickActions } from "../quick-actions/quick-actions-context"
 import { getNavTargets } from "./nav-targets"
 import { ShortcutKeys } from "./shortcut-keys"
 import { useShortcutsPreference } from "./shortcuts-preference"

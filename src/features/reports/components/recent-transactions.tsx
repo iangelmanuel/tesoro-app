@@ -1,12 +1,12 @@
 import {
   CardHeading,
   CardHeadingSkeleton
-} from "@/components/dashboard/card-heading"
+} from "@/components/dashboard/data/card-heading"
 import {
   ScrollTable,
   ScrollTableSkeleton
-} from "@/components/dashboard/scroll-table"
-import { CARD } from "@/components/dashboard/surface"
+} from "@/components/dashboard/data/scroll-table"
+import { CARD } from "@/components/dashboard/data/surface"
 import {
   Table,
   TableBody,

@@ -1,13 +1,13 @@
 import type { Route } from "next"
 import { CircleCheck } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
+import { Amount } from "@/components/dashboard/data/amount"
 import {
   CardHeading,
   CardHeadingSkeleton
-} from "@/components/dashboard/card-heading"
-import { CardEmpty } from "@/components/dashboard/empty-state"
-import { MonthSwitcherSkeleton } from "@/components/dashboard/month-switcher"
-import { CARD, CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+} from "@/components/dashboard/data/card-heading"
+import { MonthSwitcherSkeleton } from "@/components/dashboard/data/month-switcher"
+import { CARD, CARD_LIST, CARD_ROW } from "@/components/dashboard/data/surface"
+import { CardEmpty } from "@/components/dashboard/feedback/empty-state"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { RECURRING_PATH } from "@/features/budgets/tabs"

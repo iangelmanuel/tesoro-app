@@ -2,13 +2,13 @@
 
 import { useState, useTransition } from "react"
 import { Bot, Unplug } from "lucide-react"
-import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import {
   type RowAction,
   RowContextMenu,
   RowMenuBoundary
-} from "@/components/dashboard/row-actions"
-import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+} from "@/components/dashboard/data/row-actions"
+import { CARD_LIST, CARD_ROW } from "@/components/dashboard/data/surface"
+import { DeleteDialog } from "@/components/dashboard/overlays/delete-dialog"
 import { SelectField } from "@/components/forms/select-field"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"

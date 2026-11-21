@@ -4,7 +4,7 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarStations
-} from "@/components/dashboard/sidebar"
+} from "@/components/dashboard/sidebar/sidebar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
 

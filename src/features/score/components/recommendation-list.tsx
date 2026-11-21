@@ -1,6 +1,6 @@
 import { CircleCheck } from "lucide-react"
-import { CardEmpty } from "@/components/dashboard/empty-state"
-import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import { CARD_LIST, CARD_ROW } from "@/components/dashboard/data/surface"
+import { CardEmpty } from "@/components/dashboard/feedback/empty-state"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"
 import type { Recommendation } from "../types"

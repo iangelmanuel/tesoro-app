@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { CARD } from "@/components/dashboard/surface"
+import { CARD } from "@/components/dashboard/data/surface"
 import { SITE, legalHref } from "@/config/site"
 import { SignUpForm } from "@/features/auth/components/sign-up-form"
 import { buildMetadata } from "@/libs/seo"

@@ -1,12 +1,15 @@
 import { TriangleAlert } from "lucide-react"
 import { ChartCard, ChartCardSkeleton } from "@/components/charts/chart-card"
-import { Amount } from "@/components/dashboard/amount"
+import { Amount } from "@/components/dashboard/data/amount"
 import {
   CardHeading,
   CardHeadingSkeleton
-} from "@/components/dashboard/card-heading"
-import { StatCard, StatCardSkeleton } from "@/components/dashboard/stat-card"
-import { CARD, CONTROL_SURFACE } from "@/components/dashboard/surface"
+} from "@/components/dashboard/data/card-heading"
+import {
+  StatCard,
+  StatCardSkeleton
+} from "@/components/dashboard/data/stat-card"
+import { CARD, CONTROL_SURFACE } from "@/components/dashboard/data/surface"
 import { Skeleton } from "@/components/ui/skeleton"
 import { WorkspaceNoTransactions } from "@/features/transactions/components/workspace-no-transactions"
 import type { SearchParams } from "@/features/transactions/filters"

@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { ChevronRight } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
-import { SURFACE_LIST, SURFACE_ROW } from "@/components/dashboard/surface"
+import { Amount } from "@/components/dashboard/data/amount"
+import { SURFACE_LIST, SURFACE_ROW } from "@/components/dashboard/data/surface"
 import { Button } from "@/components/ui/button"
 import {
   Collapsible,

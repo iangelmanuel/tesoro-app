@@ -28,7 +28,10 @@ import {
 } from "@/components/ui/dialog"
 import { SHORTCUTS } from "@/config/shortcuts"
 import { SITE } from "@/config/site"
-import { type QuickActionKey, useQuickActions } from "../quick-actions-context"
+import {
+  type QuickActionKey,
+  useQuickActions
+} from "../quick-actions/quick-actions-context"
 import { type NavTarget, getNavTargets } from "../shortcuts/nav-targets"
 import { ShortcutKeys } from "../shortcuts/shortcut-keys"
 import { type CommandEntity, loadCommandEntities } from "./actions"

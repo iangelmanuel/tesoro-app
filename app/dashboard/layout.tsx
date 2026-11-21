@@ -1,26 +1,29 @@
 import { Suspense, cache } from "react"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { AppSidebar } from "@/components/dashboard/app-sidebar"
-import { AppSidebarSkeleton } from "@/components/dashboard/app-sidebar-skeleton"
+import { HideAmountsProvider } from "@/components/dashboard/hide-amounts/hide-amounts-context"
+import { HideAmountsToggle } from "@/components/dashboard/hide-amounts/hide-amounts-toggle"
+import { QuickActions } from "@/components/dashboard/quick-actions/quick-actions"
+import { AppSidebar } from "@/components/dashboard/shell/app-sidebar"
+import { AppSidebarSkeleton } from "@/components/dashboard/shell/app-sidebar-skeleton"
 import {
   DashboardHeader,
   DashboardHeaderSkeleton
-} from "@/components/dashboard/dashboard-header"
+} from "@/components/dashboard/shell/dashboard-header"
 import {
   DashboardTitle,
   DashboardTitleSkeleton
-} from "@/components/dashboard/dashboard-title"
-import { HideAmountsProvider } from "@/components/dashboard/hide-amounts-context"
-import { HideAmountsToggle } from "@/components/dashboard/hide-amounts-toggle"
-import { QuickActions } from "@/components/dashboard/quick-actions"
+} from "@/components/dashboard/shell/dashboard-title"
+import { WorkspaceThemeRoot } from "@/components/dashboard/shell/workspace-theme-root"
 import { ShortcutsPreferenceProvider } from "@/components/dashboard/shortcuts/shortcuts-preference"
-import { SidebarInset, SidebarProvider } from "@/components/dashboard/sidebar"
+import {
+  SidebarInset,
+  SidebarProvider
+} from "@/components/dashboard/sidebar/sidebar"
 import {
   SIDEBAR_WIDTH_COOKIE,
   parseSidebarWidth
 } from "@/components/dashboard/sidebar/width"
-import { WorkspaceThemeRoot } from "@/components/dashboard/workspace-theme-root"
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { SHORTCUTS_COOKIE, parseShortcutsCookie } from "@/config/shortcuts"

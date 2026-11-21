@@ -1,9 +1,9 @@
 "use client"
 
 import { useId } from "react"
-import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
-import { TONE_BADGE_CLASSES } from "@/components/dashboard/tone"
-import { ToneBadge } from "@/components/dashboard/tone-badge"
+import { CARD_LIST, CARD_ROW } from "@/components/dashboard/data/surface"
+import { TONE_BADGE_CLASSES } from "@/components/dashboard/feedback/tone"
+import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import { FieldHelp } from "@/components/forms/field-label"
 import { SelectField } from "@/components/forms/select-field"
 import { TextInputField } from "@/components/forms/text-input-field"

@@ -2,7 +2,7 @@
 
 import type { ComponentProps } from "react"
 import { ChartTooltipContent } from "@/components/charts/chart-tooltip"
-import { useFormatAmount } from "@/components/dashboard/hide-amounts-context"
+import { useFormatAmount } from "@/components/dashboard/hide-amounts/hide-amounts-context"
 
 type CurrencyTooltipProps = ComponentProps<typeof ChartTooltipContent> & {
   currency: string

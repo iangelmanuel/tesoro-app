@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 import { ChartCard } from "@/components/charts/chart-card"
-import { Amount } from "@/components/dashboard/amount"
-import { StatCard } from "@/components/dashboard/stat-card"
+import { Amount } from "@/components/dashboard/data/amount"
+import { StatCard } from "@/components/dashboard/data/stat-card"
 import { LoadingRegion } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
 import {

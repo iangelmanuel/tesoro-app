@@ -1,6 +1,6 @@
 import { ChartCardSkeleton } from "@/components/charts/chart-card"
-import { ScrollTableSkeleton } from "@/components/dashboard/scroll-table"
-import { StatCardSkeleton } from "@/components/dashboard/stat-card"
+import { ScrollTableSkeleton } from "@/components/dashboard/data/scroll-table"
+import { StatCardSkeleton } from "@/components/dashboard/data/stat-card"
 import { LoadingRegion } from "@/components/ui/skeleton"
 
 // Carga de cualquier pantalla del dashboard que no tenga su propio

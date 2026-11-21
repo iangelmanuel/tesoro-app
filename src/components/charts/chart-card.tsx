@@ -1,4 +1,4 @@
-import { CARD } from "@/components/dashboard/surface"
+import { CARD } from "@/components/dashboard/data/surface"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"
 

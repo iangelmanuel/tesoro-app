@@ -18,18 +18,18 @@ import {
   RefreshCw,
   Trash2
 } from "lucide-react"
-import { DeleteDialog } from "@/components/dashboard/delete-dialog"
 import {
   type RowAction,
   RowActions,
   RowContextMenu,
   RowMenuBoundary
-} from "@/components/dashboard/row-actions"
+} from "@/components/dashboard/data/row-actions"
 import {
   ScrollTable,
   ScrollTableSkeleton
-} from "@/components/dashboard/scroll-table"
-import { SURFACE_LIST } from "@/components/dashboard/surface"
+} from "@/components/dashboard/data/scroll-table"
+import { SURFACE_LIST } from "@/components/dashboard/data/surface"
+import { DeleteDialog } from "@/components/dashboard/overlays/delete-dialog"
 import { toast } from "@/components/ui/sonner"
 import {
   Table,

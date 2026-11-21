@@ -3,7 +3,7 @@ import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { HelpKey } from "@/config/help"
-import { HelpHint } from "./help-hint"
+import { HelpHint } from "../feedback/help-hint"
 
 interface CardHeadingProps {
   title: string

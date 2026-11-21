@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { SITE } from "@/config/site"
 import { signOut } from "@/features/auth/actions"
-import { useHideAmounts } from "./hide-amounts-context"
+import { useHideAmounts } from "../hide-amounts/hide-amounts-context"
 
 export interface DashboardUser {
   name: string

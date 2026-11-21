@@ -1,4 +1,4 @@
-import type { Tone } from "@/components/dashboard/tone"
+import type { Tone } from "@/components/dashboard/feedback/tone"
 import { monthRange, shiftMonth } from "@/libs/dates"
 
 // Cuotas de una cuenta por cobrar mensual (SPEC 28, 29 y 39). El estado de

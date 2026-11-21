@@ -1,5 +1,5 @@
 import { CalendarX } from "lucide-react"
-import { EmptyState } from "@/components/dashboard/empty-state"
+import { EmptyState } from "@/components/dashboard/feedback/empty-state"
 import { SITE } from "@/config/site"
 import { deletionDate, formatDeletionDate } from "@/features/account/deletion"
 import { RestoreBusinessButton } from "./restore-business-button"

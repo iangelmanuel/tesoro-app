@@ -1,6 +1,6 @@
 "use client"
 
-import { useActiveWorkspace } from "../use-active-workspace"
+import { useActiveWorkspace } from "../shell/use-active-workspace"
 import { BottomNav } from "./bottom-nav"
 import { QuickSheet } from "./quick-sheet"
 import { useQuickSheetAutoOpen } from "./use-quick-sheet-auto-open"

@@ -1,4 +1,4 @@
-import { CARD, CONTROL_SURFACE } from "@/components/dashboard/surface"
+import { CARD, CONTROL_SURFACE } from "@/components/dashboard/data/surface"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"
 import { AccountBalancesListSkeleton } from "./account-balances-list"

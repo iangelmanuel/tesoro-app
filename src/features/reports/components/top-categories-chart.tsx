@@ -7,7 +7,7 @@ import {
 } from "@/components/charts/chart-container"
 import { HORIZONTAL_BAR_PROPS } from "@/components/charts/chart-style"
 import { ChartTooltip } from "@/components/charts/chart-tooltip"
-import { useFormatAmount } from "@/components/dashboard/hide-amounts-context"
+import { useFormatAmount } from "@/components/dashboard/hide-amounts/hide-amounts-context"
 import type { CategorySlice } from "../chart-data"
 import { ChartDataTable } from "./chart-data-table"
 import { CurrencyTooltipContent } from "./currency-tooltip"

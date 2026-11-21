@@ -2,9 +2,9 @@ import { ChartLine } from "lucide-react"
 import {
   CardHeading,
   CardHeadingSkeleton
-} from "@/components/dashboard/card-heading"
-import { CardEmpty } from "@/components/dashboard/empty-state"
-import { CARD } from "@/components/dashboard/surface"
+} from "@/components/dashboard/data/card-heading"
+import { CARD } from "@/components/dashboard/data/surface"
+import { CardEmpty } from "@/components/dashboard/feedback/empty-state"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"
 import { hasScore, scoreVariation } from "../curves"

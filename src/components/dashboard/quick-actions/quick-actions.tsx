@@ -15,17 +15,17 @@ import {
   getPersonalWorkspace
 } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
-import { CommandPalette } from "./command/command-palette"
-import { CommandPaletteProvider } from "./command/command-palette-context"
-import { CommandTrigger } from "./command/command-trigger"
-import { MobileShell } from "./mobile/mobile-shell"
+import { CommandPalette } from "../command/command-palette"
+import { CommandPaletteProvider } from "../command/command-palette-context"
+import { CommandTrigger } from "../command/command-trigger"
+import { MobileShell } from "../mobile/mobile-shell"
+import { KeyboardShortcuts } from "../shortcuts/keyboard-shortcuts"
 import {
   type QuickActionsData,
   QuickActionsProvider,
   type QuickActionsWorkspace
 } from "./quick-actions-context"
 import { QuickActionsMenu } from "./quick-actions-menu"
-import { KeyboardShortcuts } from "./shortcuts/keyboard-shortcuts"
 
 // Lee la sesión: va dentro de un Suspense por cacheComponents. El layout no
 // conoce la ruta en el servidor, así que carga Personal (con sus metas,

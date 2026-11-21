@@ -1,4 +1,4 @@
-import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+import { CARD_LIST, CARD_ROW } from "@/components/dashboard/data/surface"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"
 import { isIncluded } from "../curves"

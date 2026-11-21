@@ -1,6 +1,6 @@
+import { QuickActionsSkeleton } from "../quick-actions/quick-actions"
+import { SidebarTrigger } from "../sidebar/sidebar"
 import { DashboardTitleSkeleton } from "./dashboard-title"
-import { QuickActionsSkeleton } from "./quick-actions"
-import { SidebarTrigger } from "./sidebar"
 
 // Header del dashboard: el trigger del aside, el único título de la pantalla
 // y los accesos (tutorial, ojo, paleta y acciones rápidas). Fijo arriba, en

@@ -2,7 +2,7 @@
 
 import { useTransition } from "react"
 import Link from "next/link"
-import { CARD_ROW } from "@/components/dashboard/surface"
+import { CARD_ROW } from "@/components/dashboard/data/surface"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { toast } from "@/components/ui/sonner"
 import { ToneBadge } from "@/features/debts/components/debt-indicators"

@@ -4,7 +4,10 @@ import { useTransition } from "react"
 import type { Route } from "next"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { CONTROL_BUTTON, CONTROL_SURFACE } from "@/components/dashboard/surface"
+import {
+  CONTROL_BUTTON,
+  CONTROL_SURFACE
+} from "@/components/dashboard/data/surface"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { FieldHelp } from "@/components/forms/field-label"
 import { Button } from "@/components/ui/button"

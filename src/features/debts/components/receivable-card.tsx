@@ -2,17 +2,17 @@
 
 import { useState } from "react"
 import { Archive, CircleCheck, Pencil, RefreshCw } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
+import { Amount } from "@/components/dashboard/data/amount"
 import {
   type RowAction,
   RowContextMenu,
   RowMenuBoundary
-} from "@/components/dashboard/row-actions"
+} from "@/components/dashboard/data/row-actions"
 import {
   CARD_LINK,
   SURFACE_ITEM_CLICKABLE
-} from "@/components/dashboard/surface"
-import { TONE_TEXT_CLASSES } from "@/components/dashboard/tone"
+} from "@/components/dashboard/data/surface"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { cn } from "@/libs/cn"

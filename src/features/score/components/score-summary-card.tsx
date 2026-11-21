@@ -1,8 +1,8 @@
 import {
   CardHeading,
   CardHeadingSkeleton
-} from "@/components/dashboard/card-heading"
-import { CARD } from "@/components/dashboard/surface"
+} from "@/components/dashboard/data/card-heading"
+import { CARD } from "@/components/dashboard/data/surface"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SITE } from "@/config/site"
 import { shiftMonth, todayISO } from "@/libs/dates"

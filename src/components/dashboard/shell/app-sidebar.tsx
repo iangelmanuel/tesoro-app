@@ -14,7 +14,7 @@ import {
   SidebarNavLink,
   SidebarStations,
   useCloseSidebarOnNavigate
-} from "@/components/dashboard/sidebar"
+} from "@/components/dashboard/sidebar/sidebar"
 import { SITE } from "@/config/site"
 import {
   type BusinessOption,

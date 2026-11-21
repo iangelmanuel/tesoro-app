@@ -10,21 +10,21 @@ import {
   Receipt,
   Trash2
 } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
-import { DeleteDialog } from "@/components/dashboard/delete-dialog"
-import { CardEmpty } from "@/components/dashboard/empty-state"
-import { RowActions } from "@/components/dashboard/row-actions"
+import { Amount } from "@/components/dashboard/data/amount"
+import { RowActions } from "@/components/dashboard/data/row-actions"
 import {
   type SortableConfig,
   SortableListItem,
   SortableListProvider,
   useSortableList
-} from "@/components/dashboard/sortable-list"
-import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+} from "@/components/dashboard/data/sortable-list"
+import { CARD_LIST, CARD_ROW } from "@/components/dashboard/data/surface"
+import { CardEmpty } from "@/components/dashboard/feedback/empty-state"
 import {
   TONE_BADGE_CLASSES,
   TONE_TEXT_CLASSES
-} from "@/components/dashboard/tone"
+} from "@/components/dashboard/feedback/tone"
+import { DeleteDialog } from "@/components/dashboard/overlays/delete-dialog"
 import { toast } from "@/components/ui/sonner"
 import {
   Tooltip,

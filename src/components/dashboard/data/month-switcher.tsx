@@ -1,7 +1,7 @@
 "use client"
 
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { CONTROL_SURFACE } from "@/components/dashboard/surface"
+import { CONTROL_SURFACE } from "@/components/dashboard/data/surface"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"

@@ -2,25 +2,25 @@
 
 import { useEffect, useState } from "react"
 import { Check, Pause, Pencil, Play, Trash2 } from "lucide-react"
-import { Amount } from "@/components/dashboard/amount"
-import { DeleteDialog } from "@/components/dashboard/delete-dialog"
-import {
-  DetailSection,
-  DetailSheet,
-  DetailStats
-} from "@/components/dashboard/detail-sheet"
+import { Amount } from "@/components/dashboard/data/amount"
 import {
   SortableListItem,
   SortableListProvider,
   moveItem,
   useSortableList
-} from "@/components/dashboard/sortable-list"
-import { CARD_LIST, CARD_ROW } from "@/components/dashboard/surface"
+} from "@/components/dashboard/data/sortable-list"
+import { CARD_LIST, CARD_ROW } from "@/components/dashboard/data/surface"
 import {
   TONE_BADGE_CLASSES,
   TONE_TEXT_CLASSES
-} from "@/components/dashboard/tone"
-import { ToneBadge } from "@/components/dashboard/tone-badge"
+} from "@/components/dashboard/feedback/tone"
+import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
+import { DeleteDialog } from "@/components/dashboard/overlays/delete-dialog"
+import {
+  DetailSection,
+  DetailSheet,
+  DetailStats
+} from "@/components/dashboard/overlays/detail-sheet"
 import { Button } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { CategoryBadge } from "@/features/categories/components/category-badge"

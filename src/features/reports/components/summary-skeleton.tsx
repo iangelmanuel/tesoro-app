@@ -1,5 +1,5 @@
 import { ChartCardSkeleton } from "@/components/charts/chart-card"
-import { StatCardSkeleton } from "@/components/dashboard/stat-card"
+import { StatCardSkeleton } from "@/components/dashboard/data/stat-card"
 import { AccountsCardSkeleton } from "@/features/accounts/components/accounts-card"
 import { BudgetsAtRiskCardSkeleton } from "@/features/budgets/components/budgets-at-risk-card"
 import { DebtsCardSkeleton } from "@/features/debts/components/debts-card"

@@ -46,7 +46,7 @@ import {
 } from "@/features/transactions/components/transaction-dialog"
 import { VerifyMovementsDialog } from "@/features/transactions/components/verify-movements-dialog"
 import type { WorkspaceType } from "@/features/workspaces/types"
-import { useHideAmounts } from "./hide-amounts-context"
+import { useHideAmounts } from "../hide-amounts/hide-amounts-context"
 
 /** Espacio donde los accesos rápidos pueden crear movimientos */
 export interface QuickActionsWorkspace {

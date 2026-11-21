@@ -1,9 +1,10 @@
 import { Suspense } from "react"
 import type { Route } from "next"
 import { redirect } from "next/navigation"
-import { Button } from "@heroui/react"
 import { Building2 } from "lucide-react"
 import { CardSkeleton } from "@/components/dashboard/card-skeleton"
+import { EmptyState } from "@/components/dashboard/empty-state"
+import { Button } from "@/components/ui/button"
 import { SITE } from "@/config/site"
 import { BusinessDialog } from "@/features/business/components/business-dialog"
 import { workspaceBasePath } from "@/features/workspaces/paths"
@@ -35,20 +36,13 @@ async function BusinessContent() {
   }
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center gap-4 rounded-xl border border-dashed p-10 text-center">
-      <div className="flex size-12 items-center justify-center rounded-full bg-default">
-        <Building2 className="size-6 text-muted" />
-      </div>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold tracking-tight">
-          Aún no tienes una empresa
-        </h1>
-        <p className="max-w-md text-sm text-muted">
-          Crea un espacio de Empresa para llevar las entradas y salidas de tu
-          negocio, separadas de tus finanzas personales.
-        </p>
-      </div>
+    <EmptyState
+      icon={Building2}
+      title="Aún no tienes una empresa"
+      description="Crea un espacio de Empresa para llevar las entradas y salidas de tu negocio, separadas de tus finanzas personales."
+      className="flex-1"
+    >
       <BusinessDialog trigger={<Button>Crear empresa</Button>} />
-    </section>
+    </EmptyState>
   )
 }

@@ -1,4 +1,5 @@
 import { CalendarX } from "lucide-react"
+import { EmptyState } from "@/components/dashboard/empty-state"
 import { SITE } from "@/config/site"
 import { deletionDate, formatDeletionDate } from "@/features/account/deletion"
 import { RestoreBusinessButton } from "./restore-business-button"
@@ -21,20 +22,13 @@ export function BusinessDeleted({
   )
 
   return (
-    <section className="flex flex-1 flex-col items-center justify-center gap-4 rounded-xl border border-dashed p-10 text-center">
-      <div className="flex size-12 items-center justify-center rounded-full bg-default">
-        <CalendarX className="size-6 text-muted" />
-      </div>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold tracking-tight">
-          Esta empresa se borrará el {date}
-        </h1>
-        <p className="max-w-md text-sm text-muted">
-          {name} y todos sus movimientos, categorías y cuentas se borrarán para
-          siempre ese día. Hasta entonces puedes restaurarla.
-        </p>
-      </div>
+    <EmptyState
+      icon={CalendarX}
+      title={`Esta empresa se borrará el ${date}`}
+      description={`${name} y todos sus movimientos, categorías y cuentas se borrarán para siempre ese día. Hasta entonces puedes restaurarla.`}
+      className="flex-1"
+    >
       <RestoreBusinessButton workspaceId={workspaceId} />
-    </section>
+    </EmptyState>
   )
 }

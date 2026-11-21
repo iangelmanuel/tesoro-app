@@ -1,19 +1,12 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import {
-  Button,
-  FieldError,
-  Input,
-  ListBox,
-  Modal,
-  Select,
-  TextField,
-  toast
-} from "@heroui/react"
-import { FieldLabel } from "@/components/forms/field-label"
+import { FormDialog } from "@/components/forms/form-dialog"
+import { SelectField } from "@/components/forms/select-field"
+import { TextInputField } from "@/components/forms/text-input-field"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/sonner"
 import { SITE } from "@/config/site"
-import { Field } from "@/features/debts/components/field"
 import { createBusiness, updateBusiness } from "../actions"
 import type { BusinessFormState } from "../types"
 
@@ -29,45 +22,36 @@ interface BusinessDialogProps {
   /** Si llega, el diálogo edita esta empresa */
   business?: EditableBusiness
   /** Botón que abre el diálogo */
-  trigger: React.ReactNode
+  trigger: React.ReactElement
 }
 
+const SECTOR_OPTIONS = SITE.businessSectors.map((option) => ({
+  value: option.id as string,
+  label: String(option.label)
+}))
+
 export function BusinessDialog({ business, trigger }: BusinessDialogProps) {
-  const [open, setOpen] = useState(false)
   const isEditing = business !== undefined
 
   return (
-    <Modal
-      isOpen={open}
-      onOpenChange={setOpen}
+    <FormDialog
+      trigger={trigger}
+      title={isEditing ? "Editar empresa" : "Crear empresa"}
+      description={
+        isEditing
+          ? "Cambia los datos de tu empresa. Sus movimientos no cambian."
+          : "Un espacio separado de tus finanzas personales para las entradas y salidas de tu negocio."
+      }
+      className="sm:max-w-md"
     >
-      {trigger}
-      <Modal.Backdrop>
-        <Modal.Container scroll="outside">
-          <Modal.Dialog className="sm:max-w-md">
-            <Modal.CloseTrigger />
-            <Modal.Header>
-              <Modal.Heading>
-                {isEditing ? "Editar empresa" : "Crear empresa"}
-              </Modal.Heading>
-              <p className="text-sm text-muted">
-                {isEditing
-                  ? "Cambia los datos de tu empresa. Sus movimientos no cambian."
-                  : "Un espacio separado de tus finanzas personales para las entradas y salidas de tu negocio."}
-              </p>
-            </Modal.Header>
-            <Modal.Body>
-              {/* El contenido se desmonta al cerrar: cada apertura empieza limpia */}
-              <BusinessForm
-                business={business}
-                onSaved={() => setOpen(false)}
-                onCancel={() => setOpen(false)}
-              />
-            </Modal.Body>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+      {(close) => (
+        <BusinessForm
+          business={business}
+          onSaved={close}
+          onCancel={close}
+        />
+      )}
+    </FormDialog>
   )
 }
 
@@ -119,74 +103,44 @@ export function BusinessForm({
         />
       )}
 
-      <TextField
+      <TextInputField
         name="name"
+        label="Nombre"
+        help="business.name"
         maxLength={60}
+        placeholder="Panadería Ana"
         defaultValue={values?.name ?? business?.name}
         isRequired
-        isInvalid={Boolean(errors?.name)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="business.name">Nombre</FieldLabel>
-        <Input placeholder="Panadería Ana" />
-        <FieldError>{errors?.name?.[0]}</FieldError>
-      </TextField>
+        error={errors?.name?.[0]}
+      />
 
-      <TextField
+      <TextInputField
         name="tax_id"
+        label="NIT (opcional)"
+        help="business.taxId"
         inputMode="numeric"
         autoComplete="off"
         maxLength={12}
+        placeholder="900123456-7"
         defaultValue={values?.tax_id ?? business?.taxId ?? ""}
-        isInvalid={Boolean(errors?.tax_id)}
-        validationBehavior="aria"
-        className="flex flex-col gap-2"
-      >
-        <FieldLabel help="business.taxId">NIT (opcional)</FieldLabel>
-        <Input placeholder="900123456-7" />
-        <FieldError>{errors?.tax_id?.[0]}</FieldError>
-      </TextField>
+        error={errors?.tax_id?.[0]}
+      />
 
-      <Field
-        id="sector"
+      <SelectField
+        name="sector"
         label="Sector"
         help="business.sector"
-        errors={errors?.sector}
-      >
-        <Select
-          name="sector"
-          value={sector || null}
-          onChange={(key) => key != null && setSector(String(key))}
-          fullWidth
-          isInvalid={Boolean(errors?.sector)}
-          placeholder="Elige un sector"
-        >
-          <Select.Trigger id="sector">
-            <Select.Value />
-            <Select.Indicator />
-          </Select.Trigger>
-          <Select.Popover>
-            <ListBox>
-              {SITE.businessSectors.map((option) => (
-                <ListBox.Item
-                  key={option.id}
-                  id={option.id}
-                  textValue={String(option.label)}
-                >
-                  {option.label}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </Select.Popover>
-        </Select>
-      </Field>
+        value={sector}
+        onChange={setSector}
+        options={SECTOR_OPTIONS}
+        placeholder="Elige un sector"
+        error={errors?.sector?.[0]}
+      />
 
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-danger"
+          className="text-sm text-destructive"
         >
           {state.error}
         </p>
@@ -195,15 +149,16 @@ export function BusinessForm({
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         {onCancel && (
           <Button
+            type="button"
             variant="ghost"
-            onPress={onCancel}
+            onClick={onCancel}
           >
             Cancelar
           </Button>
         )}
         <Button
           type="submit"
-          isDisabled={pending}
+          disabled={pending}
         >
           {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear empresa"}
         </Button>

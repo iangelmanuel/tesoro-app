@@ -17,7 +17,7 @@ type LabelStateProps = {
   isRequired?: boolean
   /** Pinta la etiqueta en rojo */
   isInvalid?: boolean
-  isDisabled?: boolean
+  disabled?: boolean
 }
 
 type FieldLabelProps = ComponentProps<typeof Label> &
@@ -84,15 +84,15 @@ function StateLabel({
   children,
   isRequired,
   isInvalid,
-  isDisabled,
+  disabled,
   ...props
 }: ComponentProps<typeof Label> & LabelStateProps) {
   return (
     <Label
-      data-disabled={isDisabled || undefined}
+      data-disabled={disabled || undefined}
       className={cn(
         isInvalid && "text-destructive",
-        isDisabled && "opacity-50",
+        disabled && "opacity-50",
         className
       )}
       {...props}

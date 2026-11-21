@@ -23,7 +23,7 @@ interface CategorySelectFieldProps {
   placeholder?: string
   /** Error de Zod del campo */
   error?: string
-  isDisabled?: boolean
+  disabled?: boolean
   /** Ayuda del (?) junto a la etiqueta (FIELD_HELP) */
   help?: FieldHelpKey
   /** Ayuda o aviso debajo del campo */
@@ -47,7 +47,7 @@ export function CategorySelectField({
   type,
   placeholder = "Elige una categoría",
   error,
-  isDisabled,
+  disabled,
   help,
   children
 }: CategorySelectFieldProps) {
@@ -101,7 +101,7 @@ export function CategorySelectField({
         searchLabel="Buscar categoría"
         placeholder={placeholder}
         error={error}
-        disabled={isDisabled}
+        disabled={disabled}
       >
         {children}
       </CreatableSelect>

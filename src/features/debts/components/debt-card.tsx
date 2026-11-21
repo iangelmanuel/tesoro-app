@@ -114,7 +114,7 @@ export function DebtCard({
             label: "Marcar como pagada",
             icon: <CircleCheck />,
             onAction: () => run("markPaid"),
-            isDisabled: pending
+            disabled: pending
           }
         ]
       : []),
@@ -123,7 +123,7 @@ export function DebtCard({
       label: "Archivar",
       icon: <Archive />,
       onAction: archive,
-      isDisabled: pending
+      disabled: pending
     }
   ]
 
@@ -276,7 +276,7 @@ export function CardActionsMenu({
         {actions.map((action) => (
           <DropdownMenuItem
             key={action.id}
-            disabled={action.isDisabled}
+            disabled={action.disabled}
             onClick={action.onAction}
           >
             {action.icon}

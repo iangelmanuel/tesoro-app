@@ -100,7 +100,7 @@ export function ReceivableCard({
             label: "Marcar como cobrada",
             icon: <CircleCheck />,
             onAction: () => run("markCollected"),
-            isDisabled: pending
+            disabled: pending
           }
         ]
       : []),
@@ -109,7 +109,7 @@ export function ReceivableCard({
       label: "Archivar",
       icon: <Archive />,
       onAction: archive,
-      isDisabled: pending
+      disabled: pending
     }
   ]
 

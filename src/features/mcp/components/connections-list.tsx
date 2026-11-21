@@ -74,7 +74,7 @@ function ConnectionRow({ connection }: { connection: AgentConnection }) {
       label: "Revocar conexión",
       icon: <Unplug />,
       destructive: true,
-      isDisabled: pending,
+      disabled: pending,
       onAction: () => setConfirming(true)
     }
   ]

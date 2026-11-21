@@ -28,7 +28,7 @@ export interface RowAction {
   onAction: () => void
   /** Acción destructiva: va al final del menú y con tono `danger` */
   destructive?: boolean
-  isDisabled?: boolean
+  disabled?: boolean
 }
 
 interface RowActionsProps {
@@ -71,7 +71,7 @@ export function RowActions({ label, actions }: RowActionsProps) {
             variant="ghost"
             size="icon"
             aria-label={`${action.label}: ${label}`}
-            disabled={action.isDisabled}
+            disabled={action.disabled}
             onClick={action.onAction}
             className={cn(action.destructive && "text-destructive")}
           >
@@ -104,7 +104,7 @@ export function RowActions({ label, actions }: RowActionsProps) {
             {regular.map((action) => (
               <DropdownMenuItem
                 key={action.id}
-                disabled={action.isDisabled}
+                disabled={action.disabled}
                 onClick={action.onAction}
               >
                 {action.icon}
@@ -118,7 +118,7 @@ export function RowActions({ label, actions }: RowActionsProps) {
               <DropdownMenuItem
                 key={action.id}
                 variant="destructive"
-                disabled={action.isDisabled}
+                disabled={action.disabled}
                 onClick={action.onAction}
               >
                 {action.icon}
@@ -165,7 +165,7 @@ export function RowContextMenu({
           {regular.map((action) => (
             <ContextMenuItem
               key={action.id}
-              disabled={action.isDisabled}
+              disabled={action.disabled}
               onClick={action.onAction}
             >
               {action.icon}
@@ -180,7 +180,7 @@ export function RowContextMenu({
           <ContextMenuItem
             key={action.id}
             variant="destructive"
-            disabled={action.isDisabled}
+            disabled={action.disabled}
             onClick={action.onAction}
           >
             {action.icon}

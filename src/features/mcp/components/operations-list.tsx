@@ -47,7 +47,7 @@ function OperationRow({ operation }: { operation: AgentOperation }) {
       id: "undo",
       label: "Revertir operación",
       icon: <Undo2 />,
-      isDisabled: !operation.canUndo || pending,
+      disabled: !operation.canUndo || pending,
       onAction: () => setConfirming(true)
     }
   ]

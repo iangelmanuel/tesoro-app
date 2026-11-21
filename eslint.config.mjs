@@ -7,6 +7,16 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   prettier,
+  {
+    files: ["**/*.{ts,tsx,mts}"],
+    rules: {
+      // `import { type X, y }`: el estilo que ya usa el código (SPEC 54)
+      "@typescript-eslint/consistent-type-imports": [
+        "error",
+        { prefer: "type-imports", fixStyle: "inline-type-imports" }
+      ]
+    }
+  },
   globalIgnores([
     ".next/**",
     "out/**",

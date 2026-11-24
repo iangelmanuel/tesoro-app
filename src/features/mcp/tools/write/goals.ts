@@ -1,10 +1,7 @@
 import { z } from "zod"
-import {
-  GOAL_NOT_FOUND,
-  loadGoal,
-  recordGoalContributionRecord
-} from "@/features/goals/contribution-service"
+import { recordGoalContributionRecord } from "@/features/goals/contribution-service"
 import { contributionSchema } from "@/features/goals/schemas"
+import { GOAL_NOT_FOUND, loadGoal } from "@/features/goals/service"
 import { todayISO } from "@/libs/dates"
 import { commitOperation } from "../../operations"
 import { toolError } from "../result"

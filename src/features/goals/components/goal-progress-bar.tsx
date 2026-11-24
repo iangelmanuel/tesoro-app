@@ -7,14 +7,14 @@ import { cn } from "@/libs/cn"
 import { GOAL_STATUS_LABELS, type GoalStatus } from "../progress"
 
 // Sin estado (activa sin fecha) la barra usa el color primario
-export const GOAL_BAR_CLASSES: Record<GoalStatus, string> = {
+const GOAL_BAR_CLASSES: Record<GoalStatus, string> = {
   completed: TONE_BAR.success,
   on_track: TONE_BAR.success,
   at_risk: TONE_BAR.warning,
   archived: TONE_BAR.neutral
 }
 
-export const GOAL_BADGE_CLASSES: Record<GoalStatus, string> = {
+const GOAL_BADGE_CLASSES: Record<GoalStatus, string> = {
   completed: TONE_BADGE.success,
   on_track: TONE_BADGE.success,
   at_risk: TONE_BADGE.warning,

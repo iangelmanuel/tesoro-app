@@ -1,7 +1,6 @@
 "use client"
 
-import { useTransition } from "react"
-import { toast } from "@/components/ui/sonner"
+import { useActionToast } from "@/hooks/use-action-toast"
 import { archiveGoal, completeGoal, reactivateGoal } from "../actions"
 
 const ACTIONS = {
@@ -14,17 +13,13 @@ export type GoalAction = keyof typeof ACTIONS
 
 /** Cambia el estado de una meta y avisa con un toast */
 export function useGoalAction(goal: { id: string; name: string }) {
-  const [pending, startTransition] = useTransition()
+  const { pending, run: runAction } = useActionToast()
 
   function run(action: GoalAction) {
-    startTransition(async () => {
-      const result = await ACTIONS[action].run(goal.id)
-      if (result.error) {
-        toast.error(result.error)
-      } else {
-        toast.success(`"${goal.name}" ${ACTIONS[action].success}`)
-      }
-    })
+    runAction(
+      () => ACTIONS[action].run(goal.id),
+      `"${goal.name}" ${ACTIONS[action].success}`
+    )
   }
 
   return { pending, run }

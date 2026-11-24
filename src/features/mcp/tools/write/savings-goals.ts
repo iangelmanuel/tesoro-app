@@ -3,9 +3,9 @@ import {
   CATEGORY_COLOR_KEYS,
   CATEGORY_ICON_KEYS
 } from "@/features/categories/constants"
-import { GOAL_NOT_FOUND } from "@/features/goals/contribution-service"
 import { goalSchema } from "@/features/goals/schemas"
 import {
+  GOAL_NOT_FOUND,
   createGoalRecord,
   loadGoalRow,
   updateGoalRecord

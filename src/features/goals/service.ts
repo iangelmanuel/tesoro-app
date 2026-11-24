@@ -8,7 +8,6 @@ import {
 } from "@/features/workspaces/service-result"
 import type { AppSupabase } from "@/libs/supabase/types"
 import type { Database } from "@/types/database"
-import { GOAL_NOT_FOUND } from "./contribution-service"
 import type { GoalInput } from "./schemas"
 
 // Crear y editar metas de ahorro (SPEC 44). Lo comparten las Server Actions
@@ -18,7 +17,10 @@ import type { GoalInput } from "./schemas"
 
 export type GoalRow = Database["public"]["Tables"]["savings_goals"]["Row"]
 
+/** Error cuando la meta no existe o es de otro espacio */
+export const GOAL_NOT_FOUND = "No se encontró la meta"
 const GOAL_DEFAULT_ERROR = "No se pudo guardar la meta. Intenta de nuevo"
+const GOAL_TRANSITION_ERROR = "No se pudo actualizar la meta. Intenta de nuevo"
 
 // Errores de Postgres que pueden llegar pese a la validación con Zod
 function goalPgError(error: PostgrestError): ServiceFailure {
@@ -29,6 +31,7 @@ function goalPgError(error: PostgrestError): ServiceFailure {
   return fail({ error: GOAL_DEFAULT_ERROR })
 }
 
+/** Crea una meta activa en el espacio y devuelve la fila creada */
 export async function createGoalRecord(
   supabase: AppSupabase,
   workspace: Pick<ServiceWorkspace, "id">,
@@ -46,7 +49,25 @@ export async function createGoalRecord(
   return { ok: true, after }
 }
 
-/** Meta del espacio por id, o null */
+/** Meta del espacio, o null si no existe o es ajena: lo que piden los aportes */
+export async function loadGoal(
+  supabase: AppSupabase,
+  workspaceId: string,
+  goalId: string
+) {
+  const { data } = await supabase
+    .from("savings_goals")
+    .select("id, workspace_id, name, status, target_date")
+    .eq("id", goalId)
+    .eq("workspace_id", workspaceId)
+    .maybeSingle()
+  return data
+}
+
+/** Meta cargada con loadGoal */
+export type LoadedGoal = NonNullable<Awaited<ReturnType<typeof loadGoal>>>
+
+/** Meta completa del espacio por id, o null */
 export async function loadGoalRow(
   supabase: AppSupabase,
   workspaceId: string,
@@ -91,4 +112,39 @@ export async function updateGoalRecord(
     return fail({ error: GOAL_NOT_FOUND })
   }
   return { ok: true, before, after }
+}
+
+/** Estado guardado de una meta (no el de progreso de progress.ts) */
+export type GoalRowStatus = GoalRow["status"]
+
+/**
+ * Cambia el estado de la meta solo si está en uno de los estados `from`
+ * (cumplir, archivar, reactivar). Al cumplirla guarda `completed_at`; en los
+ * demás casos lo limpia.
+ */
+export async function transitionGoalRecord(
+  supabase: AppSupabase,
+  workspace: Pick<ServiceWorkspace, "id">,
+  id: string,
+  from: GoalRowStatus[],
+  to: GoalRowStatus
+): Promise<ServiceResult<object>> {
+  const { data, error } = await supabase
+    .from("savings_goals")
+    .update({
+      status: to,
+      completed_at: to === "completed" ? new Date().toISOString() : null
+    })
+    .eq("id", id)
+    .eq("workspace_id", workspace.id)
+    .in("status", from)
+    .select("id")
+
+  if (error) {
+    return fail({ error: GOAL_TRANSITION_ERROR })
+  }
+  if (data.length === 0) {
+    return fail({ error: GOAL_NOT_FOUND })
+  }
+  return { ok: true }
 }

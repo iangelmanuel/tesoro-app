@@ -18,7 +18,7 @@ export type GoalContribution = Omit<ContributionRow, "amount"> & {
   account_name: string | null
 }
 
-// Todas las metas del espacio, en cualquier estado, con lo ahorrado
+/** Todas las metas del espacio, en cualquier estado, con lo ahorrado */
 export async function getGoals(workspaceId: string): Promise<Goal[]> {
   const supabase = await createClient()
   const { data, error } = await supabase.rpc("goal_progress", {
@@ -37,7 +37,7 @@ export async function getGoals(workspaceId: string): Promise<Goal[]> {
   }))
 }
 
-// Aportes y retiros de una meta, el más reciente primero
+/** Aportes y retiros de una meta, el más reciente primero */
 export async function getGoalContributions(
   goalId: string
 ): Promise<GoalContribution[]> {

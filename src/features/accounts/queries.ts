@@ -3,10 +3,11 @@ import { cache } from "react"
 import { createClient } from "@/libs/supabase/server"
 import type { AccountWithBalance } from "./types"
 
-// Todas las cuentas del espacio, activas o archivadas, con su saldo a hoy y
-// con lo programado
-// cache(): los accesos rápidos del header y las tarjetas del Resumen la
-// piden en el mismo request; así se consulta una sola vez
+/**
+ * Todas las cuentas del espacio, activas o archivadas, con su saldo a hoy y
+ * con lo programado. Con cache(): los accesos rápidos del header y las
+ * tarjetas del Resumen la piden en el mismo request y se consulta una vez.
+ */
 export const getAccountBalances = cache(
   async (workspaceId: string): Promise<AccountWithBalance[]> => {
     const supabase = await createClient()
@@ -27,10 +28,12 @@ export const getAccountBalances = cache(
   }
 )
 
-// Saldo de una cuenta a una fecha (YYYY-MM-DD), con las mismas reglas que
-// account_balances. Devuelve null si la cuenta no existe o no es del usuario:
-// la función es security invoker y la RLS de accounts solo deja ver al dueño
-// del espacio, así que no hay forma de leer el saldo de una cuenta ajena.
+/**
+ * Saldo de una cuenta a una fecha (YYYY-MM-DD), con las mismas reglas que
+ * account_balances. Devuelve null si la cuenta no existe o no es del
+ * usuario: la función es security invoker y la RLS de accounts solo deja ver
+ * al dueño del espacio, así que no hay forma de leer una cuenta ajena.
+ */
 export async function getAccountBalanceAt(
   accountId: string,
   on: string

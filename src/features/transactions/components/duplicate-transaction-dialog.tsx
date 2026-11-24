@@ -6,12 +6,12 @@ import type { PaymentAccountOption } from "@/features/accounts/components/paymen
 import type { Category } from "@/features/categories/queries"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
 import type { WorkspaceType } from "@/features/workspaces/types"
-import { loadTransactionDuplicate } from "../actions"
-import {
-  type RecurringOccurrenceLink,
-  TransactionDialog,
-  type TransactionInitialValues
-} from "./transaction-dialog"
+import { loadTransactionDuplicate } from "../duplicate-actions"
+import type {
+  RecurringOccurrenceLink,
+  TransactionInitialValues
+} from "../types"
+import { TransactionDialog } from "./transaction-dialog"
 
 interface DuplicateTransactionDialogProps {
   workspaceId: string

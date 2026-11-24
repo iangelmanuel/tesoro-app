@@ -2,20 +2,26 @@
 
 import { useActionState, useEffect, useState } from "react"
 import { HelpHint } from "@/components/dashboard/feedback/help-hint"
-import {
-  TONE_TEXT_CLASSES,
-  type Tone
-} from "@/components/dashboard/feedback/tone"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { FormDialog } from "@/components/forms/form-dialog"
 import { TextInputField } from "@/components/forms/text-input-field"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/sonner"
-import { SITE } from "@/config/site"
 import { todayISO } from "@/libs/dates"
 import { formatCurrency } from "@/libs/format"
-import { getReconcileBalanceAction, reconcileAccountAction } from "../actions"
-import { parseSignedAmount } from "../schemas"
+import {
+  getReconcileBalanceAction,
+  reconcileAccountAction
+} from "../adjustment-actions"
+import {
+  type FetchedBalance,
+  calculatedBalanceAt,
+  calculatedLabel,
+  differenceTone,
+  isLargeDifference,
+  reconcileDifference
+} from "../reconcile"
 import type { AccountWithBalance, ReconcileFormState } from "../types"
 
 interface ReconcileDialogProps {
@@ -26,8 +32,6 @@ interface ReconcileDialogProps {
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
-
-const roundCents = (value: number) => Math.round(value * 100) / 100
 
 /**
  * Cuadrar saldo (SPEC 21 y 48): el usuario escribe el saldo de su banco a una fecha, el
@@ -100,13 +104,13 @@ function ReconcileForm({
   const [real, setReal] = useState(values?.balance ?? "")
   const [date, setDate] = useState(values?.occurred_on || today)
   // El saldo a hoy ya viene en la cuenta; otras fechas se piden al servidor
-  const [fetched, setFetched] = useState<{
-    date: string
-    balance: number | null
-  }>({ date: today, balance: account.balance })
+  const [fetched, setFetched] = useState<FetchedBalance>({
+    date: today,
+    balance: account.balance
+  })
 
   useEffect(() => {
-    if (!date || date > today || date === today) {
+    if (!date || date >= today) {
       return
     }
 
@@ -124,35 +128,13 @@ function ReconcileForm({
     }
   }, [date, today, account.workspace_id, account.id])
 
-  const calculated =
-    date === today
-      ? account.balance
-      : fetched.date === date
-        ? fetched.balance
-        : undefined // calculando
-  const loading = calculated === undefined
+  const calculated = calculatedBalanceAt(date, today, account.balance, fetched)
 
-  const realAmount = real.trim() === "" ? Number.NaN : parseSignedAmount(real)
-  const hasReal = Number.isFinite(realAmount)
-  const difference =
-    hasReal && typeof calculated === "number"
-      ? roundCents(realAmount - calculated)
-      : null
+  const difference = reconcileDifference(real, calculated)
 
-  const tone: Tone =
-    difference === null || difference === 0
-      ? "neutral"
-      : difference > 0
-        ? "success"
-        : "danger"
+  const tone = differenceTone(difference)
 
-  const warn =
-    difference !== null &&
-    typeof calculated === "number" &&
-    Math.abs(difference) > 0 &&
-    (Math.abs(difference) > SITE.reconciliation.warnAmount ||
-      Math.abs(difference) >
-        (Math.abs(calculated) * SITE.reconciliation.warnPercent) / 100)
+  const warn = isLargeDifference(difference, calculated)
 
   const balanced = difference === 0
 
@@ -204,11 +186,7 @@ function ReconcileForm({
         <div className="flex items-baseline justify-between gap-4">
           <dt className="text-muted-foreground">Saldo calculado por Tesoro</dt>
           <dd className="font-medium tabular-nums">
-            {loading
-              ? "Calculando..."
-              : calculated === null
-                ? "No disponible"
-                : formatCurrency(calculated, currency, 2)}
+            {calculatedLabel(calculated, currency)}
           </dd>
         </div>
         <div className="flex items-baseline justify-between gap-4">

@@ -2,6 +2,7 @@ import "server-only"
 import { createClient } from "@/libs/supabase/server"
 import { monthStart } from "./month"
 
+/** Progreso del mes de una categoría de gasto */
 export interface BudgetProgress {
   categoryId: string
   name: string
@@ -17,8 +18,10 @@ export interface BudgetProgress {
   committed: number
 }
 
-// Presupuestos del mes YYYY-MM y categorías de gasto con movimientos y sin
-// presupuesto. Primero las presupuestadas, cada grupo por nombre.
+/**
+ * Presupuestos del mes YYYY-MM y categorías de gasto con movimientos y sin
+ * presupuesto. Primero las presupuestadas, cada grupo por nombre.
+ */
 export async function getBudgetProgress(
   workspaceId: string,
   month: string
@@ -47,8 +50,11 @@ export async function getBudgetProgress(
   }))
 }
 
-// Para el estado vacío: "Copiar del mes anterior" solo si ese mes tiene
-export async function hasBudgets(workspaceId: string, month: string) {
+/** Para el estado vacío: "Copiar del mes anterior" solo si ese mes tiene */
+export async function hasBudgets(
+  workspaceId: string,
+  month: string
+): Promise<boolean> {
   const supabase = await createClient()
   const { count, error } = await supabase
     .from("budgets")

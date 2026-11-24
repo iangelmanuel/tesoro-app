@@ -11,12 +11,12 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import { cn } from "@/libs/cn"
 import { currentMonth } from "@/libs/dates"
+import { formatPercentLabel } from "@/libs/format"
 import {
   BUDGET_STATUS_LABELS,
   WARNING_RATIO,
   budgetPercent,
-  budgetStatus,
-  formatPercent
+  budgetStatus
 } from "../progress"
 import { getBudgetProgress } from "../queries"
 import { BUDGETS_PATH } from "../tabs"
@@ -82,14 +82,16 @@ export async function BudgetsAtRiskCard({
                     {BUDGET_STATUS_LABELS[status]}
                   </ToneBadge>
                   <p className="ml-auto text-sm font-medium tabular-nums">
-                    {formatPercent(budgetPercent(row.spent, row.budgetAmount))}
+                    {formatPercentLabel(
+                      budgetPercent(row.spent, row.budgetAmount)
+                    )}
                   </p>
                 </div>
                 <BudgetProgressBar
                   spent={row.spent}
                   committed={row.committed}
                   budget={row.budgetAmount}
-                  label={`${row.name}: ${formatPercent(budgetPercent(row.spent, row.budgetAmount))}`}
+                  label={`${row.name}: ${formatPercentLabel(budgetPercent(row.spent, row.budgetAmount))}`}
                 />
                 <p className="text-sm text-muted-foreground tabular-nums">
                   <Amount

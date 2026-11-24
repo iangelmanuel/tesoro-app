@@ -1,6 +1,6 @@
 import { formatMonthYear } from "@/libs/format"
-import type { TransactionFilters } from "./filters"
-import type { TransactionTotals } from "./queries"
+import { type TransactionFilters, hasExtraFilters } from "./filters"
+import type { TransactionTotals } from "./types"
 
 /**
  * Totales del mes anterior para el badge de las KPI de Movimientos: null si
@@ -17,12 +17,9 @@ export function previousTotalsOrNull(previousTotals: TransactionTotals | null) {
  * " · con filtros" si hay tipo, categoría, cuenta o búsqueda
  */
 export function transactionsScope(filters: TransactionFilters) {
-  const hasExtraFilters = Boolean(
-    filters.type || filters.categoryId || filters.accountId || filters.q
-  )
   const period =
     filters.month === "all" ? "Todos los meses" : monthTitle(filters.month)
-  return `${period}${hasExtraFilters ? " · con filtros" : ""}`
+  return `${period}${hasExtraFilters(filters) ? " · con filtros" : ""}`
 }
 
 // "Noviembre 2026": el mes con mayúscula inicial, como título

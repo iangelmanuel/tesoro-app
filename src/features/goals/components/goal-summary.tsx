@@ -1,9 +1,8 @@
 import { TriangleAlert } from "lucide-react"
 import { Amount } from "@/components/dashboard/data/amount"
 import { TONE_BADGE_CLASSES } from "@/components/dashboard/feedback/tone"
-import { formatPercent } from "@/features/budgets/progress"
 import { cn } from "@/libs/cn"
-import { formatDate } from "@/libs/format"
+import { formatDate, formatPercentLabel } from "@/libs/format"
 import {
   goalPercent,
   goalRemaining,
@@ -38,10 +37,10 @@ export function GoalSummary({ goal, today, currency }: GoalSummaryProps) {
         <GoalProgressBar
           percent={percent}
           status={status}
-          label={`${goal.name}: ${formatPercent(percent)}`}
+          label={`${goal.name}: ${formatPercentLabel(percent)}`}
         />
         <span className="shrink-0 text-sm font-medium whitespace-nowrap tabular-nums">
-          {formatPercent(percent)}
+          {formatPercentLabel(percent)}
         </span>
       </div>
 

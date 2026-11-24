@@ -1,4 +1,4 @@
-import { formatPercent } from "@/features/budgets/progress"
+import { formatPercentLabel } from "@/libs/format"
 import {
   collectedPercent,
   paidPercent,
@@ -20,10 +20,10 @@ export function DebtProgress({ debt }: { debt: Debt }) {
         <div className="flex items-center gap-3">
           <UtilizationBar
             percent={percent}
-            label={`Utilización del cupo: ${formatPercent(percent)}`}
+            label={`Utilización del cupo: ${formatPercentLabel(percent)}`}
           />
           <span className="text-sm font-medium tabular-nums">
-            {formatPercent(percent)}
+            {formatPercentLabel(percent)}
           </span>
         </div>
         <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
@@ -44,10 +44,10 @@ export function DebtProgress({ debt }: { debt: Debt }) {
       <div className="flex items-center gap-3">
         <DebtBar
           percent={percent}
-          label={`Pagado del monto original: ${formatPercent(percent)}`}
+          label={`Pagado del monto original: ${formatPercentLabel(percent)}`}
         />
         <span className="text-sm font-medium tabular-nums">
-          {formatPercent(percent)}
+          {formatPercentLabel(percent)}
         </span>
       </div>
       <p className="text-sm text-muted-foreground">Pagado del monto original</p>
@@ -65,10 +65,10 @@ export function ReceivableProgress({ debt }: { debt: Debt }) {
         <DebtBar
           percent={percent}
           tone="success"
-          label={`Cobrado: ${formatPercent(percent)}`}
+          label={`Cobrado: ${formatPercentLabel(percent)}`}
         />
         <span className="text-sm font-medium tabular-nums">
-          {formatPercent(percent)}
+          {formatPercentLabel(percent)}
         </span>
       </div>
       <p className="text-sm text-muted-foreground">Cobrado</p>

@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`useActionToast`** in `src/hooks/use-action-toast.ts` (SPEC 55a): runs a server action that returns `{ error }` in a transition and shows a success or error toast. Adopted by `useAccountAction` and the movement row delete dialog.
+- `readFormValues` (`src/libs/form-data.ts`), `roundCents` (`src/libs/money.ts`), `formatMonthTitle` and `formatPercentLabel` (`src/libs/format.ts`), each with its test.
 - **Unit tests with Vitest (SPEC 54).** `pnpm test` / `pnpm test:watch`, `vitest.config.mts` (node environment, `@` alias, `server-only` stubbed) and `test` in the CI `quality` matrix. Characterization tests for `src/libs` (dates, format, allocate, payment description), `chart-format`, `amount-format` and the pure modules extracted from `app/`.
 - **Architecture guide** in `docs/arquitectura.md`: repo map, layers and dependency direction, feature anatomy, data flow, server/client split, naming, shared code, file size, JSDoc, tests, domain glossary, a "new feature" recipe and a PR checklist. Linked from `README.md`, `CONTRIBUTING.md` and `CLAUDE.md`.
 - **Lint and type rules that enforce the architecture.** `noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch` and `noImplicitOverride` in `tsconfig.json`; `consistent-type-imports` (inline style), `unicorn/filename-case` (kebab-case, Next dynamic segments exempt) and `no-restricted-imports` zones (`src/libs` and `src/config` can't import features or components, `components/ui` only imports `ui/` and `libs`, nothing in `src/` imports `app/`, `exceljs` only in `exports/workbook/`, the PDF packages only in `exports/pdf/`, HeroUI and React Aria banned); `max-lines` at 400 as a warning.
@@ -16,6 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `formatNumber`, `formatPercent`, `formatCompactCount`, `currencySymbol` and `formatMonthYear` in `src/libs/format.ts`; `listMonths`, `countMonths` and `trimSeconds` in `src/libs/dates.ts`.
 
 ### Changed
+
+- **Movements, accounts, categories, budgets and business refactored (SPEC 55a), no visible change.** Actions are thin (validate → resolve the workspace → service → revalidate): the Supabase calls that lived in `accounts`, `transactions`, `categories`, `budgets` and `business` actions moved to services (`accounts/adjustment-service.ts`, `transactions/ledger-service.ts`, `business/service.ts` and new functions in the existing ones). Large files were split into siblings:
+  - `transactions/queries.ts` → `queries.ts`, `verify-queries.ts`, `duplicate-queries.ts` and the pure `ledger-entry.ts`; types to `types.ts`, constants to `constants.ts`;
+  - `transactions/service.ts` → `service.ts`, `transaction-errors.ts`, `transaction-links.ts`;
+  - `transactions/actions.ts` → `actions.ts`, `ledger-actions.ts`, `duplicate-actions.ts`; `accounts/actions.ts` → `actions.ts`, `transfer-actions.ts`, `adjustment-actions.ts`;
+  - `transactions-filters.tsx`, `transaction-dialog.tsx` and `transactions-table.tsx` into sibling components and hooks, with their logic in tested pure modules (`filter-options.ts`, `transaction-form-values.ts`, `ledger-rows.ts`).
+- The accounts `AdjustBalanceDialog` is now `AdjustAccountBalanceDialog` (`adjust-account-balance-dialog.tsx`).
+- The budgets `formatPercent` ("93 %") moved to `src/libs/format.ts` as `formatPercentLabel`; `formatPercent` there is the `Intl` one ("12,3%").
+- Duplicating a movement now answers with the "could not prepare the duplicate" toast when reading the recurring incomes fails, instead of an unhandled error.
+- Characterization tests for transaction filters, account helpers, budget progress and month, workspace paths and every new pure module; Spanish JSDoc on every export of the area's services, queries and pure modules.
 
 - **Shared layer reorganized (SPEC 54), no visible change.** `src/components/dashboard/` is grouped by role (`shell/`, `quick-actions/`, `hide-amounts/`, `feedback/`, `data/`, `overlays/`) next to `command/`, `mobile/`, `shortcuts/` and `sidebar/`; the `sidebar/index.ts` barrel is gone. `seo/JsonLd.tsx` is now `seo/json-ld.tsx`. `revalidate.ts` and `service-result.ts` moved from `src/libs` to `src/features/workspaces/`, and `WorkspaceType` to `workspaces/types.ts`.
 - The two `monthsBetween` helpers (`score/curves.ts` returned the list of months, the MCP one the count) and the MCP `formatTime` (seconds trimmed) are now `listMonths`, `countMonths` and `trimSeconds`; only `formatTime` of `src/libs/format.ts` keeps that name.

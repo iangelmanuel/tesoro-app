@@ -8,11 +8,11 @@ import {
 } from "@/features/debts/entry-service"
 import { transactionSchema } from "@/features/transactions/schemas"
 import {
-  NOT_FOUND,
   type TransactionRow,
   type UpdateTransactionData,
   updateTransactionRecord
 } from "@/features/transactions/service"
+import { NOT_FOUND } from "@/features/transactions/transaction-errors"
 import { trimSeconds } from "@/libs/dates"
 import {
   type RowChange,

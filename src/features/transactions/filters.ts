@@ -4,15 +4,19 @@ import { NO_ACCOUNT } from "@/features/accounts/constants"
 import { TRANSACTION_TYPES } from "@/features/categories/constants"
 import { currentMonth, monthRange } from "@/libs/dates"
 
+/** Filas por página de Movimientos */
 export const PAGE_SIZE = 20
 
+/** Movimientos de Personal */
 export const TRANSACTIONS_PATH = `${SITE.routes.dashboardPersonal}/transactions`
 
+/** Entrada (`income`) o salida (`expense`) */
 export type TransactionType = (typeof TRANSACTION_TYPES)[number]
 
 /** Tipo del filtro: "transfer" muestra traspasos y ajustes */
 export type LedgerFilterType = TransactionType | "transfer"
 
+/** Filtros de Movimientos leídos de la URL */
 export interface TransactionFilters {
   /** YYYY-MM o "all" */
   month: string
@@ -24,6 +28,7 @@ export interface TransactionFilters {
   page: number
 }
 
+/** `searchParams` de una página de Next */
 export type SearchParams = Record<string, string | string[] | undefined>
 
 const monthSchema = z.union([
@@ -39,7 +44,7 @@ function first(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value
 }
 
-// Un valor inválido se trata como ausente, nunca rompe la página
+/** Un valor inválido se trata como ausente, nunca rompe la página */
 export function parseTransactionFilters(
   searchParams: SearchParams
 ): TransactionFilters {
@@ -65,8 +70,10 @@ export function filtersDateRange(filters: TransactionFilters) {
   return filters.month === "all" ? null : monthRange(filters.month)
 }
 
-// Query string de los filtros. El mes actual es el valor por defecto, pero
-// se escribe siempre para que el enlace no cambie de significado otro mes.
+/**
+ * Query string de los filtros. El mes actual es el valor por defecto, pero
+ * se escribe siempre para que el enlace no cambie de significado otro mes.
+ */
 export function buildFiltersQuery(
   filters: TransactionFilters,
   overrides: Partial<TransactionFilters> = {}
@@ -84,7 +91,32 @@ export function buildFiltersQuery(
   return params.toString()
 }
 
+/** Hay tipo, categoría, cuenta o búsqueda además del mes */
+export function hasExtraFilters(filters: TransactionFilters) {
+  return Boolean(
+    filters.type || filters.categoryId || filters.accountId || filters.q
+  )
+}
+
+/**
+ * Filtros activos de la hoja del teléfono: tipo, categoría, cuenta y "Todos
+ * los meses". El buscador queda fuera, porque no vive en la hoja.
+ */
+export function sheetFilterCount(filters: TransactionFilters) {
+  return (
+    Number(Boolean(filters.type)) +
+    Number(Boolean(filters.categoryId)) +
+    Number(Boolean(filters.accountId)) +
+    Number(filters.month === "all")
+  )
+}
+
 /** Escapa `\`, `%` y `_` para usar el texto dentro de un patrón ilike */
 export function escapeLikePattern(value: string) {
   return value.replace(/[\\%_]/g, (match) => `\\${match}`)
+}
+
+/** Valor entre comillas para un filtro `or` de PostgREST: escapa `\` y `"` */
+export function quotePostgrestValue(value: string) {
+  return `"${value.replace(/[\\"]/g, (match) => `\\${match}`)}"`
 }

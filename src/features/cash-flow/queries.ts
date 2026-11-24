@@ -4,6 +4,7 @@ import { createClient } from "@/libs/supabase/server"
 
 // `numeric` puede llegar como string: se convierte con Number() aquí.
 
+/** Un mes del flujo de caja de una empresa */
 export interface CashFlowMonth {
   /** Primer día del mes (YYYY-MM-DD) */
   month: string
@@ -18,6 +19,7 @@ export interface CashFlowMonth {
   txCount: number
 }
 
+/** Flujo de caja del periodo, mes a mes */
 export interface CashFlow {
   months: CashFlowMonth[]
   /** Movimientos del periodo sin cuenta: suman en entradas y salidas, pero no mueven el saldo */
@@ -44,6 +46,7 @@ async function getAccountMonthlyBalances(
   return new Map(data.map((row) => [row.month, Number(row.balance)]))
 }
 
+/** Movimientos del periodo sin cuenta */
 async function countWithoutAccount(
   workspaceId: string,
   from: string,

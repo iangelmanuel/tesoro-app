@@ -10,7 +10,7 @@ import { TimePickerField } from "@/components/forms/time-picker-field"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/sonner"
 import { todayISO } from "@/libs/dates"
-import { createTransfer, updateTransfer } from "../actions"
+import { createTransfer, updateTransfer } from "../transfer-actions"
 import type { TransferFormState } from "../types"
 import { type AccountOption, selectableAccounts } from "./account-select"
 
@@ -132,6 +132,7 @@ export function TransferForm({
 
   const errors = state.fieldErrors
   const values = state.values
+  const submitLabel = isEditing ? "Guardar" : "Registrar"
 
   return (
     <form
@@ -246,7 +247,7 @@ export function TransferForm({
           type="submit"
           disabled={pending}
         >
-          {pending ? "Guardando..." : isEditing ? "Guardar" : "Registrar"}
+          {pending ? "Guardando..." : submitLabel}
         </Button>
       </div>
     </form>

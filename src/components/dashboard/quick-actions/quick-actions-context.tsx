@@ -40,11 +40,9 @@ import { GOALS_PATH } from "@/features/goals/progress"
 import { IMPORT_PATH } from "@/features/imports/constants"
 import type { UpcomingPayment } from "@/features/recurring-expenses/queries"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
-import {
-  type FormPanel,
-  TransactionDialog
-} from "@/features/transactions/components/transaction-dialog"
+import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
 import { VerifyMovementsDialog } from "@/features/transactions/components/verify-movements-dialog"
+import type { FormPanel } from "@/features/transactions/types"
 import type { WorkspaceType } from "@/features/workspaces/types"
 import { useHideAmounts } from "../hide-amounts/hide-amounts-context"
 

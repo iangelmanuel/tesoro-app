@@ -5,9 +5,11 @@ import {
   formatCompactCount,
   formatCurrency,
   formatDate,
+  formatMonthTitle,
   formatMonthYear,
   formatNumber,
   formatPercent,
+  formatPercentLabel,
   formatShortDate,
   formatTime
 } from "./format"
@@ -97,6 +99,13 @@ describe("formatPercent", () => {
   })
 })
 
+describe("formatPercentLabel", () => {
+  it("separa el signo con un espacio duro", () => {
+    expect(formatPercentLabel(93)).toBe(`93${NBSP}%`)
+    expect(formatPercentLabel(0)).toBe(`0${NBSP}%`)
+  })
+})
+
 describe("formatCompactCount", () => {
   it("abrevia con la notación compacta de Intl", () => {
     expect(formatCompactCount(999)).toBe("999")
@@ -111,6 +120,13 @@ describe("currencySymbol", () => {
     expect(currencySymbol("COP")).toBe("$")
     expect(currencySymbol("USD")).toBe("$")
     expect(currencySymbol("EUR")).toBe("€")
+  })
+})
+
+describe("formatMonthTitle", () => {
+  it("nombra el mes con mayúscula inicial, como lo da Intl", () => {
+    expect(formatMonthTitle("2026-11")).toBe("Noviembre de 2026")
+    expect(formatMonthTitle("2027-01")).toBe("Enero de 2027")
   })
 })
 

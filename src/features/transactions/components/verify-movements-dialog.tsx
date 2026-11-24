@@ -11,8 +11,8 @@ import {
   DialogTitle
 } from "@/components/ui/dialog"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
-import { loadVerifyEntries } from "../actions"
-import type { VerifyEntry } from "../queries"
+import { loadVerifyEntries } from "../ledger-actions"
+import type { VerifyEntry } from "../types"
 import { VerifyRow, VerifyRowSkeleton } from "./verify-row"
 
 const ALL_ACCOUNTS = "__all__"
@@ -184,7 +184,9 @@ function VerifyMovementsBody({
             />
           ))}
         </ul>
-      ) : status === "idle" ? (
+      ) : null}
+
+      {rows.length === 0 && status === "idle" ? (
         <p className="py-8 text-center text-sm text-muted-foreground">
           No hay movimientos para mostrar.
         </p>

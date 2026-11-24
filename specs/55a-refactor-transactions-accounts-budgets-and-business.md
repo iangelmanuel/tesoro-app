@@ -1,6 +1,6 @@
 # SPEC 55a — Refactor de movimientos, cuentas, categorías, presupuestos y Empresa
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 54
 > **Fecha:** 2026-11-21
 > **Objetivo:** Aplicar las reglas de SPEC 54 a `transactions`, `accounts`, `categories`, `budgets`, `workspaces`, `business` y `cash-flow`, sin cambiar comportamiento.
@@ -141,19 +141,19 @@ Cada paso deja `check`, `eslint`, `prettier:check`, `test` y `build` en verde, y
 
 Verificables en código o con los scripts:
 
-- [ ] `pnpm eslint src/features/{transactions,accounts,categories,budgets,workspaces,business,cash-flow}` no da warnings de `max-lines`.
-- [ ] Existen los tests de §4 y `pnpm test` pasa.
-- [ ] Existe `src/hooks/use-action-toast.ts` y `use-account-action.ts` lo usa.
-- [ ] `grep -rn "export function formatPercent" src` devuelve solo `src/libs/format.ts`.
-- [ ] `grep -rn "export function AdjustBalanceDialog" src/features/accounts` no devuelve resultados y existe `AdjustAccountBalanceDialog`.
-- [ ] Ninguna action del área hace consultas a Supabase directamente; llama a un servicio o a una query.
-- [ ] Todo export de `service.ts`, `*-service.ts`, `queries.ts` (o sus partes) y módulos puros del área tiene JSDoc.
-- [ ] Las funciones que usa `src/features/mcp/tools/**` conservan nombre, parámetros y retorno (`git diff` de `src/features/mcp/tools/**` solo cambia rutas de import).
-- [ ] `git diff` no toca `supabase/migrations/`, `src/types/database.ts` ni textos visibles (`grep` de los strings de UI del área antes y después da lo mismo).
-- [ ] `CLAUDE.md`, `docs/mcp.md` y `docs/arquitectura.md` no citan rutas que ya no existen.
-- [ ] `CHANGELOG.md` tiene la entrada en `[Unreleased]`.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
-- [ ] `/code-review high` no deja hallazgos abiertos.
+- [x] `pnpm eslint src/features/{transactions,accounts,categories,budgets,workspaces,business,cash-flow}` no da warnings de `max-lines`.
+- [x] Existen los tests de §4 y `pnpm test` pasa.
+- [x] Existe `src/hooks/use-action-toast.ts` y `use-account-action.ts` lo usa.
+- [x] `grep -rn "export function formatPercent" src` devuelve solo `src/libs/format.ts`.
+- [x] `grep -rn "export function AdjustBalanceDialog" src/features/accounts` no devuelve resultados y existe `AdjustAccountBalanceDialog`.
+- [x] Ninguna action del área hace consultas a Supabase directamente; llama a un servicio o a una query.
+- [x] Todo export de `service.ts`, `*-service.ts`, `queries.ts` (o sus partes) y módulos puros del área tiene JSDoc.
+- [x] Las funciones que usa `src/features/mcp/tools/**` conservan nombre, parámetros y retorno (`git diff` de `src/features/mcp/tools/**` solo cambia rutas de import).
+- [x] `git diff` no toca `supabase/migrations/`, `src/types/database.ts` ni textos visibles (`grep` de los strings de UI del área antes y después da lo mismo).
+- [x] `CLAUDE.md`, `docs/mcp.md` y `docs/arquitectura.md` no citan rutas que ya no existen.
+- [x] `CHANGELOG.md` tiene la entrada en `[Unreleased]`.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
+- [x] `/code-review high` no deja hallazgos abiertos.
 
 Verificables en navegador (los prueba el usuario a mano):
 
@@ -175,7 +175,9 @@ Verificables en navegador (los prueba el usuario a mano):
 - **Sí:** partir `queries.ts`, `service.ts` y `actions.ts` por entidad o caso de uso. **No:** barrels que los reexporten; la guía los prohíbe.
 - **Sí:** renombrar el `AdjustBalanceDialog` de cuentas. **No:** unificarlo con el de deudas; uno ajusta saldo de cuenta y otro saldo de deuda, con campos distintos.
 - **Sí:** `formatPercent` a `src/libs/format.ts`. Es formato genérico, no de presupuestos.
+  **Nota de implementación:** `src/libs/format.ts` ya exportaba un `formatPercent` distinto (Intl, un decimal, sin espacio: "12,3%"), que usa `StatCard`. Para no cambiar textos, el de presupuestos ("93 %" con espacio duro) se movió como `formatPercentLabel`.
 - **Sí:** las firmas de los servicios que usa el MCP no cambian. Son contrato con las tools.
+  **Nota de implementación:** al mover la lectura del duplicado a `duplicate-queries.ts`, la action quedó con `return await` dentro del `try`. Antes, un fallo al leer los ingresos fijos escapaba del `catch`; ahora responde con "No se pudo preparar el duplicado". El camino feliz no cambia.
 - **Sí:** refactor puro, igual que SPEC 54. Los bugs encontrados se anotan para su propio spec.
 - **No:** subir de versión; sube al cerrar SPEC 55c.
 - **Nota:** este spec se escribió junto con SPEC 54 y 55b/c, antes de implementar SPEC 54. Las rutas de `src/components/dashboard/*` y `src/features/workspaces/*` asumen la reorganización de SPEC 54. Si SPEC 54 cambia al implementarse, se ajusta este spec antes de aprobarlo.
@@ -190,6 +192,14 @@ Verificables en navegador (los prueba el usuario a mano):
 | `useActionToast` cambia el texto o el momento del toast                              | Mismos mensajes pasados como `success`; el error sigue siendo `result.error`.               |
 | Filtros de Movimientos dan resultados distintos al mover la consulta                 | `filters.test.ts` antes de tocar; comparación manual con `master`.                          |
 | `CLAUDE.md` queda con rutas viejas de servicios                                      | Criterio específico; búsqueda de cada ruta movida en `*.md`.                                |
+
+## Bugs previos encontrados (para otro spec)
+
+`/code-review high` encontró tres bugs que ya estaban en `master`. Por ser un refactor puro no se corrigen aquí:
+
+- **`useActionToast` sin `catch`:** si la action lanza en vez de devolver `{ error }` (por ejemplo, `requireWritableWorkspace` con una empresa marcada para borrarse), no sale toast y el error llega al error boundary. Pasaba igual en los hooks por feature; conviene resolverlo antes de que SPEC 55b lo adopte en todas partes.
+- **Editar una empresa no es atómico:** `updateBusinessRecord` actualiza `business_profiles` y luego `workspaces.name` en dos escrituras. Si falla la segunda, NIT y sector quedan guardados y el formulario muestra error. Va en una RPC con transacción.
+- **Cuadrar saldo puede quedar en "Calculando...":** el efecto de `reconcile-dialog.tsx` no tiene `.catch` para `getReconcileBalanceAction`; si la action falla, el saldo calculado nunca se resuelve.
 
 ## Qué no entra en este spec
 

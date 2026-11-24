@@ -37,7 +37,7 @@ import { ACCOUNT_KIND_META } from "../constants"
 import { isNegativeAccount } from "../negative-balance"
 import type { AccountWithBalance } from "../types"
 import { AccountDialog } from "./account-dialog"
-import { AdjustBalanceDialog } from "./adjust-balance-dialog"
+import { AdjustAccountBalanceDialog } from "./adjust-account-balance-dialog"
 import { ReconcileDialog } from "./reconcile-dialog"
 import { useAccountAction } from "./use-account-action"
 
@@ -232,7 +232,7 @@ export function AccountCard({
             open={editing}
             onOpenChange={setEditing}
           />
-          <AdjustBalanceDialog
+          <AdjustAccountBalanceDialog
             account={account}
             currency={currency}
             open={adjusting}

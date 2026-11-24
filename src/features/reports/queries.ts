@@ -1,6 +1,6 @@
 import "server-only"
 import type { TransactionType } from "@/features/transactions/filters"
-import type { TransactionWithCategory } from "@/features/transactions/queries"
+import type { TransactionWithCategory } from "@/features/transactions/types"
 import { createClient } from "@/libs/supabase/server"
 
 // Todas las agregaciones corren en Postgres (RPC security invoker, con RLS).

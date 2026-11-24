@@ -1,8 +1,6 @@
 "use client"
 
-import { useEffect, useState, useTransition } from "react"
-import type { Route } from "next"
-import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { Search, SlidersHorizontal, X } from "lucide-react"
 import {
   MonthSwitcher,
@@ -17,52 +15,28 @@ import {
   InputGroupButton,
   InputGroupInput
 } from "@/components/ui/input-group"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
-import {
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle
-} from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { AccountOption } from "@/features/accounts/components/account-select"
-import { NO_ACCOUNT } from "@/features/accounts/constants"
 import type { Category } from "@/features/categories/queries"
 import { cn } from "@/libs/cn"
-import { currentMonth } from "@/libs/dates"
+import { currentMonth, shiftMonth } from "@/libs/dates"
+import { formatMonthTitle } from "@/libs/format"
+import {
+  FILTER_ALL,
+  TYPE_FILTER_OPTIONS,
+  accountFilterOptions,
+  categoryFilterOptions
+} from "../filter-options"
 import {
   type LedgerFilterType,
   TRANSACTIONS_PATH,
   type TransactionFilters,
-  buildFiltersQuery
+  hasExtraFilters,
+  sheetFilterCount
 } from "../filters"
-
-const ALL = "all"
-const SEARCH_DEBOUNCE_MS = 400
-
-const MONTH_LABEL = new Intl.DateTimeFormat("es-CO", {
-  month: "long",
-  year: "numeric",
-  timeZone: "UTC"
-})
-
-function formatMonth(month: string) {
-  const label = MONTH_LABEL.format(new Date(`${month}-01T00:00:00Z`))
-  return label.charAt(0).toUpperCase() + label.slice(1)
-}
-
-function shiftMonth(month: string, delta: number) {
-  const [year, monthIndex] = month.split("-").map(Number)
-  const date = new Date(Date.UTC(year, monthIndex - 1 + delta, 1))
-  return date.toISOString().slice(0, 7)
-}
+import { TransactionsFiltersSelect } from "./transactions-filters-select"
+import { TransactionsFiltersSheet } from "./transactions-filters-sheet"
+import { useTransactionsFilters } from "./use-transactions-filters"
 
 interface TransactionsFiltersProps {
   /** Ruta de Movimientos del espacio */
@@ -79,85 +53,28 @@ export function TransactionsFilters({
   categories,
   accounts
 }: TransactionsFiltersProps) {
-  const router = useRouter()
-  const [pending, startTransition] = useTransition()
-  const [q, setQ] = useState(filters.q ?? "")
+  const { pending, q, setQ, navigate } = useTransactionsFilters(path, filters)
   const [sheetOpen, setSheetOpen] = useState(false)
-  // Si la URL cambia desde fuera (p. ej. "limpiar filtros"), el texto la sigue
-  const [syncedQ, setSyncedQ] = useState(filters.q)
-  if (filters.q !== syncedQ) {
-    setSyncedQ(filters.q)
-    setQ(filters.q ?? "")
-  }
 
-  // Cualquier cambio de filtro vuelve a la página 1
-  function navigate(overrides: Partial<TransactionFilters>) {
-    const query = buildFiltersQuery(filters, { ...overrides, page: 1 })
-    startTransition(() => {
-      router.replace(`${path}?${query}` as Route, {
-        scroll: false
-      })
-    })
-  }
-
-  useEffect(() => {
-    const value = q.trim()
-    if (value === (filters.q ?? "")) return
-
-    const timeout = setTimeout(
-      () => navigate({ q: value || undefined }),
-      SEARCH_DEBOUNCE_MS
-    )
-    return () => clearTimeout(timeout)
-    // navigate depende de filters, que ya está cubierto por filters.q
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, filters.q])
-
-  const isAllMonths = filters.month === ALL
+  const isAllMonths = filters.month === FILTER_ALL
   const month = isAllMonths ? currentMonth() : filters.month
-
-  // Con tipo elegido solo se ofrecen sus categorías. Las archivadas van al
-  // final, marcadas, para revisar movimientos históricos.
-  const options = categories
-    .filter((category) => !filters.type || category.type === filters.type)
-    .toSorted(
-      (a, b) => Number(a.archived_at !== null) - Number(b.archived_at !== null)
-    )
-  // Igual con las cuentas: archivadas al final
-  const accountOptions = accounts.toSorted(
-    (a, b) => Number(a.archived_at !== null) - Number(b.archived_at !== null)
-  )
-
-  const hasExtraFilters = Boolean(
-    filters.type || filters.categoryId || filters.accountId || filters.q
-  )
-  // Filtros que viven en la hoja del teléfono: el buscador queda fuera.
-  // "Todos los meses" cuenta como activo.
-  const sheetFilterCount =
-    Number(Boolean(filters.type)) +
-    Number(Boolean(filters.categoryId)) +
-    Number(Boolean(filters.accountId)) +
-    Number(isAllMonths)
+  const activeSheetFilters = sheetFilterCount(filters)
 
   const typeSelect = (fullWidth: boolean) => (
     <div className={cn("flex items-center gap-0.5", fullWidth && "w-full")}>
-      <FilterSelect
+      <TransactionsFiltersSelect
         label="Tipo"
         fullWidth={fullWidth}
-        value={filters.type ?? ALL}
+        value={filters.type ?? FILTER_ALL}
         onChange={(value) =>
           navigate({
-            type: value === ALL ? undefined : (value as LedgerFilterType),
+            type:
+              value === FILTER_ALL ? undefined : (value as LedgerFilterType),
             // Una categoría de otro tipo dejaría la tabla vacía
             categoryId: undefined
           })
         }
-        options={[
-          { id: ALL, label: "Todos" },
-          { id: "income", label: "Entradas" },
-          { id: "expense", label: "Salidas" },
-          { id: "transfer", label: "Traspasos" }
-        ]}
+        options={TYPE_FILTER_OPTIONS}
       />
       <FieldHelp
         help="filters.type"
@@ -167,43 +84,26 @@ export function TransactionsFilters({
   )
 
   const categorySelect = (fullWidth: boolean) => (
-    <FilterSelect
+    <TransactionsFiltersSelect
       label="Categoría"
       fullWidth={fullWidth}
-      value={filters.categoryId ?? ALL}
+      value={filters.categoryId ?? FILTER_ALL}
       onChange={(value) =>
-        navigate({ categoryId: value === ALL ? undefined : value })
+        navigate({ categoryId: value === FILTER_ALL ? undefined : value })
       }
-      options={[
-        { id: ALL, label: "Todas" },
-        ...options.map((category) => ({
-          id: category.id,
-          label: category.archived_at
-            ? `${category.name} (archivada)`
-            : category.name
-        }))
-      ]}
+      options={categoryFilterOptions(categories, filters.type)}
     />
   )
 
   const accountSelect = (fullWidth: boolean) => (
-    <FilterSelect
+    <TransactionsFiltersSelect
       label="Cuenta"
       fullWidth={fullWidth}
-      value={filters.accountId ?? ALL}
+      value={filters.accountId ?? FILTER_ALL}
       onChange={(value) =>
-        navigate({ accountId: value === ALL ? undefined : value })
+        navigate({ accountId: value === FILTER_ALL ? undefined : value })
       }
-      options={[
-        { id: ALL, label: "Todas" },
-        { id: NO_ACCOUNT, label: "Sin cuenta" },
-        ...accountOptions.map((account) => ({
-          id: account.id,
-          label: account.archived_at
-            ? `${account.name} (archivada)`
-            : account.name
-        }))
-      ]}
+      options={accountFilterOptions(accounts)}
     />
   )
 
@@ -269,7 +169,7 @@ export function TransactionsFilters({
             alterna entre un mes y todos */}
         <MonthSwitcher
           className="w-auto flex-1 md:flex-none"
-          label={isAllMonths ? "Todos los meses" : formatMonth(month)}
+          label={isAllMonths ? "Todos los meses" : formatMonthTitle(month)}
           onPrev={
             isAllMonths
               ? null
@@ -288,12 +188,12 @@ export function TransactionsFilters({
         >
           <SlidersHorizontal />
           Filtros
-          {sheetFilterCount > 0 && (
+          {activeSheetFilters > 0 && (
             <span
-              aria-label={`${sheetFilterCount} activos`}
+              aria-label={`${activeSheetFilters} activos`}
               className="min-w-5 rounded-full bg-primary px-1.5 text-center text-xs font-medium text-primary-foreground tabular-nums"
             >
-              {sheetFilterCount}
+              {activeSheetFilters}
             </span>
           )}
         </Button>
@@ -309,7 +209,7 @@ export function TransactionsFilters({
           size="sm"
           className={CONTROL_BUTTON}
           aria-pressed={isAllMonths}
-          onClick={() => navigate({ month: isAllMonths ? month : ALL })}
+          onClick={() => navigate({ month: isAllMonths ? month : FILTER_ALL })}
         >
           {isAllMonths ? "Ver por mes" : "Todos los meses"}
         </Button>
@@ -318,7 +218,7 @@ export function TransactionsFilters({
         {categorySelect(false)}
         {accountSelect(false)}
 
-        {hasExtraFilters && (
+        {hasExtraFilters(filters) && (
           <Button
             variant="ghost"
             size="sm"
@@ -338,127 +238,29 @@ export function TransactionsFilters({
         )}
       </div>
 
-      {/* < 768 px: hoja inferior. Aplica al elegir, sin botón "Aplicar" */}
-      <Sheet
+      {/* < 768 px: hoja inferior */}
+      <TransactionsFiltersSheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
+        isAllMonths={isAllMonths}
+        onToggleAllMonths={() =>
+          navigate({ month: isAllMonths ? month : FILTER_ALL })
+        }
+        activeCount={activeSheetFilters}
+        onClear={() =>
+          navigate({
+            type: undefined,
+            categoryId: undefined,
+            accountId: undefined,
+            month: currentMonth()
+          })
+        }
       >
-        <SheetContent
-          side="bottom"
-          className="max-h-[90dvh] rounded-t-4xl pb-[env(safe-area-inset-bottom)] md:hidden"
-        >
-          <SheetHeader className="pb-2">
-            <SheetTitle>Filtros</SheetTitle>
-          </SheetHeader>
-          <div className="flex flex-col gap-3 overflow-y-auto px-6 py-1">
-            {typeSelect(true)}
-            {categorySelect(true)}
-            {accountSelect(true)}
-            <Button
-              variant="secondary"
-              className="w-full"
-              aria-pressed={isAllMonths}
-              onClick={() => navigate({ month: isAllMonths ? month : ALL })}
-            >
-              {isAllMonths ? "Ver por mes" : "Todos los meses"}
-            </Button>
-          </div>
-          <SheetFooter className="flex-row items-center justify-between gap-3">
-            {sheetFilterCount > 0 ? (
-              <Button
-                variant="ghost"
-                onClick={() =>
-                  navigate({
-                    type: undefined,
-                    categoryId: undefined,
-                    accountId: undefined,
-                    month: currentMonth()
-                  })
-                }
-              >
-                <X />
-                Limpiar filtros
-              </Button>
-            ) : (
-              <span />
-            )}
-            <Button
-              variant="ghost"
-              onClick={() => setSheetOpen(false)}
-            >
-              Cerrar
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+        {typeSelect(true)}
+        {categorySelect(true)}
+        {accountSelect(true)}
+      </TransactionsFiltersSheet>
     </div>
-  )
-}
-
-// Filtro pill: el nombre del filtro va dentro del trigger ("Tipo: Gastos"),
-// así se ve qué filtra aunque haya un valor elegido. Navega al elegir
-function FilterSelect({
-  label,
-  value,
-  onChange,
-  options,
-  fullWidth = false
-}: {
-  fullWidth?: boolean
-  label: string
-  value: string
-  onChange: (value: string) => void
-  options: { id: string; label: string }[]
-}) {
-  const isActive = value !== ALL
-
-  const items = options.map((option) => ({
-    value: option.id,
-    label: option.label
-  }))
-
-  return (
-    <Select
-      items={items}
-      value={value}
-      onValueChange={(next) => next != null && onChange(String(next))}
-    >
-      <SelectTrigger
-        aria-label={label}
-        size={fullWidth ? "default" : "sm"}
-        className={cn(
-          "gap-1.5",
-          fullWidth ? "w-full flex-1 text-base" : "max-w-64",
-          !fullWidth && !isActive && CONTROL_BUTTON,
-          // Filtro aplicado: tinte del primario del espacio
-          isActive &&
-            "bg-[color-mix(in_oklab,var(--primary)_14%,var(--card))] hover:bg-[color-mix(in_oklab,var(--primary)_20%,var(--card))]"
-        )}
-      >
-        <span className={cn(!isActive && "text-muted-foreground")}>
-          {label}:
-        </span>
-        <SelectValue
-          className={cn(
-            "min-w-0 truncate font-medium",
-            !fullWidth && "max-w-40"
-          )}
-        />
-      </SelectTrigger>
-      <SelectContent
-        alignItemWithTrigger={false}
-        className="min-w-48"
-      >
-        {items.map((option) => (
-          <SelectItem
-            key={option.value}
-            value={option.value}
-          >
-            {option.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
   )
 }
 

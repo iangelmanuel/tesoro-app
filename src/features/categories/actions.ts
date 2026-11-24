@@ -1,56 +1,43 @@
 "use server"
 
 import { refresh } from "next/cache"
-import type { PostgrestError } from "@supabase/supabase-js"
 import { z } from "zod"
 import { requireWritableWorkspace } from "@/features/workspaces/queries"
-import { moveErrorMessage } from "@/libs/move-error"
+import { readFormValues } from "@/libs/form-data"
 import { createClient } from "@/libs/supabase/server"
 import { categorySchema } from "./schemas"
-import { DUPLICATE_NAME, createCategoryRecord } from "./service"
+import {
+  NOT_FOUND,
+  createCategoryRecord,
+  moveCategoryRecord,
+  setCategoryArchived,
+  updateCategoryRecord
+} from "./service"
 import type { CategoryActionResult, CategoryFormState } from "./types"
 
-const UNIQUE_VIOLATION = "23505"
-const NOT_FOUND = "No se encontró la categoría"
-const DEFAULT_ERROR = "No se pudo guardar la categoría. Intenta de nuevo"
+const FIELDS = ["workspace_id", "id", "name", "type", "icon", "color"] as const
 
 const updateCategorySchema = categorySchema.omit({ type: true })
 const idSchema = z.uuid()
-
-function readString(formData: FormData, key: string) {
-  const value = formData.get(key)
-  return typeof value === "string" ? value : ""
-}
-
-function toFormError(
-  error: PostgrestError,
-  values: CategoryFormState["values"]
-): CategoryFormState {
-  if (error.code === UNIQUE_VIOLATION) {
-    return { fieldErrors: { name: [DUPLICATE_NAME] }, values }
-  }
-  return { error: DEFAULT_ERROR, values }
-}
 
 export async function createCategory(
   _prevState: CategoryFormState,
   formData: FormData
 ): Promise<CategoryFormState> {
-  const values = { name: readString(formData, "name") }
+  const form = readFormValues(formData, FIELDS)
+  const values = { name: form.name }
   const parsed = categorySchema.safeParse({
-    name: values.name,
-    type: readString(formData, "type"),
-    icon: readString(formData, "icon"),
-    color: readString(formData, "color")
+    name: form.name,
+    type: form.type,
+    icon: form.icon,
+    color: form.color
   })
 
   if (!parsed.success) {
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
   }
 
-  const workspace = await requireWritableWorkspace(
-    readString(formData, "workspace_id")
-  )
+  const workspace = await requireWritableWorkspace(form.workspace_id)
   const result = await createCategoryRecord(
     await createClient(),
     workspace,
@@ -70,12 +57,13 @@ export async function updateCategory(
   _prevState: CategoryFormState,
   formData: FormData
 ): Promise<CategoryFormState> {
-  const values = { name: readString(formData, "name") }
-  const id = idSchema.safeParse(readString(formData, "id"))
+  const form = readFormValues(formData, FIELDS)
+  const values = { name: form.name }
+  const id = idSchema.safeParse(form.id)
   const parsed = updateCategorySchema.safeParse({
-    name: values.name,
-    icon: readString(formData, "icon"),
-    color: readString(formData, "color")
+    name: form.name,
+    icon: form.icon,
+    color: form.color
   })
 
   if (!id.success) {
@@ -85,22 +73,16 @@ export async function updateCategory(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
   }
 
-  const workspace = await requireWritableWorkspace(
-    readString(formData, "workspace_id")
+  const workspace = await requireWritableWorkspace(form.workspace_id)
+  const result = await updateCategoryRecord(
+    await createClient(),
+    workspace,
+    id.data,
+    parsed.data
   )
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("categories")
-    .update(parsed.data)
-    .eq("id", id.data)
-    .eq("workspace_id", workspace.id)
-    .select("id")
 
-  if (error) {
-    return toFormError(error, values)
-  }
-  if (data.length === 0) {
-    return { error: NOT_FOUND, values }
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
   }
 
   refresh()
@@ -119,23 +101,15 @@ async function setArchived(
   }
 
   const workspace = await requireWritableWorkspace(workspaceId)
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("categories")
-    .update({ archived_at: archived ? new Date().toISOString() : null })
-    .eq("id", parsedId.data)
-    .eq("workspace_id", workspace.id)
-    .select("id")
+  const result = await setCategoryArchived(
+    await createClient(),
+    workspace,
+    parsedId.data,
+    archived
+  )
 
-  if (error) {
-    return {
-      error: archived
-        ? "No se pudo archivar la categoría. Intenta de nuevo"
-        : "No se pudo restaurar la categoría. Intenta de nuevo"
-    }
-  }
-  if (data.length === 0) {
-    return { error: NOT_FOUND }
+  if (!result.ok) {
+    return { error: result.error }
   }
 
   refresh()
@@ -149,8 +123,6 @@ export async function archiveCategory(
   return setArchived(workspaceId, id, true)
 }
 
-// El índice único también cubre las archivadas, así que restaurar nunca
-// duplica un nombre
 export async function restoreCategory(
   workspaceId: string,
   id: string
@@ -158,8 +130,7 @@ export async function restoreCategory(
   return setArchived(workspaceId, id, false)
 }
 
-// Reordena las categorías propias activas de un tipo (SPEC 45): la
-// categoría toma el lugar de la destino. Los selects siguen este orden
+// Reordena las categorías propias activas de un tipo (SPEC 45)
 export async function moveCategory(
   workspaceId: string,
   id: string,
@@ -173,15 +144,15 @@ export async function moveCategory(
   }
 
   const workspace = await requireWritableWorkspace(workspaceId)
-  const supabase = await createClient()
-  const { error } = await supabase.rpc("move_category", {
-    p_workspace_id: workspace.id,
-    p_id: parsedId.data,
-    p_target_id: parsedTarget.data
-  })
+  const result = await moveCategoryRecord(
+    await createClient(),
+    workspace,
+    parsedId.data,
+    parsedTarget.data
+  )
 
-  if (error) {
-    return { error: moveErrorMessage(error) }
+  if (!result.ok) {
+    return { error: result.error }
   }
 
   refresh()

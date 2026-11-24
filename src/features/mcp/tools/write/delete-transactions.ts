@@ -7,10 +7,10 @@ import {
 } from "@/features/debts/entry-service"
 import { DEBT_NOT_ACTIVE } from "@/features/debts/errors"
 import {
-  NOT_FOUND,
   type TransactionRow,
   deleteTransactionRecord
 } from "@/features/transactions/service"
+import { NOT_FOUND } from "@/features/transactions/transaction-errors"
 import { trimSeconds } from "@/libs/dates"
 import {
   type RowChange,

@@ -50,7 +50,8 @@ app/api/mcp/route.ts
   `manage` y `undo` se registran deshabilitadas (fuera de `tools/list`) y la
   ruta responde el error de solo lectura si se llaman.
 - **Escrituras.** Usan los servicios que comparten las Server Actions
-  (`transactions/service.ts`, `accounts/transfer-service.ts`,
+  (`transactions/service.ts`, con sus mensajes en
+  `transactions/transaction-errors.ts`, `accounts/transfer-service.ts`,
   `debts/entry-service.ts`, `goals/contribution-service.ts`,
   `categories/service.ts` y los de crear y editar entidades de SPEC 44) y
   los mismos prellenados del diálogo de movimiento

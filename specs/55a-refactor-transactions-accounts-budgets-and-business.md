@@ -1,6 +1,6 @@
 # SPEC 55a — Refactor de movimientos, cuentas, categorías, presupuestos y Empresa
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 54
 > **Fecha:** 2026-11-21
 > **Objetivo:** Aplicar las reglas de SPEC 54 a `transactions`, `accounts`, `categories`, `budgets`, `workspaces`, `business` y `cash-flow`, sin cambiar comportamiento.
@@ -141,19 +141,19 @@ Cada paso deja `check`, `eslint`, `prettier:check`, `test` y `build` en verde, y
 
 Verificables en código o con los scripts:
 
-- [ ] `pnpm eslint src/features/{transactions,accounts,categories,budgets,workspaces,business,cash-flow}` no da warnings de `max-lines`.
-- [ ] Existen los tests de §4 y `pnpm test` pasa.
-- [ ] Existe `src/hooks/use-action-toast.ts` y `use-account-action.ts` lo usa.
-- [ ] `grep -rn "export function formatPercent" src` devuelve solo `src/libs/format.ts`.
-- [ ] `grep -rn "export function AdjustBalanceDialog" src/features/accounts` no devuelve resultados y existe `AdjustAccountBalanceDialog`.
-- [ ] Ninguna action del área hace consultas a Supabase directamente; llama a un servicio o a una query.
-- [ ] Todo export de `service.ts`, `*-service.ts`, `queries.ts` (o sus partes) y módulos puros del área tiene JSDoc.
-- [ ] Las funciones que usa `src/features/mcp/tools/**` conservan nombre, parámetros y retorno (`git diff` de `src/features/mcp/tools/**` solo cambia rutas de import).
-- [ ] `git diff` no toca `supabase/migrations/`, `src/types/database.ts` ni textos visibles (`grep` de los strings de UI del área antes y después da lo mismo).
-- [ ] `CLAUDE.md`, `docs/mcp.md` y `docs/arquitectura.md` no citan rutas que ya no existen.
-- [ ] `CHANGELOG.md` tiene la entrada en `[Unreleased]`.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
-- [ ] `/code-review high` no deja hallazgos abiertos.
+- [x] `pnpm eslint src/features/{transactions,accounts,categories,budgets,workspaces,business,cash-flow}` no da warnings de `max-lines`.
+- [x] Existen los tests de §4 y `pnpm test` pasa.
+- [x] Existe `src/hooks/use-action-toast.ts` y `use-account-action.ts` lo usa.
+- [x] `grep -rn "export function formatPercent" src` devuelve solo `src/libs/format.ts`.
+- [x] `grep -rn "export function AdjustBalanceDialog" src/features/accounts` no devuelve resultados y existe `AdjustAccountBalanceDialog`.
+- [x] Ninguna action del área hace consultas a Supabase directamente; llama a un servicio o a una query.
+- [x] Todo export de `service.ts`, `*-service.ts`, `queries.ts` (o sus partes) y módulos puros del área tiene JSDoc.
+- [x] Las funciones que usa `src/features/mcp/tools/**` conservan nombre, parámetros y retorno (`git diff` de `src/features/mcp/tools/**` solo cambia rutas de import).
+- [x] `git diff` no toca `supabase/migrations/`, `src/types/database.ts` ni textos visibles (`grep` de los strings de UI del área antes y después da lo mismo).
+- [x] `CLAUDE.md`, `docs/mcp.md` y `docs/arquitectura.md` no citan rutas que ya no existen.
+- [x] `CHANGELOG.md` tiene la entrada en `[Unreleased]`.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
+- [x] `/code-review high` no deja hallazgos abiertos.
 
 Verificables en navegador (los prueba el usuario a mano):
 

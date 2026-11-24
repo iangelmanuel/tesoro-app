@@ -184,7 +184,9 @@ function VerifyMovementsBody({
             />
           ))}
         </ul>
-      ) : status === "idle" ? (
+      ) : null}
+
+      {rows.length === 0 && status === "idle" ? (
         <p className="py-8 text-center text-sm text-muted-foreground">
           No hay movimientos para mostrar.
         </p>

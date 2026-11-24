@@ -1,5 +1,6 @@
 "use client"
 
+import type { ReactNode } from "react"
 import type { Route } from "next"
 import Link from "next/link"
 import { buttonVariants } from "@/components/ui/button"
@@ -19,6 +20,7 @@ import {
 import { GOALS_PATH } from "@/features/goals/progress"
 import type { UpcomingPayment } from "@/features/recurring-expenses/queries"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
+import type { FormPanel } from "../types"
 
 /** Datos de los tabs de pago del diálogo (acceso rápido del header) */
 export interface PaymentTabsData {
@@ -34,11 +36,56 @@ export interface PaymentTabsData {
   incomeSources: IncomeSourceOption[]
 }
 
-interface PanelProps {
+/** Props comunes de los paneles del selector de tipo */
+export interface PanelProps {
   workspaceId: string
   accounts: PaymentAccountOption[]
   onSaved: () => void
   onCancel: () => void
+}
+
+/**
+ * Panel de traspaso, deuda, me deben o meta según el selector de tipo; null
+ * para el resto (entrada, salida o gasto fijo, que arma el formulario).
+ * Traspaso no depende de los tabs de pago
+ */
+export function renderPaymentPanel(
+  panel: FormPanel | null,
+  paymentTabs: PaymentTabsData | undefined,
+  props: PanelProps
+): ReactNode {
+  if (panel === "transfer") {
+    return <TransferPanel {...props} />
+  }
+  if (!paymentTabs) {
+    return null
+  }
+
+  switch (panel) {
+    case "debt_payment":
+      return (
+        <DebtPanel
+          debts={paymentTabs.debts}
+          {...props}
+        />
+      )
+    case "receivable":
+      return (
+        <ReceivablePanel
+          receivables={paymentTabs.receivables}
+          {...props}
+        />
+      )
+    case "goal":
+      return (
+        <GoalPanel
+          goals={paymentTabs.goals}
+          {...props}
+        />
+      )
+    default:
+      return null
+  }
 }
 
 /** Tab Traspaso: entre dos cuentas propias, no cuenta como entrada ni salida */

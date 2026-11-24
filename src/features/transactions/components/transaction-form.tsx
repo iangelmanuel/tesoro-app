@@ -43,12 +43,10 @@ import {
   TransactionNoteField
 } from "./transaction-form-fields"
 import {
-  DebtPanel,
-  GoalPanel,
   PanelEmpty,
+  type PanelProps,
   type PaymentTabsData,
-  ReceivablePanel,
-  TransferPanel
+  renderPaymentPanel
 } from "./transaction-form-panels"
 import { TransactionTypeTabs } from "./transaction-type-tabs"
 import { useTransactionForm } from "./use-transaction-form"
@@ -138,31 +136,18 @@ export function TransactionForm({
   )
 
   const panelProps = { workspaceId, accounts, onSaved, onCancel }
+  // Gasto fijo se arma aquí porque reusa TransactionForm; los demás paneles
+  // salen de transaction-form-panels
   const panelContent =
-    panel === "transfer" ? (
-      <TransferPanel {...panelProps} />
-    ) : !paymentTabs ? null : panel === "debt_payment" ? (
-      <DebtPanel
-        debts={paymentTabs.debts}
-        {...panelProps}
-      />
-    ) : panel === "receivable" ? (
-      <ReceivablePanel
-        receivables={paymentTabs.receivables}
-        {...panelProps}
-      />
-    ) : panel === "goal" ? (
-      <GoalPanel
-        goals={paymentTabs.goals}
-        {...panelProps}
-      />
-    ) : panel === "recurring" ? (
+    panel === "recurring" && paymentTabs ? (
       <RecurringPaymentPanel
         payments={paymentTabs.pendingPayments}
         categories={categories}
         {...panelProps}
       />
-    ) : null
+    ) : (
+      renderPaymentPanel(panel, paymentTabs, panelProps)
+    )
 
   if (panelContent) {
     return (
@@ -350,20 +335,23 @@ export function TransactionForm({
           type="submit"
           disabled={form.pending}
         >
-          {form.pending ? "Guardando..." : isEditing ? "Guardar" : "Registrar"}
+          {submitLabel(form.pending, isEditing)}
         </Button>
       </div>
     </form>
   )
 }
 
-interface RecurringPaymentPanelProps {
-  workspaceId: string
+function submitLabel(pending: boolean, isEditing: boolean): string {
+  if (pending) {
+    return "Guardando..."
+  }
+  return isEditing ? "Guardar" : "Registrar"
+}
+
+interface RecurringPaymentPanelProps extends PanelProps {
   payments: UpcomingPayment[]
   categories: Category[]
-  accounts: PaymentAccountOption[]
-  onSaved: () => void
-  onCancel: () => void
 }
 
 /**

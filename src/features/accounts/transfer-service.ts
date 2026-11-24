@@ -9,14 +9,16 @@ import {
 import type { AppSupabase } from "@/libs/supabase/types"
 import type { Database } from "@/types/database"
 import type { TransferInput } from "./schemas"
+import { ACCOUNT_NOT_FOUND } from "./service"
 
 // Lógica de crear, editar y borrar traspasos (SPEC 34). La comparten las
 // Server Actions y el MCP: recibe el cliente y un espacio ya resuelto con
 // permiso de escritura, y devuelve las filas antes y después.
 
+/** Fila de `transfers` */
 export type TransferRow = Database["public"]["Tables"]["transfers"]["Row"]
 
-const ACCOUNT_NOT_FOUND = "No se encontró la cuenta"
+/** Error cuando el traspaso no existe o no es del espacio */
 export const TRANSFER_NOT_FOUND = "No se encontró el traspaso"
 const TRANSFER_DEFAULT_ERROR =
   "No se pudo guardar el traspaso. Intenta de nuevo"
@@ -42,6 +44,7 @@ function transferPgError(error: PostgrestError): ServiceFailure {
   return fail({ error: TRANSFER_DEFAULT_ERROR })
 }
 
+/** Crea un traspaso entre dos cuentas activas del espacio */
 export async function createTransferRecord(
   supabase: AppSupabase,
   workspace: ServiceWorkspace,
@@ -59,6 +62,7 @@ export async function createTransferRecord(
   return { ok: true, after }
 }
 
+/** Edita un traspaso; devuelve la fila antes y después para el log */
 export async function updateTransferRecord(
   supabase: AppSupabase,
   workspace: ServiceWorkspace,
@@ -93,6 +97,7 @@ export async function updateTransferRecord(
   return { ok: true, before, after }
 }
 
+/** Borra un traspaso; devuelve la fila borrada para poder revertir */
 export async function deleteTransferRecord(
   supabase: AppSupabase,
   workspace: ServiceWorkspace,

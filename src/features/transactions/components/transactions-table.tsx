@@ -39,11 +39,12 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-import { deleteAdjustment, deleteTransfer } from "@/features/accounts/actions"
 import { activeAccountId } from "@/features/accounts/active-account"
+import { deleteAdjustment } from "@/features/accounts/adjustment-actions"
 import { AccountLabel } from "@/features/accounts/components/account-select"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
+import { deleteTransfer } from "@/features/accounts/transfer-actions"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { deleteEntry } from "@/features/debts/actions"

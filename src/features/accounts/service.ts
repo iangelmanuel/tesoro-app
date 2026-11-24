@@ -14,9 +14,12 @@ import type { AccountRow } from "./types"
 // MCP: recibe el cliente y un espacio ya resuelto con permiso de escritura y
 // devuelve la fila antes y después para el log.
 
+/** Error cuando la cuenta no existe o no es del espacio */
 export const ACCOUNT_NOT_FOUND = "No se encontró la cuenta"
+/** Error del campo `name` con un nombre que ya usa otra cuenta del espacio */
 export const ACCOUNT_DUPLICATE_NAME = "Ya existe una cuenta con ese nombre"
 const ACCOUNT_DEFAULT_ERROR = "No se pudo guardar la cuenta. Intenta de nuevo"
+const ARCHIVE_ERROR = "No se pudo actualizar la cuenta. Intenta de nuevo"
 
 function accountPgError(error: PostgrestError): ServiceFailure {
   // Índice único accounts_unique_name (espacio, nombre sin mayúsculas)
@@ -29,6 +32,7 @@ function accountPgError(error: PostgrestError): ServiceFailure {
   return fail({ error: ACCOUNT_DEFAULT_ERROR })
 }
 
+/** Crea una cuenta en el espacio. Un nombre repetido vuelve como error del campo `name` */
 export async function createAccountRecord(
   supabase: AppSupabase,
   workspace: ServiceWorkspace,
@@ -61,7 +65,10 @@ export async function loadAccount(
   return data
 }
 
-/** Cambia solo los campos de `patch`; los demás quedan igual */
+/**
+ * Edita una cuenta: cambia solo los campos de `patch`; los demás quedan
+ * igual
+ */
 export async function updateAccountRecord(
   supabase: AppSupabase,
   workspace: ServiceWorkspace,
@@ -88,4 +95,35 @@ export async function updateAccountRecord(
     return fail({ error: ACCOUNT_NOT_FOUND })
   }
   return { ok: true, before, after }
+}
+
+/**
+ * Archiva (`archived: true`) o restaura una cuenta. Solo cambia si está en
+ * el estado contrario; si no, responde que no se encontró.
+ */
+export async function setAccountArchived(
+  supabase: AppSupabase,
+  workspace: ServiceWorkspace,
+  id: string,
+  archived: boolean
+): Promise<ServiceResult<object>> {
+  const query = supabase
+    .from("accounts")
+    .update({ archived_at: archived ? new Date().toISOString() : null })
+    .eq("id", id)
+    .eq("workspace_id", workspace.id)
+
+  const { data, error } = await (
+    archived
+      ? query.is("archived_at", null)
+      : query.not("archived_at", "is", null)
+  ).select("id")
+
+  if (error) {
+    return fail({ error: ARCHIVE_ERROR })
+  }
+  if (data.length === 0) {
+    return fail({ error: ACCOUNT_NOT_FOUND })
+  }
+  return { ok: true }
 }

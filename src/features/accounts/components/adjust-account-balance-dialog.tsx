@@ -7,10 +7,10 @@ import { TimePickerField } from "@/components/forms/time-picker-field"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/sonner"
 import { formatCurrency } from "@/libs/format"
-import { adjustAccountBalance } from "../actions"
+import { adjustAccountBalance } from "../adjustment-actions"
 import type { AccountWithBalance, AdjustAccountFormState } from "../types"
 
-interface AdjustBalanceDialogProps {
+interface AdjustAccountBalanceDialogProps {
   account: Pick<AccountWithBalance, "id" | "workspace_id" | "name" | "balance">
   currency: string
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
@@ -23,13 +23,13 @@ interface AdjustBalanceDialogProps {
  * "Actualizar saldo": el usuario escribe el saldo real (por ejemplo, el de la
  * app del banco) y se guarda un ajuste con fecha de hoy por la diferencia
  */
-export function AdjustBalanceDialog({
+export function AdjustAccountBalanceDialog({
   account,
   currency,
   trigger,
   open: controlledOpen,
   onOpenChange
-}: AdjustBalanceDialogProps) {
+}: AdjustAccountBalanceDialogProps) {
   return (
     <FormDialog
       trigger={trigger}

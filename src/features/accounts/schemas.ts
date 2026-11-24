@@ -19,8 +19,10 @@ export {
   refinePaymentAccount
 } from "@/features/transactions/schemas"
 
-// Saldo con signo opcional ("-50.000"): una cuenta puede estar sobregirada.
-// Vacío cuenta como 0.
+/**
+ * Saldo con signo opcional ("-50.000"): una cuenta puede estar sobregirada.
+ * Vacío cuenta como 0.
+ */
 export function parseSignedAmount(value: string) {
   const trimmed = value.trim()
   if (trimmed === "") {
@@ -46,6 +48,13 @@ const balanceField = z.preprocess(
     })
 )
 
+// Fecha que no puede ser futura (saldo inicial y conciliar)
+const pastDateField = z.iso
+  .date({ error: "Elige una fecha válida" })
+  .refine((value) => value <= todayISO(), {
+    error: "La fecha no puede ser futura"
+  })
+
 const noteField = z
   .string()
   .trim()
@@ -64,14 +73,7 @@ export const accountSchema = z.object({
   opening_balance: balanceField,
   // Desde cuándo cuenta el saldo inicial. Vacío = antes de cualquier movimiento
   opening_balance_on: z
-    .union([
-      z.literal("").transform(() => null),
-      z.iso
-        .date({ error: "Elige una fecha válida" })
-        .refine((value) => value <= todayISO(), {
-          error: "La fecha no puede ser futura"
-        })
-    ])
+    .union([z.literal("").transform(() => null), pastDateField])
     .nullable()
 })
 
@@ -110,11 +112,7 @@ export type AdjustAccountInput = z.infer<typeof adjustAccountSchema>
 // Conciliar (SPEC 21): saldo real a una fecha que no puede ser futura
 export const reconcileAccountSchema = z.object({
   balance: balanceField,
-  occurred_on: z.iso
-    .date({ error: "Elige una fecha válida" })
-    .refine((value) => value <= todayISO(), {
-      error: "La fecha no puede ser futura"
-    })
+  occurred_on: pastDateField
 })
 
 export type ReconcileAccountInput = z.infer<typeof reconcileAccountSchema>

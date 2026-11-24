@@ -88,6 +88,7 @@ export function BusinessForm({
   const errors = state.fieldErrors
   const values = state.values
   const [sector, setSector] = useState(values?.sector ?? business?.sector ?? "")
+  const submitLabel = isEditing ? "Guardar" : "Crear empresa"
 
   return (
     <form
@@ -160,7 +161,7 @@ export function BusinessForm({
           type="submit"
           disabled={pending}
         >
-          {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear empresa"}
+          {pending ? "Guardando..." : submitLabel}
         </Button>
       </div>
     </form>

@@ -24,10 +24,11 @@ const CHART_CONFIG = {
   closingBalance: { label: "Saldo en cuentas", color: "var(--balance)" }
 } satisfies ChartConfig
 
+// Nombres de cada serie en el tooltip: los mismos de la leyenda
 const LABELS = {
-  inflow: "Entradas",
-  outflow: "Salidas",
-  closingBalance: "Saldo en cuentas"
+  inflow: CHART_CONFIG.inflow.label,
+  outflow: CHART_CONFIG.outflow.label,
+  closingBalance: CHART_CONFIG.closingBalance.label
 }
 
 const COMPACT = new Intl.NumberFormat("es-CO", {
@@ -58,13 +59,15 @@ export function CashFlowChart({
   className
 }: CashFlowChartProps) {
   const { hidden, money } = useFormatAmount()
+  const first = data.at(0)
+  const last = data.at(-1)
+  // Con todos los meses en el mismo año, el eje no repite el año
   const sameYear =
-    data.length > 0 &&
-    data[0].month.slice(0, 4) === data.at(-1)?.month.slice(0, 4)
+    first !== undefined && first.month.slice(0, 4) === last?.month.slice(0, 4)
   const tickFormat = sameYear ? "MMM" : "MMM yy"
   const range =
-    data.length > 0
-      ? `de ${monthLabel(data[0].month)} a ${monthLabel(data.at(-1)!.month)}`
+    first && last
+      ? `de ${monthLabel(first.month)} a ${monthLabel(last.month)}`
       : ""
   const description = `Entradas y salidas por mes con saldo en cuentas al cierre ${range}`
 

@@ -10,7 +10,10 @@ const SECTOR_IDS = SITE.businessSectors.map((sector) => sector.id) as [
 // dígito de verificación opcional. No se valida el DV
 const TAX_ID_PATTERN = /^\d{5,10}(-\d)?$/
 
-// La lista vive en SITE.businessSectors: agregar un sector no exige migración
+/**
+ * Crear o editar una empresa: nombre, NIT opcional y sector. La lista de
+ * sectores vive en SITE.businessSectors: agregar uno no exige migración
+ */
 export const businessSchema = z.object({
   name: z
     .string()
@@ -29,5 +32,7 @@ export const businessSchema = z.object({
   sector: z.enum(SECTOR_IDS, { error: "Elige un sector de la lista" })
 })
 
+/** Datos validados de una empresa */
 export type BusinessInput = z.infer<typeof businessSchema>
+/** Sector de una empresa */
 export type BusinessSector = BusinessInput["sector"]

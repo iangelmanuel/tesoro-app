@@ -6,12 +6,14 @@ import { SITE } from "@/config/site"
 import { createClient } from "@/libs/supabase/server"
 import type { WorkspaceType } from "./types"
 
+/** Espacio Personal del usuario con su moneda */
 export type PersonalWorkspace = {
   id: string
   name: string
   currency: string
 }
 
+/** Espacio del usuario (Personal o Empresa) con su marca de borrado */
 export type Workspace = {
   id: string
   type: WorkspaceType
@@ -20,6 +22,7 @@ export type Workspace = {
   deletionRequestedAt: string | null
 }
 
+/** Empresa con su perfil (NIT y sector) */
 export type BusinessWorkspace = Workspace & {
   taxId: string | null
   sector: string
@@ -29,8 +32,10 @@ const NOT_WRITABLE = "No puedes modificar este espacio"
 
 const idSchema = z.uuid()
 
-// Workspace Personal del usuario autenticado. Se valida la sesión contra el
-// servidor de auth (getUser) y se deduplica por request con `cache`.
+/**
+ * Workspace Personal del usuario autenticado. Se valida la sesión contra el
+ * servidor de auth (getUser) y se deduplica por request con `cache`.
+ */
 export const getPersonalWorkspace = cache(
   async (): Promise<PersonalWorkspace> => {
     const supabase = await createClient()
@@ -61,9 +66,11 @@ export const getPersonalWorkspace = cache(
   }
 )
 
-// Espacio por id, o null si no existe o no es del usuario: la política select
-// de workspaces solo devuelve los del dueño. Deduplicado por request. Los
-// Route Handlers la usan para responder 404 en JSON en vez de notFound().
+/**
+ * Espacio por id, o null si no existe o no es del usuario: la política select
+ * de workspaces solo devuelve los del dueño. Deduplicado por request. Los
+ * Route Handlers la usan para responder 404 en JSON en vez de notFound().
+ */
 export const findWorkspace = cache(
   async (id: string): Promise<Workspace | null> => {
     if (!idSchema.safeParse(id).success) {

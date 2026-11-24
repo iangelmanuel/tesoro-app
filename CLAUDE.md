@@ -158,8 +158,8 @@ líneas por archivo. Queries y servicios llevan `import "server-only"`.
   que lean la sesión sin token (`getPersonalWorkspace`). Las tools viven en
   `src/features/mcp/tools/` y se registran en `catalog.ts` (de ahí sale
   también la página `/mcp`). Las escrituras usan los servicios compartidos
-  con las actions (`transactions/service.ts`,
-  `accounts/transfer-service.ts`, `debts/entry-service.ts`,
+  con las actions (`transactions/service.ts`, con sus mensajes en
+  `transactions/transaction-errors.ts`, `accounts/transfer-service.ts`, `debts/entry-service.ts`,
   `goals/contribution-service.ts`, `categories/service.ts`) y los
   prellenados del diálogo de movimiento (`recurring-expenses/payment.ts`,
   `incomeReceiptValues` en `recurring-incomes/receipt.ts`), validan todo

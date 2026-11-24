@@ -116,12 +116,15 @@ convierte en estado de formulario y el MCP en `needs_input` o error.
 ### Escritura: registrar un movimiento
 
 ```text
-TransactionDialog (cliente)
-  └─ useActionState(createTransaction)
+TransactionDialog → TransactionForm (cliente, components/transaction-form.tsx)
+  └─ useTransactionForm → useActionState(createTransaction)
+       (valores iniciales y prellenados: transaction-form-values.ts, puro)
        └─ transactions/actions.ts  "use server"
-            1. parseForm + createTransactionSchema (Zod) → errores al formulario
+            1. readFormValues + createTransactionSchema (Zod) → errores al formulario
             2. requireWritableWorkspace(workspace_id)    → dueño y sin marca de borrado
             3. createTransactionRecord(supabase, …)      → transactions/service.ts
+                 ├─ enlaces a gasto e ingreso fijo        → transaction-links.ts
+                 ├─ errores de Postgres → de formulario   → transaction-errors.ts
                  └─ Supabase con la sesión del usuario: RLS decide qué se puede
             4. revalidateWorkspacePages(workspace)       → workspaces/revalidate.ts
 ```
@@ -136,9 +139,11 @@ app/dashboard/personal/transactions/page.tsx   (servidor)
   └─ <Suspense> → TransactionsContent
        1. await searchParams → parseTransactionFilters
        2. getPersonalWorkspace, getTransactions, getTransactionTotals…
-          (transactions/queries.ts, con server-only)
+          (transactions/queries.ts, con server-only; cada fila de la vista
+          ledger_entries pasa por toLedgerEntry, de ledger-entry.ts)
        3. transactionsScope(filters), previousTotalsOrNull(…)  (lógica pura)
        4. compone TransactionsTotals, TransactionsTable…
+          (la tabla ordena con use-transactions-table.ts y ledger-rows.ts)
 ```
 
 La página solo lee params, llama queries y compone. Un cálculo que no sea
@@ -188,7 +193,16 @@ composición va a un módulo de la feature, con su test.
 
 Los de una sola feature viven junto a sus componentes
 (`features/<área>/components/use-*.ts`). Los genéricos entre features, en
-`src/hooks/` (hoy, `use-is-mobile.ts`).
+`src/hooks/`:
+
+- `use-is-mobile.ts`: corte móvil del dashboard (`< 768 px`);
+- `use-action-toast.ts` (`useActionToast`): corre una server action que
+  devuelve `{ error }` en una transición y avisa con toast de éxito o de
+  error. Lo usan `useAccountAction` y el borrado de filas de Movimientos.
+
+Al partir un componente grande, su estado y sus efectos van a un hook
+`use-<padre>.ts` en la misma carpeta (`use-transactions-table.ts`,
+`use-transaction-form.ts`, `use-transactions-filters.ts`).
 
 ## Sin barrels
 

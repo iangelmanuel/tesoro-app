@@ -6,12 +6,9 @@ import { getIncomeSources } from "@/features/recurring-incomes/queries"
 import { incomeReceiptDescription } from "@/features/recurring-incomes/receipt"
 import { monthRange, shiftMonth } from "@/libs/dates"
 import { createClient } from "@/libs/supabase/server"
-import type {
-  RecurringOccurrenceLink,
-  TransactionInitialValues
-} from "./components/transaction-dialog"
 import { getEditableTransaction } from "./queries"
 import { NOT_FOUND } from "./transaction-errors"
+import type { RecurringOccurrenceLink, TransactionInitialValues } from "./types"
 
 // Valores para duplicar un movimiento (SPEC 49). Solo lectura: RLS limita las
 // filas al dueño.

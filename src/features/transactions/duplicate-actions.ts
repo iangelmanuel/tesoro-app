@@ -1,12 +1,9 @@
 "use server"
 
 import { z } from "zod"
-import type {
-  RecurringOccurrenceLink,
-  TransactionInitialValues
-} from "./components/transaction-dialog"
 import { DUPLICATE_ERROR, getTransactionDuplicate } from "./duplicate-queries"
 import { NOT_FOUND } from "./transaction-errors"
+import type { RecurringOccurrenceLink, TransactionInitialValues } from "./types"
 
 const idSchema = z.uuid()
 

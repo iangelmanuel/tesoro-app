@@ -3,11 +3,38 @@ import type { DebtEntry } from "@/features/debts/queries"
 import type { DebtKind, ReceivableSchedule } from "@/features/debts/schemas"
 import type { IncomeAllocation } from "@/features/recurring-incomes/types"
 import type { Database } from "@/types/database"
-import type { ACCOUNT_MOVEMENT_KINDS } from "./constants"
+import type { ACCOUNT_MOVEMENT_KINDS, FORM_PANELS } from "./constants"
 import type { TransactionType } from "./filters"
 
 type TransactionRow = Database["public"]["Tables"]["transactions"]["Row"]
 type CategoryRow = Database["public"]["Tables"]["categories"]["Row"]
+
+/** Valores con los que se prellena un movimiento nuevo */
+export interface TransactionInitialValues {
+  /** Tipo preseleccionado (gasto por defecto) */
+  type?: TransactionType
+  amount?: number
+  category_id?: string
+  occurred_on?: string
+  description?: string
+  /** Cuenta prellenada (la cuenta por defecto de un ingreso fijo) */
+  account_id?: string | null
+  /** Ingreso fijo elegido en el select (Marcar recibido) */
+  recurring_income_id?: string
+  /** Nota copiada de otro movimiento (Duplicar, SPEC 49) */
+  note?: string
+  /** Cliente o proveedor copiado de otro movimiento (Empresa, SPEC 49) */
+  counterparty?: string | null
+}
+
+/** Ocurrencia de gasto fijo que paga el movimiento nuevo */
+export interface RecurringOccurrenceLink {
+  recurringExpenseId: string
+  dueOn: string
+}
+
+/** Opciones del selector que no son un tipo de movimiento */
+export type FormPanel = (typeof FORM_PANELS)[number]
 
 export interface TransactionFormState {
   /** true cuando la acción terminó bien */

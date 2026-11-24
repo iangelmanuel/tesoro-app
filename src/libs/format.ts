@@ -96,6 +96,8 @@ const MONTH_TITLE = new Intl.DateTimeFormat(LOCALE, {
 /**
  * Mes YYYY-MM como título con la forma de Intl: "Noviembre de 2026" (el
  * selector de mes de Movimientos). Se formatea en UTC para no correr el mes.
+ * Distinto a propósito del alcance de las KPI (`transactionsScope`), que dice
+ * "Noviembre 2026": unificarlos cambia texto visible y va en su propio spec.
  */
 export function formatMonthTitle(month: string) {
   const label = MONTH_TITLE.format(new Date(`${month}-01T00:00:00Z`))

@@ -23,9 +23,9 @@ interface TransactionTypeTabsProps {
 }
 
 /**
- * Selector de tipo del diálogo de movimiento. Orden de los tabs (SPEC 30, 39
- * y 41). Personal: Gasto, Ingreso, Traspaso, Gasto fijo, Deuda, Me deben y
- * Meta. Empresa: Venta, Costo o gasto y Traspaso
+ * Selector de tipo del diálogo de movimiento. Orden de los tabs (SPEC 30, 39,
+ * 41 y 47). Personal: Salida, Entrada, Traspaso, Gasto fijo, Deuda, Me deben
+ * y Meta. Empresa: Entrada, Salida y Traspaso
  */
 export function TransactionTypeTabs({
   workspaceType,

@@ -193,6 +193,14 @@ Verificables en navegador (los prueba el usuario a mano):
 | Filtros de Movimientos dan resultados distintos al mover la consulta                 | `filters.test.ts` antes de tocar; comparación manual con `master`.                          |
 | `CLAUDE.md` queda con rutas viejas de servicios                                      | Criterio específico; búsqueda de cada ruta movida en `*.md`.                                |
 
+## Bugs previos encontrados (para otro spec)
+
+`/code-review high` encontró tres bugs que ya estaban en `master`. Por ser un refactor puro no se corrigen aquí:
+
+- **`useActionToast` sin `catch`:** si la action lanza en vez de devolver `{ error }` (por ejemplo, `requireWritableWorkspace` con una empresa marcada para borrarse), no sale toast y el error llega al error boundary. Pasaba igual en los hooks por feature; conviene resolverlo antes de que SPEC 55b lo adopte en todas partes.
+- **Editar una empresa no es atómico:** `updateBusinessRecord` actualiza `business_profiles` y luego `workspaces.name` en dos escrituras. Si falla la segunda, NIT y sector quedan guardados y el formulario muestra error. Va en una RPC con transacción.
+- **Cuadrar saldo puede quedar en "Calculando...":** el efecto de `reconcile-dialog.tsx` no tiene `.catch` para `getReconcileBalanceAction`; si la action falla, el saldo calculado nunca se resuelve.
+
 ## Qué no entra en este spec
 
 - `debts`, `recurring-expenses`, `recurring-incomes`, `goals`, `score` y `business-score` (SPEC 55b).

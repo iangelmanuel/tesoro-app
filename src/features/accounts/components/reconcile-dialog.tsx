@@ -2,70 +2,27 @@
 
 import { useActionState, useEffect, useState } from "react"
 import { HelpHint } from "@/components/dashboard/feedback/help-hint"
-import {
-  TONE_TEXT_CLASSES,
-  type Tone
-} from "@/components/dashboard/feedback/tone"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
 import { DatePickerField } from "@/components/forms/date-picker-field"
 import { FormDialog } from "@/components/forms/form-dialog"
 import { TextInputField } from "@/components/forms/text-input-field"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/sonner"
-import { SITE } from "@/config/site"
 import { todayISO } from "@/libs/dates"
 import { formatCurrency } from "@/libs/format"
-import { roundCents } from "@/libs/money"
 import {
   getReconcileBalanceAction,
   reconcileAccountAction
 } from "../adjustment-actions"
-import { parseSignedAmount } from "../schemas"
+import {
+  type FetchedBalance,
+  calculatedBalanceAt,
+  calculatedLabel,
+  differenceTone,
+  isLargeDifference,
+  reconcileDifference
+} from "../reconcile"
 import type { AccountWithBalance, ReconcileFormState } from "../types"
-
-/** Saldo pedido al servidor para una fecha distinta de hoy */
-interface FetchedBalance {
-  date: string
-  balance: number | null
-}
-
-/**
- * Saldo calculado a `date`: el de la cuenta si es hoy, el que llegó del
- * servidor si ya es de esa fecha, o undefined mientras se calcula
- */
-function calculatedBalanceAt(
-  date: string,
-  today: string,
-  accountBalance: number,
-  fetched: FetchedBalance
-): number | null | undefined {
-  if (date === today) {
-    return accountBalance
-  }
-  if (fetched.date === date) {
-    return fetched.balance
-  }
-  return undefined
-}
-
-function differenceTone(difference: number | null): Tone {
-  if (difference === null || difference === 0) {
-    return "neutral"
-  }
-  return difference > 0 ? "success" : "danger"
-}
-
-function calculatedLabel(
-  calculated: number | null | undefined,
-  currency: string
-): string {
-  if (calculated === undefined) {
-    return "Calculando..."
-  }
-  if (calculated === null) {
-    return "No disponible"
-  }
-  return formatCurrency(calculated, currency, 2)
-}
 
 interface ReconcileDialogProps {
   account: Pick<AccountWithBalance, "id" | "workspace_id" | "name" | "balance">
@@ -173,22 +130,11 @@ function ReconcileForm({
 
   const calculated = calculatedBalanceAt(date, today, account.balance, fetched)
 
-  const realAmount = real.trim() === "" ? Number.NaN : parseSignedAmount(real)
-  const hasReal = Number.isFinite(realAmount)
-  const difference =
-    hasReal && typeof calculated === "number"
-      ? roundCents(realAmount - calculated)
-      : null
+  const difference = reconcileDifference(real, calculated)
 
   const tone = differenceTone(difference)
 
-  const warn =
-    difference !== null &&
-    typeof calculated === "number" &&
-    Math.abs(difference) > 0 &&
-    (Math.abs(difference) > SITE.reconciliation.warnAmount ||
-      Math.abs(difference) >
-        (Math.abs(calculated) * SITE.reconciliation.warnPercent) / 100)
+  const warn = isLargeDifference(difference, calculated)
 
   const balanced = difference === 0
 

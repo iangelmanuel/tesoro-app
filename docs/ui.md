@@ -519,13 +519,13 @@ Reglas:
 - **Tabs de pago** (`transaction-type-tabs.tsx` y
   `transaction-form-panels.tsx`): el diálogo que abre
   "Registrar movimiento" en Personal (y **Movimiento rápido** en el
-  teléfono) tiene **Gasto · Ingreso · Traspaso · Deuda · Me deben · Gasto
-  fijo · Meta** (prop `paymentTabs`, SPEC 30 y 39; `initialPanel` abre en un
-  tab, como **Más → Cobro de Me deben**). En Empresa: **Venta · Costo o gasto ·
+  teléfono) tiene **Salida · Entrada · Traspaso · Gasto fijo · Deuda · Me
+  deben · Meta** (prop `paymentTabs`, SPEC 30 y 39; `initialPanel` abre en un
+  tab, como **Más → Cobro de Me deben**). En Empresa: **Entrada · Salida ·
   Traspaso**. Meta usa `GoalContributionPanel` (el formulario de
   `ContributionDialog`) y, sin metas activas, `PanelEmpty` con enlace a
   Metas. El tab activo se lleva a la vista con `scrollIntoView`. El tab
-  Ingreso de Personal empieza con `IncomeSourceField` (select "Ingreso
+  Entrada de Personal empieza con `IncomeSourceField` (select "Ingreso
   fijo", `src/features/recurring-incomes/components/`). Deuda (pagos y avances) usa
   `DebtPaymentPanel` (el formulario de `PaymentDialog`), solo tarjetas y
   préstamos. Me deben usa `ReceivableCollectForm`, el mismo del Sheet de la

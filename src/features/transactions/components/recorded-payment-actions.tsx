@@ -9,7 +9,7 @@ import type { PaymentAccountOption } from "@/features/accounts/components/paymen
 import type { Category } from "@/features/categories/queries"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
 import { deleteTransaction, loadEditableTransaction } from "../actions"
-import type { EditableTransaction } from "../queries"
+import type { EditableTransaction } from "../types"
 import { DuplicateTransactionDialog } from "./duplicate-transaction-dialog"
 import { TransactionDialog } from "./transaction-dialog"
 

@@ -11,8 +11,8 @@ import {
   DialogTitle
 } from "@/components/ui/dialog"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
-import { loadVerifyEntries } from "../actions"
-import type { VerifyEntry } from "../queries"
+import { loadVerifyEntries } from "../ledger-actions"
+import type { VerifyEntry } from "../types"
 import { VerifyRow, VerifyRowSkeleton } from "./verify-row"
 
 const ALL_ACCOUNTS = "__all__"

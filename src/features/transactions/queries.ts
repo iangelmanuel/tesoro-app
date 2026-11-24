@@ -1,164 +1,35 @@
 import "server-only"
 import { NO_ACCOUNT } from "@/features/accounts/constants"
 import { TRANSACTION_TYPES } from "@/features/categories/constants"
-import type { DebtStatus } from "@/features/debts/calculations"
-import type { DebtEntry } from "@/features/debts/queries"
-import type { DebtKind, ReceivableSchedule } from "@/features/debts/schemas"
-import type { IncomeAllocation } from "@/features/recurring-incomes/types"
 import { createClient } from "@/libs/supabase/server"
-import type { Database } from "@/types/database"
+import { ACCOUNT_MOVEMENT_KINDS } from "./constants"
 import {
   PAGE_SIZE,
   type TransactionFilters,
-  type TransactionType,
   escapeLikePattern,
-  filtersDateRange
+  filtersDateRange,
+  quotePostgrestValue
 } from "./filters"
-
-type TransactionRow = Database["public"]["Tables"]["transactions"]["Row"]
-type CategoryRow = Database["public"]["Tables"]["categories"]["Row"]
-type LedgerEntryRow = Database["public"]["Views"]["ledger_entries"]["Row"]
-
-export type TransactionWithCategory = TransactionRow & {
-  category: Pick<CategoryRow, "id" | "name" | "icon" | "color" | "archived_at">
-}
-
-/** Campos de un movimiento que usa el diálogo de edición */
-export type EditableTransaction = Pick<
-  TransactionRow,
-  | "id"
-  | "type"
-  | "amount"
-  | "occurred_on"
-  | "occurred_time"
-  | "category_id"
-  | "description"
-  | "note"
-  | "account_id"
-  | "counterparty"
-  | "invoice_ref"
-  | "recurring_expense_id"
-  | "recurring_income_id"
-> & {
-  /** Lo que este ingreso cubrió de cada ocurrencia de su ingreso fijo (SPEC 38) */
-  recurring_income_allocations: IncomeAllocation[]
-}
-
-/**
- * Abono enlazado a un movimiento: pago de préstamo o cobro de una cuenta por
- * cobrar (SPEC 26). Es la fuente de verdad: el movimiento se edita y elimina
- * desde el diálogo del pago. Trae lo que ese diálogo prellena del abono; la
- * cuenta, la descripción y la categoría salen del movimiento. Al guardar, la
- * nota del abono pasa también al movimiento (SPEC 42).
- */
-export type LinkedDebtEntry = Pick<
-  DebtEntry,
-  | "id"
-  | "debt_id"
-  | "workspace_id"
-  | "kind"
-  | "amount"
-  | "occurred_on"
-  | "occurred_time"
-  | "note"
-  | "transaction_id"
-  | "is_extra_payment"
-> & {
-  debt_kind: DebtKind
-  /** Estado y tipo de cobro de la deuda: deciden si se duplica (SPEC 49) */
-  debt_status: DebtStatus
-  debt_schedule: ReceivableSchedule | null
-}
-
-/** Hora y posición manual dentro del día, comunes a toda fila de Movimientos */
-interface LedgerOrder {
-  /** "HH:MM:SS" desde Postgres; null si el usuario no la puso */
-  occurred_time: string | null
-  /** 0 = fila nueva (arriba del día); 1..n tras reordenar. No se edita */
-  day_position: number
-}
-
-/**
- * Fila de Movimientos: un ingreso o gasto, un traspaso o un ajuste de saldo.
- * La categoría y la cuenta se resuelven en la tabla con las listas que la
- * página ya carga.
- */
-export type LedgerEntry = LedgerOrder &
-  (
-    | {
-        kind: TransactionType
-        transaction: EditableTransaction
-        /** Abono enlazado, si el movimiento es un pago de deuda */
-        debt_entry: LinkedDebtEntry | null
-      }
-    | {
-        kind: "transfer"
-        id: string
-        amount: number
-        occurred_on: string
-        note: string | null
-        from_account_id: string
-        to_account_id: string
-      }
-    | {
-        kind: "adjustment"
-        id: string
-        /** > 0 sube el saldo */
-        amount: number
-        occurred_on: string
-        note: string | null
-        account_id: string
-      }
-    | {
-        kind: AccountMovementKind
-        id: string
-        /** En un aporte de meta, < 0 es un retiro */
-        amount: number
-        occurred_on: string
-        note: string | null
-        account_id: string
-        /** Nombre de la deuda o la meta */
-        name: string
-        /** Deuda o meta de origen; el diálogo de edición la necesita */
-        parent_id: string
-        /** Pago de tarjeta que es un abono extra (no cubre el mínimo) */
-        is_extra_payment: boolean
-        /** La deuda o la meta sigue activa: se puede duplicar (SPEC 49) */
-        parent_active: boolean
-      }
-  )
-
-/**
- * Pagos y avances de tarjeta y aportes de metas que llevan cuenta (SPEC 16).
- * Mueven capital, no son ingreso ni gasto: quedan fuera de los totales. Se
- * editan con el diálogo de la deuda o la meta (SPEC 26).
- */
-export const ACCOUNT_MOVEMENT_KINDS = [
-  "debt_payment",
-  "debt_advance",
-  "goal_contribution"
-] as const
-
-export type AccountMovementKind = (typeof ACCOUNT_MOVEMENT_KINDS)[number]
-
-export interface TransactionTotals {
-  income: number
-  expense: number
-  balance: number
-}
-
-// Valor entre comillas para un filtro `or` de PostgREST: escapa `\` y `"`
-export function quotePostgrestValue(value: string) {
-  return `"${value.replace(/[\\"]/g, (match) => `\\${match}`)}"`
-}
+import {
+  type ParentLink,
+  type TransactionLinks,
+  toLedgerEntry
+} from "./ledger-entry"
+import type {
+  EditableTransaction,
+  LedgerEntry,
+  TransactionTotals
+} from "./types"
 
 // PostgREST responde PGRST103 si la página pide un offset mayor que el total
 const RANGE_NOT_SATISFIABLE = "PGRST103"
 
-// Lee la vista ledger_entries para paginar movimientos, traspasos, ajustes y
-// pagos con cuenta juntos, con el orden real (fecha, posición manual del día,
-// captura). Los enlaces a un gasto fijo y a un abono no están en la vista:
-// se piden aparte solo para los movimientos de la página.
+/**
+ * Lee la vista ledger_entries para paginar movimientos, traspasos, ajustes y
+ * pagos con cuenta juntos, con el orden real (fecha, posición manual del día,
+ * captura). Los enlaces a un gasto fijo y a un abono no están en la vista:
+ * se piden aparte solo para los movimientos de la página.
+ */
 export async function getTransactions(
   workspaceId: string,
   filters: TransactionFilters
@@ -248,14 +119,6 @@ export async function getTransactions(
   }
 }
 
-/** Enlaces de un movimiento que la vista ledger_entries no trae */
-interface TransactionLinks {
-  recurringExpenseId: string | null
-  recurringIncomeId: string | null
-  recurringIncomeAllocations: IncomeAllocation[]
-  debtEntry: LinkedDebtEntry | null
-}
-
 // Gasto fijo y abono enlazados a los movimientos de la página
 async function getTransactionLinks(ids: string[]) {
   const links = new Map<string, TransactionLinks>()
@@ -306,16 +169,6 @@ async function getTransactionLinks(ids: string[]) {
     })
   }
   return links
-}
-
-/**
- * Deuda o meta de un pago, avance o aporte, si el pago es un abono extra y si
- * el padre sigue activo
- */
-interface ParentLink {
-  parentId: string
-  isExtraPayment: boolean
-  isActive: boolean
 }
 
 // Deuda o meta de los pagos, avances y aportes de la página: id → padre
@@ -370,85 +223,6 @@ async function getParentIds(
   return parents
 }
 
-// Las columnas de una vista llegan como nullable en los tipos generados
-function toLedgerEntry(
-  row: LedgerEntryRow,
-  links: Map<string, TransactionLinks>,
-  parents: Map<string, ParentLink>
-): LedgerEntry {
-  const id = row.id as string
-  const amount = Number(row.amount)
-  const occurred_on = row.occurred_on as string
-  const order: LedgerOrder = {
-    occurred_time: row.occurred_time,
-    day_position: row.day_position as number
-  }
-
-  if (row.kind === "transfer") {
-    return {
-      ...order,
-      kind: "transfer",
-      id,
-      amount,
-      occurred_on,
-      note: row.note,
-      from_account_id: row.account_id as string,
-      to_account_id: row.to_account_id as string
-    }
-  }
-  if (row.kind === "adjustment") {
-    return {
-      ...order,
-      kind: "adjustment",
-      id,
-      amount,
-      occurred_on,
-      note: row.note,
-      account_id: row.account_id as string
-    }
-  }
-
-  if (isAccountMovementKind(row.kind)) {
-    return {
-      ...order,
-      kind: row.kind,
-      id,
-      amount,
-      occurred_on,
-      note: row.note,
-      account_id: row.account_id as string,
-      name: row.description ?? "",
-      parent_id: parents.get(id)?.parentId ?? "",
-      is_extra_payment: parents.get(id)?.isExtraPayment ?? false,
-      parent_active: parents.get(id)?.isActive ?? false
-    }
-  }
-
-  const type = row.kind as TransactionType
-  const link = links.get(id)
-  return {
-    ...order,
-    kind: type,
-    debt_entry: link?.debtEntry ?? null,
-    transaction: {
-      id,
-      type,
-      amount,
-      occurred_on,
-      occurred_time: row.occurred_time,
-      category_id: row.category_id as string,
-      description: row.description as string,
-      note: row.note,
-      account_id: row.account_id,
-      counterparty: row.counterparty,
-      invoice_ref: row.invoice_ref,
-      recurring_expense_id: link?.recurringExpenseId ?? null,
-      recurring_income_id: link?.recurringIncomeId ?? null,
-      recurring_income_allocations: link?.recurringIncomeAllocations ?? []
-    }
-  }
-}
-
 /**
  * Un movimiento del espacio listo para el diálogo de edición, o null si no
  * existe o es ajeno (RLS). Lo usan los Sheets de gastos e ingresos fijos para
@@ -486,13 +260,7 @@ export async function getEditableTransaction(
   }
 }
 
-function isAccountMovementKind(
-  kind: string | null
-): kind is AccountMovementKind {
-  return ACCOUNT_MOVEMENT_KINDS.some((value) => value === kind)
-}
-
-// Para distinguir "sin movimientos" de "sin resultados para los filtros"
+/** Para distinguir "sin movimientos" de "sin resultados para los filtros" */
 export async function hasAnyTransactions(workspaceId: string) {
   const supabase = await createClient()
   const { count, error } = await supabase
@@ -507,7 +275,7 @@ export async function hasAnyTransactions(workspaceId: string) {
   return (count ?? 0) > 0
 }
 
-// Igual que hasAnyTransactions, contando también traspasos y ajustes
+/** Igual que hasAnyTransactions, contando también traspasos y ajustes */
 export async function hasAnyLedgerEntries(workspaceId: string) {
   const supabase = await createClient()
   const { count, error } = await supabase
@@ -522,8 +290,10 @@ export async function hasAnyLedgerEntries(workspaceId: string) {
   return (count ?? 0) > 0
 }
 
-// Totales de todo el periodo filtrado, no solo de la página actual. Solo
-// suman ingresos y gastos: traspasos y ajustes no cuentan.
+/**
+ * Totales de todo el periodo filtrado, no solo de la página actual. Solo
+ * suman ingresos y gastos: traspasos y ajustes no cuentan.
+ */
 export async function getTransactionTotals(
   workspaceId: string,
   filters: TransactionFilters
@@ -557,73 +327,4 @@ export async function getTransactionTotals(
   const income = Number(data.income)
   const expense = Number(data.expense)
   return { income, expense, balance: income - expense }
-}
-
-export const VERIFY_PAGE_SIZE = 50
-
-/**
- * Fila de Verificar movimientos (SPEC 19): plana y de solo lectura. `kind` es
- * el de ledger_entries; en un aporte de meta, el signo del monto distingue
- * aporte y retiro.
- */
-export interface VerifyEntry {
-  key: string
-  kind: string
-  amount: number
-  occurred_on: string
-  occurred_time: string | null
-  account_id: string | null
-  to_account_id: string | null
-  /** Descripción del movimiento o nombre de la deuda o la meta */
-  title: string
-  note: string | null
-}
-
-// Historial completo sin filtro de mes, de lo más reciente hacia atrás, con el
-// mismo orden que la tabla de Movimientos. Pide una fila de más para saber si
-// quedan páginas sin usar count exact.
-export async function getVerifyEntries(
-  workspaceId: string,
-  options: { accountId?: string; offset: number }
-): Promise<{ rows: VerifyEntry[]; hasMore: boolean }> {
-  const supabase = await createClient()
-  let query = supabase
-    .from("ledger_entries")
-    .select(
-      "id, kind, amount, occurred_on, occurred_time, account_id, to_account_id, description, note"
-    )
-    .eq("workspace_id", workspaceId)
-
-  if (options.accountId) {
-    // Cuenta del movimiento o del ajuste, u origen o destino del traspaso
-    query = query.or(
-      `account_id.eq.${options.accountId},to_account_id.eq.${options.accountId}`
-    )
-  }
-
-  const { data, error } = await query
-    .order("occurred_on", { ascending: false })
-    .order("day_position", { ascending: true })
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: true })
-    .range(options.offset, options.offset + VERIFY_PAGE_SIZE)
-
-  if (error) {
-    throw new Error("No se pudieron cargar los movimientos")
-  }
-
-  return {
-    rows: data.slice(0, VERIFY_PAGE_SIZE).map((row) => ({
-      key: `${row.kind}:${row.id}`,
-      kind: row.kind as string,
-      amount: Number(row.amount),
-      occurred_on: row.occurred_on as string,
-      occurred_time: row.occurred_time,
-      account_id: row.account_id,
-      to_account_id: row.to_account_id,
-      title: row.description ?? "",
-      note: row.note
-    })),
-    hasMore: data.length > VERIFY_PAGE_SIZE
-  }
 }

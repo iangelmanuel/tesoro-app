@@ -4,7 +4,8 @@ import {
   buildFiltersQuery,
   escapeLikePattern,
   filtersDateRange,
-  parseTransactionFilters
+  parseTransactionFilters,
+  quotePostgrestValue
 } from "./filters"
 
 const ACCOUNT_ID = "6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b"
@@ -136,5 +137,12 @@ describe("escapeLikePattern", () => {
 
   it("deja igual el texto sin comodines", () => {
     expect(escapeLikePattern("mercado")).toBe("mercado")
+  })
+})
+
+describe("quotePostgrestValue", () => {
+  it("encierra en comillas y escapa la barra invertida y las comillas", () => {
+    expect(quotePostgrestValue("%café%")).toBe('"%café%"')
+    expect(quotePostgrestValue(String.raw`a"b\c`)).toBe(String.raw`"a\"b\\c"`)
   })
 })

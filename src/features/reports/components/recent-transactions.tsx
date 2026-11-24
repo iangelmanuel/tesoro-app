@@ -20,7 +20,7 @@ import {
   TRANSACTIONS_PATH,
   buildFiltersQuery
 } from "@/features/transactions/filters"
-import type { TransactionWithCategory } from "@/features/transactions/queries"
+import type { TransactionWithCategory } from "@/features/transactions/types"
 import { cn } from "@/libs/cn"
 import { formatCurrency, formatDate } from "@/libs/format"
 

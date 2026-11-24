@@ -1,9 +1,7 @@
 import "server-only"
-import type { PostgrestError } from "@supabase/supabase-js"
 import type { z } from "zod"
 import type { IncomeAllocation } from "@/features/recurring-incomes/types"
 import {
-  type ServiceFailure,
   type ServiceResult,
   type ServiceWorkspace,
   fail
@@ -12,6 +10,23 @@ import type { WorkspaceType } from "@/features/workspaces/types"
 import type { AppSupabase } from "@/libs/supabase/types"
 import type { Database } from "@/types/database"
 import type { TransactionInput, createTransactionSchema } from "./schemas"
+import {
+  ARCHIVED_CATEGORY,
+  DEFAULT_ERROR,
+  DELETE_ERROR,
+  INVALID_CATEGORY,
+  LINKED_DEBT_ENTRY,
+  NOT_FOUND,
+  RECURRING_MUST_BE_EXPENSE,
+  toServiceError
+} from "./transaction-errors"
+import {
+  type IncomeLink,
+  NO_INCOME_LINK,
+  fetchAllocations,
+  resolveIncomeLink,
+  validateRecurring
+} from "./transaction-links"
 
 // Lógica de crear, editar y borrar movimientos (SPEC 34). La comparten las
 // Server Actions (sesión de cookies) y el MCP (Bearer del agente). Recibe el
@@ -19,8 +34,10 @@ import type { TransactionInput, createTransactionSchema } from "./schemas"
 // rutas ni lee FormData. Devuelve las filas antes y después para el log de
 // operaciones del MCP.
 
+/** Fila de `transactions` */
 export type TransactionRow = Database["public"]["Tables"]["transactions"]["Row"]
 
+/** Datos validados para crear un movimiento */
 export type CreateTransactionData = z.output<typeof createTransactionSchema>
 
 /**
@@ -34,62 +51,6 @@ export type UpdateTransactionData = Omit<
   recurring_income_id?: TransactionInput["recurring_income_id"]
 }
 
-export const NOT_FOUND = "No se encontró el movimiento"
-const DEFAULT_ERROR = "No se pudo guardar el movimiento. Intenta de nuevo"
-const DELETE_ERROR = "No se pudo eliminar el movimiento. Intenta de nuevo"
-const INVALID_CATEGORY = "Elige una categoría válida para este tipo"
-const ARCHIVED_CATEGORY = "Esta categoría está archivada. Elige otra"
-const RECURRING_NOT_FOUND = "No se encontró el gasto fijo"
-const ALREADY_PAID = "Este pago ya está registrado"
-const RECURRING_MUST_BE_EXPENSE = "El pago de un gasto fijo debe ser una salida"
-const ARCHIVED_ACCOUNT = "La cuenta está archivada"
-const INVALID_ACCOUNT = "Elige una cuenta válida"
-const SAME_TRANSFER_ACCOUNT = "Elige una cuenta distinta a la que paga"
-const INCOME_NOT_FOUND = "No se encontró el ingreso fijo"
-export const LINKED_DEBT_ENTRY =
-  "Este movimiento es un pago o avance de deuda: edítalo desde su diálogo de pago"
-const UNIQUE_VIOLATION = "23505"
-
-// Códigos de Postgres que pueden llegar pese a la validación con Zod
-const PG_ERROR_MESSAGES: Record<string, Omit<ServiceFailure, "ok">> = {
-  // check_transaction_category y los check de la tabla
-  "23514": { fieldErrors: { category_id: [INVALID_CATEGORY] } },
-  // FK de category_id
-  "23503": { fieldErrors: { category_id: [INVALID_CATEGORY] } },
-  // RLS
-  "42501": { error: "No tienes permiso para modificar este movimiento" }
-}
-
-// allocate_income_receipt marca con `hint` por qué sobró monto al repartir
-// (SPEC 38); el mensaje va al campo del monto
-const ALLOCATION_HINTS = new Set([
-  "allocation_future_limit",
-  "allocation_exceeds_end"
-])
-
-function toServiceError(error: PostgrestError): ServiceFailure {
-  if (ALLOCATION_HINTS.has(error.hint)) {
-    return fail({ fieldErrors: { amount: [error.message] } })
-  }
-  // Índice único por ocurrencia: el pago ya existe (p. ej. doble clic)
-  if (error.code === UNIQUE_VIOLATION) {
-    return fail({ error: ALREADY_PAID })
-  }
-  // check_account_active y la FK compuesta de la cuenta, antes que los
-  // códigos genéricos de la categoría
-  if (error.message.includes(ARCHIVED_ACCOUNT)) {
-    return fail({ fieldErrors: { account_id: [ARCHIVED_ACCOUNT] } })
-  }
-  if (error.code === "23503" && error.message.includes("account_id")) {
-    return fail({ fieldErrors: { account_id: [INVALID_ACCOUNT] } })
-  }
-  // El traspaso desde la misma cuenta que paga lo frena transfers_check
-  if (error.message.includes("transfers_check")) {
-    return fail({ fieldErrors: { transfer_from: [SAME_TRANSFER_ACCOUNT] } })
-  }
-  return fail(PG_ERROR_MESSAGES[error.code] ?? { error: DEFAULT_ERROR })
-}
-
 // Contraparte y factura solo existen en Empresa
 function workspaceFields<
   T extends { counterparty: unknown; invoice_ref: unknown }
@@ -97,79 +58,6 @@ function workspaceFields<
   return type === "business"
     ? data
     : { ...data, counterparty: null, invoice_ref: null }
-}
-
-// El gasto fijo debe ser del espacio y la ocurrencia no debe tener pago. El
-// trigger y el índice único lo garantizan en la BD; esto da un mensaje claro
-// antes de insertar.
-async function validateRecurring(
-  supabase: AppSupabase,
-  workspaceId: string,
-  recurringExpenseId: string,
-  dueOn: string
-): Promise<string | null> {
-  const { data: expense } = await supabase
-    .from("recurring_expenses")
-    .select("id")
-    .eq("id", recurringExpenseId)
-    .eq("workspace_id", workspaceId)
-    .maybeSingle()
-
-  if (!expense) {
-    return RECURRING_NOT_FOUND
-  }
-
-  const { count } = await supabase
-    .from("transactions")
-    .select("id", { count: "exact", head: true })
-    .eq("recurring_expense_id", recurringExpenseId)
-    .eq("recurring_due_on", dueOn)
-
-  return (count ?? 0) > 0 ? ALREADY_PAID : null
-}
-
-interface IncomeLink {
-  recurring_income_id: string | null
-}
-
-const NO_INCOME_LINK: IncomeLink = { recurring_income_id: null }
-
-// Enlace de un ingreso a un ingreso fijo activo del espacio (SPEC 30). El
-// reparto entre ocurrencias (SPEC 38) lo hace la BD: el trigger de
-// transactions llama a allocate_income_receipt en la misma transacción que
-// guarda el movimiento. El cliente nunca elige las ocurrencias.
-async function resolveIncomeLink(
-  supabase: AppSupabase,
-  workspaceId: string,
-  recurringIncomeId: string
-): Promise<IncomeLink | { error: string }> {
-  const { data: income } = await supabase
-    .from("recurring_incomes")
-    .select("id")
-    .eq("id", recurringIncomeId)
-    .eq("workspace_id", workspaceId)
-    .eq("is_active", true)
-    .maybeSingle()
-
-  return income
-    ? { recurring_income_id: income.id }
-    : { error: INCOME_NOT_FOUND }
-}
-
-/** Reparto guardado de un ingreso, de la ocurrencia más antigua a la última */
-async function fetchAllocations(
-  supabase: AppSupabase,
-  transaction: TransactionRow
-): Promise<IncomeAllocation[]> {
-  if (transaction.recurring_income_id === null) {
-    return []
-  }
-  const { data } = await supabase
-    .from("recurring_income_allocations")
-    .select("due_on, amount")
-    .eq("transaction_id", transaction.id)
-    .order("due_on")
-  return data ?? []
 }
 
 /**

@@ -59,12 +59,13 @@ import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
 import type { WorkspaceType } from "@/features/workspaces/types"
 import { cn } from "@/libs/cn"
 import { formatCurrency, formatDate, formatTime } from "@/libs/format"
-import { deleteTransaction, moveLedgerEntry } from "../actions"
-import {
-  type AccountMovementKind,
-  type LedgerEntry,
-  type LinkedDebtEntry
-} from "../queries"
+import { deleteTransaction } from "../actions"
+import { moveLedgerEntry } from "../ledger-actions"
+import type {
+  AccountMovementKind,
+  LedgerEntry,
+  LinkedDebtEntry
+} from "../types"
 import { DuplicateTransactionDialog } from "./duplicate-transaction-dialog"
 import { TransactionDialog } from "./transaction-dialog"
 

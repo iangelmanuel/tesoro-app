@@ -1,6 +1,6 @@
 import { formatMonthYear } from "@/libs/format"
 import type { TransactionFilters } from "./filters"
-import type { TransactionTotals } from "./queries"
+import type { TransactionTotals } from "./types"
 
 /**
  * Totales del mes anterior para el badge de las KPI de Movimientos: null si

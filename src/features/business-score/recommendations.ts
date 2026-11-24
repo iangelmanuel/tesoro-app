@@ -14,10 +14,8 @@ import {
 } from "@/features/score/curves"
 import { compareRecommendations } from "@/features/score/recommendations"
 import { buildFiltersQuery } from "@/features/transactions/filters"
-import {
-  type TransactionTotals,
-  getTransactionTotals
-} from "@/features/transactions/queries"
+import { getTransactionTotals } from "@/features/transactions/queries"
+import type { TransactionTotals } from "@/features/transactions/types"
 import {
   workspaceBasePath,
   workspaceCashFlowPath,

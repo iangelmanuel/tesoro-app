@@ -2,7 +2,7 @@ import { ArrowDown, ArrowLeftRight, ArrowUp } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"
 import { formatCurrency, formatDate, formatTime } from "@/libs/format"
-import type { VerifyEntry } from "../queries"
+import type { VerifyEntry } from "../types"
 
 type Tone = "income" | "expense" | "neutral"
 

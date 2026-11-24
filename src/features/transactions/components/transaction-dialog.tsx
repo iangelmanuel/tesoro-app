@@ -56,7 +56,7 @@ import { cn } from "@/libs/cn"
 import { todayISO } from "@/libs/dates"
 import { createTransaction, updateTransaction } from "../actions"
 import type { TransactionType } from "../filters"
-import type { EditableTransaction } from "../queries"
+import type { EditableTransaction } from "../types"
 import type { TransactionFormState } from "../types"
 
 const AMOUNT_FORMAT = new Intl.NumberFormat("es-CO", {

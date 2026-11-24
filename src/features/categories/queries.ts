@@ -4,14 +4,17 @@ import { getWorkspace } from "@/features/workspaces/queries"
 import { createClient } from "@/libs/supabase/server"
 import type { Database } from "@/types/database"
 
+/** Fila de `categories`: del sistema o propia del espacio */
 export type Category = Database["public"]["Tables"]["categories"]["Row"]
 
-// Categorías del sistema con el scope del espacio (Personal o Empresa) y
-// propias del espacio (activas y archivadas). Primero las del sistema, por
-// nombre; luego las propias, en el orden que eligió el usuario (SPEC 45). Las propias ya tienen el scope de su
-// espacio (trigger set_category_scope).
-// cache(): los accesos rápidos del header y las tarjetas del Resumen la
-// piden en el mismo request; así se consulta una sola vez
+/**
+ * Categorías del sistema con el scope del espacio (Personal o Empresa) y
+ * propias del espacio (activas y archivadas). Primero las del sistema, por
+ * nombre; luego las propias, en el orden que eligió el usuario (SPEC 45).
+ * Las propias ya tienen el scope de su espacio (trigger set_category_scope).
+ * cache(): los accesos rápidos del header y las tarjetas del Resumen la
+ * piden en el mismo request; así se consulta una sola vez
+ */
 export const getCategories = cache(
   async (workspaceId: string): Promise<Category[]> => {
     const workspace = await getWorkspace(workspaceId)

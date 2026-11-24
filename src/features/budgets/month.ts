@@ -3,10 +3,12 @@ import { es } from "date-fns/locale"
 import { z } from "zod"
 import { currentMonth, shiftMonth } from "@/libs/dates"
 
+/** `?month` de la tab Presupuestos (YYYY-MM) */
 export const monthParamSchema = z
   .string()
   .regex(/^\d{4}-(0[1-9]|1[0-2])$/, { error: "Elige un mes válido" })
 
+/** Mes elegido en Presupuestos y sus vecinos */
 export interface BudgetMonth {
   /** Mes elegido (YYYY-MM) */
   month: string
@@ -18,7 +20,7 @@ export interface BudgetMonth {
 }
 
 /** Primer día del mes YYYY-MM, como lo guarda `budgets.month` */
-export function monthStart(month: string) {
+export function monthStart(month: string): string {
   return `${month}-01`
 }
 

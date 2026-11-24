@@ -177,6 +177,7 @@ Verificables en navegador (los prueba el usuario a mano):
 - **Sí:** `formatPercent` a `src/libs/format.ts`. Es formato genérico, no de presupuestos.
   **Nota de implementación:** `src/libs/format.ts` ya exportaba un `formatPercent` distinto (Intl, un decimal, sin espacio: "12,3%"), que usa `StatCard`. Para no cambiar textos, el de presupuestos ("93 %" con espacio duro) se movió como `formatPercentLabel`.
 - **Sí:** las firmas de los servicios que usa el MCP no cambian. Son contrato con las tools.
+  **Nota de implementación:** al mover la lectura del duplicado a `duplicate-queries.ts`, la action quedó con `return await` dentro del `try`. Antes, un fallo al leer los ingresos fijos escapaba del `catch`; ahora responde con "No se pudo preparar el duplicado". El camino feliz no cambia.
 - **Sí:** refactor puro, igual que SPEC 54. Los bugs encontrados se anotan para su propio spec.
 - **No:** subir de versión; sube al cerrar SPEC 55c.
 - **Nota:** este spec se escribió junto con SPEC 54 y 55b/c, antes de implementar SPEC 54. Las rutas de `src/components/dashboard/*` y `src/features/workspaces/*` asumen la reorganización de SPEC 54. Si SPEC 54 cambia al implementarse, se ajusta este spec antes de aprobarlo.

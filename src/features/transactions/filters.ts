@@ -91,6 +91,26 @@ export function buildFiltersQuery(
   return params.toString()
 }
 
+/** Hay tipo, categoría, cuenta o búsqueda además del mes */
+export function hasExtraFilters(filters: TransactionFilters) {
+  return Boolean(
+    filters.type || filters.categoryId || filters.accountId || filters.q
+  )
+}
+
+/**
+ * Filtros activos de la hoja del teléfono: tipo, categoría, cuenta y "Todos
+ * los meses". El buscador queda fuera, porque no vive en la hoja.
+ */
+export function sheetFilterCount(filters: TransactionFilters) {
+  return (
+    Number(Boolean(filters.type)) +
+    Number(Boolean(filters.categoryId)) +
+    Number(Boolean(filters.accountId)) +
+    Number(filters.month === "all")
+  )
+}
+
 /** Escapa `\`, `%` y `_` para usar el texto dentro de un patrón ilike */
 export function escapeLikePattern(value: string) {
   return value.replace(/[\\%_]/g, (match) => `\\${match}`)

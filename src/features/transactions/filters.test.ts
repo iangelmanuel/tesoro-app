@@ -4,8 +4,10 @@ import {
   buildFiltersQuery,
   escapeLikePattern,
   filtersDateRange,
+  hasExtraFilters,
   parseTransactionFilters,
-  quotePostgrestValue
+  quotePostgrestValue,
+  sheetFilterCount
 } from "./filters"
 
 const ACCOUNT_ID = "6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b"
@@ -144,5 +146,30 @@ describe("quotePostgrestValue", () => {
   it("encierra en comillas y escapa la barra invertida y las comillas", () => {
     expect(quotePostgrestValue("%café%")).toBe('"%café%"')
     expect(quotePostgrestValue(String.raw`a"b\c`)).toBe(String.raw`"a\"b\\c"`)
+  })
+})
+
+describe("hasExtraFilters", () => {
+  it("cuenta tipo, categoría, cuenta o búsqueda, no el mes", () => {
+    expect(hasExtraFilters({ month: "all", page: 3 })).toBe(false)
+    expect(hasExtraFilters({ month: "2026-11", page: 1, q: "café" })).toBe(true)
+    expect(
+      hasExtraFilters({ month: "2026-11", page: 1, accountId: "none" })
+    ).toBe(true)
+  })
+})
+
+describe("sheetFilterCount", () => {
+  it("cuenta los filtros de la hoja y Todos los meses, no la búsqueda", () => {
+    expect(sheetFilterCount({ month: "2026-11", page: 1, q: "café" })).toBe(0)
+    expect(
+      sheetFilterCount({
+        month: "all",
+        type: "expense",
+        categoryId: CATEGORY_ID,
+        accountId: ACCOUNT_ID,
+        page: 1
+      })
+    ).toBe(4)
   })
 })

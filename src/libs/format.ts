@@ -87,6 +87,21 @@ export function formatMonthYear(month: string) {
   return format(new Date(`${month}-01T12:00:00`), "MMMM yyyy", { locale: es })
 }
 
+const MONTH_TITLE = new Intl.DateTimeFormat(LOCALE, {
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC"
+})
+
+/**
+ * Mes YYYY-MM como título con la forma de Intl: "Noviembre de 2026" (el
+ * selector de mes de Movimientos). Se formatea en UTC para no correr el mes.
+ */
+export function formatMonthTitle(month: string) {
+  const label = MONTH_TITLE.format(new Date(`${month}-01T00:00:00Z`))
+  return label.charAt(0).toUpperCase() + label.slice(1)
+}
+
 /** Opciones de `formatNumber`: un subconjunto de las de `Intl.NumberFormat` */
 export interface NumberFormatOptions {
   minimumFractionDigits?: number

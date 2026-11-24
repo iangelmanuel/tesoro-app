@@ -23,7 +23,7 @@ export interface ScoreTimeline {
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
-// Días entre dos fechas YYYY-MM-DD, sin zona horaria de por medio
+/** Días entre dos fechas YYYY-MM-DD, sin zona horaria de por medio */
 export function daysBetween(from: string, to: string) {
   return Math.round((Date.parse(to) - Date.parse(from)) / DAY_MS)
 }
@@ -150,6 +150,7 @@ export function regularityCounts(
   }
 }
 
+/** ¿El factor entra al puntaje? Los excluidos llevan su motivo */
 export function isIncluded<K extends string>(
   factor: FactorResult<K>
 ): factor is Extract<FactorResult<K>, { points: number }> {
@@ -169,15 +170,18 @@ export function weightedScore<K extends string>(factors: FactorResult<K>[]) {
   return Math.min(Math.max(Math.round(total / weights), 0), 100)
 }
 
+/** Banda del puntaje: la primera de `BANDS` cuyo mínimo alcanza */
 export function scoreBand(score: number): Band {
   return (BANDS.find((band) => score >= band.min) ?? BANDS[BANDS.length - 1])
     .band
 }
 
+/** Etiqueta, mínimo y tono de una banda */
 export function bandInfo(band: Band) {
   return BANDS.find((item) => item.band === band) ?? BANDS[BANDS.length - 1]
 }
 
+/** ¿El mes tiene score, o solo motivos de "Sin datos suficientes"? */
 export function hasScore<K extends string>(
   result: ScoreResult<K>
 ): result is Extract<ScoreResult<K>, { score: number }> {

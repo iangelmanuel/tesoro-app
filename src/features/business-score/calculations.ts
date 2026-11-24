@@ -29,6 +29,7 @@ import type {
   BusinessScoreResult
 } from "./types"
 
+/** Totales del mes YYYY-MM, o ceros si el mes no tiene movimientos */
 export function monthInput(
   inputs: BusinessScoreInputs,
   month: string

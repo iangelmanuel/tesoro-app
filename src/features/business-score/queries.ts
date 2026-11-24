@@ -127,6 +127,7 @@ export async function getBusinessScoreHistory(
   return { inputs, history: businessScoreHistory(inputs) }
 }
 
+/** Total de ventas (o costos) de una contraparte en un rango */
 export interface CounterpartyTotal {
   /** Primer valor original del grupo */
   counterparty: string

@@ -7,7 +7,7 @@ import {
 import {
   type BusinessRecommendationInputs,
   buildBusinessRecommendations
-} from "./recommendations"
+} from "./recommendation-rules"
 import type { BusinessScoreInputs } from "./types"
 
 // Tests de caracterización (SPEC 55b): fijan la lista completa de

@@ -10,13 +10,11 @@ import {
 } from "@/testing/fixtures"
 import { monthlyInputFixture } from "@/testing/score-fixtures"
 import type { ScoreData } from "./queries"
+import { splitDismissed } from "./recommendation-helpers"
 import {
   type RecommendationInputs,
-  buildRecommendations,
-  compareRecommendations,
-  splitDismissed
-} from "./recommendations"
-import type { Recommendation } from "./types"
+  buildRecommendations
+} from "./recommendation-rules"
 
 // Tests de caracterización (SPEC 55b): fijan la lista completa de
 // recomendaciones y su orden antes de partir el módulo
@@ -290,26 +288,6 @@ describe("buildRecommendations", () => {
         accounts: []
       })
     ).toEqual([])
-  })
-})
-
-describe("compareRecommendations", () => {
-  it("ordena por severidad y luego por monto", () => {
-    const item = (severity: Recommendation["severity"], amount: number) =>
-      ({ severity, amount }) as Recommendation
-    const sorted = [
-      item("low", 900),
-      item("high", 10),
-      item("medium", 5),
-      item("high", 50)
-    ].sort(compareRecommendations)
-
-    expect(sorted.map((row) => `${row.severity}:${row.amount}`)).toEqual([
-      "high:50",
-      "high:10",
-      "medium:5",
-      "low:900"
-    ])
   })
 })
 

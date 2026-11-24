@@ -1,7 +1,6 @@
 "use client"
 
-import { useTransition } from "react"
-import { toast } from "@/components/ui/sonner"
+import { useActionToast } from "@/hooks/use-action-toast"
 import { archiveAccount, restoreAccount } from "../actions"
 
 const ACTIONS = {
@@ -17,17 +16,13 @@ export function useAccountAction(account: {
   workspace_id: string
   name: string
 }) {
-  const [pending, startTransition] = useTransition()
+  const { pending, run: runWithToast } = useActionToast()
 
   function run(action: AccountAction) {
-    startTransition(async () => {
-      const result = await ACTIONS[action].run(account.workspace_id, account.id)
-      if (result.error) {
-        toast.error(result.error)
-      } else {
-        toast.success(`"${account.name}" ${ACTIONS[action].success}`)
-      }
-    })
+    runWithToast(
+      () => ACTIONS[action].run(account.workspace_id, account.id),
+      `"${account.name}" ${ACTIONS[action].success}`
+    )
   }
 
   return { pending, run }

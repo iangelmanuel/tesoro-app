@@ -10,9 +10,9 @@ import { CardEmpty } from "@/components/dashboard/feedback/empty-state"
 import { HelpHint } from "@/components/dashboard/feedback/help-hint"
 import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { formatPercent } from "@/features/budgets/progress"
 import { cn } from "@/libs/cn"
 import { todayISO } from "@/libs/dates"
+import { formatPercentLabel } from "@/libs/format"
 import {
   DEBTS_PATH,
   globalUtilization,
@@ -83,7 +83,7 @@ export async function DebtsCard({ workspaceId, currency }: DebtsCardProps) {
                     <HelpHint topic="utilization" />
                   </dt>
                   <dd className="flex flex-wrap items-center gap-2 text-xl font-semibold tabular-nums">
-                    {formatPercent(utilization)}
+                    {formatPercentLabel(utilization)}
                     <UtilizationBadge percent={utilization} />
                   </dd>
                 </div>

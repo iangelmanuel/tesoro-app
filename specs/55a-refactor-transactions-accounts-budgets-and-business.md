@@ -175,6 +175,7 @@ Verificables en navegador (los prueba el usuario a mano):
 - **Sí:** partir `queries.ts`, `service.ts` y `actions.ts` por entidad o caso de uso. **No:** barrels que los reexporten; la guía los prohíbe.
 - **Sí:** renombrar el `AdjustBalanceDialog` de cuentas. **No:** unificarlo con el de deudas; uno ajusta saldo de cuenta y otro saldo de deuda, con campos distintos.
 - **Sí:** `formatPercent` a `src/libs/format.ts`. Es formato genérico, no de presupuestos.
+  **Nota de implementación:** `src/libs/format.ts` ya exportaba un `formatPercent` distinto (Intl, un decimal, sin espacio: "12,3%"), que usa `StatCard`. Para no cambiar textos, el de presupuestos ("93 %" con espacio duro) se movió como `formatPercentLabel`.
 - **Sí:** las firmas de los servicios que usa el MCP no cambian. Son contrato con las tools.
 - **Sí:** refactor puro, igual que SPEC 54. Los bugs encontrados se anotan para su propio spec.
 - **No:** subir de versión; sube al cerrar SPEC 55c.

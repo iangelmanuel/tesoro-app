@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "@/components/ui/sonner"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import { cn } from "@/libs/cn"
+import { formatPercentLabel } from "@/libs/format"
 import { deleteBudget } from "../actions"
 import type { BudgetMonth } from "../month"
 import {
@@ -28,7 +29,6 @@ import {
   type BudgetStatus,
   budgetPercent,
   budgetStatus,
-  formatPercent,
   projectedPercent
 } from "../progress"
 import type { BudgetProgress } from "../queries"
@@ -198,7 +198,7 @@ export function BudgetProgressRow({
           spent={budget.spent}
           committed={budget.committed}
           budget={budget.budgetAmount}
-          label={`${budget.name}: ${formatPercent(percent)}`}
+          label={`${budget.name}: ${formatPercentLabel(percent)}`}
         />
         <div className="flex flex-wrap justify-between gap-2 text-sm">
           <span
@@ -208,11 +208,11 @@ export function BudgetProgressRow({
               status === "exceeded" && TONE_TEXT.danger
             )}
           >
-            {formatPercent(percent)}
+            {formatPercentLabel(percent)}
           </span>
           {projected !== null && (
             <span className="text-muted-foreground">
-              Con pagos pendientes llegarías al {formatPercent(projected)}
+              Con pagos pendientes llegarías al {formatPercentLabel(projected)}
             </span>
           )}
         </div>

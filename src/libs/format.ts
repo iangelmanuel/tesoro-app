@@ -120,6 +120,14 @@ export function formatPercent(value: number) {
   return PERCENT.format(value / 100)
 }
 
+/**
+ * Etiqueta de progreso (presupuestos, deudas, metas) con un porcentaje ya
+ * redondeado: 93 → "93 %". El espacio duro evita que se parta en dos líneas.
+ */
+export function formatPercentLabel(value: number) {
+  return `${value}\u00A0%`
+}
+
 const COMPACT_COUNT = new Intl.NumberFormat(LOCALE, {
   notation: "compact",
   maximumFractionDigits: 1

@@ -9,9 +9,9 @@ import { CARD, CARD_LIST, CARD_ROW } from "@/components/dashboard/data/surface"
 import { CardEmpty } from "@/components/dashboard/feedback/empty-state"
 import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { formatPercent } from "@/features/budgets/progress"
 import { cn } from "@/libs/cn"
 import { todayISO } from "@/libs/dates"
+import { formatPercentLabel } from "@/libs/format"
 import {
   GOALS_PATH,
   compareByTargetDate,
@@ -83,13 +83,13 @@ export async function GoalsCard({ workspaceId, currency }: GoalsCardProps) {
                   <p className="min-w-0 truncate font-medium">{goal.name}</p>
                   <GoalStatusBadge status={status} />
                   <p className="ml-auto shrink-0 text-sm font-medium whitespace-nowrap tabular-nums">
-                    {formatPercent(percent)}
+                    {formatPercentLabel(percent)}
                   </p>
                 </div>
                 <GoalProgressBar
                   percent={percent}
                   status={status}
-                  label={`${goal.name}: ${formatPercent(percent)}`}
+                  label={`${goal.name}: ${formatPercentLabel(percent)}`}
                 />
                 <p className="text-sm text-muted-foreground tabular-nums">
                   <Amount

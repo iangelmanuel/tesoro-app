@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest"
-import {
-  budgetPercent,
-  budgetStatus,
-  formatPercent,
-  projectedPercent
-} from "./progress"
+import { budgetPercent, budgetStatus, projectedPercent } from "./progress"
 
 describe("budgetStatus", () => {
   it("está bien por debajo del 80 %", () => {
@@ -27,12 +22,6 @@ describe("budgetPercent", () => {
     expect(budgetPercent(79.9, 100)).toBe(79)
     expect(budgetPercent(99.9, 100)).toBe(99)
     expect(budgetPercent(1, 3)).toBe(33)
-  })
-})
-
-describe("formatPercent", () => {
-  it("separa el signo con un espacio duro", () => {
-    expect(formatPercent(93)).toBe("93 %")
   })
 })
 

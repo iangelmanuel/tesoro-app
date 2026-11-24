@@ -25,12 +25,6 @@ export function budgetPercent(amount: number, budget: number) {
   return Math.floor((amount / budget) * 100)
 }
 
-/** "93 %" */
-export function formatPercent(value: number) {
-  // Espacio duro: el porcentaje no se parte en dos líneas
-  return `${value}\u00A0%`
-}
-
 /**
  * Porcentaje al que llegaría el presupuesto con los pagos pendientes, o
  * null si no hay pendientes o no alcanza el 80 %

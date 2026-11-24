@@ -8,6 +8,7 @@ import {
   formatMonthYear,
   formatNumber,
   formatPercent,
+  formatPercentLabel,
   formatShortDate,
   formatTime
 } from "./format"
@@ -94,6 +95,13 @@ describe("formatPercent", () => {
     expect(formatPercent(0)).toBe("0%")
     expect(formatPercent(100)).toBe("100%")
     expect(formatPercent(-5.55)).toBe("-5,6%")
+  })
+})
+
+describe("formatPercentLabel", () => {
+  it("separa el signo con un espacio duro", () => {
+    expect(formatPercentLabel(93)).toBe(`93${NBSP}%`)
+    expect(formatPercentLabel(0)).toBe(`0${NBSP}%`)
   })
 })
 

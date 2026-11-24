@@ -32,7 +32,7 @@ src/
 ├── hooks/           Hooks genéricos entre features
 ├── content/         Textos largos (legales)
 ├── styles/          globals.css: Tailwind y tokens
-├── testing/         Apoyo de Vitest (stub de server-only)
+├── testing/         Apoyo de Vitest: stub de server-only y fixtures
 └── types/           database.ts, generado por Supabase
 supabase/            config.toml y migraciones versionadas
 scripts/             Scripts de mantenimiento (assets de marca, demo)
@@ -239,6 +239,11 @@ de cliente.
 - **Antes de mover o cambiar un cálculo, un test de caracterización** fija lo
   que hace hoy (con salidas medidas, no supuestas). Si el test sigue verde
   después, el refactor no cambió el comportamiento.
+- Las filas de ejemplo salen de `src/testing/fixtures.ts` (filas de BD y
+  de queries, como `debtFixture` o `accountFixture`) y de
+  `src/testing/score-fixtures.ts` (insumos y resúmenes del score). Cada
+  constructor trae valores neutros y completos, sin cast: si la fila gana una
+  columna, `tsc` lo avisa. El test pasa solo los campos que le importan.
 - Los textos de `Intl` llevan espacio duro (U+00A0): en los tests se escribe
   como `String.fromCharCode(0xa0)` para que se vea.
 - Por ahora no hay tests de componentes ni de navegador.

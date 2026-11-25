@@ -1,7 +1,32 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/database"
 
+/** Bucket público de las fotos de perfil (1 MB, solo WebP) */
 export const AVATARS_BUCKET = "avatars"
+
+// <user_id>/<uuid>.webp, tal como lo sube avatar-uploader
+const AVATAR_FILE = /^[0-9a-f-]{36}\.webp$/
+
+/**
+ * El archivo es una foto de la carpeta propia (las políticas de Storage
+ * también lo exigen al subir)
+ */
+export function isOwnAvatarPath(userId: string, path: unknown): path is string {
+  const prefix = `${userId}/`
+  return (
+    typeof path === "string" &&
+    path.startsWith(prefix) &&
+    AVATAR_FILE.test(path.slice(prefix.length))
+  )
+}
+
+/** URL pública de un archivo del bucket de avatares */
+export function avatarPublicUrl(
+  supabase: SupabaseClient<Database>,
+  path: string
+) {
+  return supabase.storage.from(AVATARS_BUCKET).getPublicUrl(path).data.publicUrl
+}
 
 /**
  * Borra los archivos de `avatars/<userId>/`, salvo `keepPath` si llega. Usa la

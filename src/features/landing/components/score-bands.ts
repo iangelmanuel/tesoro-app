@@ -1,8 +1,10 @@
 import type { Tone } from "@/components/dashboard/feedback/tone"
 
-// Bandas del score (docs/producto.md, "Bandas") para la landing: el medidor de
-// score-visual.tsx y la leyenda de score-section.tsx. Módulo sin "use client"
-// para que lo lean tanto el servidor como el cliente.
+/**
+ * Bandas del score (docs/producto.md, "Bandas") para la landing: el medidor de
+ * score-visual.tsx y la leyenda de score-section.tsx. Módulo sin "use client"
+ * para que lo lean tanto el servidor como el cliente.
+ */
 export const SCORE_BANDS: {
   label: string
   from: number

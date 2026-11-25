@@ -75,6 +75,7 @@ function resolveSteps(steps: readonly TutorialStep[]): DriveStep[] {
   })
 }
 
+/** Hay un recorrido guiado abierto */
 export function isTourActive() {
   return activeTour?.isActive() ?? false
 }

@@ -6,7 +6,7 @@ const CURRENCY_CODES = SITE.currencies.map((currency) => currency.code) as [
   ...(typeof SITE.currencies)[number]["code"][]
 ]
 
-// Mismas reglas que el nombre del registro (signUpSchema)
+/** Mismas reglas que el nombre del registro (signUpSchema) */
 export const profileSchema = z.object({
   fullName: z
     .string()
@@ -15,11 +15,12 @@ export const profileSchema = z.object({
     .max(80, { error: "El nombre debe tener máximo 80 caracteres" })
 })
 
-// La lista vive en SITE.currencies: agregar una moneda no exige migración
+/** La lista vive en SITE.currencies: agregar una moneda no exige migración */
 export const currencySchema = z.object({
   currency: z.enum(CURRENCY_CODES, { error: "Elige una moneda de la lista" })
 })
 
+/** Ocultar montos: sí o no */
 export const hideAmountsSchema = z.boolean()
 
 const newPasswordFields = {
@@ -38,6 +39,7 @@ const passwordsMatch = {
   }
 }
 
+/** Cambiar contraseña: la actual, la nueva y su confirmación */
 export const changePasswordSchema = z
   .object({
     currentPassword: z
@@ -47,12 +49,16 @@ export const changePasswordSchema = z
   })
   .refine(passwordsMatch.check, passwordsMatch.params)
 
-// Usuarios de solo OAuth: no tienen contraseña actual que pedir
+/** Usuarios de solo OAuth: no tienen contraseña actual que pedir */
 export const createPasswordSchema = z
   .object(newPasswordFields)
   .refine(passwordsMatch.check, passwordsMatch.params)
 
+/** Nombre del perfil ya validado */
 export type ProfileInput = z.infer<typeof profileSchema>
+/** Moneda ya validada */
 export type CurrencyInput = z.infer<typeof currencySchema>
+/** Cambio de contraseña ya validado */
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>
+/** Contraseña nueva ya validada */
 export type CreatePasswordInput = z.infer<typeof createPasswordSchema>

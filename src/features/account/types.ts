@@ -1,3 +1,4 @@
+/** Usuario, perfil y si tiene contraseña, para Cuenta */
 export interface AccountData {
   user: {
     id: string
@@ -14,6 +15,7 @@ export interface AccountData {
   hasPassword: boolean
 }
 
+/** Estado de los formularios de Cuenta */
 export interface ProfileFormState {
   /** true cuando la acción terminó bien */
   ok?: boolean
@@ -27,6 +29,7 @@ export interface ProfileFormState {
   values?: Record<string, string>
 }
 
+/** Resultado de las acciones de Cuenta sin formulario */
 export interface AccountActionResult {
   error?: string
 }

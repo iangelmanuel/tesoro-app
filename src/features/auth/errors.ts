@@ -16,6 +16,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
 
 const DEFAULT_ERROR_MESSAGE = "Ocurrió un error inesperado. Intenta de nuevo"
 
+/** Error de Supabase Auth como mensaje para el usuario */
 export function translateAuthError(error: AuthError): string {
   return (
     (error.code && AUTH_ERROR_MESSAGES[error.code]) || DEFAULT_ERROR_MESSAGE

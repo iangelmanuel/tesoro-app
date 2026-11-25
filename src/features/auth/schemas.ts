@@ -2,6 +2,7 @@ import { z } from "zod"
 
 const email = z.email({ error: "Ingresa un email válido" }).trim().toLowerCase()
 
+/** Registro: nombre, email y contraseña */
 export const signUpSchema = z.object({
   fullName: z
     .string()
@@ -14,10 +15,13 @@ export const signUpSchema = z.object({
     .min(8, { error: "La contraseña debe tener al menos 8 caracteres" })
 })
 
+/** Inicio de sesión: email y contraseña */
 export const signInSchema = z.object({
   email,
   password: z.string().min(1, { error: "Ingresa tu contraseña" })
 })
 
+/** Datos del registro ya validados */
 export type SignUpInput = z.infer<typeof signUpSchema>
+/** Datos del inicio de sesión ya validados */
 export type SignInInput = z.infer<typeof signInSchema>

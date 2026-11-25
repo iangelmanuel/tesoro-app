@@ -1,5 +1,7 @@
+/** Proveedores OAuth del inicio de sesión */
 export type OAuthProvider = "google" | "github"
 
+/** Estado de los formularios de sign-in y sign-up */
 export interface AuthFormState {
   /** Error general (credenciales, email duplicado, etc.) */
   error?: string

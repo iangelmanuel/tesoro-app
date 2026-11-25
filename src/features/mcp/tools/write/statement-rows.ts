@@ -81,7 +81,7 @@ export interface StatementRow {
   transferAccountId: string | null
 }
 
-// Placeholder para validar el resto de la fila mientras falta un dato
+/** Placeholder para validar el resto de la fila mientras falta un dato */
 export const PLACEHOLDER_ID = "11111111-1111-4111-8111-111111111111"
 
 /** Campos de los esquemas de la UI → campos de la fila */

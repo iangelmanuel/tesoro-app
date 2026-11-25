@@ -10,6 +10,7 @@ import type { McpContext, McpTool } from "./types"
 
 const INSTRUCTIONS = `Tesoro es un gestor de finanzas personales y de empresas. Empieza con list_workspaces para obtener el workspace_id. Fechas YYYY-MM-DD, meses YYYY-MM y horas HH:MM, en America/Bogota. Los montos son números positivos en la moneda que trae cada respuesta.`
 
+/** Respuesta de una tool de escritura con acceso de solo lectura */
 export const READ_ONLY_ERROR =
   "Esta conexión es de solo lectura. Cámbiala en Tesoro → Cuenta → Agentes IA."
 
@@ -54,6 +55,7 @@ export function readOnlyCallResponse(
   )
 }
 
+/** Servidor MCP de una llamada con las tools que el acceso permite */
 export function createMcpServer(ctx: McpContext) {
   const server = new McpServer(
     { name: SITE.info.name, version: SITE.info.version },

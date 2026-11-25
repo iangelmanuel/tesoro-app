@@ -8,6 +8,7 @@ import { toolError, toolResult } from "../result"
 // validan todas las filas; si una falla no se escribe ninguna y la respuesta
 // lista cada error con su índice (desde 0).
 
+/** Error de una fila del lote */
 export interface RowError {
   index: number
   field?: string
@@ -24,6 +25,7 @@ export function bulk<T extends z.ZodType>(item: T, what: string) {
     })
 }
 
+/** dry_run de las tools en lote */
 export const dryRunSchema = z
   .boolean()
   .default(false)
@@ -40,6 +42,7 @@ export const timeInputSchema = z
 // Los esquemas de la UI nombran la hora occurred_time; el MCP, time
 const FIELD_ALIASES: Record<string, string> = { occurred_time: "time" }
 
+/** Errores de Zod de una fila, con los nombres de campo del MCP */
 export function zodRowErrors(index: number, error: z.ZodError): RowError[] {
   return error.issues.map((issue) => {
     const field = issue.path.map(String).join(".")
@@ -51,6 +54,7 @@ export function zodRowErrors(index: number, error: z.ZodError): RowError[] {
   })
 }
 
+/** Errores de un servicio en una fila, con sus campos */
 export function failureRowErrors(
   index: number,
   failure: Pick<ServiceFailure, "error" | "fieldErrors">
@@ -84,6 +88,7 @@ export function duplicateIdErrors(ids: string[]): RowError[] {
   })
 }
 
+/** Nada se guardó: errores por fila */
 export function batchError(errors: RowError[]) {
   const rows = new Set(errors.map((error) => error.index)).size
   return toolError(
@@ -111,6 +116,7 @@ export function midwayError(
   )
 }
 
+/** Respuesta de una escritura con su operation_id para revertir */
 export function writeResult(
   ctx: McpContext,
   {

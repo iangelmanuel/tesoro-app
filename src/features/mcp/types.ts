@@ -3,6 +3,7 @@ import type { ZodObject, ZodRawShape, z } from "zod"
 import type { AppSupabase } from "@/libs/supabase/types"
 import type { McpAccess } from "./constants"
 
+/** Estado del formulario de consentimiento */
 export interface ConsentFormState {
   /** Error general: solicitud vencida o falla del servidor de auth */
   error?: string
@@ -19,6 +20,7 @@ export interface McpContext {
   currency: string
 }
 
+/** Definición de una tool sin el código que la ejecuta */
 export interface McpToolDefinition<
   Input extends ZodObject<ZodRawShape> = ZodObject<ZodRawShape>
 > {

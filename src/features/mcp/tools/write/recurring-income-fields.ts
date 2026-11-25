@@ -15,7 +15,7 @@ import { accountNameSchema, categoryNameSchema } from "./references"
 // las frecuencias de SPEC 38. Las ocurrencias salen de la frecuencia y sus
 // días, igual que en la app. Lógica pura.
 
-// Mismas etiquetas que el diálogo de la app
+/** Mismas etiquetas que el diálogo de la app */
 export const FREQUENCY_LABELS: Record<IncomeFrequency, string> = {
   weekly: "Semanal",
   biweekly: "Quincenal",

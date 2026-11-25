@@ -7,6 +7,7 @@ import { SITE } from "@/config/site"
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!.replace(/\/+$/, "")
 
+/** Cabeceras de los documentos de descubrimiento OAuth */
 export const DISCOVERY_HEADERS = {
   "Cache-Control": "public, max-age=3600"
 } as const
@@ -17,6 +18,7 @@ export const MCP_RESOURCE_URL = `${SITE.site.url}${SITE.mcp.path}`
 /** Ruta del metadato del recurso (RFC 9728) que anuncia el 401 */
 export const MCP_RESOURCE_METADATA_URL = `${SITE.site.url}/.well-known/oauth-protected-resource${SITE.mcp.path}`
 
+/** Servidor de autorización: el OAuth 2.1 de Supabase */
 export const AUTHORIZATION_SERVER = `${SUPABASE_URL}/auth/v1`
 
 /** Metadato del recurso protegido (RFC 9728) */

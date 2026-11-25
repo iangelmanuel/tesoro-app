@@ -55,6 +55,7 @@ import type { McpTool, McpToolDefinition } from "./types"
 // la página /mcp las lista desde aquí. Agregar una tool = un archivo en
 // tools/ y una línea en esta lista.
 
+/** Todas las tools del servidor, en el orden de tools/list */
 export const MCP_TOOLS: readonly McpTool[] = [
   listWorkspaces,
   listAccounts,
@@ -108,6 +109,7 @@ export const MCP_TOOLS: readonly McpTool[] = [
   undoOperation
 ]
 
+/** Nombre de cada grupo de tools en la página /mcp */
 export const MCP_GROUP_LABELS: Record<McpToolDefinition["group"], string> = {
   read: "Lectura",
   write: "Escritura",

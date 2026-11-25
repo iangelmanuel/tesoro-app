@@ -8,21 +8,25 @@ import type { McpWorkspace, MissingField } from "../shared"
 // error: vuelve como pregunta para el usuario (needs_input) con las opciones
 // activas del espacio.
 
+/** Cuenta o categoría activa que se puede elegir */
 export interface RefOption {
   id: string
   name: string
 }
 
+/** Categoría activa con su tipo */
 export interface CategoryOption extends RefOption {
   type: string
 }
 
+/** Cuenta por nombre, si el agente no tiene el id */
 export const accountNameSchema = z
   .string()
   .min(1)
   .max(120)
   .describe("Nombre de la cuenta, si no tienes el id.")
 
+/** Categoría por nombre, si el agente no tiene el id */
 export const categoryNameSchema = z
   .string()
   .min(1)

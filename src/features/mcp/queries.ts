@@ -5,6 +5,7 @@ import { canUndo } from "./operations"
 
 // Datos de Cuenta → Agentes IA (SPEC 34). Corren con la sesión de cookies.
 
+/** Agente conectado, como se ve en Cuenta → Agentes IA */
 export interface AgentConnection {
   clientId: string
   name: string
@@ -14,6 +15,7 @@ export interface AgentConnection {
   access: McpAccess
 }
 
+/** Operación de un agente en el historial de Cuenta → Agentes IA */
 export interface AgentOperation {
   id: string
   createdAt: string

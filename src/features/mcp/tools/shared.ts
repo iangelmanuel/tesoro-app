@@ -6,22 +6,28 @@ import { toolResult } from "./result"
 // Piezas comunes de las tools (SPEC 34): esquemas de entrada, el espacio y
 // el paginado por cursor.
 
+/** El espacio no existe o no es del usuario */
 export const WORKSPACE_NOT_FOUND = "Espacio no encontrado."
-// Presupuestos, metas, deudas, fijos y Me deben solo existen en Personal
+/** Presupuestos, metas, deudas, fijos y Me deben solo existen en Personal */
 export const PERSONAL_ONLY = "Solo disponible en el espacio Personal."
+/** El espacio está marcado para borrarse */
 export const WORKSPACE_NOT_WRITABLE =
   "Este espacio está marcado para borrarse y no admite cambios."
 
+/** workspace_id de entrada */
 export const workspaceIdSchema = z
   .string()
   .describe("Id del espacio (de list_workspaces).")
 
+/** Fecha YYYY-MM-DD de entrada */
 export const dateSchema = z.iso.date({ error: "Usa una fecha YYYY-MM-DD." })
 
+/** Mes YYYY-MM de entrada */
 export const monthSchema = z
   .string()
   .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Usa un mes YYYY-MM.")
 
+/** Filas por página de las listas */
 export const limitSchema = z
   .number()
   .int()
@@ -30,6 +36,7 @@ export const limitSchema = z
   .default(50)
   .describe("Filas por página (1–200, por defecto 50).")
 
+/** Cursor de la página anterior */
 export const cursorSchema = z
   .string()
   .max(500)
@@ -43,6 +50,7 @@ export function defineTool<Input extends McpTool["input"]>(
   return tool as unknown as McpTool
 }
 
+/** Espacio del usuario resuelto para una tool */
 export interface McpWorkspace {
   id: string
   type: WorkspaceType
@@ -93,8 +101,10 @@ const cursorPayload = z.object({
   i: z.uuid()
 })
 
+/** Posición en el orden de la lista de movimientos */
 export type LedgerCursor = z.infer<typeof cursorPayload>
 
+/** Cursor opaco de la fila, para seguir después de ella */
 export function encodeCursor(row: {
   occurred_on: string
   day_position: number
@@ -110,6 +120,7 @@ export function encodeCursor(row: {
   return Buffer.from(JSON.stringify(payload)).toString("base64url")
 }
 
+/** Cursor leído, o null si no es válido */
 export function decodeCursor(cursor: string): LedgerCursor | null {
   try {
     const json: unknown = JSON.parse(
@@ -138,6 +149,7 @@ export function afterCursorFilter({ d, p, c, i }: LedgerCursor) {
   ].join(",")
 }
 
+/** El cursor no se pudo leer */
 export const INVALID_CURSOR =
   "El cursor no es válido. Repite la consulta sin cursor."
 
@@ -146,6 +158,7 @@ export const INVALID_CURSOR =
 // el usuario, cada una con sus opciones. No es un error: el agente pregunta
 // y vuelve a llamar.
 
+/** Pregunta de needs_input para el usuario */
 export interface MissingField {
   field: string
   /** Índice de la fila (desde 0), si la tool recibe una lista */
@@ -154,6 +167,7 @@ export interface MissingField {
   options?: { id: string; label: string }[]
 }
 
+/** Respuesta de needs_input: nada se guardó */
 export interface NeedsInput {
   status: "needs_input"
   missing: MissingField[]
@@ -163,6 +177,7 @@ export interface NeedsInput {
 export const NEEDS_INPUT_HINT =
   "Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos."
 
+/** No escribe y devuelve las preguntas para el usuario */
 export function needsInput(missing: MissingField[]) {
   const data: NeedsInput = { status: "needs_input", missing }
   const questions = missing

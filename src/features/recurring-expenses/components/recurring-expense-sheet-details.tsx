@@ -1,5 +1,6 @@
 import { CategoryBadge } from "@/features/categories/components/category-badge"
-import { frequencyLabel, validityLabel } from "../occurrences"
+import { formatValidity } from "@/libs/format"
+import { frequencyLabel } from "../occurrences"
 import type { RecurringExpense } from "../queries"
 
 /** Categoría, frecuencia y vigencia de un gasto fijo, en su Sheet */
@@ -25,7 +26,7 @@ export function RecurringExpenseSheetDetails({
       <dt className="text-muted-foreground">Frecuencia</dt>
       <dd>{frequencyLabel(expense)}</dd>
       <dt className="text-muted-foreground">Vigencia</dt>
-      <dd>{validityLabel(expense)}</dd>
+      <dd>{formatValidity(expense.starts_on, expense.ends_on)}</dd>
     </dl>
   )
 }

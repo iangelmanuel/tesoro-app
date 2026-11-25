@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   TIME_ZONE,
+  addDays,
   countMonths,
   currentMonth,
   fromLocalDate,
@@ -138,5 +139,13 @@ describe("trimSeconds", () => {
   it("da null sin hora", () => {
     expect(trimSeconds(null)).toBeNull()
     expect(trimSeconds("")).toBeNull()
+  })
+})
+
+describe("addDays", () => {
+  it("suma y resta días cruzando meses y años", () => {
+    expect(addDays("2026-02-27", 2)).toBe("2026-03-01")
+    expect(addDays("2026-01-01", -1)).toBe("2025-12-31")
+    expect(addDays("2024-02-28", 1)).toBe("2024-02-29")
   })
 })

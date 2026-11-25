@@ -1,4 +1,3 @@
-import { formatDate } from "@/libs/format"
 import { buildPaymentDescription } from "@/libs/payment-description"
 import type { RecurringFrequency } from "./schemas"
 
@@ -47,6 +46,15 @@ export function monthName(month: number) {
   return MONTH_NAME.format(new Date(Date.UTC(2000, month - 1, 1)))
 }
 
+/** Opciones del select "Mes de pago": 1 → "Enero" */
+export const MONTH_OPTIONS = Array.from({ length: 12 }, (_, index) => {
+  const name = monthName(index + 1)
+  return {
+    value: String(index + 1),
+    label: name.charAt(0).toUpperCase() + name.slice(1)
+  }
+})
+
 /** "Mensual, día 5" o "Anual, 15 de marzo" */
 export function frequencyLabel(expense: {
   frequency: RecurringFrequency
@@ -57,17 +65,6 @@ export function frequencyLabel(expense: {
     return `Anual, ${expense.day_of_month} de ${monthName(expense.month_of_year)}`
   }
   return `Mensual, día ${expense.day_of_month}`
-}
-
-/** Vigencia de un recurrente: "Desde {inicio}" o "{inicio} – {fin}" */
-export function validityLabel(item: {
-  starts_on: string
-  ends_on: string | null
-}) {
-  const from = formatDate(item.starts_on)
-  return item.ends_on
-    ? `${from} – ${formatDate(item.ends_on)}`
-    : `Desde ${from}`
 }
 
 /**

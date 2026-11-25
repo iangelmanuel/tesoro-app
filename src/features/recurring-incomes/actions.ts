@@ -8,23 +8,22 @@ import {
   requireWritableWorkspace
 } from "@/features/workspaces/queries"
 import { revalidatePersonalPages } from "@/features/workspaces/revalidate"
+import { readFormValues } from "@/libs/form-data"
 import { createClient } from "@/libs/supabase/server"
-import {
-  type RecurringIncomeHistory,
-  getRecurringIncomeHistory
-} from "./queries"
+import { getRecurringIncomeHistory } from "./history-queries"
+import type { RecurringIncomeHistory } from "./income-history"
 import { recurringIncomeSchema } from "./schemas"
 import {
   RECURRING_INCOME_NOT_FOUND,
   createRecurringIncomeRecord,
+  deleteRecurringIncomeRecord,
+  setRecurringIncomeActiveRecord,
   updateRecurringIncomeRecord
 } from "./service"
 import type {
   RecurringIncomeActionResult,
   RecurringIncomeFormState
 } from "./types"
-
-const NOT_FOUND = RECURRING_INCOME_NOT_FOUND
 
 const FIELDS = [
   "name",
@@ -50,17 +49,8 @@ async function requirePersonalWorkspace(): Promise<Workspace> {
   return requireWritableWorkspace(personal.id)
 }
 
-function readValues(formData: FormData) {
-  return Object.fromEntries(
-    FIELDS.map((key) => {
-      const value = formData.get(key)
-      return [key, typeof value === "string" ? value : ""]
-    })
-  ) as Record<(typeof FIELDS)[number], string>
-}
-
 function parseForm(formData: FormData) {
-  const values = readValues(formData)
+  const values = readFormValues(formData, FIELDS)
   const parsed = recurringIncomeSchema.safeParse({
     ...values,
     amount: parseAmount(values.amount)
@@ -101,7 +91,7 @@ export async function updateRecurringIncome(
   const id = idSchema.safeParse(formData.get("id"))
 
   if (!id.success) {
-    return { error: NOT_FOUND, values }
+    return { error: RECURRING_INCOME_NOT_FOUND, values }
   }
   if (!parsed.success) {
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
@@ -131,53 +121,43 @@ export async function toggleRecurringIncome(
   const parsedId = idSchema.safeParse(id)
 
   if (!parsedId.success) {
-    return { error: NOT_FOUND }
+    return { error: RECURRING_INCOME_NOT_FOUND }
   }
 
   const workspace = await requirePersonalWorkspace()
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("recurring_incomes")
-    .update({ is_active: active === true })
-    .eq("id", parsedId.data)
-    .eq("workspace_id", workspace.id)
-    .select("id")
+  const result = await setRecurringIncomeActiveRecord(
+    await createClient(),
+    workspace,
+    parsedId.data,
+    active === true
+  )
 
-  if (error) {
-    return { error: "No se pudo actualizar el ingreso fijo. Intenta de nuevo" }
-  }
-  if (data.length === 0) {
-    return { error: NOT_FOUND }
+  if (!result.ok) {
+    return { error: result.error }
   }
 
   revalidatePersonalPages()
   return {}
 }
 
-// Los movimientos recibidos se conservan: la FK los deja con el enlace en null
 export async function deleteRecurringIncome(
   id: string
 ): Promise<RecurringIncomeActionResult> {
   const parsedId = idSchema.safeParse(id)
 
   if (!parsedId.success) {
-    return { error: NOT_FOUND }
+    return { error: RECURRING_INCOME_NOT_FOUND }
   }
 
   const workspace = await requirePersonalWorkspace()
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("recurring_incomes")
-    .delete()
-    .eq("id", parsedId.data)
-    .eq("workspace_id", workspace.id)
-    .select("id")
+  const result = await deleteRecurringIncomeRecord(
+    await createClient(),
+    workspace,
+    parsedId.data
+  )
 
-  if (error) {
-    return { error: "No se pudo eliminar el ingreso fijo. Intenta de nuevo" }
-  }
-  if (data.length === 0) {
-    return { error: NOT_FOUND }
+  if (!result.ok) {
+    return { error: result.error }
   }
 
   revalidatePersonalPages()
@@ -201,7 +181,7 @@ export async function loadRecurringIncomeHistory(
   const parsedLimit = z.int().min(1).max(MAX_HISTORY_LIMIT).safeParse(limit)
 
   if (!parsedId.success || !parsedLimit.success) {
-    return { error: NOT_FOUND }
+    return { error: RECURRING_INCOME_NOT_FOUND }
   }
 
   try {

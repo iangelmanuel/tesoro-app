@@ -1,7 +1,13 @@
 // Mecánica común del score de Personal (SPEC 07) y Empresa (SPEC 11): curvas,
 // bandas, ventana, semanas y ponderación. Funciones puras; los factores de
 // cada espacio viven en su módulo.
-import { listMonths, monthRange, shiftMonth, todayISO } from "@/libs/dates"
+import {
+  addDays,
+  listMonths,
+  monthRange,
+  shiftMonth,
+  todayISO
+} from "@/libs/dates"
 import {
   BANDS,
   CLOSED_MONTHS,
@@ -26,10 +32,6 @@ const DAY_MS = 24 * 60 * 60 * 1000
 /** Días entre dos fechas YYYY-MM-DD, sin zona horaria de por medio */
 export function daysBetween(from: string, to: string) {
   return Math.round((Date.parse(to) - Date.parse(from)) / DAY_MS)
-}
-
-function addDays(date: string, days: number) {
-  return new Date(Date.parse(date) + days * DAY_MS).toISOString().slice(0, 10)
 }
 
 /** Lunes de la semana ISO de una fecha YYYY-MM-DD */

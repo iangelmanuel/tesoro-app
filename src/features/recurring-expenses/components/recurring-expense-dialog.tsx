@@ -19,19 +19,10 @@ import {
 import type { Category } from "@/features/categories/queries"
 import { todayISO } from "@/libs/dates"
 import { createRecurringExpense, updateRecurringExpense } from "../actions"
-import { monthName } from "../occurrences"
+import { MONTH_OPTIONS } from "../occurrences"
 import type { RecurringExpense } from "../queries"
 import type { RecurringFrequency } from "../schemas"
 import type { RecurringExpenseFormState } from "../types"
-
-/** "enero" → "Enero": opciones del mes de pago */
-const MONTH_OPTIONS = Array.from({ length: 12 }, (_, index) => {
-  const name = monthName(index + 1)
-  return {
-    value: String(index + 1),
-    label: name.charAt(0).toUpperCase() + name.slice(1)
-  }
-})
 
 const FREQUENCY_OPTIONS = [
   { value: "monthly", label: "Mensual" },

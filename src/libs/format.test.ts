@@ -11,7 +11,8 @@ import {
   formatPercent,
   formatPercentLabel,
   formatShortDate,
-  formatTime
+  formatTime,
+  formatValidity
 } from "./format"
 
 // Intl en es-CO separa con espacio duro (U+00A0)
@@ -134,5 +135,16 @@ describe("formatMonthYear", () => {
   it("nombra el mes en minúscula con su año", () => {
     expect(formatMonthYear("2026-11")).toBe("noviembre 2026")
     expect(formatMonthYear("2027-01")).toBe("enero 2027")
+  })
+})
+
+describe("formatValidity", () => {
+  it("con y sin fecha de fin", () => {
+    expect(formatValidity("2026-01-05", null)).toMatchInlineSnapshot(
+      `"Desde 5 de ene de 2026"`
+    )
+    expect(formatValidity("2026-01-05", "2026-12-31")).toMatchInlineSnapshot(
+      `"5 de ene de 2026 – 31 de dic de 2026"`
+    )
   })
 })

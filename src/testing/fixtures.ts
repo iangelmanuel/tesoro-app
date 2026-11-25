@@ -6,10 +6,20 @@ import type { BudgetProgress } from "@/features/budgets/queries"
 import type { Debt } from "@/features/debts/queries"
 import type { Goal } from "@/features/goals/queries"
 import type { UpcomingPayment } from "@/features/recurring-expenses/queries"
+import type { UpcomingIncome } from "@/features/recurring-incomes/queries"
 import type { CategoryTotal } from "@/features/reports/queries"
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 const CREATED_AT = "2025-10-01T15:00:00Z"
+
+/** Categoría de una ocurrencia de gasto o ingreso fijo */
+const CATEGORY_REF = {
+  id: "category",
+  name: "Categoría",
+  icon: "tag",
+  color: "gray",
+  archived_at: null
+}
 
 /** Lunes YYYY-MM-DD desde `from` (un lunes), cada `step` semanas, hasta `to` */
 export function isoWeeks(from: string, to: string, step = 1) {
@@ -123,19 +133,32 @@ export function upcomingPaymentFixture(
     frequency: "monthly",
     accountId: null,
     amount: 0,
-    category: {
-      id: "category",
-      name: "Categoría",
-      icon: "tag",
-      color: "gray",
-      archived_at: null
-    },
+    category: CATEGORY_REF,
     dueOn: "2026-01-01",
     transactionId: null,
     paidAmount: null,
     paidOn: null,
     accountName: null,
     status: "upcoming",
+    ...fields
+  }
+}
+
+/** Ocurrencia de un ingreso fijo mensual, pendiente */
+export function upcomingIncomeFixture(
+  fields: Partial<UpcomingIncome>
+): UpcomingIncome {
+  return {
+    recurringIncomeId: "income",
+    name: "Ingreso fijo",
+    amount: 0,
+    category: CATEGORY_REF,
+    accountId: null,
+    frequency: "monthly",
+    dueOn: "2026-01-01",
+    receivedAmount: 0,
+    remaining: 0,
+    status: "pending",
     ...fields
   }
 }

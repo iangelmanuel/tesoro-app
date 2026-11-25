@@ -89,3 +89,10 @@ export function countMonths(from: string, to: string): number {
 export function trimSeconds(value: string | null): string | null {
   return value ? value.slice(0, 5) : null
 }
+
+/** Suma `days` días (o resta, si es negativo) a una fecha YYYY-MM-DD, en UTC */
+export function addDays(date: string, days: number) {
+  return new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000)
+    .toISOString()
+    .slice(0, 10)
+}

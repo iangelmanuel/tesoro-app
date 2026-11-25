@@ -30,10 +30,12 @@ export function occurrenceRemaining(occurrence: {
   return Math.max(cents, 0) / 100
 }
 
-// Recibido: lo asignado suma el monto esperado o más. Abonado: hay algo
-// asignado, pero menos que el esperado. Sin asignaciones, según la fecha.
-// `due_on` y `today` son fechas YYYY-MM-DD en America/Bogota; como texto ISO
-// se comparan en orden cronológico
+/**
+ * Estado de una ocurrencia. Recibido: lo asignado suma el monto esperado o
+ * más. Abonado: hay algo asignado, pero menos que el esperado. Sin
+ * asignaciones, según la fecha. `due_on` y `today` son fechas YYYY-MM-DD en
+ * America/Bogota: como texto ISO se comparan en orden cronológico.
+ */
 export function getIncomeOccurrenceStatus(
   occurrence: { due_on: string; amount: number; received_amount: number },
   today: string
@@ -257,12 +259,4 @@ export function incomeFrequencyLabel(income: {
     case "none":
       return "Sin fecha fija"
   }
-}
-
-/**
- * Ocurrencias por página del Sheet de un ingreso fijo: 31 en la diaria (un
- * mes), 12 en las demás. "Ver más" suma otra página.
- */
-export function incomeHistoryPageSize(frequency: IncomeFrequency) {
-  return frequency === "daily" ? 31 : 12
 }

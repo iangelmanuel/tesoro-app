@@ -4,11 +4,7 @@ import { useState } from "react"
 import type { ReactNode } from "react"
 import { Check, Pause, Pencil, Play, Trash2 } from "lucide-react"
 import { Amount } from "@/components/dashboard/data/amount"
-import {
-  TONE_BADGE_CLASSES,
-  TONE_TEXT_CLASSES
-} from "@/components/dashboard/feedback/tone"
-import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
 import { DeleteDialog } from "@/components/dashboard/overlays/delete-dialog"
 import {
   DetailSection,
@@ -32,6 +28,7 @@ import {
   nextUnpaidPayment,
   periodLabel
 } from "../recurring-expense-history"
+import { ActiveStatusBadge } from "./active-status-badge"
 import { RecurringExpenseDialog } from "./recurring-expense-dialog"
 import { RecurringExpenseSheetDetails } from "./recurring-expense-sheet-details"
 import { RecurringExpenseSheetHistory } from "./recurring-expense-sheet-history"
@@ -100,17 +97,7 @@ export function RecurringExpenseSheet({
         open={open}
         onOpenChange={onOpenChange}
         title={expense.name}
-        status={
-          <ToneBadge
-            className={
-              expense.is_active
-                ? TONE_BADGE_CLASSES.success
-                : TONE_BADGE_CLASSES.neutral
-            }
-          >
-            {expense.is_active ? "Activo" : "Pausado"}
-          </ToneBadge>
-        }
+        status={<ActiveStatusBadge active={expense.is_active} />}
         figure={
           <Amount
             value={expense.amount}

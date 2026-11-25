@@ -1,7 +1,6 @@
 "use client"
 
-import { useTransition } from "react"
-import { toast } from "@/components/ui/sonner"
+import { useActionToast } from "@/hooks/use-action-toast"
 import { deleteRecurringIncome, toggleRecurringIncome } from "../actions"
 import type { RecurringIncome } from "../queries"
 
@@ -10,31 +9,21 @@ import type { RecurringIncome } from "../queries"
  * menú de la fila y el Sheet (SPEC 38).
  */
 export function useRecurringIncomeActions(income: RecurringIncome) {
-  const [pending, startTransition] = useTransition()
+  const { pending, run: runWithToast } = useActionToast()
 
   function toggle() {
-    startTransition(async () => {
-      const result = await toggleRecurringIncome(income.id, !income.is_active)
-      if (result.error) {
-        toast.error(result.error)
-      } else {
-        toast.success(
-          income.is_active ? "Ingreso fijo pausado" : "Ingreso fijo reanudado"
-        )
-      }
-    })
+    runWithToast(
+      () => toggleRecurringIncome(income.id, !income.is_active),
+      income.is_active ? "Ingreso fijo pausado" : "Ingreso fijo reanudado"
+    )
   }
 
   function remove(onDeleted?: () => void) {
-    startTransition(async () => {
-      const result = await deleteRecurringIncome(income.id)
-      if (result.error) {
-        toast.error(result.error)
-      } else {
-        toast.success("Ingreso fijo eliminado")
-        onDeleted?.()
-      }
-    })
+    runWithToast(
+      () => deleteRecurringIncome(income.id),
+      "Ingreso fijo eliminado",
+      onDeleted
+    )
   }
 
   return { pending, toggle, remove }

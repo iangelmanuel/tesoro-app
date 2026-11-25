@@ -49,6 +49,12 @@ export function formatDate(date: string | Date) {
     .replace(WHITESPACE, "\u00A0")
 }
 
+/** Vigencia: "Desde {inicio}" o "{inicio} – {fin}", con formatDate */
+export function formatValidity(startsOn: string, endsOn: string | null) {
+  const from = formatDate(startsOn)
+  return endsOn ? `${from} – ${formatDate(endsOn)}` : `Desde ${from}`
+}
+
 /** Fecha corta sin año ("1 nov") para filas compactas en móvil */
 export function formatShortDate(date: string | Date) {
   return new Intl.DateTimeFormat(LOCALE, {

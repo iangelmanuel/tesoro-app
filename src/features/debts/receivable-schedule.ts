@@ -103,6 +103,48 @@ export function lastPeriodOn(
 }
 
 /**
+ * Resumen de una cuenta por cobrar mensual mientras se escribe (diálogo):
+ * día de pago, primera cuota y, si tiene número de cuotas, la última y el
+ * total. null si falta un dato o no es válido (monto > 0, día 1–31, inicio y
+ * 1–600 cuotas)
+ */
+export function monthlyReceivablePreview(input: {
+  amount: number
+  /** Día de pago como texto */
+  dueDay: string
+  startsOn: string
+  /** Número de cuotas como texto, o null si es sin fin */
+  term: string | null
+}) {
+  const { amount, startsOn } = input
+  const day = Number(input.dueDay)
+  const months = input.term === null ? null : Number(input.term)
+  const ready =
+    !Number.isNaN(amount) &&
+    amount > 0 &&
+    Number.isInteger(day) &&
+    day >= 1 &&
+    day <= 31 &&
+    startsOn !== "" &&
+    (months === null ||
+      (Number.isInteger(months) && months >= 1 && months <= 600))
+  if (!ready) return null
+
+  const lastPeriod =
+    months === null
+      ? null
+      : lastPeriodOn({ starts_on: startsOn, term_months: months })
+  return {
+    day,
+    firstDue: installmentDueOn(periodOf(startsOn), day),
+    end:
+      months === null || lastPeriod === null
+        ? null
+        : { months, lastPeriod, total: roundCents(amount * months) }
+  }
+}
+
+/**
  * Valor de la cuota del mes `periodOn`: el valor anterior con el menor
  * `through_period` que lo cubre o, si ninguno, el valor actual
  */

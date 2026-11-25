@@ -10,6 +10,7 @@ import {
   installmentAmountFor,
   installmentDueOn,
   lastPeriodOn,
+  monthlyReceivablePreview,
   owedOnOpenEnded,
   periodOf,
   periodPayments,
@@ -173,5 +174,48 @@ describe("desde la fila de la consulta", () => {
   it("collectedInYear suma por fecha del cobro", () => {
     expect(collectedInYear(periodPayments(ENTRIES), TODAY)).toBe(450_000)
     expect(collectedInYear(periodPayments(ENTRIES), "2027-01-01")).toBe(0)
+  })
+})
+
+describe("monthlyReceivablePreview", () => {
+  const base = { amount: 200_000.5, dueDay: "31", startsOn: "2026-02-10" }
+
+  it("resume primera cuota, última y total", () => {
+    expect([
+      monthlyReceivablePreview({ ...base, term: "3" }),
+      monthlyReceivablePreview({ ...base, term: null })
+    ]).toMatchInlineSnapshot(`
+      [
+        {
+          "day": 31,
+          "end": {
+            "lastPeriod": "2026-04-01",
+            "months": 3,
+            "total": 600001.5,
+          },
+          "firstDue": "2026-02-28",
+        },
+        {
+          "day": 31,
+          "end": null,
+          "firstDue": "2026-02-28",
+        },
+      ]
+    `)
+  })
+
+  it("null si falta un dato o no es válido", () => {
+    expect(
+      [
+        { ...base, amount: Number.NaN, term: null },
+        { ...base, amount: 0, term: null },
+        { ...base, dueDay: "32", term: null },
+        { ...base, dueDay: "", term: null },
+        { ...base, startsOn: "", term: null },
+        { ...base, term: "0" },
+        { ...base, term: "601" },
+        { ...base, term: "1.5" }
+      ].map(monthlyReceivablePreview)
+    ).toEqual(Array(8).fill(null))
   })
 })

@@ -28,7 +28,11 @@ import {
 } from "../receivable-schedule"
 import { AdjustDebtBalanceDialog } from "./adjust-debt-balance-dialog"
 import { ArchiveDebtDialog } from "./archive-debt-dialog"
-import { CardActionsMenu, DEBT_CARD_FRAME, ZeroBalanceNote } from "./debt-card"
+import {
+  DEBT_CARD_FRAME,
+  DebtCardActionsMenu,
+  DebtCardZeroBalanceNote
+} from "./debt-card-parts"
 import { ReceivableProgress } from "./debt-progress"
 import { DebtSheet } from "./debt-sheet"
 import { ReceivableDialog } from "./receivable-dialog"
@@ -170,7 +174,7 @@ export function ReceivableCard({
             </span>
           </button>
 
-          <CardActionsMenu
+          <DebtCardActionsMenu
             label={receivable.name}
             actions={actions}
             disabled={pending}
@@ -232,7 +236,7 @@ export function ReceivableCard({
         ) : null}
 
         {zeroBalance ? (
-          <ZeroBalanceNote
+          <DebtCardZeroBalanceNote
             action="Marcar como cobrada"
             disabled={pending}
             onAction={() => run("markCollected")}

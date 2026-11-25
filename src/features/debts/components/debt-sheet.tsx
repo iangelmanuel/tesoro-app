@@ -3,43 +3,41 @@
 import { useState } from "react"
 import { Plus, RefreshCw } from "lucide-react"
 import { Amount } from "@/components/dashboard/data/amount"
-import { HelpHint } from "@/components/dashboard/feedback/help-hint"
-import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
 import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import {
   DetailSection,
   DetailSheet
 } from "@/components/dashboard/overlays/detail-sheet"
-import { TextInputField } from "@/components/forms/text-input-field"
 import { Button } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
-import { parseAmount } from "@/features/transactions/schemas"
-import { cn } from "@/libs/cn"
-import { formatDate, formatDayMonth, formatMonthLong } from "@/libs/format"
 import {
   debtStatusLabel,
   isActiveDebt,
   isReceivableOverdue
 } from "../calculations"
-import {
-  cardMonthlyPayment,
-  installmentsShare,
-  nextFeeDate
-} from "../card-cycle"
 import { nextPayment } from "../next-payment"
 import { debtPaymentDescriptions } from "../payment-description"
-import { type DebtProjection, debtProjection, formatRate } from "../projection"
+import { debtProjection } from "../projection"
 import type { Debt, DebtEntry } from "../queries"
 import { toCollectableReceivable } from "../receivable-collect"
 import {
   type Installment,
-  collectedInYear,
   receivableInstallments
 } from "../receivable-schedule"
 import { AdjustDebtBalanceDialog } from "./adjust-debt-balance-dialog"
 import { DebtEntriesList } from "./debt-entries-list"
 import { DebtProgress, ReceivableProgress } from "./debt-progress"
+import {
+  DebtSheetDetails,
+  DebtSheetProjection,
+  DebtSheetSimulator
+} from "./debt-sheet-details"
+import {
+  DebtSheetCollectedThisYear,
+  DebtSheetInstallmentsDue,
+  DebtSheetNextFee
+} from "./debt-sheet-summary"
 import { PaymentDialog } from "./payment-dialog"
 import { ReceivableCollectDialog } from "./receivable-collect-form"
 import { ReceivableInstallments } from "./receivable-installments"
@@ -116,7 +114,7 @@ export function DebtSheet({
         summary={
           <div className="flex flex-col gap-3">
             {isOpenEnded ? (
-              <CollectedThisYear
+              <DebtSheetCollectedThisYear
                 entries={entries}
                 today={today}
                 currency={currency}
@@ -136,13 +134,13 @@ export function DebtSheet({
                 de {debt.term_months} cuotas cobradas
               </p>
             )}
-            <NextFee
+            <DebtSheetNextFee
               debt={debt}
               today={today}
               currency={currency}
             />
             {isActive && (
-              <InstallmentsDue
+              <DebtSheetInstallmentsDue
                 debt={debt}
                 currency={currency}
               />
@@ -270,18 +268,18 @@ export function DebtSheet({
         details={
           <>
             <DetailSection title="Detalles">
-              <DebtDetails
+              <DebtSheetDetails
                 debt={debt}
                 currency={currency}
               />
             </DetailSection>
             {isActiveDebt(debt) && debt.balance > 0 && (
               <DetailSection title="Proyección">
-                <ProjectionDetails
+                <DebtSheetProjection
                   projection={debtProjection(debt)}
                   currency={currency}
                 />
-                <PaymentSimulator
+                <DebtSheetSimulator
                   debt={debt}
                   currency={currency}
                 />
@@ -306,329 +304,5 @@ export function DebtSheet({
         />
       )}
     </>
-  )
-}
-
-/** Cobro mensual indefinido: lo cobrado en el año en curso (SPEC 28) */
-function CollectedThisYear({
-  entries,
-  today,
-  currency
-}: {
-  entries: DebtEntry[]
-  today: string
-  currency: string
-}) {
-  const collected = collectedInYear(
-    entries.filter((entry) => entry.kind === "payment"),
-    today
-  )
-
-  return (
-    <p className="text-sm text-muted-foreground tabular-nums">
-      Cobrado en {today.slice(0, 4)}{" "}
-      <span className="font-medium text-foreground">
-        <Amount
-          value={collected}
-          currency={currency}
-        />
-      </span>
-    </p>
-  )
-}
-
-/**
- * "Pago del mes: $ 200.000 · $ 200.000 de compras a cuotas", solo en
- * tarjetas con cuotas en el ciclo (SPEC 42)
- */
-function InstallmentsDue({ debt, currency }: { debt: Debt; currency: string }) {
-  const share = installmentsShare(debt)
-  const payment = cardMonthlyPayment(debt)
-
-  if (share === null || payment === null) {
-    return null
-  }
-
-  return (
-    <p className="flex flex-wrap items-center gap-x-1 text-sm text-muted-foreground tabular-nums">
-      Pago del mes:{" "}
-      <span className="font-medium text-foreground">
-        <Amount
-          value={payment}
-          currency={currency}
-        />
-      </span>{" "}
-      ·{" "}
-      <Amount
-        value={share}
-        currency={currency}
-      />{" "}
-      de compras a cuotas
-      <HelpHint topic="cardInstallments" />
-    </p>
-  )
-}
-
-/** "Próxima cuota: 5 de diciembre · $ 22.000", solo en tarjetas con cuota */
-function NextFee({
-  debt,
-  today,
-  currency
-}: {
-  debt: Debt
-  today: string
-  currency: string
-}) {
-  const dueOn = nextFeeDate(debt, today)
-
-  if (dueOn === null || debt.fee_amount === null) {
-    return null
-  }
-
-  return (
-    <p className="text-sm text-muted-foreground tabular-nums">
-      Próxima cuota: {formatDayMonth(dueOn)} ·{" "}
-      <span className="font-medium text-foreground">
-        <Amount
-          value={debt.fee_amount}
-          currency={currency}
-        />
-      </span>
-    </p>
-  )
-}
-
-/** Datos del tipo de deuda, solo los que tienen valor */
-function DebtDetails({ debt, currency }: { debt: Debt; currency: string }) {
-  const rate =
-    debt.interest_rate !== null && debt.rate_type !== null
-      ? formatRate(debt.interest_rate, debt.rate_type)
-      : null
-
-  const rows: [string, React.ReactNode | null][] =
-    debt.kind === "credit_card"
-      ? [
-          ["Entidad", debt.counterparty],
-          [
-            "Cupo",
-            debt.credit_limit !== null ? (
-              <Amount
-                value={debt.credit_limit}
-                currency={currency}
-              />
-            ) : null
-          ],
-          ["Tasa", rate ?? "Sin tasa"],
-          [
-            "Pago mínimo",
-            debt.min_payment !== null ? (
-              <Amount
-                value={debt.min_payment}
-                currency={currency}
-              />
-            ) : (
-              "Sin pago mínimo"
-            )
-          ],
-          ["Día de pago", debt.due_day !== null ? `Día ${debt.due_day}` : null],
-          [
-            "Día de corte",
-            debt.closing_day !== null ? `Día ${debt.closing_day}` : null
-          ]
-        ]
-      : debt.kind === "loan"
-        ? [
-            ["Entidad", debt.counterparty],
-            [
-              "Cuota",
-              debt.installment !== null ? (
-                <Amount
-                  value={debt.installment}
-                  currency={currency}
-                />
-              ) : null
-            ],
-            ["Tasa", rate],
-            [
-              "Día de pago",
-              debt.due_day !== null ? `Día ${debt.due_day}` : null
-            ],
-            [
-              "Monto original",
-              debt.original_amount !== null ? (
-                <Amount
-                  value={debt.original_amount}
-                  currency={currency}
-                />
-              ) : null
-            ],
-            [
-              "Plazo",
-              debt.term_months !== null ? `${debt.term_months} meses` : null
-            ]
-          ]
-        : debt.schedule === "monthly"
-          ? [
-              ["Deudor", debt.counterparty],
-              [
-                "Monto mensual",
-                debt.installment !== null ? (
-                  <Amount
-                    value={debt.installment}
-                    currency={currency}
-                  />
-                ) : null
-              ],
-              [
-                "Día de pago",
-                debt.due_day !== null ? `Día ${debt.due_day}` : null
-              ],
-              [
-                "Inicio",
-                debt.starts_on !== null ? formatDate(debt.starts_on) : null
-              ],
-              [
-                "Cuotas",
-                debt.term_months !== null
-                  ? String(debt.term_months)
-                  : "Sin fecha de fin"
-              ],
-              [
-                "Total",
-                debt.term_months !== null ? (
-                  <Amount
-                    value={debt.opening_balance}
-                    currency={currency}
-                  />
-                ) : null
-              ]
-            ]
-          : [
-              ["Deudor", debt.counterparty],
-              [
-                "Monto prestado",
-                <Amount
-                  key="opening"
-                  value={debt.opening_balance}
-                  currency={currency}
-                />
-              ],
-              [
-                "Fecha esperada",
-                debt.expected_on !== null ? formatDate(debt.expected_on) : null
-              ]
-            ]
-
-  return (
-    <dl className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
-      {rows
-        .filter((row): row is [string, React.ReactNode] => row[1] !== null)
-        .map(([label, value]) => (
-          <div
-            key={label}
-            className="flex justify-between gap-2 sm:flex-col sm:justify-start"
-          >
-            <dt className="text-muted-foreground">{label}</dt>
-            <dd className="font-medium tabular-nums">{value}</dd>
-          </div>
-        ))}
-    </dl>
-  )
-}
-
-/** Meses, mes de pago total e intereses, o el aviso que aplique */
-function ProjectionDetails({
-  projection,
-  currency
-}: {
-  projection: DebtProjection | null
-  currency: string
-}) {
-  if (projection === null) {
-    return null
-  }
-
-  switch (projection.kind) {
-    case "needs_min_payment":
-      return (
-        <p className="text-sm text-muted-foreground">
-          Agrega el pago mínimo para ver la proyección
-        </p>
-      )
-    case "no_progress":
-      return (
-        <p className={cn("text-sm font-medium", TONE_TEXT_CLASSES.danger)}>
-          Con este pago la deuda no baja
-        </p>
-      )
-    case "too_long":
-      return (
-        <p className={cn("text-sm font-medium", TONE_TEXT_CLASSES.warning)}>
-          Más de 50 años
-        </p>
-      )
-    case "ok":
-      return (
-        <div className="flex flex-col gap-2">
-          <dl className="grid grid-cols-3 gap-2 text-sm">
-            <div className="flex flex-col">
-              <dt className="text-muted-foreground">Meses</dt>
-              <dd className="font-medium tabular-nums">{projection.months}</dd>
-            </div>
-            <div className="flex flex-col">
-              <dt className="text-muted-foreground">Terminas en</dt>
-              <dd className="font-medium">
-                {formatMonthLong(projection.payoffMonth)}
-              </dd>
-            </div>
-            <div className="flex flex-col">
-              <dt className="text-muted-foreground">Intereses</dt>
-              <dd className="font-medium tabular-nums">
-                <Amount
-                  value={projection.totalInterest}
-                  currency={currency}
-                />
-              </dd>
-            </div>
-          </dl>
-          {projection.withoutRate && (
-            <p className="text-xs text-muted-foreground">
-              Sin tasa, la proyección no incluye intereses
-            </p>
-          )}
-        </div>
-      )
-  }
-}
-
-/** "Simula un pago mensual": recalcula la proyección sin guardar nada */
-function PaymentSimulator({
-  debt,
-  currency
-}: {
-  debt: Debt
-  currency: string
-}) {
-  const [value, setValue] = useState("")
-  const payment = parseAmount(value)
-  const valid = !Number.isNaN(payment) && payment > 0
-
-  return (
-    <div className="flex flex-col gap-3 rounded-2xl bg-subtle p-3">
-      <TextInputField
-        label="Simula un pago mensual"
-        inputMode="decimal"
-        autoComplete="off"
-        placeholder="0"
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-      />
-      {valid && (
-        <ProjectionDetails
-          projection={debtProjection(debt, payment)}
-          currency={currency}
-        />
-      )}
-    </div>
   )
 }

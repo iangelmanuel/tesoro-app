@@ -7,8 +7,7 @@ import { CARD_LIST, CARD_ROW } from "@/components/dashboard/data/surface"
 import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/libs/cn"
-import { formatShortDate } from "@/libs/format"
-import { formatMonthYear } from "../calculations"
+import { formatMonthLong, formatShortDate } from "@/libs/format"
 import type { Debt, DebtEntry } from "../queries"
 import {
   INSTALLMENT_STATUS,
@@ -177,7 +176,7 @@ function InstallmentRow({
   onCollect: (installment: Installment) => void
 }) {
   const { label, tone } = INSTALLMENT_STATUS[installment.status]
-  const month = formatMonthYear(installment.period_on.slice(0, 7))
+  const month = formatMonthLong(installment.period_on.slice(0, 7))
   const isPaid = installment.status === "paid"
   const isPartial = installment.status === "partial"
 

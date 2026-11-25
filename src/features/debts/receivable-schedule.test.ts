@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { TODAY } from "@/testing/debt-samples"
 import { debtEntryFixture } from "@/testing/fixtures"
 import {
   type Installment,
@@ -18,8 +19,6 @@ import {
 
 // Tests de caracterización (SPEC 55b): fijan las cuotas de una cuenta por
 // cobrar mensual (SPEC 28, 29 y 39) antes de partir la feature
-
-const TODAY = "2026-06-15"
 
 const RECEIVABLE = {
   starts_on: "2026-03-01",

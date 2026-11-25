@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { TODAY } from "@/testing/debt-samples"
 import { debtEntryFixture, debtFixture } from "@/testing/fixtures"
 import {
   amountForMonths,
@@ -14,8 +15,6 @@ import {
 
 // Tests de caracterización (SPEC 55b): fijan el cobro de una cuenta por
 // cobrar (SPEC 39) antes de partir la feature
-
-const TODAY = "2026-06-15"
 
 const MONTHLY = debtFixture({
   id: "ana",

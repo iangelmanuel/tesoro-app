@@ -34,8 +34,12 @@ import {
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { cn } from "@/libs/cn"
-import { formatDate, formatShortDate, formatTime } from "@/libs/format"
-import { formatMonthYear } from "../calculations"
+import {
+  formatDate,
+  formatMonthLong,
+  formatShortDate,
+  formatTime
+} from "@/libs/format"
 import { deleteEntry, moveDebtEntry } from "../entry-actions"
 import { installmentLabel, installmentProgress } from "../installments"
 import type { Debt, DebtEntry } from "../queries"
@@ -129,11 +133,11 @@ export function DebtEntriesList({
         {groupByMonth(sortable.items).map(([month, monthEntries]) => (
           <section
             key={month}
-            aria-label={formatMonthYear(month)}
+            aria-label={formatMonthLong(month)}
             className="flex flex-col gap-2"
           >
             <h4 className="text-xs font-medium text-muted-foreground first-letter:uppercase">
-              {formatMonthYear(month)}
+              {formatMonthLong(month)}
             </h4>
             <ul className={CARD_LIST}>
               {monthEntries.map((entry) => (

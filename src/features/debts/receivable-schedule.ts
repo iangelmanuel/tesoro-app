@@ -1,5 +1,6 @@
 import type { Tone } from "@/components/dashboard/feedback/tone"
-import { monthRange, shiftMonth } from "@/libs/dates"
+import { dayInMonth, shiftMonth } from "@/libs/dates"
+import { roundCents } from "@/libs/money"
 
 // Cuotas de una cuenta por cobrar mensual (SPEC 28, 29 y 39). El estado de
 // cada cuota no se guarda: depende de lo que le asignan los abonos
@@ -77,8 +78,6 @@ export interface PeriodEntry {
   allocations: readonly EntryAllocation[]
 }
 
-const roundCents = (value: number) => Math.round(value * 100) / 100
-
 /** Primer día del mes de una fecha YYYY-MM-DD */
 export function periodOf(date: string) {
   return `${date.slice(0, 7)}-01`
@@ -89,10 +88,7 @@ export function periodOf(date: string) {
  * día del mes si el mes es más corto (31 → 30 de abril, 28 o 29 de febrero)
  */
 export function installmentDueOn(periodOn: string, dueDay: number) {
-  const { to } = monthRange(periodOn.slice(0, 7))
-  const lastDay = Number(to.slice(8))
-  const day = Math.min(dueDay, lastDay)
-  return `${periodOn.slice(0, 7)}-${String(day).padStart(2, "0")}`
+  return dayInMonth(periodOn.slice(0, 7), dueDay)
 }
 
 /** Mes (YYYY-MM-01) de la última cuota, o null si es indefinida */

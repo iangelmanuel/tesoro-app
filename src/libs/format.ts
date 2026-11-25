@@ -86,7 +86,8 @@ export function formatTime(time: string) {
 }
 
 /**
- * Mes YYYY-MM como "noviembre 2026", en minúscula. Se arma a mediodía local
+ * Mes YYYY-MM como "noviembre 2026" (sin «de», date-fns), en minúscula. Con
+ * «de»: formatMonthLong; como título: formatMonthTitle. Se arma a mediodía local
  * para que la zona horaria no corra el mes.
  */
 export function formatMonthYear(month: string) {
@@ -100,13 +101,32 @@ const MONTH_TITLE = new Intl.DateTimeFormat(LOCALE, {
 })
 
 /**
+ * Mes YYYY-MM con la forma de Intl, en minúscula y con «de»: "octubre de
+ * 2027" (deudas y gastos fijos). Sin «de»: formatMonthYear. Se formatea en UTC para no correr el mes.
+ */
+export function formatMonthLong(month: string) {
+  return MONTH_TITLE.format(new Date(`${month}-01T00:00:00Z`))
+}
+
+const DAY_MONTH = new Intl.DateTimeFormat(LOCALE, {
+  day: "numeric",
+  month: "long",
+  timeZone: "UTC"
+})
+
+/** "5 de diciembre", desde una fecha YYYY-MM-DD */
+export function formatDayMonth(date: string) {
+  return DAY_MONTH.format(toUtcDate(date))
+}
+
+/**
  * Mes YYYY-MM como título con la forma de Intl: "Noviembre de 2026" (el
  * selector de mes de Movimientos). Se formatea en UTC para no correr el mes.
  * Distinto a propósito del alcance de las KPI (`transactionsScope`), que dice
  * "Noviembre 2026": unificarlos cambia texto visible y va en su propio spec.
  */
 export function formatMonthTitle(month: string) {
-  const label = MONTH_TITLE.format(new Date(`${month}-01T00:00:00Z`))
+  const label = formatMonthLong(month)
   return label.charAt(0).toUpperCase() + label.slice(1)
 }
 

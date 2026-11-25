@@ -1,5 +1,5 @@
-import { formatMonthYear } from "@/features/debts/calculations"
 import { monthRange } from "@/libs/dates"
+import { formatMonthLong } from "@/libs/format"
 import type { UpcomingPayment } from "./queries"
 
 // Lógica del historial de un gasto fijo en su Sheet (SPEC 37 y 49). La lista
@@ -16,7 +16,7 @@ export function periodLabel(
 ) {
   return isYearly
     ? payment.dueOn.slice(0, 4)
-    : formatMonthYear(payment.dueOn.slice(0, 7))
+    : formatMonthLong(payment.dueOn.slice(0, 7))
 }
 
 /** El periodo por pagar más antiguo: los atrasados primero */

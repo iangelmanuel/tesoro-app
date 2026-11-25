@@ -13,13 +13,10 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"
 import { todayISO } from "@/libs/dates"
 import { formatPercentLabel } from "@/libs/format"
-import {
-  DEBTS_PATH,
-  globalUtilization,
-  isActiveDebt,
-  totalDebt
-} from "../calculations"
+import { isActiveDebt, totalDebt } from "../calculations"
 import { getDebts } from "../queries"
+import { DEBTS_PATH } from "../tabs"
+import { globalUtilization } from "../utilization"
 import { UtilizationBadge } from "./debt-indicators"
 import { UpcomingDebtPayments } from "./upcoming-debt-payments"
 

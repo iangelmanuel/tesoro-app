@@ -33,14 +33,10 @@ import { Skeleton } from "@/components/ui/skeleton"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { cn } from "@/libs/cn"
-import { formatDate } from "@/libs/format"
-import {
-  debtProjection,
-  formatMonthYear,
-  formatRate,
-  hasZeroBalance,
-  nextPayment
-} from "../calculations"
+import { formatDate, formatMonthLong } from "@/libs/format"
+import { hasZeroBalance } from "../calculations"
+import { nextPayment } from "../next-payment"
+import { debtProjection, formatRate } from "../projection"
 import type { Debt, DebtEntry } from "../queries"
 import { AdjustBalanceDialog } from "./adjust-balance-dialog"
 import { ArchiveDebtDialog } from "./archive-debt-dialog"
@@ -375,7 +371,7 @@ export function ProjectionSummary({ debt }: { debt: Debt }) {
     case "ok":
       return (
         <span className="flex flex-col">
-          Terminas en {formatMonthYear(projection.payoffMonth)}
+          Terminas en {formatMonthLong(projection.payoffMonth)}
           {projection.withoutRate && (
             <span className="text-xs font-normal text-muted-foreground">
               Sin tasa, la proyección no incluye intereses

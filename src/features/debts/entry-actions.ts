@@ -4,7 +4,6 @@ import { z } from "zod"
 import { revalidatePersonalPages } from "@/features/workspaces/revalidate"
 import { readFormValues } from "@/libs/form-data"
 import { createClient } from "@/libs/supabase/server"
-import { nextPayment } from "./calculations"
 import type { LoadedEntry } from "./debt-loader"
 import { findDebt, findEntry, idSchema } from "./debt-lookup"
 import {
@@ -27,6 +26,7 @@ import {
 } from "./entry-service"
 import { type EntryType, entryKindOf } from "./entry-types"
 import { DEBT_NOT_FOUND, ENTRY_NOT_FOUND } from "./errors"
+import { nextPayment } from "./next-payment"
 import {
   type DebtEntry,
   type LinkableTransaction,

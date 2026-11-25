@@ -1,4 +1,4 @@
-import { shiftMonth } from "@/libs/dates"
+import { dayInMonth, shiftMonth } from "@/libs/dates"
 
 // Compras y avances de tarjeta a cuotas (SPEC 42, parte 2). Cada compra a N
 // cuotas aporta monto / N al pago de los N ciclos siguientes a su fecha. La
@@ -7,15 +7,6 @@ import { shiftMonth } from "@/libs/dates"
 
 /** Cuotas de una compra o avance: de 1 a 48 */
 export const MAX_INSTALLMENTS = 48
-
-const pad2 = (value: number) => String(value).padStart(2, "0")
-
-/** Día `day` del mes YYYY-MM; si no existe, el último día */
-function dayInMonth(month: string, day: number) {
-  const [year, monthNumber] = month.split("-").map(Number)
-  const lastDay = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate()
-  return `${month}-${pad2(Math.min(day, lastDay))}`
-}
 
 /**
  * Mes YYYY-MM del vencimiento en el que se paga la primera cuota de una

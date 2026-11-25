@@ -5,6 +5,8 @@ import {
   formatCompactCount,
   formatCurrency,
   formatDate,
+  formatDayMonth,
+  formatMonthLong,
   formatMonthTitle,
   formatMonthYear,
   formatNumber,
@@ -146,5 +148,15 @@ describe("formatValidity", () => {
     expect(formatValidity("2026-01-05", "2026-12-31")).toMatchInlineSnapshot(
       `"5 de ene de 2026 – 31 de dic de 2026"`
     )
+  })
+})
+
+describe("formatMonthLong y formatDayMonth", () => {
+  it("formatMonthLong: mes con «de», en minúscula", () => {
+    expect(formatMonthLong("2027-10")).toBe("octubre de 2027")
+  })
+
+  it("formatDayMonth: día y mes", () => {
+    expect(formatDayMonth("2026-12-05")).toBe("5 de diciembre")
   })
 })

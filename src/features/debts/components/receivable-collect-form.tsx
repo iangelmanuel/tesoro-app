@@ -26,12 +26,11 @@ import {
   parsePaymentAmount
 } from "@/features/accounts/components/payment-account-section"
 import { todayISO } from "@/libs/dates"
-import { AMOUNT_MASK, formatCurrency } from "@/libs/format"
+import { AMOUNT_MASK, formatCurrency, formatMonthTitle } from "@/libs/format"
 import {
   type PaymentPeriod,
   buildPaymentDescription
 } from "@/libs/payment-description"
-import { formatMonthYear } from "../calculations"
 import { collectReceivable } from "../receivable-actions"
 import {
   type CollectableReceivable,
@@ -53,11 +52,6 @@ const MODE_LABELS: Record<ReceivableCollectMode, string> = {
   full: "Pago completo",
   single: "Una cuota",
   allocate: "Varios meses"
-}
-
-/** "noviembre de 2026" → "Noviembre de 2026" */
-function capitalize(text: string) {
-  return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
 /** Monto como texto, o `***` con las cifras ocultas */
@@ -392,7 +386,7 @@ function CollectFields({
           }}
           options={open.map((item) => ({
             value: item.period_on,
-            label: capitalize(formatMonthYear(item.period_on.slice(0, 7))),
+            label: formatMonthTitle(item.period_on.slice(0, 7)),
             description: `Falta ${money(item.remaining)}`
           }))}
           error={errors?.period_on?.[0]}

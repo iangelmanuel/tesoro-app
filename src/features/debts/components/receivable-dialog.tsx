@@ -23,8 +23,8 @@ import {
 } from "@/features/accounts/components/account-select"
 import { parseAmount } from "@/features/transactions/schemas"
 import { todayISO } from "@/libs/dates"
-import { formatDate } from "@/libs/format"
-import { formatMonthYear } from "../calculations"
+import { formatDate, formatMonthLong } from "@/libs/format"
+import { roundCents } from "@/libs/money"
 import { createDebt, updateDebt } from "../debt-actions"
 import type { Debt } from "../queries"
 import {
@@ -540,9 +540,9 @@ function MonthlySummary({
         ) : (
           <>
             {months} {months === 1 ? "cuota" : "cuotas"}, la última en{" "}
-            {formatMonthYear(last.slice(0, 7))}. Total{" "}
+            {formatMonthLong(last.slice(0, 7))}. Total{" "}
             <span className="font-medium text-foreground tabular-nums">
-              {NUMBER_FORMAT.format(Math.round(amount * months * 100) / 100)}
+              {NUMBER_FORMAT.format(roundCents(amount * months))}
             </span>
             .
           </>

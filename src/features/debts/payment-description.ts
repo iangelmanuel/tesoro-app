@@ -1,6 +1,7 @@
 import { todayISO } from "@/libs/dates"
 import { buildPaymentDescription } from "@/libs/payment-description"
-import { type DebtCalcInput, nextPayment } from "./calculations"
+import type { DebtCalcInput } from "./calculations"
+import { nextPayment } from "./next-payment"
 
 /** Valores prellenados del pago según el tipo (SPEC 41) */
 export interface DebtPaymentDescriptions {

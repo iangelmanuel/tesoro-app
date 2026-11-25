@@ -90,7 +90,7 @@ export const monthlyReceivableSchema = z
  * cobro: Abono o Pago completo en una de cobro único; Una cuota o Varios
  * meses en una mensual.
  */
-const RECEIVABLE_COLLECT_MODES = [
+export const RECEIVABLE_COLLECT_MODES = [
   "partial", // Abono (una vez)
   "full", // Pago completo (una vez)
   "single", // Una cuota (mes a mes)

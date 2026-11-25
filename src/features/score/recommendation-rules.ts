@@ -8,15 +8,11 @@ import type { AccountWithBalance } from "@/features/accounts/types"
 import { budgetPercent } from "@/features/budgets/progress"
 import type { BudgetProgress } from "@/features/budgets/queries"
 import { BUDGETS_PATH, RECURRING_PATH } from "@/features/budgets/tabs"
-import {
-  DEBTS_PATH,
-  formatDayMonth,
-  isActiveDebt,
-  monthlyInterest,
-  monthlyRate,
-  nextPayment,
-  utilizationPercent
-} from "@/features/debts/calculations"
+import { isActiveDebt } from "@/features/debts/calculations"
+import { nextPayment } from "@/features/debts/next-payment"
+import { monthlyInterest, monthlyRate } from "@/features/debts/projection"
+import { DEBTS_PATH } from "@/features/debts/tabs"
+import { utilizationPercent } from "@/features/debts/utilization"
 import {
   GOALS_PATH,
   expectedSaved,
@@ -27,7 +23,7 @@ import { REPORTS_PATH, buildReportQuery } from "@/features/reports/period"
 import type { CategoryTotal } from "@/features/reports/queries"
 import { TRANSACTIONS_PATH } from "@/features/transactions/filters"
 import { monthRange, shiftMonth } from "@/libs/dates"
-import { formatCurrency, formatNumber } from "@/libs/format"
+import { formatCurrency, formatDayMonth, formatNumber } from "@/libs/format"
 import {
   averageExpense,
   cushionFactor,

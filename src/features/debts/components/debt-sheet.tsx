@@ -15,22 +15,20 @@ import type { PaymentAccountOption } from "@/features/accounts/components/paymen
 import type { Category } from "@/features/categories/queries"
 import { parseAmount } from "@/features/transactions/schemas"
 import { cn } from "@/libs/cn"
-import { formatDate } from "@/libs/format"
+import { formatDate, formatDayMonth, formatMonthLong } from "@/libs/format"
 import {
-  type DebtProjection,
-  cardMonthlyPayment,
-  debtProjection,
   debtStatusLabel,
-  formatDayMonth,
-  formatMonthYear,
-  formatRate,
-  installmentsShare,
   isActiveDebt,
-  isReceivableOverdue,
-  nextFeeDate,
-  nextPayment
+  isReceivableOverdue
 } from "../calculations"
+import {
+  cardMonthlyPayment,
+  installmentsShare,
+  nextFeeDate
+} from "../card-cycle"
+import { nextPayment } from "../next-payment"
 import { debtPaymentDescriptions } from "../payment-description"
+import { type DebtProjection, debtProjection, formatRate } from "../projection"
 import type { Debt, DebtEntry } from "../queries"
 import { toCollectableReceivable } from "../receivable-collect"
 import {
@@ -580,7 +578,7 @@ function ProjectionDetails({
             <div className="flex flex-col">
               <dt className="text-muted-foreground">Terminas en</dt>
               <dd className="font-medium">
-                {formatMonthYear(projection.payoffMonth)}
+                {formatMonthLong(projection.payoffMonth)}
               </dd>
             </div>
             <div className="flex flex-col">

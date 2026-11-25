@@ -10,7 +10,6 @@ import type { PaymentAccountOption } from "@/features/accounts/components/paymen
 import { getAccountBalances } from "@/features/accounts/queries"
 import { type Category, getCategories } from "@/features/categories/queries"
 import {
-  DEBTS_PATH,
   compareByExpectedOn,
   compareByNextDue,
   totalReceivable
@@ -32,7 +31,7 @@ import {
   getDebts
 } from "@/features/debts/queries"
 import { owedOnOpenEnded } from "@/features/debts/receivable-schedule"
-import { parseDebtsTab } from "@/features/debts/tabs"
+import { DEBTS_PATH, parseDebtsTab } from "@/features/debts/tabs"
 import { ImportButton } from "@/features/imports/components/import-button"
 import {
   type PersonalWorkspace,

@@ -4,7 +4,7 @@ import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"
 import { formatDate } from "@/libs/format"
-import { upcomingPayments } from "../calculations"
+import { upcomingPayments } from "../next-payment"
 import type { Debt } from "../queries"
 import { PaymentStatusBadge } from "./debt-indicators"
 

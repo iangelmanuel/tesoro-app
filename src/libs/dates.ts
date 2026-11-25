@@ -96,3 +96,13 @@ export function addDays(date: string, days: number) {
     .toISOString()
     .slice(0, 10)
 }
+
+/**
+ * Día `day` del mes YYYY-MM (YYYY-MM-DD); si el mes es más corto, su último
+ * día: 31 → 30 de abril, 28 o 29 de febrero
+ */
+export function dayInMonth(month: string, day: number) {
+  const [year, monthNumber] = month.split("-").map(Number)
+  const lastDay = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate()
+  return `${month}-${String(Math.min(day, lastDay)).padStart(2, "0")}`
+}

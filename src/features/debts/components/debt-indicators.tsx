@@ -5,12 +5,8 @@ import {
 import { ToneBadge as Badge } from "@/components/dashboard/feedback/tone-badge"
 import type { OccurrenceTone } from "@/features/recurring-expenses/occurrences"
 import { cn } from "@/libs/cn"
-import {
-  PAYMENT_STATUS,
-  type PaymentStatus,
-  UTILIZATION_LEVELS,
-  utilizationLevel
-} from "../calculations"
+import { PAYMENT_STATUS, type PaymentStatus } from "../next-payment"
+import { UTILIZATION_LEVELS, utilizationLevel } from "../utilization"
 
 const TONE_BADGE_CLASSES: Record<OccurrenceTone, string> = {
   success: TONE_BADGE.success,

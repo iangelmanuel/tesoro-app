@@ -26,12 +26,12 @@ import { SITE } from "@/config/site"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
 import type { Category } from "@/features/categories/queries"
-import { DEBTS_PATH, RECEIVABLES_PATH } from "@/features/debts/calculations"
 import {
   type DebtOption,
   PaymentDialog
 } from "@/features/debts/components/payment-dialog"
 import type { CollectableReceivable } from "@/features/debts/receivable-collect"
+import { DEBTS_PATH, RECEIVABLES_PATH } from "@/features/debts/tabs"
 import {
   ContributionDialog,
   type GoalOption

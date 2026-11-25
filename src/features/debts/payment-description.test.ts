@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest"
+import { TODAY } from "@/testing/debt-samples"
 import { debtFixture } from "@/testing/fixtures"
 import { debtPaymentDescriptions } from "./payment-description"
 
 // Tests de caracterización (SPEC 55b): fijan la descripción y el monto que
 // prellena el pago de una deuda (diálogo de pago y pay_debt del MCP)
-
-const TODAY = "2026-06-15"
 
 const CARD = debtFixture({
   name: "Visa",

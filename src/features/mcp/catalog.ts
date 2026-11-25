@@ -24,9 +24,12 @@ import { collectReceivable } from "./tools/write/collect-receivable"
 import { createCategory } from "./tools/write/create-category"
 import { createDebtTool } from "./tools/write/create-debt"
 import { createReceivableTool } from "./tools/write/create-receivable"
+import { createRecurringIncomeTool } from "./tools/write/create-recurring-income"
 import { createTransactions } from "./tools/write/create-transactions"
+import { createTransfers } from "./tools/write/create-transfers"
 import { deleteDebtEntry } from "./tools/write/delete-debt-entry"
 import { deleteTransactions } from "./tools/write/delete-transactions"
+import { deleteTransfers } from "./tools/write/delete-transfers"
 import { recordGoalContribution } from "./tools/write/goals"
 import { importStatement } from "./tools/write/import-statement"
 import { recordDebtPayment } from "./tools/write/record-debt-payment"
@@ -38,21 +41,14 @@ import {
   createRecurringExpenseTool,
   updateRecurringExpenseTool
 } from "./tools/write/recurring-expenses"
-import {
-  createRecurringIncomeTool,
-  updateRecurringIncomeTool
-} from "./tools/write/recurring-incomes"
 import { createGoalTool, updateGoalTool } from "./tools/write/savings-goals"
-import {
-  createTransfers,
-  deleteTransfers,
-  updateTransfers
-} from "./tools/write/transfers"
 import { undoOperation } from "./tools/write/undo-operation"
 import { updateDebtTool } from "./tools/write/update-debt"
 import { updateDebtEntry } from "./tools/write/update-debt-entry"
 import { updateReceivableTool } from "./tools/write/update-receivable"
+import { updateRecurringIncomeTool } from "./tools/write/update-recurring-income"
 import { updateTransactions } from "./tools/write/update-transactions"
+import { updateTransfers } from "./tools/write/update-transfers"
 import type { McpTool, McpToolDefinition } from "./types"
 
 // Catálogo único de tools (SPEC 34): el servidor las registra desde aquí y

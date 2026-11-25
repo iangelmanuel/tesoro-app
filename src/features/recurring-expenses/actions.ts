@@ -4,6 +4,7 @@ import { z } from "zod"
 import { parseAmount } from "@/features/transactions/schemas"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { revalidatePersonalPages } from "@/features/workspaces/revalidate"
+import { readFormValues } from "@/libs/form-data"
 import { createClient } from "@/libs/supabase/server"
 import {
   type RecurringExpenseHistory,
@@ -13,14 +14,14 @@ import { recurringExpenseSchema } from "./schemas"
 import {
   RECURRING_EXPENSE_NOT_FOUND,
   createRecurringExpenseRecord,
+  deleteRecurringExpenseRecord,
+  setRecurringExpenseActiveRecord,
   updateRecurringExpenseRecord
 } from "./service"
 import type {
   RecurringExpenseActionResult,
   RecurringExpenseFormState
 } from "./types"
-
-const NOT_FOUND = RECURRING_EXPENSE_NOT_FOUND
 
 const FIELDS = [
   "name",
@@ -36,17 +37,8 @@ const FIELDS = [
 
 const idSchema = z.uuid()
 
-function readValues(formData: FormData) {
-  return Object.fromEntries(
-    FIELDS.map((key) => {
-      const value = formData.get(key)
-      return [key, typeof value === "string" ? value : ""]
-    })
-  ) as Record<(typeof FIELDS)[number], string>
-}
-
 function parseForm(formData: FormData) {
-  const values = readValues(formData)
+  const values = readFormValues(formData, FIELDS)
   const parsed = recurringExpenseSchema.safeParse({
     ...values,
     amount: parseAmount(values.amount)
@@ -87,7 +79,7 @@ export async function updateRecurringExpense(
   const id = idSchema.safeParse(formData.get("id"))
 
   if (!id.success) {
-    return { error: NOT_FOUND, values }
+    return { error: RECURRING_EXPENSE_NOT_FOUND, values }
   }
   if (!parsed.success) {
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
@@ -117,53 +109,43 @@ export async function toggleRecurringExpense(
   const parsedId = idSchema.safeParse(id)
 
   if (!parsedId.success) {
-    return { error: NOT_FOUND }
+    return { error: RECURRING_EXPENSE_NOT_FOUND }
   }
 
   const workspace = await getPersonalWorkspace()
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("recurring_expenses")
-    .update({ is_active: active === true })
-    .eq("id", parsedId.data)
-    .eq("workspace_id", workspace.id)
-    .select("id")
+  const result = await setRecurringExpenseActiveRecord(
+    await createClient(),
+    workspace,
+    parsedId.data,
+    active === true
+  )
 
-  if (error) {
-    return { error: "No se pudo actualizar el gasto fijo. Intenta de nuevo" }
-  }
-  if (data.length === 0) {
-    return { error: NOT_FOUND }
+  if (!result.ok) {
+    return { error: result.error }
   }
 
   revalidatePersonalPages()
   return {}
 }
 
-// Los movimientos de pago se conservan: la FK los deja con el enlace en null
 export async function deleteRecurringExpense(
   id: string
 ): Promise<RecurringExpenseActionResult> {
   const parsedId = idSchema.safeParse(id)
 
   if (!parsedId.success) {
-    return { error: NOT_FOUND }
+    return { error: RECURRING_EXPENSE_NOT_FOUND }
   }
 
   const workspace = await getPersonalWorkspace()
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("recurring_expenses")
-    .delete()
-    .eq("id", parsedId.data)
-    .eq("workspace_id", workspace.id)
-    .select("id")
+  const result = await deleteRecurringExpenseRecord(
+    await createClient(),
+    workspace,
+    parsedId.data
+  )
 
-  if (error) {
-    return { error: "No se pudo eliminar el gasto fijo. Intenta de nuevo" }
-  }
-  if (data.length === 0) {
-    return { error: NOT_FOUND }
+  if (!result.ok) {
+    return { error: result.error }
   }
 
   revalidatePersonalPages()
@@ -187,7 +169,7 @@ export async function loadRecurringExpenseHistory(
   const parsedLimit = z.int().min(1).max(MAX_HISTORY_LIMIT).safeParse(limit)
 
   if (!parsedId.success || !parsedLimit.success) {
-    return { error: NOT_FOUND }
+    return { error: RECURRING_EXPENSE_NOT_FOUND }
   }
 
   try {

@@ -29,8 +29,7 @@ import type { PaymentAccountOption } from "@/features/accounts/components/paymen
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { cn } from "@/libs/cn"
-import { formatDate } from "@/libs/format"
-import { frequencyLabel } from "../occurrences"
+import { frequencyLabel, validityLabel } from "../occurrences"
 import type { RecurringExpense } from "../queries"
 import { RecurringExpenseDialog } from "./recurring-expense-dialog"
 import { RecurringExpenseSheet } from "./recurring-expense-sheet"
@@ -40,13 +39,6 @@ import { useRecurringExpenseActions } from "./use-recurring-expense-actions"
 const TABLE_SURFACE = cn(SURFACE_LIST, "divide-y-0 px-2")
 const MIN_WIDTH = "56rem"
 const COLUMNS = 7
-
-function validityLabel(expense: RecurringExpense) {
-  const from = formatDate(expense.starts_on)
-  return expense.ends_on
-    ? `${from} – ${formatDate(expense.ends_on)}`
-    : `Desde ${from}`
-}
 
 interface RecurringExpensesListProps {
   expenses: RecurringExpense[]

@@ -157,6 +157,10 @@ function RecurringExpenseForm({
 
   const errors = state.fieldErrors
   const values = state.values
+  let submitLabel = isEditing ? "Guardar" : "Crear"
+  if (pending) {
+    submitLabel = "Guardando..."
+  }
 
   return (
     <form
@@ -328,7 +332,7 @@ function RecurringExpenseForm({
           type="submit"
           disabled={pending}
         >
-          {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear"}
+          {submitLabel}
         </Button>
       </div>
     </form>

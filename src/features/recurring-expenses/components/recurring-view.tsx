@@ -84,6 +84,9 @@ export async function RecurringView({
     )
   }
 
+  const paymentsTitle = month.isCurrent
+    ? "Próximos pagos"
+    : `Pagos de ${month.label}`
   const isUpToDate = payments.every((payment) => payment.transactionId !== null)
   // Resumen del mes elegido: en el mes actual no cuentan los atrasados que
   // vienen de meses anteriores
@@ -112,14 +115,12 @@ export async function RecurringView({
       </div>
 
       <section
-        aria-label={
-          month.isCurrent ? "Próximos pagos" : `Pagos de ${month.label}`
-        }
+        aria-label={paymentsTitle}
         className={CARD}
         data-tour="recurring-upcoming"
       >
         <CardHeading
-          title={month.isCurrent ? "Próximos pagos" : `Pagos de ${month.label}`}
+          title={paymentsTitle}
           control={
             <MonthNav
               path={RECURRING_PATH}

@@ -13,10 +13,10 @@ export type GoalAction = keyof typeof ACTIONS
 
 /** Cambia el estado de una meta y avisa con un toast */
 export function useGoalAction(goal: { id: string; name: string }) {
-  const { pending, run: runAction } = useActionToast()
+  const { pending, run: runWithToast } = useActionToast()
 
   function run(action: GoalAction) {
-    runAction(
+    runWithToast(
       () => ACTIONS[action].run(goal.id),
       `"${goal.name}" ${ACTIONS[action].success}`
     )

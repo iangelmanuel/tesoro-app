@@ -6,11 +6,11 @@ import type { UpcomingPayment } from "./queries"
 // gastos fijos del diálogo de movimiento y la tool pay_recurring_expense del
 // MCP, para que ambos prellenen lo mismo.
 
-/** Ocurrencia sin pagar más antigua de un gasto fijo, o la de `dueOn` */
-export function unpaidOccurrence(
+/** Ocurrencia sin pagar más antigua de un gasto fijo que cumple `matches` */
+function oldestUnpaid(
   payments: UpcomingPayment[],
   recurringExpenseId: string,
-  dueOn?: string
+  matches: (dueOn: string) => boolean
 ) {
   return (
     payments
@@ -18,9 +18,22 @@ export function unpaidOccurrence(
         (payment) =>
           payment.recurringExpenseId === recurringExpenseId &&
           payment.transactionId === null &&
-          (dueOn === undefined || payment.dueOn === dueOn)
+          matches(payment.dueOn)
       )
       .sort((a, b) => a.dueOn.localeCompare(b.dueOn))[0] ?? null
+  )
+}
+
+/** Ocurrencia sin pagar más antigua de un gasto fijo, o la de `dueOn` */
+export function unpaidOccurrence(
+  payments: UpcomingPayment[],
+  recurringExpenseId: string,
+  dueOn?: string
+) {
+  return oldestUnpaid(
+    payments,
+    recurringExpenseId,
+    (paymentDueOn) => dueOn === undefined || paymentDueOn === dueOn
   )
 }
 
@@ -34,15 +47,10 @@ export function nextUnpaidOccurrence(
   recurringExpenseId: string,
   afterDueOn: string
 ) {
-  return (
-    payments
-      .filter(
-        (payment) =>
-          payment.recurringExpenseId === recurringExpenseId &&
-          payment.transactionId === null &&
-          payment.dueOn > afterDueOn
-      )
-      .sort((a, b) => a.dueOn.localeCompare(b.dueOn))[0] ?? null
+  return oldestUnpaid(
+    payments,
+    recurringExpenseId,
+    (dueOn) => dueOn > afterDueOn
   )
 }
 

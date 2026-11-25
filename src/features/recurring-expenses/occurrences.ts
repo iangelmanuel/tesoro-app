@@ -1,3 +1,4 @@
+import { formatDate } from "@/libs/format"
 import { buildPaymentDescription } from "@/libs/payment-description"
 import type { RecurringFrequency } from "./schemas"
 
@@ -15,8 +16,11 @@ export const OCCURRENCE_STATUS: Record<
   upcoming: { label: "Próximo", tone: "neutral" }
 }
 
-// `dueOn` y `today` son fechas YYYY-MM-DD en America/Bogota; como texto ISO
-// se comparan en orden cronológico
+/**
+ * Estado de una ocurrencia: pagada si tiene movimiento; si no, atrasada, de
+ * hoy o próxima. `due_on` y `today` son fechas YYYY-MM-DD en America/Bogota:
+ * como texto ISO se comparan en orden cronológico.
+ */
 export function getOccurrenceStatus(
   occurrence: { due_on: string; transaction_id: string | null },
   today: string
@@ -55,12 +59,16 @@ export function frequencyLabel(expense: {
   return `Mensual, día ${expense.day_of_month}`
 }
 
-/**
- * Periodos visibles del historial de un gasto fijo antes de "Ver más". Vive
- * aquí y no en queries.ts para que el Sheet (cliente) lo importe sin arrastrar
- * el cliente de Supabase del servidor.
- */
-export const HISTORY_PAGE_SIZE = 12
+/** Vigencia de un recurrente: "Desde {inicio}" o "{inicio} – {fin}" */
+export function validityLabel(item: {
+  starts_on: string
+  ends_on: string | null
+}) {
+  const from = formatDate(item.starts_on)
+  return item.ends_on
+    ? `${from} – ${formatDate(item.ends_on)}`
+    : `Desde ${from}`
+}
 
 /**
  * "Pago {nombre} · {periodo}" de la cuota que se paga, no de hoy (SPEC 41):

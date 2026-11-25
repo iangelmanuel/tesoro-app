@@ -198,7 +198,10 @@ Los de una sola feature viven junto a sus componentes
 - `use-is-mobile.ts`: corte móvil del dashboard (`< 768 px`);
 - `use-action-toast.ts` (`useActionToast`): corre una server action que
   devuelve `{ error }` en una transición y avisa con toast de éxito o de
-  error. Lo usan `useAccountAction` y el borrado de filas de Movimientos.
+  error; un `onSuccess` opcional corre tras el éxito (cerrar un Sheet). Lo
+  usan los hooks de acciones de cada feature (`useAccountAction`,
+  `useGoalAction`, `useRecurringExpenseActions`…) y el borrado de filas de
+  Movimientos.
 
 Al partir un componente grande, su estado y sus efectos van a un hook
 `use-<padre>.ts` en la misma carpeta (`use-transactions-table.ts`,

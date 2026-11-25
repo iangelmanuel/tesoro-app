@@ -10,9 +10,10 @@ import type { AppSupabase } from "@/libs/supabase/types"
 import type { Database } from "@/types/database"
 import type { RecurringExpenseInput } from "./schemas"
 
-// Crear y editar gastos fijos (SPEC 44). Lo comparten las Server Actions y
-// el MCP: recibe el cliente y el espacio Personal ya resuelto y devuelve la
-// fila antes y después para el log.
+// Escrituras de gastos fijos. Crear y editar (SPEC 44) lo comparten las
+// Server Actions y el MCP: recibe el cliente y el espacio Personal ya resuelto
+// y devuelve la fila antes y después para el log. Pausar, reanudar y eliminar
+// solo los usan las actions.
 
 export type RecurringExpenseRow =
   Database["public"]["Tables"]["recurring_expenses"]["Row"]
@@ -80,6 +81,7 @@ async function referenceErrors(
   return null
 }
 
+/** Crea un gasto fijo activo y devuelve la fila creada */
 export async function createRecurringExpenseRecord(
   supabase: AppSupabase,
   workspace: Pick<ServiceWorkspace, "id">,
@@ -151,4 +153,56 @@ export async function updateRecurringExpenseRecord(
     return fail({ error: RECURRING_EXPENSE_NOT_FOUND })
   }
   return { ok: true, before, after }
+}
+
+/** Pausa (`active` false) o reanuda (`active` true) un gasto fijo */
+export async function setRecurringExpenseActiveRecord(
+  supabase: AppSupabase,
+  workspace: Pick<ServiceWorkspace, "id">,
+  id: string,
+  active: boolean
+): Promise<ServiceResult<object>> {
+  const { data, error } = await supabase
+    .from("recurring_expenses")
+    .update({ is_active: active })
+    .eq("id", id)
+    .eq("workspace_id", workspace.id)
+    .select("id")
+
+  if (error) {
+    return fail({
+      error: "No se pudo actualizar el gasto fijo. Intenta de nuevo"
+    })
+  }
+  if (data.length === 0) {
+    return fail({ error: RECURRING_EXPENSE_NOT_FOUND })
+  }
+  return { ok: true }
+}
+
+/**
+ * Elimina un gasto fijo. Sus movimientos de pago se conservan: la FK los deja
+ * con el enlace en null.
+ */
+export async function deleteRecurringExpenseRecord(
+  supabase: AppSupabase,
+  workspace: Pick<ServiceWorkspace, "id">,
+  id: string
+): Promise<ServiceResult<object>> {
+  const { data, error } = await supabase
+    .from("recurring_expenses")
+    .delete()
+    .eq("id", id)
+    .eq("workspace_id", workspace.id)
+    .select("id")
+
+  if (error) {
+    return fail({
+      error: "No se pudo eliminar el gasto fijo. Intenta de nuevo"
+    })
+  }
+  if (data.length === 0) {
+    return fail({ error: RECURRING_EXPENSE_NOT_FOUND })
+  }
+  return { ok: true }
 }

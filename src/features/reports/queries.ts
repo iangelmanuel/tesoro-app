@@ -2,10 +2,18 @@ import "server-only"
 import type { TransactionType } from "@/features/transactions/filters"
 import type { TransactionWithCategory } from "@/features/transactions/types"
 import { createClient } from "@/libs/supabase/server"
+import {
+  type PeriodComparison,
+  type PeriodTotals,
+  previousPeriod,
+  sumPeriodTotals,
+  withPrevious
+} from "./comparison"
 
 // Todas las agregaciones corren en Postgres (RPC security invoker, con RLS).
 // `numeric` puede llegar como string: se convierte con Number() aquí.
 
+/** Una fila de `monthly_totals` */
 export interface MonthlyTotal {
   /** Primer día del mes (YYYY-MM-DD) */
   month: string
@@ -15,6 +23,7 @@ export interface MonthlyTotal {
   txCount: number
 }
 
+/** Una fila de `category_totals` */
 export interface CategoryTotal {
   categoryId: string
   name: string
@@ -118,4 +127,56 @@ export async function getRecentTransactions(
   }
 
   return data
+}
+
+// monthly_totals agrupa por mes completo; category_totals filtra por día
+// exacto. Un rango que no cae en meses completos se suma desde categorías
+async function rangeTotals(
+  workspaceId: string,
+  from: string,
+  to: string
+): Promise<PeriodTotals> {
+  const [income, expense] = await Promise.all([
+    getCategoryTotals(workspaceId, from, to, "income"),
+    getCategoryTotals(workspaceId, from, to, "expense")
+  ])
+  const incomeTotal = income.reduce((total, row) => total + row.total, 0)
+  const expenseTotal = expense.reduce((total, row) => total + row.total, 0)
+
+  return {
+    income: incomeTotal,
+    expense: expenseTotal,
+    balance: incomeTotal - expenseTotal,
+    txCount: [...income, ...expense].reduce(
+      (total, row) => total + row.txCount,
+      0
+    )
+  }
+}
+
+/**
+ * Totales del periodo [from, to] y del anterior de la misma duración
+ * (`previousPeriod`). Con meses completos es una sola llamada. Solo reusa
+ * las RPC existentes: sin esquema nuevo.
+ */
+export async function getPeriodComparison(
+  workspaceId: string,
+  from: string,
+  to: string
+): Promise<PeriodComparison> {
+  const previous = previousPeriod(from, to)
+
+  if (previous.months !== null) {
+    const rows = await getMonthlyTotals(workspaceId, previous.from, to)
+    return withPrevious(
+      sumPeriodTotals(rows.filter((row) => row.month >= from)),
+      sumPeriodTotals(rows.filter((row) => row.month < from))
+    )
+  }
+
+  const [currentTotals, previousTotals] = await Promise.all([
+    rangeTotals(workspaceId, from, to),
+    rangeTotals(workspaceId, previous.from, previous.to)
+  ])
+  return withPrevious(currentTotals, previousTotals)
 }

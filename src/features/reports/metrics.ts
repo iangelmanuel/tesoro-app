@@ -26,6 +26,7 @@ export function monthProgress(today: string) {
   return { daysElapsed: day, daysInMonth }
 }
 
+/** Gasto promedio por día transcurrido; 0 si no ha pasado ninguno */
 export function dailyAverage(expense: number, daysElapsed: number) {
   if (daysElapsed <= 0) return 0
   return expense / daysElapsed
@@ -36,13 +37,17 @@ export function monthProjection(dailyAvg: number, daysInMonth: number) {
   return dailyAvg * daysInMonth
 }
 
+/** Resultado de `groupTopWithOthers` */
 export interface TopWithOthers<T> {
   top: T[]
   /** Suma de las filas que no entran en el top; null si no sobra ninguna */
   others: { total: number; count: number } | null
 }
 
-// Las filas llegan ordenadas por total descendente desde category_totals
+/**
+ * Top `limit` filas y la suma del resto. Las filas llegan ordenadas por total
+ * descendente desde category_totals
+ */
 export function groupTopWithOthers<T extends { total: number }>(
   items: T[],
   limit: number
@@ -59,8 +64,10 @@ export function groupTopWithOthers<T extends { total: number }>(
   }
 }
 
-// Reparto de 100 % entre `values` con `decimals` decimales. Usa el método del
-// mayor residuo para que la suma redondeada dé exactamente 100.
+/**
+ * Reparto de 100 % entre `values` con `decimals` decimales. Usa el método del
+ * mayor residuo para que la suma redondeada dé exactamente 100.
+ */
 export function percentShares(values: number[], decimals = 1) {
   const total = values.reduce((sum, value) => sum + value, 0)
   if (total === 0) return values.map(() => 0)

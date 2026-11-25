@@ -22,11 +22,14 @@ import type { Workspace } from "@/features/workspaces/queries"
 import { cn } from "@/libs/cn"
 import { monthRange, shiftMonth } from "@/libs/dates"
 import { TOP_CATEGORIES, buildTopCategories } from "../chart-data"
-import { getPeriodComparison } from "../comparison"
 import { REPORT_LABELS } from "../labels"
 import { savingsRate } from "../metrics"
 import { parseReportParams } from "../period"
-import { getCategoryTotals, getMonthlyTotals } from "../queries"
+import {
+  getCategoryTotals,
+  getMonthlyTotals,
+  getPeriodComparison
+} from "../queries"
 import { incomeExpenseLegend } from "../series"
 import {
   CategorySummaryTable,

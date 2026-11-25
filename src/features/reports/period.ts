@@ -7,17 +7,27 @@ import type {
   SearchParams,
   TransactionType
 } from "@/features/transactions/filters"
-import { currentMonth, monthRange, shiftMonth } from "@/libs/dates"
+import {
+  countMonths,
+  currentMonth,
+  monthRange,
+  shiftMonth,
+  toLocalDate
+} from "@/libs/dates"
 
+/** Ruta de Reportes de Personal */
 export const REPORTS_PATH = `${SITE.routes.dashboardPersonal}/reports`
 
+/** Periodos del selector de Reportes */
 export const REPORT_PERIODS = ["month", "quarter", "year", "range"] as const
 
+/** Un periodo de Reportes */
 export type ReportPeriod = (typeof REPORT_PERIODS)[number]
 
 /** Meses que puede cubrir un rango, contando el primero y el último */
 export const MAX_RANGE_MONTHS = 24
 
+/** Periodo ya validado de Reportes, con sus fechas y su etiqueta */
 export interface ReportParams {
   period: ReportPeriod
   /** YYYY-MM, YYYY-Qn o YYYY según el periodo; null en `range` */
@@ -58,18 +68,6 @@ function isRealDate(value: string) {
   )
 }
 
-// Date local con los componentes de la fecha, solo para formatear etiquetas
-function toLocalDate(value: string) {
-  const [year, month, day] = value.split("-").map(Number)
-  return new Date(year, month - 1, day ?? 1)
-}
-
-function monthsSpanned(from: string, to: string) {
-  const [fromYear, fromMonth] = from.split("-").map(Number)
-  const [toYear, toMonth] = to.split("-").map(Number)
-  return (toYear - fromYear) * 12 + (toMonth - fromMonth) + 1
-}
-
 /** Valor del periodo actual en America/Bogota */
 export function currentPeriodValue(
   period: Exclude<ReportPeriod, "range">,
@@ -86,7 +84,7 @@ export function currentPeriodValue(
 function monthPeriod(value: string) {
   return {
     ...monthRange(value),
-    label: format(toLocalDate(value), "MMMM yyyy", { locale: es })
+    label: format(toLocalDate(`${value}-01`), "MMMM yyyy", { locale: es })
   }
 }
 
@@ -125,15 +123,18 @@ function rangeWarning(from: string | undefined, to: string | undefined) {
     return "Las fechas del rango no son válidas."
   if (fromDate.data > toDate.data)
     return "La fecha inicial es posterior a la final."
-  if (monthsSpanned(fromDate.data, toDate.data) > MAX_RANGE_MONTHS) {
+  if (countMonths(fromDate.data, toDate.data) > MAX_RANGE_MONTHS) {
     return `El rango no puede cubrir más de ${MAX_RANGE_MONTHS} meses.`
   }
   return null
 }
 
-// Un valor inválido cae a su valor por defecto. Un rango inválido muestra un
-// aviso y cae al mes actual. Nunca rompe la página. Sin periodo se usa
-// `defaultPeriod` (Reportes: el mes; Flujo de caja: el año).
+/**
+ * Periodo y tipo de Reportes desde los searchParams. Un valor inválido cae a
+ * su valor por defecto. Un rango inválido muestra un aviso y cae al mes
+ * actual. Nunca rompe la página. Sin periodo se usa `defaultPeriod`
+ * (Reportes: el mes; Flujo de caja: el año).
+ */
 export function parseReportParams(
   searchParams: SearchParams,
   now = new Date(),
@@ -202,6 +203,7 @@ export function shiftPeriodValue(
   return `${Math.floor(index / 4)}-Q${(index % 4) + 1}`
 }
 
+/** Lo que se escribe en la URL de Reportes */
 export type ReportQuery =
   | {
       period: Exclude<ReportPeriod, "range">
@@ -210,8 +212,10 @@ export type ReportQuery =
     }
   | { period: "range"; from: string; to: string; type: TransactionType }
 
-// Se escriben siempre periodo y tipo para que el enlace no cambie de
-// significado con el tiempo y se conserve al recargar
+/**
+ * Query string de un periodo. Se escriben siempre periodo y tipo para que el
+ * enlace no cambie de significado con el tiempo y se conserve al recargar
+ */
 export function buildReportQuery(query: ReportQuery) {
   const params = new URLSearchParams({ period: query.period })
 

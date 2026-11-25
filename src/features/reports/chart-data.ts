@@ -8,7 +8,9 @@ import type { CategoryTotal } from "./queries"
 // Datos listos para las gráficas de categorías. Se preparan en el servidor y
 // los client components solo los dibujan.
 
+/** Clave de la porción "Otras" */
 export const OTHERS_KEY = "others"
+/** Color neutro de la porción "Otras" */
 export const OTHERS_COLOR = "var(--muted-foreground)"
 
 /** Porciones de la dona: top 6 + "Otras" */
@@ -17,6 +19,7 @@ export const DONUT_SLICES = 6
 /** Barras del top de categorías */
 export const TOP_CATEGORIES = 5
 
+/** Una porción o barra de categoría, con su color CSS */
 export interface CategorySlice {
   key: string
   name: string

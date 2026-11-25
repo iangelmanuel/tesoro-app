@@ -1,5 +1,6 @@
 import type { WorkspaceType } from "@/features/workspaces/types"
 
+/** Textos de las series de Reportes, por tipo de espacio */
 export interface ReportLabels {
   /** Serie de ingresos en gráficas, toggle y títulos */
   income: string
@@ -19,6 +20,7 @@ export interface ReportLabels {
 
 // Personal y Empresa hablan de entradas y salidas (SPEC 47).
 // Los datos son los mismos: income y expense de transactions.
+/** Textos de Reportes de Personal y de Empresa */
 export const REPORT_LABELS = {
   personal: {
     income: "Entradas",

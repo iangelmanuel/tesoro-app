@@ -1,15 +1,14 @@
 // Formato y color de la variación vs. el mes anterior en las tarjetas del
 // Resumen. Lo comparten Personal y Empresa.
 
+/** Lo que se muestra cuando no hay base para comparar */
 export const EMPTY = "—"
+/** Color de un cambio bueno */
 export const POSITIVE = "text-(--income)"
+/** Color de un cambio malo */
 export const NEGATIVE = "text-(--expense)"
 
-export const PERCENT = new Intl.NumberFormat("es-CO", {
-  style: "percent",
-  maximumFractionDigits: 1
-})
-
+// Con signo: no coincide con `formatPercent` de libs, que no lo muestra
 const SIGNED_PERCENT = new Intl.NumberFormat("es-CO", {
   style: "percent",
   maximumFractionDigits: 1,
@@ -21,7 +20,7 @@ export function formatPercentChange(change: number | null) {
   return change === null ? EMPTY : SIGNED_PERCENT.format(change / 100)
 }
 
-// Verde si el cambio es bueno y rojo si es malo. En gastos subir es malo.
+/** Verde si el cambio es bueno y rojo si es malo. En gastos subir es malo. */
 export function changeTone(change: number | null, inverted = false) {
   if (!change) return "text-muted-foreground"
   return change > 0 !== inverted ? POSITIVE : NEGATIVE

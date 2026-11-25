@@ -9,9 +9,9 @@ import type { PaymentAccountOption } from "@/features/accounts/components/paymen
 import { TransferDialog } from "@/features/accounts/components/transfer-dialog"
 import { deleteTransfer } from "@/features/accounts/transfer-actions"
 import type { Category } from "@/features/categories/queries"
-import { deleteEntry } from "@/features/debts/actions"
 import { DebtEntryDialog } from "@/features/debts/components/debt-entry-dialog"
 import { DuplicateDebtEntryLoader } from "@/features/debts/components/duplicate-debt-entry-dialog"
+import { deleteEntry } from "@/features/debts/entry-actions"
 import { deleteContribution } from "@/features/goals/actions"
 import { ContributionDialog } from "@/features/goals/components/contribution-dialog"
 import {

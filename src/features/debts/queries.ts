@@ -1,4 +1,5 @@
 import "server-only"
+import { addDays } from "@/libs/dates"
 import { createClient } from "@/libs/supabase/server"
 import type { Database } from "@/types/database"
 import type { EntryAllocation, InstallmentRate } from "./receivable-schedule"
@@ -62,8 +63,10 @@ export type DebtEntry = Omit<DebtEntryRow, "amount"> & {
 const toNumber = (value: number | string | null) =>
   value === null ? null : Number(value)
 
-// Todas las deudas y cuentas por cobrar del espacio, en cualquier estado,
-// con su saldo y ciclo de pago
+/**
+ * Todas las deudas y cuentas por cobrar del espacio, en cualquier estado,
+ * con su saldo y ciclo de pago
+ */
 export async function getDebts(workspaceId: string): Promise<Debt[]> {
   const supabase = await createClient()
   const [{ data, error }, history] = await Promise.all([
@@ -126,7 +129,7 @@ export async function getDebts(workspaceId: string): Promise<Debt[]> {
 const ENTRY_COLUMNS =
   "*, account:accounts!debt_entries_account_id_workspace_id_fkey (name), transaction:transactions!debt_entries_transaction_id_fkey (account_id, description, category_id, account:accounts!transactions_account_id_workspace_id_fkey (name)), allocations:debt_entry_allocations (period_on, amount)"
 
-// Pagos, avances y ajustes de una deuda, el más reciente primero
+/** Pagos, avances y ajustes de una deuda, el más reciente primero */
 export async function getDebtEntries(debtId: string): Promise<DebtEntry[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -207,16 +210,9 @@ export interface LinkableTransaction {
 }
 
 /** Días de margen alrededor de la fecha del ajuste para sugerir candidatos */
-export const LINKABLE_DAYS = 7
+const LINKABLE_DAYS = 7
 
 /** Fecha YYYY-MM-DD desplazada `days` días, sin pasar por la zona local */
-function shiftDay(date: string, days: number) {
-  const [year, month, day] = date.split("-").map(Number)
-  return new Date(Date.UTC(year, month - 1, day + days))
-    .toISOString()
-    .slice(0, 10)
-}
-
 /**
  * Movimientos ya registrados que pueden ser el de un pago, cobro o avance
  * (SPEC 42): del espacio de la deuda, del tipo dado, con el mismo monto y
@@ -248,8 +244,8 @@ export async function findLinkableTransactions(
     .eq("workspace_id", debt.workspace_id)
     .eq("type", type)
     .eq("amount", amount)
-    .gte("occurred_on", shiftDay(occurredOn, -LINKABLE_DAYS))
-    .lte("occurred_on", shiftDay(occurredOn, LINKABLE_DAYS))
+    .gte("occurred_on", addDays(occurredOn, -LINKABLE_DAYS))
+    .lte("occurred_on", addDays(occurredOn, LINKABLE_DAYS))
     .is("recurring_expense_id", null)
     .is("recurring_income_id", null)
 

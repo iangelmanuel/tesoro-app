@@ -8,16 +8,20 @@ import {
 import { shiftMonth, todayISO } from "@/libs/dates"
 import type { AppSupabase } from "@/libs/supabase/types"
 import type { Database } from "@/types/database"
-import type { LoadedDebt } from "./entry-service"
+import type { LoadedDebt } from "./debt-loader"
+import {
+  type DebtKind,
+  creditCardSchema,
+  habitualAccountSchema,
+  loanSchema
+} from "./debt-schemas"
 import { DEBT_NOT_FOUND, NEGATIVE_BALANCE, debtPgError } from "./errors"
 import { lastPeriodOn, periodOf } from "./receivable-schedule"
 import {
-  DEBT_SCHEMAS,
-  type DebtKind,
   type ReceivableSchedule,
-  habitualAccountSchema,
-  monthlyReceivableSchema
-} from "./schemas"
+  monthlyReceivableSchema,
+  receivableSchema
+} from "./receivable-schemas"
 
 // Crear y editar deudas y cuentas por cobrar (SPEC 44). Lo comparten las
 // Server Actions y el MCP: recibe el cliente y el espacio Personal ya
@@ -32,8 +36,15 @@ const NEGATIVE_OPENING = "Con este saldo inicial la deuda queda en negativo"
 const ENTRIES_OUT_OF_RANGE =
   "Hay cobros de cuotas fuera de estas fechas. Elimínalos primero"
 
+/** Esquema de cada tipo de deuda (la mensual por cobrar va aparte) */
+const DEBT_SCHEMAS = {
+  credit_card: creditCardSchema,
+  loan: loanSchema,
+  receivable: receivableSchema
+} as const
+
 /** Campos del formulario de cada tipo (debt-dialog.tsx) */
-export const DEBT_FIELDS: Record<DebtKind, readonly string[]> = {
+const DEBT_FIELDS: Record<DebtKind, readonly string[]> = {
   credit_card: [
     "name",
     "counterparty",
@@ -62,7 +73,7 @@ export const DEBT_FIELDS: Record<DebtKind, readonly string[]> = {
 }
 
 // Cuenta por cobrar mensual (SPEC 28): el saldo inicial se calcula
-export const MONTHLY_RECEIVABLE_FIELDS = [
+const MONTHLY_RECEIVABLE_FIELDS = [
   "name",
   "counterparty",
   "installment",
@@ -125,7 +136,7 @@ export function parseDebtInput(
 }
 
 /** La cuenta por defecto, si llega, debe ser del espacio y estar activa */
-export async function validateHabitualAccount(
+async function validateHabitualAccount(
   supabase: AppSupabase,
   workspaceId: string,
   accountId: string | null
@@ -144,6 +155,7 @@ export async function validateHabitualAccount(
   return null
 }
 
+/** Crea una deuda o cuenta por cobrar y devuelve la fila creada */
 export async function createDebtRecord(
   supabase: AppSupabase,
   workspace: Pick<ServiceWorkspace, "id">,
@@ -347,4 +359,61 @@ export async function updateDebtRecord(
     return fail({ error: DEBT_NOT_FOUND })
   }
   return { ok: true, before, after, history }
+}
+
+/** Estado guardado de una deuda */
+export type DebtRowStatus = DebtRow["status"]
+
+const DEBT_TRANSITION_ERROR = "No se pudo actualizar la deuda. Intenta de nuevo"
+const HAS_BALANCE = "La deuda aún tiene saldo"
+const OPEN_ENDED_PAID = "Un cobro mensual sin número de cuotas se archiva"
+
+/**
+ * Cambia el estado de la deuda solo si está en uno de los estados `from`
+ * (pagar, archivar, reactivar). Al pagarla guarda `closed_at`; en los demás
+ * casos lo limpia.
+ */
+export async function transitionDebtRecord(
+  supabase: AppSupabase,
+  workspace: Pick<ServiceWorkspace, "id">,
+  id: string,
+  from: DebtRowStatus[],
+  to: DebtRowStatus
+): Promise<ServiceResult<object>> {
+  const { data, error } = await supabase
+    .from("debts")
+    .update({
+      status: to,
+      closed_at: to === "paid" ? new Date().toISOString() : null
+    })
+    .eq("id", id)
+    .eq("workspace_id", workspace.id)
+    .in("status", from)
+    .select("id")
+
+  if (error) {
+    return fail({ error: DEBT_TRANSITION_ERROR })
+  }
+  if (data.length === 0) {
+    return fail({ error: DEBT_NOT_FOUND })
+  }
+  return { ok: true }
+}
+
+/**
+ * Marca una deuda como pagada (o cobrada): sin saldo. Una mensual indefinida
+ * no tiene saldo total: sigue activa hasta archivarla.
+ */
+export async function markDebtPaidRecord(
+  supabase: AppSupabase,
+  workspace: Pick<ServiceWorkspace, "id">,
+  debt: Pick<LoadedDebt, "id" | "balance" | "openEnded">
+): Promise<ServiceResult<object>> {
+  if (debt.balance > 0) {
+    return fail({ error: HAS_BALANCE })
+  }
+  if (debt.openEnded) {
+    return fail({ error: OPEN_ENDED_PAID })
+  }
+  return transitionDebtRecord(supabase, workspace, debt.id, ["active"], "paid")
 }

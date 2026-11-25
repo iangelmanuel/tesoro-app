@@ -12,6 +12,7 @@ import type { MonthlyInput, RuleKey, ScoreInputs } from "./types"
 // calcula en TS. `numeric` puede llegar como string: se convierte con
 // Number() aquí.
 
+/** Insumos del score con las deudas y metas completas, que piden las reglas */
 export type ScoreData = Omit<ScoreInputs, "debts" | "goals"> & {
   debts: Debt[]
   goals: Goal[]
@@ -109,6 +110,7 @@ export async function getScoreHistory(workspaceId: string, today = todayISO()) {
   return { inputs, history: scoreHistory(inputs) }
 }
 
+/** Recomendación que el usuario ocultó en un mes */
 export interface DismissedRecommendation {
   rule: RuleKey
   entityKey: string

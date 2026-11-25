@@ -9,11 +9,11 @@ import { TimePickerField } from "@/components/forms/time-picker-field"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/sonner"
 import { todayISO } from "@/libs/dates"
-import { adjustBalance } from "../actions"
+import { adjustBalance } from "../entry-actions"
 import type { Debt } from "../queries"
 import type { AdjustBalanceFormState } from "../types"
 
-interface AdjustBalanceDialogProps {
+interface AdjustDebtBalanceDialogProps {
   debt: Pick<Debt, "id" | "balance">
   currency: string
   /** Botón que abre el diálogo. Sin él, se controla con open/onOpenChange */
@@ -27,13 +27,13 @@ interface AdjustBalanceDialogProps {
  * extracto) y se guarda un ajuste por la diferencia. Editar un ajuste va por
  * DebtEntryDialog (SPEC 42)
  */
-export function AdjustBalanceDialog({
+export function AdjustDebtBalanceDialog({
   debt,
   currency,
   trigger,
   open,
   onOpenChange
-}: AdjustBalanceDialogProps) {
+}: AdjustDebtBalanceDialogProps) {
   return (
     <FormDialog
       trigger={trigger}

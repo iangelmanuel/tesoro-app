@@ -1,5 +1,6 @@
 import { z } from "zod"
-import { isReceivableOverdue, nextPayment } from "@/features/debts/calculations"
+import { isReceivableOverdue } from "@/features/debts/calculations"
+import { nextPayment } from "@/features/debts/next-payment"
 import { getDebtEntries, getDebts } from "@/features/debts/queries"
 import { receivableInstallments } from "@/features/debts/receivable-schedule"
 import { getUpcomingPayments } from "@/features/recurring-expenses/queries"

@@ -1,7 +1,6 @@
 "use client"
 
-import { useTransition } from "react"
-import { toast } from "@/components/ui/sonner"
+import { useActionToast } from "@/hooks/use-action-toast"
 import { deleteRecurringExpense, toggleRecurringExpense } from "../actions"
 import type { RecurringExpense } from "../queries"
 
@@ -12,34 +11,21 @@ import type { RecurringExpense } from "../queries"
 export function useRecurringExpenseActions(
   expense: Pick<RecurringExpense, "id" | "is_active">
 ) {
-  const [pending, startTransition] = useTransition()
+  const { pending, run: runWithToast } = useActionToast()
 
   function toggle() {
-    startTransition(async () => {
-      const result = await toggleRecurringExpense(
-        expense.id,
-        !expense.is_active
-      )
-      if (result.error) {
-        toast.error(result.error)
-      } else {
-        toast.success(
-          expense.is_active ? "Gasto fijo pausado" : "Gasto fijo reanudado"
-        )
-      }
-    })
+    runWithToast(
+      () => toggleRecurringExpense(expense.id, !expense.is_active),
+      expense.is_active ? "Gasto fijo pausado" : "Gasto fijo reanudado"
+    )
   }
 
   function remove(onDeleted?: () => void) {
-    startTransition(async () => {
-      const result = await deleteRecurringExpense(expense.id)
-      if (result.error) {
-        toast.error(result.error)
-      } else {
-        toast.success("Gasto fijo eliminado")
-        onDeleted?.()
-      }
-    })
+    runWithToast(
+      () => deleteRecurringExpense(expense.id),
+      "Gasto fijo eliminado",
+      onDeleted
+    )
   }
 
   return { pending, toggle, remove }

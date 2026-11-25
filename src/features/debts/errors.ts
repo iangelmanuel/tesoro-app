@@ -2,10 +2,12 @@ import type { PostgrestError } from "@supabase/supabase-js"
 import type { DebtFormState } from "./types"
 
 // Mensajes de los triggers de debts y debt_entries (check_violation) y su
-// traducción a errores de formulario. Los comparten las actions y el
-// servicio de abonos que usa el MCP (SPEC 34).
+// traducción a errores de formulario. Los comparten las actions y los
+// servicios de deudas que usa el MCP (SPEC 34).
 
 export const DEBT_NOT_FOUND = "No se encontró la deuda"
+export const ENTRY_DEFAULT_ERROR =
+  "No se pudo guardar el movimiento. Intenta de nuevo"
 export const ENTRY_NOT_FOUND = "No se encontró el pago"
 /**
  * Texto que lanzan los triggers y las RPC de deudas. Cambiarlo exige una

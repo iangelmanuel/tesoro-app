@@ -1,10 +1,7 @@
 import { formatPercentLabel } from "@/libs/format"
-import {
-  collectedPercent,
-  paidPercent,
-  utilizationPercent
-} from "../calculations"
+import { collectedPercent, paidPercent } from "../calculations"
 import type { Debt } from "../queries"
+import { utilizationPercent } from "../utilization"
 import { DebtBar, UtilizationBadge, UtilizationBar } from "./debt-indicators"
 
 /**

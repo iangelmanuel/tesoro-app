@@ -1,10 +1,7 @@
 import { z } from "zod"
-import {
-  PAYMENT_STATUS,
-  nextPayment,
-  utilizationPercent
-} from "@/features/debts/calculations"
+import { PAYMENT_STATUS, nextPayment } from "@/features/debts/next-payment"
 import { getDebts } from "@/features/debts/queries"
+import { utilizationPercent } from "@/features/debts/utilization"
 import { todayISO } from "@/libs/dates"
 import { toolError, toolResult } from "../result"
 import {

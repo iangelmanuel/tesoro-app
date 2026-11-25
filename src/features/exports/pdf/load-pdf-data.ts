@@ -17,10 +17,8 @@ import {
   getDismissedRecommendations,
   getScoreHistory
 } from "@/features/score/queries"
-import {
-  getRecommendations,
-  splitDismissed
-} from "@/features/score/recommendations"
+import { splitDismissed } from "@/features/score/recommendation-helpers"
+import { getRecommendations } from "@/features/score/recommendations"
 import type {
   FactorResult,
   Recommendation,

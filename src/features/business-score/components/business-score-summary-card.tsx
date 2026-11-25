@@ -1,6 +1,6 @@
 import { ScoreSummary } from "@/features/score/components/score-summary-card"
 import { getDismissedRecommendations } from "@/features/score/queries"
-import { splitDismissed } from "@/features/score/recommendations"
+import { splitDismissed } from "@/features/score/recommendation-helpers"
 import { workspaceRecommendationsPath } from "@/features/workspaces/paths"
 import type { Workspace } from "@/features/workspaces/queries"
 import { shiftMonth, todayISO } from "@/libs/dates"

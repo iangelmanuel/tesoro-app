@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/libs/cn"
-import { DEBTS_PATH } from "../calculations"
-import type { DebtsTab } from "../tabs"
+import { DEBTS_PATH, type DebtsTab, RECEIVABLES_PATH } from "../tabs"
 
 interface DebtsTabsProps {
   tab: DebtsTab
@@ -30,9 +29,7 @@ export function DebtsTabs({ tab, children }: DebtsTabsProps) {
 
     startTransition(() => {
       router.replace(
-        (value === "receivables"
-          ? `${DEBTS_PATH}?tab=receivables`
-          : DEBTS_PATH) as Route,
+        (value === "receivables" ? RECEIVABLES_PATH : DEBTS_PATH) as Route,
         { scroll: false }
       )
     })

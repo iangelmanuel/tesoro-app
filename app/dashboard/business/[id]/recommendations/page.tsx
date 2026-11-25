@@ -11,7 +11,7 @@ import {
   ScoreRecommendationsView
 } from "@/features/score/components/score-recommendations-view"
 import { getDismissedRecommendations } from "@/features/score/queries"
-import { splitDismissed } from "@/features/score/recommendations"
+import { splitDismissed } from "@/features/score/recommendation-helpers"
 import { WorkspaceNoTransactions } from "@/features/transactions/components/workspace-no-transactions"
 import { hasAnyTransactions } from "@/features/transactions/queries"
 import { getWorkspace } from "@/features/workspaces/queries"

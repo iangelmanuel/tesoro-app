@@ -1,9 +1,11 @@
+import type { Tone } from "@/components/dashboard/feedback/tone"
 import { buildPaymentDescription } from "@/libs/payment-description"
 import type { RecurringFrequency } from "./schemas"
 
 export type OccurrenceStatus = "paid" | "overdue" | "today" | "upcoming"
 
-export type OccurrenceTone = "success" | "danger" | "warning" | "neutral"
+/** Tonos de una ocurrencia: los de tone.ts sin info */
+export type OccurrenceTone = Exclude<Tone, "info">
 
 export const OCCURRENCE_STATUS: Record<
   OccurrenceStatus,
@@ -15,8 +17,11 @@ export const OCCURRENCE_STATUS: Record<
   upcoming: { label: "Próximo", tone: "neutral" }
 }
 
-// `dueOn` y `today` son fechas YYYY-MM-DD en America/Bogota; como texto ISO
-// se comparan en orden cronológico
+/**
+ * Estado de una ocurrencia: pagada si tiene movimiento; si no, atrasada, de
+ * hoy o próxima. `due_on` y `today` son fechas YYYY-MM-DD en America/Bogota:
+ * como texto ISO se comparan en orden cronológico.
+ */
 export function getOccurrenceStatus(
   occurrence: { due_on: string; transaction_id: string | null },
   today: string
@@ -43,6 +48,15 @@ export function monthName(month: number) {
   return MONTH_NAME.format(new Date(Date.UTC(2000, month - 1, 1)))
 }
 
+/** Opciones del select "Mes de pago": 1 → "Enero" */
+export const MONTH_OPTIONS = Array.from({ length: 12 }, (_, index) => {
+  const name = monthName(index + 1)
+  return {
+    value: String(index + 1),
+    label: name.charAt(0).toUpperCase() + name.slice(1)
+  }
+})
+
 /** "Mensual, día 5" o "Anual, 15 de marzo" */
 export function frequencyLabel(expense: {
   frequency: RecurringFrequency
@@ -54,13 +68,6 @@ export function frequencyLabel(expense: {
   }
   return `Mensual, día ${expense.day_of_month}`
 }
-
-/**
- * Periodos visibles del historial de un gasto fijo antes de "Ver más". Vive
- * aquí y no en queries.ts para que el Sheet (cliente) lo importe sin arrastrar
- * el cliente de Supabase del servidor.
- */
-export const HISTORY_PAGE_SIZE = 12
 
 /**
  * "Pago {nombre} · {periodo}" de la cuota que se paga, no de hoy (SPEC 41):

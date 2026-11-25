@@ -13,6 +13,17 @@ export interface RecurringMonth {
   next: string | null
 }
 
+/** `month` acotado entre `first` y `last` (YYYY-MM se compara como texto) */
+function clampMonth(month: string, first: string, last: string) {
+  if (month > last) {
+    return last
+  }
+  if (month < first) {
+    return first
+  }
+  return month
+}
+
 /**
  * `?month` de Próximos pagos. Va del mes del gasto fijo más antiguo
  * (`startMonth`) al mes actual; fuera de ese rango (o inválido) cae al
@@ -27,9 +38,7 @@ export function parseRecurringMonth(
   const first =
     startMonth !== null && startMonth < current ? startMonth : current
   const requested = parseBudgetMonth(value, now).month
-  const clamped =
-    requested > current ? current : requested < first ? first : requested
-  const parsed = parseBudgetMonth(clamped, now)
+  const parsed = parseBudgetMonth(clampMonth(requested, first, current), now)
 
   return {
     month: parsed.month,

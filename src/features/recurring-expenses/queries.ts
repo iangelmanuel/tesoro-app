@@ -2,11 +2,8 @@ import "server-only"
 import { currentMonth, monthRange, shiftMonth, todayISO } from "@/libs/dates"
 import { createClient } from "@/libs/supabase/server"
 import type { Database } from "@/types/database"
-import {
-  HISTORY_PAGE_SIZE,
-  type OccurrenceStatus,
-  getOccurrenceStatus
-} from "./occurrences"
+import { type OccurrenceStatus, getOccurrenceStatus } from "./occurrences"
+import { HISTORY_PAGE_SIZE } from "./recurring-expense-history"
 import type { RecurringFrequency } from "./schemas"
 
 type RecurringExpenseRow =
@@ -65,7 +62,10 @@ export interface RecurringExpenseHistory {
 }
 
 const CATEGORY_COLUMNS = "id, name, icon, color, archived_at"
+const PAYMENTS_LOAD_ERROR =
+  "No se pudieron cargar los pagos de los gastos fijos"
 
+/** Gastos fijos del espacio con su categoría, por nombre */
 export async function getRecurringExpenses(
   workspaceId: string
 ): Promise<RecurringExpense[]> {
@@ -120,13 +120,13 @@ async function fetchOccurrences(
   })
 
   if (error) {
-    throw new Error("No se pudieron cargar los pagos de los gastos fijos")
+    throw new Error(PAYMENTS_LOAD_ERROR)
   }
 
   return data
 }
 
-// Agrega categoría, cuenta del pago y estado a cada ocurrencia
+/** Agrega categoría, cuenta del pago y estado a cada ocurrencia */
 async function toUpcomingPayments(
   supabase: SupabaseClient,
   occurrences: OccurrenceRow[]
@@ -143,7 +143,7 @@ async function toUpcomingPayments(
     .in("id", categoryIds)
 
   if (categoriesError) {
-    throw new Error("No se pudieron cargar los pagos de los gastos fijos")
+    throw new Error(PAYMENTS_LOAD_ERROR)
   }
 
   const categoryById = new Map(categories.map((row) => [row.id, row]))
@@ -157,7 +157,7 @@ async function toUpcomingPayments(
     .in("id", expenseIds)
 
   if (expensesError) {
-    throw new Error("No se pudieron cargar los pagos de los gastos fijos")
+    throw new Error(PAYMENTS_LOAD_ERROR)
   }
 
   const expenseById = new Map(expenses.map((row) => [row.id, row]))
@@ -179,7 +179,7 @@ async function toUpcomingPayments(
       .in("id", paidIds)
 
     if (paidError) {
-      throw new Error("No se pudieron cargar los pagos de los gastos fijos")
+      throw new Error(PAYMENTS_LOAD_ERROR)
     }
     for (const row of paid) {
       paymentByTransaction.set(row.id, {

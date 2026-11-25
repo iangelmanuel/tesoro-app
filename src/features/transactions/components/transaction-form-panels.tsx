@@ -6,13 +6,13 @@ import Link from "next/link"
 import { buttonVariants } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { TransferForm } from "@/features/accounts/components/transfer-dialog"
-import { DEBTS_PATH, RECEIVABLES_PATH } from "@/features/debts/calculations"
 import {
   type DebtOption,
   DebtPaymentPanel
 } from "@/features/debts/components/payment-dialog"
 import { ReceivableCollectForm } from "@/features/debts/components/receivable-collect-form"
 import type { CollectableReceivable } from "@/features/debts/receivable-collect"
+import { DEBTS_PATH, RECEIVABLES_PATH } from "@/features/debts/tabs"
 import {
   GoalContributionPanel,
   type GoalOption

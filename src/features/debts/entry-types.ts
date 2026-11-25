@@ -1,4 +1,5 @@
-import type { DebtKind, ReceivableSchedule } from "./schemas"
+import type { DebtKind } from "./debt-schemas"
+import type { ReceivableSchedule } from "./receivable-schemas"
 
 // Tipos de movimiento de una deuda en el formulario de edición (SPEC 42,
 // parte 3). Cada tipo de la pantalla se guarda como un kind de debt_entries:
@@ -144,4 +145,55 @@ export function entryKindOf(type: EntryType): EntryKind {
  */
 export function balanceEffect(kind: EntryKind, amount: number) {
   return kind === "payment" ? -amount : amount
+}
+
+/** Opciones del segmentado "El ajuste" */
+export const DIRECTION_OPTIONS = [
+  { value: "up", label: "Sube" },
+  { value: "down", label: "Baja" }
+] as const satisfies readonly { value: AdjustmentDirection; label: string }[]
+
+/** Opciones del select "Tipo": etiqueta y pista de cada tipo en la deuda */
+export function entryTypeOptions(types: EntryType[], kind: DebtKind) {
+  return types.map((type) => {
+    const info = entryTypeInfo(type, kind)
+    return { value: type, label: info.label, description: info.hint }
+  })
+}
+
+/**
+ * Si el movimiento usa una cuenta: un pago o abono, en tarjeta la que paga y
+ * en préstamo o cuenta por cobrar la del movimiento (solo si lo registra);
+ * un avance, la que recibe. Compra, cuota de manejo y ajuste no tocan cuentas
+ */
+export function usesPaymentAccount(
+  type: EntryType,
+  isCard: boolean,
+  createsTransaction: boolean
+) {
+  return (
+    (entryKindOf(type) === "payment" && (isCard || createsTransaction)) ||
+    type === "advance"
+  )
+}
+
+/**
+ * Tipo del movimiento enlazado: el avance y el cobro de una cuenta por cobrar
+ * son entradas; el pago o abono de tarjeta y préstamo, salidas
+ */
+export function entryTransactionType(
+  type: EntryType,
+  debtKind: DebtKind
+): "income" | "expense" {
+  return type === "advance" || debtKind === "receivable" ? "income" : "expense"
+}
+
+/**
+ * Tipo de los movimientos que se pueden enlazar (SPEC 42): solo pagos, abonos
+ * y avances; los demás tipos no llevan movimiento (null)
+ */
+export function linkableTransactionType(type: EntryType, debtKind: DebtKind) {
+  return type === "advance" || entryKindOf(type) === "payment"
+    ? entryTransactionType(type, debtKind)
+    : null
 }

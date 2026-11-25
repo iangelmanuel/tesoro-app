@@ -1,4 +1,13 @@
-export const DEBTS_TABS = ["debts", "receivables"] as const
+import type { Route } from "next"
+import { SITE } from "@/config/site"
+
+/** Página de Deudas */
+export const DEBTS_PATH = `${SITE.routes.dashboardPersonal}/debts` as const
+
+/** Tab Me deben de Deudas */
+export const RECEIVABLES_PATH = `${DEBTS_PATH}?tab=receivables` as Route
+
+const DEBTS_TABS = ["debts", "receivables"] as const
 
 export type DebtsTab = (typeof DEBTS_TABS)[number]
 

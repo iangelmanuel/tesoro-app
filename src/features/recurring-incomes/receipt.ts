@@ -3,6 +3,7 @@ import {
   type Period,
   allocateOldestFirst
 } from "@/libs/allocate"
+import { addDays } from "@/libs/dates"
 import {
   type PaymentPeriod,
   buildPaymentDescription
@@ -52,11 +53,6 @@ export interface IncomeReceiptPeriods {
    */
   futureLimited: boolean
 }
-
-export const addDays = (date: string, days: number) =>
-  new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000)
-    .toISOString()
-    .slice(0, 10)
 
 const addMonths = (date: string, months: number) => {
   const [year, month, day] = date.split("-").map(Number)
@@ -236,12 +232,13 @@ function incomePeriod(
     frequency === "daily" ||
     frequency === "every_n_days"
   if (dates.length > 1) {
-    return {
-      kind: "range",
-      from,
-      to,
-      unit: byDay ? "day" : frequency === "yearly" ? "year" : "month"
+    let unit: "day" | "year" | "month" = "month"
+    if (byDay) {
+      unit = "day"
+    } else if (frequency === "yearly") {
+      unit = "year"
     }
+    return { kind: "range", from, to, unit }
   }
   if (byDay) return { kind: "day", on: from }
   if (frequency === "biweekly") return { kind: "biweekly", on: from }
@@ -311,4 +308,18 @@ export function incomeReceiptValues(
     account_id: account?.id ?? null,
     description: incomeReceiptDescription(source)
   }
+}
+
+/**
+ * Duplicar un cobro (SPEC 49) necesita una fuente activa con un periodo
+ * abierto donde repartirse; "Sin fecha fija" siempre acepta
+ */
+export function canDuplicateReceipt(
+  source: { frequency: IncomeFrequency; periods: { due: number }[] } | undefined
+) {
+  return (
+    source !== undefined &&
+    (source.frequency === "none" ||
+      source.periods.some((period) => period.due > 0))
+  )
 }

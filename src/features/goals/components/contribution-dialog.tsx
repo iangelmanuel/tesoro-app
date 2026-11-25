@@ -31,6 +31,18 @@ const KIND_OPTIONS = (["deposit", "withdrawal"] as const).map((value) => ({
   label: KIND_LABELS[value]
 }))
 
+// El signo del monto guardado dice si es aporte o retiro
+function kindOf(amount: number): ContributionKind {
+  return amount < 0 ? "withdrawal" : "deposit"
+}
+
+function dialogTitle(isEditing: boolean, kind: ContributionKind) {
+  if (isEditing) {
+    return `Editar ${KIND_LABELS[kind].toLowerCase()}`
+  }
+  return kind === "withdrawal" ? "Retirar de la meta" : "Aportar a la meta"
+}
+
 /** Meta que se puede elegir en el diálogo (acceso rápido del header) */
 export interface GoalOption {
   id: string
@@ -91,11 +103,7 @@ export function ContributionDialog({
   onOpenChange
 }: ContributionDialogProps) {
   const isEditing = contribution !== undefined
-  const initialKind: ContributionKind = contribution
-    ? contribution.amount < 0
-      ? "withdrawal"
-      : "deposit"
-    : kind
+  const initialKind = contribution ? kindOf(contribution.amount) : kind
 
   return (
     <FormDialog
@@ -103,13 +111,7 @@ export function ContributionDialog({
       open={controlledOpen}
       onOpenChange={onOpenChange}
       className="sm:max-w-md"
-      title={
-        isEditing
-          ? `Editar ${KIND_LABELS[initialKind].toLowerCase()}`
-          : initialKind === "withdrawal"
-            ? "Retirar de la meta"
-            : "Aportar a la meta"
-      }
+      title={dialogTitle(isEditing, initialKind)}
       description="Un aporte no es una salida. Con cuenta, solo mueve su saldo."
     >
       {(close) => (
@@ -176,9 +178,7 @@ function ContributionForm({
 
     if (result.ok) {
       toast.success(
-        isEditing
-          ? `${KIND_LABELS[kind]} actualizado`
-          : `${KIND_LABELS[kind]} registrado`
+        `${KIND_LABELS[kind]} ${isEditing ? "actualizado" : "registrado"}`
       )
       onSaved()
     }
@@ -187,17 +187,15 @@ function ContributionForm({
 
   const errors = state.fieldErrors
   const values = state.values
-  const [amountText, setAmountText] = useState(
-    () =>
+  const [amountText, setAmountText] = useState(() => {
+    // Sin signo: el tipo lo da `kind`
+    const amount = contribution?.amount ?? initialValues?.amount
+    return (
       values?.amount ??
-      amountInput(
-        contribution
-          ? Math.abs(contribution.amount)
-          : initialValues
-            ? Math.abs(initialValues.amount)
-            : null
-      )
-  )
+      amountInput(amount === undefined ? null : Math.abs(amount))
+    )
+  })
+  const submitLabel = isEditing ? "Guardar" : "Registrar"
 
   return (
     <form
@@ -330,7 +328,7 @@ function ContributionForm({
           type="submit"
           disabled={pending}
         >
-          {pending ? "Guardando..." : isEditing ? "Guardar" : "Registrar"}
+          {pending ? "Guardando..." : submitLabel}
         </Button>
       </div>
     </form>
@@ -366,5 +364,3 @@ export function GoalContributionPanel({
     />
   )
 }
-
-// Solo deja elegir fechas hasta hoy

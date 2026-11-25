@@ -37,6 +37,7 @@ const MONTH_DAY_FREQUENCIES: readonly IncomeFrequency[] = [
   "yearly"
 ]
 
+/** La frecuencia se programa por día del mes (mensual, quincenal o anual) */
 export function usesDayOfMonth(frequency: IncomeFrequency) {
   return MONTH_DAY_FREQUENCIES.includes(frequency)
 }

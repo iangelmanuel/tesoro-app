@@ -14,8 +14,6 @@ import {
   ScrollTableSkeleton
 } from "@/components/dashboard/data/scroll-table"
 import { SURFACE_LIST } from "@/components/dashboard/data/surface"
-import { TONE_BADGE_CLASSES } from "@/components/dashboard/feedback/tone"
-import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import { DeleteDialog } from "@/components/dashboard/overlays/delete-dialog"
 import {
   Table,
@@ -29,9 +27,10 @@ import type { PaymentAccountOption } from "@/features/accounts/components/paymen
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { cn } from "@/libs/cn"
-import { formatDate } from "@/libs/format"
+import { formatValidity } from "@/libs/format"
 import { frequencyLabel } from "../occurrences"
 import type { RecurringExpense } from "../queries"
+import { ActiveStatusBadge } from "./active-status-badge"
 import { RecurringExpenseDialog } from "./recurring-expense-dialog"
 import { RecurringExpenseSheet } from "./recurring-expense-sheet"
 import { useRecurringExpenseActions } from "./use-recurring-expense-actions"
@@ -40,13 +39,6 @@ import { useRecurringExpenseActions } from "./use-recurring-expense-actions"
 const TABLE_SURFACE = cn(SURFACE_LIST, "divide-y-0 px-2")
 const MIN_WIDTH = "56rem"
 const COLUMNS = 7
-
-function validityLabel(expense: RecurringExpense) {
-  const from = formatDate(expense.starts_on)
-  return expense.ends_on
-    ? `${from} – ${formatDate(expense.ends_on)}`
-    : `Desde ${from}`
-}
 
 interface RecurringExpensesListProps {
   expenses: RecurringExpense[]
@@ -229,18 +221,10 @@ function ExpenseRow({
         </TableCell>
         <TableCell>{frequencyLabel(expense)}</TableCell>
         <TableCell className="text-muted-foreground">
-          {validityLabel(expense)}
+          {formatValidity(expense.starts_on, expense.ends_on)}
         </TableCell>
         <TableCell>
-          <ToneBadge
-            className={
-              expense.is_active
-                ? TONE_BADGE_CLASSES.success
-                : TONE_BADGE_CLASSES.neutral
-            }
-          >
-            {expense.is_active ? "Activo" : "Pausado"}
-          </ToneBadge>
+          <ActiveStatusBadge active={expense.is_active} />
         </TableCell>
         {/* Las acciones no abren el detalle */}
         <TableCell onClick={(event) => event.stopPropagation()}>

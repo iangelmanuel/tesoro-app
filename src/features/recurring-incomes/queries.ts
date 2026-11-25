@@ -6,15 +6,9 @@ import type { Database } from "@/types/database"
 import {
   type IncomeOccurrenceStatus,
   getIncomeOccurrenceStatus,
-  incomeDueDates,
   occurrenceRemaining
 } from "./occurrences"
-import {
-  type IncomeReceiptPeriods,
-  addDays,
-  futureWindowEnd,
-  incomeReceiptPeriods
-} from "./receipt"
+import { type IncomeReceiptPeriods, incomeReceiptPeriods } from "./receipt"
 import type { IncomeFrequency } from "./schemas"
 
 export { OTHER_INCOME } from "./schemas"
@@ -112,6 +106,10 @@ async function fetchOccurrences(workspaceId: string, from: string, to: string) {
   return data
 }
 
+/**
+ * Ingresos fijos del espacio por nombre, con su categoría, el nombre de su
+ * cuenta y, en los "Sin fecha fija", lo recibido en el mes y el año
+ */
 export async function getRecurringIncomes(
   workspaceId: string
 ): Promise<RecurringIncome[]> {
@@ -394,152 +392,4 @@ export async function getIncomeSources(
       futureLimited
     }
   })
-}
-
-/** Un movimiento que cubre (toda o parte de) una ocurrencia */
-export interface IncomeReceipt {
-  transactionId: string
-  occurredOn: string
-  description: string
-  /** Lo que este movimiento asignó a la ocurrencia */
-  amount: number
-}
-
-/** Ocurrencia del Sheet de un ingreso fijo, con los movimientos que la cubren */
-export interface IncomeHistoryRow {
-  dueOn: string
-  amount: number
-  receivedAmount: number
-  remaining: number
-  status: IncomeOccurrenceStatus
-  receipts: IncomeReceipt[]
-}
-
-export interface RecurringIncomeHistory {
-  /** Desde `starts_on` hasta hoy más la próxima, la más reciente primero */
-  occurrences: IncomeHistoryRow[]
-  /** Hay ocurrencias más antiguas que `limit` */
-  hasMore: boolean
-  /** Recibido en ocurrencias del año actual */
-  receivedThisYear: number
-  /** Lo que falta de las ocurrencias vencidas o de hoy */
-  dueToDate: number
-}
-
-/**
- * Ocurrencias de un ingreso fijo para su Sheet (SPEC 38): desde `starts_on`
- * hasta hoy más la próxima, la más reciente primero, con lo recibido y los
- * movimientos que cubren cada una. Las asignaciones cuya fecha ya no calza
- * con el calendario (la fuente cambió de días) se muestran en su fecha.
- * "Sin fecha fija" no tiene ocurrencias.
- */
-export async function getRecurringIncomeHistory(
-  recurringIncomeId: string,
-  options: { limit: number }
-): Promise<RecurringIncomeHistory> {
-  const empty: RecurringIncomeHistory = {
-    occurrences: [],
-    hasMore: false,
-    receivedThisYear: 0,
-    dueToDate: 0
-  }
-  const supabase = await createClient()
-  const [{ data: income, error }, { data: allocations, error: allocError }] =
-    await Promise.all([
-      supabase
-        .from("recurring_incomes")
-        .select(
-          "amount, frequency, day_of_month, second_day_of_month, month_of_year, day_of_week, interval_days, starts_on, ends_on"
-        )
-        .eq("id", recurringIncomeId)
-        .maybeSingle(),
-      supabase
-        .from("recurring_income_allocations")
-        .select(
-          "due_on, amount, transaction:transactions (id, occurred_on, description, day_position, created_at)"
-        )
-        .eq("recurring_income_id", recurringIncomeId)
-        .order("created_at", { ascending: true })
-    ])
-
-  if (error || allocError) {
-    throw new Error("No se pudo cargar el historial del ingreso fijo")
-  }
-  if (!income || income.frequency === "none") {
-    return empty
-  }
-
-  const schedule = { ...income, amount: Number(income.amount) }
-  const today = todayISO()
-  const next = incomeDueDates(
-    schedule,
-    addDays(today, 1),
-    futureWindowEnd(schedule, today)
-  )[0]
-  const dates = new Set(incomeDueDates(schedule, schedule.starts_on, today))
-  if (next !== undefined) {
-    dates.add(next)
-  }
-
-  // Por fecha y, dentro del día, en el orden manual de Movimientos (SPEC 19
-  // y 45): así los cobros del mismo día quedan juntos y se pueden reordenar
-  const sortedAllocations = [...allocations].sort(
-    (a, b) =>
-      a.transaction.occurred_on.localeCompare(b.transaction.occurred_on) ||
-      a.transaction.day_position - b.transaction.day_position ||
-      b.transaction.created_at.localeCompare(a.transaction.created_at)
-  )
-  const receiptsByDate = new Map<string, IncomeReceipt[]>()
-  for (const allocation of sortedAllocations) {
-    dates.add(allocation.due_on)
-    const list = receiptsByDate.get(allocation.due_on) ?? []
-    list.push({
-      transactionId: allocation.transaction.id,
-      occurredOn: allocation.transaction.occurred_on,
-      description: allocation.transaction.description,
-      amount: Number(allocation.amount)
-    })
-    receiptsByDate.set(allocation.due_on, list)
-  }
-
-  const year = today.slice(0, 4)
-  let receivedCents = 0
-  let dueCents = 0
-  const occurrences = [...dates]
-    .sort((a, b) => b.localeCompare(a))
-    .map((dueOn): IncomeHistoryRow => {
-      const receipts = receiptsByDate.get(dueOn) ?? []
-      const occurrence = {
-        due_on: dueOn,
-        amount: schedule.amount,
-        received_amount:
-          receipts.reduce(
-            (total, row) => total + Math.round(row.amount * 100),
-            0
-          ) / 100
-      }
-      const remaining = occurrenceRemaining(occurrence)
-      if (dueOn.startsWith(year)) {
-        receivedCents += Math.round(occurrence.received_amount * 100)
-      }
-      if (dueOn <= today) {
-        dueCents += Math.round(remaining * 100)
-      }
-      return {
-        dueOn,
-        amount: schedule.amount,
-        receivedAmount: occurrence.received_amount,
-        remaining,
-        status: getIncomeOccurrenceStatus(occurrence, today),
-        receipts
-      }
-    })
-
-  const visible = occurrences.slice(0, Math.max(1, options.limit))
-  return {
-    occurrences: visible,
-    hasMore: occurrences.length > visible.length,
-    receivedThisYear: receivedCents / 100,
-    dueToDate: dueCents / 100
-  }
 }

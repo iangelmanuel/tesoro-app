@@ -13,6 +13,7 @@ import {
   SURFACE_ITEM_CLICKABLE
 } from "@/components/dashboard/data/surface"
 import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
+import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { cn } from "@/libs/cn"
@@ -25,10 +26,13 @@ import {
   receivableInstallments,
   summarizeInstallments
 } from "../receivable-schedule"
-import { AdjustBalanceDialog } from "./adjust-balance-dialog"
+import { AdjustDebtBalanceDialog } from "./adjust-debt-balance-dialog"
 import { ArchiveDebtDialog } from "./archive-debt-dialog"
-import { CardActionsMenu, DEBT_CARD_FRAME, ZeroBalanceNote } from "./debt-card"
-import { ToneBadge } from "./debt-indicators"
+import {
+  DEBT_CARD_FRAME,
+  DebtCardActionsMenu,
+  DebtCardZeroBalanceNote
+} from "./debt-card-parts"
 import { ReceivableProgress } from "./debt-progress"
 import { DebtSheet } from "./debt-sheet"
 import { ReceivableDialog } from "./receivable-dialog"
@@ -170,7 +174,7 @@ export function ReceivableCard({
             </span>
           </button>
 
-          <CardActionsMenu
+          <DebtCardActionsMenu
             label={receivable.name}
             actions={actions}
             disabled={pending}
@@ -232,7 +236,7 @@ export function ReceivableCard({
         ) : null}
 
         {zeroBalance ? (
-          <ZeroBalanceNote
+          <DebtCardZeroBalanceNote
             action="Marcar como cobrada"
             disabled={pending}
             onAction={() => run("markCollected")}
@@ -261,7 +265,7 @@ export function ReceivableCard({
             open={editing}
             onOpenChange={setEditing}
           />
-          <AdjustBalanceDialog
+          <AdjustDebtBalanceDialog
             debt={receivable}
             currency={currency}
             open={adjusting}

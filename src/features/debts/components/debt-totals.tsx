@@ -2,12 +2,10 @@ import {
   StatCard,
   StatCardSkeleton
 } from "@/components/dashboard/data/stat-card"
-import {
-  globalUtilization,
-  totalDebt,
-  totalMonthlyInterest
-} from "../calculations"
+import { totalDebt } from "../calculations"
+import { totalMonthlyInterest } from "../projection"
 import type { Debt } from "../queries"
+import { globalUtilization } from "../utilization"
 import { UtilizationBadge } from "./debt-indicators"
 
 interface DebtTotalsProps {

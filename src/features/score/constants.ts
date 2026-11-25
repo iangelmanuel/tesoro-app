@@ -153,5 +153,8 @@ export const LOW_CUSHION_MONTHS = 3
 export const UNBUDGETED_MIN_CATEGORIES = 2
 export const IRREGULAR_RATIO = 0.5
 
+/** Largo máximo de entity_key en dismissed_recommendations */
+export const ENTITY_KEY_MAX = 100
+
 /** Recomendaciones que van a la tarjeta del Resumen */
 export const SUMMARY_RECOMMENDATIONS = 3

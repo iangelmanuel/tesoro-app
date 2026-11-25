@@ -5,7 +5,7 @@ import { Amount } from "@/components/dashboard/data/amount"
 import { FieldError } from "@/components/ui/field"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { formatDate, formatTime } from "@/libs/format"
-import { listLinkableTransactions } from "../actions"
+import { listLinkableTransactions } from "../entry-actions"
 import type { EntryType } from "../entry-types"
 import type { LinkableTransaction } from "../queries"
 

@@ -89,3 +89,20 @@ export function countMonths(from: string, to: string): number {
 export function trimSeconds(value: string | null): string | null {
   return value ? value.slice(0, 5) : null
 }
+
+/** Suma `days` días (o resta, si es negativo) a una fecha YYYY-MM-DD, en UTC */
+export function addDays(date: string, days: number) {
+  return new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000)
+    .toISOString()
+    .slice(0, 10)
+}
+
+/**
+ * Día `day` del mes YYYY-MM (YYYY-MM-DD); si el mes es más corto, su último
+ * día: 31 → 30 de abril, 28 o 29 de febrero
+ */
+export function dayInMonth(month: string, day: number) {
+  const [year, monthNumber] = month.split("-").map(Number)
+  const lastDay = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate()
+  return `${month}-${String(Math.min(day, lastDay)).padStart(2, "0")}`
+}

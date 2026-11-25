@@ -1,33 +1,15 @@
-import {
-  TONE_BADGE_CLASSES as TONE_BADGE,
-  TONE_TEXT_CLASSES as TONE_TEXT
-} from "@/components/dashboard/feedback/tone"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
 import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"
 import { formatDate } from "@/libs/format"
-import type { BandTone } from "../constants"
 import { bandInfo } from "../curves"
 import type { Band } from "../types"
-
-const BAND_BADGE_CLASSES: Record<BandTone, string> = {
-  danger: TONE_BADGE.danger,
-  warning: TONE_BADGE.warning,
-  info: TONE_BADGE.info,
-  success: TONE_BADGE.success
-}
-
-const BAND_TEXT_CLASSES: Record<BandTone, string> = {
-  danger: TONE_TEXT.danger,
-  warning: TONE_TEXT.warning,
-  info: TONE_TEXT.info,
-  success: TONE_TEXT.success
-}
 
 /** "Débil", "Regular", "Bueno" o "Excelente" con su color */
 export function BandBadge({ band }: { band: Band }) {
   const { label, tone } = bandInfo(band)
-  return <ToneBadge className={BAND_BADGE_CLASSES[tone]}>{label}</ToneBadge>
+  return <ToneBadge tone={tone}>{label}</ToneBadge>
 }
 
 /** "+3 pts vs. el mes anterior", o "Sin comparación aún" si el anterior no tiene score */
@@ -75,7 +57,7 @@ export function ScoreOverview({
         <span
           className={cn(
             "text-5xl font-semibold tracking-tight tabular-nums",
-            BAND_TEXT_CLASSES[bandInfo(band).tone]
+            TONE_TEXT_CLASSES[bandInfo(band).tone]
           )}
         >
           {score}

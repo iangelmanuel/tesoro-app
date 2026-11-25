@@ -10,9 +10,10 @@ import type { AppSupabase } from "@/libs/supabase/types"
 import type { Database } from "@/types/database"
 import type { RecurringIncomeInput } from "./schemas"
 
-// Crear y editar ingresos fijos (SPEC 44). Lo comparten las Server Actions y
-// el MCP: recibe el cliente y el espacio Personal ya resuelto (con permiso
-// de escritura) y devuelve la fila antes y después para el log.
+// Escrituras de ingresos fijos. Crear y editar (SPEC 44) lo comparten las
+// Server Actions y el MCP: recibe el cliente y el espacio Personal ya resuelto
+// (con permiso de escritura) y devuelve la fila antes y después para el log.
+// Pausar, reanudar y eliminar solo los usan las actions.
 
 export type RecurringIncomeRow =
   Database["public"]["Tables"]["recurring_incomes"]["Row"]
@@ -82,6 +83,7 @@ async function referenceErrors(
   return null
 }
 
+/** Crea un ingreso fijo activo y devuelve la fila creada */
 export async function createRecurringIncomeRecord(
   supabase: AppSupabase,
   workspace: Pick<ServiceWorkspace, "id">,
@@ -153,4 +155,56 @@ export async function updateRecurringIncomeRecord(
     return fail({ error: RECURRING_INCOME_NOT_FOUND })
   }
   return { ok: true, before, after }
+}
+
+/** Pausa (`active` false) o reanuda (`active` true) un ingreso fijo */
+export async function setRecurringIncomeActiveRecord(
+  supabase: AppSupabase,
+  workspace: Pick<ServiceWorkspace, "id">,
+  id: string,
+  active: boolean
+): Promise<ServiceResult<object>> {
+  const { data, error } = await supabase
+    .from("recurring_incomes")
+    .update({ is_active: active })
+    .eq("id", id)
+    .eq("workspace_id", workspace.id)
+    .select("id")
+
+  if (error) {
+    return fail({
+      error: "No se pudo actualizar el ingreso fijo. Intenta de nuevo"
+    })
+  }
+  if (data.length === 0) {
+    return fail({ error: RECURRING_INCOME_NOT_FOUND })
+  }
+  return { ok: true }
+}
+
+/**
+ * Elimina un ingreso fijo. Sus movimientos recibidos se conservan: la FK los
+ * deja con el enlace en null.
+ */
+export async function deleteRecurringIncomeRecord(
+  supabase: AppSupabase,
+  workspace: Pick<ServiceWorkspace, "id">,
+  id: string
+): Promise<ServiceResult<object>> {
+  const { data, error } = await supabase
+    .from("recurring_incomes")
+    .delete()
+    .eq("id", id)
+    .eq("workspace_id", workspace.id)
+    .select("id")
+
+  if (error) {
+    return fail({
+      error: "No se pudo eliminar el ingreso fijo. Intenta de nuevo"
+    })
+  }
+  if (data.length === 0) {
+    return fail({ error: RECURRING_INCOME_NOT_FOUND })
+  }
+  return { ok: true }
 }

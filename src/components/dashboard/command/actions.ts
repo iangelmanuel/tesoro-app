@@ -2,7 +2,7 @@
 
 import type { Route } from "next"
 import { ACCOUNTS_PATH } from "@/features/accounts/constants"
-import { DEBTS_PATH } from "@/features/debts/calculations"
+import { DEBTS_PATH, RECEIVABLES_PATH } from "@/features/debts/tabs"
 import { GOALS_PATH } from "@/features/goals/progress"
 import { workspaceBasePath } from "@/features/workspaces/paths"
 import { requireWorkspace } from "@/features/workspaces/queries"
@@ -77,7 +77,7 @@ export async function loadCommandEntities(
       name: row.name,
       // Las cuentas por cobrar viven en su pestaña (Me deben)
       href: (row.kind === "receivable"
-        ? `${DEBTS_PATH}?tab=receivables&${DETAIL_PARAM}=${row.id}`
+        ? `${RECEIVABLES_PATH}&${DETAIL_PARAM}=${row.id}`
         : `${DEBTS_PATH}?${DETAIL_PARAM}=${row.id}`) as Route
     })),
     ...(goals?.data ?? []).map((row) => ({

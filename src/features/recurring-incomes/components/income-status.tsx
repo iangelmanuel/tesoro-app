@@ -1,20 +1,11 @@
 import { Amount } from "@/components/dashboard/data/amount"
-import { TONE_BADGE_CLASSES as TONE_BADGE } from "@/components/dashboard/feedback/tone"
 import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import {
   INCOME_OCCURRENCE_STATUS,
-  type IncomeOccurrenceStatus,
-  type IncomeOccurrenceTone
+  type IncomeOccurrenceStatus
 } from "../occurrences"
 
 // Piezas de estado de una ocurrencia: las usan la lista del mes y el Sheet
-
-const TONE_CLASSES: Record<IncomeOccurrenceTone, string> = {
-  success: TONE_BADGE.success,
-  danger: TONE_BADGE.danger,
-  warning: TONE_BADGE.warning,
-  neutral: TONE_BADGE.neutral
-}
 
 export function IncomeStatusBadge({
   status
@@ -22,7 +13,7 @@ export function IncomeStatusBadge({
   status: IncomeOccurrenceStatus
 }) {
   const { label, tone } = INCOME_OCCURRENCE_STATUS[status]
-  return <ToneBadge className={TONE_CLASSES[tone]}>{label}</ToneBadge>
+  return <ToneBadge tone={tone}>{label}</ToneBadge>
 }
 
 /** "Recibió $ 20.000 de $ 50.000 · Falta $ 30.000" */

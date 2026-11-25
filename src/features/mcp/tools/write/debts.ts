@@ -1,11 +1,8 @@
 import { z } from "zod"
-import { loadDebt } from "@/features/debts/entry-service"
+import { loadDebt } from "@/features/debts/debt-loader"
+import { type DebtKind, RATE_TYPES } from "@/features/debts/debt-schemas"
 import { DEBT_NOT_FOUND, RECEIVABLE_NOT_FOUND } from "@/features/debts/errors"
-import {
-  type DebtKind,
-  RATE_TYPES,
-  type ReceivableSchedule
-} from "@/features/debts/schemas"
+import type { ReceivableSchedule } from "@/features/debts/receivable-schemas"
 import {
   createDebtRecord,
   debtFieldsFor,

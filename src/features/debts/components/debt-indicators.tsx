@@ -1,40 +1,11 @@
 import {
-  TONE_BADGE_CLASSES as TONE_BADGE,
-  TONE_BAR_CLASSES as TONE_BAR
+  TONE_BAR_CLASSES,
+  type Tone
 } from "@/components/dashboard/feedback/tone"
-import { ToneBadge as Badge } from "@/components/dashboard/feedback/tone-badge"
-import type { OccurrenceTone } from "@/features/recurring-expenses/occurrences"
+import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import { cn } from "@/libs/cn"
-import {
-  PAYMENT_STATUS,
-  type PaymentStatus,
-  UTILIZATION_LEVELS,
-  utilizationLevel
-} from "../calculations"
-
-const TONE_BADGE_CLASSES: Record<OccurrenceTone, string> = {
-  success: TONE_BADGE.success,
-  danger: TONE_BADGE.danger,
-  warning: TONE_BADGE.warning,
-  neutral: TONE_BADGE.neutral
-}
-
-const TONE_BAR_CLASSES: Record<OccurrenceTone, string> = {
-  success: TONE_BAR.success,
-  danger: TONE_BAR.danger,
-  warning: TONE_BAR.warning,
-  neutral: TONE_BAR.neutral
-}
-
-export function ToneBadge({
-  tone,
-  children
-}: {
-  tone: OccurrenceTone
-  children: React.ReactNode
-}) {
-  return <Badge className={TONE_BADGE_CLASSES[tone]}>{children}</Badge>
-}
+import { PAYMENT_STATUS, type PaymentStatus } from "../next-payment"
+import { UTILIZATION_LEVELS, utilizationLevel } from "../utilization"
 
 export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
   const { label, tone } = PAYMENT_STATUS[status]
@@ -51,7 +22,7 @@ interface DebtBarProps {
   /** Porcentaje entero; puede pasar de 100 */
   percent: number
   /** Sin tono, la barra usa el color primario */
-  tone?: OccurrenceTone
+  tone?: Tone
   /** Nombre accesible de la barra ("Mercado: 85 %") */
   label?: string
   className?: string

@@ -4,27 +4,29 @@ import { z } from "zod"
 import { parseAmount } from "@/features/transactions/schemas"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { revalidatePersonalPages } from "@/features/workspaces/revalidate"
-import { moveErrorMessage } from "@/libs/move-error"
+import { readFormValues } from "@/libs/form-data"
 import { createClient } from "@/libs/supabase/server"
 import {
-  GOAL_NOT_ACTIVE,
-  GOAL_NOT_FOUND,
-  OVER_WITHDRAWAL,
-  contributionPgError,
-  goalSaved,
-  recordGoalContributionRecord
+  CONTRIBUTION_NOT_FOUND,
+  deleteGoalContributionRecord,
+  moveGoalContributionRecord,
+  recordGoalContributionRecord,
+  updateGoalContributionRecord
 } from "./contribution-service"
 import { contributionSchema, goalSchema } from "./schemas"
-import { createGoalRecord, updateGoalRecord } from "./service"
+import {
+  GOAL_NOT_FOUND,
+  type GoalRowStatus,
+  createGoalRecord,
+  loadGoal,
+  transitionGoalRecord,
+  updateGoalRecord
+} from "./service"
 import type {
   ContributionFormState,
   GoalActionResult,
   GoalFormState
 } from "./types"
-
-type GoalStatus = "active" | "completed" | "archived"
-
-const CONTRIBUTION_NOT_FOUND = "No se encontró el aporte"
 
 const GOAL_FIELDS = [
   "name",
@@ -47,41 +49,29 @@ const CONTRIBUTION_FIELDS = [
 
 const idSchema = z.uuid()
 
-function readValues<const T extends readonly string[]>(
-  formData: FormData,
-  fields: T
-) {
-  return Object.fromEntries(
-    fields.map((key) => {
-      const value = formData.get(key)
-      return [key, typeof value === "string" ? value : ""]
-    })
-  ) as Record<T[number], string>
-}
-
 // Meta del espacio Personal del usuario
 async function findGoal(goalId: string) {
   const workspace = await getPersonalWorkspace()
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from("savings_goals")
-    .select("id, workspace_id, status, target_date")
-    .eq("id", goalId)
-    .eq("workspace_id", workspace.id)
-    .maybeSingle()
+  return loadGoal(await createClient(), workspace.id, goalId)
+}
 
-  return data
+// Al editar, `currentTargetDate` deja conservar una fecha objetivo ya pasada
+function parseGoal(
+  values: Record<(typeof GOAL_FIELDS)[number], string>,
+  currentTargetDate?: string | null
+) {
+  return goalSchema(currentTargetDate).safeParse({
+    ...values,
+    target_amount: parseAmount(values.target_amount)
+  })
 }
 
 export async function createGoal(
   _prevState: GoalFormState,
   formData: FormData
 ): Promise<GoalFormState> {
-  const values = readValues(formData, GOAL_FIELDS)
-  const parsed = goalSchema().safeParse({
-    ...values,
-    target_amount: parseAmount(values.target_amount)
-  })
+  const values = readFormValues(formData, GOAL_FIELDS)
+  const parsed = parseGoal(values)
 
   if (!parsed.success) {
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
@@ -106,7 +96,7 @@ export async function updateGoal(
   _prevState: GoalFormState,
   formData: FormData
 ): Promise<GoalFormState> {
-  const values = readValues(formData, GOAL_FIELDS)
+  const values = readFormValues(formData, GOAL_FIELDS)
   const id = idSchema.safeParse(formData.get("id"))
 
   if (!id.success) {
@@ -118,10 +108,7 @@ export async function updateGoal(
     return { error: GOAL_NOT_FOUND, values }
   }
 
-  const parsed = goalSchema(goal.target_date).safeParse({
-    ...values,
-    target_amount: parseAmount(values.target_amount)
-  })
+  const parsed = parseGoal(values, goal.target_date)
 
   if (!parsed.success) {
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
@@ -145,8 +132,8 @@ export async function updateGoal(
 // Cambia el estado solo si la meta está en uno de los estados `from`
 async function transitionGoal(
   id: string,
-  from: GoalStatus[],
-  to: GoalStatus
+  from: GoalRowStatus[],
+  to: GoalRowStatus
 ): Promise<GoalActionResult> {
   const parsedId = idSchema.safeParse(id)
 
@@ -155,23 +142,16 @@ async function transitionGoal(
   }
 
   const workspace = await getPersonalWorkspace()
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("savings_goals")
-    .update({
-      status: to,
-      completed_at: to === "completed" ? new Date().toISOString() : null
-    })
-    .eq("id", parsedId.data)
-    .eq("workspace_id", workspace.id)
-    .in("status", from)
-    .select("id")
+  const result = await transitionGoalRecord(
+    await createClient(),
+    workspace,
+    parsedId.data,
+    from,
+    to
+  )
 
-  if (error) {
-    return { error: "No se pudo actualizar la meta. Intenta de nuevo" }
-  }
-  if (data.length === 0) {
-    return { error: GOAL_NOT_FOUND }
+  if (!result.ok) {
+    return { error: result.error }
   }
 
   revalidatePersonalPages()
@@ -191,7 +171,7 @@ export async function reactivateGoal(id: string): Promise<GoalActionResult> {
 }
 
 function parseContribution(formData: FormData) {
-  const values = readValues(formData, CONTRIBUTION_FIELDS)
+  const values = readFormValues(formData, CONTRIBUTION_FIELDS)
   const parsed = contributionSchema.safeParse({
     ...values,
     amount: parseAmount(values.amount)
@@ -230,20 +210,6 @@ export async function createContribution(
   return { ok: true }
 }
 
-// Aporte del espacio Personal del usuario, con el estado de su meta
-async function findContribution(id: string) {
-  const workspace = await getPersonalWorkspace()
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from("goal_contributions")
-    .select("id, goal_id, amount, goal:savings_goals!inner (status)")
-    .eq("id", id)
-    .eq("workspace_id", workspace.id)
-    .maybeSingle()
-
-  return data
-}
-
 export async function updateContribution(
   _prevState: ContributionFormState,
   formData: FormData
@@ -258,34 +224,16 @@ export async function updateContribution(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
   }
 
-  const contribution = await findContribution(id.data)
-  if (!contribution) {
-    return { error: CONTRIBUTION_NOT_FOUND, values }
-  }
-  if (contribution.goal.status !== "active") {
-    return { error: GOAL_NOT_ACTIVE, values }
-  }
+  const workspace = await getPersonalWorkspace()
+  const result = await updateGoalContributionRecord(
+    await createClient(),
+    workspace,
+    id.data,
+    parsed.data
+  )
 
-  const saved = await goalSaved(await createClient(), contribution.goal_id)
-  if (saved - Number(contribution.amount) + parsed.data.amount < 0) {
-    return { fieldErrors: { amount: [OVER_WITHDRAWAL] }, values }
-  }
-
-  // Editar cambia monto, fecha, hora y nota; la cuenta no se toca (SPEC 16)
-  const { amount, occurred_on, occurred_time, note } = parsed.data
-
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("goal_contributions")
-    .update({ amount, occurred_on, occurred_time, note })
-    .eq("id", contribution.id)
-    .select("id")
-
-  if (error) {
-    return { ...contributionPgError(error), values }
-  }
-  if (data.length === 0) {
-    return { error: CONTRIBUTION_NOT_FOUND, values }
+  if (!result.ok) {
+    return { error: result.error, fieldErrors: result.fieldErrors, values }
   }
 
   revalidatePersonalPages()
@@ -301,33 +249,15 @@ export async function deleteContribution(
     return { error: CONTRIBUTION_NOT_FOUND }
   }
 
-  const contribution = await findContribution(parsedId.data)
-  if (!contribution) {
-    return { error: CONTRIBUTION_NOT_FOUND }
-  }
-  if (contribution.goal.status !== "active") {
-    return { error: GOAL_NOT_ACTIVE }
-  }
+  const workspace = await getPersonalWorkspace()
+  const result = await deleteGoalContributionRecord(
+    await createClient(),
+    workspace,
+    parsedId.data
+  )
 
-  const saved = await goalSaved(await createClient(), contribution.goal_id)
-  if (saved - Number(contribution.amount) < 0) {
-    return { error: OVER_WITHDRAWAL }
-  }
-
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("goal_contributions")
-    .delete()
-    .eq("id", contribution.id)
-    .select("id")
-
-  if (error) {
-    // En un borrado, el único error por campo posible es el del saldo
-    const result = contributionPgError(error)
-    return { error: result.error ?? result.fieldErrors?.amount?.[0] }
-  }
-  if (data.length === 0) {
-    return { error: CONTRIBUTION_NOT_FOUND }
+  if (!result.ok) {
+    return { error: result.error }
   }
 
   revalidatePersonalPages()
@@ -346,14 +276,14 @@ export async function moveContribution(
     return { error: CONTRIBUTION_NOT_FOUND }
   }
 
-  const supabase = await createClient()
-  const { error } = await supabase.rpc("move_goal_contribution", {
-    p_id: parsedId.data,
-    p_target_id: parsedTarget.data
-  })
+  const result = await moveGoalContributionRecord(
+    await createClient(),
+    parsedId.data,
+    parsedTarget.data
+  )
 
-  if (error) {
-    return { error: moveErrorMessage(error) }
+  if (!result.ok) {
+    return { error: result.error }
   }
 
   revalidatePersonalPages()

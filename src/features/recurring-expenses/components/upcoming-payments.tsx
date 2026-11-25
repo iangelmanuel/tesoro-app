@@ -1,42 +1,17 @@
 import { Check } from "lucide-react"
 import { Amount } from "@/components/dashboard/data/amount"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/data/surface"
-import {
-  TONE_BADGE_CLASSES as TONE_BADGE,
-  TONE_TEXT_CLASSES
-} from "@/components/dashboard/feedback/tone"
-import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
+import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
 import { Button } from "@/components/ui/button"
-import { activeAccountId } from "@/features/accounts/active-account"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
 import { cn } from "@/libs/cn"
 import { formatDate, formatShortDate } from "@/libs/format"
-import {
-  OCCURRENCE_STATUS,
-  type OccurrenceStatus,
-  type OccurrenceTone,
-  occurrenceDescription
-} from "../occurrences"
+import { recurringPaymentValues } from "../payment"
 import type { UpcomingPayment } from "../queries"
-
-const TONE_CLASSES: Record<OccurrenceTone, string> = {
-  success: TONE_BADGE.success,
-  danger: TONE_BADGE.danger,
-  warning: TONE_BADGE.warning,
-  neutral: TONE_BADGE.neutral
-}
-
-export function OccurrenceStatusBadge({
-  status
-}: {
-  status: OccurrenceStatus
-}) {
-  const { label, tone } = OCCURRENCE_STATUS[status]
-  return <ToneBadge className={TONE_CLASSES[tone]}>{label}</ToneBadge>
-}
+import { OccurrenceStatusBadge } from "./occurrence-status-badge"
 
 interface PayOccurrenceButtonProps {
   workspaceId: string
@@ -57,13 +32,8 @@ export function occurrencePaymentProps(
   accounts: PaymentAccountOption[]
 ) {
   return {
-    initialValues: {
-      amount: payment.amount,
-      category_id: payment.category.id,
-      // Cuenta por defecto si sigue activa (SPEC 41); si no, la elige el usuario
-      account_id: activeAccountId(accounts, payment.accountId),
-      description: occurrenceDescription(payment)
-    },
+    // Cuenta por defecto si sigue activa (SPEC 41); si no, la elige el usuario
+    initialValues: recurringPaymentValues(payment, accounts),
     recurring: {
       recurringExpenseId: payment.recurringExpenseId,
       dueOn: payment.dueOn

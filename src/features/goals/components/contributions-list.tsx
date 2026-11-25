@@ -102,6 +102,7 @@ function ContributionRow({
   const [deleting, setDeleting] = useState(false)
   const [, startTransition] = useTransition()
   const isWithdrawal = contribution.amount < 0
+  const ArrowIcon = isWithdrawal ? ArrowDown : ArrowUp
   const label = isWithdrawal ? "retiro" : "aporte"
   // Un aporte sale de la cuenta y un retiro entra a ella
   const accountText = contribution.account_name
@@ -136,17 +137,10 @@ function ContributionRow({
                   : TONE_TEXT_CLASSES.success
               )}
             >
-              {isWithdrawal ? (
-                <ArrowDown
-                  aria-hidden
-                  className="mr-0.5 inline size-3.5 align-[-2px]"
-                />
-              ) : (
-                <ArrowUp
-                  aria-hidden
-                  className="mr-0.5 inline size-3.5 align-[-2px]"
-                />
-              )}
+              <ArrowIcon
+                aria-hidden
+                className="mr-0.5 inline size-3.5 align-[-2px]"
+              />
               <Amount
                 value={contribution.amount}
                 currency={currency}

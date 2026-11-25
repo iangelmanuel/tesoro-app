@@ -14,8 +14,6 @@ import {
   ScrollTableSkeleton
 } from "@/components/dashboard/data/scroll-table"
 import { SURFACE_LIST } from "@/components/dashboard/data/surface"
-import { TONE_BADGE_CLASSES } from "@/components/dashboard/feedback/tone"
-import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import { DeleteDialog } from "@/components/dashboard/overlays/delete-dialog"
 import {
   Table,
@@ -28,8 +26,9 @@ import {
 import type { AccountOption } from "@/features/accounts/components/account-select"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
+import { ActiveStatusBadge } from "@/features/recurring-expenses/components/active-status-badge"
 import { cn } from "@/libs/cn"
-import { formatDate } from "@/libs/format"
+import { formatValidity } from "@/libs/format"
 import { incomeFrequencyLabel } from "../occurrences"
 import type { RecurringIncome } from "../queries"
 import { useOpenIncomeSheet } from "./income-sheet-context"
@@ -40,13 +39,6 @@ import { useRecurringIncomeActions } from "./use-recurring-income-actions"
 const TABLE_SURFACE = cn(SURFACE_LIST, "divide-y-0 px-2")
 const MIN_WIDTH = "60rem"
 const COLUMNS = 8
-
-function validityLabel(income: RecurringIncome) {
-  const from = formatDate(income.starts_on)
-  return income.ends_on
-    ? `${from} – ${formatDate(income.ends_on)}`
-    : `Desde ${from}`
-}
 
 interface RecurringIncomesListProps {
   incomes: RecurringIncome[]
@@ -212,18 +204,10 @@ function IncomeRow({
           {income.accountName ?? "Sin cuenta"}
         </TableCell>
         <TableCell className="text-muted-foreground">
-          {validityLabel(income)}
+          {formatValidity(income.starts_on, income.ends_on)}
         </TableCell>
         <TableCell>
-          <ToneBadge
-            className={
-              income.is_active
-                ? TONE_BADGE_CLASSES.success
-                : TONE_BADGE_CLASSES.neutral
-            }
-          >
-            {income.is_active ? "Activo" : "Pausado"}
-          </ToneBadge>
+          <ActiveStatusBadge active={income.is_active} />
         </TableCell>
         {/* Las acciones no abren el detalle */}
         <TableCell onClick={(event) => event.stopPropagation()}>

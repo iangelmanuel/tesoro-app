@@ -89,6 +89,7 @@ function GoalForm({ goal, onSaved, onCancel }: GoalFormProps) {
 
   const errors = state.fieldErrors
   const values = state.values
+  const submitLabel = isEditing ? "Guardar" : "Crear"
 
   return (
     <form
@@ -184,7 +185,7 @@ function GoalForm({ goal, onSaved, onCancel }: GoalFormProps) {
           type="submit"
           disabled={pending}
         >
-          {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear"}
+          {pending ? "Guardando..." : submitLabel}
         </Button>
       </div>
     </form>

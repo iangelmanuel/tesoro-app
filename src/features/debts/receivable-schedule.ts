@@ -1,5 +1,6 @@
 import type { Tone } from "@/components/dashboard/feedback/tone"
-import { monthRange, shiftMonth } from "@/libs/dates"
+import { dayInMonth, shiftMonth } from "@/libs/dates"
+import { roundCents } from "@/libs/money"
 
 // Cuotas de una cuenta por cobrar mensual (SPEC 28, 29 y 39). El estado de
 // cada cuota no se guarda: depende de lo que le asignan los abonos
@@ -77,8 +78,6 @@ export interface PeriodEntry {
   allocations: readonly EntryAllocation[]
 }
 
-const roundCents = (value: number) => Math.round(value * 100) / 100
-
 /** Primer día del mes de una fecha YYYY-MM-DD */
 export function periodOf(date: string) {
   return `${date.slice(0, 7)}-01`
@@ -89,10 +88,7 @@ export function periodOf(date: string) {
  * día del mes si el mes es más corto (31 → 30 de abril, 28 o 29 de febrero)
  */
 export function installmentDueOn(periodOn: string, dueDay: number) {
-  const { to } = monthRange(periodOn.slice(0, 7))
-  const lastDay = Number(to.slice(8))
-  const day = Math.min(dueDay, lastDay)
-  return `${periodOn.slice(0, 7)}-${String(day).padStart(2, "0")}`
+  return dayInMonth(periodOn.slice(0, 7), dueDay)
 }
 
 /** Mes (YYYY-MM-01) de la última cuota, o null si es indefinida */
@@ -104,6 +100,48 @@ export function lastPeriodOn(
   }
   const first = receivable.starts_on.slice(0, 7)
   return `${shiftMonth(first, receivable.term_months - 1)}-01`
+}
+
+/**
+ * Resumen de una cuenta por cobrar mensual mientras se escribe (diálogo):
+ * día de pago, primera cuota y, si tiene número de cuotas, la última y el
+ * total. null si falta un dato o no es válido (monto > 0, día 1–31, inicio y
+ * 1–600 cuotas)
+ */
+export function monthlyReceivablePreview(input: {
+  amount: number
+  /** Día de pago como texto */
+  dueDay: string
+  startsOn: string
+  /** Número de cuotas como texto, o null si es sin fin */
+  term: string | null
+}) {
+  const { amount, startsOn } = input
+  const day = Number(input.dueDay)
+  const months = input.term === null ? null : Number(input.term)
+  const ready =
+    !Number.isNaN(amount) &&
+    amount > 0 &&
+    Number.isInteger(day) &&
+    day >= 1 &&
+    day <= 31 &&
+    startsOn !== "" &&
+    (months === null ||
+      (Number.isInteger(months) && months >= 1 && months <= 600))
+  if (!ready) return null
+
+  const lastPeriod =
+    months === null
+      ? null
+      : lastPeriodOn({ starts_on: startsOn, term_months: months })
+  return {
+    day,
+    firstDue: installmentDueOn(periodOf(startsOn), day),
+    end:
+      months === null || lastPeriod === null
+        ? null
+        : { months, lastPeriod, total: roundCents(amount * months) }
+  }
 }
 
 /**
@@ -126,6 +164,7 @@ export function installmentAmountFor(
   return match?.amount ?? receivable.installment
 }
 
+/** Estado de una cuota: pagada, abonada o, sin abonos, según su fecha de pago */
 export function getInstallmentStatus(
   dueOn: string,
   expected: number,

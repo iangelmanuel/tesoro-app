@@ -15,7 +15,8 @@ import { getCategories } from "@/features/categories/queries"
 import { cn } from "@/libs/cn"
 import { formatDate } from "@/libs/format"
 import { getUpcomingPayments } from "../queries"
-import { OccurrenceStatusBadge, PayOccurrenceButton } from "./upcoming-payments"
+import { OccurrenceStatusBadge } from "./occurrence-status-badge"
+import { PayOccurrenceButton } from "./upcoming-payments"
 
 const MAX_PAYMENTS = 5
 const RECURRING_HREF = RECURRING_PATH as Route

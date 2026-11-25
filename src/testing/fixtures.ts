@@ -3,7 +3,7 @@
 // lo avisa) y recibe solo los campos que el test necesita.
 import type { AccountWithBalance } from "@/features/accounts/types"
 import type { BudgetProgress } from "@/features/budgets/queries"
-import type { Debt } from "@/features/debts/queries"
+import type { Debt, DebtEntry } from "@/features/debts/queries"
 import type { Goal } from "@/features/goals/queries"
 import type { UpcomingPayment } from "@/features/recurring-expenses/queries"
 import type { UpcomingIncome } from "@/features/recurring-incomes/queries"
@@ -74,6 +74,35 @@ export function debtFixture(fields: Partial<Debt>): Debt {
     installments_due_current: null,
     installments_due_previous: null,
     installment_history: [],
+    ...fields
+  }
+}
+
+/** Movimiento de una deuda: un pago sin cuenta ni asignaciones */
+export function debtEntryFixture(fields: Partial<DebtEntry>): DebtEntry {
+  return {
+    id: "entry",
+    workspace_id: "workspace",
+    debt_id: "debt",
+    kind: "payment",
+    amount: 0,
+    occurred_on: "2026-01-01",
+    occurred_time: null,
+    note: null,
+    account_id: null,
+    transaction_id: null,
+    import_id: null,
+    installments: null,
+    is_extra_payment: false,
+    generated: false,
+    day_position: 0,
+    created_at: CREATED_AT,
+    updated_at: CREATED_AT,
+    account_name: null,
+    payment_account_id: null,
+    description: null,
+    category_id: null,
+    allocations: [],
     ...fields
   }
 }

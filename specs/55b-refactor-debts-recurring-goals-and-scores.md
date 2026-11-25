@@ -1,6 +1,6 @@
 # SPEC 55b — Refactor de deudas, recurrentes, metas y scores
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 54, SPEC 55a
 > **Fecha:** 2026-11-21
 > **Objetivo:** Aplicar las reglas de SPEC 54 a `debts`, `recurring-expenses`, `recurring-incomes`, `goals`, `score` y `business-score`, sin cambiar comportamiento.
@@ -135,21 +135,21 @@ Cada paso deja `check`, `eslint`, `prettier:check`, `test` y `build` en verde, y
 
 Verificables en código o con los scripts:
 
-- [ ] `pnpm eslint src/features/{debts,recurring-expenses,recurring-incomes,goals,score,business-score}` no da warnings de `max-lines`.
-- [ ] Existen los tests de §4 y `pnpm test` pasa.
-- [ ] Los tests del score dan el mismo puntaje y los mismos factores que antes del refactor para cada entrada de ejemplo.
-- [ ] `grep -rn "export function ToneBadge" src` devuelve solo `src/components/dashboard/feedback/tone-badge.tsx`.
-- [ ] `grep -rn "export function AdjustBalanceDialog" src` no devuelve resultados; existen `AdjustAccountBalanceDialog` y `AdjustDebtBalanceDialog`.
-- [ ] `use-debt-action.ts`, `use-goal-action.ts`, `use-recurring-expense-actions.ts` y `use-recurring-income-actions.ts` usan `useActionToast` y no importan `useTransition`.
-- [ ] No existen `src/features/debts/actions.ts` ni `src/features/debts/schemas.ts` como archivos únicos; existen sus partes por entidad.
-- [ ] Ninguna action del área hace consultas a Supabase directamente.
-- [ ] Todo export de servicios, queries y módulos puros del área tiene JSDoc.
-- [ ] `git diff` de `src/features/mcp/tools/**` solo cambia rutas de import.
-- [ ] `git diff` no toca `supabase/migrations/`, `src/types/database.ts`, `docs/producto.md` ni textos visibles del área.
-- [ ] `CLAUDE.md` y `docs/mcp.md` no citan rutas que ya no existen.
-- [ ] `CHANGELOG.md` tiene la entrada en `[Unreleased]`.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
-- [ ] `/code-review high` no deja hallazgos abiertos.
+- [x] `pnpm eslint src/features/{debts,recurring-expenses,recurring-incomes,goals,score,business-score}` no da warnings de `max-lines`.
+- [x] Existen los tests de §4 y `pnpm test` pasa.
+- [x] Los tests del score dan el mismo puntaje y los mismos factores que antes del refactor para cada entrada de ejemplo.
+- [x] `grep -rn "export function ToneBadge" src` devuelve solo `src/components/dashboard/feedback/tone-badge.tsx`.
+- [x] `grep -rn "export function AdjustBalanceDialog" src` no devuelve resultados; existen `AdjustAccountBalanceDialog` y `AdjustDebtBalanceDialog`.
+- [x] `use-debt-action.ts`, `use-goal-action.ts`, `use-recurring-expense-actions.ts` y `use-recurring-income-actions.ts` usan `useActionToast` y no importan `useTransition`.
+- [x] No existen `src/features/debts/actions.ts` ni `src/features/debts/schemas.ts` como archivos únicos; existen sus partes por entidad.
+- [x] Ninguna action del área hace consultas a Supabase directamente.
+- [x] Todo export de servicios, queries y módulos puros del área tiene JSDoc.
+- [x] `git diff` de `src/features/mcp/tools/**` solo cambia rutas de import.
+- [x] `git diff` no toca `supabase/migrations/`, `src/types/database.ts`, `docs/producto.md` ni textos visibles del área.
+- [x] `CLAUDE.md` y `docs/mcp.md` no citan rutas que ya no existen.
+- [x] `CHANGELOG.md` tiene la entrada en `[Unreleased]`.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
+- [x] `/code-review high` no deja hallazgos abiertos.
 
 Verificables en navegador (los prueba el usuario a mano):
 

@@ -20,23 +20,16 @@ import { listUpcomingPayments } from "./tools/read/list-upcoming-payments"
 import { listWorkspaces } from "./tools/read/list-workspaces"
 import { createAccountTool, updateAccountTool } from "./tools/write/accounts"
 import { setBudgetTool } from "./tools/write/budgets"
+import { collectReceivable } from "./tools/write/collect-receivable"
 import { createCategory } from "./tools/write/create-category"
+import { createDebtTool } from "./tools/write/create-debt"
+import { createReceivableTool } from "./tools/write/create-receivable"
 import { createTransactions } from "./tools/write/create-transactions"
-import {
-  collectReceivable,
-  deleteDebtEntry,
-  recordDebtPayment,
-  updateDebtEntry
-} from "./tools/write/debt-entries"
-import {
-  createDebtTool,
-  createReceivableTool,
-  updateDebtTool,
-  updateReceivableTool
-} from "./tools/write/debts"
+import { deleteDebtEntry } from "./tools/write/delete-debt-entry"
 import { deleteTransactions } from "./tools/write/delete-transactions"
 import { recordGoalContribution } from "./tools/write/goals"
 import { importStatement } from "./tools/write/import-statement"
+import { recordDebtPayment } from "./tools/write/record-debt-payment"
 import {
   payRecurringExpense,
   receiveRecurringIncome
@@ -56,6 +49,9 @@ import {
   updateTransfers
 } from "./tools/write/transfers"
 import { undoOperation } from "./tools/write/undo-operation"
+import { updateDebtTool } from "./tools/write/update-debt"
+import { updateDebtEntry } from "./tools/write/update-debt-entry"
+import { updateReceivableTool } from "./tools/write/update-receivable"
 import { updateTransactions } from "./tools/write/update-transactions"
 import type { McpTool, McpToolDefinition } from "./types"
 

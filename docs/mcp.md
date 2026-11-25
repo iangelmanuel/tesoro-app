@@ -52,7 +52,9 @@ app/api/mcp/route.ts
 - **Escrituras.** Usan los servicios que comparten las Server Actions
   (`transactions/service.ts`, con sus mensajes en
   `transactions/transaction-errors.ts`, `accounts/transfer-service.ts`,
-  `debts/entry-service.ts`, `goals/contribution-service.ts`,
+  `debts/entry-payment-service.ts` (pagos y abonos), `debts/entry-service.ts`
+  (editar, borrar y mover movimientos), `debts/receivable-service.ts`,
+  `goals/contribution-service.ts`,
   `categories/service.ts` y los de crear y editar entidades de SPEC 44) y
   los mismos prellenados del diálogo de movimiento
   (`recurring-expenses/payment.ts`, `recurring-incomes/receipt.ts`), nunca tablas o RPC directo. Todo o nada:

@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Architecture guide** in `docs/arquitectura.md`: repo map, layers and dependency direction, feature anatomy, data flow, server/client split, naming, shared code, file size, JSDoc, tests, domain glossary, a "new feature" recipe and a PR checklist. Linked from `README.md`, `CONTRIBUTING.md` and `CLAUDE.md`.
 - **Lint and type rules that enforce the architecture.** `noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch` and `noImplicitOverride` in `tsconfig.json`; `consistent-type-imports` (inline style), `unicorn/filename-case` (kebab-case, Next dynamic segments exempt) and `no-restricted-imports` zones (`src/libs` and `src/config` can't import features or components, `components/ui` only imports `ui/` and `libs`, nothing in `src/` imports `app/`, `exceljs` only in `exports/workbook/`, the PDF packages only in `exports/pdf/`, HeroUI and React Aria banned); `max-lines` at 400 as a warning.
 - `import "server-only"` in every feature `queries.ts`, `service.ts` and `*-service.ts` and in `src/libs/supabase/server.ts`, so a client import fails the build.
+- `addDays` and `dayInMonth` in `src/libs/dates.ts`; `formatMonthLong`, `formatDayMonth` and `formatValidity` in `src/libs/format.ts` (SPEC 55b).
+- Shared test fixtures in `src/testing/` (`fixtures.ts`, `score-fixtures.ts`, `schema-result.ts`, `debt-service-fixtures.ts`, `debt-samples.ts`).
 - `formatNumber`, `formatPercent`, `formatCompactCount`, `currencySymbol` and `formatMonthYear` in `src/libs/format.ts`; `listMonths`, `countMonths` and `trimSeconds` in `src/libs/dates.ts`.
 
 ### Changed
@@ -24,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `transactions/service.ts` → `service.ts`, `transaction-errors.ts`, `transaction-links.ts`;
   - `transactions/actions.ts` → `actions.ts`, `ledger-actions.ts`, `duplicate-actions.ts`; `accounts/actions.ts` → `actions.ts`, `transfer-actions.ts`, `adjustment-actions.ts`;
   - `transactions-filters.tsx`, `transaction-dialog.tsx` and `transactions-table.tsx` into sibling components and hooks, with their logic in tested pure modules (`filter-options.ts`, `transaction-form-values.ts`, `ledger-rows.ts`).
+- **Debts, recurring expenses and incomes, goals and both scores refactored (SPEC 55b), no visible change.** Characterization tests first, then thin actions and split files:
+  - `debts`: schemas into `debt-schemas.ts`, `receivable-schemas.ts`, `entry-schemas.ts` and `schema-fields.ts`; actions into `debt-actions.ts`, `entry-actions.ts` and `receivable-actions.ts`; services into `debt-loader.ts`, `entry-service.ts` (edit, delete, move), `entry-payment-service.ts`, `entry-advance-service.ts`, `entry-adjustment-service.ts` and `receivable-service.ts`; `calculations.ts` into `card-cycle.ts`, `next-payment.ts` and `utilization.ts`;
+  - the payment, debt-entry, receivable-collect, debt and receivable dialogs, the debt sheet, the entries list and the card into sibling components and hooks, with their logic in tested pure modules (`payment-form-values.ts`, `debt-entry-form-values.ts`, `receivable-collect-form-values.ts`, `entry-list.ts`, `monthlyReceivablePreview`); one rule for the linked movement type (`entryTransactionType`) and for the account a movement uses (`usesPaymentAccount`) in `entry-types.ts`;
+  - `score` and `business-score`: recommendation rules into `recommendation-rules.ts`, shared helpers in `score/recommendation-helpers.ts`;
+  - `recurring-expenses` and `recurring-incomes`: history, schedule and sheet logic into pure modules (`recurring-expense-history.ts`, `income-history.ts`, `income-schedule.ts`) and split sheets and dialogs; `goals`: `loadGoal` and contribution records in services.
+- The shared `ToneBadge` takes `tone`; the debts copy was removed. The debts `AdjustBalanceDialog` is now `AdjustDebtBalanceDialog`.
 - The accounts `AdjustBalanceDialog` is now `AdjustAccountBalanceDialog` (`adjust-account-balance-dialog.tsx`).
 - The budgets `formatPercent` ("93 %") moved to `src/libs/format.ts` as `formatPercentLabel`; `formatPercent` there is the `Intl` one ("12,3%").
 - Duplicating a movement now answers with the "could not prepare the duplicate" toast when reading the recurring incomes fails, instead of an unhandled error.

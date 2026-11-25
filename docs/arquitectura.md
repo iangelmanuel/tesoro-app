@@ -101,11 +101,17 @@ existen en cada feature):
 | `schemas.ts`                  | Esquemas Zod de entrada (formularios, MCP)                                                             |
 | `types.ts`                    | Tipos de la feature                                                                                    |
 | `constants.ts`                | Constantes en `UPPER_SNAKE_CASE`                                                                       |
-| `queries.ts`                  | Lecturas. Empieza con `import "server-only"`                                                           |
+| `queries.ts` / `*-queries.ts` | Lecturas. Empiezan con `import "server-only"`                                                          |
 | `service.ts` / `*-service.ts` | Escrituras compartidas entre las actions y el MCP. Empiezan con `import "server-only"`                 |
-| `actions.ts`                  | `"use server"`, delgadas: validar → `requireWritableWorkspace` → servicio → revalidar                  |
+| `actions.ts` / `*-actions.ts` | `"use server"`, delgadas: validar → `requireWritableWorkspace` → servicio → revalidar                  |
 | `calculations.ts` y otros     | Lógica pura, sin I/O, con su `*.test.ts` al lado                                                       |
 | `components/`                 | UI de la feature. Cada componente que carga datos exporta su `…Skeleton` en el mismo archivo (SPEC 51) |
+
+Una feature grande parte sus lecturas y actions por sección o destino, no por
+tamaño: `exports/` lee con `movement-export-queries.ts`,
+`personal-export-queries.ts` y `business-export-queries.ts`; `imports/` tiene
+una action por destino (`transaction-import-actions.ts`,
+`debt-entry-import-actions.ts`…). En `mcp/tools/` va un archivo por tool.
 
 Los servicios devuelven `ServiceResult<T>` (`features/workspaces/service-result.ts`):
 `{ ok: true, … }` o `{ ok: false, error?, fieldErrors? }`. Así la action lo

@@ -10,8 +10,8 @@ seguridad en serio y agradecemos cualquier reporte responsable.
 | 0.3.x   | :white_check_mark: |
 | < 0.3   | :x:                |
 
-**Versión actual**: 0.3.0 — app sobre shadcn + Base UI, nueva paleta,
-hero de video y demo de la landing regrabada.
+**Versión actual**: 0.3.1 — código reorganizado por capas y features, con
+tests de Vitest, sin cambios para el usuario.
 
 ## Reportar una vulnerabilidad
 

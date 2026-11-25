@@ -1,6 +1,6 @@
 {
   "name": "tesoro-app",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "description": "Tesoro: gestor y recomendador de finanzas personales y empresariales de código abierto. A partir de los registros del usuario genera gráficas claras, recomendaciones y un score de salud financiera, con espacios separados para Personal y Empresa. Construido con Next.js, React, Tailwind CSS y Supabase.",
   "license": "MIT",

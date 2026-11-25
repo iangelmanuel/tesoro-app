@@ -167,3 +167,21 @@ export function buildGoalContributionPreviewRows(
     }
   })
 }
+
+/** Aportes y retiros marcados, como filas de la action de metas */
+export function toGoalContributionImportRows(
+  rows: PreviewRow<GoalContributionValue>[]
+) {
+  return rows.flatMap(({ selected, value }) =>
+    selected && value
+      ? [
+          {
+            goal_id: value.goalId,
+            amount: value.amount,
+            occurred_on: value.occurred_on,
+            note: value.note
+          }
+        ]
+      : []
+  )
+}

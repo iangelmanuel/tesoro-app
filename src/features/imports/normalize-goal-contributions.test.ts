@@ -6,7 +6,8 @@ import {
 import {
   buildGoalContributionPreviewRows,
   extractGoalContributionRows,
-  suggestGoalEntryValue
+  suggestGoalEntryValue,
+  toGoalContributionImportRows
 } from "./normalize-goal-contributions"
 
 const TODAY = "2026-11-20"
@@ -107,5 +108,27 @@ describe("extractGoalContributionRows", () => {
       status: "skipped",
       reasons: ["Meta «Viaje» marcada como No importar"]
     })
+  })
+})
+
+describe("toGoalContributionImportRows", () => {
+  it("solo las filas marcadas, con los nombres de la action", () => {
+    const value = {
+      goalId: "g1",
+      amount: -20,
+      occurred_on: "2026-10-05",
+      note: null
+    }
+    const row = (selected: boolean) => ({
+      sheet: "Hoja1",
+      sourceRow: 2,
+      status: "ready" as const,
+      reasons: [],
+      selected,
+      value
+    })
+    expect(toGoalContributionImportRows([row(false), row(true)])).toEqual([
+      { goal_id: "g1", amount: -20, occurred_on: "2026-10-05", note: null }
+    ])
   })
 })

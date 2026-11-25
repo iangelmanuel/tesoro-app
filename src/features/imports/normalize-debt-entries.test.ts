@@ -6,7 +6,8 @@ import {
 import {
   buildDebtEntryPreviewRows,
   extractDebtEntryRows,
-  suggestDebtEntryValue
+  suggestDebtEntryValue,
+  toDebtEntryImportRows
 } from "./normalize-debt-entries"
 
 const TODAY = "2026-11-20"
@@ -185,5 +186,34 @@ describe("buildDebtEntryPreviewRows", () => {
     expect(buildDebtEntryPreviewRows(extracted, {}, null)[0].status).toBe(
       "skipped"
     )
+  })
+})
+
+describe("toDebtEntryImportRows", () => {
+  it("solo las filas marcadas, con los nombres de la action", () => {
+    const value = {
+      debtId: "d1",
+      kind: "adjustment" as const,
+      amount: -10,
+      occurred_on: "2026-10-05",
+      note: "x"
+    }
+    const row = (selected: boolean) => ({
+      sheet: "Hoja1",
+      sourceRow: 2,
+      status: "ready" as const,
+      reasons: [],
+      selected,
+      value
+    })
+    expect(toDebtEntryImportRows([row(true), row(false)])).toEqual([
+      {
+        debt_id: "d1",
+        kind: "adjustment",
+        amount: -10,
+        occurred_on: "2026-10-05",
+        note: "x"
+      }
+    ])
   })
 })

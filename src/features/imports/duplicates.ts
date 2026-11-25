@@ -11,6 +11,42 @@ import type {
 // Duplicados (SPEC 08): misma fecha, tipo, monto y descripción normalizada.
 // SPEC 08b: una clave propia por destino.
 
+/** Pedido de filas existentes para marcar duplicados, según el destino */
+export type DuplicateRequest =
+  | { target: "transactions"; from: string; to: string }
+  | { target: "recurring_expenses" }
+  | {
+      target: "debt_entries" | "goal_contributions"
+      from: string
+      to: string
+      /** Deudas o metas de las filas */
+      ids: string[]
+    }
+
+/** Filas existentes del destino con las que se comparan las del archivo */
+export type DuplicateCandidates =
+  | { target: "transactions"; candidates: DuplicateCandidate[] }
+  | { target: "recurring_expenses"; candidates: { name: string }[] }
+  | {
+      target: "debt_entries"
+      candidates: {
+        debtId: string
+        kind: DebtEntryKind
+        amount: number
+        occurred_on: string
+      }[]
+    }
+  | {
+      target: "goal_contributions"
+      candidates: { goalId: string; amount: number; occurred_on: string }[]
+    }
+
+/** Respuesta de getDuplicateCandidates: candidatos o un error */
+export type DuplicateCandidatesResult =
+  | (DuplicateCandidates & { error?: undefined })
+  | { error: string; target?: undefined; candidates?: undefined }
+
+/** Movimiento existente con lo que define un duplicado */
 export interface DuplicateCandidate {
   occurred_on: string
   type: TransactionType
@@ -18,6 +54,7 @@ export interface DuplicateCandidate {
   description: string
 }
 
+/** Movimiento: fecha, tipo, monto y descripción normalizada */
 export function duplicateKey(value: DuplicateCandidate) {
   return [
     value.occurred_on,

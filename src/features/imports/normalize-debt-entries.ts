@@ -168,3 +168,20 @@ export function buildDebtEntryPreviewRows(
     }
   })
 }
+
+/** Pagos y ajustes marcados, como filas de la action de deudas */
+export function toDebtEntryImportRows(rows: PreviewRow<DebtEntryValue>[]) {
+  return rows.flatMap(({ selected, value }) =>
+    selected && value
+      ? [
+          {
+            debt_id: value.debtId,
+            kind: value.kind,
+            amount: value.amount,
+            occurred_on: value.occurred_on,
+            note: value.note
+          }
+        ]
+      : []
+  )
+}

@@ -17,9 +17,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "@/components/ui/sonner"
+import { formatDateTime } from "@/libs/format"
 import { undoAgentOperation } from "../actions"
 import type { AgentOperation } from "../queries"
-import { formatTimestamp } from "./connections-list"
 
 const STATUS: Record<AgentOperation["status"], { label: string; tone: Tone }> =
   {
@@ -71,7 +71,7 @@ function OperationRow({ operation }: { operation: AgentOperation }) {
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground">
-            {formatTimestamp(operation.createdAt)} · {operation.agent}
+            {formatDateTime(operation.createdAt)} · {operation.agent}
             {operation.workspace ? ` · ${operation.workspace}` : ""}
           </p>
         </div>

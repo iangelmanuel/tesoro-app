@@ -13,8 +13,7 @@ import { SelectField } from "@/components/forms/select-field"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "@/components/ui/sonner"
-import { todayISO } from "@/libs/dates"
-import { formatDate } from "@/libs/format"
+import { formatDateTime } from "@/libs/format"
 import { revokeAgent, updateAgentAccess } from "../actions"
 import {
   MCP_ACCESS_OPTIONS,
@@ -24,10 +23,6 @@ import {
 import type { AgentConnection } from "../queries"
 
 /** Fecha de un timestamp en America/Bogota, como la UI */
-export function formatTimestamp(value: string) {
-  return formatDate(todayISO(new Date(value)))
-}
-
 const ACCESS_OPTIONS = MCP_ACCESS_VALUES.map((value) => ({
   value,
   label: MCP_ACCESS_OPTIONS[value].label
@@ -95,11 +90,11 @@ function ConnectionRow({ connection }: { connection: AgentConnection }) {
             <p className="truncate font-medium">{connection.name}</p>
             <p className="text-sm text-muted-foreground">
               {connection.authorizedAt
-                ? `Autorizado el ${formatTimestamp(connection.authorizedAt)}`
+                ? `Autorizado el ${formatDateTime(connection.authorizedAt)}`
                 : "Autorizado"}
               {" · "}
               {connection.lastUsedAt
-                ? `Último uso el ${formatTimestamp(connection.lastUsedAt)}`
+                ? `Último uso el ${formatDateTime(connection.lastUsedAt)}`
                 : "Sin uso todavía"}
             </p>
           </div>

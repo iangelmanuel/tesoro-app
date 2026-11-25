@@ -219,13 +219,19 @@ export type EntryEditorDebt = Pick<
   cycle_covered?: boolean
 }
 
+/** Movimiento y deuda que edita el diálogo */
+export interface DebtEntryEditorData {
+  entry: DebtEntry
+  debt: EntryEditorDebt
+}
+
 // Movimiento y deuda para el editor (SPEC 42, parte 3) y para Duplicar (SPEC
 // 49). Lo usa Movimientos, que no tiene el abono completo; el Sheet de la
 // deuda ya los tiene.
 export async function loadDebtEntryEditor(
   entryId: string,
   options: { cycle?: boolean } = {}
-): Promise<{ entry: DebtEntry; debt: EntryEditorDebt } | { error: string }> {
+): Promise<DebtEntryEditorData | { error: string }> {
   const id = idSchema.safeParse(entryId)
   if (!id.success) {
     return { error: ENTRY_NOT_FOUND }

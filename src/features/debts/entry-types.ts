@@ -146,3 +146,33 @@ export function entryKindOf(type: EntryType): EntryKind {
 export function balanceEffect(kind: EntryKind, amount: number) {
   return kind === "payment" ? -amount : amount
 }
+
+/** Opciones del segmentado "El ajuste" */
+export const DIRECTION_OPTIONS = [
+  { value: "up", label: "Sube" },
+  { value: "down", label: "Baja" }
+] as const satisfies readonly { value: AdjustmentDirection; label: string }[]
+
+/** Opciones del select "Tipo": etiqueta y pista de cada tipo en la deuda */
+export function entryTypeOptions(types: EntryType[], kind: DebtKind) {
+  return types.map((type) => {
+    const info = entryTypeInfo(type, kind)
+    return { value: type, label: info.label, description: info.hint }
+  })
+}
+
+/**
+ * Si el movimiento usa una cuenta: un pago o abono, en tarjeta la que paga y
+ * en préstamo o cuenta por cobrar la del movimiento (solo si lo registra);
+ * un avance, la que recibe. Compra, cuota de manejo y ajuste no tocan cuentas
+ */
+export function usesPaymentAccount(
+  type: EntryType,
+  isCard: boolean,
+  createsTransaction: boolean
+) {
+  return (
+    (entryKindOf(type) === "payment" && (isCard || createsTransaction)) ||
+    type === "advance"
+  )
+}

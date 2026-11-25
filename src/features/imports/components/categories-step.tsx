@@ -10,7 +10,7 @@ import { AccountDialog } from "@/features/accounts/components/account-dialog"
 import { CategoryDialog } from "@/features/categories/components/category-dialog"
 import { cn } from "@/libs/cn"
 import { MAX_ACCOUNT_NAME_LENGTH, MAX_CATEGORY_NAME_LENGTH } from "../constants"
-import { EMPTY_LINK_LABEL } from "../normalize"
+import { EMPTY_LINK_LABEL } from "../normalize-values"
 import type {
   AccountOption,
   AccountTarget,

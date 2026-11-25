@@ -9,12 +9,12 @@ import { RadioGroup } from "@/components/ui/radio-group"
 import type { FieldHelpKey } from "@/config/help"
 import { cn } from "@/libs/cn"
 import { FIELD_LABELS, MAX_ROWS } from "../constants"
+import { countDataRows } from "../normalize-transactions"
 import {
   type SourceTable,
-  countDataRows,
   distinctValues,
   readDataRows
-} from "../normalize"
+} from "../normalize-values"
 import { IMPORT_TARGETS } from "../targets"
 import type {
   DateFormat,

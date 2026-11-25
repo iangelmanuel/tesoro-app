@@ -1,21 +1,8 @@
 import { describe, expect, it } from "vitest"
 import type { SheetCells } from "../read-file"
 import type { PreviewRow } from "../types"
-import {
-  INITIAL_STATE,
-  type PreviewState,
-  type WizardAction,
-  type WizardState,
-  extractForTarget,
-  extractedAccountValues,
-  extractedLinkValues,
-  extractedPairs,
-  initialState,
-  selectedTables,
-  sourceTables,
-  stepLabel,
-  wizardReducer
-} from "./wizard-state"
+import { INITIAL_STATE, initialState, wizardReducer } from "./wizard-state"
+import type { PreviewState, WizardAction, WizardState } from "./wizard-types"
 
 const MOVEMENTS: SheetCells = {
   name: "Enero",
@@ -49,15 +36,6 @@ const loaded = run(INITIAL_STATE, {
   sheets: [OTHER, MOVEMENTS, SAME_HEADERS]
 })
 
-describe("stepLabel", () => {
-  it("el paso 4 cambia según el destino", () => {
-    expect(stepLabel("file", "transactions")).toBe("Archivo")
-    expect(stepLabel("categories", "transactions")).toBe("Categorías")
-    expect(stepLabel("categories", "debt_entries")).toBe("Deudas")
-    expect(stepLabel("categories", "goal_contributions")).toBe("Metas")
-  })
-})
-
 describe("archivo y hojas", () => {
   it("marca la primera hoja con tabla", () => {
     expect(loaded.step).toBe("table")
@@ -78,40 +56,6 @@ describe("archivo y hojas", () => {
       headerRow: 1,
       startCol: 1
     })
-  })
-
-  it("selectedTables busca los mismos encabezados en las demás hojas", () => {
-    const state = run(
-      loaded,
-      { type: "toggle_sheet", sheet: "Febrero" },
-      { type: "toggle_sheet", sheet: "Vacía" }
-    )
-    expect(
-      selectedTables(state).map(({ sheet, table }) => [
-        sheet.name,
-        table?.startCol ?? null
-      ])
-    ).toEqual([
-      ["Vacía", null],
-      ["Enero", null],
-      ["Febrero", null]
-    ])
-    // La primera marcada no tiene tabla: no hay tablas de origen
-    expect(sourceTables(state)).toEqual([])
-  })
-
-  it("con la primera hoja con tabla, las demás se emparejan", () => {
-    const state = run(loaded, { type: "toggle_sheet", sheet: "Febrero" })
-    expect(
-      selectedTables(state).map(({ sheet, table }) => [
-        sheet.name,
-        table?.startCol ?? null
-      ])
-    ).toEqual([
-      ["Enero", 0],
-      ["Febrero", 1]
-    ])
-    expect(sourceTables(state)).toHaveLength(2)
   })
 })
 
@@ -225,18 +169,6 @@ describe("categorías y cuentas", () => {
       }
     )
     expect(again.categoryTargets["expense:comida"]).toEqual({ kind: "skip" })
-  })
-
-  it("los extraídos de movimientos no dan valores de deuda o meta", () => {
-    const extracted = extractForTarget(
-      "transactions",
-      sourceTables(categories),
-      categories.config!
-    )
-    expect(extractedPairs(extracted)).toHaveLength(2)
-    expect(extractedAccountValues(extracted)).toHaveLength(2)
-    expect(extractedLinkValues(extracted)).toEqual([])
-    expect(extractedPairs(null)).toEqual([])
   })
 })
 

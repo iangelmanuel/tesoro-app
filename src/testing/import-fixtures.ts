@@ -1,4 +1,4 @@
-import type { SourceTable } from "@/features/imports/normalize"
+import type { SourceTable } from "@/features/imports/normalize-values"
 import type { DetectedTable, ImportConfig } from "@/features/imports/types"
 
 // Insumos de los tests del importador (SPEC 55c): una tabla con encabezados

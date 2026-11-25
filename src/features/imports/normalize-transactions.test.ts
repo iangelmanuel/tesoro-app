@@ -8,7 +8,6 @@ import {
   buildPreviewRows,
   categoryKeyFor,
   categoryPairs,
-  computeStats,
   countDataRows,
   extractRows,
   newAccounts,
@@ -16,12 +15,22 @@ import {
   pairKey,
   suggestAccountTargets,
   suggestCategoryTargets,
+  suggestTypeValue,
   toImportRows,
   toTransactionImportRows
-} from "./normalize"
+} from "./normalize-transactions"
+import { computeStats } from "./normalize-values"
 import type { PreviewRow } from "./types"
 
 const TODAY = "2026-11-20"
+
+describe("suggestTypeValue", () => {
+  it("por sinónimos", () => {
+    expect(suggestTypeValue(" Ingreso ")).toBe("income")
+    expect(suggestTypeValue("EGRESO")).toBe("expense")
+    expect(suggestTypeValue("otro")).toBeUndefined()
+  })
+})
 
 describe("extractRows por signo", () => {
   const table = importSourceFixture(

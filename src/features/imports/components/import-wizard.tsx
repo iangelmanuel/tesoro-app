@@ -26,9 +26,11 @@ import {
   markGoalContributionDuplicates,
   markRecurringDuplicates
 } from "../duplicates"
+import { buildDebtEntryPreviewRows } from "../normalize-debt-entries"
+import { buildGoalContributionPreviewRows } from "../normalize-goal-contributions"
+import { buildRecurringPreviewRows } from "../normalize-recurring"
 import {
   buildPreviewRows,
-  computeStats,
   existingAccountKey,
   existingCategoryKey,
   newAccountKey,
@@ -37,10 +39,8 @@ import {
   newCategoryKey,
   toImportRows,
   toTransactionImportRows
-} from "../normalize"
-import { buildDebtEntryPreviewRows } from "../normalize-debt-entries"
-import { buildGoalContributionPreviewRows } from "../normalize-goal-contributions"
-import { buildRecurringPreviewRows } from "../normalize-recurring"
+} from "../normalize-transactions"
+import { computeStats } from "../normalize-values"
 import type { DebtLinkOption, GoalLinkOption } from "../queries"
 import { countLabel } from "../targets"
 import type { AccountOption, CategoryOption, ImportTarget } from "../types"
@@ -60,19 +60,16 @@ import {
 import { SummaryStep } from "./summary-step"
 import { TableStep } from "./table-step"
 import {
-  type PreviewState,
-  STEPS,
-  type StepId,
   extractForTarget,
   extractedAccountValues,
   extractedLinkValues,
   extractedPairs,
-  initialState,
   selectedTables,
   stepLabel,
-  toSourceTables,
-  wizardReducer
-} from "./wizard-state"
+  toSourceTables
+} from "./wizard-selectors"
+import { initialState, wizardReducer } from "./wizard-state"
+import { type PreviewState, STEPS, type StepId } from "./wizard-types"
 
 // Asistente de 6 pasos: archivo → tabla → columnas → categorías (o deudas o
 // metas) → vista previa → resumen. El estado vive en el cliente y se pierde

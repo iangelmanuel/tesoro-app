@@ -10,7 +10,7 @@ import {
   parseDateCell,
   readDataRows,
   suggestBySynonyms
-} from "./normalize"
+} from "./normalize-values"
 import type {
   DebtEntryTarget,
   DebtEntryValue,

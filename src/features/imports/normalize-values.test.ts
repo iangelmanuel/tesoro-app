@@ -13,9 +13,8 @@ import {
   parseIntegerCell,
   readDataRows,
   suggestBySynonyms,
-  suggestLinkTargets,
-  suggestTypeValue
-} from "./normalize"
+  suggestLinkTargets
+} from "./normalize-values"
 
 const TODAY = "2026-11-20"
 
@@ -95,12 +94,6 @@ describe("isValidAmount", () => {
 })
 
 describe("sugerencias por sinónimos", () => {
-  it("suggestTypeValue", () => {
-    expect(suggestTypeValue(" Ingreso ")).toBe("income")
-    expect(suggestTypeValue("EGRESO")).toBe("expense")
-    expect(suggestTypeValue("otro")).toBeUndefined()
-  })
-
   it("suggestBySynonyms", () => {
     const synonyms = { a: ["uno", "one"], b: ["dos"] }
     expect(suggestBySynonyms("Dos", synonyms)).toBe("b")

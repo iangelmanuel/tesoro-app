@@ -2,8 +2,8 @@ import type { ChartPalette } from "../theme"
 import {
   type ChartSize,
   type LegendItem,
+  axisMonthLabel,
   niceScale,
-  shortMonth,
   svgDocument,
   svgLegend,
   svgRect,
@@ -86,7 +86,7 @@ export function groupedBarsChart(
     bars += svgText(
       area.x + slot * groupIndex + slot / 2,
       area.y + area.height + 10,
-      shortMonth(group.month, withYear),
+      axisMonthLabel(group.month, withYear),
       { anchor: "middle", fill: palette.muted, size: 6.5 }
     )
   })

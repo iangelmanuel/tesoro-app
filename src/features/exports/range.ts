@@ -1,6 +1,6 @@
 import { z } from "zod"
 import type { WorkspaceType } from "@/features/workspaces/types"
-import { shiftMonth } from "@/libs/dates"
+import { countMonths, listMonths, shiftMonth } from "@/libs/dates"
 import {
   DEFAULT_PDF_OPTIONS,
   EXPORT_FORMATS,
@@ -59,27 +59,12 @@ export function parsePdfOptions(raw: {
   return { success: true, options: parsed.data }
 }
 
-/** Meses entre `from` y `to` (YYYY-MM), contando ambos */
-export function monthsSpanned(from: string, to: string) {
-  const [fromYear, fromMonth] = from.split("-").map(Number)
-  const [toYear, toMonth] = to.split("-").map(Number)
-  return (toYear - fromYear) * 12 + (toMonth - fromMonth) + 1
-}
-
 /** Periodo anterior de igual largo: los N meses justo antes de `from` */
 export function previousRange(range: Pick<ExportRange, "from" | "months">) {
   return {
     from: shiftMonth(range.from, -range.months.length),
     to: shiftMonth(range.from, -1)
   }
-}
-
-/** ["2026-01", "2026-02", ...] de `from` a `to` (YYYY-MM), inclusivo */
-export function listMonths(from: string, to: string) {
-  const count = monthsSpanned(from, to)
-  return Array.from({ length: Math.max(count, 0) }, (_, index) =>
-    shiftMonth(from, index)
-  )
 }
 
 export type ParsedExportRange =
@@ -117,10 +102,10 @@ export function parseExportRange(
       error: "El periodo no puede terminar después del mes actual"
     }
   }
-  if (format === "pdf" && monthsSpanned(fromMonth, toMonth) > MAX_PDF_MONTHS) {
+  if (format === "pdf" && countMonths(fromMonth, toMonth) > MAX_PDF_MONTHS) {
     return { success: false, error: PDF_MONTHS_ERROR }
   }
-  if (monthsSpanned(fromMonth, toMonth) > MAX_EXPORT_MONTHS) {
+  if (countMonths(fromMonth, toMonth) > MAX_EXPORT_MONTHS) {
     return {
       success: false,
       error: `El periodo no puede cubrir más de ${MAX_EXPORT_MONTHS} meses.`

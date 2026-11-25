@@ -1,9 +1,9 @@
 import type { ChartPalette } from "../theme"
 import {
   type ChartSize,
+  axisMonthLabel,
   n,
   niceScale,
-  shortMonth,
   svgDocument,
   svgLegend,
   svgText,
@@ -52,7 +52,7 @@ export function lineChart(
     body += svgText(
       coord.x,
       area.y + area.height + 10,
-      shortMonth(points[index].month, withYear),
+      axisMonthLabel(points[index].month, withYear),
       { anchor: "middle", fill: palette.muted, size: 6.5 }
     )
   })

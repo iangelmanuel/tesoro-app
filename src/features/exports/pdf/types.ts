@@ -1,5 +1,5 @@
 import type { WorkspaceType } from "@/features/workspaces/types"
-import type { ExportData } from "../queries"
+import type { ExportData } from "../types"
 import type { PageSetup } from "./page"
 import type { PdfTheme } from "./theme"
 

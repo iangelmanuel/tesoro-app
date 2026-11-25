@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs"
 import type { Workspace } from "@/features/workspaces/queries"
-import type { ExportData } from "../queries"
+import type { ExportData } from "../types"
 import type { ExportRange } from "../types"
 import { addBusinessMonthSheet } from "./business-month-sheet"
 import { addMovementsSheet } from "./movements-sheet"

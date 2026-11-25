@@ -185,7 +185,7 @@ const SHORT_MONTHS = [
 ]
 
 /** "Oct" o "Oct 25" si el periodo cruza de año */
-export function shortMonth(month: string, withYear: boolean) {
+export function axisMonthLabel(month: string, withYear: boolean) {
   const [year, index] = month.split("-")
   const label = SHORT_MONTHS[Number(index) - 1]
   return withYear ? `${label} ${year.slice(2)}` : label

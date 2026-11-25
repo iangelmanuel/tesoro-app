@@ -2,13 +2,8 @@ import type { Workbook, Worksheet } from "exceljs"
 import { monthLabel, monthTitle } from "../range"
 import type { PersonalMonthData } from "../types"
 import { movementSectionColumns } from "./movements-sheet"
-import {
-  FIRST_SECTION_ROW,
-  type Formula,
-  type SectionRanges,
-  writeSection,
-  writeSheetHeader
-} from "./section"
+import { type Formula, type SectionRanges, writeSection } from "./section"
+import { FIRST_SECTION_ROW, writeSheetHeader } from "./sheet-header"
 import {
   COLORS,
   NUMBER_FORMATS,

@@ -22,6 +22,7 @@ import {
   SURFACE_ITEM_CLICKABLE
 } from "@/components/dashboard/data/surface"
 import { TONE_BADGE_CLASSES } from "@/components/dashboard/feedback/tone"
+import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -38,10 +39,10 @@ import { hasZeroBalance } from "../calculations"
 import { nextPayment } from "../next-payment"
 import { debtProjection, formatRate } from "../projection"
 import type { Debt, DebtEntry } from "../queries"
-import { AdjustBalanceDialog } from "./adjust-balance-dialog"
+import { AdjustDebtBalanceDialog } from "./adjust-debt-balance-dialog"
 import { ArchiveDebtDialog } from "./archive-debt-dialog"
 import { DebtDialog } from "./debt-dialog"
-import { PaymentStatusBadge, ToneBadge } from "./debt-indicators"
+import { PaymentStatusBadge } from "./debt-indicators"
 import { DebtProgress } from "./debt-progress"
 import { DebtSheet } from "./debt-sheet"
 import { useDebtAction } from "./use-debt-action"
@@ -208,7 +209,7 @@ export function DebtCard({
             open={editing}
             onOpenChange={setEditing}
           />
-          <AdjustBalanceDialog
+          <AdjustDebtBalanceDialog
             debt={debt}
             currency={currency}
             open={adjusting}

@@ -3,16 +3,16 @@
 import { useTransition } from "react"
 import Link from "next/link"
 import { CARD_ROW } from "@/components/dashboard/data/surface"
+import type { Tone } from "@/components/dashboard/feedback/tone"
+import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { toast } from "@/components/ui/sonner"
-import { ToneBadge } from "@/features/debts/components/debt-indicators"
-import type { OccurrenceTone } from "@/features/recurring-expenses/occurrences"
 import { cn } from "@/libs/cn"
 import { dismissRecommendation } from "../actions"
 import { SEVERITY_LABELS } from "../constants"
 import type { Recommendation, Severity } from "../types"
 
-const SEVERITY_TONES: Record<Severity, OccurrenceTone> = {
+const SEVERITY_TONES: Record<Severity, Tone> = {
   high: "danger",
   medium: "warning",
   low: "neutral"

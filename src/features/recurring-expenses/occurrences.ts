@@ -1,9 +1,11 @@
+import type { Tone } from "@/components/dashboard/feedback/tone"
 import { buildPaymentDescription } from "@/libs/payment-description"
 import type { RecurringFrequency } from "./schemas"
 
 export type OccurrenceStatus = "paid" | "overdue" | "today" | "upcoming"
 
-export type OccurrenceTone = "success" | "danger" | "warning" | "neutral"
+/** Tonos de una ocurrencia: los de tone.ts sin info */
+export type OccurrenceTone = Exclude<Tone, "info">
 
 export const OCCURRENCE_STATUS: Record<
   OccurrenceStatus,

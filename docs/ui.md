@@ -394,8 +394,9 @@ Validan en el servidor: el error llega por `error`, el campo lleva
 | `FormDialog`          | Dialog con título, descripción y el formulario; `bottomOnMobile` lo pega abajo en el teléfono. Siempre modal (foco atrapado)                                                 |
 
 El tipo de movimiento usa un `ToggleGroup` con forma de tabs. Los chips de
-estado de las tarjetas son `ToneBadge` (`src/components/dashboard/feedback/tone-badge.tsx`)
-con las clases de `tone.ts`.
+estado de las tarjetas son `ToneBadge` (`src/components/dashboard/feedback/tone-badge.tsx`):
+`tone` elige un tono de `tone.ts`; `className` queda para los casos sin tono
+(un presupuesto sin estado).
 
 ### Vocabulario (SPEC 47)
 

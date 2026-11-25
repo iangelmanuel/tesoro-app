@@ -1,7 +1,6 @@
 "use client"
 
-import { useTransition } from "react"
-import { toast } from "@/components/ui/sonner"
+import { useActionToast } from "@/hooks/use-action-toast"
 import { archiveDebt, markDebtPaid, reactivateDebt } from "../debt-actions"
 
 const ACTIONS = {
@@ -15,17 +14,13 @@ export type DebtAction = keyof typeof ACTIONS
 
 /** Cambia el estado de una deuda y avisa con un toast */
 export function useDebtAction(debt: { id: string; name: string }) {
-  const [pending, startTransition] = useTransition()
+  const { pending, run: runWithToast } = useActionToast()
 
   function run(action: DebtAction) {
-    startTransition(async () => {
-      const result = await ACTIONS[action].run(debt.id)
-      if (result.error) {
-        toast.error(result.error)
-      } else {
-        toast.success(`"${debt.name}" ${ACTIONS[action].success}`)
-      }
-    })
+    runWithToast(
+      () => ACTIONS[action].run(debt.id),
+      `"${debt.name}" ${ACTIONS[action].success}`
+    )
   }
 
   return { pending, run }

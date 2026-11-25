@@ -1,24 +1,17 @@
 import {
-  TONE_BADGE_CLASSES as TONE_BADGE,
-  TONE_BAR_CLASSES as TONE_BAR
+  TONE_BAR_CLASSES,
+  type Tone
 } from "@/components/dashboard/feedback/tone"
 import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import { cn } from "@/libs/cn"
 import { GOAL_STATUS_LABELS, type GoalStatus } from "../progress"
 
-// Sin estado (activa sin fecha) la barra usa el color primario
-const GOAL_BAR_CLASSES: Record<GoalStatus, string> = {
-  completed: TONE_BAR.success,
-  on_track: TONE_BAR.success,
-  at_risk: TONE_BAR.warning,
-  archived: TONE_BAR.neutral
-}
-
-const GOAL_BADGE_CLASSES: Record<GoalStatus, string> = {
-  completed: TONE_BADGE.success,
-  on_track: TONE_BADGE.success,
-  at_risk: TONE_BADGE.warning,
-  archived: TONE_BADGE.neutral
+/** Tono de cada estado; sin estado (activa sin fecha) la barra usa el primario */
+const GOAL_TONES: Record<GoalStatus, Tone> = {
+  completed: "success",
+  on_track: "success",
+  at_risk: "warning",
+  archived: "neutral"
 }
 
 /** Etiqueta del estado. Activa sin fecha: sin etiqueta. */
@@ -27,7 +20,7 @@ export function GoalStatusBadge({ status }: { status: GoalStatus | null }) {
     return null
   }
   return (
-    <ToneBadge className={GOAL_BADGE_CLASSES[status]}>
+    <ToneBadge tone={GOAL_TONES[status]}>
       {GOAL_STATUS_LABELS[status]}
     </ToneBadge>
   )
@@ -66,7 +59,7 @@ export function GoalProgressBar({
       <div
         className={cn(
           "h-full transition-all motion-reduce:transition-none",
-          status ? GOAL_BAR_CLASSES[status] : "bg-primary"
+          status ? TONE_BAR_CLASSES[GOAL_TONES[status]] : "bg-primary"
         )}
         style={{ width: `${width}%` }}
       />

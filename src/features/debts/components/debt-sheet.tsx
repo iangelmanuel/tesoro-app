@@ -5,6 +5,7 @@ import { Plus, RefreshCw } from "lucide-react"
 import { Amount } from "@/components/dashboard/data/amount"
 import { HelpHint } from "@/components/dashboard/feedback/help-hint"
 import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
+import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import {
   DetailSection,
   DetailSheet
@@ -36,9 +37,8 @@ import {
   collectedInYear,
   receivableInstallments
 } from "../receivable-schedule"
-import { AdjustBalanceDialog } from "./adjust-balance-dialog"
+import { AdjustDebtBalanceDialog } from "./adjust-debt-balance-dialog"
 import { DebtEntriesList } from "./debt-entries-list"
-import { ToneBadge } from "./debt-indicators"
 import { DebtProgress, ReceivableProgress } from "./debt-progress"
 import { PaymentDialog } from "./payment-dialog"
 import { ReceivableCollectDialog } from "./receivable-collect-form"
@@ -169,7 +169,7 @@ export function DebtSheet({
                 }
               />
               {!isMonthly && (
-                <AdjustBalanceDialog
+                <AdjustDebtBalanceDialog
                   debt={debt}
                   currency={currency}
                   trigger={
@@ -204,7 +204,7 @@ export function DebtSheet({
                   </Button>
                 }
               />
-              <AdjustBalanceDialog
+              <AdjustDebtBalanceDialog
                 debt={debt}
                 currency={currency}
                 trigger={

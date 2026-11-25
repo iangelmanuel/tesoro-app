@@ -1,3 +1,4 @@
+import type { Tone } from "@/components/dashboard/feedback/tone"
 import { monthName } from "@/features/recurring-expenses/occurrences"
 import type { IncomeFrequency } from "./schemas"
 
@@ -6,7 +7,8 @@ import type { IncomeFrequency } from "./schemas"
 export type IncomeOccurrenceStatus =
   "received" | "partial" | "today" | "pending" | "overdue"
 
-export type IncomeOccurrenceTone = "success" | "danger" | "warning" | "neutral"
+/** Tonos de una ocurrencia: los de tone.ts sin info */
+export type IncomeOccurrenceTone = Exclude<Tone, "info">
 
 export const INCOME_OCCURRENCE_STATUS: Record<
   IncomeOccurrenceStatus,

@@ -1,5 +1,4 @@
 import { Amount } from "@/components/dashboard/data/amount"
-import { TONE_BADGE_CLASSES } from "@/components/dashboard/feedback/tone"
 import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import {
   INCOME_OCCURRENCE_STATUS,
@@ -14,7 +13,7 @@ export function IncomeStatusBadge({
   status: IncomeOccurrenceStatus
 }) {
   const { label, tone } = INCOME_OCCURRENCE_STATUS[status]
-  return <ToneBadge className={TONE_BADGE_CLASSES[tone]}>{label}</ToneBadge>
+  return <ToneBadge tone={tone}>{label}</ToneBadge>
 }
 
 /** "Recibió $ 20.000 de $ 50.000 · Falta $ 30.000" */

@@ -4,6 +4,7 @@ import { useState } from "react"
 import { ChevronRight } from "lucide-react"
 import { Amount } from "@/components/dashboard/data/amount"
 import { SURFACE_LIST, SURFACE_ROW } from "@/components/dashboard/data/surface"
+import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import { Button } from "@/components/ui/button"
 import {
   Collapsible,
@@ -13,7 +14,6 @@ import {
 import { cn } from "@/libs/cn"
 import { debtStatusLabel } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
-import { ToneBadge } from "./debt-indicators"
 import { DebtSheet } from "./debt-sheet"
 import { useDebtAction } from "./use-debt-action"
 

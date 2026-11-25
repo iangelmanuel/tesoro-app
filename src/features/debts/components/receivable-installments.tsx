@@ -5,6 +5,7 @@ import { Check, Plus } from "lucide-react"
 import { Amount } from "@/components/dashboard/data/amount"
 import { CARD_LIST, CARD_ROW } from "@/components/dashboard/data/surface"
 import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
+import { ToneBadge } from "@/components/dashboard/feedback/tone-badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/libs/cn"
 import { formatMonthLong, formatShortDate } from "@/libs/format"
@@ -14,7 +15,6 @@ import {
   type Installment,
   receivableInstallments
 } from "../receivable-schedule"
-import { ToneBadge } from "./debt-indicators"
 
 /** Filas visibles antes de "Ver más" (cuentas indefinidas antiguas) */
 const VISIBLE_INSTALLMENTS = 12

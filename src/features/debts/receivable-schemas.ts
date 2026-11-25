@@ -3,6 +3,7 @@ import {
   MAX_AMOUNT,
   paymentAccountSchema
 } from "@/features/transactions/schemas"
+import { roundCents } from "@/libs/money"
 import {
   amountField,
   checkboxField,
@@ -13,7 +14,8 @@ import {
   noteField,
   pastDateField,
   paymentDescriptionField,
-  toAmount
+  positiveAmountField,
+  termField
 } from "./schema-fields"
 
 // Esquemas de una cuenta por cobrar: de cobro único o mensual (SPEC 28) y su
@@ -23,7 +25,7 @@ import {
  * Tipo de cobro de una cuenta por cobrar (SPEC 28): único o mes a mes. Se
  * elige al crear y no cambia.
  */
-export const RECEIVABLE_SCHEDULES = ["once", "monthly"] as const
+const RECEIVABLE_SCHEDULES = ["once", "monthly"] as const
 
 export type ReceivableSchedule = (typeof RECEIVABLE_SCHEDULES)[number]
 
@@ -53,31 +55,13 @@ export const monthlyReceivableSchema = z
   .object({
     name: nameField,
     counterparty: counterpartyField,
-    installment: z.preprocess(
-      toAmount,
-      z
-        .number({ error: "Ingresa el monto mensual" })
-        .refine((value) => !Number.isNaN(value), {
-          error: "Ingresa el monto mensual"
-        })
-        .refine((value) => value > 0, {
-          error: "El monto mensual debe ser mayor a 0"
-        })
-        .refine((value) => value <= MAX_AMOUNT, {
-          error: "El monto es demasiado grande"
-        })
+    installment: positiveAmountField(
+      "Ingresa el monto mensual",
+      "El monto mensual debe ser mayor a 0"
     ),
     due_day: dayField("Elige un día de pago entre 1 y 31"),
     starts_on: z.iso.date({ error: "Elige la fecha de inicio" }),
-    term_months: z.preprocess(
-      emptyToNull,
-      z.coerce
-        .number({ error: "Ingresa entre 1 y 600 cuotas" })
-        .int({ error: "Ingresa entre 1 y 600 cuotas" })
-        .min(1, { error: "Ingresa entre 1 y 600 cuotas" })
-        .max(600, { error: "Ingresa entre 1 y 600 cuotas" })
-        .nullable()
-    )
+    term_months: termField("Ingresa entre 1 y 600 cuotas")
   })
   .superRefine((data, ctx) => {
     if (
@@ -98,7 +82,7 @@ export const monthlyReceivableSchema = z
     opening_balance:
       data.term_months === null
         ? 0
-        : Math.round(data.installment * data.term_months * 100) / 100
+        : roundCents(data.installment * data.term_months)
   }))
 
 /**
@@ -106,7 +90,7 @@ export const monthlyReceivableSchema = z
  * cobro: Abono o Pago completo en una de cobro único; Una cuota o Varios
  * meses en una mensual.
  */
-export const RECEIVABLE_COLLECT_MODES = [
+const RECEIVABLE_COLLECT_MODES = [
   "partial", // Abono (una vez)
   "full", // Pago completo (una vez)
   "single", // Una cuota (mes a mes)
@@ -166,6 +150,3 @@ export const receivableCollectSchema = z.discriminatedUnion(
 )
 
 export type ReceivableCollectInput = z.infer<typeof receivableCollectSchema>
-
-export type ReceivableInput = z.infer<typeof receivableSchema>
-export type MonthlyReceivableInput = z.infer<typeof monthlyReceivableSchema>

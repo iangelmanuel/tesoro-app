@@ -1,14 +1,16 @@
 import { z } from "zod"
+import {
+  type LoadedDebt,
+  loadDebt,
+  loadEntry
+} from "@/features/debts/debt-loader"
 import { recordDebtPaymentRecord } from "@/features/debts/entry-payment-service"
 import {
   debtEntryEditSchema,
   paymentSchema
 } from "@/features/debts/entry-schemas"
 import {
-  type LoadedDebt,
   deleteEntryRecord,
-  loadDebt,
-  loadEntry,
   updateDebtEntryRecord
 } from "@/features/debts/entry-service"
 import {

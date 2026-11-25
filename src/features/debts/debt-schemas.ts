@@ -1,6 +1,4 @@
 import { z } from "zod"
-import { MAX_AMOUNT } from "@/features/transactions/schemas"
-import { receivableSchema } from "./receivable-schemas"
 import {
   amountField,
   balanceField,
@@ -9,7 +7,8 @@ import {
   emptyToNull,
   nameField,
   optionalAmountField,
-  toAmount
+  positiveAmountField,
+  termField
 } from "./schema-fields"
 
 // Esquemas de una deuda: tarjeta y préstamo, con su tasa y su cuenta por
@@ -22,7 +21,7 @@ export type DebtKind = (typeof DEBT_KINDS)[number]
 export type RateType = (typeof RATE_TYPES)[number]
 
 /** Tope de la tasa por tipo (checks de la tabla) */
-export const MAX_RATE: Record<RateType, number> = { ea: 200, mv: 10 }
+const MAX_RATE: Record<RateType, number> = { ea: 200, mv: 10 }
 
 /** Tasa escrita con coma decimal ("28,5"), hasta 3 decimales */
 export function parseRate(value: string) {
@@ -131,17 +130,9 @@ export const creditCardSchema = z
     name: nameField,
     counterparty: counterpartyField,
     opening_balance: balanceField,
-    credit_limit: z.preprocess(
-      toAmount,
-      z
-        .number({ error: "Ingresa el cupo" })
-        .refine((value) => !Number.isNaN(value), {
-          error: "Ingresa el cupo"
-        })
-        .refine((value) => value > 0, { error: "El cupo debe ser mayor a 0" })
-        .refine((value) => value <= MAX_AMOUNT, {
-          error: "El monto es demasiado grande"
-        })
+    credit_limit: positiveAmountField(
+      "Ingresa el cupo",
+      "El cupo debe ser mayor a 0"
     ),
     due_day: dayField("Elige un día de pago entre 1 y 31"),
     interest_rate: rateField,
@@ -169,40 +160,15 @@ export const loanSchema = z
     name: nameField,
     counterparty: counterpartyField,
     opening_balance: amountField,
-    installment: z.preprocess(
-      toAmount,
-      z
-        .number({ error: "Ingresa la cuota" })
-        .refine((value) => !Number.isNaN(value), {
-          error: "Ingresa la cuota"
-        })
-        .refine((value) => value > 0, { error: "La cuota debe ser mayor a 0" })
-        .refine((value) => value <= MAX_AMOUNT, {
-          error: "El monto es demasiado grande"
-        })
+    installment: positiveAmountField(
+      "Ingresa la cuota",
+      "La cuota debe ser mayor a 0"
     ),
     interest_rate: rateField,
     rate_type: rateTypeField,
     due_day: dayField("Elige un día de pago entre 1 y 31"),
     original_amount: optionalAmountField,
-    term_months: z.preprocess(
-      emptyToNull,
-      z.coerce
-        .number({ error: "Ingresa un plazo entre 1 y 600 meses" })
-        .int({ error: "Ingresa un plazo entre 1 y 600 meses" })
-        .min(1, { error: "Ingresa un plazo entre 1 y 600 meses" })
-        .max(600, { error: "Ingresa un plazo entre 1 y 600 meses" })
-        .nullable()
-    )
+    term_months: termField("Ingresa un plazo entre 1 y 600 meses")
   })
   .superRefine((data, ctx) => checkRate(data, ctx, true))
   .transform(withRateType)
-
-export const DEBT_SCHEMAS = {
-  credit_card: creditCardSchema,
-  loan: loanSchema,
-  receivable: receivableSchema
-} as const
-
-export type CreditCardInput = z.infer<typeof creditCardSchema>
-export type LoanInput = z.infer<typeof loanSchema>

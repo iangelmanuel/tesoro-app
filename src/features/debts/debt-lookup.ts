@@ -2,7 +2,7 @@ import "server-only"
 import { z } from "zod"
 import { getPersonalWorkspace } from "@/features/workspaces/queries"
 import { createClient } from "@/libs/supabase/server"
-import { loadDebt, loadEntry } from "./entry-service"
+import { loadDebt, loadEntry } from "./debt-loader"
 
 // Lo que comparten las actions de deudas: el id y la deuda o el movimiento
 // del espacio Personal del usuario

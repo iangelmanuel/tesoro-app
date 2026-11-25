@@ -1,10 +1,13 @@
 import "server-only"
 import { validateCategory } from "@/features/transactions/service"
 import { type ServiceResult, fail } from "@/features/workspaces/service-result"
-import { roundCents } from "@/libs/money"
 import { moveErrorMessage } from "@/libs/move-error"
 import type { AppSupabase } from "@/libs/supabase/types"
-import type { Database } from "@/types/database"
+import {
+  type DebtEntryRecord,
+  type LoadedEntry,
+  entryRecord
+} from "./debt-loader"
 import type { DebtEntryEditInput } from "./entry-schemas"
 import { entryKindOf, entryTypesFor } from "./entry-types"
 import {
@@ -21,86 +24,11 @@ import {
 // Movimientos de una deuda con un cliente dado (SPEC 34): las actions lo
 // usan con la sesión de cookies y el MCP con el Bearer del agente. El
 // espacio llega resuelto: aquí no se lee la sesión. Aquí va lo común a todos
-// los tipos (cargar, editar, borrar, reordenar); el pago, el avance y los
+// los tipos (editar, borrar, reordenar); el pago, el avance y los
 // ajustes van en entry-payment-service.ts, entry-advance-service.ts y
 // entry-adjustment-service.ts, y el cobro en receivable-service.ts.
 
-/** Fila de debt_entries: el snapshot del log de operaciones */
-export type DebtEntryRecord =
-  Database["public"]["Tables"]["debt_entries"]["Row"]
-
 const DELETE_ERROR = "No se pudo eliminar. Intenta de nuevo"
-
-/** Deuda del espacio con su saldo actual, o null si no existe o es ajena */
-export async function loadDebt(
-  supabase: AppSupabase,
-  workspaceId: string,
-  debtId: string
-) {
-  const { data } = await supabase
-    .from("debts")
-    .select(
-      "id, workspace_id, kind, status, name, opening_balance, installment, schedule, starts_on, term_months, entries:debt_entries (kind, amount, allocations:debt_entry_allocations (period_on))"
-    )
-    .eq("id", debtId)
-    .eq("workspace_id", workspaceId)
-    .maybeSingle()
-
-  if (!data) {
-    return null
-  }
-
-  // saldo = saldo inicial − pagos + ajustes + avances
-  const balance = data.entries.reduce(
-    (sum, entry) =>
-      entry.kind === "payment"
-        ? sum - Number(entry.amount)
-        : sum + Number(entry.amount),
-    Number(data.opening_balance)
-  )
-
-  return {
-    ...data,
-    balance: roundCents(balance),
-    // Mensual indefinida: sin saldo total, el saldo no limita los cobros
-    openEnded:
-      data.kind === "receivable" &&
-      data.schedule === "monthly" &&
-      data.term_months === null
-  }
-}
-
-export type LoadedDebt = NonNullable<Awaited<ReturnType<typeof loadDebt>>>
-
-/** Abono del espacio con su deuda, o null si no existe o es ajeno */
-export async function loadEntry(
-  supabase: AppSupabase,
-  workspaceId: string,
-  entryId: string
-) {
-  const { data } = await supabase
-    .from("debt_entries")
-    .select("*")
-    .eq("id", entryId)
-    .eq("workspace_id", workspaceId)
-    .maybeSingle()
-
-  if (!data) {
-    return null
-  }
-
-  const debt = await loadDebt(supabase, workspaceId, data.debt_id)
-  return debt ? { ...data, amount: Number(data.amount), debt } : null
-}
-
-export type LoadedEntry = NonNullable<Awaited<ReturnType<typeof loadEntry>>>
-
-/** La fila del abono sin su deuda: el snapshot del log de operaciones */
-export function entryRecord(entry: LoadedEntry): DebtEntryRecord {
-  const { debt, ...row } = entry
-  void debt
-  return row
-}
 
 /**
  * Reescribe cualquier movimiento de una deuda como si se registrara de nuevo
@@ -201,13 +129,14 @@ export async function updateDebtEntryRecord(
   })
 
   if (error) {
-    const failure = debtPgError(
-      error,
-      "amount",
-      kind === "payment" ? OVER_PAYMENT : NEGATIVE_BALANCE,
-      ENTRY_DEFAULT_ERROR
+    return fail(
+      debtPgError(
+        error,
+        "amount",
+        kind === "payment" ? OVER_PAYMENT : NEGATIVE_BALANCE,
+        ENTRY_DEFAULT_ERROR
+      )
     )
-    return fail({ error: failure.error, fieldErrors: failure.fieldErrors })
   }
 
   const { data: after } = await supabase
@@ -275,36 +204,4 @@ export async function moveDebtEntryRecord(
     return fail({ error: moveErrorMessage(error) })
   }
   return { ok: true }
-}
-
-/**
- * Reparte de nuevo un abono de una mensual desde la cuota no pagada más
- * antigua (reallocate_debt_entry). Cambiar el monto ya lo reparte por
- * trigger; esto sirve para rehacer el reparto sin cambiar el abono.
- */
-export async function reallocateEntry(
-  supabase: AppSupabase,
-  entryId: string
-): Promise<
-  ServiceResult<{ allocations: { period_on: string; amount: number }[] }>
-> {
-  const { data, error } = await supabase.rpc("reallocate_debt_entry", {
-    p_entry_id: entryId
-  })
-  if (error) {
-    const failure = debtPgError(
-      error,
-      "amount",
-      OVER_PAYMENT,
-      ENTRY_DEFAULT_ERROR
-    )
-    return fail({ error: failure.error, fieldErrors: failure.fieldErrors })
-  }
-  return {
-    ok: true,
-    allocations: data.map((row) => ({
-      period_on: row.period_on,
-      amount: Number(row.amount)
-    }))
-  }
 }

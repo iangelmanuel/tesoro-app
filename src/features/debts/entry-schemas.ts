@@ -4,12 +4,14 @@ import {
   refinePaymentAccount,
   timeSchema
 } from "@/features/transactions/schemas"
-import { ADJUSTMENT_DIRECTIONS, ENTRY_TYPES } from "./entry-types"
+import { ENTRY_TYPES } from "./entry-types"
 import { MAX_INSTALLMENTS } from "./installments"
 import {
   amountField,
   balanceField,
+  checkDirection,
   checkboxField,
+  directionField,
   emptyToNull,
   noteField,
   pastDateField,
@@ -72,14 +74,7 @@ export const debtEntryEditSchema = z
   .object({
     type: z.enum(ENTRY_TYPES, { error: "Elige el tipo de movimiento" }),
     amount: amountField,
-    direction: z.preprocess(
-      emptyToNull,
-      z
-        .enum(ADJUSTMENT_DIRECTIONS, {
-          error: "Elige si el ajuste sube o baja el saldo"
-        })
-        .nullable()
-    ),
+    direction: directionField,
     occurred_on: pastDateField,
     occurred_time: timeSchema,
     note: noteField,
@@ -97,13 +92,7 @@ export const debtEntryEditSchema = z
     )
   })
   .superRefine((data, ctx) => {
-    if (data.type === "adjustment" && data.direction === null) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["direction"],
-        message: "Elige si el ajuste sube o baja el saldo"
-      })
-    }
+    checkDirection(data, ctx)
     if (data.type === "advance" && data.account_id === null) {
       ctx.addIssue({
         code: "custom",
@@ -141,27 +130,12 @@ export const debtChargeSchema = z
       error: "Elige el tipo de movimiento"
     }),
     amount: amountField,
-    direction: z.preprocess(
-      emptyToNull,
-      z
-        .enum(ADJUSTMENT_DIRECTIONS, {
-          error: "Elige si el ajuste sube o baja el saldo"
-        })
-        .nullable()
-    ),
+    direction: directionField,
     occurred_on: pastDateField,
     occurred_time: timeSchema,
     note: noteField
   })
-  .superRefine((data, ctx) => {
-    if (data.type === "adjustment" && data.direction === null) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["direction"],
-        message: "Elige si el ajuste sube o baja el saldo"
-      })
-    }
-  })
+  .superRefine(checkDirection)
 
 export type DebtChargeInput = z.infer<typeof debtChargeSchema>
 

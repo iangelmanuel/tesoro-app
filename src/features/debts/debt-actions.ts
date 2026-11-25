@@ -157,8 +157,11 @@ export async function markDebtPaid(id: string): Promise<DebtActionResult> {
     return { error: DEBT_NOT_FOUND }
   }
 
-  const workspace = await getPersonalWorkspace()
-  const result = await markDebtPaidRecord(await createClient(), workspace, debt)
+  const result = await markDebtPaidRecord(
+    await createClient(),
+    { id: debt.workspace_id },
+    debt
+  )
   if (!result.ok) {
     return { error: result.error }
   }

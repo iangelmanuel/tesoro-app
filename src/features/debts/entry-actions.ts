@@ -5,6 +5,7 @@ import { revalidatePersonalPages } from "@/features/workspaces/revalidate"
 import { readFormValues } from "@/libs/form-data"
 import { createClient } from "@/libs/supabase/server"
 import { nextPayment } from "./calculations"
+import type { LoadedEntry } from "./debt-loader"
 import { findDebt, findEntry, idSchema } from "./debt-lookup"
 import {
   adjustBalanceRecord,
@@ -20,7 +21,6 @@ import {
   paymentSchema
 } from "./entry-schemas"
 import {
-  type LoadedEntry,
   deleteEntryRecord,
   moveDebtEntryRecord,
   updateDebtEntryRecord
@@ -97,19 +97,14 @@ const CHARGE_FIELDS = [
   "note"
 ] as const
 
-function parsePayment(formData: FormData) {
-  const values = readFormValues(formData, PAYMENT_FIELDS)
-  const parsed = paymentSchema.safeParse(values)
-  return { values, parsed }
-}
-
 // Pago de tarjeta o préstamo, o abono de cuenta por cobrar. El movimiento,
 // si se pide, se crea en la misma transacción (record_debt_payment).
 export async function recordPayment(
   _prevState: PaymentFormState,
   formData: FormData
 ): Promise<PaymentFormState> {
-  const { values, parsed } = parsePayment(formData)
+  const values = readFormValues(formData, PAYMENT_FIELDS)
+  const parsed = paymentSchema.safeParse(values)
   const debtId = idSchema.safeParse(formData.get("debt_id"))
 
   if (!debtId.success) {

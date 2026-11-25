@@ -2,8 +2,8 @@ import "server-only"
 import { type ServiceResult, fail } from "@/features/workspaces/service-result"
 import { roundCents } from "@/libs/money"
 import type { AppSupabase } from "@/libs/supabase/types"
+import type { LoadedDebt } from "./debt-loader"
 import type { AdjustBalanceInput, DebtChargeInput } from "./entry-schemas"
-import type { LoadedDebt } from "./entry-service"
 import { entryTypesFor } from "./entry-types"
 import {
   DEBT_NOT_ACTIVE,

@@ -8,17 +8,19 @@ import {
 import { shiftMonth, todayISO } from "@/libs/dates"
 import type { AppSupabase } from "@/libs/supabase/types"
 import type { Database } from "@/types/database"
+import type { LoadedDebt } from "./debt-loader"
 import {
-  DEBT_SCHEMAS,
   type DebtKind,
-  habitualAccountSchema
+  creditCardSchema,
+  habitualAccountSchema,
+  loanSchema
 } from "./debt-schemas"
-import type { LoadedDebt } from "./entry-service"
 import { DEBT_NOT_FOUND, NEGATIVE_BALANCE, debtPgError } from "./errors"
 import { lastPeriodOn, periodOf } from "./receivable-schedule"
 import {
   type ReceivableSchedule,
-  monthlyReceivableSchema
+  monthlyReceivableSchema,
+  receivableSchema
 } from "./receivable-schemas"
 
 // Crear y editar deudas y cuentas por cobrar (SPEC 44). Lo comparten las
@@ -33,6 +35,13 @@ const DEBT_DEFAULT_ERROR = "No se pudo guardar la deuda. Intenta de nuevo"
 const NEGATIVE_OPENING = "Con este saldo inicial la deuda queda en negativo"
 const ENTRIES_OUT_OF_RANGE =
   "Hay cobros de cuotas fuera de estas fechas. Elimínalos primero"
+
+/** Esquema de cada tipo de deuda (la mensual por cobrar va aparte) */
+const DEBT_SCHEMAS = {
+  credit_card: creditCardSchema,
+  loan: loanSchema,
+  receivable: receivableSchema
+} as const
 
 /** Campos del formulario de cada tipo (debt-dialog.tsx) */
 export const DEBT_FIELDS: Record<DebtKind, readonly string[]> = {

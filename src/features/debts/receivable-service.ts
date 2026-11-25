@@ -5,7 +5,7 @@ import {
   fail
 } from "@/features/workspaces/service-result"
 import type { AppSupabase } from "@/libs/supabase/types"
-import type { LoadedDebt } from "./entry-service"
+import type { LoadedDebt } from "./debt-loader"
 import {
   COLLECT_MODE_INVALID,
   COLLECT_OVER_BALANCE,
@@ -100,13 +100,9 @@ export async function recordReceivableCollection(
   })
 
   if (error) {
-    const failure = debtPgError(
-      error,
-      "amount",
-      COLLECT_OVER_BALANCE,
-      COLLECT_DEFAULT_ERROR
+    return fail(
+      debtPgError(error, "amount", COLLECT_OVER_BALANCE, COLLECT_DEFAULT_ERROR)
     )
-    return fail({ error: failure.error, fieldErrors: failure.fieldErrors })
   }
   return { ok: true, entryId: data }
 }

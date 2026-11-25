@@ -2,14 +2,14 @@ import "server-only"
 import { validateCategory } from "@/features/transactions/service"
 import { type ServiceResult, fail } from "@/features/workspaces/service-result"
 import type { AppSupabase } from "@/libs/supabase/types"
-import type { PaymentChange } from "./entry-payment-service"
-import type { AdvanceInput } from "./entry-schemas"
 import {
   type DebtEntryRecord,
   type LoadedDebt,
   type LoadedEntry,
   entryRecord
-} from "./entry-service"
+} from "./debt-loader"
+import type { PaymentChange } from "./entry-payment-service"
+import type { AdvanceInput } from "./entry-schemas"
 import {
   ADVANCE_ONLY_CARD,
   DEBT_NOT_ACTIVE,
@@ -120,13 +120,9 @@ export async function updateCardAdvance(
   })
 
   if (error) {
-    const failure = debtPgError(
-      error,
-      "amount",
-      NEGATIVE_BALANCE,
-      ENTRY_DEFAULT_ERROR
+    return fail(
+      debtPgError(error, "amount", NEGATIVE_BALANCE, ENTRY_DEFAULT_ERROR)
     )
-    return fail({ error: failure.error, fieldErrors: failure.fieldErrors })
   }
 
   const { data: after } = await supabase

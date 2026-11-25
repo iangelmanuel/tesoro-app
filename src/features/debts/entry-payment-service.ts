@@ -8,14 +8,14 @@ import {
 import { roundCents } from "@/libs/money"
 import type { AppSupabase } from "@/libs/supabase/types"
 import type { Database } from "@/types/database"
-import { updateCardAdvance } from "./entry-advance-service"
-import type { PaymentInput } from "./entry-schemas"
 import {
   type DebtEntryRecord,
   type LoadedDebt,
   type LoadedEntry,
   entryRecord
-} from "./entry-service"
+} from "./debt-loader"
+import { updateCardAdvance } from "./entry-advance-service"
+import type { PaymentInput } from "./entry-schemas"
 import {
   CARD_TRANSACTION,
   DEBT_NOT_ACTIVE,
@@ -58,7 +58,6 @@ const RECEIVABLE_EXTRA = "Una cuenta por cobrar no tiene abonos extra"
 const ADVANCE_EXTRA = "Un avance no es un abono extra"
 const NO_TRANSACTION_ACCOUNT =
   "Este pago no tiene movimiento: no se le puede asignar una cuenta"
-const TRANSACTION_ERROR = "No se pudo guardar el movimiento. Intenta de nuevo"
 
 /**
  * Valida el cambio de un pago o de un avance con las reglas del diálogo de
@@ -223,13 +222,7 @@ export async function updatePaymentEntry(
     .select("*")
 
   if (error) {
-    const failure = debtPgError(
-      error,
-      "amount",
-      OVER_PAYMENT,
-      ENTRY_DEFAULT_ERROR
-    )
-    return fail({ error: failure.error, fieldErrors: failure.fieldErrors })
+    return fail(debtPgError(error, "amount", OVER_PAYMENT, ENTRY_DEFAULT_ERROR))
   }
   const after = data[0]
   if (!after) {
@@ -260,13 +253,9 @@ export async function updatePaymentEntry(
       if (!txError) {
         return fail({ error: ENTRY_NOT_FOUND })
       }
-      const failure = debtPgError(
-        txError,
-        "amount",
-        OVER_PAYMENT,
-        TRANSACTION_ERROR
+      return fail(
+        debtPgError(txError, "amount", OVER_PAYMENT, ENTRY_DEFAULT_ERROR)
       )
-      return fail({ error: failure.error, fieldErrors: failure.fieldErrors })
     }
   }
   return { ok: true, before, after }
@@ -330,13 +319,7 @@ export async function recordDebtPaymentRecord(
   })
 
   if (error) {
-    const failure = debtPgError(
-      error,
-      "amount",
-      OVER_PAYMENT,
-      ENTRY_DEFAULT_ERROR
-    )
-    return fail({ error: failure.error, fieldErrors: failure.fieldErrors })
+    return fail(debtPgError(error, "amount", OVER_PAYMENT, ENTRY_DEFAULT_ERROR))
   }
   return { ok: true, entryId }
 }

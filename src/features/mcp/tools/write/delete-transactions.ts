@@ -1,10 +1,10 @@
 import { z } from "zod"
 import {
   type LoadedEntry,
-  deleteEntryRecord,
   entryRecord,
   loadEntry
-} from "@/features/debts/entry-service"
+} from "@/features/debts/debt-loader"
+import { deleteEntryRecord } from "@/features/debts/entry-service"
 import { DEBT_NOT_ACTIVE } from "@/features/debts/errors"
 import {
   type TransactionRow,

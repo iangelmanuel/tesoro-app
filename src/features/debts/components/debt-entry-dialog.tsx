@@ -28,7 +28,7 @@ import {
   type EntryEditorDebt,
   loadDebtEntryEditor,
   updateDebtEntry
-} from "../actions"
+} from "../entry-actions"
 import {
   type AdjustmentDirection,
   type EntryType,

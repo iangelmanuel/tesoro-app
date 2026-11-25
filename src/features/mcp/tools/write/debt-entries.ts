@@ -1,11 +1,14 @@
 import { z } from "zod"
+import { recordDebtPaymentRecord } from "@/features/debts/entry-payment-service"
+import {
+  debtEntryEditSchema,
+  paymentSchema
+} from "@/features/debts/entry-schemas"
 import {
   type LoadedDebt,
   deleteEntryRecord,
   loadDebt,
   loadEntry,
-  recordDebtPaymentRecord,
-  recordReceivableCollection,
   updateDebtEntryRecord
 } from "@/features/debts/entry-service"
 import {
@@ -17,10 +20,9 @@ import { debtPaymentDescriptions } from "@/features/debts/payment-description"
 import { type Debt, getDebtEntry, getDebts } from "@/features/debts/queries"
 import {
   type ReceivableSchedule,
-  debtEntryEditSchema,
-  paymentSchema,
   receivableCollectSchema
-} from "@/features/debts/schemas"
+} from "@/features/debts/receivable-schemas"
+import { recordReceivableCollection } from "@/features/debts/receivable-service"
 import type { ServiceFailure } from "@/features/workspaces/service-result"
 import { todayISO } from "@/libs/dates"
 import { type OperationInput, commitOperation } from "../../operations"

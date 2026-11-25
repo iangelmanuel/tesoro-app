@@ -13,7 +13,7 @@ import {
   receivableInstallments,
   summarizeInstallments
 } from "./receivable-schedule"
-import type { ReceivableSchedule } from "./schemas"
+import type { ReceivableSchedule } from "./receivable-schemas"
 
 // Cobro de una cuenta por cobrar (SPEC 39). Funciones puras para el
 // formulario compartido del tab Me deben y del Sheet: la regla de reparto es

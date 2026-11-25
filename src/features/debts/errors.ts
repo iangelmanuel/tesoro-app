@@ -6,6 +6,8 @@ import type { DebtFormState } from "./types"
 // servicio de abonos que usa el MCP (SPEC 34).
 
 export const DEBT_NOT_FOUND = "No se encontró la deuda"
+export const ENTRY_DEFAULT_ERROR =
+  "No se pudo guardar el movimiento. Intenta de nuevo"
 export const ENTRY_NOT_FOUND = "No se encontró el pago"
 /**
  * Texto que lanzan los triggers y las RPC de deudas. Cambiarlo exige una

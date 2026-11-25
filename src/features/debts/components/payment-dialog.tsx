@@ -22,7 +22,11 @@ import {
 } from "@/features/accounts/components/payment-account-section"
 import { cn } from "@/libs/cn"
 import { todayISO } from "@/libs/dates"
-import { recordAdvance, recordDebtCharge, recordPayment } from "../actions"
+import {
+  recordAdvance,
+  recordDebtCharge,
+  recordPayment
+} from "../entry-actions"
 import {
   type AdjustmentDirection,
   type EntryType,

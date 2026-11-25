@@ -1,6 +1,7 @@
 import type { DebtStatus } from "@/features/debts/calculations"
+import type { DebtKind } from "@/features/debts/debt-schemas"
 import type { DebtEntry } from "@/features/debts/queries"
-import type { DebtKind, ReceivableSchedule } from "@/features/debts/schemas"
+import type { ReceivableSchedule } from "@/features/debts/receivable-schemas"
 import type { IncomeAllocation } from "@/features/recurring-incomes/types"
 import type { Database } from "@/types/database"
 import type { ACCOUNT_MOVEMENT_KINDS, FORM_PANELS } from "./constants"

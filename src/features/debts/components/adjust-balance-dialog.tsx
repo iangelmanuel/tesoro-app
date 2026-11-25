@@ -9,7 +9,7 @@ import { TimePickerField } from "@/components/forms/time-picker-field"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/sonner"
 import { todayISO } from "@/libs/dates"
-import { adjustBalance } from "../actions"
+import { adjustBalance } from "../entry-actions"
 import type { Debt } from "../queries"
 import type { AdjustBalanceFormState } from "../types"
 

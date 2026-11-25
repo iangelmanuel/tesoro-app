@@ -1,10 +1,12 @@
 import { z } from "zod"
 import {
-  type LoadedEntry,
-  entryRecord,
-  loadEntry,
   updatePaymentEntry,
   validatePaymentChange
+} from "@/features/debts/entry-payment-service"
+import {
+  type LoadedEntry,
+  entryRecord,
+  loadEntry
 } from "@/features/debts/entry-service"
 import { transactionSchema } from "@/features/transactions/schemas"
 import {

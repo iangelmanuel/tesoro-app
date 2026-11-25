@@ -1,4 +1,5 @@
-import type { DebtKind, ReceivableSchedule } from "./schemas"
+import type { DebtKind } from "./debt-schemas"
+import type { ReceivableSchedule } from "./receivable-schemas"
 
 // Tipos de movimiento de una deuda en el formulario de edición (SPEC 42,
 // parte 3). Cada tipo de la pantalla se guarda como un kind de debt_entries:

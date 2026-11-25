@@ -35,8 +35,8 @@ import type { PaymentAccountOption } from "@/features/accounts/components/paymen
 import type { Category } from "@/features/categories/queries"
 import { cn } from "@/libs/cn"
 import { formatDate, formatShortDate, formatTime } from "@/libs/format"
-import { deleteEntry, moveDebtEntry } from "../actions"
 import { formatMonthYear } from "../calculations"
+import { deleteEntry, moveDebtEntry } from "../entry-actions"
 import { installmentLabel, installmentProgress } from "../installments"
 import type { Debt, DebtEntry } from "../queries"
 import {

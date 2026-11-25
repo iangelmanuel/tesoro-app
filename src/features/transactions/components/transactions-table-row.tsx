@@ -6,12 +6,12 @@ import { AccountLabel } from "@/features/accounts/components/account-select"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { CategoryBadge } from "@/features/categories/components/category-badge"
 import type { Category } from "@/features/categories/queries"
-import { deleteEntry } from "@/features/debts/actions"
 import { DebtEntryDialog } from "@/features/debts/components/debt-entry-dialog"
 import {
   DuplicateDebtEntryLoader,
   DuplicateReceivableLoader
 } from "@/features/debts/components/duplicate-debt-entry-dialog"
+import { deleteEntry } from "@/features/debts/entry-actions"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
 import type { WorkspaceType } from "@/features/workspaces/types"
 import { cn } from "@/libs/cn"

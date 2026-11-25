@@ -62,8 +62,10 @@ export type DebtEntry = Omit<DebtEntryRow, "amount"> & {
 const toNumber = (value: number | string | null) =>
   value === null ? null : Number(value)
 
-// Todas las deudas y cuentas por cobrar del espacio, en cualquier estado,
-// con su saldo y ciclo de pago
+/**
+ * Todas las deudas y cuentas por cobrar del espacio, en cualquier estado,
+ * con su saldo y ciclo de pago
+ */
 export async function getDebts(workspaceId: string): Promise<Debt[]> {
   const supabase = await createClient()
   const [{ data, error }, history] = await Promise.all([
@@ -126,7 +128,7 @@ export async function getDebts(workspaceId: string): Promise<Debt[]> {
 const ENTRY_COLUMNS =
   "*, account:accounts!debt_entries_account_id_workspace_id_fkey (name), transaction:transactions!debt_entries_transaction_id_fkey (account_id, description, category_id, account:accounts!transactions_account_id_workspace_id_fkey (name)), allocations:debt_entry_allocations (period_on, amount)"
 
-// Pagos, avances y ajustes de una deuda, el más reciente primero
+/** Pagos, avances y ajustes de una deuda, el más reciente primero */
 export async function getDebtEntries(debtId: string): Promise<DebtEntry[]> {
   const supabase = await createClient()
   const { data, error } = await supabase

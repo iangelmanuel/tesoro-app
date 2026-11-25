@@ -2,7 +2,8 @@ import type { Route } from "next"
 import { SITE } from "@/config/site"
 import type { OccurrenceTone } from "@/features/recurring-expenses/occurrences"
 import { shiftMonth, todayISO } from "@/libs/dates"
-import type { DebtKind, RateType, ReceivableSchedule } from "./schemas"
+import type { DebtKind, RateType } from "./debt-schemas"
+import type { ReceivableSchedule } from "./receivable-schemas"
 
 export const DEBTS_PATH = `${SITE.routes.dashboardPersonal}/debts` as const
 
@@ -203,6 +204,7 @@ export const UTILIZATION_LEVELS: Record<
   high: { label: "Alta", tone: "danger" }
 }
 
+/** Nivel de la utilización: alta desde 70 %, moderada desde 30 % */
 export function utilizationLevel(percent: number): UtilizationLevel {
   if (percent >= 70) return "high"
   if (percent >= 30) return "moderate"

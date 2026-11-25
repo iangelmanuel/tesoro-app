@@ -31,8 +31,8 @@ import {
   type PaymentPeriod,
   buildPaymentDescription
 } from "@/libs/payment-description"
-import { collectReceivable } from "../actions"
 import { formatMonthYear } from "../calculations"
+import { collectReceivable } from "../receivable-actions"
 import {
   type CollectableReceivable,
   MONTH_SHORTCUTS,
@@ -45,7 +45,7 @@ import {
 import {
   COLLECT_MODES_BY_SCHEDULE,
   type ReceivableCollectMode
-} from "../schemas"
+} from "../receivable-schemas"
 import type { PaymentFormState } from "../types"
 
 const MODE_LABELS: Record<ReceivableCollectMode, string> = {

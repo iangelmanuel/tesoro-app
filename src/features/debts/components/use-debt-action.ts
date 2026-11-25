@@ -2,7 +2,7 @@
 
 import { useTransition } from "react"
 import { toast } from "@/components/ui/sonner"
-import { archiveDebt, markDebtPaid, reactivateDebt } from "../actions"
+import { archiveDebt, markDebtPaid, reactivateDebt } from "../debt-actions"
 
 const ACTIONS = {
   markPaid: { run: markDebtPaid, success: "se marcó como pagada" },

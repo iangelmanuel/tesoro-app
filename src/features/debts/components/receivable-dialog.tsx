@@ -24,15 +24,15 @@ import {
 import { parseAmount } from "@/features/transactions/schemas"
 import { todayISO } from "@/libs/dates"
 import { formatDate } from "@/libs/format"
-import { createDebt, updateDebt } from "../actions"
 import { formatMonthYear } from "../calculations"
+import { createDebt, updateDebt } from "../debt-actions"
 import type { Debt } from "../queries"
 import {
   installmentDueOn,
   lastPeriodOn,
   periodOf
 } from "../receivable-schedule"
-import type { ReceivableSchedule } from "../schemas"
+import type { ReceivableSchedule } from "../receivable-schemas"
 import type { DebtFormState } from "../types"
 
 const SCHEDULE_OPTIONS = [

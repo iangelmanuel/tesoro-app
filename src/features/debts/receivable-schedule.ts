@@ -126,6 +126,7 @@ export function installmentAmountFor(
   return match?.amount ?? receivable.installment
 }
 
+/** Estado de una cuota: pagada, abonada o, sin abonos, según su fecha de pago */
 export function getInstallmentStatus(
   dueOn: string,
   expected: number,

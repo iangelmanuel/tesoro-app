@@ -23,9 +23,9 @@ import {
   selectableAccounts
 } from "@/features/accounts/components/account-select"
 import { cn } from "@/libs/cn"
-import { createDebt, updateDebt } from "../actions"
+import { createDebt, updateDebt } from "../debt-actions"
+import type { RateType } from "../debt-schemas"
 import type { Debt } from "../queries"
-import type { RateType } from "../schemas"
 import type { DebtFormState } from "../types"
 
 type PayableKind = "credit_card" | "loan"

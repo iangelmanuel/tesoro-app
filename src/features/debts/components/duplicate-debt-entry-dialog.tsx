@@ -4,13 +4,10 @@ import { useEffect, useEffectEvent, useState } from "react"
 import { toast } from "@/components/ui/sonner"
 import { activeAccountId } from "@/features/accounts/active-account"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
-import {
-  type EntryEditorDebt,
-  loadDebtEntryEditor,
-  loadReceivableDuplicate
-} from "../actions"
+import { type EntryEditorDebt, loadDebtEntryEditor } from "../entry-actions"
 import { entryTypeOf } from "../entry-types"
 import type { DebtEntry } from "../queries"
+import { loadReceivableDuplicate } from "../receivable-actions"
 import type { CollectableReceivable } from "../receivable-collect"
 import { PaymentDialog, type PaymentInitialValues } from "./payment-dialog"
 import { ReceivableCollectDialog } from "./receivable-collect-form"

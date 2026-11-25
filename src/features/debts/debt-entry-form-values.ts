@@ -7,6 +7,7 @@ import {
   type EntryType,
   balanceEffect,
   entryKindOf,
+  entryTransactionType,
   entryTypeOf,
   usesPaymentAccount
 } from "./entry-types"
@@ -60,8 +61,7 @@ export function entryFormFlags(context: {
   const canCreateTransaction = isPayment && !isCard
   const createsTransaction = canCreateTransaction && createTransaction
   const usesAccount = usesPaymentAccount(type, isCard, createsTransaction)
-  const transactionType: "income" | "expense" =
-    type === "advance" || isReceivable ? "income" : "expense"
+  const transactionType = entryTransactionType(type, debtKind)
   return {
     isCard,
     isReceivable,

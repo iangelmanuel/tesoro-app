@@ -24,7 +24,7 @@ import {
   moveDebtEntryRecord,
   updateDebtEntryRecord
 } from "./entry-service"
-import { type EntryType, entryKindOf } from "./entry-types"
+import { type EntryType, linkableTransactionType } from "./entry-types"
 import { DEBT_NOT_FOUND, ENTRY_NOT_FOUND } from "./errors"
 import { nextPayment } from "./next-payment"
 import {
@@ -288,15 +288,7 @@ export async function listLinkableTransactions(
     return []
   }
 
-  const kind = entryKindOf(type)
-  // Pago de tarjeta y préstamo: gasto. Cobro de Me deben y avance: ingreso
-  const txType =
-    type === "advance" ||
-    (kind === "payment" && entry.debt.kind === "receivable")
-      ? "income"
-      : kind === "payment"
-        ? "expense"
-        : null
+  const txType = linkableTransactionType(type, entry.debt.kind)
   if (!txType) {
     return []
   }

@@ -38,7 +38,7 @@ export function canDuplicateDebtEntry(
 }
 
 /** Valores del duplicado: mismo tipo, monto, cuenta, textos y cuotas */
-export function debtEntryDuplicateValues(
+function debtEntryDuplicateValues(
   entry: DebtEntry,
   accounts: PaymentAccountOption[]
 ): PaymentInitialValues | null {

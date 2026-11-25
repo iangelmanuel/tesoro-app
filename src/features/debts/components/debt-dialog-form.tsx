@@ -55,6 +55,7 @@ export function DebtDialogForm({
   onCancel
 }: DebtDialogFormProps) {
   const isEditing = debt !== undefined
+  const submitLabel = isEditing ? "Guardar" : "Crear"
   // Cuenta por defecto (SPEC 41): solo activas; una archivada se vacía
   const accountOptions = selectableAccounts(accounts)
   const [accountId, setAccountId] = useState(() =>
@@ -375,7 +376,7 @@ export function DebtDialogForm({
           type="submit"
           disabled={pending}
         >
-          {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear"}
+          {pending ? "Guardando..." : submitLabel}
         </Button>
       </div>
     </form>

@@ -18,7 +18,7 @@ export const emptyToNull = (value: unknown) => (value === "" ? null : value)
  * Los montos llegan como texto en es-CO ("1.500.000") y se convierten con
  * parseAmount, igual que en movimientos
  */
-export const toAmount = (value: unknown) =>
+const toAmount = (value: unknown) =>
   typeof value === "string" ? parseAmount(value) : value
 
 /** Monto obligatorio mayor que 0, escrito en es-CO */

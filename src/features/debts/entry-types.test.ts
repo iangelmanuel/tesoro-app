@@ -5,9 +5,12 @@ import {
   ENTRY_TYPES,
   balanceEffect,
   entryKindOf,
+  entryTransactionType,
   entryTypeInfo,
   entryTypeOf,
-  entryTypesFor
+  entryTypesFor,
+  linkableTransactionType,
+  usesPaymentAccount
 } from "./entry-types"
 
 // Tests de caracterización (SPEC 55b): fijan los tipos de movimiento de una
@@ -111,5 +114,151 @@ describe("entryTypeOf, entryKindOf y balanceEffect", () => {
     expect(balanceEffect("payment", 100)).toBe(-100)
     expect(balanceEffect("advance", 100)).toBe(100)
     expect(balanceEffect("adjustment", -50)).toBe(-50)
+  })
+})
+
+describe("movimiento enlazado", () => {
+  const TYPES = [
+    "payment",
+    "extra",
+    "purchase",
+    "advance",
+    "fee",
+    "adjustment"
+  ] as const
+
+  it("entrada o salida según el tipo y la deuda", () => {
+    expect(
+      (["credit_card", "loan", "receivable"] as const).map((kind) =>
+        TYPES.map((type) => [
+          entryTransactionType(type, kind),
+          linkableTransactionType(type, kind)
+        ])
+      )
+    ).toMatchInlineSnapshot(`
+      [
+        [
+          [
+            "expense",
+            "expense",
+          ],
+          [
+            "expense",
+            "expense",
+          ],
+          [
+            "expense",
+            null,
+          ],
+          [
+            "income",
+            "income",
+          ],
+          [
+            "expense",
+            null,
+          ],
+          [
+            "expense",
+            null,
+          ],
+        ],
+        [
+          [
+            "expense",
+            "expense",
+          ],
+          [
+            "expense",
+            "expense",
+          ],
+          [
+            "expense",
+            null,
+          ],
+          [
+            "income",
+            "income",
+          ],
+          [
+            "expense",
+            null,
+          ],
+          [
+            "expense",
+            null,
+          ],
+        ],
+        [
+          [
+            "income",
+            "income",
+          ],
+          [
+            "income",
+            "income",
+          ],
+          [
+            "income",
+            null,
+          ],
+          [
+            "income",
+            "income",
+          ],
+          [
+            "income",
+            null,
+          ],
+          [
+            "income",
+            null,
+          ],
+        ],
+      ]
+    `)
+  })
+
+  it("qué tipos usan una cuenta", () => {
+    expect(
+      TYPES.map((type) => [
+        usesPaymentAccount(type, true, false),
+        usesPaymentAccount(type, false, false),
+        usesPaymentAccount(type, false, true)
+      ])
+    ).toMatchInlineSnapshot(`
+      [
+        [
+          true,
+          false,
+          true,
+        ],
+        [
+          true,
+          false,
+          true,
+        ],
+        [
+          false,
+          false,
+          false,
+        ],
+        [
+          true,
+          true,
+          true,
+        ],
+        [
+          false,
+          false,
+          false,
+        ],
+        [
+          false,
+          false,
+          false,
+        ],
+      ]
+    `)
   })
 })

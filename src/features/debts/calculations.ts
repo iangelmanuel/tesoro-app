@@ -108,37 +108,34 @@ export function collectedPercent(
   )
 }
 
+/** Fecha más cercana primero, sin fecha al final; empates por creación */
+function byDateThenCreated<K extends "next_due_on" | "expected_on">(key: K) {
+  return (
+    a: Pick<DebtCalcInput, K | "created_at">,
+    b: Pick<DebtCalcInput, K | "created_at">
+  ) => {
+    const aDate = a[key] as string | null
+    const bDate = b[key] as string | null
+    if (aDate !== bDate) {
+      if (aDate === null) return 1
+      if (bDate === null) return -1
+      return aDate < bDate ? -1 : 1
+    }
+    return a.created_at.localeCompare(b.created_at)
+  }
+}
+
 /**
  * Orden de las deudas activas: próximo vencimiento más cercano primero y las
  * que no tienen (cuentas por cobrar) al final; empates por creación
  */
-export function compareByNextDue(
-  a: Pick<DebtCalcInput, "next_due_on" | "created_at">,
-  b: Pick<DebtCalcInput, "next_due_on" | "created_at">
-) {
-  if (a.next_due_on !== b.next_due_on) {
-    if (a.next_due_on === null) return 1
-    if (b.next_due_on === null) return -1
-    return a.next_due_on < b.next_due_on ? -1 : 1
-  }
-  return a.created_at.localeCompare(b.created_at)
-}
+export const compareByNextDue = byDateThenCreated("next_due_on")
 
 /**
  * Orden de las cuentas por cobrar activas: fecha esperada más cercana
  * primero y las que no tienen al final; empates por creación
  */
-export function compareByExpectedOn(
-  a: Pick<DebtCalcInput, "expected_on" | "created_at">,
-  b: Pick<DebtCalcInput, "expected_on" | "created_at">
-) {
-  if (a.expected_on !== b.expected_on) {
-    if (a.expected_on === null) return 1
-    if (b.expected_on === null) return -1
-    return a.expected_on < b.expected_on ? -1 : 1
-  }
-  return a.created_at.localeCompare(b.created_at)
-}
+export const compareByExpectedOn = byDateThenCreated("expected_on")
 
 /** Etiqueta de una deuda pagada o archivada, o null si está activa */
 export function debtStatusLabel(

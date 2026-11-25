@@ -15,8 +15,7 @@ import {
 } from "./errors"
 import {
   COLLECT_MODES_BY_SCHEDULE,
-  type ReceivableCollectInput,
-  type ReceivableSchedule
+  type ReceivableCollectInput
 } from "./receivable-schemas"
 
 // Cobro de una cuenta por cobrar (SPEC 39), con un cliente dado: lo usan las
@@ -41,11 +40,7 @@ export function validateReceivableCollection(
   if (debt.status !== "active") {
     return { error: DEBT_NOT_ACTIVE }
   }
-  if (
-    !COLLECT_MODES_BY_SCHEDULE[debt.schedule as ReceivableSchedule].includes(
-      input.mode
-    )
-  ) {
+  if (!COLLECT_MODES_BY_SCHEDULE[debt.schedule].includes(input.mode)) {
     return { error: COLLECT_MODE_INVALID }
   }
   if (input.mode === "full" && debt.balance <= 0) {

@@ -176,3 +176,24 @@ export function usesPaymentAccount(
     type === "advance"
   )
 }
+
+/**
+ * Tipo del movimiento enlazado: el avance y el cobro de una cuenta por cobrar
+ * son entradas; el pago o abono de tarjeta y préstamo, salidas
+ */
+export function entryTransactionType(
+  type: EntryType,
+  debtKind: DebtKind
+): "income" | "expense" {
+  return type === "advance" || debtKind === "receivable" ? "income" : "expense"
+}
+
+/**
+ * Tipo de los movimientos que se pueden enlazar (SPEC 42): solo pagos, abonos
+ * y avances; los demás tipos no llevan movimiento (null)
+ */
+export function linkableTransactionType(type: EntryType, debtKind: DebtKind) {
+  return type === "advance" || entryKindOf(type) === "payment"
+    ? entryTransactionType(type, debtKind)
+    : null
+}

@@ -44,7 +44,7 @@ const DEBT_SCHEMAS = {
 } as const
 
 /** Campos del formulario de cada tipo (debt-dialog.tsx) */
-export const DEBT_FIELDS: Record<DebtKind, readonly string[]> = {
+const DEBT_FIELDS: Record<DebtKind, readonly string[]> = {
   credit_card: [
     "name",
     "counterparty",
@@ -73,7 +73,7 @@ export const DEBT_FIELDS: Record<DebtKind, readonly string[]> = {
 }
 
 // Cuenta por cobrar mensual (SPEC 28): el saldo inicial se calcula
-export const MONTHLY_RECEIVABLE_FIELDS = [
+const MONTHLY_RECEIVABLE_FIELDS = [
   "name",
   "counterparty",
   "installment",
@@ -136,7 +136,7 @@ export function parseDebtInput(
 }
 
 /** La cuenta por defecto, si llega, debe ser del espacio y estar activa */
-export async function validateHabitualAccount(
+async function validateHabitualAccount(
   supabase: AppSupabase,
   workspaceId: string,
   accountId: string | null

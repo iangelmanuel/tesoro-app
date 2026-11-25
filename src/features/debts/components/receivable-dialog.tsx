@@ -95,6 +95,7 @@ function ReceivableForm({
   onCancel
 }: ReceivableFormProps) {
   const isEditing = receivable !== undefined
+  const submitLabel = isEditing ? "Guardar" : "Crear"
   // El tipo de cobro se elige al crear (SPEC 28); al editar se usa el
   // guardado y no se puede cambiar
   const [schedule, setSchedule] = useState<ReceivableSchedule>(
@@ -254,7 +255,7 @@ function ReceivableForm({
           type="submit"
           disabled={pending}
         >
-          {pending ? "Guardando..." : isEditing ? "Guardar" : "Crear"}
+          {pending ? "Guardando..." : submitLabel}
         </Button>
       </div>
     </form>

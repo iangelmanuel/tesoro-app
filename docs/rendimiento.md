@@ -519,3 +519,36 @@ de las tres rutas:
 buscador solo re-renderiza la barra de filtros y la tabla cambia una vez,
 al llegar la página nueva. No se pagina ni se virtualiza más, salvo que el
 Profiler muestre commits de más de 200 ms.
+
+### Lo aplicado
+
+- **React Compiler** (`reactCompiler: true`, `babel-plugin-react-compiler`
+  1.0.0). Un barrido con el plugin y un logger dio 10 funciones sin
+  compilar; se corrigieron 8 (dependencias de `useMemo`, `useEffectEvent`
+  en vez de `eslint-disable` y dos expresiones que el compilador aún no
+  baja). Quedan 2 con `try/finally` (`use-export-form.ts`,
+  `file-step.tsx`), sin `"use no memo"` porque no rompen reglas.
+- **Carga diferida** con `lazyWithPreload` y precarga en
+  `pointerenter` / `focus`: gráficas (`…-lazy.tsx`), paleta ⌘K,
+  formularios de movimiento, exportar, aporte, pago de deuda y Verificar
+  movimientos, cuerpo de Categorías y calendario de `DatePickerField`.
+- **`@dnd-kit` en idle** en la tabla de Movimientos, enganchado a las
+  filas desde fuera para no remontarlas.
+- **Prefetch:** el aside y la barra móvil ya usaban `<Link>` con el
+  prefetch por defecto, y las 27 rutas del dashboard tienen shell estático
+  (◐) y su `loading.tsx`, sin datos de la URL fuera de `Suspense`. La
+  paleta, que navega con `router.push`, precarga sus destinos al abrir.
+- **Re-renders:** los valores de contexto ya iban memoizados (o los
+  memoiza el compilador) y el texto del buscador vive en la barra de
+  filtros, no en la tabla.
+
+### Pendiente
+
+- **Sheets de detalle** de Deuda, Meta, Gasto fijo e Ingreso fijo: siguen en
+  el JS inicial de sus páginas (por eso `/dashboard/personal/debts` baja
+  solo 3 %). Su contenido está acoplado al Sheet (estado de edición, datos
+  que se piden al abrir, diálogos hermanos); diferirlo es un refactor
+  propio.
+- **Coste del React Compiler:** su memoización agrega ~1 % en las páginas
+  públicas y ~120 kB en `/dashboard/personal/transactions` antes de
+  diferir. Se revisa con las cifras de campo de 56c.

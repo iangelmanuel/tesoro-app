@@ -322,6 +322,45 @@ y de Cuenta (`AccountSectionSkeleton`, `AccountFieldSkeleton`,
 - La región que carga va en `LoadingRegion` (`aria-busy="true"` y
   "Cargando…" solo para lector); los bloques van con `aria-hidden`.
 
+### Carga diferida (SPEC 56b)
+
+Lo que no se usa al entrar no viaja en el JS inicial de la ruta: gráficas,
+paleta ⌘K, formularios de diálogo, cuerpo de Categorías, calendario y
+arrastre de Movimientos. Se descarga al abrir o al pasar por su disparador.
+
+- **`lazyWithPreload`** (`src/libs/lazy-with-preload.ts`) devuelve
+  `{ Component, preload }`: una sola descarga que comparten la precarga y
+  el primer render; si falla, se olvida y el siguiente intento la pide de
+  nuevo. `Component` va dentro de un `Suspense`.
+- **Precarga** en `onPointerEnter` y `onFocus` del disparador (en táctil,
+  `pointerenter` llega al tocar, antes del clic). `FormDialog` lo hace con
+  `onTriggerIntent`; los accesos rápidos, con
+  `preloadQuickAction(key)` (`quick-actions-context.tsx`).
+- **Mientras llega** se ve su skeleton con las medidas reales, o la forma
+  cerrada. Un diálogo diferido conserva su título y su descripción reales y
+  difiere solo el formulario (`FormDialogBodySkeleton`): el disparador, el
+  título y la animación no cambian, y todos sus usos lo heredan.
+- **Gráficas:** cada una se importa desde su `…-lazy.tsx` hermano
+  (`IncomeExpenseChartLazy`, `TopCategoriesChartLazy`,
+  `CategoryDonutChartLazy`, `CashFlowChartLazy`, `ScoreHistoryChartLazy`)
+  con `lazy()` + `Suspense` en vez de `next/dynamic`: el hueco
+  (`ChartSkeleton`) toma el tamaño de las props de la gráfica, que
+  `loading` de `next/dynamic` no recibe. Con render en servidor (sin
+  `ssr: false`): la gráfica llega pintada en el HTML y el hueco solo se ve
+  en una navegación del cliente si el chunk no llegó. El skeleton y las
+  medidas compartidas (`chart-sizes.ts`) viven fuera del módulo de la
+  gráfica: importarlos de ahí traería Recharts de vuelta.
+- **Paleta ⌘K:** el atajo se registra desde el inicio
+  (`CommandPaletteProvider`); el diálogo (`CommandPaletteLazy`) se
+  monta la primera vez que se abre y queda montado para animar el cierre.
+- **Arrastre de Movimientos:** `@dnd-kit` llega con `requestIdleCallback`
+  (`setTimeout` de respaldo). Hasta entonces el asa se ve igual pero está
+  `disabled`. El proveedor y los `useSortable` viven al lado de la tabla
+  (`transactions-table-dnd.tsx`) y enganchan el `<tr>` y el asa de cada
+  fila por ref: al llegar, ninguna fila se remonta ni pierde el foco.
+- Para saber si algo salió del chunk inicial: `pnpm next analyze` (método
+  en [`rendimiento.md`](rendimiento.md)).
+
 ### Menús rápidos (SPEC 51 §5)
 
 - **Una sola lista de acciones:** `quick-actions-context.tsx` define las

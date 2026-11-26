@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `getSessionUser` (`src/features/account/session.ts`): the only session read on the dashboard read path, deduplicated per request.
 - Set functions `owned_workspace_ids()` and `writable_workspace_ids()` (`security invoker`) for RLS policies.
 - `getDebtEntriesByDebt` and `getGoalContributionsByGoal`: debt entries and goal contributions for many debts or goals in a single query.
+- **Client bundle measurements (SPEC 56b)** in `docs/rendimiento.md`: Turbopack Bundle Analyzer (`pnpm next analyze`) top modules per route, React Profiler and click-to-skeleton method, with "before" and "after" tables.
+- `lazyWithPreload` (`src/libs/lazy-with-preload.ts`): a lazy component plus a `preload()` that shares one download and retries after a failure. `FormDialog` takes `onTriggerIntent` and exports `FormDialogBodySkeleton`; `ChartSkeleton` is the shared chart placeholder.
 
 ### Changed
 
@@ -21,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **RLS policies evaluated once per query.** The 67 policies that called `is_workspace_owner(workspace_id)` / `is_workspace_writable(workspace_id)` per row now use `workspace_id = any (array(select public.owned_workspace_ids()))` / `writable_workspace_ids()`. Access is unchanged (same pgTAP matrix before and after); full-workspace reads go from ~38 ms to 2–6 ms on 2,000 movements.
 - **Indexes:** `workspaces (owner_id, type)` and covering indexes for the 18 foreign keys the Supabase advisor flagged. Five single-column `account_id` indexes are replaced by composite `(account_id, workspace_id)` ones.
 - **Leaner server reads.** Read queries select explicit columns instead of `*`. The debts and goals pages, the header quick actions and the `list_receivables` / `list_upcoming_payments` MCP tools load entries in one query instead of one per debt or goal. Upcoming payments, the recommendations pages and the summary health card fetch independent data in parallel (`loadRecommendationData` + `recommendationsFor`). MCP tool contracts and export contents are unchanged.
+- **React Compiler enabled (SPEC 56b).** `reactCompiler: true` with `babel-plugin-react-compiler` 1.0.0. Components the compiler skipped are fixed instead of suppressed: missing `useMemo` dependencies in the hide-amounts and tutorial providers, `useEffectEvent` instead of `exhaustive-deps` disables in the movement search and the linkable transactions field, and two expressions the compiler can't lower yet.
+- **Smaller initial JS on the dashboard (SPEC 56b).** Charts (Recharts), the ⌘K palette (`cmdk`), the quick-action forms (movement, export, goal contribution, debt payment, verify movements), the Categories sheet body, the date picker calendar (`react-day-picker`) and the movements drag and drop (`@dnd-kit`, loaded when idle) are no longer in the initial chunk. They load on open and are preloaded on pointer enter or focus of their trigger, behind a placeholder of the same size. Initial JS of `/dashboard/personal` goes from 2,003 kB to 1,314 kB (−34 %).
+- The command palette prefetches its "Go to" screens when it opens, like the sidebar links do.
+- The movement search reads the current filters when the debounce fires, so a filter changed during the 400 ms wait is no longer overwritten.
 
 ## [0.3.1] — 2026-11-25
 

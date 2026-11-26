@@ -21,6 +21,7 @@ export interface PdfContext {
 // Datos del PDF (SPEC 33) que el Excel no tiene. Parte de `ExportData` para
 // que los totales cuadren con el Excel.
 
+/** Todo lo que lleva el PDF del periodo */
 export interface PdfReportData {
   /** El mismo de SPEC 32 */
   export: ExportData
@@ -34,6 +35,7 @@ export interface PdfReportData {
   reportsUrl: string
 }
 
+/** Score del periodo para el PDF, o la razón por la que no hay */
 export type PdfScore =
   | {
       status: "ok"

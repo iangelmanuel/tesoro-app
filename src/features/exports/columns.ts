@@ -2,8 +2,10 @@ import type { WorkspaceType } from "@/features/workspaces/types"
 import type { ExportMovementKind, ExportMovementRow } from "./types"
 import type { AmountTone } from "./workbook/theme"
 
+/** Tipo de dato de una columna exportada */
 export type ColumnKind = "date" | "time" | "text" | "money" | "percent"
 
+/** Columna de la hoja Movimientos y del CSV */
 export interface MovementColumn {
   header: string
   key: keyof ExportMovementRow
@@ -42,6 +44,7 @@ export function movementTone(row: ExportMovementRow) {
 
 const AMOUNT: MovementColumn = { header: "Monto", key: "amount", kind: "money" }
 
+/** Columnas de Movimientos y del CSV; Empresa suma contraparte y factura */
 export function movementColumns(type: WorkspaceType): MovementColumn[] {
   return type === "business"
     ? [...BASE, ...BUSINESS, AMOUNT]

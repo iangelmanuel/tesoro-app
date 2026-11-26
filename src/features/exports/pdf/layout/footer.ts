@@ -4,7 +4,9 @@ import type { PdfContext } from "../types"
 
 const TOP = 24
 
-// Pie de todas las páginas menos la portada. La portada cuenta como página 1
+/**
+ * Pie de todas las páginas menos la portada. La portada cuenta como página 1
+ */
 export function pdfFooter(ctx: PdfContext): DynamicContent {
   return (currentPage, pageCount) => {
     if (currentPage === 1) return null

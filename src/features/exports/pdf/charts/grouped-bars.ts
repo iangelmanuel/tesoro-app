@@ -11,6 +11,7 @@ import {
   svgYAxis
 } from "./svg"
 
+/** Serie de las barras agrupadas */
 export interface BarSeries {
   label: string
   color: string
@@ -18,6 +19,7 @@ export interface BarSeries {
   hatch?: boolean
 }
 
+/** Grupo de barras de un mes */
 export interface BarGroup {
   /** YYYY-MM */
   month: string

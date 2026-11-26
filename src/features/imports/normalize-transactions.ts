@@ -68,12 +68,14 @@ export interface ExtractedRow {
   }
 }
 
+/** Filas leídas y cuántas vacías se omitieron */
 export interface ExtractResult {
   rows: ExtractedRow[]
   /** Filas sin fecha ni monto: no se muestran y suman en omitidas */
   empty: number
 }
 
+/** Clave del par (tipo, valor de categoría de origen) */
 export function pairKey(type: TransactionType, label: string) {
   return `${type}:${normalizeText(label)}`
 }
@@ -273,6 +275,7 @@ export function newAccountKey(name: string) {
   return `new:${normalizeText(name)}`
 }
 
+/** Clave de una cuenta existente */
 export function existingAccountKey(accountId: string) {
   return `existing:${accountId}`
 }
@@ -355,6 +358,7 @@ export function newCategoryKey(type: TransactionType, name: string) {
   return `new:${type}:${normalizeText(name)}`
 }
 
+/** Clave de destino de una categoría existente */
 export function existingCategoryKey(categoryId: string) {
   return `existing:${categoryId}`
 }

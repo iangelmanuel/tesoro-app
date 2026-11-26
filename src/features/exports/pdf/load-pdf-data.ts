@@ -206,8 +206,10 @@ async function loadScore(
   )
 }
 
-// Datos del PDF (SPEC 33), con la sesión del usuario y RLS. Parte de
-// `loadExportData` (SPEC 32) para que los totales cuadren con el Excel.
+/**
+ * Datos del PDF (SPEC 33), con la sesión del usuario y RLS. Parte de
+ * `loadExportData` (SPEC 32) para que los totales cuadren con el Excel.
+ */
 export async function loadPdfData(
   workspace: Workspace,
   range: ExportRange,

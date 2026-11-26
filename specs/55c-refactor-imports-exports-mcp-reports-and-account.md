@@ -1,6 +1,6 @@
 # SPEC 55c — Refactor de imports, exports, MCP, reportes, cuenta y públicas
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 54, SPEC 55a, SPEC 55b
 > **Fecha:** 2026-11-21
 > **Objetivo:** Aplicar las reglas de SPEC 54 a `imports`, `exports`, `mcp`, `reports`, `tutorials`, `account`, `auth`, `landing` y `legal`, sin cambiar comportamiento, y cerrar la serie subiendo la versión.
@@ -149,19 +149,19 @@ Cada paso deja `check`, `eslint`, `prettier:check`, `test` y `build` en verde, y
 
 Verificables en código o con los scripts:
 
-- [ ] `pnpm eslint src` no da ningún warning de `max-lines` (cierra la serie: cero en todo el repo).
-- [ ] Existen los tests de §4 y `src/features/mcp/catalog.test.ts`, y `pnpm test` pasa.
-- [ ] `catalog.test.ts` pasa sin cambiar la instantánea escrita en el paso 1.
-- [ ] `grep -rnE "export function shortMonth" src` devuelve solo `src/features/debts/receivable-collect.ts`.
-- [ ] `grep -rn "formatTimestamp" src` no devuelve resultados y existe `formatDateTime` en `src/libs/format.ts`.
-- [ ] `exceljs` solo aparece en `src/features/exports/workbook/**`, y `pdfmake`, `html-to-pdfmake` y `jsdom` solo en `src/features/exports/pdf/**` (lo verifica `pnpm eslint`).
-- [ ] Ninguna action del área hace consultas a Supabase directamente.
-- [ ] Todo export de servicios, queries y módulos puros del área tiene JSDoc.
-- [ ] `package.json`, `SITE.info.version`, `CHANGELOG.md` y `SECURITY.md` dicen 0.3.1; `CHANGELOG.md` no tiene entradas sueltas en `[Unreleased]` de SPEC 54–55c.
-- [ ] Cada ruta de archivo citada en `docs/arquitectura.md`, `CLAUDE.md` y `docs/mcp.md` existe.
-- [ ] `git diff` no toca `supabase/migrations/`, `src/types/database.ts` ni textos visibles del área.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
-- [ ] `/code-review high` no deja hallazgos abiertos.
+- [x] `pnpm eslint src` no da ningún warning de `max-lines` (cierra la serie: cero en todo el repo).
+- [x] Existen los tests de §4 y `src/features/mcp/catalog.test.ts`, y `pnpm test` pasa.
+- [x] `catalog.test.ts` pasa sin cambiar la instantánea escrita en el paso 1.
+- [x] `grep -rnE "export function shortMonth" src` devuelve solo `src/features/debts/receivable-collect.ts`.
+- [x] `grep -rn "formatTimestamp" src` no devuelve resultados y existe `formatDateTime` en `src/libs/format.ts`.
+- [x] `exceljs` solo aparece en `src/features/exports/workbook/**`, y `pdfmake`, `html-to-pdfmake` y `jsdom` solo en `src/features/exports/pdf/**` (lo verifica `pnpm eslint`).
+- [x] Ninguna action del área hace consultas a Supabase directamente.
+- [x] Todo export de servicios, queries y módulos puros del área tiene JSDoc.
+- [x] `package.json`, `SITE.info.version`, `CHANGELOG.md` y `SECURITY.md` dicen 0.3.1; `CHANGELOG.md` no tiene entradas sueltas en `[Unreleased]` de SPEC 54–55c.
+- [x] Cada ruta de archivo citada en `docs/arquitectura.md`, `CLAUDE.md` y `docs/mcp.md` existe.
+- [x] `git diff` no toca `supabase/migrations/`, `src/types/database.ts` ni textos visibles del área.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
+- [x] `/code-review high` no deja hallazgos abiertos.
 
 Verificables en navegador (los prueba el usuario a mano):
 

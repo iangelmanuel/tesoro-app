@@ -17,12 +17,14 @@ const SIZES: Record<
   letter: { name: "LETTER", width: 612, height: 792 }
 }
 
+/** Margen horizontal de la página, en puntos */
 export const MARGIN_X = 40
 /** Arriba va el encabezado */
 export const MARGIN_TOP = 72
 /** Abajo va el pie */
 export const MARGIN_BOTTOM = 56
 
+/** Tamaño, orientación y ancho útil de la página */
 export interface PageSetup {
   pageSize: PredefinedPageSize
   pageOrientation: PageOrientation
@@ -37,6 +39,7 @@ export interface PageSetup {
   contentHeight: number
 }
 
+/** Página del PDF según el tamaño y la orientación elegidos */
 export function pageSetup(options: Pick<PdfOptions, "size" | "orientation">) {
   const size = SIZES[options.size]
   const landscape = options.orientation === "landscape"

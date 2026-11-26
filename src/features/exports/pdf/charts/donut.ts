@@ -10,6 +10,7 @@ import {
   truncate
 } from "./svg"
 
+/** Porción de la dona */
 export interface DonutSlice {
   name: string
   total: number

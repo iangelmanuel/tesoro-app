@@ -7,6 +7,7 @@ import type { ChartPalette } from "../theme"
 // el conversor de pdfmake (svg-to-pdfkit) dibuja como vector. Todo texto pasa
 // por `escapeXml`: los nombres de categoría vienen del usuario.
 
+/** Tamaño de una gráfica en puntos */
 export interface ChartSize {
   width: number
   height: number
@@ -20,6 +21,7 @@ const ESCAPES: Record<string, string> = {
   "'": "&#39;"
 }
 
+/** Escapa un texto para meterlo en el SVG */
 export function escapeXml(value: string) {
   return value.replace(/[&<>"']/g, (char) => ESCAPES[char])
 }
@@ -31,6 +33,7 @@ export const n = (value: number) => String(Math.round(value * 100) / 100)
 export const compact = (value: number) =>
   formatCompactCurrency(value).replace("-", "−")
 
+/** Documento SVG con el tamaño de la gráfica */
 export function svgDocument(size: ChartSize, body: string) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${n(size.width)}" height="${n(size.height)}" viewBox="0 0 ${n(size.width)} ${n(size.height)}" font-family="${FONT}">${body}</svg>`
 }
@@ -42,6 +45,7 @@ interface TextOptions {
   bold?: boolean
 }
 
+/** Texto SVG con la fuente del PDF */
 export function svgText(
   x: number,
   y: number,
@@ -53,6 +57,7 @@ export function svgText(
   return `<text x="${n(x)}" y="${n(y)}" font-size="${n(options.size ?? 7)}" text-anchor="${anchor}" fill="${options.fill}"${weight}>${escapeXml(value)}</text>`
 }
 
+/** Línea SVG */
 export function svgLine(
   x1: number,
   y1: number,
@@ -110,6 +115,7 @@ export function niceScale(minValue: number, maxValue: number, ticks = 4) {
   return { min: niceMin, max: niceMax, values }
 }
 
+/** Entrada de la leyenda de una gráfica */
 export interface LegendItem {
   label: string
   color: string

@@ -21,9 +21,12 @@ export async function confirmDebtEntriesImport(
     return { error: parsed.error.issues[0]?.message ?? DEFAULT_ERROR }
   }
 
-  const workspace = await getPersonalWorkspace()
   const supabase = await createClient()
-  const result = await importDebtEntriesRecord(supabase, workspace, parsed.data)
+  const result = await importDebtEntriesRecord(
+    supabase,
+    getPersonalWorkspace,
+    parsed.data
+  )
 
   if (result.error === undefined) revalidatePersonalPages()
   return result

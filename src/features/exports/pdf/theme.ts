@@ -19,6 +19,7 @@ import { FONT, FONT_SEMIBOLD } from "./fonts"
 // - income / zebra 5.19, expense / zebra 5.01, muted / zebra 5.61
 // El tema Para imprimir usa texto ≥ #4b5563 sobre blanco.
 
+/** Colores del PDF según el espacio y el tema */
 export interface PdfTheme {
   variant: PdfOptions["theme"]
   /** Del espacio: emerald en Personal, naranja en Empresa */
@@ -48,6 +49,7 @@ export interface PdfTheme {
   defaultStyle: Style
 }
 
+/** Colores de las gráficas del PDF */
 export interface ChartPalette {
   /** Serie de entradas (ingresos, ventas) */
   income: string
@@ -126,6 +128,7 @@ function buildStyles(colors: {
   }
 }
 
+/** Tema del PDF: color del espacio o para imprimir */
 export function pdfTheme(
   type: WorkspaceType,
   variant: PdfOptions["theme"]

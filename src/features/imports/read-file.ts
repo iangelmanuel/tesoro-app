@@ -1,11 +1,13 @@
 import { FILE_EXTENSIONS, MAX_FILE_BYTES } from "./constants"
 
+/** Una hoja del archivo con su matriz de celdas */
 export interface SheetCells {
   name: string
   /** Filas y columnas tal como vienen; las celdas vacías son null */
   cells: unknown[][]
 }
 
+/** Hojas leídas del archivo */
 export interface ReadFileResult {
   sheets: SheetCells[]
 }

@@ -14,14 +14,17 @@ import {
   type PdfOptions
 } from "./types"
 
+/** Mes YYYY-MM del periodo */
 export const exportMonthSchema = z
   .string()
   .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "El mes debe tener el formato AAAA-MM.")
 
+/** Formato del archivo: xlsx, csv o pdf */
 export const exportFormatSchema = z.enum(EXPORT_FORMATS, {
   error: "El formato debe ser xlsx, csv o pdf"
 })
 
+/** El PDF cubre más meses de los que admite */
 export const PDF_MONTHS_ERROR = `El PDF admite hasta ${MAX_PDF_MONTHS} meses.`
 
 // Opciones del PDF (SPEC 33). Ausentes toman el valor por defecto; un valor
@@ -34,6 +37,7 @@ const pdfOptionsSchema = z.object({
   theme: z.enum(PDF_THEMES).default(DEFAULT_PDF_OPTIONS.theme)
 })
 
+/** Opciones del PDF validadas o el error */
 export type ParsedPdfOptions =
   { success: true; options: PdfOptions } | { success: false; error: string }
 
@@ -67,12 +71,15 @@ export function previousRange(range: Pick<ExportRange, "from" | "months">) {
   }
 }
 
+/** Periodo validado o el error */
 export type ParsedExportRange =
   { success: true; range: ExportRange } | { success: false; error: string }
 
-// Valida `from` y `to` (YYYY-MM) contra hoy (YYYY-MM-DD en America/Bogota).
-// Lo usan el Route Handler y el diálogo, para que ambos rechacen lo mismo.
-// Con PDF el tope es de 12 meses; con Excel y CSV, de 36.
+/**
+ * Valida `from` y `to` (YYYY-MM) contra hoy (YYYY-MM-DD en America/Bogota).
+ * Lo usan el Route Handler y el diálogo, para que ambos rechacen lo mismo.
+ * Con PDF el tope es de 12 meses; con Excel y CSV, de 36.
+ */
 export function parseExportRange(
   from: unknown,
   to: unknown,

@@ -7,9 +7,11 @@ import { addMovementsSheet } from "./movements-sheet"
 import { addPersonalMonthSheet } from "./personal-month-sheet"
 import { addSummarySheet, fillSummarySheet, periodLabel } from "./summary-sheet"
 
-// Libro de la exportación. Orden de las hojas: Resumen, una por mes (de la
-// más antigua a la más reciente) y Movimientos. `today` es YYYY-MM-DD en
-// America/Bogota: marca el mes en curso.
+/**
+ * Libro de la exportación. Orden de las hojas: Resumen, una por mes (de la
+ * más antigua a la más reciente) y Movimientos. `today` es YYYY-MM-DD en
+ * America/Bogota: marca el mes en curso.
+ */
 export async function buildWorkbook(
   workspace: Workspace,
   data: ExportData,

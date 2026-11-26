@@ -21,11 +21,10 @@ export async function confirmGoalContributionsImport(
     return { error: parsed.error.issues[0]?.message ?? DEFAULT_ERROR }
   }
 
-  const workspace = await getPersonalWorkspace()
   const supabase = await createClient()
   const result = await importGoalContributionsRecord(
     supabase,
-    workspace,
+    getPersonalWorkspace,
     parsed.data
   )
 

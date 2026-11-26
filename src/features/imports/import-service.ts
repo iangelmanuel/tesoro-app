@@ -24,10 +24,11 @@ import type { ConfirmImportResult, UndoImportResult } from "./types"
 // validadas con Zod contra la BD y las guardan todo o nada con la RPC del
 // destino. Con la sesión del usuario: RLS decide qué se puede.
 
-/** Workspace de destino: el Personal del usuario */
-interface ImportWorkspace {
-  id: string
-}
+/**
+ * Espacio de destino (el Personal del usuario). Se resuelve después de
+ * revalidar las filas, como lo hacían las actions
+ */
+type ResolveWorkspace = () => Promise<{ id: string }>
 
 // Las categorías existentes deben ser visibles para el usuario (RLS), tener
 // el tipo del movimiento y estar activas. El trigger de transactions también
@@ -109,7 +110,7 @@ async function validateLinks(
 /** Movimientos: revalida categorías y cuentas y guarda con import_transactions */
 export async function importTransactionsRecord(
   supabase: AppSupabase,
-  workspace: ImportWorkspace,
+  resolveWorkspace: ResolveWorkspace,
   data: z.output<typeof confirmImportSchema>
 ): Promise<ConfirmImportResult> {
   const { filename, sheets, stats, newCategories, newAccounts, rows } = data
@@ -121,6 +122,7 @@ export async function importTransactionsRecord(
     return { error: categoryError }
   }
 
+  const workspace = await resolveWorkspace()
   const result = await supabase.rpc("import_transactions", {
     p_workspace_id: workspace.id,
     p_filename: filename,
@@ -140,7 +142,7 @@ export async function importTransactionsRecord(
 /** Gastos fijos: revalida categorías y guarda con import_recurring_expenses */
 export async function importRecurringRecord(
   supabase: AppSupabase,
-  workspace: ImportWorkspace,
+  resolveWorkspace: ResolveWorkspace,
   data: z.output<typeof confirmRecurringImportSchema>
 ): Promise<ConfirmImportResult> {
   const { filename, sheets, stats, newCategories, rows } = data
@@ -153,6 +155,7 @@ export async function importRecurringRecord(
     return { error: categoryError }
   }
 
+  const workspace = await resolveWorkspace()
   const result = await supabase.rpc("import_recurring_expenses", {
     p_workspace_id: workspace.id,
     p_filename: filename,
@@ -171,7 +174,7 @@ export async function importRecurringRecord(
 /** Deudas: revalida las deudas y guarda con import_debt_entries */
 export async function importDebtEntriesRecord(
   supabase: AppSupabase,
-  workspace: ImportWorkspace,
+  resolveWorkspace: ResolveWorkspace,
   data: z.output<typeof confirmDebtEntriesImportSchema>
 ): Promise<ConfirmImportResult> {
   const { filename, sheets, stats, createTransactions, rows } = data
@@ -185,6 +188,7 @@ export async function importDebtEntriesRecord(
     return { error: linkError }
   }
 
+  const workspace = await resolveWorkspace()
   const result = await supabase.rpc("import_debt_entries", {
     p_workspace_id: workspace.id,
     p_filename: filename,
@@ -203,7 +207,7 @@ export async function importDebtEntriesRecord(
 /** Metas: revalida las metas y guarda con import_goal_contributions */
 export async function importGoalContributionsRecord(
   supabase: AppSupabase,
-  workspace: ImportWorkspace,
+  resolveWorkspace: ResolveWorkspace,
   data: z.output<typeof confirmGoalContributionsImportSchema>
 ): Promise<ConfirmImportResult> {
   const { filename, sheets, stats, rows } = data
@@ -217,6 +221,7 @@ export async function importGoalContributionsRecord(
     return { error: linkError }
   }
 
+  const workspace = await resolveWorkspace()
   const result = await supabase.rpc("import_goal_contributions", {
     p_workspace_id: workspace.id,
     p_filename: filename,

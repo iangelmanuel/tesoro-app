@@ -37,9 +37,11 @@ export function pdfPeriodLabel(
   return `${from} – ${monthLabel(range.to)}${suffix}`
 }
 
-// Reporte PDF de un espacio (SPEC 33). Orden: portada, resumen del periodo,
-// gráficas, score y detalle por mes; cada parte arranca en página nueva.
-// `today` es YYYY-MM-DD en America/Bogota.
+/**
+ * Reporte PDF de un espacio (SPEC 33). Orden: portada, resumen del periodo,
+ * gráficas, score y detalle por mes; cada parte arranca en página nueva.
+ * `today` es YYYY-MM-DD en America/Bogota.
+ */
 export async function buildPdf(
   workspace: Workspace,
   data: PdfReportData,

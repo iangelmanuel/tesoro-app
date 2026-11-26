@@ -251,8 +251,105 @@ puede comparar tiempos de export hasta entonces.
 
 ## Después
 
-_Pendiente (paso 11 de SPEC 56a)._
+Medido el 2026-11-26 en el Preview de la rama `spec-56a` (`iad1`), con las
+tres migraciones ya en producción. Al Preview se entra con un enlace
+compartido de Vercel (`_vercel_share`, 23 h) en vez del secreto de bypass.
+
+### Duración de función
+
+La primera corrida en el Preview (6 cargas) salió con mucha variación entre
+rutas, así que se repitió con 11 cargas por ruta (mediana de las últimas
+10), dos veces, alternando con producción. Como control se midió también
+producción en ese momento: código de `master` sobre la base ya migrada,
+lo que aísla el efecto del código de la rama.
+
+| Ruta                               | Antes (master) | Control (master + base nueva) | Después (rama) | Diferencia |
+| ---------------------------------- | -------------- | ----------------------------- | -------------- | ---------- |
+| `/`                                | 266 ms         | 255 ms                        | 210 ms         | −21 %      |
+| `/dashboard/personal`              | 739 ms         | 573 ms                        | 517 ms         | −30 %      |
+| `/dashboard/personal/transactions` | 514 ms         | 522 ms                        | 456 ms         | −11 %      |
+| `/dashboard/personal/reports`      | 486 ms         | 471 ms                        | 425 ms         | −13 %      |
+
+"Documento" (HTML completo con el streaming). Control y Después son el
+promedio de las dos corridas de 11 cargas. La primera corrida del Preview
+(6 cargas) dio 261, 661, 591 y 473 ms: la variación entre corridas es de
+±60 ms, del orden de la mejora en `/transactions`.
+
+El TTFB (shell de Partial Prerendering) no cambia: 87–94 ms en todas las
+rutas, antes y después.
+
+### Lighthouse móvil
+
+| Ruta                               | Performance | LCP   | TBT      | CLS   | TTFB  |
+| ---------------------------------- | ----------- | ----- | -------- | ----- | ----- |
+| `/`                                | 66 (67)     | 3,4 s | 1.601 ms | 0,000 | 89 ms |
+| `/dashboard/personal`              | 50 (53)     | 5,3 s | 1.774 ms | 0,000 | 89 ms |
+| `/dashboard/personal/transactions` | 56 (63)     | 4,6 s | 1.390 ms | 0,000 | 87 ms |
+| `/dashboard/personal/reports`      | 50 (52)     | 5,1 s | 1.414 ms | 0,002 | 87 ms |
+
+Entre paréntesis, el Performance de "Antes". 56a no toca el cliente: el
+puntaje lo dominan el TBT y el LCP del JS (56b), que en el perfil móvil
+simulado de Lighthouse varían varios cientos de ms entre corridas. El TTFB
+no cambia.
+
+### JS por ruta
+
+Idéntico a "Antes" en las 10 rutas medidas (mismo número de chunks y mismos
+kB): 56a no cambia el código del cliente. `pnpm build` de la rama termina sin
+errores.
+
+### Planes de consulta
+
+Mismas consultas y misma cuenta que en "Antes". En las tres, el conjunto de
+espacios es un `InitPlan` que entra en la condición del índice:
+
+```text
+Index Scan using transactions_workspace_date on transactions t
+  Index Cond: ((workspace_id = '<espacio>') AND (workspace_id = ANY ((InitPlan 1).col1)))
+InitPlan 1
+  ->  ProjectSet (rows=1)
+```
+
+| Consulta                                   | Antes                    | Después               |
+| ------------------------------------------ | ------------------------ | --------------------- |
+| Total de la lista (`count`)                | 39,97 ms · 4.107 buffers | 5,60 ms · 210 buffers |
+| Movimientos de 12 meses (reportes)         | 37,55 ms · 4.053 buffers | 1,85 ms · 347 buffers |
+| Página de 50 de la lista (EXPLAIN en frío) | 2,55 ms · 314 buffers    | 6,78 ms · 224 buffers |
+| Página de 50 de la lista (20 corridas)     | —                        | mediana 0,65 ms       |
+
+Los buffers son la medida estable: el tiempo de un EXPLAIN suelto en la base
+compartida varía mucho (una corrida dio 51 ms, 128 ms de ellos planeando).
+La página de 50 lee pocas filas, así que gana poco; el ahorro está en las
+lecturas que recorren todo el espacio (totales, reportes, score), que dejan
+de hacer una subconsulta a `workspaces` por fila.
+
+### Exportar
+
+Sigue respondiendo 500 en el Preview y en producción (`jsdom`,
+`ERR_REQUIRE_ESM`, ver "Antes"): no hay tiempos que comparar.
+
+### Advisors de Supabase
+
+- **Performance:** sin `unindexed_foreign_keys` (antes 18) ni
+  `auth_rls_initplan`. Quedan 19 `unused_index`: los índices nuevos, todavía
+  sin estadísticas de uso.
+- **Security:** los mismos tres avisos de la línea base, sin avisos nuevos.
 
 ## Lo aplicado
 
-_Pendiente._
+- **Sesión:** `getSessionUser` (`src/features/account/session.ts`) es la
+  única lectura de sesión del camino de lectura del dashboard; el proxy usa
+  `getClaims()` (JWKS) en vez de `getUser()`.
+- **RLS:** funciones de conjunto `owned_workspace_ids()` y
+  `writable_workspace_ids()`, y 67 políticas reescritas a
+  `workspace_id = any (array(select …))`. El acceso lo fija
+  `supabase/tests/rls_workspace_access.test.sql`.
+- **Índices:** `workspaces (owner_id, type)` y los 18 de llaves foráneas.
+- **Consultas:** columnas explícitas en las lecturas; movimientos de deudas
+  y aportes de metas en una sola consulta; pagos próximos, recomendaciones y
+  la tarjeta de Salud financiera piden en paralelo lo que no depende entre
+  sí.
+
+Queda para 56b: el JS del cliente, que domina el TBT y el LCP del dashboard.
+Queda abierto: el score de Empresa llama a `category_totals` una vez por mes
+(~18 llamadas); es candidato a una RPC si la medición de Empresa lo pide.

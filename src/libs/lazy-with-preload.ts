@@ -30,8 +30,12 @@ export function lazyWithPreload<P extends object>(
 
   return {
     Component: lazy(get),
-    preload() {
-      get().catch(() => {})
+    /** Descarga el chunk; resuelve true si cargó y false si falló */
+    preload(): Promise<boolean> {
+      return get().then(
+        () => true,
+        () => false
+      )
     }
   }
 }

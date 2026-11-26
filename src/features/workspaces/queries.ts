@@ -3,6 +3,7 @@ import { cache } from "react"
 import { notFound, redirect } from "next/navigation"
 import { z } from "zod"
 import { SITE } from "@/config/site"
+import { getSessionUser } from "@/features/account/session"
 import { createClient } from "@/libs/supabase/server"
 import type { WorkspaceType } from "./types"
 
@@ -33,15 +34,16 @@ const NOT_WRITABLE = "No puedes modificar este espacio"
 const idSchema = z.uuid()
 
 /**
- * Workspace Personal del usuario autenticado. Se valida la sesión contra el
- * servidor de auth (getUser) y se deduplica por request con `cache`.
+ * Workspace Personal del usuario autenticado. La sesión sale de
+ * getSessionUser (validada contra el servidor de auth una vez por request) y
+ * el resultado se deduplica por request con `cache`.
  */
 export const getPersonalWorkspace = cache(
   async (): Promise<PersonalWorkspace> => {
-    const supabase = await createClient()
-    const {
-      data: { user }
-    } = await supabase.auth.getUser()
+    const [supabase, user] = await Promise.all([
+      createClient(),
+      getSessionUser()
+    ])
 
     if (!user) {
       redirect(SITE.routes.signIn)

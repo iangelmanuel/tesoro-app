@@ -15,8 +15,8 @@ import {
   getPersonalWorkspace
 } from "@/features/workspaces/queries"
 import { todayISO } from "@/libs/dates"
-import { CommandPalette } from "../command/command-palette"
 import { CommandPaletteProvider } from "../command/command-palette-context"
+import { CommandPaletteLazy } from "../command/command-palette-lazy"
 import { CommandTrigger } from "../command/command-trigger"
 import { MobileShell } from "../mobile/mobile-shell"
 import { KeyboardShortcuts } from "../shortcuts/keyboard-shortcuts"
@@ -112,7 +112,7 @@ async function QuickActionsLoader() {
         <CommandTrigger />
         <QuickActionsMenu />
         <MobileShell />
-        <CommandPalette />
+        <CommandPaletteLazy />
         <KeyboardShortcuts />
       </CommandPaletteProvider>
     </QuickActionsProvider>

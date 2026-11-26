@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { useCommandPalette } from "../command/command-palette-context"
+import { preloadCommandPalette } from "../command/command-palette-lazy"
 import {
   type QuickAction,
   useQuickActions
@@ -94,6 +95,8 @@ export function QuickSheet({
               onOpenChange(false)
               palette.setOpen(true)
             }}
+            onPointerEnter={preloadCommandPalette}
+            onFocus={preloadCommandPalette}
           >
             <Search className="size-5" />
             Buscar o ejecutar

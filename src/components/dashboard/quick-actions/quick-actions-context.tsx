@@ -28,13 +28,15 @@ import { CategoriesSheet } from "@/features/categories/components/categories-she
 import type { Category } from "@/features/categories/queries"
 import {
   type DebtOption,
-  PaymentDialog
+  PaymentDialog,
+  preloadPaymentForm
 } from "@/features/debts/components/payment-dialog"
 import type { CollectableReceivable } from "@/features/debts/receivable-collect"
 import { DEBTS_PATH, RECEIVABLES_PATH } from "@/features/debts/tabs"
 import {
   ContributionDialog,
-  type GoalOption
+  type GoalOption,
+  preloadContributionForm
 } from "@/features/goals/components/contribution-dialog"
 import { GOALS_PATH } from "@/features/goals/progress"
 import { IMPORT_PATH } from "@/features/imports/constants"
@@ -44,7 +46,10 @@ import {
   TransactionDialog,
   preloadTransactionForm
 } from "@/features/transactions/components/transaction-dialog"
-import { VerifyMovementsDialog } from "@/features/transactions/components/verify-movements-dialog"
+import {
+  VerifyMovementsDialog,
+  preloadVerifyMovements
+} from "@/features/transactions/components/verify-movements-dialog"
 import type { FormPanel } from "@/features/transactions/types"
 import type { WorkspaceType } from "@/features/workspaces/types"
 import { useHideAmounts } from "../hide-amounts/hide-amounts-context"
@@ -120,7 +125,10 @@ const QuickActionsContext = createContext<QuickActionsValue | null>(null)
 const PRELOADS: Partial<Record<QuickActionKey, () => void>> = {
   movement: preloadTransactionForm,
   transfer: preloadTransactionForm,
-  receivable: preloadTransactionForm
+  receivable: preloadTransactionForm,
+  contribution: preloadContributionForm,
+  payment: preloadPaymentForm,
+  verify: preloadVerifyMovements
 }
 
 /**

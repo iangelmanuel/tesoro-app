@@ -6,17 +6,13 @@ import Link from "next/link"
 import { buttonVariants } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import { TransferForm } from "@/features/accounts/components/transfer-dialog"
-import {
-  type DebtOption,
-  DebtPaymentPanel
-} from "@/features/debts/components/payment-dialog"
+import { DebtPaymentPanel } from "@/features/debts/components/debt-payment-panel"
+import type { DebtOption } from "@/features/debts/components/payment-dialog"
 import { ReceivableCollectForm } from "@/features/debts/components/receivable-collect-form"
 import type { CollectableReceivable } from "@/features/debts/receivable-collect"
 import { DEBTS_PATH, RECEIVABLES_PATH } from "@/features/debts/tabs"
-import {
-  GoalContributionPanel,
-  type GoalOption
-} from "@/features/goals/components/contribution-dialog"
+import type { GoalOption } from "@/features/goals/components/contribution-dialog"
+import { GoalContributionPanel } from "@/features/goals/components/contribution-form"
 import { GOALS_PATH } from "@/features/goals/progress"
 import type { UpcomingPayment } from "@/features/recurring-expenses/queries"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"

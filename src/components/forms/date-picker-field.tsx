@@ -1,20 +1,46 @@
 "use client"
 
-import { useId, useState } from "react"
+import { Suspense, useId, useState } from "react"
 import { CalendarIcon } from "lucide-react"
-import { es } from "react-day-picker/locale"
 import { FieldLabel } from "@/components/forms/field-label"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
 import { FieldError } from "@/components/ui/field"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger
 } from "@/components/ui/popover"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { FieldHelpKey } from "@/config/help"
 import { cn } from "@/libs/cn"
 import { formatDate } from "@/libs/format"
+import { lazyWithPreload } from "@/libs/lazy-with-preload"
+
+// react-day-picker se descarga al abrir el popover o al pasar por el botón
+// de fecha (SPEC 56b). El botón muestra la fecha sin esperarlo
+const DatePickerCalendar = lazyWithPreload(() =>
+  import("./date-picker-calendar").then((m) => m.DatePickerCalendar)
+)
+
+/**
+ * Tamaño de celda del calendario. Siete celdas de 44 px no caben en un
+ * teléfono de 320 px: por debajo de ~350 px la celda se ajusta al ancho
+ * (40 px a 320). Lo comparten el calendario y su hueco de carga
+ */
+export const CALENDAR_CELL_CLASS =
+  "[--cell-size:min(--spacing(11),calc((100vw-2.5rem)/7))]"
+
+/** Hueco del calendario: su padding, la fila del mes y 7 filas de celdas */
+function CalendarSkeleton() {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn("p-3", CALENDAR_CELL_CLASS)}
+    >
+      <Skeleton className="h-[calc(var(--cell-size)*8)] w-[calc(var(--cell-size)*7)] rounded-2xl" />
+    </div>
+  )
+}
 
 interface DatePickerFieldProps {
   /** Nombre del campo: el formulario recibe la fecha como YYYY-MM-DD */
@@ -120,6 +146,8 @@ export function DatePickerField({
         onOpenChange={setOpen}
       >
         <PopoverTrigger
+          onPointerEnter={DatePickerCalendar.preload}
+          onFocus={DatePickerCalendar.preload}
           render={
             <Button
               id={id}
@@ -149,27 +177,21 @@ export function DatePickerField({
           align="start"
           className="w-auto p-0"
         >
-          <Calendar
-            mode="single"
-            locale={es}
-            weekStartsOn={1}
-            captionLayout="dropdown"
-            selected={selected}
-            defaultMonth={selected ?? max ?? undefined}
-            startMonth={startMonth}
-            endMonth={endMonth}
-            disabled={disabled}
-            required={isRequired}
-            aria-label={label}
-            autoFocus
-            // Siete celdas de 44 px no caben en un teléfono de 320 px: por
-            // debajo de ~350 px la celda se ajusta al ancho (40 px a 320)
-            className="[--cell-size:min(--spacing(11),calc((100vw-2.5rem)/7))]"
-            onSelect={(date: Date | undefined) => {
-              onChange(date ? fromDate(date) : "")
-              setOpen(false)
-            }}
-          />
+          <Suspense fallback={<CalendarSkeleton />}>
+            <DatePickerCalendar.Component
+              selected={selected}
+              defaultMonth={selected ?? max ?? undefined}
+              startMonth={startMonth}
+              endMonth={endMonth}
+              disabled={disabled}
+              required={isRequired}
+              label={label}
+              onSelect={(date: Date | undefined) => {
+                onChange(date ? fromDate(date) : "")
+                setOpen(false)
+              }}
+            />
+          </Suspense>
         </PopoverContent>
       </Popover>
       {error ? <FieldError id={errorId}>{error}</FieldError> : null}

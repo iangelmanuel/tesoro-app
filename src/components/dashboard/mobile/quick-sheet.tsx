@@ -15,8 +15,10 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { useCommandPalette } from "../command/command-palette-context"
+import { preloadCommandPalette } from "../command/command-palette-lazy"
 import {
   type QuickAction,
+  preloadQuickAction,
   useQuickActions
 } from "../quick-actions/quick-actions-context"
 
@@ -64,6 +66,8 @@ export function QuickSheet({
           onOpenChange(false)
           run(key)
         }}
+        onPointerEnter={() => preloadQuickAction(key)}
+        onFocus={() => preloadQuickAction(key)}
       >
         <Icon className="size-5" />
         {label}
@@ -94,6 +98,8 @@ export function QuickSheet({
               onOpenChange(false)
               palette.setOpen(true)
             }}
+            onPointerEnter={preloadCommandPalette}
+            onFocus={preloadCommandPalette}
           >
             <Search className="size-5" />
             Buscar o ejecutar

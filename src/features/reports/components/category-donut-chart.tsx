@@ -10,6 +10,7 @@ import { ChartTooltip } from "@/components/charts/chart-tooltip"
 import { useFormatAmount } from "@/components/dashboard/hide-amounts/hide-amounts-context"
 import type { CategorySlice } from "../chart-data"
 import { ChartDataTable } from "./chart-data-table"
+import { DONUT_CLASS } from "./chart-sizes"
 import { CurrencyTooltipContent } from "./currency-tooltip"
 
 const PERCENT = new Intl.NumberFormat("es-CO", {
@@ -46,7 +47,7 @@ export function CategoryDonutChart({
     <div className="flex flex-col gap-4">
       <ChartContainer
         config={config}
-        className={className ?? "mx-auto aspect-square max-h-64 w-full"}
+        className={className ?? DONUT_CLASS}
         role="figure"
         aria-label={`${title}. Total ${money(total, currency)}`}
       >

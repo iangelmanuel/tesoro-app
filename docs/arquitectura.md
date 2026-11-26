@@ -183,6 +183,22 @@ composición va a un módulo de la feature, con su test.
   `.in()`, no una por fila; y los límites van en la consulta (`.limit()`,
   `.range()`), no cortando en JS. Los datos de usuario no se cachean entre
   requests. Método y cifras en [`rendimiento.md`](rendimiento.md).
+- **React Compiler (SPEC 56b):** `reactCompiler: true` en `next.config.ts`
+  memoiza los componentes y hooks cliente. No se agregan `memo()`,
+  `useMemo` ni `useCallback` nuevos para rendimiento; los que ya existen
+  se quedan. El compilador salta un componente que rompe las reglas de
+  React (reglas `react-hooks` de `eslint-config-next`): se corrige el
+  componente, no se suprime la regla, porque un `eslint-disable` de
+  `react-hooks` también lo deja sin compilar (para dependencias que no
+  deben disparar un efecto, `useEffectEvent`). `"use no memo"` solo para
+  un componente que no tenga arreglo sin cambiar comportamiento, y siempre
+  con un comentario del motivo. Hoy no hay ninguno; `use-export-form.ts` y
+  `file-step.tsx` quedan sin compilar porque usan `try/finally`, que el
+  compilador aún no soporta.
+- **Carga diferida (SPEC 56b):** lo que no se usa al entrar (gráficas,
+  formularios de diálogo, paleta, calendario, arrastre) se carga con
+  `lazyWithPreload` y su skeleton. Patrón en
+  [`ui.md`](ui.md#carga-diferida-spec-56b).
 
 ## Nombres
 
@@ -331,4 +347,6 @@ de cliente.
 - [ ] `pnpm build` termina
 - [ ] Lockfile sincronizado (`pnpm install --frozen-lockfile`)
 - [ ] Sin imports que crucen capas al revés ni barrels nuevos
+- [ ] Nada pesado que no se use al entrar en el JS inicial (`pnpm next analyze`)
+- [ ] Cada `"use no memo"` lleva un comentario con el motivo
 - [ ] `docs/` y `CHANGELOG.md` actualizados si aplica

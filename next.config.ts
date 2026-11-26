@@ -3,6 +3,9 @@ import type { NextConfig } from "next"
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  // React Compiler (SPEC 56b): memoiza los componentes cliente. Los que no
+  // puede optimizar sin cambiar comportamiento llevan "use no memo"
+  reactCompiler: true,
   reactStrictMode: true,
   poweredByHeader: false,
   typedRoutes: true,

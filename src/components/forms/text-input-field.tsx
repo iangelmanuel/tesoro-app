@@ -49,10 +49,14 @@ export function TextInputField({
   const id = useId()
   const errorId = `${id}-error`
   const descriptionId = `${id}-description`
-  const describedBy =
-    [error ? errorId : null, description ? descriptionId : null]
-      .filter(Boolean)
-      .join(" ") || undefined
+  const describedIds = [
+    error ? errorId : null,
+    description ? descriptionId : null
+  ]
+    .filter(Boolean)
+    .join(" ")
+  // Sin `|| undefined`: el React Compiler no compila un `||` con ternarios
+  const describedBy = describedIds === "" ? undefined : describedIds
 
   return (
     <div

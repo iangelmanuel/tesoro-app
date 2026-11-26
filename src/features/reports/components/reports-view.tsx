@@ -35,11 +35,11 @@ import {
   CategorySummaryTable,
   CategorySummaryTableSkeleton
 } from "./category-summary-table"
-import { IncomeExpenseChart } from "./income-expense-chart"
+import { IncomeExpenseChartLazy } from "./income-expense-chart-lazy"
 import { NoPeriodData } from "./no-period-data"
 import { ReportPeriodPicker } from "./report-period-picker"
 import { ReportTypeToggle } from "./report-type-toggle"
-import { TopCategoriesChart } from "./top-categories-chart"
+import { TopCategoriesChartLazy } from "./top-categories-chart-lazy"
 
 /** La tendencia muestra al menos estos meses, terminando en el periodo */
 const MIN_TREND_MONTHS = 6
@@ -174,7 +174,7 @@ export async function ReportsView({
             legend={incomeExpenseLegend(labels, true)}
             tour="reports-trend"
           >
-            <IncomeExpenseChart
+            <IncomeExpenseChartLazy
               data={trend}
               currency={currency}
               showBalance
@@ -210,7 +210,7 @@ export async function ReportsView({
               tour="reports-top"
             >
               {categoryTotals.length > 0 ? (
-                <TopCategoriesChart
+                <TopCategoriesChartLazy
                   categories={buildTopCategories(categoryTotals)}
                   currency={currency}
                   title={`Top ${TOP_CATEGORIES} categorías de ${typeNoun} de ${params.label}`}

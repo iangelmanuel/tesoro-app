@@ -16,9 +16,9 @@ import {
 } from "./recommendation-list"
 import { ScoreFactors, ScoreFactorsSkeleton } from "./score-factors"
 import {
-  ScoreHistoryChart,
+  ScoreHistoryChartLazy,
   ScoreHistoryChartSkeleton
-} from "./score-history-chart"
+} from "./score-history-chart-lazy"
 import { ScoreInsufficient } from "./score-insufficient"
 import { ScoreOverview, ScoreOverviewSkeleton } from "./score-overview"
 
@@ -102,7 +102,7 @@ export function ScoreRecommendationsView<K extends string>({
             message="Aún no hay histórico"
           />
         ) : (
-          <ScoreHistoryChart data={points} />
+          <ScoreHistoryChartLazy data={points} />
         )}
       </ScoreCard>
 

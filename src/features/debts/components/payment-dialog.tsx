@@ -1,13 +1,25 @@
 "use client"
 
-import { useState } from "react"
-import { FormDialog } from "@/components/forms/form-dialog"
+import { Suspense, useState } from "react"
+import {
+  FormDialog,
+  FormDialogBodySkeleton
+} from "@/components/forms/form-dialog"
 import { SelectField } from "@/components/forms/select-field"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
+import { lazyWithPreload } from "@/libs/lazy-with-preload"
 import type { DebtPaymentDescriptions } from "../payment-description"
 import type { PaymentDebt, PaymentInitialValues } from "../payment-form-values"
 import type { Debt } from "../queries"
-import { PaymentDialogForm } from "./payment-dialog-form"
+
+// Tipo, monto, fecha y cuenta se descargan al abrir el diálogo o al pasar
+// por su disparador (SPEC 56b)
+const PaymentDialogForm = lazyWithPreload(() =>
+  import("./payment-dialog-form").then((m) => m.PaymentDialogForm)
+)
+
+/** Precarga el formulario de pago de deuda: `onPointerEnter` / `onFocus` */
+export const preloadPaymentForm = PaymentDialogForm.preload
 
 /** Deuda que se puede elegir en el diálogo (acceso rápido del header) */
 export type DebtOption = Pick<Debt, "id" | "kind" | "name" | "account_id"> & {
@@ -58,6 +70,7 @@ export function PaymentDialog({
   return (
     <FormDialog
       trigger={trigger}
+      onTriggerIntent={PaymentDialogForm.preload}
       open={controlledOpen}
       onOpenChange={onOpenChange}
       className="sm:max-w-md"
@@ -78,16 +91,25 @@ export function PaymentDialog({
             />
           )}
           {debt && (
-            <PaymentDialogForm
-              // Cambiar de deuda reinicia el formulario (tipo y textos)
-              key={debt.id}
-              workspaceId={workspaceId}
-              debt={debt}
-              accounts={accounts}
-              initialValues={fixedDebt ? initialValues : undefined}
-              onSaved={close}
-              onCancel={close}
-            />
+            <Suspense
+              fallback={
+                <FormDialogBodySkeleton
+                  fields={4}
+                  tabs
+                />
+              }
+            >
+              <PaymentDialogForm.Component
+                // Cambiar de deuda reinicia el formulario (tipo y textos)
+                key={debt.id}
+                workspaceId={workspaceId}
+                debt={debt}
+                accounts={accounts}
+                initialValues={fixedDebt ? initialValues : undefined}
+                onSaved={close}
+                onCancel={close}
+              />
+            </Suspense>
           )}
         </div>
       )}
@@ -95,53 +117,8 @@ export function PaymentDialog({
   )
 }
 
-interface DebtPaymentPanelProps {
-  workspaceId: string
-  /** Deudas activas para elegir (tarjetas y préstamos) */
-  debts: DebtOption[]
-  accounts: PaymentAccountOption[]
-  onSaved: () => void
-  onCancel: () => void
-}
-
-/**
- * Elegir deuda + formulario de pago, sin el diálogo: tab "Pago de deuda" del
- * diálogo de movimiento. Mismo resultado que PaymentDialog desde "Más"
- */
-export function DebtPaymentPanel({
-  workspaceId,
-  debts,
-  accounts,
-  onSaved,
-  onCancel
-}: DebtPaymentPanelProps) {
-  // Arranca con la primera de la lista
-  const [selectedDebtId, setSelectedDebtId] = useState(() => debts[0]?.id ?? "")
-  const debt = debts.find((option) => option.id === selectedDebtId)
-
-  return (
-    <div className="flex flex-col gap-4">
-      <DebtSelect
-        debts={debts}
-        value={selectedDebtId}
-        onChange={setSelectedDebtId}
-      />
-      {debt && (
-        <PaymentDialogForm
-          // Cambiar de deuda reinicia el formulario (tipo y textos)
-          key={debt.id}
-          workspaceId={workspaceId}
-          debt={debt}
-          accounts={accounts}
-          onSaved={onSaved}
-          onCancel={onCancel}
-        />
-      )}
-    </div>
-  )
-}
-
-function DebtSelect({
+/** Elegir la deuda: el diálogo y el tab "Deuda" del diálogo de movimiento */
+export function DebtSelect({
   debts,
   value,
   onChange

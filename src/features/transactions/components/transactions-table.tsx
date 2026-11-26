@@ -1,7 +1,6 @@
 "use client"
 
-import { DragDropProvider, DragOverlay } from "@dnd-kit/react"
-import { GripVertical } from "lucide-react"
+import { Suspense, useEffect, useState } from "react"
 import {
   ScrollTable,
   ScrollTableSkeleton
@@ -19,6 +18,7 @@ import type { Category } from "@/features/categories/queries"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
 import type { WorkspaceType } from "@/features/workspaces/types"
 import { cn } from "@/libs/cn"
+import { lazyWithPreload } from "@/libs/lazy-with-preload"
 import { isAccountMovement } from "../ledger-rows"
 import type { LedgerEntry } from "../types"
 import {
@@ -26,6 +26,10 @@ import {
   AdjustmentRow,
   TransferRow
 } from "./transactions-table-account-rows"
+import {
+  TableDndContext,
+  createRowElementsStore
+} from "./transactions-table-dnd-context"
 import { TransactionRow } from "./transactions-table-row"
 import { useTransactionsTable } from "./use-transactions-table"
 
@@ -52,6 +56,47 @@ const ACTIONS_COLUMN = "w-28 md:w-16"
 const TABLE_SURFACE = cn(SURFACE_LIST, "divide-y-0 px-2")
 const MIN_WIDTH = { personal: "46rem", business: "64rem" } as const
 
+const TableDnd = lazyWithPreload(() =>
+  import("./transactions-table-dnd").then((m) => m.TableDnd)
+)
+
+// Una sola descarga por sesión: al volver a Movimientos ya está
+let dndLoaded = false
+
+/**
+ * @dnd-kit en idle después de hidratar (SPEC 56b): nadie reordena en el
+ * primer segundo. Sin requestIdleCallback (Safari), un setTimeout corto. Si
+ * falla la red, el asa sigue disabled y la próxima visita lo reintenta
+ */
+function useIdleTableDnd(enabled: boolean) {
+  const [ready, setReady] = useState(dndLoaded)
+
+  useEffect(() => {
+    if (!enabled || ready) return
+    let cancelled = false
+    const load = () => {
+      void TableDnd.preload().then((loaded) => {
+        dndLoaded = loaded
+        if (loaded && !cancelled) setReady(true)
+      })
+    }
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(load, { timeout: 2000 })
+      return () => {
+        cancelled = true
+        window.cancelIdleCallback(id)
+      }
+    }
+    const id = window.setTimeout(load, 200)
+    return () => {
+      cancelled = true
+      window.clearTimeout(id)
+    }
+  }, [enabled, ready])
+
+  return ready
+}
+
 // Client: cada fila abre el diálogo de edición, y así las categorías y las
 // cuentas viajan una sola vez en vez de una por fila
 export function TransactionsTable({
@@ -64,8 +109,10 @@ export function TransactionsTable({
   canReorder = false,
   incomeSources
 }: TransactionsTableProps) {
-  const { orderedRows, reorders, handleDragStart, handleDragEnd } =
+  const { orderedRows, reorders, activeId, handleDragStart, handleDragEnd } =
     useTransactionsTable(workspaceId, rows, canReorder)
+  const dndReady = useIdleTableDnd(canReorder)
+  const [rowElements] = useState(createRowElementsStore)
   const categoriesById = new Map(
     categories.map((category) => [category.id, category])
   )
@@ -74,9 +121,8 @@ export function TransactionsTable({
   const isBusiness = workspaceType === "business"
 
   return (
-    <DragDropProvider
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+    <TableDndContext
+      value={{ ready: dndReady, activeId, register: rowElements.register }}
     >
       <ScrollTable
         minWidth={MIN_WIDTH[workspaceType]}
@@ -174,18 +220,18 @@ export function TransactionsTable({
           </TableBody>
         </Table>
       </ScrollTable>
-      <DragOverlay>
-        {(source) => (
-          <div className="flex w-fit max-w-full items-center gap-2 rounded-2xl bg-popover px-4 py-2.5 text-sm font-medium shadow-(--overlay-shadow) ring-1 ring-ring">
-            <GripVertical
-              aria-hidden="true"
-              className="size-4 text-muted-foreground"
-            />
-            {String(source.data?.title ?? "")}
-          </div>
-        )}
-      </DragOverlay>
-    </DragDropProvider>
+      {/* Al lado de la tabla: llegar no remonta las filas */}
+      {dndReady && reorders ? (
+        <Suspense fallback={null}>
+          <TableDnd.Component
+            reorders={reorders}
+            elementsFor={rowElements.elementsFor}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          />
+        </Suspense>
+      ) : null}
+    </TableDndContext>
   )
 }
 

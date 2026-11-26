@@ -24,24 +24,35 @@ import {
 import { useTheme } from "next-themes"
 import { SITE } from "@/config/site"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
-import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
+import {
+  CategoriesSheet,
+  preloadCategoriesSheet
+} from "@/features/categories/components/categories-sheet"
 import type { Category } from "@/features/categories/queries"
 import {
   type DebtOption,
-  PaymentDialog
+  PaymentDialog,
+  preloadPaymentForm
 } from "@/features/debts/components/payment-dialog"
 import type { CollectableReceivable } from "@/features/debts/receivable-collect"
 import { DEBTS_PATH, RECEIVABLES_PATH } from "@/features/debts/tabs"
 import {
   ContributionDialog,
-  type GoalOption
+  type GoalOption,
+  preloadContributionForm
 } from "@/features/goals/components/contribution-dialog"
 import { GOALS_PATH } from "@/features/goals/progress"
 import { IMPORT_PATH } from "@/features/imports/constants"
 import type { UpcomingPayment } from "@/features/recurring-expenses/queries"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
-import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
-import { VerifyMovementsDialog } from "@/features/transactions/components/verify-movements-dialog"
+import {
+  TransactionDialog,
+  preloadTransactionForm
+} from "@/features/transactions/components/transaction-dialog"
+import {
+  VerifyMovementsDialog,
+  preloadVerifyMovements
+} from "@/features/transactions/components/verify-movements-dialog"
 import type { FormPanel } from "@/features/transactions/types"
 import type { WorkspaceType } from "@/features/workspaces/types"
 import { useHideAmounts } from "../hide-amounts/hide-amounts-context"
@@ -112,6 +123,25 @@ interface QuickActionsValue extends QuickActionsData {
 }
 
 const QuickActionsContext = createContext<QuickActionsValue | null>(null)
+
+// Formulario diferido de cada acción (SPEC 56b)
+const PRELOADS: Partial<Record<QuickActionKey, () => void>> = {
+  movement: preloadTransactionForm,
+  transfer: preloadTransactionForm,
+  receivable: preloadTransactionForm,
+  contribution: preloadContributionForm,
+  payment: preloadPaymentForm,
+  verify: preloadVerifyMovements,
+  categories: preloadCategoriesSheet
+}
+
+/**
+ * Precarga el formulario que abre una acción. Va en `onPointerEnter` /
+ * `onFocus` de su botón o ítem de menú
+ */
+export function preloadQuickAction(key: QuickActionKey) {
+  PRELOADS[key]?.()
+}
 
 // Diálogos que abren las acciones; uno a la vez
 type OpenDialog = Exclude<QuickActionKey, "import" | "theme" | "hide-amounts">

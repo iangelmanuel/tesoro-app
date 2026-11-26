@@ -45,7 +45,7 @@ export function HideAmountsProvider({
         })
       }
     }),
-    [hidden, setOptimistic]
+    [hidden, setOptimistic, startTransition]
   )
 
   return (

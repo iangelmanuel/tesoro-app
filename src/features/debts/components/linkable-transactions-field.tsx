@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useId, useState } from "react"
+import { useEffect, useEffectEvent, useId, useState } from "react"
 import { Amount } from "@/components/dashboard/data/amount"
 import { FieldError } from "@/components/ui/field"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -55,14 +55,21 @@ export function LinkableTransactionsField({
   const errorId = useId()
   const [candidates, setCandidates] = useState<LinkableTransaction[]>([])
 
+  // value y onChange no disparan una búsqueda nueva
+  const dropStaleChoice = useEffectEvent(
+    (rows: readonly LinkableTransaction[]) => {
+      // El elegido ya no calza con el monto o la fecha
+      if (value && !rows.some((row) => row.id === value)) onChange(null)
+    }
+  )
+
   useEffect(() => {
     let active = true
     listLinkableTransactions(entryId, type, amount, occurredOn)
       .then((rows) => {
         if (!active) return
         setCandidates(rows)
-        // El elegido ya no calza con el monto o la fecha
-        if (value && !rows.some((row) => row.id === value)) onChange(null)
+        dropStaleChoice(rows)
       })
       .catch(() => {
         if (active) setCandidates([])
@@ -70,8 +77,6 @@ export function LinkableTransactionsField({
     return () => {
       active = false
     }
-    // value y onChange no disparan una búsqueda nueva
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entryId, type, amount, occurredOn])
 
   function handleChange(next: string) {

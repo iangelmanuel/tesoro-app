@@ -1,6 +1,7 @@
 import { CARD } from "@/components/dashboard/data/surface"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/libs/cn"
+import { ChartSkeleton } from "./chart-skeleton"
 
 export interface LegendItem {
   label: string
@@ -161,9 +162,7 @@ export function ChartCardSkeleton({
         )}
       </div>
       <div className="flex min-h-0 flex-1 flex-col">
-        <Skeleton
-          className={cn("aspect-video w-full rounded-2xl", chartClassName)}
-        />
+        <ChartSkeleton className={chartClassName} />
       </div>
     </ChartCardFrame>
   )

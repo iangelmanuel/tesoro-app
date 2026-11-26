@@ -16,6 +16,11 @@ import { es } from "react-day-picker/locale"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/libs/cn"
 
+// Fuera del componente: el React Compiler no compila un `String.raw` cuyo
+// valor crudo difiere del procesado (las `\_` de la clase de Tailwind)
+const RTL_NEXT_ICON = String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`
+const RTL_PREVIOUS_ICON = String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`
+
 function Calendar({
   className,
   classNames,
@@ -36,8 +41,8 @@ function Calendar({
       showOutsideDays={showOutsideDays}
       className={cn(
         "group/calendar bg-popover p-3 [--cell-radius:var(--radius-4xl)] [--cell-size:--spacing(11)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
-        String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
-        String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
+        RTL_NEXT_ICON,
+        RTL_PREVIOUS_ICON,
         className
       )}
       captionLayout={captionLayout}

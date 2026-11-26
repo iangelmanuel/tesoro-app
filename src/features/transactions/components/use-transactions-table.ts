@@ -1,8 +1,6 @@
 "use client"
 
 import { useOptimistic, useState, useTransition } from "react"
-import type { DragEndEvent, DragStartEvent } from "@dnd-kit/react"
-import { isSortable } from "@dnd-kit/react/sortable"
 import { toast } from "@/components/ui/sonner"
 import { moveLedgerEntry } from "../ledger-actions"
 import {
@@ -13,6 +11,10 @@ import {
   rowReorders
 } from "../ledger-rows"
 import type { LedgerEntry } from "../types"
+import type {
+  TableDragMove,
+  TableDragStart
+} from "./transactions-table-dnd-context"
 
 /**
  * Orden manual de la tabla de Movimientos (SPEC 19): la fila se mueve al
@@ -27,6 +29,8 @@ export function useTransactionsTable(
   const [, startTransition] = useTransition()
   // Día de la fila que se arrastra: solo se puede soltar dentro de él
   const [draggingDay, setDraggingDay] = useState<string | null>(null)
+  // Fila que se arrastra: queda como hueco en el lugar de destino
+  const [activeId, setActiveId] = useState<string | null>(null)
 
   function moveRow(source: LedgerEntry, target: LedgerEntry) {
     startTransition(async () => {
@@ -44,31 +48,24 @@ export function useTransactionsTable(
     })
   }
 
-  function handleDragStart(event: DragStartEvent) {
-    const source = event.operation.source
-    setDraggingDay(isSortable(source) ? String(source.group) : null)
+  function handleDragStart(start: TableDragStart | null) {
+    setDraggingDay(start?.day ?? null)
+    setActiveId(start?.id ?? null)
   }
 
-  function handleDragEnd(event: DragEndEvent) {
+  // null: se canceló o no era una fila de la tabla
+  function handleDragEnd(move: TableDragMove | null) {
     setDraggingDay(null)
-    const source = event.operation.source
+    setActiveId(null)
 
-    if (event.canceled || !isSortable(source)) {
-      return
-    }
     // Una fila solo se mueve entre las de su día, y la RPC deja la fila
     // arrastrada en el lugar de la destino
-    if (
-      source.group !== source.initialGroup ||
-      source.index === source.initialIndex
-    ) {
+    if (!move || !move.sameDay || move.index === move.initialIndex) {
       return
     }
-    const dayRows = orderedRows.filter(
-      (row) => entryDate(row) === String(source.group)
-    )
-    const moved = dayRows[source.initialIndex]
-    const destination = dayRows[source.index]
+    const dayRows = orderedRows.filter((row) => entryDate(row) === move.day)
+    const moved = dayRows[move.initialIndex]
+    const destination = dayRows[move.index]
 
     if (moved && destination) {
       moveRow(moved, destination)
@@ -78,5 +75,5 @@ export function useTransactionsTable(
   // Sin permiso de escritura o con búsqueda, las filas no tienen asa
   const reorders = canReorder ? rowReorders(orderedRows, draggingDay) : null
 
-  return { orderedRows, reorders, handleDragStart, handleDragEnd }
+  return { orderedRows, reorders, activeId, handleDragStart, handleDragEnd }
 }

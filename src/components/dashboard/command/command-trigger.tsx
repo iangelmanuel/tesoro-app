@@ -4,6 +4,7 @@ import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Kbd } from "@/components/ui/kbd"
 import { useCommandPalette, useModKey } from "./command-palette-context"
+import { preloadCommandPalette } from "./command-palette-lazy"
 
 /**
  * Disparador visible de la paleta en el header, con su atajo. En el teléfono
@@ -20,6 +21,8 @@ export function CommandTrigger() {
       aria-keyshortcuts="Control+K Meta+K"
       data-tour="header-search"
       onClick={() => setOpen(true)}
+      onPointerEnter={preloadCommandPalette}
+      onFocus={preloadCommandPalette}
     >
       <Search className="size-4" />
       <span className="truncate">Buscar o ejecutar</span>

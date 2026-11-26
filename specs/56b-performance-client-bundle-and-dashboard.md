@@ -1,6 +1,6 @@
 # SPEC 56b — Rendimiento: bundle del cliente y dashboard
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 51, SPEC 52a, SPEC 56a
 > **Fecha:** 2026-11-26
 > **Objetivo:** Bajar el JavaScript inicial del dashboard y el trabajo de render en el navegador con el React Compiler, carga diferida de lo que no se usa al entrar y prefetch revisado, sin cambiar lo que ve ni puede hacer el usuario.
@@ -110,19 +110,28 @@ export const IncomeExpenseChartLazy = dynamic(
 
 ## Criterios de aceptación
 
-- [ ] `next.config.ts` tiene `reactCompiler: true` y `babel-plugin-react-compiler` está en `devDependencies` con versión exacta.
-- [ ] Cada `"use no memo"` del repo lleva un comentario con el motivo.
-- [ ] El JS inicial (First Load JS) de `/dashboard/personal` baja al menos un 20 % respecto a la línea base de 56a.
-- [ ] Lighthouse móvil de `/dashboard/personal`, `/dashboard/personal/transactions` y `/dashboard/personal/reports`: Performance ≥ 90, LCP ≤ 2,5 s, CLS ≤ 0,1 y TBT ≤ 200 ms.
-- [ ] En el analyzer, `recharts`, `cmdk`, `react-day-picker` y `@dnd-kit/react` no están en el chunk inicial de `/dashboard/personal`.
-- [ ] Abrir la paleta con ⌘K / Ctrl+K funciona en la primera pulsación, también sin haber pasado el ratón por el botón.
-- [ ] Cada gráfica, diálogo, Sheet y calendario diferido muestra su skeleton o forma cerrada sin salto de layout (CLS de la ruta ≤ 0,1).
-- [ ] Reordenar movimientos funciona con ratón, táctil y teclado después de que la página termina de cargar.
-- [ ] El clic en un ítem del aside muestra el skeleton de la ruta en ≤ 100 ms (mediana de 5).
-- [ ] Escribir en el buscador de Movimientos con 2.000 filas no da commits de más de 200 ms en el Profiler.
-- [ ] Las tres interacciones del Profiler renderizan menos componentes que en la línea base.
-- [ ] `docs/rendimiento.md` tiene las tablas "Antes" y "Después" de este spec.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
+- [x] `next.config.ts` tiene `reactCompiler: true` y `babel-plugin-react-compiler` está en `devDependencies` con versión exacta.
+- [x] Cada `"use no memo"` del repo lleva un comentario con el motivo.
+- [x] El JS inicial (First Load JS) de `/dashboard/personal` baja al menos un 20 % respecto a la línea base de 56a.
+- [ ] Lighthouse móvil de `/dashboard/personal`, `/dashboard/personal/transactions` y `/dashboard/personal/reports`: Performance ≥ 90, LCP ≤ 2,5 s, CLS ≤ 0,1 y TBT ≤ 200 ms. **Pasa a SPEC 57.**
+- [x] En el analyzer, `recharts`, `cmdk`, `react-day-picker` y `@dnd-kit/react` no están en el chunk inicial de `/dashboard/personal`.
+- [x] Abrir la paleta con ⌘K / Ctrl+K funciona en la primera pulsación, también sin haber pasado el ratón por el botón.
+- [x] Cada gráfica, diálogo, Sheet y calendario diferido muestra su skeleton o forma cerrada sin salto de layout (CLS de la ruta ≤ 0,1).
+- [ ] Reordenar movimientos funciona con ratón, táctil y teclado después de que la página termina de cargar. **Prueba manual pendiente en el PR.**
+- [x] El clic en un ítem del aside muestra el skeleton de la ruta en ≤ 100 ms (mediana de 5).
+- [ ] Escribir en el buscador de Movimientos con 2.000 filas no da commits de más de 200 ms en el Profiler. **Pasa a SPEC 57.**
+- [ ] Las tres interacciones del Profiler renderizan menos componentes que en la línea base. **Pasa a SPEC 57.**
+- [x] `docs/rendimiento.md` tiene las tablas "Antes" y "Después" de este spec.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
+
+Notas de la verificación (detalle en `docs/rendimiento.md`):
+
+- JS inicial: `/dashboard/personal` baja de 2.003 kB a 1.314 kB (−34 %). `master` reconstruido con el mismo script da exactamente la línea base de 56a.
+- Lighthouse: Preview de la rama intercalado con producción (`master`) en la misma ventana. Con la misma CPU, el TBT baja 45 % en `/dashboard/personal` y 35 % en Movimientos, y queda igual en Reportes; el CLS es ≤ 0,002. El Performance sigue en 45–49: lo dominan el TBT restante (render e hidratación en `react-dom`) y el LCP, una cifra en streaming que espera a la hidratación. Ese trabajo no es de bundle y sigue en SPEC 57.
+- Profiler: no se midió (no se puede contra el Preview y la línea base de §1 no se tomó). Sus dos criterios y la medición de línea base pasan a SPEC 57. La tabla de Movimientos pagina de 50 en 50, así que nunca pinta 2.000 filas; no se virtualizó.
+- Arrastre: verificado con Playwright que el asa se habilita en idle y dnd-kit la engancha (`aria-roledescription`). Falta probar a mano con ratón, táctil y teclado antes de fusionar.
+- ⌘K: abre en la primera pulsación sin precarga (~400 ms con la descarga del chunk). Clic a skeleton: mediana 66 ms.
+- Diferidos: de los `DetailSheet`, solo Categorías difiere su cuerpo. Los de Deuda, Meta, Gasto fijo e Ingreso fijo pasan a SPEC 57.
 
 ## Decisiones
 
@@ -139,6 +148,11 @@ export const IncomeExpenseChartLazy = dynamic(
 - **Sí:** paginar o virtualizar la tabla solo si la medición supera los 200 ms. No se agrega complejidad sin evidencia.
 - **Sí:** metas numéricas duras. Sin ellas, "más rápido" no se puede cerrar.
 - **No:** quitar los `useMemo` / `useCallback` existentes. No mejora el rendimiento y agranda el diff.
+- **Sí (en la implementación):** `lazy()` + `Suspense` en vez de `next/dynamic` para las gráficas. `loading` de `next/dynamic` no recibe las props y el tamaño de varias gráficas depende de ellas (alto por filas, clase por página).
+- **Sí (en la implementación):** diferir el formulario dentro del diálogo, no el diálogo. El disparador, el título y la animación no cambian y los usos fuera de los accesos rápidos lo heredan.
+- **Sí (en la implementación):** el arrastre de Movimientos se engancha desde un árbol al lado de la tabla. Envolver la tabla en el proveedor al llegar el chunk la remontaría y movería el foco.
+- **No (en la implementación):** diferir el cuerpo de los Sheets de Deuda, Meta, Gasto fijo e Ingreso fijo. Su contenido está acoplado al Sheet; pasa a SPEC 57.
+- **Sí (en la implementación):** `useEffectEvent` en vez de `eslint-disable` de `react-hooks`. Un `eslint-disable` también deja el componente sin compilar.
 
 ## Riesgos
 

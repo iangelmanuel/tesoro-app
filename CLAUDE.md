@@ -225,6 +225,17 @@ líneas por archivo. Queries y servicios llevan `import "server-only"`.
   los compone dentro de `LoadingRegion` (`aria-busy`). Las pantallas
   arman su skeleton en un archivo `…-screen-skeleton.tsx` (o junto al
   componente) para reusarlo en el `Suspense` y en el `loading.tsx`.
+- **Carga diferida y React Compiler** (SPEC 56b): `reactCompiler: true`
+  memoiza el cliente; no se agregan `memo` / `useMemo` / `useCallback`
+  nuevos, no se suprimen reglas `react-hooks` (`useEffectEvent` en su
+  lugar) y `"use no memo"` va siempre con comentario. Lo que no se usa al
+  entrar se carga con `lazyWithPreload` (`src/libs/lazy-with-preload.ts`)
+  dentro de un `Suspense` con su skeleton y precarga en `onPointerEnter` /
+  `onFocus` del disparador (`onTriggerIntent` en `FormDialog`,
+  `preloadQuickAction`): gráficas desde su `…-lazy.tsx`, formularios de
+  diálogo, paleta, calendario de `DatePickerField` y `@dnd-kit` de
+  Movimientos (en idle). Skeletons y constantes no se importan del módulo
+  diferido. Ver `docs/ui.md#carga-diferida-spec-56b`.
 - Listas y tarjetas de grilla con las clases de
   `src/components/dashboard/data/surface.ts`, sin `rounded-xl border` ni
   `border-dashed`. Los campos de formulario van con relleno suave y sin borde

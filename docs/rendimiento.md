@@ -353,3 +353,231 @@ Sigue respondiendo 500 en el Preview y en producción (`jsdom`,
 Queda para 56b: el JS del cliente, que domina el TBT y el LCP del dashboard.
 Queda abierto: el score de Empresa llama a `category_totals` una vez por mes
 (~18 llamadas); es candidato a una RPC si la medición de Empresa lo pide.
+
+## Cliente (SPEC 56b)
+
+### Método
+
+Además de las medidas de arriba (JS por ruta con el mismo método y
+Lighthouse móvil):
+
+- **Bundle Analyzer de Turbopack.** `pnpm next analyze --output --snapshot <nombre>`
+  y luego `pnpm next analyze export --snapshot <nombre> --route <ruta>`
+  (JSON Lines). Se suman los módulos de los chunks JS del cliente que no
+  son `async` (grupos `bootstrap` y `render_dependent`), agrupados por
+  paquete de `node_modules` (o por archivo si es código propio). El CSS no
+  cuenta. `next` incluye `react` y `react-dom`, que Next trae compilados. En
+  Git Bash, `MSYS_NO_PATHCONV=1` evita que `--route /dashboard/...` se
+  convierta en una ruta de Windows.
+- **React DevTools Profiler.** Build de producción con perfilado
+  (`pnpm next build --profile` + `pnpm start`), sesión de la cuenta de
+  pruebas. Tres interacciones: escribir "mercado" en el buscador de
+  Movimientos, cambiar de mes en Reportes y abrir el diálogo de movimiento
+  desde el header. Se anota el commit más largo y cuántos componentes
+  renderiza.
+- **Clic a skeleton.** Performance panel de Chrome, desde el aside de
+  Personal hacia otra ruta: tiempo desde el evento `click` hasta el primer
+  frame que pinta el `loading.tsx`. Cinco clics, mediana.
+
+### Antes
+
+Medido el 2026-11-26 sobre `master` (con SPEC 56a fusionado).
+
+**JS por ruta.** El de "Después" de 56a: `/dashboard/personal` 2.003 kB
+(635 kB gzip), `/dashboard/personal/transactions` 1.658 kB (533 kB) y
+`/dashboard/personal/reports` 1.986 kB (629 kB). La meta de 56b es bajar
+el de `/dashboard/personal` al menos un 20 %: 1.602 kB o menos.
+
+**Analyzer: los 10 paquetes más pesados del JS inicial**
+
+`/dashboard/personal` (32 chunks, 1.895 kB, 803 kB comprimido):
+
+| Paquete            | Tamaño   | Comprimido |
+| ------------------ | -------- | ---------- |
+| `next`             | 444,8 kB | 167,8 kB   |
+| `@base-ui/react`   | 274,0 kB | 135,0 kB   |
+| `recharts`         | 273,3 kB | 123,2 kB   |
+| `zod`              | 105,8 kB | 33,7 kB    |
+| `@dnd-kit/dom`     | 70,6 kB  | 25,2 kB    |
+| `react-day-picker` | 42,7 kB  | 19,4 kB    |
+| `sonner`           | 34,3 kB  | 9,2 kB     |
+| `lucide-react`     | 29,3 kB  | 18,4 kB    |
+| `date-fns`         | 28,4 kB  | 12,6 kB    |
+| `tailwind-merge`   | 26,7 kB  | 8,2 kB     |
+
+`/dashboard/personal/transactions` (30 chunks, 1.549 kB, 646 kB
+comprimido): los mismos sin `recharts`. `@base-ui/react` sube a 282,9 kB
+y entra `@dnd-kit/abstract` (19,8 kB) en el décimo puesto.
+
+`/dashboard/personal/reports` (32 chunks, 1.904 kB, 807 kB comprimido):
+igual que `/dashboard/personal` (`recharts` 273,5 kB).
+
+Los cuatro paquetes que 56b quiere sacar del chunk inicial están en las
+tres rutas, también en las que no los usan al entrar:
+
+| Paquete            | `/personal` | `/transactions` | `/reports` |
+| ------------------ | ----------- | --------------- | ---------- |
+| `recharts`         | 273,3 kB    | —               | 273,5 kB   |
+| `@dnd-kit/*`       | 111,2 kB    | 111,2 kB        | 111,2 kB   |
+| `react-day-picker` | 42,7 kB     | 42,7 kB         | 42,7 kB    |
+| `cmdk`             | 11,4 kB     | 11,4 kB         | 11,4 kB    |
+
+**Profiler**
+
+| Interacción                    | Commit más largo | Componentes |
+| ------------------------------ | ---------------- | ----------- |
+| Buscar en Movimientos          | _por medir_      | _por medir_ |
+| Cambiar de mes en Reportes     | _por medir_      | _por medir_ |
+| Abrir el diálogo de movimiento | _por medir_      | _por medir_ |
+
+**Clic a skeleton** (mediana de 5): _por medir_.
+
+### Después
+
+Build local de la rama `spec-56b` (2026-11-26). JS por ruta y analyzer se
+miden igual que en "Antes"; `master` reconstruido con el mismo script da
+exactamente las cifras de 56a, así que la comparación es directa.
+Lighthouse, Profiler y clic a skeleton se miden en el Preview de la rama.
+
+**JS por ruta** (`next build`, chunks del HTML prerenderado)
+
+| Ruta                               | Chunks  | JS               | gzip         | Diferencia |
+| ---------------------------------- | ------- | ---------------- | ------------ | ---------- |
+| `/`                                | 18      | 967 kB (960)     | 315 kB (311) | +1 %       |
+| `/sign-in`                         | 16 (14) | 771 kB (765)     | 249 kB (245) | +1 %       |
+| `/mcp`                             | 17      | 836 kB (829)     | 270 kB (267) | +1 %       |
+| `/dashboard/personal`              | 28 (32) | 1.314 kB (2.003) | 429 kB (635) | −34 %      |
+| `/dashboard/personal/transactions` | 32 (30) | 1.460 kB (1.658) | 485 kB (533) | −12 %      |
+| `/dashboard/personal/reports`      | 26 (31) | 1.253 kB (1.986) | 406 kB (629) | −37 %      |
+| `/dashboard/personal/budgets`      | 29 (30) | 1.355 kB (1.621) | 445 kB (522) | −16 %      |
+| `/dashboard/personal/debts`        | 33 (32) | 1.646 kB (1.705) | 545 kB (550) | −3 %       |
+| `/dashboard/personal/accounts`     | 30      | 1.373 kB (1.626) | 452 kB (524) | −16 %      |
+| `/dashboard/business`              | 23 (29) | 1.081 kB (1.572) | 353 kB (506) | −31 %      |
+
+Entre paréntesis, "Antes". `/dashboard/personal` cumple la meta (1.602 kB
+o menos). Las páginas públicas suben ~1 % por el React Compiler: su
+memoización agrega código a cada componente y ahí no hubo nada que
+diferir. En el dashboard el compilador también suma (en
+`/dashboard/personal/transactions`, ~120 kB antes de diferir nada), pero
+la carga diferida lo compensa de sobra. Deudas casi no baja: su Sheet de
+detalle sigue entrando completo (ver "Pendiente").
+
+**Analyzer: los 10 paquetes más pesados del JS inicial**
+
+`/dashboard/personal` (28 chunks, 1.210 kB, 501 kB comprimido; antes
+1.895 kB):
+
+| Paquete          | Tamaño   | Comprimido |
+| ---------------- | -------- | ---------- |
+| `next`           | 444,8 kB | 168,0 kB   |
+| `@base-ui/react` | 263,1 kB | 128,8 kB   |
+| `zod`            | 106,0 kB | 33,7 kB    |
+| `sonner`         | 34,3 kB  | 9,2 kB     |
+| `lucide-react`   | 27,1 kB  | 17,5 kB    |
+| `tailwind-merge` | 26,7 kB  | 8,2 kB     |
+| `tutorials.ts`   | 15,7 kB  | 4,8 kB     |
+| `@base-ui/utils` | 15,1 kB  | 8,4 kB     |
+| `@floating-ui`   | 10,6 kB  | 4,0 kB     |
+| `help.ts`        | 10,5 kB  | 3,9 kB     |
+
+`/dashboard/personal/transactions` (32 chunks, 1.356 kB, 571 kB
+comprimido; antes 1.549 kB) y `/dashboard/personal/reports` (30 chunks,
+1.283 kB, 535 kB comprimido; antes 1.904 kB): los mismos paquetes, con
+`@base-ui/react` en 273,5 kB y 269,0 kB, y `date-fns` (25,8 kB) en
+Reportes.
+
+Los cuatro paquetes diferidos ya no están en el chunk inicial de ninguna
+de las tres rutas:
+
+| Paquete            | `/personal` | `/transactions` | `/reports` |
+| ------------------ | ----------- | --------------- | ---------- |
+| `recharts`         | —           | —               | —          |
+| `@dnd-kit/*`       | —           | —               | —          |
+| `react-day-picker` | —           | —               | —          |
+| `cmdk`             | —           | —               | —          |
+
+**Lighthouse móvil** (2026-11-26, mediana de 3)
+
+Preview de la rama (commit `0a9d8a9`, `iad1`, enlace compartido de Vercel)
+y, como control, producción (`master`) en la misma ventana de tiempo,
+corrida a corrida intercaladas. La CPU de la máquina que corre Lighthouse
+estaba más lenta que en 56a (`benchmarkIndex` ~900 en las dos primeras
+rutas y ~1.400 en Reportes, contra ~1.600 en un build local): por eso el
+control importa más que las cifras sueltas.
+
+| Ruta                               | Performance | LCP   | TBT      | CLS   | Control (`master`)        |
+| ---------------------------------- | ----------- | ----- | -------- | ----- | ------------------------- |
+| `/dashboard/personal`              | 45          | 4,5 s | 3.535 ms | 0,000 | 43 · 5,0 s · 6.408 ms TBT |
+| `/dashboard/personal/transactions` | 46          | 4,7 s | 3.844 ms | 0,000 | 47 · 4,4 s · 5.909 ms TBT |
+| `/dashboard/personal/reports`      | 49          | 5,1 s | 1.276 ms | 0,002 | 55 · 4,7 s · 1.202 ms TBT |
+
+Con la misma CPU, el TBT baja 45 % en `/dashboard/personal` y 35 % en
+Movimientos; en Reportes queda igual. El Performance no se mueve: lo
+dominan el TBT que queda y el LCP, que es una cifra del Resumen que llega
+en streaming. En el reporte, ~2,7 s del script son de `react-dom`
+(render e hidratación del árbol del dashboard con la CPU 4× simulada), no
+de descargar JS. **No se cumple** la meta de 56b (Performance ≥ 90,
+LCP ≤ 2,5 s, TBT ≤ 200 ms); el CLS sí (≤ 0,002). La cuenta de pruebas
+abre además el diálogo de bienvenida del tutorial al entrar.
+
+**Profiler**
+
+| Interacción                    | Commit más largo | Componentes |
+| ------------------------------ | ---------------- | ----------- |
+| Buscar en Movimientos          | _por medir_      | _por medir_ |
+| Cambiar de mes en Reportes     | _por medir_      | _por medir_ |
+| Abrir el diálogo de movimiento | _por medir_      | _por medir_ |
+
+**Clic a skeleton** (mediana de 5): 66 ms (50, 61, 66, 71 y 115 ms),
+desde el aside de Personal a Movimientos, Reportes, Presupuestos, Metas y
+Deudas, con el prefetch ya hecho. Medido con Playwright sobre el build de
+producción local: del `click` al frame que pinta el `loading.tsx`.
+
+**Funcionales** (mismo build): ⌘K / Ctrl+K abre la paleta en la primera
+pulsación, sin pasar por el botón (~400 ms con la descarga del chunk); el
+asa de Movimientos se habilita en idle y dnd-kit la engancha
+(`aria-roledescription="draggable"`).
+
+**Tabla de Movimientos con 2.000 filas.** La tabla pagina de 50 en 50
+(`getTransactions`), así que nunca pinta las 2.000 filas: escribir en el
+buscador solo re-renderiza la barra de filtros y la tabla cambia una vez,
+al llegar la página nueva. No se pagina ni se virtualiza más, salvo que el
+Profiler muestre commits de más de 200 ms.
+
+### Lo aplicado
+
+- **React Compiler** (`reactCompiler: true`, `babel-plugin-react-compiler`
+  1.0.0). Un barrido con el plugin y un logger dio 10 funciones sin
+  compilar; se corrigieron 8 (dependencias de `useMemo`, `useEffectEvent`
+  en vez de `eslint-disable` y dos expresiones que el compilador aún no
+  baja). Quedan 2 con `try/finally` (`use-export-form.ts`,
+  `file-step.tsx`), sin `"use no memo"` porque no rompen reglas.
+- **Carga diferida** con `lazyWithPreload` y precarga en
+  `pointerenter` / `focus`: gráficas (`…-lazy.tsx`), paleta ⌘K,
+  formularios de movimiento, exportar, aporte, pago de deuda y Verificar
+  movimientos, cuerpo de Categorías y calendario de `DatePickerField`.
+- **`@dnd-kit` en idle** en la tabla de Movimientos, enganchado a las
+  filas desde fuera para no remontarlas.
+- **Prefetch:** el aside y la barra móvil ya usaban `<Link>` con el
+  prefetch por defecto, y las 27 rutas del dashboard tienen shell estático
+  (◐) y su `loading.tsx`, sin datos de la URL fuera de `Suspense`. La
+  paleta, que navega con `router.push`, precarga sus destinos al abrir.
+- **Re-renders:** los valores de contexto ya iban memoizados (o los
+  memoiza el compilador) y el texto del buscador vive en la barra de
+  filtros, no en la tabla.
+
+### Pendiente
+
+Todo lo de esta sección pasa a
+[SPEC 57](../specs/57-performance-dashboard-render-and-hydration.md)
+(render e hidratación del dashboard), junto con la meta de Lighthouse ≥ 90
+y los dos criterios del Profiler.
+
+- **Sheets de detalle** de Deuda, Meta, Gasto fijo e Ingreso fijo: siguen en
+  el JS inicial de sus páginas (por eso `/dashboard/personal/debts` baja
+  solo 3 %). Su contenido está acoplado al Sheet (estado de edición, datos
+  que se piden al abrir, diálogos hermanos); diferirlo es un refactor
+  propio.
+- **Coste del React Compiler:** su memoización agrega ~1 % en las páginas
+  públicas y ~120 kB en `/dashboard/personal/transactions` antes de
+  diferir. Se revisa con las cifras de campo de 56c.

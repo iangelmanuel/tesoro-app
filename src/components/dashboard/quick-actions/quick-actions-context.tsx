@@ -53,6 +53,7 @@ import {
 } from "@/features/transactions/components/verify-movements-dialog"
 import type { FormPanel } from "@/features/transactions/types"
 import type { WorkspaceType } from "@/features/workspaces/types"
+import { useOpenedOnce } from "@/hooks/use-opened-once"
 import { useHideAmounts } from "../hide-amounts/hide-amounts-context"
 import { loadFormData } from "./form-data"
 
@@ -255,9 +256,10 @@ function buildActions(
 
 // Una sola carga en el servidor que comparten el header, la hoja de acciones
 // rápidas, la barra inferior y la paleta. Además monta, una sola vez, los
-// diálogos que abren las acciones. Aporte y pago se montan con los primeros
-// datos que llegan y quedan montados, como antes, para conservar la deuda
-// elegida al cerrar
+// diálogos que abren las acciones. Cada uno se monta la primera vez que se
+// abre y queda montado (`useOpenedOnce`, SPEC 57): al entrar no hidrata
+// ninguno, y al cerrar conservan su estado como antes (la deuda elegida, la
+// pestaña de Categorías)
 export function QuickActionsProvider({
   value,
   children
@@ -364,6 +366,10 @@ export function QuickActionsProvider({
   }
 
   const openKey = dialog?.key
+  const contributionOpened = useOpenedOnce(openKey === "contribution")
+  const paymentOpened = useOpenedOnce(openKey === "payment")
+  const categoriesOpened = useOpenedOnce(openKey === "categories")
+  const verifyOpened = useOpenedOnce(openKey === "verify")
   const movementPanel: Partial<Record<OpenDialog, FormPanel>> = {
     transfer: "transfer",
     receivable: "receivable"
@@ -393,43 +399,47 @@ export function QuickActionsProvider({
               onOpenChange={close}
             />
           )}
-          {isPersonal && formData && (
-            <>
-              <ContributionDialog
-                key={`contribution-${workspace.id}`}
-                workspaceId={workspace.id}
-                goals={formData.goals}
-                accounts={workspace.accounts}
-                open={openKey === "contribution"}
-                onOpenChange={close}
-              />
-              <PaymentDialog
-                key={`payment-${workspace.id}`}
-                workspaceId={workspace.id}
-                debts={formData.debts}
-                accounts={workspace.accounts}
-                open={openKey === "payment"}
-                onOpenChange={close}
-              />
-            </>
+          {isPersonal && formData && contributionOpened && (
+            <ContributionDialog
+              key={`contribution-${workspace.id}`}
+              workspaceId={workspace.id}
+              goals={formData.goals}
+              accounts={workspace.accounts}
+              open={openKey === "contribution"}
+              onOpenChange={close}
+            />
           )}
-          <CategoriesSheet
-            key={`categories-${workspace.id}`}
-            workspaceId={workspace.id}
-            categories={workspace.categories}
-            open={openKey === "categories"}
-            onOpenChange={close}
-          />
-          <VerifyMovementsDialog
-            key={`verify-${workspace.id}`}
-            workspaceId={workspace.id}
-            accounts={workspace.accounts}
-            currency={workspace.currency}
-            // Como en la página de Movimientos: solo Personal filtra por cuenta
-            showAccountFilter={isPersonal}
-            open={openKey === "verify"}
-            onOpenChange={close}
-          />
+          {isPersonal && formData && paymentOpened && (
+            <PaymentDialog
+              key={`payment-${workspace.id}`}
+              workspaceId={workspace.id}
+              debts={formData.debts}
+              accounts={workspace.accounts}
+              open={openKey === "payment"}
+              onOpenChange={close}
+            />
+          )}
+          {categoriesOpened && (
+            <CategoriesSheet
+              key={`categories-${workspace.id}`}
+              workspaceId={workspace.id}
+              categories={workspace.categories}
+              open={openKey === "categories"}
+              onOpenChange={close}
+            />
+          )}
+          {verifyOpened && (
+            <VerifyMovementsDialog
+              key={`verify-${workspace.id}`}
+              workspaceId={workspace.id}
+              accounts={workspace.accounts}
+              currency={workspace.currency}
+              // Como en la página de Movimientos: solo Personal filtra por cuenta
+              showAccountFilter={isPersonal}
+              open={openKey === "verify"}
+              onOpenChange={close}
+            />
+          )}
         </>
       )}
     </QuickActionsContext.Provider>

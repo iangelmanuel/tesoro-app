@@ -4,6 +4,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js"
 // corto que lo resume. Los errores van con isError para que el agente los
 // lea y corrija, en español.
 
+/** Respuesta de una tool: resumen en texto y el JSON */
 export function toolResult(
   summary: string,
   data: Record<string, unknown>
@@ -14,6 +15,7 @@ export function toolResult(
   }
 }
 
+/** Error de una tool, con detalles opcionales en el JSON */
 export function toolError(
   message: string,
   details?: Record<string, unknown>

@@ -1,7 +1,7 @@
 import type { Content } from "pdfmake/interfaces"
-import { PERCENT, formatPercentChange } from "@/features/reports/change"
+import { formatPercentChange } from "@/features/reports/change"
 import { percentChange, savingsRate } from "@/features/reports/metrics"
-import { formatCurrency } from "@/libs/format"
+import { formatCurrency, formatPercent } from "@/libs/format"
 import { monthLabel } from "../../range"
 import type { PdfContext, PdfReportData } from "../types"
 import { ratio, sumOf } from "./personal-month"
@@ -188,7 +188,7 @@ function kpis(ctx: PdfContext, data: PdfReportData, rows: MonthRow[]): Kpi[] {
     },
     {
       label: labels.rate,
-      value: rate === null ? "—" : PERCENT.format(rate / 100).replace("-", "−"),
+      value: rate === null ? "—" : formatPercent(rate).replace("-", "−"),
       change: rateChange === null ? "—" : `${POINTS.format(rateChange)} pp`,
       rounded: rateChange,
       trend: "higher-is-better"

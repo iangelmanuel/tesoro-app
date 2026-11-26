@@ -134,3 +134,20 @@ export interface BusinessMonthData {
   costs: ExportMovementRow[]
   transfers: ExportMovementRow[]
 }
+
+/** Datos de la exportación de Personal */
+export interface PersonalExport {
+  type: "personal"
+  months: PersonalMonthData[]
+  movements: ExportMovementRow[]
+}
+
+/** Datos de la exportación de Empresa */
+export interface BusinessExport {
+  type: "business"
+  months: BusinessMonthData[]
+  movements: ExportMovementRow[]
+}
+
+/** Todo lo que necesitan el Excel, el CSV y el PDF */
+export type ExportData = PersonalExport | BusinessExport

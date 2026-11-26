@@ -1,0 +1,3356 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`contrato del MCP > mantiene nombre, descripción y esquema de entrada de cada tool 1`] = `
+[
+  {
+    "description": "Lista los espacios del usuario: Personal y sus empresas. Cada uno trae id, tipo (personal o business), nombre y si está marcado para borrar. Usa el id como workspace_id en las demás tools.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {},
+      "type": "object",
+    },
+    "name": "list_workspaces",
+  },
+  {
+    "description": "Cuentas del espacio (efectivo, banco, billetera…) con su saldo a hoy, el saldo con lo programado a futuro, su tipo y si está archivada. Usa el id como account_id al registrar movimientos o traspasos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "include_archived": {
+          "default": false,
+          "description": "Incluir las cuentas archivadas.",
+          "type": "boolean",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "list_accounts",
+  },
+  {
+    "description": "Categorías del espacio por tipo (income o expense): las del sistema y las propias. Un movimiento necesita una categoría de su mismo tipo. Si falta una, créala con create_category.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "include_archived": {
+          "default": false,
+          "description": "Incluir las categorías archivadas.",
+          "type": "boolean",
+        },
+        "type": {
+          "description": "income (ingreso) o expense (gasto). Sin él, ambas.",
+          "enum": [
+            "income",
+            "expense",
+          ],
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "list_categories",
+  },
+  {
+    "description": "Ingresos y gastos del espacio, del más reciente al más antiguo (mismo orden que la tabla de Movimientos), con categoría, cuenta y vínculo. No incluye traspasos (usa list_transfers). Pagina con limit y next_cursor.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account_id": {
+          "description": "Id de una cuenta.",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "category_id": {
+          "description": "Id de una categoría.",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "cursor": {
+          "description": "Cursor de la respuesta anterior (next_cursor) para seguir.",
+          "maxLength": 500,
+          "type": "string",
+        },
+        "from": {
+          "description": "Desde (incluido), YYYY-MM-DD.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "limit": {
+          "default": 50,
+          "description": "Filas por página (1–200, por defecto 50).",
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "linked": {
+          "default": "any",
+          "description": "Vínculo: any (todos), none (sin vínculo), debt (pago de deuda o avance de tarjeta), recurring_expense (pago de gasto fijo), recurring_income (ingreso fijo) o receivable (cobro de Me deben).",
+          "enum": [
+            "any",
+            "none",
+            "debt",
+            "recurring_expense",
+            "recurring_income",
+            "receivable",
+          ],
+          "type": "string",
+        },
+        "search": {
+          "description": "Busca en la descripción y la nota.",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string",
+        },
+        "to": {
+          "description": "Hasta (incluido), YYYY-MM-DD.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "type": {
+          "description": "income (ingreso) o expense (gasto).",
+          "enum": [
+            "income",
+            "expense",
+          ],
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "list_transactions",
+  },
+  {
+    "description": "Un ingreso o gasto por id, con su categoría, cuenta y vínculo (pago de deuda, avance de tarjeta, gasto fijo, ingreso fijo o cobro de Me deben).",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "id": {
+          "description": "Id del movimiento.",
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+        "id",
+      ],
+      "type": "object",
+    },
+    "name": "get_transaction",
+  },
+  {
+    "description": "Traspasos entre cuentas del espacio, del más reciente al más antiguo, con cuenta de origen y de destino. No cuentan como ingreso ni gasto. Pagina con limit y next_cursor.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account_id": {
+          "description": "Solo los traspasos que salen de esta cuenta o llegan a ella.",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "cursor": {
+          "description": "Cursor de la respuesta anterior (next_cursor) para seguir.",
+          "maxLength": 500,
+          "type": "string",
+        },
+        "from": {
+          "description": "Desde (incluido), YYYY-MM-DD.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "limit": {
+          "default": 50,
+          "description": "Filas por página (1–200, por defecto 50).",
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "to": {
+          "description": "Hasta (incluido), YYYY-MM-DD.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "list_transfers",
+  },
+  {
+    "description": "Totales de un mes, iguales a la página de Resumen. Personal: ingresos, gastos, balance y tasa de ahorro. Empresa: ventas, costos y gastos, utilidad y margen. En ambos: saldo en cuentas al inicio y al cierre del mes, y las 5 categorías con más gasto (o costo).",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "month": {
+          "description": "Mes YYYY-MM. Por defecto, el mes actual.",
+          "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_month_summary",
+  },
+  {
+    "description": "Serie mes a mes de un periodo de hasta 36 meses (los mismos totales de get_month_summary), los totales del periodo y los totales por categoría de ingresos y de gastos, como la página de Reportes. Sirve para comparar meses.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "from": {
+          "description": "Primer mes YYYY-MM. Por defecto, 6 meses hasta to.",
+          "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+          "type": "string",
+        },
+        "to": {
+          "description": "Último mes YYYY-MM. Por defecto, el mes actual.",
+          "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_period_report",
+  },
+  {
+    "description": "Flujo de caja de una empresa mes a mes (hasta 36 meses): entradas, salidas, neto y saldo en cuentas al cierre de cada mes, como la página Flujo de caja. Solo para espacios de Empresa.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "from": {
+          "description": "Primer mes YYYY-MM. Por defecto, 12 meses hasta to.",
+          "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+          "type": "string",
+        },
+        "to": {
+          "description": "Último mes YYYY-MM. Por defecto, el mes actual.",
+          "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_cash_flow",
+  },
+  {
+    "description": "Score de salud financiera del espacio (0–100) del mes actual con su banda y factores, la historia de 12 meses y las recomendaciones activas (sin las que el usuario ocultó). Personal usa los factores de salud financiera; Empresa, los de salud del negocio.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_score",
+  },
+  {
+    "description": "Recomendaciones activas del espacio (las del dashboard, sin las que el usuario ocultó) con su severidad y evidencia, y el desglose del score del mes por factor: peso, valor y puntos de cada uno, o por qué se excluye. Sirve para explicar qué mejorar primero.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_recommendations",
+  },
+  {
+    "description": "Totales por categoría y por contraparte (cliente o proveedor, en Empresa) de un rango de fechas, comparados con el periodo anterior del mismo largo: total, participación %, total anterior y cambio %. Mismos totales por categoría que Reportes. Sirve para ver en qué se va el dinero y qué subió.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "from": {
+          "description": "Primer día YYYY-MM-DD. Por defecto el 1 del mes actual.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "limit": {
+          "default": 20,
+          "description": "Máximo de filas por lista (por defecto 20).",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "to": {
+          "description": "Último día YYYY-MM-DD. Por defecto hoy.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "type": {
+          "default": "expense",
+          "description": "expense (gastos, por defecto) o income (ingresos).",
+          "enum": [
+            "income",
+            "expense",
+          ],
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_spending_breakdown",
+  },
+  {
+    "description": "Saldo de una cuenta en Tesoro al cierre de una fecha, como la pantalla de Cuentas. Con expected_balance devuelve la diferencia (real − Tesoro) para conciliar y si es grande (faltan movimientos). Si recibes status needs_input, pregunta al usuario y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account": {
+          "description": "Nombre de la cuenta, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "account_id": {
+          "description": "Cuenta (de list_accounts).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "date": {
+          "description": "Fecha YYYY-MM-DD del saldo (al cierre del día). Por defecto hoy.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "expected_balance": {
+          "description": "Saldo real (del banco o del extracto) a esa fecha, para ver la diferencia.",
+          "type": "number",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_account_balance",
+  },
+  {
+    "description": "Lo que vence en los próximos días (por defecto 30, hasta 90) y, aparte, lo vencido sin pagar: ocurrencias de gastos fijos, el próximo pago de cada tarjeta o préstamo, cuotas y cobros de Me deben, e ingresos fijos esperados. Cada fila dice si sale (out) o entra (in) dinero. Solo Personal.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "days": {
+          "default": 30,
+          "description": "Días hacia adelante (1–90, por defecto 30).",
+          "maximum": 90,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "list_upcoming_payments",
+  },
+  {
+    "description": "Presupuestos de un mes por categoría de gasto con su progreso, como la página de Presupuestos: presupuesto, gastado, comprometido por gastos fijos pendientes, disponible y porcentaje usado. También las categorías con gastos y sin presupuesto. Solo Personal.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "month": {
+          "description": "Mes YYYY-MM. Por defecto, el mes actual.",
+          "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "list_budgets",
+  },
+  {
+    "description": "Metas de ahorro con su progreso, como la página de Metas: objetivo, ahorrado, lo que falta, porcentaje, fecha objetivo y estado. Solo Personal.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "include_inactive": {
+          "default": false,
+          "description": "Incluir metas completadas o archivadas.",
+          "type": "boolean",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "list_goals",
+  },
+  {
+    "description": "Tarjetas de crédito y préstamos con su saldo, como la página de Deudas: saldo, cupo y uso (tarjetas), cuota, tasa, próximo pago y su estado (Pagado, Pendiente, Hoy o Vencido). Lo que te deben está en list_receivables. Solo Personal.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "include_inactive": {
+          "default": false,
+          "description": "Incluir deudas pagadas o archivadas.",
+          "type": "boolean",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "list_debts",
+  },
+  {
+    "description": "Gastos e ingresos fijos del mes actual con su estado, igual que las páginas de Gastos fijos e Ingresos fijos (ambos incluyen todos los sin pagar o sin recibir de meses anteriores). Gastos: Pagado, Hoy, Próximo o Atrasado. Ingresos: Recibido, Abonado (recibió una parte: ver remaining), De hoy, Pendiente o Atrasado. Un ingreso puede cubrir varias ocurrencias. Solo Personal.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "list_recurring",
+  },
+  {
+    "description": "Cuentas por cobrar (Me deben) activas de un mes con lo esperado, lo cobrado y lo pendiente. En un cobro mensual es la cuota del mes (Pagada, Abonada, Pendiente o Atrasada) y lo atrasado de meses anteriores; en un cobro único, el total con su fecha esperada. Solo Personal.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "month": {
+          "description": "Mes YYYY-MM. Por defecto, el mes actual.",
+          "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "list_receivables",
+  },
+  {
+    "description": "Escrituras hechas desde el MCP, de la más reciente a la más antigua: herramienta, resumen, espacio, estado (Aplicada, Revertida o Fallida) y si todavía se puede revertir con undo_operation (30 días).",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "all_connections": {
+          "default": false,
+          "description": "true: las de todos los agentes conectados. false: solo las de este agente.",
+          "type": "boolean",
+        },
+        "limit": {
+          "default": 20,
+          "description": "Cuántas operaciones (1–100, por defecto 20).",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer",
+        },
+      },
+      "type": "object",
+    },
+    "name": "list_operations",
+  },
+  {
+    "description": "Registra de 1 a 200 ingresos o gastos en un espacio, con las mismas reglas que la app: categoría del mismo tipo, cuenta activa, monto > 0, descripción de 1 a 120 caracteres y nota de hasta 500. Todo o nada: si una fila tiene un error no se guarda ninguna y la respuesta lista los errores por índice. Categoría y cuenta van por id o por nombre (category, account). Usa dry_run para revisar antes. Devuelve un operation_id para revertir con undo_operation. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "dry_run": {
+          "default": false,
+          "description": "true: valida y muestra el antes y el después de cada fila sin guardar nada.",
+          "type": "boolean",
+        },
+        "transactions": {
+          "items": {
+            "properties": {
+              "account": {
+                "description": "Nombre de la cuenta, si no tienes el id.",
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string",
+              },
+              "account_id": {
+                "anyOf": [
+                  {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+                "description": "Cuenta (de list_accounts), o null fuera de las cuentas. Sin account_id ni account: con una sola cuenta activa se usa esa y con varias se pregunta.",
+              },
+              "amount": {
+                "description": "Monto positivo, con hasta 2 decimales.",
+                "type": "number",
+              },
+              "category": {
+                "description": "Nombre de la categoría, si no tienes el id.",
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string",
+              },
+              "category_id": {
+                "description": "Categoría del mismo tipo (de list_categories).",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "description": {
+                "description": "Descripción (1–120 caracteres).",
+                "type": "string",
+              },
+              "note": {
+                "description": "Nota opcional (hasta 500).",
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "occurred_on": {
+                "description": "Fecha YYYY-MM-DD.",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                "type": "string",
+              },
+              "time": {
+                "anyOf": [
+                  {
+                    "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+                "description": "Hora HH:MM, o null sin hora.",
+              },
+              "type": {
+                "description": "income (ingreso) o expense (gasto).",
+                "enum": [
+                  "income",
+                  "expense",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "type",
+              "amount",
+              "occurred_on",
+              "description",
+            ],
+            "type": "object",
+          },
+          "maxItems": 200,
+          "minItems": 1,
+          "type": "array",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+        "transactions",
+      ],
+      "type": "object",
+    },
+    "name": "create_transactions",
+  },
+  {
+    "description": "Edita de 1 a 200 movimientos: cada elemento lleva el id y solo los campos que cambian (type, amount, category_id, account_id, occurred_on, time, description, note). Mismas reglas que la app. En un pago de deuda, avance de tarjeta o cobro de Me deben (link.kind debt o receivable) solo cambian monto, fecha, hora y nota, y el abono se actualiza con él. Todo o nada, con dry_run. Devuelve un operation_id para revertir.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "dry_run": {
+          "default": false,
+          "description": "true: valida y muestra el antes y el después de cada fila sin guardar nada.",
+          "type": "boolean",
+        },
+        "transactions": {
+          "items": {
+            "description": "El id y solo los campos que cambian.",
+            "properties": {
+              "account_id": {
+                "anyOf": [
+                  {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+                "description": "Cuenta (de list_accounts), o null fuera de las cuentas.",
+              },
+              "amount": {
+                "description": "Monto positivo, con hasta 2 decimales.",
+                "type": "number",
+              },
+              "category_id": {
+                "description": "Categoría del mismo tipo (de list_categories).",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "description": {
+                "description": "Descripción (1–120 caracteres).",
+                "type": "string",
+              },
+              "id": {
+                "description": "Id del movimiento.",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "note": {
+                "description": "Nota opcional (hasta 500).",
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "occurred_on": {
+                "description": "Fecha YYYY-MM-DD.",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                "type": "string",
+              },
+              "time": {
+                "anyOf": [
+                  {
+                    "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+                "description": "Hora HH:MM, o null sin hora.",
+              },
+              "type": {
+                "description": "income (ingreso) o expense (gasto).",
+                "enum": [
+                  "income",
+                  "expense",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+            ],
+            "type": "object",
+          },
+          "maxItems": 200,
+          "minItems": 1,
+          "type": "array",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+        "transactions",
+      ],
+      "type": "object",
+    },
+    "name": "update_transactions",
+  },
+  {
+    "description": "Borra de 1 a 200 movimientos por id. Un pago de deuda, avance de tarjeta o cobro de Me deben se borra con su abono, como en la app. Todo o nada, con dry_run. Se puede deshacer con undo_operation durante 30 días: los movimientos vuelven con sus mismos ids y vínculos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "dry_run": {
+          "default": false,
+          "description": "true: valida y muestra el antes y el después de cada fila sin guardar nada.",
+          "type": "boolean",
+        },
+        "ids": {
+          "description": "Ids de los movimientos a borrar.",
+          "items": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "maxItems": 200,
+          "minItems": 1,
+          "type": "array",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+        "ids",
+      ],
+      "type": "object",
+    },
+    "name": "delete_transactions",
+  },
+  {
+    "description": "Registra de 1 a 200 traspasos entre dos cuentas activas del espacio (origen distinto de destino, monto > 0). No cuentan como ingreso ni gasto. Las cuentas van por id o por nombre (from_account, to_account). Todo o nada, con dry_run. Devuelve un operation_id para revertir. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "dry_run": {
+          "default": false,
+          "description": "true: valida y muestra el antes y el después de cada fila sin guardar nada.",
+          "type": "boolean",
+        },
+        "transfers": {
+          "items": {
+            "properties": {
+              "amount": {
+                "description": "Monto positivo, con hasta 2 decimales.",
+                "type": "number",
+              },
+              "from_account": {
+                "description": "Nombre de la cuenta de origen, si no tienes el id.",
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string",
+              },
+              "from_account_id": {
+                "description": "Cuenta de origen (de list_accounts).",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "note": {
+                "description": "Nota opcional.",
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "occurred_on": {
+                "description": "Fecha YYYY-MM-DD. Puede ser futura.",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                "type": "string",
+              },
+              "time": {
+                "anyOf": [
+                  {
+                    "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+                "description": "Hora HH:MM, o null sin hora.",
+              },
+              "to_account": {
+                "description": "Nombre de la cuenta de destino, si no tienes el id.",
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string",
+              },
+              "to_account_id": {
+                "description": "Cuenta de destino, distinta a la de origen.",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "amount",
+              "occurred_on",
+            ],
+            "type": "object",
+          },
+          "maxItems": 200,
+          "minItems": 1,
+          "type": "array",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+        "transfers",
+      ],
+      "type": "object",
+    },
+    "name": "create_transfers",
+  },
+  {
+    "description": "Edita de 1 a 200 traspasos: cada elemento lleva el id y solo los campos que cambian (from_account_id, to_account_id, amount, occurred_on, time, note). Mismas reglas que la app. Todo o nada, con dry_run. Devuelve un operation_id para revertir.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "dry_run": {
+          "default": false,
+          "description": "true: valida y muestra el antes y el después de cada fila sin guardar nada.",
+          "type": "boolean",
+        },
+        "transfers": {
+          "items": {
+            "description": "El id y solo los campos que cambian.",
+            "properties": {
+              "amount": {
+                "description": "Monto positivo, con hasta 2 decimales.",
+                "type": "number",
+              },
+              "from_account_id": {
+                "description": "Cuenta de origen (de list_accounts).",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "id": {
+                "description": "Id del traspaso.",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "note": {
+                "description": "Nota opcional.",
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "occurred_on": {
+                "description": "Fecha YYYY-MM-DD. Puede ser futura.",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                "type": "string",
+              },
+              "time": {
+                "anyOf": [
+                  {
+                    "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+                "description": "Hora HH:MM, o null sin hora.",
+              },
+              "to_account_id": {
+                "description": "Cuenta de destino, distinta a la de origen.",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+            ],
+            "type": "object",
+          },
+          "maxItems": 200,
+          "minItems": 1,
+          "type": "array",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+        "transfers",
+      ],
+      "type": "object",
+    },
+    "name": "update_transfers",
+  },
+  {
+    "description": "Borra de 1 a 200 traspasos por id. Todo o nada, con dry_run. Se puede deshacer con undo_operation durante 30 días: vuelven con sus mismos ids.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "dry_run": {
+          "default": false,
+          "description": "true: valida y muestra el antes y el después de cada fila sin guardar nada.",
+          "type": "boolean",
+        },
+        "ids": {
+          "description": "Ids de los traspasos a borrar.",
+          "items": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "maxItems": 200,
+          "minItems": 1,
+          "type": "array",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+        "ids",
+      ],
+      "type": "object",
+    },
+    "name": "delete_transfers",
+  },
+  {
+    "description": "Crea una categoría propia del espacio (ingreso o gasto) para registrar movimientos en ella. Revisa antes list_categories: el nombre no puede repetirse en el mismo tipo. Devuelve el id y un operation_id para revertir.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "color": {
+          "description": "Color opcional de la paleta de Tesoro.",
+          "enum": [
+            "emerald",
+            "teal",
+            "lime",
+            "amber",
+            "orange",
+            "rose",
+            "pink",
+            "violet",
+            "indigo",
+            "blue",
+            "sky",
+            "slate",
+          ],
+          "type": "string",
+        },
+        "icon": {
+          "description": "Icono opcional del set de Tesoro.",
+          "enum": [
+            "home",
+            "utensils",
+            "car",
+            "bus",
+            "fuel",
+            "briefcase",
+            "laptop",
+            "coins",
+            "piggy-bank",
+            "trending-up",
+            "landmark",
+            "heart-pulse",
+            "graduation-cap",
+            "gamepad",
+            "shopping-bag",
+            "shirt",
+            "receipt",
+            "zap",
+            "smartphone",
+            "wrench",
+            "coffee",
+            "plane",
+            "gift",
+            "baby",
+            "paw-print",
+            "dumbbell",
+            "tag",
+            "banknote",
+            "wallet",
+            "store",
+            "package",
+            "users",
+            "megaphone",
+          ],
+          "type": "string",
+        },
+        "name": {
+          "description": "Nombre (1–40 caracteres), único por tipo.",
+          "type": "string",
+        },
+        "type": {
+          "description": "income (ingreso) o expense (gasto).",
+          "enum": [
+            "income",
+            "expense",
+          ],
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+        "name",
+        "type",
+      ],
+      "type": "object",
+    },
+    "name": "create_category",
+  },
+  {
+    "description": "Pone al día una cuenta con las filas de un extracto bancario (hasta 400): monto negativo = gasto, positivo = ingreso, y transfer_account_id para traspasos entre cuentas propias. Por defecto (dry_run true) no guarda nada y devuelve: filas listas (ready), duplicados probables (misma cuenta, tipo y monto a ±2 días; se omiten salvo que vayan en include_rows), datos faltantes (needsInput), categorías sugeridas por el historial y, con statement_balance, el saldo antes y después contra el extracto. Muestra la vista previa al usuario y luego llama con dry_run false: crea todo en una sola operación revertible con undo_operation. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account": {
+          "description": "Nombre de la cuenta, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "account_id": {
+          "description": "Cuenta del extracto (de list_accounts).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "dry_run": {
+          "default": true,
+          "description": "true (por defecto): vista previa sin guardar nada. Muéstrala al usuario antes de llamar con false.",
+          "type": "boolean",
+        },
+        "include_rows": {
+          "default": [],
+          "description": "Índices de duplicados probables que sí se importan (por defecto se omiten).",
+          "items": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "type": "array",
+        },
+        "rows": {
+          "description": "Filas del extracto, hasta 400.",
+          "items": {
+            "properties": {
+              "amount": {
+                "description": "Monto: negativo sale de la cuenta (gasto) y positivo entra (ingreso). Con type se usa su valor absoluto.",
+                "type": "number",
+              },
+              "category": {
+                "description": "Nombre de la categoría, si no tienes el id.",
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string",
+              },
+              "category_id": {
+                "description": "Categoría del mismo tipo. Sin ella se usa la sugerida por el historial.",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "date": {
+                "description": "Fecha del movimiento, YYYY-MM-DD.",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+                "type": "string",
+              },
+              "description": {
+                "description": "Descripción tal como sale en el extracto (1–120 caracteres).",
+                "type": "string",
+              },
+              "note": {
+                "description": "Nota opcional (hasta 500).",
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "time": {
+                "anyOf": [
+                  {
+                    "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+                "description": "Hora HH:MM, opcional.",
+              },
+              "transfer_account": {
+                "description": "Nombre de la otra cuenta del traspaso, si no tienes el id.",
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string",
+              },
+              "transfer_account_id": {
+                "description": "Solo si la fila es un traspaso entre cuentas propias: la otra cuenta. Destino si el monto sale; origen si entra.",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "type": {
+                "description": "income o expense, si el monto viene sin signo.",
+                "enum": [
+                  "income",
+                  "expense",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "date",
+              "description",
+              "amount",
+            ],
+            "type": "object",
+          },
+          "maxItems": 400,
+          "minItems": 1,
+          "type": "array",
+        },
+        "statement_balance": {
+          "description": "Saldo final del extracto, para conciliar.",
+          "type": "number",
+        },
+        "statement_end_date": {
+          "description": "Fecha de corte del extracto. Sin ella, la última fecha de las filas.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+        "rows",
+      ],
+      "type": "object",
+    },
+    "name": "import_statement",
+  },
+  {
+    "description": "Registra un pago o un abono extra a una tarjeta de crédito o un préstamo, como el diálogo de pago: baja el saldo y, en un préstamo, crea el gasto en la cuenta. Fecha por defecto hoy y cuenta por defecto la habitual de la deuda. Para lo que te deben usa collect_receivable. Solo Personal. Devuelve un operation_id para revertir con undo_operation. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account": {
+          "description": "Nombre de la cuenta, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "account_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Cuenta de la que sale el pago. Sin ella se usa la cuenta por defecto de la deuda; null = fuera de las cuentas.",
+        },
+        "amount": {
+          "description": "Monto positivo.",
+          "type": "number",
+        },
+        "create_transaction": {
+          "default": true,
+          "description": "Solo préstamos: registrar el gasto del pago (por defecto sí). Un pago de tarjeta no crea gasto.",
+          "type": "boolean",
+        },
+        "debt_id": {
+          "description": "Id de la deuda (de list_debts o list_receivables).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "description": {
+          "description": "Descripción del gasto. Por defecto la de la app: "Pago {deuda} · {mes}" o "Pago {deuda}" en un abono.",
+          "type": "string",
+        },
+        "is_extra_payment": {
+          "default": false,
+          "description": "true: abono extra a capital; baja el saldo pero no cubre el pago del mes.",
+          "type": "boolean",
+        },
+        "note": {
+          "description": "Nota opcional (hasta 120).",
+          "type": "string",
+        },
+        "occurred_on": {
+          "description": "Fecha YYYY-MM-DD, no futura. Por defecto hoy.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "time": {
+          "anyOf": [
+            {
+              "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Hora HH:MM, opcional.",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+        "debt_id",
+        "amount",
+      ],
+      "type": "object",
+    },
+    "name": "record_debt_payment",
+  },
+  {
+    "description": "Registra un cobro de Me deben como el tab Me deben: en un cobro único, abono o pago completo; en uno mensual, una cuota o varios meses (el monto se reparte desde la cuota más antigua sin cobrar). Crea el ingreso en la cuenta (por defecto la habitual) con fecha de hoy. Solo Personal. Devuelve un operation_id para revertir con undo_operation. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account": {
+          "description": "Nombre de la cuenta, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "account_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Cuenta a la que entra el dinero. Sin ella se usa la habitual; null = fuera de las cuentas.",
+        },
+        "amount": {
+          "description": "Monto positivo. No aplica en full: se cobra el saldo.",
+          "type": "number",
+        },
+        "create_transaction": {
+          "default": true,
+          "description": "Registrar el ingreso en la cuenta (por defecto sí).",
+          "type": "boolean",
+        },
+        "debt_id": {
+          "description": "Id de la deuda (de list_debts o list_receivables).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "description": {
+          "description": "Descripción del ingreso. Por defecto "Cobro {nombre}".",
+          "type": "string",
+        },
+        "mode": {
+          "description": "Cobro único: partial (abono, por defecto) o full (todo el saldo). Mensual: allocate (reparte desde la cuota más antigua, por defecto) o single (una cuota, con period_on).",
+          "enum": [
+            "partial",
+            "full",
+            "single",
+            "allocate",
+          ],
+          "type": "string",
+        },
+        "note": {
+          "description": "Nota opcional (hasta 120).",
+          "type": "string",
+        },
+        "occurred_on": {
+          "description": "Fecha YYYY-MM-DD, no futura. Por defecto hoy.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "period_on": {
+          "description": "Solo en single: la cuota, primer día del mes (YYYY-MM-01).",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+        "debt_id",
+      ],
+      "type": "object",
+    },
+    "name": "collect_receivable",
+  },
+  {
+    "description": "Edita un movimiento de una deuda como el editor de la app: tipo, monto, fecha, hora, nota, cuenta, movimiento enlazado, abono extra y cuotas. Envía solo lo que cambia. Cambiar la cuenta mueve también el movimiento enlazado. Solo Personal. Devuelve un operation_id para revertir con undo_operation. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account": {
+          "description": "Nombre de la cuenta, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "account_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Cuenta del pago o del avance; null = fuera de las cuentas.",
+        },
+        "amount": {
+          "description": "Monto positivo.",
+          "type": "number",
+        },
+        "category_id": {
+          "description": "Categoría del movimiento enlazado.",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "create_transaction": {
+          "description": "Préstamo y Me deben: si el pago lleva su gasto o ingreso.",
+          "type": "boolean",
+        },
+        "description": {
+          "description": "Descripción del movimiento enlazado.",
+          "type": "string",
+        },
+        "direction": {
+          "description": "Solo ajustes: up sube el saldo, down lo baja.",
+          "enum": [
+            "up",
+            "down",
+          ],
+          "type": "string",
+        },
+        "entry_id": {
+          "description": "Id del movimiento de la deuda.",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "installments": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Compra o avance: cuotas (1–48), o null sin cuotas.",
+        },
+        "link_transaction_id": {
+          "description": "Un gasto o ingreso ya registrado que pasa a ser el de este pago, en vez de crear uno.",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "note": {
+          "description": "Nota (hasta 120).",
+          "type": [
+            "string",
+            "null",
+          ],
+        },
+        "occurred_on": {
+          "description": "Fecha YYYY-MM-DD, no futura.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "time": {
+          "anyOf": [
+            {
+              "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Hora HH:MM, o null sin hora.",
+        },
+        "type": {
+          "description": "payment (pago o cobro), extra (abono), purchase (compra), advance (avance a una cuenta), fee (cuota de manejo) o adjustment (ajuste). Depende de la deuda.",
+          "enum": [
+            "payment",
+            "extra",
+            "purchase",
+            "advance",
+            "fee",
+            "adjustment",
+          ],
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+        "entry_id",
+      ],
+      "type": "object",
+    },
+    "name": "update_debt_entry",
+  },
+  {
+    "description": "Borra un pago, cobro, compra, avance, cuota de manejo o ajuste de una deuda, como la app: si tiene movimiento enlazado también se borra, y no puede dejar el saldo negativo. Solo Personal. Se puede deshacer con undo_operation durante 30 días.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "entry_id": {
+          "description": "Id del movimiento de la deuda.",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+        "entry_id",
+      ],
+      "type": "object",
+    },
+    "name": "delete_debt_entry",
+  },
+  {
+    "description": "Paga una ocurrencia de un gasto fijo como el tab Gasto fijo: por defecto la más antigua sin pagar (hasta el mes actual), con su monto, su categoría, la cuenta por defecto, fecha de hoy y "Pago {nombre} · {mes}". Crea el gasto y marca la ocurrencia como pagada. Solo Personal. Devuelve un operation_id para revertir con undo_operation. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account": {
+          "description": "Nombre de la cuenta, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "account_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Cuenta. Por defecto la habitual del gasto o ingreso fijo; null = fuera de las cuentas.",
+        },
+        "amount": {
+          "description": "Monto positivo. Por defecto el del gasto o ingreso fijo.",
+          "type": "number",
+        },
+        "category_id": {
+          "description": "Categoría. Por defecto la del gasto o ingreso fijo.",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "description": {
+          "description": "Descripción. Por defecto la de la app (SPEC 41).",
+          "type": "string",
+        },
+        "due_on": {
+          "description": "Vencimiento de la ocurrencia que se paga. Por defecto la más antigua sin pagar.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "note": {
+          "description": "Nota opcional (hasta 500).",
+          "type": "string",
+        },
+        "occurred_on": {
+          "description": "Fecha del movimiento YYYY-MM-DD. Por defecto hoy.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "recurring_expense_id": {
+          "description": "Id del gasto fijo (de list_recurring).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "time": {
+          "anyOf": [
+            {
+              "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Hora HH:MM, opcional.",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+        "recurring_expense_id",
+      ],
+      "type": "object",
+    },
+    "name": "pay_recurring_expense",
+  },
+  {
+    "description": "Recibe un ingreso fijo como el tab Ingreso: crea el ingreso (por defecto el monto esperado, su categoría, la cuenta por defecto, fecha de hoy y "Ingreso {nombre} · {periodo}") y la app lo reparte entre las ocurrencias desde la más antigua abierta, hasta 12 futuras (SPEC 38). Solo Personal. Devuelve un operation_id para revertir con undo_operation. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account": {
+          "description": "Nombre de la cuenta, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "account_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Cuenta. Por defecto la habitual del gasto o ingreso fijo; null = fuera de las cuentas.",
+        },
+        "amount": {
+          "description": "Monto positivo. Por defecto el del gasto o ingreso fijo.",
+          "type": "number",
+        },
+        "category_id": {
+          "description": "Categoría. Por defecto la del gasto o ingreso fijo.",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "description": {
+          "description": "Descripción. Por defecto la de la app (SPEC 41).",
+          "type": "string",
+        },
+        "note": {
+          "description": "Nota opcional (hasta 500).",
+          "type": "string",
+        },
+        "occurred_on": {
+          "description": "Fecha del movimiento YYYY-MM-DD. Por defecto hoy.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "recurring_income_id": {
+          "description": "Id del ingreso fijo (de list_recurring).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "time": {
+          "anyOf": [
+            {
+              "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Hora HH:MM, opcional.",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+        "recurring_income_id",
+      ],
+      "type": "object",
+    },
+    "name": "receive_recurring_income",
+  },
+  {
+    "description": "Registra un aporte (direction in) o un retiro (out) en una meta de ahorro activa, como la app: un retiro no puede pasar de lo ahorrado. La cuenta es opcional. Fecha por defecto hoy. Solo Personal. Devuelve un operation_id para revertir con undo_operation. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account": {
+          "description": "Nombre de la cuenta, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "account_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Cuenta de la que sale el aporte o a la que vuelve el retiro. Opcional: sin ella no toca ninguna cuenta.",
+        },
+        "amount": {
+          "description": "Monto positivo.",
+          "type": "number",
+        },
+        "direction": {
+          "description": "in = aporte (sube el progreso); out = retiro (lo baja).",
+          "enum": [
+            "in",
+            "out",
+          ],
+          "type": "string",
+        },
+        "goal_id": {
+          "description": "Id de la meta (de list_goals).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "note": {
+          "description": "Nota opcional (hasta 120).",
+          "type": "string",
+        },
+        "occurred_on": {
+          "description": "Fecha YYYY-MM-DD, no futura. Por defecto hoy.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "time": {
+          "anyOf": [
+            {
+              "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Hora HH:MM, opcional.",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+        "goal_id",
+        "direction",
+        "amount",
+      ],
+      "type": "object",
+    },
+    "name": "record_goal_contribution",
+  },
+  {
+    "description": "Crea una cuenta (efectivo, banco, billetera u otra) con su saldo inicial y la fecha desde la que cuenta. Úsala cuando el usuario mencione una cuenta que no está en list_accounts; el nombre no puede repetirse. Personal y Empresa. Devuelve el id y un operation_id para revertir. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "color": {
+          "description": "Opcional; por defecto el del tipo.",
+          "enum": [
+            "emerald",
+            "teal",
+            "lime",
+            "amber",
+            "orange",
+            "rose",
+            "pink",
+            "violet",
+            "indigo",
+            "blue",
+            "sky",
+            "slate",
+          ],
+          "type": "string",
+        },
+        "confirm_duplicate": {
+          "description": "true para crear aunque ya exista otra activa con el mismo nombre (solo después de preguntarle al usuario).",
+          "type": "boolean",
+        },
+        "icon": {
+          "description": "Opcional; por defecto el del tipo.",
+          "enum": [
+            "home",
+            "utensils",
+            "car",
+            "bus",
+            "fuel",
+            "briefcase",
+            "laptop",
+            "coins",
+            "piggy-bank",
+            "trending-up",
+            "landmark",
+            "heart-pulse",
+            "graduation-cap",
+            "gamepad",
+            "shopping-bag",
+            "shirt",
+            "receipt",
+            "zap",
+            "smartphone",
+            "wrench",
+            "coffee",
+            "plane",
+            "gift",
+            "baby",
+            "paw-print",
+            "dumbbell",
+            "tag",
+            "banknote",
+            "wallet",
+            "store",
+            "package",
+            "users",
+            "megaphone",
+          ],
+          "type": "string",
+        },
+        "kind": {
+          "description": "cash (efectivo), bank (banco), wallet (billetera) u other.",
+          "enum": [
+            "cash",
+            "bank",
+            "wallet",
+            "other",
+          ],
+          "type": "string",
+        },
+        "name": {
+          "description": "Nombre de la cuenta (1–40 caracteres).",
+          "type": "string",
+        },
+        "opening_balance": {
+          "description": "Saldo inicial; por defecto 0. Puede ser negativo.",
+          "type": "number",
+        },
+        "opening_balance_on": {
+          "anyOf": [
+            {
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Fecha YYYY-MM-DD, no futura, desde la que cuenta el saldo inicial. null = antes de cualquier movimiento.",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "create_account",
+  },
+  {
+    "description": "Cambia nombre, tipo, saldo inicial, su fecha, icono o color de una cuenta. Solo cambia los campos que envíes; los demás quedan igual. Para el saldo real de hoy usa los movimientos, no el saldo inicial. Devuelve un operation_id para revertir. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account": {
+          "description": "Nombre de la cuenta, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "account_id": {
+          "description": "Id de la cuenta (de list_accounts).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "color": {
+          "description": "Color de la paleta de Tesoro.",
+          "enum": [
+            "emerald",
+            "teal",
+            "lime",
+            "amber",
+            "orange",
+            "rose",
+            "pink",
+            "violet",
+            "indigo",
+            "blue",
+            "sky",
+            "slate",
+          ],
+          "type": "string",
+        },
+        "icon": {
+          "description": "Icono del set de Tesoro.",
+          "enum": [
+            "home",
+            "utensils",
+            "car",
+            "bus",
+            "fuel",
+            "briefcase",
+            "laptop",
+            "coins",
+            "piggy-bank",
+            "trending-up",
+            "landmark",
+            "heart-pulse",
+            "graduation-cap",
+            "gamepad",
+            "shopping-bag",
+            "shirt",
+            "receipt",
+            "zap",
+            "smartphone",
+            "wrench",
+            "coffee",
+            "plane",
+            "gift",
+            "baby",
+            "paw-print",
+            "dumbbell",
+            "tag",
+            "banknote",
+            "wallet",
+            "store",
+            "package",
+            "users",
+            "megaphone",
+          ],
+          "type": "string",
+        },
+        "kind": {
+          "description": "cash (efectivo), bank (banco), wallet (billetera) u other.",
+          "enum": [
+            "cash",
+            "bank",
+            "wallet",
+            "other",
+          ],
+          "type": "string",
+        },
+        "name": {
+          "description": "Nombre de la cuenta (1–40 caracteres).",
+          "type": "string",
+        },
+        "opening_balance": {
+          "description": "Saldo inicial. Puede ser negativo si la cuenta está sobregirada.",
+          "type": "number",
+        },
+        "opening_balance_on": {
+          "anyOf": [
+            {
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Fecha YYYY-MM-DD, no futura, desde la que cuenta el saldo inicial. null = antes de cualquier movimiento.",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "update_account",
+  },
+  {
+    "description": "Crea una tarjeta de crédito o un préstamo en Deudas, con los campos del formulario de la app. Tarjeta: nombre, saldo de hoy, cupo, día de corte y día de pago (tasa, pago mínimo y cuota de manejo opcionales). Préstamo: nombre, saldo, cuota, tasa (0 si no tiene) y día de pago (monto original y plazo opcionales). Para lo que le deben al usuario usa create_receivable. Solo Personal. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account": {
+          "description": "Nombre de la cuenta, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "account_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Cuenta por defecto de los pagos (prellena la cuenta al pagar). null = ninguna.",
+        },
+        "closing_day": {
+          "description": "Tarjeta: día de corte (1–31).",
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer",
+        },
+        "confirm_duplicate": {
+          "description": "true para crear aunque ya exista otra activa con el mismo nombre (solo después de preguntarle al usuario).",
+          "type": "boolean",
+        },
+        "counterparty": {
+          "description": "Banco, entidad o persona (hasta 60), opcional.",
+          "type": "string",
+        },
+        "credit_limit": {
+          "description": "Tarjeta: cupo total.",
+          "type": "number",
+        },
+        "due_day": {
+          "description": "Día de pago (1–31).",
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer",
+        },
+        "fee_amount": {
+          "anyOf": [
+            {
+              "description": "Tarjeta: cuota de manejo mensual, opcional. Va con fee_day.",
+              "type": "number",
+            },
+            {
+              "type": "null",
+            },
+          ],
+        },
+        "fee_day": {
+          "anyOf": [
+            {
+              "description": "Tarjeta: día de cobro de la cuota de manejo.",
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+        },
+        "installment": {
+          "description": "Préstamo: cuota mensual.",
+          "type": "number",
+        },
+        "interest_rate": {
+          "description": "Tasa de interés en %. Préstamo: obligatoria (0 si no tiene). Tarjeta: opcional.",
+          "type": [
+            "number",
+            "null",
+          ],
+        },
+        "kind": {
+          "description": "credit_card (tarjeta de crédito) o loan (préstamo).",
+          "enum": [
+            "credit_card",
+            "loan",
+          ],
+          "type": "string",
+        },
+        "min_payment": {
+          "anyOf": [
+            {
+              "description": "Tarjeta: pago mínimo, opcional.",
+              "type": "number",
+            },
+            {
+              "type": "null",
+            },
+          ],
+        },
+        "name": {
+          "description": "Nombre (1–60 caracteres).",
+          "type": "string",
+        },
+        "opening_balance": {
+          "description": "Saldo que se debe hoy.",
+          "type": "number",
+        },
+        "original_amount": {
+          "anyOf": [
+            {
+              "description": "Préstamo: monto prestado, opcional.",
+              "type": "number",
+            },
+            {
+              "type": "null",
+            },
+          ],
+        },
+        "rate_type": {
+          "anyOf": [
+            {
+              "enum": [
+                "ea",
+                "mv",
+              ],
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "ea (efectiva anual) o mv (mes vencido). Va con la tasa.",
+        },
+        "term_months": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Préstamo: plazo en meses (1–600), opcional.",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "create_debt",
+  },
+  {
+    "description": "Cambia los datos de una tarjeta o un préstamo: nombre, cupo, corte, pago, tasa, cuota, plazo, cuota de manejo o cuenta por defecto. Solo cambia los campos que envíes; el tipo no cambia. Para registrar pagos usa record_debt_payment. Solo Personal. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account": {
+          "description": "Nombre de la cuenta, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "account_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Cuenta por defecto de los pagos (prellena la cuenta al pagar). null = ninguna.",
+        },
+        "closing_day": {
+          "description": "Tarjeta: día de corte (1–31).",
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer",
+        },
+        "counterparty": {
+          "description": "Banco, entidad o persona (hasta 60), opcional.",
+          "type": "string",
+        },
+        "credit_limit": {
+          "description": "Tarjeta: cupo total.",
+          "type": "number",
+        },
+        "debt": {
+          "description": "Nombre de la deuda, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "debt_id": {
+          "description": "Id de la deuda (de list_debts).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "due_day": {
+          "description": "Día de pago (1–31).",
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer",
+        },
+        "fee_amount": {
+          "anyOf": [
+            {
+              "description": "Tarjeta: cuota de manejo mensual, opcional. Va con fee_day.",
+              "type": "number",
+            },
+            {
+              "type": "null",
+            },
+          ],
+        },
+        "fee_day": {
+          "anyOf": [
+            {
+              "description": "Tarjeta: día de cobro de la cuota de manejo.",
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+        },
+        "installment": {
+          "description": "Préstamo: cuota mensual.",
+          "type": "number",
+        },
+        "interest_rate": {
+          "description": "Tasa de interés en %. Préstamo: obligatoria (0 si no tiene). Tarjeta: opcional.",
+          "type": [
+            "number",
+            "null",
+          ],
+        },
+        "min_payment": {
+          "anyOf": [
+            {
+              "description": "Tarjeta: pago mínimo, opcional.",
+              "type": "number",
+            },
+            {
+              "type": "null",
+            },
+          ],
+        },
+        "name": {
+          "description": "Nombre (1–60 caracteres).",
+          "type": "string",
+        },
+        "opening_balance": {
+          "description": "Saldo que se debe hoy.",
+          "type": "number",
+        },
+        "original_amount": {
+          "anyOf": [
+            {
+              "description": "Préstamo: monto prestado, opcional.",
+              "type": "number",
+            },
+            {
+              "type": "null",
+            },
+          ],
+        },
+        "rate_type": {
+          "anyOf": [
+            {
+              "enum": [
+                "ea",
+                "mv",
+              ],
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "ea (efectiva anual) o mv (mes vencido). Va con la tasa.",
+        },
+        "term_months": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Préstamo: plazo en meses (1–600), opcional.",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "update_debt",
+  },
+  {
+    "description": "Crea una cuenta por cobrar en Me deben: dinero que le deben al usuario. Cobro único (schedule once): nombre y monto, fecha esperada opcional. Mes a mes (monthly): nombre, monto mensual, día de pago y fecha de inicio; número de cuotas opcional (sin él es indefinida). El tipo de cobro no se puede cambiar después. Solo Personal. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account": {
+          "description": "Nombre de la cuenta, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "account_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Cuenta por defecto de los pagos (prellena la cuenta al pagar). null = ninguna.",
+        },
+        "confirm_duplicate": {
+          "description": "true para crear aunque ya exista otra activa con el mismo nombre (solo después de preguntarle al usuario).",
+          "type": "boolean",
+        },
+        "counterparty": {
+          "description": "Quién te debe (hasta 60), opcional.",
+          "type": "string",
+        },
+        "due_day": {
+          "description": "Mes a mes: día de pago (1–31).",
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer",
+        },
+        "expected_on": {
+          "anyOf": [
+            {
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Cobro único: fecha esperada de pago YYYY-MM-DD, opcional.",
+        },
+        "installment": {
+          "description": "Mes a mes: monto de cada mes.",
+          "type": "number",
+        },
+        "name": {
+          "description": "Nombre (1–60 caracteres).",
+          "type": "string",
+        },
+        "opening_balance": {
+          "description": "Cobro único: cuánto te deben.",
+          "type": "number",
+        },
+        "schedule": {
+          "description": "once: te pagan una vez (o por abonos). monthly: te pagan una cuota cada mes. Por defecto once.",
+          "enum": [
+            "once",
+            "monthly",
+          ],
+          "type": "string",
+        },
+        "starts_on": {
+          "description": "Mes a mes: fecha de inicio YYYY-MM-DD.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "term_months": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Mes a mes: número de cuotas (1–600). null = indefinida.",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "create_receivable",
+  },
+  {
+    "description": "Cambia los datos de una cuenta por cobrar de Me deben. Solo cambia los campos que envíes. No cambia el tipo de cobro (único o mes a mes): envía solo los campos de su tipo. En una mensual indefinida, un monto nuevo deja los meses ya corridos con el anterior, como la app. Para registrar cobros usa collect_receivable. Solo Personal. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account": {
+          "description": "Nombre de la cuenta, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "account_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Cuenta por defecto de los pagos (prellena la cuenta al pagar). null = ninguna.",
+        },
+        "counterparty": {
+          "description": "Quién te debe (hasta 60), opcional.",
+          "type": "string",
+        },
+        "due_day": {
+          "description": "Mes a mes: día de pago (1–31).",
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer",
+        },
+        "expected_on": {
+          "anyOf": [
+            {
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Cobro único: fecha esperada de pago YYYY-MM-DD, opcional.",
+        },
+        "installment": {
+          "description": "Mes a mes: monto de cada mes.",
+          "type": "number",
+        },
+        "name": {
+          "description": "Nombre (1–60 caracteres).",
+          "type": "string",
+        },
+        "opening_balance": {
+          "description": "Cobro único: cuánto te deben.",
+          "type": "number",
+        },
+        "receivable": {
+          "description": "Nombre de la cuenta por cobrar, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "receivable_id": {
+          "description": "Id de la cuenta por cobrar (de list_receivables).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "starts_on": {
+          "description": "Mes a mes: fecha de inicio YYYY-MM-DD.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "term_months": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Mes a mes: número de cuotas (1–600). null = indefinida.",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "update_receivable",
+  },
+  {
+    "description": "Crea un gasto fijo (suscripción, arriendo, servicio) que se repite cada mes o cada año, con su categoría de gasto, día de pago y cuenta por defecto opcional. Aparece en Gastos fijos con sus próximas fechas. Para pagar una ocurrencia usa pay_recurring_expense. Solo Personal. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account": {
+          "description": "Nombre de la cuenta, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "account_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Cuenta por defecto del pago (prellena la cuenta al pagar). null = ninguna.",
+        },
+        "amount": {
+          "description": "Monto de cada pago, positivo.",
+          "type": "number",
+        },
+        "category": {
+          "description": "Nombre de la categoría, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "category_id": {
+          "description": "Categoría de gasto (de list_categories).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "confirm_duplicate": {
+          "description": "true para crear aunque ya exista otra activa con el mismo nombre (solo después de preguntarle al usuario).",
+          "type": "boolean",
+        },
+        "day_of_month": {
+          "description": "Día de pago (1–31). En meses más cortos cae el último día del mes.",
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer",
+        },
+        "ends_on": {
+          "anyOf": [
+            {
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Hasta cuándo aplica, YYYY-MM-DD. null = sin fin.",
+        },
+        "frequency": {
+          "description": "Por defecto monthly.",
+          "enum": [
+            "monthly",
+            "yearly",
+          ],
+          "type": "string",
+        },
+        "month_of_year": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Anual: mes de pago (1–12).",
+        },
+        "name": {
+          "description": "Nombre (1–60 caracteres): Netflix, Arriendo…",
+          "type": "string",
+        },
+        "starts_on": {
+          "description": "Por defecto hoy.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "create_recurring_expense",
+  },
+  {
+    "description": "Cambia nombre, monto, categoría, frecuencia, día, mes, fechas o cuenta por defecto de un gasto fijo. Solo cambia los campos que envíes; los demás quedan igual. Los pagos ya registrados no cambian. Solo Personal. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account": {
+          "description": "Nombre de la cuenta, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "account_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Cuenta por defecto del pago (prellena la cuenta al pagar). null = ninguna.",
+        },
+        "amount": {
+          "description": "Monto de cada pago, positivo.",
+          "type": "number",
+        },
+        "category": {
+          "description": "Nombre de la categoría, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "category_id": {
+          "description": "Categoría de gasto (de list_categories).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "day_of_month": {
+          "description": "Día de pago (1–31). En meses más cortos cae el último día del mes.",
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "type": "integer",
+        },
+        "ends_on": {
+          "anyOf": [
+            {
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Hasta cuándo aplica, YYYY-MM-DD. null = sin fin.",
+        },
+        "frequency": {
+          "description": "monthly (cada mes) o yearly (una vez al año).",
+          "enum": [
+            "monthly",
+            "yearly",
+          ],
+          "type": "string",
+        },
+        "month_of_year": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Anual: mes de pago (1–12).",
+        },
+        "name": {
+          "description": "Nombre (1–60 caracteres): Netflix, Arriendo…",
+          "type": "string",
+        },
+        "recurring_expense": {
+          "description": "Nombre del gasto fijo, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "recurring_expense_id": {
+          "description": "Id del gasto fijo (de list_recurring).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "starts_on": {
+          "description": "Desde cuándo aplica, YYYY-MM-DD.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "update_recurring_expense",
+  },
+  {
+    "description": "Crea un ingreso fijo (salario, arriendo que recibe, rendimiento) con su frecuencia, categoría de ingreso y cuenta por defecto opcional. Cada frecuencia pide sus días: weekly el día de la semana, biweekly dos días del mes, monthly y yearly el día (yearly también el mes), every_n_days el intervalo. Para registrar lo que llegó usa receive_recurring_income. Solo Personal. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account": {
+          "description": "Nombre de la cuenta, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "account_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Cuenta por defecto a la que llega. null = ninguna.",
+        },
+        "amount": {
+          "description": "Monto de cada pago, positivo. En quincenal, el de cada quincena.",
+          "type": "number",
+        },
+        "category": {
+          "description": "Nombre de la categoría, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "category_id": {
+          "description": "Categoría de ingreso (de list_categories).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "confirm_duplicate": {
+          "description": "true para crear aunque ya exista otra activa con el mismo nombre (solo después de preguntarle al usuario).",
+          "type": "boolean",
+        },
+        "day_of_month": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Monthly, yearly: día de pago (1–31). Biweekly: primer día (por defecto 15).",
+        },
+        "day_of_week": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Weekly: día de la semana, 1 = lunes … 7 = domingo.",
+        },
+        "ends_on": {
+          "anyOf": [
+            {
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Hasta cuándo aplica, YYYY-MM-DD. null = sin fin.",
+        },
+        "frequency": {
+          "description": "weekly, biweekly (quincenal), monthly, yearly, daily, every_n_days o none (sin fecha fija).",
+          "enum": [
+            "weekly",
+            "biweekly",
+            "monthly",
+            "yearly",
+            "daily",
+            "every_n_days",
+            "none",
+          ],
+          "type": "string",
+        },
+        "interval_days": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Every_n_days: cada cuántos días (2–90), contados desde starts_on.",
+        },
+        "month_of_year": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Yearly: mes de pago (1–12).",
+        },
+        "name": {
+          "description": "Nombre (1–60 caracteres): Salario, Arriendo…",
+          "type": "string",
+        },
+        "second_day_of_month": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Biweekly: segundo día, posterior al primero (por defecto 30).",
+        },
+        "starts_on": {
+          "description": "Por defecto hoy.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "create_recurring_income",
+  },
+  {
+    "description": "Cambia nombre, monto, categoría, frecuencia, días, fechas o cuenta por defecto de un ingreso fijo. Solo cambia los campos que envíes; los demás quedan igual. Al cambiar la frecuencia envía los días que pide la nueva. Lo ya recibido no cambia. Solo Personal. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "account": {
+          "description": "Nombre de la cuenta, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "account_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Cuenta por defecto a la que llega. null = ninguna.",
+        },
+        "amount": {
+          "description": "Monto de cada pago, positivo. En quincenal, el de cada quincena.",
+          "type": "number",
+        },
+        "category": {
+          "description": "Nombre de la categoría, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "category_id": {
+          "description": "Categoría de ingreso (de list_categories).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "day_of_month": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Monthly, yearly: día de pago (1–31). Biweekly: primer día (por defecto 15).",
+        },
+        "day_of_week": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Weekly: día de la semana, 1 = lunes … 7 = domingo.",
+        },
+        "ends_on": {
+          "anyOf": [
+            {
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Hasta cuándo aplica, YYYY-MM-DD. null = sin fin.",
+        },
+        "frequency": {
+          "description": "weekly, biweekly (quincenal), monthly, yearly, daily, every_n_days o none (sin fecha fija).",
+          "enum": [
+            "weekly",
+            "biweekly",
+            "monthly",
+            "yearly",
+            "daily",
+            "every_n_days",
+            "none",
+          ],
+          "type": "string",
+        },
+        "interval_days": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Every_n_days: cada cuántos días (2–90), contados desde starts_on.",
+        },
+        "month_of_year": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Yearly: mes de pago (1–12).",
+        },
+        "name": {
+          "description": "Nombre (1–60 caracteres): Salario, Arriendo…",
+          "type": "string",
+        },
+        "recurring_income": {
+          "description": "Nombre del ingreso fijo, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "recurring_income_id": {
+          "description": "Id del ingreso fijo (de list_recurring).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "second_day_of_month": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Biweekly: segundo día, posterior al primero (por defecto 30).",
+        },
+        "starts_on": {
+          "description": "Desde cuándo aplica, YYYY-MM-DD.",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "update_recurring_income",
+  },
+  {
+    "description": "Crea una meta de ahorro con su monto objetivo y fecha opcional (posterior a hoy). Para aportar o retirar usa record_goal_contribution. Solo Personal. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "color": {
+          "description": "Color de la paleta de Tesoro.",
+          "enum": [
+            "emerald",
+            "teal",
+            "lime",
+            "amber",
+            "orange",
+            "rose",
+            "pink",
+            "violet",
+            "indigo",
+            "blue",
+            "sky",
+            "slate",
+          ],
+          "type": "string",
+        },
+        "confirm_duplicate": {
+          "description": "true para crear aunque ya exista otra activa con el mismo nombre (solo después de preguntarle al usuario).",
+          "type": "boolean",
+        },
+        "icon": {
+          "description": "Icono del set de Tesoro.",
+          "enum": [
+            "home",
+            "utensils",
+            "car",
+            "bus",
+            "fuel",
+            "briefcase",
+            "laptop",
+            "coins",
+            "piggy-bank",
+            "trending-up",
+            "landmark",
+            "heart-pulse",
+            "graduation-cap",
+            "gamepad",
+            "shopping-bag",
+            "shirt",
+            "receipt",
+            "zap",
+            "smartphone",
+            "wrench",
+            "coffee",
+            "plane",
+            "gift",
+            "baby",
+            "paw-print",
+            "dumbbell",
+            "tag",
+            "banknote",
+            "wallet",
+            "store",
+            "package",
+            "users",
+            "megaphone",
+          ],
+          "type": "string",
+        },
+        "name": {
+          "description": "Nombre de la meta (1–60 caracteres).",
+          "type": "string",
+        },
+        "target_amount": {
+          "description": "Monto objetivo, positivo.",
+          "type": "number",
+        },
+        "target_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Fecha objetivo YYYY-MM-DD, posterior a hoy. null = sin fecha.",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "create_goal",
+  },
+  {
+    "description": "Cambia nombre, monto objetivo, fecha, icono o color de una meta de ahorro. Solo cambia los campos que envíes; los demás quedan igual. Una fecha nueva debe ser posterior a hoy. Lo ahorrado no cambia. Solo Personal. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "color": {
+          "description": "Color de la paleta de Tesoro.",
+          "enum": [
+            "emerald",
+            "teal",
+            "lime",
+            "amber",
+            "orange",
+            "rose",
+            "pink",
+            "violet",
+            "indigo",
+            "blue",
+            "sky",
+            "slate",
+          ],
+          "type": "string",
+        },
+        "goal": {
+          "description": "Nombre de la meta, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "goal_id": {
+          "description": "Id de la meta (de list_goals).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "icon": {
+          "description": "Icono del set de Tesoro.",
+          "enum": [
+            "home",
+            "utensils",
+            "car",
+            "bus",
+            "fuel",
+            "briefcase",
+            "laptop",
+            "coins",
+            "piggy-bank",
+            "trending-up",
+            "landmark",
+            "heart-pulse",
+            "graduation-cap",
+            "gamepad",
+            "shopping-bag",
+            "shirt",
+            "receipt",
+            "zap",
+            "smartphone",
+            "wrench",
+            "coffee",
+            "plane",
+            "gift",
+            "baby",
+            "paw-print",
+            "dumbbell",
+            "tag",
+            "banknote",
+            "wallet",
+            "store",
+            "package",
+            "users",
+            "megaphone",
+          ],
+          "type": "string",
+        },
+        "name": {
+          "description": "Nombre de la meta (1–60 caracteres).",
+          "type": "string",
+        },
+        "target_amount": {
+          "description": "Monto objetivo, positivo.",
+          "type": "number",
+        },
+        "target_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+          "description": "Fecha objetivo YYYY-MM-DD, posterior a hoy. null = sin fecha.",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "update_goal",
+  },
+  {
+    "description": "Crea el presupuesto de una categoría de gasto para un mes o, si ya existe, cambia su monto (nunca duplica). Revisa list_budgets para ver los del mes. Solo Personal. Devuelve un operation_id para revertir. Si recibes status needs_input, no se guardó nada: pregunta al usuario cada question (con sus options) y vuelve a llamar con los datos.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "amount": {
+          "description": "Monto del presupuesto, positivo.",
+          "type": "number",
+        },
+        "category": {
+          "description": "Nombre de la categoría, si no tienes el id.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string",
+        },
+        "category_id": {
+          "description": "Categoría de gasto (de list_categories).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+        "month": {
+          "description": "Mes YYYY-MM. Por defecto el actual.",
+          "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+          "type": "string",
+        },
+        "workspace_id": {
+          "description": "Id del espacio (de list_workspaces).",
+          "type": "string",
+        },
+      },
+      "required": [
+        "workspace_id",
+      ],
+      "type": "object",
+    },
+    "name": "set_budget",
+  },
+  {
+    "description": "Revierte una escritura del MCP por su operation_id: borra lo creado, recrea lo borrado con sus mismos ids y devuelve lo editado. Todo o nada: si alguna fila cambió después (p. ej. desde la app), o si una cuenta, deuda, fijo, meta o presupuesto creado ya tiene datos vinculados (movimientos, pagos, aportes), no revierte ninguna y dice el motivo. Se revierte una sola vez y hasta 30 días después; no hay rehacer.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "operation_id": {
+          "description": "Id de la operación (de list_operations o de una escritura).",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "type": "string",
+        },
+      },
+      "required": [
+        "operation_id",
+      ],
+      "type": "object",
+    },
+    "name": "undo_operation",
+  },
+]
+`;

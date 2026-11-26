@@ -152,7 +152,9 @@ con otra cuenta propia.
    omiten salvo los índices de `include_rows`; una fila sin categoría usa la
    sugerida.
 
-El análisis vive en `tools/write/statement.ts`.
+El análisis vive en `tools/write/statement.ts`: la lógica pura (esquema de
+las filas, duplicados probables y conciliación) en `statement-rows.ts` y las
+lecturas en `statement-queries.ts`.
 
 ### Pagar una deuda
 
@@ -280,8 +282,14 @@ Cambia el objetivo; el nombre y la fecha quedan igual.
 
 ## Agregar una tool
 
-1. Crea el archivo en `src/features/mcp/tools/read/` o `tools/write/` con
-   `defineTool({ name, group, title, description, input, annotations, run })`:
+1. Crea un archivo por tool en `src/features/mcp/tools/read/` o
+   `tools/write/`, con el nombre de la tool en kebab-case
+   (`record_debt_payment` → `record-debt-payment.ts`), y define la tool con
+   `defineTool({ name, group, title, description, input, annotations, run })`.
+   Lo que comparten varias tools va en un módulo aparte
+   (`debt-entry-shared.ts`, `debt-entity.ts`, `transfer-queries.ts`), y la
+   lógica pura en uno con su test (`debt-entry-values.ts`, `debt-fields.ts`,
+   `transfer-input.ts`, `recurring-income-fields.ts`). Reglas de la tool:
    - `name` en `snake_case` inglés; título, descripción y errores en español;
    - `input` es un `z.object`: el SDK lo convierte en el JSON Schema de la tool
      y valida la entrada antes de llamar `run`;
@@ -292,7 +300,11 @@ Cambia el objetivo; el nombre y la fecha quedan igual.
    - responde con `toolResult(resumen, datos)` o `toolError(mensaje)`; los
      montos llevan `currency: ctx.currency`.
 2. Agrégala a `MCP_TOOLS` en `catalog.ts`. El servidor la registra y la
-   página `/mcp` la muestra sin más cambios.
+   página `/mcp` la muestra sin más cambios. `catalog.test.ts` guarda una
+   instantánea del nombre, la descripción y el esquema de entrada de cada
+   tool: una tool nueva la actualiza a propósito (`pnpm test -u`), pero un
+   cambio en una existente rompe a los agentes conectados y va en su propio
+   spec.
 3. Si escribe:
    - usa (o extrae) un servicio que también use la action de la UI;
    - valida todas las filas antes de escribir y responde los errores con
@@ -309,9 +321,10 @@ Cambia el objetivo; el nombre y la fecha quedan igual.
 
 El servidor OAuth de Supabase está en beta. Todo su uso vive en:
 
-- `app/oauth/consent/page.tsx` y `src/features/mcp/actions.ts`
-  (`getAuthorizationDetails`, `approveAuthorization`, `denyAuthorization`,
-  `listGrants` en `queries.ts` y `revokeGrant`);
+- `app/oauth/consent/page.tsx` y `src/features/mcp/connection-service.ts`
+  (`getAuthorizationDetails`, `approveAuthorization`, `denyAuthorization` y
+  `revokeGrant`; las actions de `actions.ts` solo validan y lo llaman), más
+  `listGrants` en `queries.ts`;
 - `src/features/mcp/auth.ts` (claim `client_id`);
 - `src/features/mcp/discovery.ts` (ruta del metadato
   `/.well-known/oauth-authorization-server/auth/v1`).

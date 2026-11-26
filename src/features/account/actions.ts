@@ -6,8 +6,9 @@ import { redirect } from "next/navigation"
 import { z } from "zod"
 import { SITE } from "@/config/site"
 import { translateAuthError } from "@/features/auth/errors"
+import { readFormValues } from "@/libs/form-data"
 import { createClient } from "@/libs/supabase/server"
-import { AVATARS_BUCKET, removeAvatarFiles } from "./avatar"
+import { avatarPublicUrl, isOwnAvatarPath, removeAvatarFiles } from "./avatar"
 import { deletionDate } from "./deletion"
 import {
   changePasswordSchema,
@@ -16,19 +17,19 @@ import {
   hideAmountsSchema,
   profileSchema
 } from "./schemas"
+import {
+  type ProfileChanges,
+  cancelAccountDeletionRecord,
+  requestAccountDeletionRecord,
+  sessionUser,
+  updateProfileRecord,
+  userHasPassword
+} from "./service"
 import type { AccountActionResult, ProfileFormState } from "./types"
 
 const DEFAULT_ERROR = "No se pudieron guardar los cambios. Intenta de nuevo"
 const SESSION_EXPIRED = "Tu sesión expiró. Inicia sesión de nuevo"
 const AVATAR_ERROR = "No se pudo guardar la foto. Intenta de nuevo"
-
-// <user_id>/<uuid>.webp, tal como lo sube avatar-uploader
-const AVATAR_FILE = /^[0-9a-f-]{36}\.webp$/
-
-function readString(formData: FormData, key: string) {
-  const value = formData.get(key)
-  return typeof value === "string" ? value : ""
-}
 
 // El nombre, el avatar y la moneda se ven en el aside y en los montos de todo
 // el dashboard: se revalida su layout completo
@@ -36,35 +37,25 @@ function revalidateDashboard() {
   revalidatePath(SITE.routes.dashboard, "layout")
 }
 
-async function updateOwnProfile(
-  changes:
-    | { full_name: string }
-    | { currency: string }
-    | { avatar_url: string | null }
-    | { hide_amounts: boolean }
-) {
+async function updateOwnProfile(changes: ProfileChanges) {
   const supabase = await createClient()
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+  const user = await sessionUser(supabase)
 
   if (!user) {
     return { error: SESSION_EXPIRED }
   }
 
-  const { error } = await supabase
-    .from("profiles")
-    .update(changes)
-    .eq("id", user.id)
-
-  return error ? { error: DEFAULT_ERROR } : {}
+  return (await updateProfileRecord(supabase, user.id, changes))
+    ? {}
+    : { error: DEFAULT_ERROR }
 }
 
+/** Cambia el nombre del perfil */
 export async function updateProfile(
   _prevState: ProfileFormState,
   formData: FormData
 ): Promise<ProfileFormState> {
-  const values = { fullName: readString(formData, "fullName") }
+  const values = readFormValues(formData, ["fullName"])
   const parsed = profileSchema.safeParse(values)
 
   if (!parsed.success) {
@@ -83,11 +74,12 @@ export async function updateProfile(
   return { ok: true }
 }
 
+/** Cambia la moneda de los montos */
 export async function updateCurrency(
   _prevState: ProfileFormState,
   formData: FormData
 ): Promise<ProfileFormState> {
-  const values = { currency: readString(formData, "currency") }
+  const values = readFormValues(formData, ["currency"])
   const parsed = currencySchema.safeParse(values)
 
   if (!parsed.success) {
@@ -104,7 +96,7 @@ export async function updateCurrency(
   return { ok: true }
 }
 
-// Preferencia global del usuario (Personal, Empresa y todos sus dispositivos)
+/** Ocultar montos: preferencia global (Personal, Empresa y dispositivos) */
 export async function setHideAmountsAction(
   hidden: unknown
 ): Promise<AccountActionResult> {
@@ -124,32 +116,22 @@ export async function setHideAmountsAction(
   return {}
 }
 
+/** Guarda la foto ya subida a la carpeta propia y borra las anteriores */
 export async function setAvatar(path: unknown): Promise<AccountActionResult> {
   const supabase = await createClient()
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+  const user = await sessionUser(supabase)
 
   if (!user) {
     return { error: SESSION_EXPIRED }
   }
 
-  // Solo archivos de la carpeta propia (las políticas de Storage también lo
-  // exigen al subir)
-  const prefix = `${user.id}/`
-  if (
-    typeof path !== "string" ||
-    !path.startsWith(prefix) ||
-    !AVATAR_FILE.test(path.slice(prefix.length))
-  ) {
+  if (!isOwnAvatarPath(user.id, path)) {
     return { error: AVATAR_ERROR }
   }
 
-  const {
-    data: { publicUrl }
-  } = supabase.storage.from(AVATARS_BUCKET).getPublicUrl(path)
-
-  const { error } = await updateOwnProfile({ avatar_url: publicUrl })
+  const { error } = await updateOwnProfile({
+    avatar_url: avatarPublicUrl(supabase, path)
+  })
 
   if (error) {
     return { error: AVATAR_ERROR }
@@ -162,11 +144,10 @@ export async function setAvatar(path: unknown): Promise<AccountActionResult> {
   return {}
 }
 
+/** Quita la foto de perfil */
 export async function removeAvatar(): Promise<AccountActionResult> {
   const supabase = await createClient()
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+  const user = await sessionUser(supabase)
 
   if (!user) {
     return { error: SESSION_EXPIRED }
@@ -188,24 +169,21 @@ export async function removeAvatar(): Promise<AccountActionResult> {
   return {}
 }
 
+/** Cambia la contraseña verificando la actual */
 export async function changePassword(
   _prevState: ProfileFormState,
   formData: FormData
 ): Promise<ProfileFormState> {
-  const parsed = changePasswordSchema.safeParse({
-    currentPassword: readString(formData, "currentPassword"),
-    password: readString(formData, "password"),
-    confirmPassword: readString(formData, "confirmPassword")
-  })
+  const parsed = changePasswordSchema.safeParse(
+    readFormValues(formData, ["currentPassword", "password", "confirmPassword"])
+  )
 
   if (!parsed.success) {
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors }
   }
 
   const supabase = await createClient()
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+  const user = await sessionUser(supabase)
 
   if (!user?.email) {
     return { error: SESSION_EXPIRED }
@@ -239,33 +217,30 @@ export async function changePassword(
   return { ok: true }
 }
 
+/** Crea la contraseña de una cuenta que entró solo con OAuth */
 export async function createPassword(
   _prevState: ProfileFormState,
   formData: FormData
 ): Promise<ProfileFormState> {
-  const parsed = createPasswordSchema.safeParse({
-    password: readString(formData, "password"),
-    confirmPassword: readString(formData, "confirmPassword")
-  })
+  const parsed = createPasswordSchema.safeParse(
+    readFormValues(formData, ["password", "confirmPassword"])
+  )
 
   if (!parsed.success) {
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors }
   }
 
   const supabase = await createClient()
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+  const user = await sessionUser(supabase)
 
   if (!user) {
     return { error: SESSION_EXPIRED }
   }
 
   // Sin esta revisión, una sesión podría cambiar la contraseña sin la actual
-  const { data: hasPassword, error: rpcError } =
-    await supabase.rpc("has_password")
+  const hasPassword = await userHasPassword(supabase)
 
-  if (rpcError) {
+  if (hasPassword === null) {
     return { error: DEFAULT_ERROR }
   }
   if (hasPassword) {
@@ -285,16 +260,17 @@ export async function createPassword(
   return { ok: true }
 }
 
+/** Programa el borrado de la cuenta y cierra la sesión */
 export async function requestAccountDeletion(
   _prevState: ProfileFormState,
   formData: FormData
 ): Promise<ProfileFormState> {
-  const confirmEmail = readString(formData, "confirmEmail").trim()
+  const confirmEmail = readFormValues(formData, [
+    "confirmEmail"
+  ]).confirmEmail.trim()
 
   const supabase = await createClient()
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+  const user = await sessionUser(supabase)
 
   if (!user?.email) {
     return { error: SESSION_EXPIRED }
@@ -319,11 +295,9 @@ export async function requestAccountDeletion(
     return { error: profileError }
   }
 
-  const { data: requestedAt, error } = await supabase.rpc(
-    "request_account_deletion"
-  )
+  const requestedAt = await requestAccountDeletionRecord(supabase)
 
-  if (error) {
+  if (requestedAt === null) {
     return { error: "No se pudo programar el borrado. Intenta de nuevo" }
   }
 
@@ -336,11 +310,11 @@ export async function requestAccountDeletion(
   redirect(`${SITE.routes.signIn}?${params}` as Route)
 }
 
+/** Cancela el borrado programado y vuelve al dashboard */
 export async function cancelAccountDeletion(): Promise<AccountActionResult> {
   const supabase = await createClient()
-  const { error } = await supabase.rpc("cancel_account_deletion")
 
-  if (error) {
+  if (!(await cancelAccountDeletionRecord(supabase))) {
     return { error: "No se pudo restaurar la cuenta. Intenta de nuevo" }
   }
 

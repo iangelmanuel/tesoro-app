@@ -30,6 +30,7 @@ import {
 
 const input = z.object({ workspace_id: workspaceIdSchema })
 
+/** Factor del score como lo responde get_score */
 export function toFactor(
   factor: FactorResult<string>,
   labels: Record<string, string>
@@ -44,6 +45,7 @@ export function toFactor(
     : { ...base, value: factor.value, points: Math.round(factor.points) }
 }
 
+/** Score de un mes como lo responde get_score */
 export function toScore(
   result: ScoreResult<string>,
   labels: Record<string, string>
@@ -64,6 +66,7 @@ export function toScore(
   }
 }
 
+/** Recomendación como la responde get_score */
 export function toRecommendation(item: Recommendation<string>) {
   return {
     rule: item.rule,

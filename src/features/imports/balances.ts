@@ -3,6 +3,7 @@ import type { DebtEntryValue, GoalContributionValue, PreviewRow } from "./types"
 // Saldos resultantes de deudas y metas en la vista previa (SPEC 08b). Solo
 // cuentan las filas marcadas.
 
+/** Saldo actual y resultante de una deuda o meta */
 export interface ResultingBalance {
   id: string
   name: string

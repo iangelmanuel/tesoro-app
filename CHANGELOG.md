@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-11-25
+
 ### Added
 
 - **`useActionToast`** in `src/hooks/use-action-toast.ts` (SPEC 55a): runs a server action that returns `{ error }` in a transition and shows a success or error toast. Adopted by `useAccountAction` and the movement row delete dialog.
@@ -18,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `addDays` and `dayInMonth` in `src/libs/dates.ts`; `formatMonthLong`, `formatDayMonth` and `formatValidity` in `src/libs/format.ts` (SPEC 55b).
 - Shared test fixtures in `src/testing/` (`fixtures.ts`, `score-fixtures.ts`, `schema-result.ts`, `debt-service-fixtures.ts`, `debt-samples.ts`).
 - `formatNumber`, `formatPercent`, `formatCompactCount`, `currencySymbol` and `formatMonthYear` in `src/libs/format.ts`; `listMonths`, `countMonths` and `trimSeconds` in `src/libs/dates.ts`.
+- `formatDateTime` in `src/libs/format.ts` (SPEC 55c): the day in America/Bogota of a Postgres timestamp, as Account → AI agents shows it.
+- **MCP contract snapshot** (`src/features/mcp/catalog.test.ts`): name, description and JSON input schema of every tool. Changing any of them fails the test.
+- Characterization tests for `reports`, `exports`, `imports`, `mcp` and `auth`, and for every pure module split out of them (SPEC 55c).
 
 ### Changed
 
@@ -42,6 +47,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Every `Intl` / `toLocaleString` in `src/components/` (except shadcn's `ui/calendar.tsx`) goes through `src/libs/format.ts`.
 - Pages and layouts only read params, call queries and compose: the dashboard user query, the summary KPIs, budget rows, the movements scope label and the legal document lookup moved to their features.
 - JSDoc on every export of `src/libs`, on `src/config` types and constants (one comment per `SITE` section) and on the public props of `forms/`, `charts/` and `dashboard/`.
+- **Imports, exports, MCP, reports, account, auth and tutorials refactored (SPEC 55c), no visible change.** Same import rules, exported files and MCP contract.
+  - `imports`: `normalize.ts` into `normalize-values.ts` and `normalize-transactions.ts`; `wizard-state.ts` into `wizard-types.ts`, `wizard-selectors.ts` and the reducer; the wizard, columns and preview steps into sibling components, the `use-import-wizard.ts` hook and tested pure modules (`columns-options.ts`, `preview-columns.ts`); `actions.ts` into one action per target (`transaction-`, `recurring-`, `debt-entry-` and `goal-contribution-import-actions.ts`) over `import-service.ts`, `duplicate-queries.ts` and `import-errors.ts`.
+  - `exports`: `queries.ts` into `movement-`, `personal-`, `debt-` and `business-export-queries.ts` with the pure `export-calculations.ts`; `export-dialog.tsx` into sibling fields, the `use-export-form.ts` hook and `export-selection.ts`; `workbook/section.ts` into `cells.ts` and `sheet-header.ts`. The PDF chart `shortMonth` is now `axisMonthLabel`.
+  - `mcp`: `tools/write/` has one file per tool (`record-debt-payment.ts`, `create-debt.ts`, `create-transfers.ts`, `create-recurring-income.ts`…), with shared pieces in `debt-entry-shared.ts`, `debt-entity.ts` and `transfer-queries.ts` and tested pure modules (`debt-entry-values.ts`, `debt-fields.ts`, `statement-rows.ts`, `recurring-income-fields.ts`); the statement analysis into `statement-rows.ts`, `statement-queries.ts` and `statement.ts`. Agent consent and connections moved to `connection-service.ts`.
+  - `reports`: `getPeriodComparison` moved to `queries.ts`; `comparison.ts` keeps the pure period logic.
+  - `account` and `tutorials`: database and Storage calls moved from the actions to `service.ts`; `isOwnAvatarPath` and `avatarPublicUrl` in `account/avatar.ts`.
+- Local date and rounding copies in reports, exports, imports and the MCP read tools now use `src/libs` (`addDays`, `countMonths`, `listMonths`, `toLocalDate`, `trimSeconds`, `roundCents`). The MCP `formatTimestamp` is now `formatDateTime` in `src/libs/format.ts`.
+- Spanish JSDoc on every export of the area's services, queries and pure modules. No file in `src/` goes over the 400-line `max-lines` limit.
 
 ## [0.3.0] — 2026-11-21
 

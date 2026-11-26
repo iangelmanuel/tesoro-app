@@ -15,7 +15,9 @@ import {
 // pdfmake solo distingue normal, bold, italics y bolditalics. SemiBold es
 // una familia aparte: los estilos que lo usan fijan `font: FONT_SEMIBOLD`.
 
+/** Fuente del cuerpo del PDF (Atkinson Hyperlegible Next) */
 export const FONT = "AtkinsonHyperlegibleNext"
+/** Variante semibold, registrada como familia aparte */
 export const FONT_SEMIBOLD = "AtkinsonHyperlegibleNextSemiBold"
 
 const FILES = {

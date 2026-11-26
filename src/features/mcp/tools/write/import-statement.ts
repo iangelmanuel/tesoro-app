@@ -23,11 +23,8 @@ import {
   activeCategories,
   resolveAccount
 } from "./references"
-import {
-  type StatementRow,
-  analyzeStatement,
-  statementRowsSchema
-} from "./statement"
+import { analyzeStatement } from "./statement"
+import { type StatementRow, statementRowsSchema } from "./statement-rows"
 
 // Extracto bancario (SPEC 43): pone al día una cuenta con las filas que el
 // agente leyó del extracto. Por defecto es una vista previa: duplicados

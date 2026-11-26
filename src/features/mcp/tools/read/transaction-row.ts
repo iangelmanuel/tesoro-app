@@ -7,6 +7,7 @@ import type { Database } from "@/types/database"
 
 type DebtKind = Database["public"]["Enums"]["debt_kind"]
 
+/** Filtros por vínculo de list_transactions */
 export const LINK_KINDS = [
   "any",
   "none",
@@ -16,6 +17,7 @@ export const LINK_KINDS = [
   "receivable"
 ] as const
 
+/** Un filtro por vínculo */
 export type LinkFilter = (typeof LINK_KINDS)[number]
 
 const BASE_COLUMNS =
@@ -28,6 +30,7 @@ export function transactionColumns(innerDebt: boolean) {
     : `${BASE_COLUMNS}, debt_entries(id, kind, debts(id, name, kind))`
 }
 
+/** Fila de transactions con sus embeds, como llega del select */
 export interface RawTransaction {
   id: string
   type: Database["public"]["Enums"]["transaction_type"]
@@ -92,6 +95,7 @@ function toLink(row: RawTransaction) {
   return null
 }
 
+/** Movimiento como lo ve el agente, con su vínculo */
 export function toApiTransaction(row: RawTransaction) {
   return {
     id: row.id,

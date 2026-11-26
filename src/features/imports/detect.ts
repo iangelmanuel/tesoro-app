@@ -25,6 +25,7 @@ export function normalizeText(value: string) {
     .replace(/\s+/g, " ")
 }
 
+/** Celda vacía: null, undefined o texto en blanco */
 export function isEmptyCell(cell: unknown) {
   return (
     cell === null ||
@@ -316,6 +317,7 @@ export function suggestMapping(
   return mapping
 }
 
+/** Modo de tipo sugerido por el mapeo: columna, dos columnas o signo */
 export function suggestTypeMode(mapping: ColumnMapping): TypeMode {
   if (mapping.type !== undefined) return "column"
   if (

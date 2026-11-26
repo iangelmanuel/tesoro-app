@@ -6,8 +6,10 @@ import type { PdfContext } from "../types"
 const TOP = 28
 const LOGO_SIZE = 14
 
-// Encabezado de todas las páginas menos la portada: logo y espacio a la
-// izquierda, periodo a la derecha y una línea fina del color del espacio
+/**
+ * Encabezado de todas las páginas menos la portada: logo y espacio a la
+ * izquierda, periodo a la derecha y una línea fina del color del espacio
+ */
 export function pdfHeader(ctx: PdfContext): DynamicContent {
   const { theme, page } = ctx
 

@@ -15,7 +15,7 @@ import {
   MAX_ROWS,
   MIN_DATE
 } from "./constants"
-import { maxDate } from "./normalize"
+import { maxDate } from "./normalize-values"
 
 // Revalidación en el servidor de lo que arma el asistente (SPEC 08 y 08b).
 // Los límites de cada fila son los de los schemas de su tabla (SPEC 02, 04,

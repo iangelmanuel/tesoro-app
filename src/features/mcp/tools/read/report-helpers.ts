@@ -2,16 +2,17 @@ import { savingsRate } from "@/features/reports/metrics"
 import type { CategoryTotal, MonthlyTotal } from "@/features/reports/queries"
 import type { WorkspaceType } from "@/features/workspaces/types"
 import { countMonths, currentMonth, monthRange, shiftMonth } from "@/libs/dates"
+import { roundCents } from "@/libs/money"
 import { monthSchema } from "../shared"
 
 // Totales de un mes con los nombres de cada espacio (SPEC 34): Personal
 // habla de ingresos, gastos y tasa de ahorro; Empresa de ventas, costos y
 // gastos, utilidad y margen. Mismos números que Resumen y Reportes.
 
+/** Meses que puede cubrir un reporte del MCP */
 export const MAX_REPORT_MONTHS = 36
 
 const round1 = (value: number) => Math.round(value * 10) / 10
-const round2 = (value: number) => Math.round(value * 100) / 100
 
 /** Margen % (utilidad / ventas), o null sin ventas */
 export function margin(income: number, expense: number) {
@@ -26,42 +27,46 @@ export function totalsFor(
   if (type === "business") {
     const rate = margin(row.income, row.expense)
     return {
-      sales: round2(row.income),
-      costs_and_expenses: round2(row.expense),
-      profit: round2(row.balance),
+      sales: roundCents(row.income),
+      costs_and_expenses: roundCents(row.expense),
+      profit: roundCents(row.balance),
       margin_percent: rate === null ? null : round1(rate),
       transaction_count: row.txCount
     }
   }
   const rate = savingsRate(row.income, row.expense)
   return {
-    income: round2(row.income),
-    expense: round2(row.expense),
-    balance: round2(row.balance),
+    income: roundCents(row.income),
+    expense: roundCents(row.expense),
+    balance: roundCents(row.balance),
     savings_rate_percent: rate === null ? null : round1(rate),
     transaction_count: row.txCount
   }
 }
 
+/** Totales de un mes con su mes YYYY-MM */
 export function monthTotals(type: WorkspaceType, row: MonthlyTotal) {
   return { month: row.month.slice(0, 7), ...totalsFor(type, row) }
 }
 
+/** Filas por categoría con su participación sobre el total de todas */
 export function categoryRows(rows: CategoryTotal[], limit?: number) {
   const total = rows.reduce((sum, row) => sum + row.total, 0)
   return (limit === undefined ? rows : rows.slice(0, limit)).map((row) => ({
     category_id: row.categoryId,
     name: row.name,
-    total: round2(row.total),
+    total: roundCents(row.total),
     share_percent: total === 0 ? 0 : round1((row.total / total) * 100),
     transaction_count: row.txCount
   }))
 }
 
+/** Entrada opcional de mes de las tools de reportes */
 export const monthInput = monthSchema
   .optional()
   .describe("Mes YYYY-MM. Por defecto, el mes actual.")
 
+/** Rango de meses validado o el error para el agente */
 export type MonthRange =
   | { from: string; to: string; dateFrom: string; dateTo: string }
   | { error: string }

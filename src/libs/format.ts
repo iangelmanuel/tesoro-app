@@ -1,5 +1,6 @@
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { todayISO } from "./dates"
 
 const LOCALE = "es-CO"
 
@@ -47,6 +48,14 @@ export function formatDate(date: string | Date) {
   })
     .format(toUtcDate(date))
     .replace(WHITESPACE, "\u00A0")
+}
+
+/**
+ * Fecha de un timestamp de Postgres en es-CO, como se ve en Cuenta / Agentes:
+ * el día en America/Bogota con `formatDate` ("5 de nov de 2026")
+ */
+export function formatDateTime(value: string) {
+  return formatDate(todayISO(new Date(value)))
 }
 
 /** Vigencia: "Desde {inicio}" o "{inicio} – {fin}", con formatDate */

@@ -1,10 +1,10 @@
-import { monthRange, shiftMonth } from "@/libs/dates"
-import { getCategoryTotals, getMonthlyTotals } from "./queries"
+import { addDays, countMonths, monthRange, shiftMonth } from "@/libs/dates"
 
-// Totales de un periodo y del periodo anterior equivalente, para el badge de
-// variación de las KPI (StatCard). Solo reusa las RPC existentes: sin
-// esquema nuevo. Corre en el servidor.
+// Periodo anterior equivalente para el badge de variación de las KPI
+// (StatCard). Lógica pura: las lecturas están en `getPeriodComparison`
+// (queries.ts).
 
+/** Totales de un periodo */
 export interface PeriodTotals {
   income: number
   expense: number
@@ -12,6 +12,7 @@ export interface PeriodTotals {
   txCount: number
 }
 
+/** Un periodo y el anterior equivalente */
 export interface PeriodComparison {
   current: PeriodTotals
   /** null si no hay periodo anterior con movimientos */
@@ -20,7 +21,8 @@ export interface PeriodComparison {
 
 const EMPTY: PeriodTotals = { income: 0, expense: 0, balance: 0, txCount: 0 }
 
-function sum(rows: PeriodTotals[]): PeriodTotals {
+/** Suma de los totales de varias filas (meses o categorías) */
+export function sumPeriodTotals(rows: PeriodTotals[]): PeriodTotals {
   return rows.reduce(
     (total, row) => ({
       income: total.income + row.income,
@@ -32,13 +34,8 @@ function sum(rows: PeriodTotals[]): PeriodTotals {
   )
 }
 
-function addDays(date: string, days: number) {
-  const value = new Date(`${date}T00:00:00Z`)
-  value.setUTCDate(value.getUTCDate() + days)
-  return value.toISOString().slice(0, 10)
-}
-
-function daysBetween(from: string, to: string) {
+/** Días del rango [from, to] (YYYY-MM-DD), contando ambos extremos */
+export function daysInRange(from: string, to: string) {
   const ms =
     new Date(`${to}T00:00:00Z`).getTime() -
     new Date(`${from}T00:00:00Z`).getTime()
@@ -46,67 +43,40 @@ function daysBetween(from: string, to: string) {
 }
 
 /** Cantidad de meses completos que cubre el rango, o null si no es exacto */
-function wholeMonths(from: string, to: string) {
+export function wholeMonths(from: string, to: string) {
   if (!from.endsWith("-01")) return null
   if (monthRange(to.slice(0, 7)).to !== to) return null
-
-  const [fromYear, fromMonth] = from.split("-").map(Number)
-  const [toYear, toMonth] = to.split("-").map(Number)
-  return (toYear - fromYear) * 12 + (toMonth - fromMonth) + 1
-}
-
-// monthly_totals agrupa por mes completo; category_totals filtra por día
-// exacto. Un rango que no cae en meses completos se suma desde categorías
-async function rangeTotals(
-  workspaceId: string,
-  from: string,
-  to: string
-): Promise<PeriodTotals> {
-  const [income, expense] = await Promise.all([
-    getCategoryTotals(workspaceId, from, to, "income"),
-    getCategoryTotals(workspaceId, from, to, "expense")
-  ])
-  const incomeTotal = income.reduce((total, row) => total + row.total, 0)
-  const expenseTotal = expense.reduce((total, row) => total + row.total, 0)
-
-  return {
-    income: incomeTotal,
-    expense: expenseTotal,
-    balance: incomeTotal - expenseTotal,
-    txCount: [...income, ...expense].reduce(
-      (total, row) => total + row.txCount,
-      0
-    )
-  }
+  return countMonths(from, to)
 }
 
 /**
- * Totales del periodo [from, to] y del anterior de la misma duración: los
- * N meses previos si el periodo son N meses completos, o los mismos días
- * justo antes si es un rango libre. Con meses completos es una sola llamada.
+ * Periodo anterior de la misma duración que [from, to]: los N meses previos
+ * si son N meses completos (`months`), o los mismos días justo antes si es
+ * un rango libre (`months` null)
  */
-export async function getPeriodComparison(
-  workspaceId: string,
-  from: string,
-  to: string
-): Promise<PeriodComparison> {
+export function previousPeriod(from: string, to: string) {
   const months = wholeMonths(from, to)
 
   if (months !== null) {
-    const previousFrom = `${shiftMonth(from.slice(0, 7), -months)}-01`
-    const rows = await getMonthlyTotals(workspaceId, previousFrom, to)
-    const current = sum(rows.filter((row) => row.month >= from))
-    const previous = sum(rows.filter((row) => row.month < from))
-
-    return { current, previous: previous.txCount > 0 ? previous : null }
+    return {
+      months,
+      from: `${shiftMonth(from.slice(0, 7), -months)}-01`,
+      to: addDays(from, -1)
+    }
   }
 
-  const days = daysBetween(from, to)
   const previousTo = addDays(from, -1)
-  const [current, previous] = await Promise.all([
-    rangeTotals(workspaceId, from, to),
-    rangeTotals(workspaceId, addDays(previousTo, -(days - 1)), previousTo)
-  ])
+  return {
+    months,
+    from: addDays(previousTo, -(daysInRange(from, to) - 1)),
+    to: previousTo
+  }
+}
 
+/** El periodo anterior solo compara si tuvo movimientos */
+export function withPrevious(
+  current: PeriodTotals,
+  previous: PeriodTotals
+): PeriodComparison {
   return { current, previous: previous.txCount > 0 ? previous : null }
 }

@@ -12,12 +12,11 @@ cero ni conecta bancos: se alimenta de los registros que el usuario introduce
 (ingresos, gastos, deudas, metas) y a partir de ellos genera gráficas claras,
 recomendaciones y un score de salud financiera.
 
-Estado: **v0.1.0**. Por ahora solo existen la configuración base, el SEO y la
-documentación. No hay código de la app todavía. Las piezas se construyen en
-este orden (ver `README.md#hoja-de-ruta` y `docs/producto.md`):
+Estado: **v0.3.1**. La app está construida (ver `README.md#hoja-de-ruta`,
+`docs/producto.md` y `specs/`):
 
-1. Landing (`/`)
-2. Auth con Supabase (`/sign-in`, `/sign-up`)
+1. Landing (`/`), legales (`/legal/*`) y guía del MCP (`/mcp`)
+2. Auth con Supabase (`/sign-in`, `/sign-up`, Google y GitHub) y Cuenta
 3. Dashboard (`/dashboard`) con un aside. Arriba del aside va un selector tipo
    tab **Personal / Empresa**:
    - **Personal** es el espacio por defecto. Todo usuario lo tiene desde el
@@ -26,7 +25,8 @@ este orden (ver `README.md#hoja-de-ruta` y `docs/producto.md`):
    - **Empresa** es opcional. Si el usuario no tiene uno, el dashboard
      muestra un estado vacío que lo invita a crearlo. Su estructura: flujo
      de caja, ventas, costos/gastos operativos, reportes y recomendaciones.
-4. Movimientos → gráficas → score → recomendaciones
+4. Movimientos, gráficas, score y recomendaciones en ambos espacios, más
+   importar, exportar y el servidor MCP para agentes de IA
 
 `docs/producto.md` es la especificación de producto. Actualízalo cuando se
 definan detalles, por ejemplo los factores y pesos del score.
@@ -140,12 +140,25 @@ líneas por archivo. Queries y servicios llevan `import "server-only"`.
   responde el `.xlsx`, el `.csv` o el `.pdf`. `exceljs` solo se importa desde
   `src/features/exports/workbook/`, y `pdfmake`, `html-to-pdfmake` y `jsdom`
   solo desde `src/features/exports/pdf/`; nunca desde un componente cliente.
-  `pdfmake` va en `serverExternalPackages` (`next.config.ts`). Los Route
+  `pdfmake` va en `serverExternalPackages` (`next.config.ts`). Las lecturas
+  entran por `exports/queries.ts` (`loadExportData`) y viven por sección:
+  `movement-export-queries.ts` (lo común), `personal-export-queries.ts`,
+  `debt-export-queries.ts` y `business-export-queries.ts`, con los cálculos
+  puros en `export-calculations.ts`. Los Route
   Handlers resuelven el espacio con `findWorkspace` (null → 404 en JSON), no
   con `getWorkspace` (`notFound()` responde HTML). Si cambian `--accent`,
   `--income`, `--expense`, `--muted`, `--balance` o `--chart-*`, actualiza
   `workbook/theme.ts` (de ahí también lee `pdf/theme.ts`). Las notas y
   descripciones del usuario nunca pasan por HTML en el PDF.
+- **Importar** (SPEC 08 y 08b): el asistente vive en
+  `src/features/imports/components/` (`use-import-wizard.ts`, reducer en
+  `wizard-state.ts`, tipos en `wizard-types.ts` y datos derivados en
+  `wizard-selectors.ts`). La normalización es pura: `normalize-values.ts`
+  (fechas, montos, filas de las tablas), `normalize-transactions.ts` y un
+  `normalize-*.ts` por destino. Una action por destino
+  (`transaction-import-actions.ts`, `recurring-import-actions.ts`,
+  `debt-entry-import-actions.ts`, `goal-contribution-import-actions.ts`)
+  sobre `import-service.ts`; duplicados y deshacer en `actions.ts`.
 - **MCP para agentes de IA** (SPEC 34, guía en `docs/mcp.md`):
   `app/api/mcp/route.ts` (Streamable HTTP sin estado,
   `@modelcontextprotocol/sdk`) con OAuth 2.1 del servidor de Supabase
@@ -156,7 +169,9 @@ líneas por archivo. Queries y servicios llevan `import "server-only"`.
   `runWithSupabaseClient`, así `createClient()` devuelve el cliente del
   agente y las tools reusan las consultas de la UI; ahí no sirven funciones
   que lean la sesión sin token (`getPersonalWorkspace`). Las tools viven en
-  `src/features/mcp/tools/` y se registran en `catalog.ts` (de ahí sale
+  `src/features/mcp/tools/`, un archivo por tool (`tools/write/create-debt.ts`,
+  `record-debt-payment.ts`…), y se registran en `catalog.ts`;
+  `catalog.test.ts` fija su nombre, descripción y esquema (de ahí sale
   también la página `/mcp`). Las escrituras usan los servicios compartidos
   con las actions (`transactions/service.ts`, con sus mensajes en
   `transactions/transaction-errors.ts`, `accounts/transfer-service.ts`, `debts/entry-payment-service.ts`,

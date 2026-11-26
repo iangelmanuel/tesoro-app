@@ -28,6 +28,7 @@ import {
 // deudas, Me deben, fijos, metas y presupuestos. Una entidad por llamada;
 // cada create y update deja su fila en el log para undo_operation.
 
+/** Una edición sin campos */
 export const NO_CHANGES = "Envía al menos un campo para cambiar."
 
 /** Pregunta de needs_input para un campo obligatorio que no llegó */
@@ -198,6 +199,7 @@ export async function habitualAccount(
   })
 }
 
+/** Espacio Personal con escritura, o el error de la tool */
 export async function personalWorkspace(
   ctx: McpContext,
   id: string
@@ -239,6 +241,7 @@ export async function entityCategory(
 // veces lo mismo. Si ya hay una entidad activa del mismo tipo con el mismo
 // nombre (sin mayúsculas ni tildes), se pregunta antes de crear.
 
+/** Confirmación para crear aunque ya exista uno con ese nombre */
 export const confirmDuplicateSchema = z
   .boolean()
   .optional()

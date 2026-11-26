@@ -7,17 +7,16 @@ import {
   MONTH_NAMES
 } from "./constants"
 import { cellText, isEmptyCell, normalizeText } from "./detect"
+import { categoryKeyFor, pairKey } from "./normalize-transactions"
 import {
   type SourceTable,
-  categoryKeyFor,
   isValidAmount,
-  pairKey,
   parseAmountCell,
   parseDateCell,
   parseIntegerCell,
   readDataRows,
   suggestBySynonyms
-} from "./normalize"
+} from "./normalize-values"
 import type {
   CategoryTarget,
   FrequencyTarget,

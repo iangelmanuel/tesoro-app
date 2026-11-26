@@ -1,6 +1,7 @@
 # SPEC 09 — Cuenta y perfil
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
+> **Nota:** la parte de correos (recuperar contraseña, confirmar y cambiar email) se retiró después: Tesoro no envía correos por ahora y queda para un spec futuro.
 > **Depende de:** SPEC 01
 > **Fecha:** 2026-10-30
 > **Objetivo:** Que el usuario gestione su cuenta desde `/dashboard/account` (nombre, avatar, moneda, email y contraseña), recupere su contraseña si la olvida y pueda programar el borrado de su cuenta con 30 días de gracia.

@@ -173,3 +173,13 @@ export interface ImportStats {
   duplicates: number // duplicadas no incluidas
   errors: number
 }
+
+/** Respuesta de confirmar una importación */
+export type ConfirmImportResult =
+  | { importId: string; error?: undefined }
+  | { error: string; importId?: undefined }
+
+/** Respuesta de deshacer una importación */
+export type UndoImportResult =
+  | { deleted: number; error?: undefined }
+  | { error: string; deleted?: undefined }

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { SITE } from "@/config/site"
 import { createClient } from "@/libs/supabase/server"
 import { tutorialSectionSchema } from "./schemas"
+import { clearTutorialProgress, markTutorialCompleted } from "./service"
 import type { TutorialActionResult } from "./types"
 
 const DEFAULT_ERROR = "No se pudo guardar el progreso. Intenta de nuevo"
@@ -39,16 +40,7 @@ export async function completeTutorialAction(
     return { error: SESSION_EXPIRED }
   }
 
-  const { error } = await supabase.from("tutorial_progress").upsert(
-    {
-      user_id: user.id,
-      section: parsed.data,
-      completed_at: new Date().toISOString()
-    },
-    { onConflict: "user_id,section" }
-  )
-
-  if (error) {
+  if (!(await markTutorialCompleted(supabase, user.id, parsed.data))) {
     return { error: DEFAULT_ERROR }
   }
 
@@ -64,12 +56,7 @@ export async function resetTutorialsAction(): Promise<TutorialActionResult> {
     return { error: SESSION_EXPIRED }
   }
 
-  const { error } = await supabase
-    .from("tutorial_progress")
-    .delete()
-    .eq("user_id", user.id)
-
-  if (error) {
+  if (!(await clearTutorialProgress(supabase, user.id))) {
     return { error: DEFAULT_ERROR }
   }
 

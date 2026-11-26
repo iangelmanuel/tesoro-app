@@ -1,12 +1,19 @@
-import type { Borders, CellValue, Workbook, Worksheet } from "exceljs"
+import type { CellValue, Worksheet } from "exceljs"
+import { roundCents } from "@/libs/money"
 import type { ColumnKind } from "../columns"
-import { LOGO_PNG_BASE64 } from "./logo-data"
+import {
+  ALIGN,
+  FORMATS,
+  columnLetter,
+  displayLength,
+  excelDate,
+  frame,
+  solid,
+  widen
+} from "./cells"
 import {
   type AmountTone,
   COLORS,
-  MAX_COLUMN_WIDTH,
-  MIN_COLUMN_WIDTHS,
-  NUMBER_FORMATS,
   TONE_COLORS,
   type WorkbookPalette
 } from "./theme"
@@ -28,6 +35,7 @@ export interface Formula {
 /** Letras de columna de la sección, por `key` */
 export type ColumnLetters<K extends string> = Record<K, string>
 
+/** Una columna de la tabla */
 export interface SectionColumn<T, K extends string = string> {
   header: string
   key: K
@@ -40,6 +48,7 @@ export interface SectionColumn<T, K extends string = string> {
   tone?: (row: T) => AmountTone | null
 }
 
+/** Fila de total de la tabla */
 export interface SectionTotal<K extends string> {
   label: string
   /**
@@ -51,6 +60,7 @@ export interface SectionTotal<K extends string> {
   >
 }
 
+/** Lo que necesita `writeSection` */
 export interface SectionOptions<T, K extends string> {
   /** Fila de la banda de título */
   startRow: number
@@ -62,6 +72,7 @@ export interface SectionOptions<T, K extends string> {
   emptyText?: string
 }
 
+/** Filas y rangos A1 de una tabla ya escrita */
 export interface SectionRanges<K extends string> {
   titleRow: number
   headerRow: number
@@ -81,63 +92,6 @@ export interface SectionRanges<K extends string> {
   values: (key: K) => number[]
 }
 
-export function columnLetter(index: number) {
-  let letter = ""
-  let n = index
-  while (n > 0) {
-    const remainder = (n - 1) % 26
-    letter = String.fromCharCode(65 + remainder) + letter
-    n = Math.floor((n - 1) / 26)
-  }
-  return letter
-}
-
-/** Fecha real de Excel desde YYYY-MM-DD, con componentes UTC */
-export function excelDate(value: string) {
-  const [year, month, day] = value.split("-").map(Number)
-  return new Date(Date.UTC(year, month - 1, day))
-}
-
-const roundCents = (value: number) => Math.round(value * 100) / 100
-
-/** Caracteres que ocupa un valor ya formateado, para el ancho de columna */
-function displayLength(value: CellValue, kind: ColumnKind) {
-  if (value === null || value === undefined) return 0
-  switch (kind) {
-    case "money": {
-      const digits = String(Math.round(Math.abs(Number(value)))).length
-      // "$ " + dígitos + puntos de miles
-      return digits + Math.floor((digits - 1) / 3) + 2
-    }
-    case "percent":
-      return 7
-    case "date":
-      return 10
-    case "time":
-      return 5
-    default:
-      return String(value).length
-  }
-}
-
-/**
- * El ancho de cada columna es el mayor que le pide cualquier tabla de la
- * hoja: su contenido más largo, con un mínimo por tipo y un máximo
- */
-function widen(
-  sheet: Worksheet,
-  index: number,
-  kind: ColumnKind,
-  chars: number
-) {
-  const column = sheet.getColumn(index)
-  const wanted = Math.min(
-    Math.max(chars + 3, MIN_COLUMN_WIDTHS[kind]),
-    MAX_COLUMN_WIDTH
-  )
-  column.width = Math.max(column.width ?? 0, wanted)
-}
-
 function cellValue<T, K extends string>(
   column: SectionColumn<T, K>,
   row: T
@@ -151,51 +105,10 @@ function cellValue<T, K extends string>(
   return raw as CellValue
 }
 
-const FORMATS: Partial<Record<ColumnKind, string>> = {
-  money: NUMBER_FORMATS.money,
-  date: NUMBER_FORMATS.date,
-  percent: NUMBER_FORMATS.percent
-}
-
-const ALIGN: Record<ColumnKind, "left" | "center" | "right"> = {
-  text: "left",
-  date: "center",
-  time: "center",
-  money: "right",
-  percent: "right"
-}
-
-const solid = (argb: string) =>
-  ({ type: "pattern", pattern: "solid", fgColor: { argb } }) as const
-
 /**
- * Borde grueso exterior del color del espacio y bordes finos grises por
- * dentro, en el rectángulo [top, bottom] × [1, width]
+ * Escribe una tabla desde `startRow` y devuelve sus rangos, para que otras
+ * celdas armen fórmulas A1 con ellos
  */
-function frame(
-  sheet: Worksheet,
-  palette: WorkbookPalette,
-  top: number,
-  bottom: number,
-  width: number,
-  heavyRows: Set<number>
-) {
-  const inner = { style: "thin", color: { argb: COLORS.gridline } } as const
-  const outer = { style: "medium", color: { argb: palette.accent } } as const
-
-  for (let row = top; row <= bottom; row++) {
-    for (let col = 1; col <= width; col++) {
-      const border: Partial<Borders> = {
-        top: row === top || heavyRows.has(row) ? outer : inner,
-        bottom: row === bottom ? outer : inner,
-        left: col === 1 ? outer : inner,
-        right: col === width ? outer : inner
-      }
-      sheet.getCell(row, col).border = border
-    }
-  }
-}
-
 export function writeSection<T, K extends string>(
   sheet: Worksheet,
   palette: WorkbookPalette,
@@ -342,68 +255,3 @@ export function writeSection<T, K extends string>(
 
   return ranges
 }
-
-/** Filas de la cabecera de la hoja (título, subtítulo, línea) */
-export const HEADER_ROWS = 3
-
-/**
- * Cabecera de la hoja: logo, título grande, subtítulo y una línea del color
- * del espacio debajo. Ocupa las filas 1 a 3; la primera tabla va en la 5.
- */
-export function writeSheetHeader(
-  workbook: Workbook,
-  sheet: Worksheet,
-  palette: WorkbookPalette,
-  options: { title: string; subtitle: string; width: number }
-) {
-  const width = Math.max(options.width, 2)
-  const lastColumn = columnLetter(width)
-
-  sheet.mergeCells(`B1:${lastColumn}1`)
-  sheet.mergeCells(`B2:${lastColumn}2`)
-
-  const title = sheet.getCell("B1")
-  title.value = options.title
-  title.font = { bold: true, size: 20, color: { argb: COLORS.ink } }
-  title.alignment = { vertical: "bottom", indent: 1 }
-
-  const subtitle = sheet.getCell("B2")
-  subtitle.value = options.subtitle
-  subtitle.font = { size: 11, color: { argb: COLORS.muted } }
-  subtitle.alignment = { vertical: "top", indent: 1 }
-
-  sheet.getRow(1).height = 30
-  sheet.getRow(2).height = 20
-  sheet.getRow(3).height = 8
-
-  // Línea del color del espacio bajo la cabecera
-  for (let col = 1; col <= width; col++) {
-    sheet.getCell(3, col).border = {
-      bottom: { style: "medium", color: { argb: palette.accent } }
-    }
-  }
-
-  sheet.addImage(logoImage(workbook), {
-    tl: { col: 0.2, row: 0.15 },
-    ext: { width: 40, height: 40 },
-    editAs: "oneCell"
-  })
-  // La columna A lleva el logo: al menos su ancho
-  const first = sheet.getColumn(1)
-  first.width = Math.max(first.width ?? 0, 8)
-}
-
-// Una sola imagen por libro, compartida por todas las hojas
-const LOGO_IDS = new WeakMap<Workbook, number>()
-
-function logoImage(workbook: Workbook) {
-  let id = LOGO_IDS.get(workbook)
-  if (id === undefined) {
-    id = workbook.addImage({ base64: LOGO_PNG_BASE64, extension: "png" })
-    LOGO_IDS.set(workbook, id)
-  }
-  return id
-}
-
-/** Fila de la primera tabla, debajo de la cabecera */
-export const FIRST_SECTION_ROW = HEADER_ROWS + 2

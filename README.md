@@ -18,9 +18,8 @@
 ---
 
 > [!NOTE]
-> Proyecto en fase inicial (`0.1.0`). Este repositorio contiene por ahora la
-> base del proyecto: configuración, SEO y documentación. La aplicación se
-> construye en las siguientes versiones — ver [Hoja de ruta](#hoja-de-ruta).
+> Versión `0.3.1`. La app ya cubre los espacios _Personal_ y _Empresa_ de
+> punta a punta; lo que sigue está en la [Hoja de ruta](#hoja-de-ruta).
 
 ## Qué es
 
@@ -202,13 +201,17 @@ Sin ellos, el registro con email y contraseña funciona igual.
 ## Hoja de ruta
 
 - [x] Base del proyecto: configuración, SEO y documentación
-- [ ] Landing page
+- [x] Landing page y páginas legales
 - [x] Autenticación con Supabase (`/sign-in`, `/sign-up`, Google y GitHub)
 - [x] Dashboard con aside y selector de espacio _Personal_ / _Empresa_
-- [ ] Registro de movimientos (ingresos, gastos, categorías)
-- [ ] Gráficas y reportes
-- [ ] Score financiero
-- [ ] Motor de recomendaciones
+- [x] Registro de movimientos (ingresos, gastos, categorías, cuentas y traspasos)
+- [x] Gráficas y reportes
+- [x] Score financiero
+- [x] Motor de recomendaciones
+- [x] Importar desde Excel o CSV y exportar a Excel, CSV y PDF
+- [x] Servidor MCP para agentes de IA
+- [ ] Correos: recuperar contraseña, confirmar y cambiar email
+- [ ] Filtros unificados y revisión visual en móvil
 
 El detalle de cada módulo está en [docs/producto.md](docs/producto.md).
 

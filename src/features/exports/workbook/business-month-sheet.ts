@@ -8,12 +8,8 @@ import {
   writeAccountsSection,
   writeMonthSummary
 } from "./personal-month-sheet"
-import {
-  FIRST_SECTION_ROW,
-  type SectionColumn,
-  writeSection,
-  writeSheetHeader
-} from "./section"
+import { type SectionColumn, writeSection } from "./section"
+import { FIRST_SECTION_ROW, writeSheetHeader } from "./sheet-header"
 import {
   COLORS,
   type WorkbookPalette,

@@ -30,7 +30,7 @@ import {
 } from "../detect"
 import type { SheetCells } from "../read-file"
 import type { DetectedTable } from "../types"
-import type { LoadedFile, SheetTable } from "./wizard-state"
+import type { LoadedFile, SheetTable } from "./wizard-types"
 
 interface TableStepProps {
   file: LoadedFile

@@ -14,6 +14,7 @@ import type { McpContext } from "../../types"
 
 type Row = { id: string; updated_at?: string } & Record<string, unknown>
 
+/** Estado de una deuda y lo vinculado a un movimiento, para el log */
 export interface DebtSnapshot {
   debt: Row | null
   entry: Row | null

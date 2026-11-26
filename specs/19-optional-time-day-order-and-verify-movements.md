@@ -1,6 +1,6 @@
 # SPEC 19 — Hora opcional, orden manual dentro del día y Verificar movimientos
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 02, SPEC 08c, SPEC 16, SPEC 18
 > **Fecha:** 2026-11-03
 > **Objetivo:** Que cada movimiento pueda guardar una hora opcional, que el usuario reordene a mano los movimientos del mismo día, y que una modal "Verificar movimientos" liste todo el historial en formato compacto para compararlo contra el extracto del banco.

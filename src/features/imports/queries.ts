@@ -8,6 +8,7 @@ import type { ImportStats } from "./types"
 
 type ImportRow = Database["public"]["Tables"]["imports"]["Row"]
 
+/** Una importación del historial con sus stats */
 export type ImportRecord = Omit<ImportRow, "stats"> & {
   stats: ImportStats
   /** Filas del destino que siguen enlazadas; las borra "Deshacer" */
@@ -24,8 +25,10 @@ const EMPTY_STATS: ImportStats = {
   errors: 0
 }
 
-// Historial de importaciones del espacio, la más reciente primero, con las
-// filas que siguen enlazadas en la tabla de su destino
+/**
+ * Historial de importaciones del espacio, la más reciente primero, con las
+ * filas que siguen enlazadas en la tabla de su destino
+ */
 export async function getImports(workspaceId: string): Promise<ImportRecord[]> {
   const supabase = await createClient()
   const [imports, linked] = await Promise.all([
@@ -81,6 +84,7 @@ export async function getImports(workspaceId: string): Promise<ImportRecord[]> {
   )
 }
 
+/** Deuda que se puede elegir como destino */
 export interface DebtLinkOption {
   id: string
   name: string
@@ -88,13 +92,14 @@ export interface DebtLinkOption {
   balance: number
 }
 
+/** Meta que se puede elegir como destino */
 export interface GoalLinkOption {
   id: string
   name: string
   saved: number
 }
 
-// Deudas activas con su saldo: destinos de una importación de deudas
+/** Deudas activas con su saldo: destinos de una importación de deudas */
 export async function getActiveDebtOptions(
   workspaceId: string
 ): Promise<DebtLinkOption[]> {
@@ -104,7 +109,7 @@ export async function getActiveDebtOptions(
     .map(({ id, name, kind, balance }) => ({ id, name, kind, balance }))
 }
 
-// Metas activas con lo ahorrado: destinos de una importación de metas
+/** Metas activas con lo ahorrado: destinos de una importación de metas */
 export async function getActiveGoalOptions(
   workspaceId: string
 ): Promise<GoalLinkOption[]> {

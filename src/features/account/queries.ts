@@ -5,8 +5,10 @@ import { SITE } from "@/config/site"
 import { createClient } from "@/libs/supabase/server"
 import type { AccountData } from "./types"
 
-// Usuario autenticado, su perfil y si tiene contraseña. Se deduplica por
-// request con `cache`.
+/**
+ * Usuario autenticado, su perfil y si tiene contraseña. Se deduplica por
+ * request con `cache`.
+ */
 export const getAccount = cache(async (): Promise<AccountData> => {
   const supabase = await createClient()
   const {

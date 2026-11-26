@@ -10,6 +10,7 @@ import { type RowError, timeInputSchema } from "./batch"
 // la entrada de los esquemas de la UI (src/features/transactions/schemas.ts)
 // para validar con las mismas reglas.
 
+/** Campos de un movimiento en las tools */
 export const transactionFields = {
   type: z
     .enum(TRANSACTION_TYPES)
@@ -42,6 +43,7 @@ export interface TransactionValues {
   invoice_ref: string | null
 }
 
+/** Valores del formulario de movimiento (createTransactionSchema) */
 export function toFormInput(values: TransactionValues) {
   return {
     type: values.type,

@@ -5,7 +5,7 @@ import { getDebtEntries, getDebts } from "@/features/debts/queries"
 import { receivableInstallments } from "@/features/debts/receivable-schedule"
 import { getUpcomingPayments } from "@/features/recurring-expenses/queries"
 import { getUpcomingIncomes } from "@/features/recurring-incomes/queries"
-import { currentMonth, shiftMonth, todayISO } from "@/libs/dates"
+import { addDays, currentMonth, shiftMonth, todayISO } from "@/libs/dates"
 import { toolError, toolResult } from "../result"
 import {
   PERSONAL_ONLY,
@@ -44,11 +44,6 @@ interface Item {
   due_on: string
   amount: number | null
 }
-
-const addDays = (date: string, days: number) =>
-  new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000)
-    .toISOString()
-    .slice(0, 10)
 
 /** Meses YYYY-MM desde el actual hasta el de `end` */
 function monthsUntil(end: string) {

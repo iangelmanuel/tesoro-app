@@ -5,6 +5,7 @@ import type { ImportField, ImportTarget } from "./types"
 // Destinos del asistente de importación (SPEC 08 y 08b). Cada importación
 // tiene uno solo.
 
+/** Un destino de importación: textos, campos, sinónimos y su página */
 export interface TargetDefinition {
   /** Nombre en el selector y en el historial */
   label: string
@@ -20,6 +21,7 @@ export interface TargetDefinition {
 
 const PERSONAL = SITE.routes.dashboardPersonal
 
+/** Destinos de importación de Personal */
 export const IMPORT_TARGETS: Record<ImportTarget, TargetDefinition> = {
   transactions: {
     label: "Movimientos",
@@ -91,8 +93,10 @@ export const IMPORT_TARGETS: Record<ImportTarget, TargetDefinition> = {
   }
 }
 
+/** Destino sin `?target=` válido */
 export const DEFAULT_TARGET: ImportTarget = "transactions"
 
+/** El valor es un destino de importación */
 export function isImportTarget(value: unknown): value is ImportTarget {
   return typeof value === "string" && Object.hasOwn(IMPORT_TARGETS, value)
 }

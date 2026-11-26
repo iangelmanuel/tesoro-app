@@ -10,6 +10,7 @@ import type { McpContext } from "./types"
 // una transacción: la usan undo_operation, Cuenta → Agentes IA y la
 // compensación de una escritura que falla a mitad de camino.
 
+/** Tablas que el log guarda y undo_mcp_operation restaura */
 export const SNAPSHOT_TABLES = [
   "transactions",
   "transfers",
@@ -30,6 +31,7 @@ export const SNAPSHOT_TABLES = [
   "budgets"
 ] as const
 
+/** Una tabla del log de operaciones */
 export type SnapshotTable = (typeof SNAPSHOT_TABLES)[number]
 
 /** Una fila tocada. before null = se creó; after null = se borró */
@@ -40,6 +42,7 @@ export interface RowChange {
   after: object | null
 }
 
+/** Operación a registrar: espacio, tool, resumen y filas tocadas */
 export interface OperationInput {
   workspaceId: string
   /** Nombre de la tool: 'create_transactions' */

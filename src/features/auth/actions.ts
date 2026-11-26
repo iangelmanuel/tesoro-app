@@ -4,6 +4,7 @@ import type { Route } from "next"
 import { redirect } from "next/navigation"
 import { z } from "zod"
 import { SITE } from "@/config/site"
+import { readFormValues } from "@/libs/form-data"
 import { createClient } from "@/libs/supabase/server"
 import { translateAuthError } from "./errors"
 import { safeRedirectPath } from "./safe-redirect"
@@ -12,24 +13,18 @@ import type { AuthFormState, OAuthProvider } from "./types"
 
 const OAUTH_PROVIDERS: OAuthProvider[] = ["google", "github"]
 
-function readString(formData: FormData, key: string) {
-  const value = formData.get(key)
-  return typeof value === "string" ? value : ""
-}
-
+/** Crea la cuenta con email y contraseña y entra al dashboard */
 export async function signUp(
   _prevState: AuthFormState,
   formData: FormData
 ): Promise<AuthFormState> {
-  const values = {
-    fullName: readString(formData, "fullName"),
-    email: readString(formData, "email")
-  }
+  const { password, ...values } = readFormValues(formData, [
+    "fullName",
+    "email",
+    "password"
+  ])
 
-  const parsed = signUpSchema.safeParse({
-    ...values,
-    password: readString(formData, "password")
-  })
+  const parsed = signUpSchema.safeParse({ ...values, password })
 
   if (!parsed.success) {
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
@@ -60,16 +55,17 @@ export async function signUp(
   redirect(SITE.routes.dashboard)
 }
 
+/** Entra con email y contraseña y vuelve a `next` (solo rutas internas) */
 export async function signIn(
   _prevState: AuthFormState,
   formData: FormData
 ): Promise<AuthFormState> {
-  const values = { email: readString(formData, "email") }
+  const { password, ...values } = readFormValues(formData, [
+    "email",
+    "password"
+  ])
 
-  const parsed = signInSchema.safeParse({
-    ...values,
-    password: readString(formData, "password")
-  })
+  const parsed = signInSchema.safeParse({ ...values, password })
 
   if (!parsed.success) {
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors, values }
@@ -85,6 +81,7 @@ export async function signIn(
   redirect(safeRedirectPath(formData.get("next")) as Route)
 }
 
+/** Entra con Google o GitHub; vuelve por /auth/callback a `next` */
 export async function signInWithOAuth(
   provider: OAuthProvider,
   formData: FormData
@@ -109,6 +106,7 @@ export async function signInWithOAuth(
   redirect(data.url as Route)
 }
 
+/** Cierra solo esta sesión y va a sign-in */
 export async function signOut() {
   const supabase = await createClient()
   // Solo esta sesión: el scope por defecto ('global') también borra las

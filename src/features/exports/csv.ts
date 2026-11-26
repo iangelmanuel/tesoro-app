@@ -13,6 +13,7 @@ function formatAmount(amount: number) {
   return String(amount).replace(".", ",")
 }
 
+/** CSV de movimientos para Excel en es-CO */
 export function buildMovementsCsv(
   type: WorkspaceType,
   rows: ExportMovementRow[]

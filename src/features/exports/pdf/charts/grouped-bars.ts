@@ -2,8 +2,8 @@ import type { ChartPalette } from "../theme"
 import {
   type ChartSize,
   type LegendItem,
+  axisMonthLabel,
   niceScale,
-  shortMonth,
   svgDocument,
   svgLegend,
   svgRect,
@@ -11,6 +11,7 @@ import {
   svgYAxis
 } from "./svg"
 
+/** Serie de las barras agrupadas */
 export interface BarSeries {
   label: string
   color: string
@@ -18,6 +19,7 @@ export interface BarSeries {
   hatch?: boolean
 }
 
+/** Grupo de barras de un mes */
 export interface BarGroup {
   /** YYYY-MM */
   month: string
@@ -86,7 +88,7 @@ export function groupedBarsChart(
     bars += svgText(
       area.x + slot * groupIndex + slot / 2,
       area.y + area.height + 10,
-      shortMonth(group.month, withYear),
+      axisMonthLabel(group.month, withYear),
       { anchor: "middle", fill: palette.muted, size: 6.5 }
     )
   })

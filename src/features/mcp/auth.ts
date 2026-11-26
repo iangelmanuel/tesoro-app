@@ -9,12 +9,14 @@ import { MCP_RESOURCE_METADATA_URL } from "./discovery"
 // service_role. Todo el uso del servidor OAuth (beta) de Supabase en el
 // endpoint vive aquí.
 
+/** Agente autenticado: su cliente de Supabase como el usuario */
 export interface McpIdentity {
   supabase: AppSupabase
   userId: string
   clientId: string
 }
 
+/** Identidad del agente o la respuesta de error lista */
 export type McpAuthResult =
   { ok: true; identity: McpIdentity } | { ok: false; response: Response }
 
@@ -34,6 +36,7 @@ export function unauthorized(message = "Inicia sesión para usar Tesoro.") {
   )
 }
 
+/** Error JSON sin caché, con cabeceras extra opcionales */
 export function jsonError(status: number, error: string, headers = {}) {
   return Response.json(
     { error },

@@ -2,7 +2,8 @@ import { z } from "zod"
 import { getCounterpartyTotals } from "@/features/business-score/queries"
 import { TRANSACTION_TYPES } from "@/features/categories/constants"
 import { getCategoryTotals } from "@/features/reports/queries"
-import { currentMonth, monthRange, todayISO } from "@/libs/dates"
+import { addDays, currentMonth, monthRange, todayISO } from "@/libs/dates"
+import { roundCents } from "@/libs/money"
 import { toolError, toolResult } from "../result"
 import {
   dateSchema,
@@ -19,10 +20,8 @@ const MAX_DAYS = 366 * 3
 const DAY_MS = 86_400_000
 
 const round1 = (value: number) => Math.round(value * 10) / 10
-const round2 = (value: number) => Math.round(value * 100) / 100
 
 const toTime = (date: string) => Date.parse(`${date}T00:00:00Z`)
-const toDate = (time: number) => new Date(time).toISOString().slice(0, 10)
 
 const input = z.object({
   workspace_id: workspaceIdSchema,
@@ -65,10 +64,10 @@ function compare<T extends { total: number; txCount: number }>(
     const prior = before.get(key(row)) ?? 0
     return {
       key: key(row),
-      total: round2(row.total),
+      total: roundCents(row.total),
       share_percent: total === 0 ? 0 : round1((row.total / total) * 100),
       transaction_count: row.txCount,
-      previous_total: round2(prior),
+      previous_total: roundCents(prior),
       change_percent:
         prior === 0 ? null : round1(((row.total - prior) / prior) * 100)
     }
@@ -100,8 +99,8 @@ export const getSpendingBreakdown = defineTool({
     if (days > MAX_DAYS) {
       return toolError("El rango puede tener hasta 3 años.")
     }
-    const previousTo = toDate(toTime(from) - DAY_MS)
-    const previousFrom = toDate(toTime(from) - days * DAY_MS)
+    const previousTo = addDays(from, -1)
+    const previousFrom = addDays(from, -days)
 
     const [
       categories,
@@ -123,7 +122,7 @@ export const getSpendingBreakdown = defineTool({
     )
 
     return toolResult(
-      `${args.type === "expense" ? "Gastos" : "Ingresos"} de ${workspace.name} del ${from} al ${to}: ${round2(total)} (periodo anterior: ${round2(previousTotal)}).`,
+      `${args.type === "expense" ? "Gastos" : "Ingresos"} de ${workspace.name} del ${from} al ${to}: ${roundCents(total)} (periodo anterior: ${roundCents(previousTotal)}).`,
       {
         workspace_id: workspace.id,
         type: args.type,
@@ -131,8 +130,8 @@ export const getSpendingBreakdown = defineTool({
         to,
         previous_from: previousFrom,
         previous_to: previousTo,
-        total: round2(total),
-        previous_total: round2(previousTotal),
+        total: roundCents(total),
+        previous_total: roundCents(previousTotal),
         change_percent:
           previousTotal === 0
             ? null

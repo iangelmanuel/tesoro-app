@@ -5,6 +5,7 @@ import {
   formatCompactCount,
   formatCurrency,
   formatDate,
+  formatDateTime,
   formatDayMonth,
   formatMonthLong,
   formatMonthTitle,
@@ -51,6 +52,18 @@ describe("formatDate", () => {
   it("formatea un Date en UTC", () => {
     expect(formatDate(new Date("2026-12-31T23:00:00Z"))).toBe(
       `31${NBSP}de${NBSP}dic${NBSP}de${NBSP}2026`
+    )
+  })
+})
+
+describe("formatDateTime", () => {
+  it("el día en America/Bogota de un timestamp de Postgres", () => {
+    expect(formatDateTime("2026-11-05T15:00:00+00:00")).toBe(
+      `5${NBSP}de${NBSP}nov${NBSP}de${NBSP}2026`
+    )
+    // 01:00 UTC del 6 es todavía el 5 en Bogotá
+    expect(formatDateTime("2026-11-06T01:00:00.123456+00:00")).toBe(
+      `5${NBSP}de${NBSP}nov${NBSP}de${NBSP}2026`
     )
   })
 })

@@ -91,7 +91,15 @@ export function TutorialProvider({
       requestStart: setPendingStart,
       clearPendingStart
     }),
-    [completed, setOptimistic, isResetting, pendingStart, clearPendingStart]
+    [
+      completed,
+      setOptimistic,
+      startTransition,
+      startReset,
+      isResetting,
+      pendingStart,
+      clearPendingStart
+    ]
   )
 
   return (

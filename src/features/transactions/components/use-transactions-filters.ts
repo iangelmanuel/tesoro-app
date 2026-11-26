@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useTransition } from "react"
+import { useEffect, useEffectEvent, useState, useTransition } from "react"
 import type { Route } from "next"
 import { useRouter } from "next/navigation"
 import { type TransactionFilters, buildFiltersQuery } from "../filters"
@@ -35,17 +35,17 @@ export function useTransactionsFilters(
     })
   }
 
+  // Lee los filtros al buscar: navigate no dispara el debounce de nuevo
+  const search = useEffectEvent((value: string) => {
+    navigate({ q: value || undefined })
+  })
+
   useEffect(() => {
     const value = q.trim()
     if (value === (filters.q ?? "")) return
 
-    const timeout = setTimeout(
-      () => navigate({ q: value || undefined }),
-      SEARCH_DEBOUNCE_MS
-    )
+    const timeout = setTimeout(() => search(value), SEARCH_DEBOUNCE_MS)
     return () => clearTimeout(timeout)
-    // navigate depende de filters, que ya está cubierto por filters.q
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, filters.q])
 
   return { pending, q, setQ, navigate }

@@ -7,7 +7,9 @@ base de datos y servidor),
 [56b](../specs/56b-performance-client-bundle-and-dashboard.md) (bundle del
 cliente y dashboard) y
 [56c](../specs/56c-performance-landing-public-pages-and-field-metrics.md)
-(landing y páginas públicas).
+(landing y páginas públicas). Sigue en
+[SPEC 57](../specs/57-performance-dashboard-render-and-hydration.md)
+(render e hidratación del dashboard).
 
 La arquitectura está en [`arquitectura.md`](arquitectura.md). Los comandos,
 en [`CLAUDE.md`](../CLAUDE.md).
@@ -581,3 +583,138 @@ y los dos criterios del Profiler.
 - **Coste del React Compiler:** su memoización agrega ~1 % en las páginas
   públicas y ~120 kB en `/dashboard/personal/transactions` antes de
   diferir. Se revisa con las cifras de campo de 56c.
+
+## Render e hidratación (SPEC 57)
+
+### Método
+
+Las medidas de 56b (Lighthouse móvil y Profiler) más dos nuevas. Los
+scripts viven en `tmp/perf-57/` (git-ignorado) y usan la cuenta de pruebas
+de `.env.local`:
+
+- **Commits de React** (`measure.mjs`). Build con perfilado
+  (`pnpm next build --profile` + `pnpm next start`) y un hook mínimo de
+  DevTools (`__REACT_DEVTOOLS_GLOBAL_HOOK__`) inyectado antes de los scripts
+  de la página. En cada commit anota `actualDuration` de la raíz y cuenta
+  los componentes que renderizaron: los que se montan o tienen la marca
+  `PerformedWork`. Se saltan los subárboles que React reusó sin tocar, igual
+  que el Profiler de DevTools.
+  - **Profiler:** las tres interacciones de 56b, a 1440 × 900 y sin
+    limitar la CPU. Se anota el commit más largo, cuántos componentes
+    renderiza y el total de la interacción. El tutorial que abre la cuenta
+    de pruebas se quita del DOM sin marcarlo como completado.
+  - **Render en la carga** (hidratación y lo que monta después): todos los
+    commits desde que se abre la ruta hasta 3 s sin commits, con la CPU a
+    4× (como Lighthouse móvil) y a 412 × 823 y 1440 × 900. `networkidle`
+    no sirve como fin: con la CPU a 4×, los `Suspense` siguen hidratando
+    más de 8 s después.
+  - **Por región:** el tiempo propio de cada componente (su
+    `actualDuration` menos el de sus hijos) se suma a la región del DOM
+    donde pinta: aside, header, barra inferior, diálogos y hojas, cada
+    `data-tour` del `main` o "sin DOM" (proveedores y componentes que solo
+    tienen efectos). Turbopack minifica los nombres también con
+    `--profile`, así que se agrupa por región y no por componente.
+- **Payload RSC** (`measure.mjs` y `rsc-rows.mjs`). Las cadenas de
+  `self.__next_f.push([1, …])` del HTML de cada ruta, unidas: es lo que
+  React serializa para hidratar (props de componentes cliente y el árbol de
+  servidor). Se mide en bytes y se separa por fila del protocolo Flight.
+  `self.__next_f` no sirve leído en la página, porque Next lo vacía al
+  procesarlo.
+- **Lighthouse** (`lighthouse.mjs`). El método de 56a/56b: base A y control
+  B intercalados corrida a corrida, mediana de 3 y `benchmarkIndex` de cada
+  corrida. Contra un Preview usa `VERCEL_AUTOMATION_BYPASS_SECRET`.
+
+### Antes
+
+Medido el 2026-11-26 sobre `master` (`de555fb`, con SPEC 56b fusionado), en
+el build de producción local contra la Supabase remota. El Lighthouse del
+Preview con control de producción se mide en el Paso 9, con la rama
+desplegada y en la misma ventana.
+
+**Lighthouse móvil local** (`next start` sin perfilado, mediana de 3)
+
+| Ruta                               | Performance | LCP   | TBT      | CLS   | `benchmarkIndex`  |
+| ---------------------------------- | ----------- | ----- | -------- | ----- | ----------------- |
+| `/dashboard/personal`              | 44          | 5,1 s | 3.270 ms | 0,000 | 1.054, 873, 930   |
+| `/dashboard/personal/transactions` | 47          | 5,1 s | 3.120 ms | 0,000 | 834, 750, 905     |
+| `/dashboard/personal/reports`      | 42          | 6,5 s | 4.245 ms | 0,002 | 669, 1.431, 1.009 |
+
+La CPU de la máquina estuvo por debajo del mínimo del criterio (1.200) en
+8 de 9 corridas, y el servidor corre en la misma máquina. Sirve como
+referencia del orden de magnitud, no para cerrar el criterio. El LCP de
+Reportes es el `dd` del balance del periodo. El 93 % de su tiempo es
+"Render Delay" (6,1 s, con 490 ms de TTFB): el HTML ya llegó y el hilo
+principal está ocupado. En el hilo principal de esa corrida hay 6,3 s de
+evaluación de script y **2,8 s de estilo y layout**. Lo segundo no se había
+medido en 56b: los selectores `:has()` del tema por espacio
+(`globals.css`) y de la barra inferior
+(`[body:has([role='dialog'])_&]:hidden`) son candidatos, porque invalidan
+estilos en cada cambio del DOM durante el streaming.
+
+**Profiler** (sin limitar la CPU)
+
+| Interacción                    | Commit más largo | Componentes en ese commit | Commits | Componentes en total |
+| ------------------------------ | ---------------- | ------------------------- | ------- | -------------------- |
+| Buscar en Movimientos          | 94 ms            | 1.466                     | 10      | 1.590                |
+| Cambiar de mes en Reportes     | 24 ms            | 268                       | 27      | 3.370                |
+| Abrir el diálogo de movimiento | 63 ms            | 225                       | 8       | 298                  |
+
+Entre corridas, el commit más largo varía: 89–119 ms al buscar, 24–37 ms al
+cambiar de mes y 18–63 ms al abrir el diálogo. Ninguno pasa de 200 ms sin
+limitar la CPU. Al buscar, el commit más largo repinta la tabla entera
+(526 componentes) y las acciones de fila (444). Lo dispara la página nueva
+que llega del servidor, no cada tecla. Cambiar de mes repinta sobre todo la
+gráfica de tendencia (189 componentes).
+
+**Render en la carga** (CPU 4×)
+
+| Ruta                               | Pantalla  | Render total | Commits | Commit más largo | Componentes |
+| ---------------------------------- | --------- | ------------ | ------- | ---------------- | ----------- |
+| `/dashboard/personal`              | 412 × 823 | 3.943 ms     | 42      | 887 ms           | 1.199       |
+| `/dashboard/personal`              | 1440×900  | 3.877 ms     | 38      | 745 ms           | 1.477       |
+| `/dashboard/personal/transactions` | 412 × 823 | 3.696 ms     | 33      | 1.673 ms         | 2.307       |
+| `/dashboard/personal/transactions` | 1440×900  | 3.550 ms     | 27      | 1.712 ms         | 2.182       |
+| `/dashboard/personal/reports`      | 412 × 823 | 4.058 ms     | 40      | 1.193 ms         | 1.667       |
+| `/dashboard/personal/reports`      | 1440×900  | 4.771 ms     | 52      | 786 ms           | 2.363       |
+
+Por región (tiempo propio, ms · componentes), 412 × 823 salvo que se
+indique:
+
+| Región                                  | `/personal`          | `/transactions`      | `/reports`           |
+| --------------------------------------- | -------------------- | -------------------- | -------------------- |
+| Gráfica de tendencia (`*-trend`)        | 1.481 · 624          | —                    | 1.707 · 669          |
+| Tabla de Movimientos                    | —                    | 766 · 857            | —                    |
+| Acciones de fila de la tabla            | —                    | 226 · 460            | —                    |
+| Sin DOM (proveedores y efectos)         | 572 · 202            | 482 · 551            | 632 · 299            |
+| Header (accesos rápidos, título, ayuda) | 299 · 44             | 310 · 44             | 161 · 49             |
+| Aside (oculto en el teléfono)           | 164 · 52             | 169 · 52             | 40 · 52              |
+| Barra inferior (oculta en escritorio)   | 57 · 22 (escritorio) | 63 · 22 (escritorio) | 65 · 22 (escritorio) |
+| Hoja de acciones rápidas (autoabierta)  | 69 · 63              | 60 · 63              | 39 · 63              |
+
+Lo que se ve:
+
+- El shell hidrata en las dos pantallas lo que solo se ve en una: en el
+  teléfono, los 52 componentes del aside de escritorio, y en escritorio,
+  los 22 de la barra inferior. En el teléfono, además, la hoja de accesos
+  rápidos se abre sola al entrar (SPEC 15) y monta sus 63 componentes.
+- La gráfica de tendencia es lo más caro del Resumen y de Reportes
+  (~1,5 s con la CPU a 4×), aunque su chunk ya era diferido (56b). Se
+  difiere la descarga, pero el montaje de Recharts sigue ocurriendo en la
+  carga.
+- En Movimientos, la tabla y sus acciones de fila suman ~1 s y forman el
+  commit más largo de la carga (1,7 s): las 50 filas hidratan de una vez.
+
+**Payload RSC**
+
+| Ruta                               | RSC      | HTML     | `className` en el RSC | Fila más pesada                           |
+| ---------------------------------- | -------- | -------- | --------------------- | ----------------------------------------- |
+| `/dashboard/personal`              | 204,3 kB | 400,9 kB | 85,3 kB (42 %)        | Contexto de los accesos rápidos: 7,1 kB   |
+| `/dashboard/personal/transactions` | 146,4 kB | 491,8 kB | 49,5 kB (34 %)        | Filtros con categorías y cuentas: 14,5 kB |
+| `/dashboard/personal/reports`      | 166,8 kB | 352,7 kB | 63,1 kB (38 %)        | Contexto de los accesos rápidos: 7,1 kB   |
+
+El contexto de los accesos rápidos viaja en cada ruta de Personal. En la
+cuenta de pruebas lleva 19 categorías (5,6 kB) y 3 cuentas (1,2 kB), sin
+metas, deudas, cobros, pagos pendientes ni ingresos fijos activos. En una
+cuenta con esos datos, cada lista se suma a todas las rutas. El peso que
+más se repite son las clases de Tailwind de los componentes de servidor
+(34–42 %). Ninguna fila sola domina: el payload se reparte en ~300 filas.

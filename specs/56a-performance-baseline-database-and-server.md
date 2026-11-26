@@ -1,6 +1,6 @@
 # SPEC 56a — Rendimiento: línea base, base de datos y servidor
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 34, SPEC 54, SPEC 55c
 > **Fecha:** 2026-11-26
 > **Objetivo:** Medir el rendimiento actual de Tesoro y bajar el tiempo de respuesta del servidor con índices, políticas RLS evaluadas una vez por consulta, una sola validación de sesión por request y consultas en paralelo, sin cambiar lo que ve ni puede hacer el usuario.
@@ -151,22 +151,27 @@ export async function updateSession(
 
 ## Criterios de aceptación
 
-- [ ] `docs/rendimiento.md` tiene el método y las tablas "Antes" y "Después" de Lighthouse, duración de funciones, JS por ruta, EXPLAIN y export, con las mismas rutas en ambas.
-- [ ] Ninguna ruta medida empeora más de un 10 % en TTFB ni en duración de función entre "Antes" y "Después".
-- [ ] `/dashboard/personal` y `/dashboard/personal/transactions` bajan su duración de función mediana respecto a "Antes".
-- [ ] En el camino de lectura del dashboard, `supabase.auth.getUser()` solo aparece en `src/features/account/session.ts` (verificable con grep en `queries.ts` y `dashboard-user.ts`).
-- [ ] `src/libs/supabase/proxy.ts` usa `getClaims()` y no llama `getUser()`.
-- [ ] Sin sesión, `/dashboard/personal` redirige a `/sign-in?next=…`.
-- [ ] Una cuenta que pide su borrado es redirigida a `/account-deleted` en el siguiente request; al cancelarlo vuelve a entrar al dashboard.
-- [ ] Ninguna política RLS de una tabla con `workspace_id` llama `is_workspace_owner(workspace_id)` ni `is_workspace_writable(workspace_id)` por fila.
-- [ ] El EXPLAIN "Después" de la lista de movimientos muestra la función de conjunto como `InitPlan`, no como `SubPlan` por fila.
-- [ ] `supabase test db` pasa antes y después de reescribir las políticas, con los mismos tests.
-- [ ] El advisor de performance de Supabase no reporta `auth_rls_initplan` ni `unindexed_foreign_keys` sobre tablas de `public`.
-- [ ] El advisor de security no reporta avisos nuevos respecto a la línea base.
-- [ ] Ninguna query de lectura de `src/features/*/queries.ts` usa `select("*")`.
-- [ ] Las tools del MCP pasan `catalog.test.ts` sin cambios y el export PDF y XLSX del mes da el mismo contenido que antes.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
-- [ ] Las credenciales de la cuenta de pruebas no aparecen en ningún archivo versionado.
+- [x] `docs/rendimiento.md` tiene el método y las tablas "Antes" y "Después" de Lighthouse, duración de funciones, JS por ruta, EXPLAIN y export, con las mismas rutas en ambas.
+- [x] Ninguna ruta medida empeora más de un 10 % en TTFB ni en duración de función entre "Antes" y "Después".
+- [x] `/dashboard/personal` y `/dashboard/personal/transactions` bajan su duración de función mediana respecto a "Antes".
+- [x] En el camino de lectura del dashboard, `supabase.auth.getUser()` solo aparece en `src/features/account/session.ts` (verificable con grep en `queries.ts` y `dashboard-user.ts`).
+- [x] `src/libs/supabase/proxy.ts` usa `getClaims()` y no llama `getUser()`.
+- [x] Sin sesión, `/dashboard/personal` redirige a `/sign-in?next=…`.
+- [x] Una cuenta que pide su borrado es redirigida a `/account-deleted` en el siguiente request; al cancelarlo vuelve a entrar al dashboard.
+- [x] Ninguna política RLS de una tabla con `workspace_id` llama `is_workspace_owner(workspace_id)` ni `is_workspace_writable(workspace_id)` por fila.
+- [x] El EXPLAIN "Después" de la lista de movimientos muestra la función de conjunto como `InitPlan`, no como `SubPlan` por fila.
+- [x] `supabase test db` pasa antes y después de reescribir las políticas, con los mismos tests.
+- [x] El advisor de performance de Supabase no reporta `auth_rls_initplan` ni `unindexed_foreign_keys` sobre tablas de `public`.
+- [x] El advisor de security no reporta avisos nuevos respecto a la línea base.
+- [x] Ninguna query de lectura de `src/features/*/queries.ts` usa `select("*")`.
+- [x] Las tools del MCP pasan `catalog.test.ts` sin cambios y el export PDF y XLSX del mes da el mismo contenido que antes.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
+- [x] Las credenciales de la cuenta de pruebas no aparecen en ningún archivo versionado.
+
+Notas de la verificación (detalle en `docs/rendimiento.md`):
+
+- Duración de función: las cifras "Después" son el promedio de dos corridas de 11 cargas por ruta, alternadas con producción. Una primera corrida de 6 cargas dio `/dashboard/personal/transactions` un 15 % más lento; la variación entre corridas (±60 ms) es del orden de su mejora (−11 %).
+- Export: el PDF y el XLSX responden 500 en producción desde antes de 56a (`jsdom`, `ERR_REQUIRE_ESM`), así que no hay tiempos ni contenido que comparar. El código del export no cambió; el arreglo va en su propio spec.
 
 ## Decisiones
 

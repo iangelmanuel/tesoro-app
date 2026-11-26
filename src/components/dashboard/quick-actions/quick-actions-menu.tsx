@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { ExportButton } from "@/features/exports/components/export-button"
-import { preloadQuickAction, useQuickActions } from "./quick-actions-context"
+import { useQuickActions } from "./quick-actions-context"
 
 // Accesos rápidos del header. "Registrar movimiento" es el primario del
 // espacio; "Más" despliega el resto de acciones de la misma lista que la
@@ -19,7 +19,8 @@ import { preloadQuickAction, useQuickActions } from "./quick-actions-context"
 // /dashboard/business/[id]/* en esa empresa; en otras rutas (cuenta, estado
 // vacío de Empresa) no hay accesos
 export function QuickActionsMenu() {
-  const { workspace, actions, run } = useQuickActions()
+  const { workspace, actions, run, preload, preloadFormData } =
+    useQuickActions()
 
   if (!workspace) {
     return null
@@ -41,8 +42,8 @@ export function QuickActionsMenu() {
       <Button
         data-tour="header-quick-add"
         onClick={() => run("movement")}
-        onPointerEnter={() => preloadQuickAction("movement")}
-        onFocus={() => preloadQuickAction("movement")}
+        onPointerEnter={() => preload("movement")}
+        onFocus={() => preload("movement")}
       >
         <Plus className="size-4" />
         <span className="hidden sm:inline">{label}</span>
@@ -50,6 +51,9 @@ export function QuickActionsMenu() {
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger
+          // Casi todo el menú usa los datos de los formularios de Personal
+          onPointerEnter={preloadFormData}
+          onFocus={preloadFormData}
           render={
             <Button
               variant="secondary"
@@ -71,8 +75,8 @@ export function QuickActionsMenu() {
               <DropdownMenuItem
                 key={key}
                 onClick={() => run(key)}
-                onPointerEnter={() => preloadQuickAction(key)}
-                onFocus={() => preloadQuickAction(key)}
+                onPointerEnter={() => preload(key)}
+                onFocus={() => preload(key)}
               >
                 <Icon />
                 {itemLabel}
@@ -85,8 +89,8 @@ export function QuickActionsMenu() {
               <DropdownMenuItem
                 key={key}
                 onClick={() => run(key)}
-                onPointerEnter={() => preloadQuickAction(key)}
-                onFocus={() => preloadQuickAction(key)}
+                onPointerEnter={() => preload(key)}
+                onFocus={() => preload(key)}
               >
                 <Icon />
                 {itemLabel}

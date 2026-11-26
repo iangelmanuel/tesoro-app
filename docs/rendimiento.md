@@ -431,3 +431,91 @@ tres rutas, también en las que no los usan al entrar:
 | Abrir el diálogo de movimiento | _por medir_      | _por medir_ |
 
 **Clic a skeleton** (mediana de 5): _por medir_.
+
+### Después
+
+Build local de la rama `spec-56b` (2026-11-26). JS por ruta y analyzer se
+miden igual que en "Antes"; `master` reconstruido con el mismo script da
+exactamente las cifras de 56a, así que la comparación es directa.
+Lighthouse, Profiler y clic a skeleton se miden en el Preview de la rama.
+
+**JS por ruta** (`next build`, chunks del HTML prerenderado)
+
+| Ruta                               | Chunks  | JS               | gzip         | Diferencia |
+| ---------------------------------- | ------- | ---------------- | ------------ | ---------- |
+| `/`                                | 18      | 967 kB (960)     | 315 kB (311) | +1 %       |
+| `/sign-in`                         | 16 (14) | 771 kB (765)     | 249 kB (245) | +1 %       |
+| `/mcp`                             | 17      | 836 kB (829)     | 270 kB (267) | +1 %       |
+| `/dashboard/personal`              | 28 (32) | 1.314 kB (2.003) | 429 kB (635) | −34 %      |
+| `/dashboard/personal/transactions` | 32 (30) | 1.460 kB (1.658) | 485 kB (533) | −12 %      |
+| `/dashboard/personal/reports`      | 26 (31) | 1.253 kB (1.986) | 406 kB (629) | −37 %      |
+| `/dashboard/personal/budgets`      | 29 (30) | 1.355 kB (1.621) | 445 kB (522) | −16 %      |
+| `/dashboard/personal/debts`        | 33 (32) | 1.646 kB (1.705) | 545 kB (550) | −3 %       |
+| `/dashboard/personal/accounts`     | 30      | 1.373 kB (1.626) | 452 kB (524) | −16 %      |
+| `/dashboard/business`              | 23 (29) | 1.081 kB (1.572) | 353 kB (506) | −31 %      |
+
+Entre paréntesis, "Antes". `/dashboard/personal` cumple la meta (1.602 kB
+o menos). Las páginas públicas suben ~1 % por el React Compiler: su
+memoización agrega código a cada componente y ahí no hubo nada que
+diferir. En el dashboard el compilador también suma (en
+`/dashboard/personal/transactions`, ~120 kB antes de diferir nada), pero
+la carga diferida lo compensa de sobra. Deudas casi no baja: su Sheet de
+detalle sigue entrando completo (ver "Pendiente").
+
+**Analyzer: los 10 paquetes más pesados del JS inicial**
+
+`/dashboard/personal` (28 chunks, 1.210 kB, 501 kB comprimido; antes
+1.895 kB):
+
+| Paquete          | Tamaño   | Comprimido |
+| ---------------- | -------- | ---------- |
+| `next`           | 444,8 kB | 168,0 kB   |
+| `@base-ui/react` | 263,1 kB | 128,8 kB   |
+| `zod`            | 106,0 kB | 33,7 kB    |
+| `sonner`         | 34,3 kB  | 9,2 kB     |
+| `lucide-react`   | 27,1 kB  | 17,5 kB    |
+| `tailwind-merge` | 26,7 kB  | 8,2 kB     |
+| `tutorials.ts`   | 15,7 kB  | 4,8 kB     |
+| `@base-ui/utils` | 15,1 kB  | 8,4 kB     |
+| `@floating-ui`   | 10,6 kB  | 4,0 kB     |
+| `help.ts`        | 10,5 kB  | 3,9 kB     |
+
+`/dashboard/personal/transactions` (32 chunks, 1.356 kB, 571 kB
+comprimido; antes 1.549 kB) y `/dashboard/personal/reports` (30 chunks,
+1.283 kB, 535 kB comprimido; antes 1.904 kB): los mismos paquetes, con
+`@base-ui/react` en 273,5 kB y 269,0 kB, y `date-fns` (25,8 kB) en
+Reportes.
+
+Los cuatro paquetes diferidos ya no están en el chunk inicial de ninguna
+de las tres rutas:
+
+| Paquete            | `/personal` | `/transactions` | `/reports` |
+| ------------------ | ----------- | --------------- | ---------- |
+| `recharts`         | —           | —               | —          |
+| `@dnd-kit/*`       | —           | —               | —          |
+| `react-day-picker` | —           | —               | —          |
+| `cmdk`             | —           | —               | —          |
+
+**Lighthouse móvil** (Preview, mediana de 3)
+
+| Ruta                               | Performance | LCP         | TBT         | CLS         |
+| ---------------------------------- | ----------- | ----------- | ----------- | ----------- |
+| `/dashboard/personal`              | _por medir_ | _por medir_ | _por medir_ | _por medir_ |
+| `/dashboard/personal/transactions` | _por medir_ | _por medir_ | _por medir_ | _por medir_ |
+| `/dashboard/personal/reports`      | _por medir_ | _por medir_ | _por medir_ | _por medir_ |
+
+**Profiler**
+
+| Interacción                    | Commit más largo | Componentes |
+| ------------------------------ | ---------------- | ----------- |
+| Buscar en Movimientos          | _por medir_      | _por medir_ |
+| Cambiar de mes en Reportes     | _por medir_      | _por medir_ |
+| Abrir el diálogo de movimiento | _por medir_      | _por medir_ |
+
+**Clic a skeleton** (mediana de 5): _por medir_.
+
+**Tabla de Movimientos con 2.000 filas.** La tabla pagina de 50 en 50
+(`getTransactions`), así que nunca pinta las 2.000 filas: escribir en el
+buscador solo re-renderiza la barra de filtros y la tabla cambia una vez,
+al llegar la página nueva. No se pagina ni se virtualiza más, salvo que el
+Profiler muestre commits de más de 200 ms.

@@ -23,7 +23,6 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/charts/chart-tooltip"
-import { Skeleton } from "@/components/ui/skeleton"
 import { ChartDataTable } from "@/features/reports/components/chart-data-table"
 
 // Serie neutra: el acento del espacio (emerald) se confundía con ingresos
@@ -123,15 +122,5 @@ export function ScoreHistoryChart({ data }: { data: ScoreHistoryPoint[] }) {
         ])}
       />
     </>
-  )
-}
-
-/** Hueco de la gráfica de evolución: misma altura */
-export function ScoreHistoryChartSkeleton() {
-  return (
-    <Skeleton
-      aria-hidden="true"
-      className="h-64 w-full rounded-2xl"
-    />
   )
 }

@@ -10,10 +10,10 @@ import { ChartTooltip } from "@/components/charts/chart-tooltip"
 import { useFormatAmount } from "@/components/dashboard/hide-amounts/hide-amounts-context"
 import type { CategorySlice } from "../chart-data"
 import { ChartDataTable } from "./chart-data-table"
+import { topCategoriesChartHeight } from "./chart-sizes"
 import { CurrencyTooltipContent } from "./currency-tooltip"
 
 // Cada fila: nombre y monto arriba (no se cortan a 375 px) y la barra debajo
-const ROW_HEIGHT = 48
 
 interface TopCategoriesChartProps {
   categories: CategorySlice[]
@@ -42,7 +42,7 @@ export function TopCategoriesChart({
       <ChartContainer
         config={config}
         className="aspect-auto w-full"
-        style={{ height: categories.length * ROW_HEIGHT + 8 }}
+        style={{ height: topCategoriesChartHeight(categories.length) }}
         role="figure"
         aria-label={title}
       >

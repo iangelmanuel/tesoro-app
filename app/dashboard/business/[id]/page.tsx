@@ -11,8 +11,8 @@ import {
   BusinessSummarySkeleton
 } from "@/features/business/components/business-summary-skeleton"
 import { buildCategorySlices } from "@/features/reports/chart-data"
-import { CategoryDonutChart } from "@/features/reports/components/category-donut-chart"
-import { IncomeExpenseChart } from "@/features/reports/components/income-expense-chart"
+import { CategoryDonutChartLazy } from "@/features/reports/components/category-donut-chart-lazy"
+import { IncomeExpenseChartLazy } from "@/features/reports/components/income-expense-chart-lazy"
 import { NoPeriodData } from "@/features/reports/components/no-period-data"
 import { RecentTransactions } from "@/features/reports/components/recent-transactions"
 import { REPORT_LABELS } from "@/features/reports/labels"
@@ -130,7 +130,7 @@ async function SummaryContent({
               className="h-72"
             />
           ) : (
-            <IncomeExpenseChart
+            <IncomeExpenseChartLazy
               data={monthly}
               currency={workspace.currency}
               labels={labels}
@@ -151,7 +151,7 @@ async function SummaryContent({
           className="lg:col-span-2"
         >
           {costsByCategory.length > 0 ? (
-            <CategoryDonutChart
+            <CategoryDonutChartLazy
               slices={buildCategorySlices(costsByCategory)}
               currency={workspace.currency}
               title={`${labels.expense} por categoría de ${monthLabel}`}

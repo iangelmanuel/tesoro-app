@@ -7,7 +7,7 @@ import { TONE_BADGE_CLASSES } from "@/components/dashboard/feedback/tone"
 import { SITE } from "@/config/site"
 import { getAccountBalances } from "@/features/accounts/queries"
 import { AccountBalancesList } from "@/features/cash-flow/components/account-balances-list"
-import { CashFlowChart } from "@/features/cash-flow/components/cash-flow-chart"
+import { CashFlowChartLazy } from "@/features/cash-flow/components/cash-flow-chart-lazy"
 import { CashFlowScreenSkeleton } from "@/features/cash-flow/components/cash-flow-screen-skeleton"
 import { CashFlowTable } from "@/features/cash-flow/components/cash-flow-table"
 import { getCashFlow } from "@/features/cash-flow/queries"
@@ -143,7 +143,7 @@ async function CashFlowContent({
               {period.label} · con el saldo en cuentas al cierre de cada mes
             </p>
           </header>
-          <CashFlowChart
+          <CashFlowChartLazy
             data={cashFlow.months}
             currency={workspace.currency}
             className="aspect-auto h-80 w-full"

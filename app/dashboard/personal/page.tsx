@@ -26,7 +26,7 @@ import {
   UpcomingPaymentsCard,
   UpcomingPaymentsCardSkeleton
 } from "@/features/recurring-expenses/components/upcoming-payments-card"
-import { IncomeExpenseChart } from "@/features/reports/components/income-expense-chart"
+import { IncomeExpenseChartLazy } from "@/features/reports/components/income-expense-chart-lazy"
 import { NoPeriodData } from "@/features/reports/components/no-period-data"
 import { RecentTransactions } from "@/features/reports/components/recent-transactions"
 import { SummarySkeleton } from "@/features/reports/components/summary-skeleton"
@@ -168,7 +168,7 @@ async function SummaryContent() {
               className="h-72"
             />
           ) : (
-            <IncomeExpenseChart
+            <IncomeExpenseChartLazy
               data={monthly}
               currency={currency}
               legend="none"

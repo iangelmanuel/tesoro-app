@@ -48,6 +48,9 @@ next-env.d.ts
 *.xlsx
 *.xls
 
+# salidas temporales de scripts, como el CSV de rendimiento (SPEC 56a)
+/tmp/
+
 # motor de Impeccable: binario por plataforma, el launcher lo descarga y verifica
 .claude/skills/impeccable/scripts/bin/
 

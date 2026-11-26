@@ -24,7 +24,10 @@ import {
 import { useTheme } from "next-themes"
 import { SITE } from "@/config/site"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
-import { CategoriesSheet } from "@/features/categories/components/categories-sheet"
+import {
+  CategoriesSheet,
+  preloadCategoriesSheet
+} from "@/features/categories/components/categories-sheet"
 import type { Category } from "@/features/categories/queries"
 import {
   type DebtOption,
@@ -128,7 +131,8 @@ const PRELOADS: Partial<Record<QuickActionKey, () => void>> = {
   receivable: preloadTransactionForm,
   contribution: preloadContributionForm,
   payment: preloadPaymentForm,
-  verify: preloadVerifyMovements
+  verify: preloadVerifyMovements,
+  categories: preloadCategoriesSheet
 }
 
 /**

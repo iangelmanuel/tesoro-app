@@ -18,6 +18,7 @@ import { useCommandPalette } from "../command/command-palette-context"
 import { preloadCommandPalette } from "../command/command-palette-lazy"
 import {
   type QuickAction,
+  preloadQuickAction,
   useQuickActions
 } from "../quick-actions/quick-actions-context"
 
@@ -65,6 +66,8 @@ export function QuickSheet({
           onOpenChange(false)
           run(key)
         }}
+        onPointerEnter={() => preloadQuickAction(key)}
+        onFocus={() => preloadQuickAction(key)}
       >
         <Icon className="size-5" />
         {label}

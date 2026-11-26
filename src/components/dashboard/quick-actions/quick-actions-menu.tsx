@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { ExportButton } from "@/features/exports/components/export-button"
-import { useQuickActions } from "./quick-actions-context"
+import { preloadQuickAction, useQuickActions } from "./quick-actions-context"
 
 // Accesos rápidos del header. "Registrar movimiento" es el primario del
 // espacio; "Más" despliega el resto de acciones de la misma lista que la
@@ -41,6 +41,8 @@ export function QuickActionsMenu() {
       <Button
         data-tour="header-quick-add"
         onClick={() => run("movement")}
+        onPointerEnter={() => preloadQuickAction("movement")}
+        onFocus={() => preloadQuickAction("movement")}
       >
         <Plus className="size-4" />
         <span className="hidden sm:inline">{label}</span>
@@ -69,6 +71,8 @@ export function QuickActionsMenu() {
               <DropdownMenuItem
                 key={key}
                 onClick={() => run(key)}
+                onPointerEnter={() => preloadQuickAction(key)}
+                onFocus={() => preloadQuickAction(key)}
               >
                 <Icon />
                 {itemLabel}
@@ -81,6 +85,8 @@ export function QuickActionsMenu() {
               <DropdownMenuItem
                 key={key}
                 onClick={() => run(key)}
+                onPointerEnter={() => preloadQuickAction(key)}
+                onFocus={() => preloadQuickAction(key)}
               >
                 <Icon />
                 {itemLabel}

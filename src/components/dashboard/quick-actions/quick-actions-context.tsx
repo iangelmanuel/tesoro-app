@@ -40,7 +40,10 @@ import { GOALS_PATH } from "@/features/goals/progress"
 import { IMPORT_PATH } from "@/features/imports/constants"
 import type { UpcomingPayment } from "@/features/recurring-expenses/queries"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
-import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
+import {
+  TransactionDialog,
+  preloadTransactionForm
+} from "@/features/transactions/components/transaction-dialog"
 import { VerifyMovementsDialog } from "@/features/transactions/components/verify-movements-dialog"
 import type { FormPanel } from "@/features/transactions/types"
 import type { WorkspaceType } from "@/features/workspaces/types"
@@ -112,6 +115,21 @@ interface QuickActionsValue extends QuickActionsData {
 }
 
 const QuickActionsContext = createContext<QuickActionsValue | null>(null)
+
+// Formulario diferido de cada acción (SPEC 56b)
+const PRELOADS: Partial<Record<QuickActionKey, () => void>> = {
+  movement: preloadTransactionForm,
+  transfer: preloadTransactionForm,
+  receivable: preloadTransactionForm
+}
+
+/**
+ * Precarga el formulario que abre una acción. Va en `onPointerEnter` /
+ * `onFocus` de su botón o ítem de menú
+ */
+export function preloadQuickAction(key: QuickActionKey) {
+  PRELOADS[key]?.()
+}
 
 // Diálogos que abren las acciones; uno a la vez
 type OpenDialog = Exclude<QuickActionKey, "import" | "theme" | "hide-amounts">

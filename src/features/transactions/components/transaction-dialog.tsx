@@ -1,10 +1,15 @@
 "use client"
 
-import { FormDialog } from "@/components/forms/form-dialog"
+import { Suspense } from "react"
+import {
+  FormDialog,
+  FormDialogBodySkeleton
+} from "@/components/forms/form-dialog"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import type { IncomeSourceOption } from "@/features/recurring-incomes/queries"
 import type { WorkspaceType } from "@/features/workspaces/types"
+import { lazyWithPreload } from "@/libs/lazy-with-preload"
 import { transactionDialogText } from "../transaction-form-values"
 import type {
   EditableTransaction,
@@ -12,8 +17,16 @@ import type {
   RecurringOccurrenceLink,
   TransactionInitialValues
 } from "../types"
-import { TransactionForm } from "./transaction-form"
 import type { PaymentTabsData } from "./transaction-form-panels"
+
+// El formulario (campos, calendario, tabs de pago) se descarga al abrir el
+// diálogo o al pasar por su disparador (SPEC 56b). El título ya es el real
+const TransactionForm = lazyWithPreload(() =>
+  import("./transaction-form").then((m) => m.TransactionForm)
+)
+
+/** Precarga el formulario de movimiento: `onPointerEnter` / `onFocus` */
+export const preloadTransactionForm = TransactionForm.preload
 
 interface TransactionDialogProps {
   /** Espacio donde se crea o edita el movimiento */
@@ -85,6 +98,7 @@ export function TransactionDialog({
   return (
     <FormDialog
       trigger={trigger}
+      onTriggerIntent={TransactionForm.preload}
       open={controlledOpen}
       onOpenChange={onOpenChange}
       // Con 7 tabs el diálogo se ensancha para que quepan en escritorio
@@ -93,29 +107,38 @@ export function TransactionDialog({
       description={description}
     >
       {(close) => (
-        <TransactionForm
-          workspaceId={workspaceId}
-          workspaceType={workspaceType}
-          categories={categories}
-          accounts={accounts}
-          transaction={transaction}
-          initialValues={isEditing ? undefined : initialValues}
-          recurring={isEditing ? undefined : recurring}
-          paymentTabs={showPaymentTabs ? paymentTabs : undefined}
-          // El traspaso existe en ambos espacios (atajo T, SPEC 51)
-          initialPanel={
-            showPaymentTabs || initialPanel === "transfer"
-              ? initialPanel
-              : undefined
+        <Suspense
+          fallback={
+            <FormDialogBodySkeleton
+              tabs={!isEditing}
+              fields={5}
+            />
           }
-          incomeSources={
-            workspaceType === "personal" && !isPayment
-              ? (incomeSources ?? paymentTabs?.incomeSources)
-              : undefined
-          }
-          onSaved={close}
-          onCancel={close}
-        />
+        >
+          <TransactionForm.Component
+            workspaceId={workspaceId}
+            workspaceType={workspaceType}
+            categories={categories}
+            accounts={accounts}
+            transaction={transaction}
+            initialValues={isEditing ? undefined : initialValues}
+            recurring={isEditing ? undefined : recurring}
+            paymentTabs={showPaymentTabs ? paymentTabs : undefined}
+            // El traspaso existe en ambos espacios (atajo T, SPEC 51)
+            initialPanel={
+              showPaymentTabs || initialPanel === "transfer"
+                ? initialPanel
+                : undefined
+            }
+            incomeSources={
+              workspaceType === "personal" && !isPayment
+                ? (incomeSources ?? paymentTabs?.incomeSources)
+                : undefined
+            }
+            onSaved={close}
+            onCancel={close}
+          />
+        </Suspense>
       )}
     </FormDialog>
   )

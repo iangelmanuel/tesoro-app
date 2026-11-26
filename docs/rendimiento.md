@@ -353,3 +353,81 @@ Sigue respondiendo 500 en el Preview y en producción (`jsdom`,
 Queda para 56b: el JS del cliente, que domina el TBT y el LCP del dashboard.
 Queda abierto: el score de Empresa llama a `category_totals` una vez por mes
 (~18 llamadas); es candidato a una RPC si la medición de Empresa lo pide.
+
+## Cliente (SPEC 56b)
+
+### Método
+
+Además de las medidas de arriba (JS por ruta con el mismo método y
+Lighthouse móvil):
+
+- **Bundle Analyzer de Turbopack.** `pnpm next analyze --output --snapshot <nombre>`
+  y luego `pnpm next analyze export --snapshot <nombre> --route <ruta>`
+  (JSON Lines). Se suman los módulos de los chunks JS del cliente que no
+  son `async` (grupos `bootstrap` y `render_dependent`), agrupados por
+  paquete de `node_modules` (o por archivo si es código propio). El CSS no
+  cuenta. `next` incluye `react` y `react-dom`, que Next trae compilados. En
+  Git Bash, `MSYS_NO_PATHCONV=1` evita que `--route /dashboard/...` se
+  convierta en una ruta de Windows.
+- **React DevTools Profiler.** Build de producción con perfilado
+  (`pnpm next build --profile` + `pnpm start`), sesión de la cuenta de
+  pruebas. Tres interacciones: escribir "mercado" en el buscador de
+  Movimientos, cambiar de mes en Reportes y abrir el diálogo de movimiento
+  desde el header. Se anota el commit más largo y cuántos componentes
+  renderiza.
+- **Clic a skeleton.** Performance panel de Chrome, desde el aside de
+  Personal hacia otra ruta: tiempo desde el evento `click` hasta el primer
+  frame que pinta el `loading.tsx`. Cinco clics, mediana.
+
+### Antes
+
+Medido el 2026-11-26 sobre `master` (con SPEC 56a fusionado).
+
+**JS por ruta.** El de "Después" de 56a: `/dashboard/personal` 2.003 kB
+(635 kB gzip), `/dashboard/personal/transactions` 1.658 kB (533 kB) y
+`/dashboard/personal/reports` 1.986 kB (629 kB). La meta de 56b es bajar
+el de `/dashboard/personal` al menos un 20 %: 1.602 kB o menos.
+
+**Analyzer: los 10 paquetes más pesados del JS inicial**
+
+`/dashboard/personal` (32 chunks, 1.895 kB, 803 kB comprimido):
+
+| Paquete            | Tamaño   | Comprimido |
+| ------------------ | -------- | ---------- |
+| `next`             | 444,8 kB | 167,8 kB   |
+| `@base-ui/react`   | 274,0 kB | 135,0 kB   |
+| `recharts`         | 273,3 kB | 123,2 kB   |
+| `zod`              | 105,8 kB | 33,7 kB    |
+| `@dnd-kit/dom`     | 70,6 kB  | 25,2 kB    |
+| `react-day-picker` | 42,7 kB  | 19,4 kB    |
+| `sonner`           | 34,3 kB  | 9,2 kB     |
+| `lucide-react`     | 29,3 kB  | 18,4 kB    |
+| `date-fns`         | 28,4 kB  | 12,6 kB    |
+| `tailwind-merge`   | 26,7 kB  | 8,2 kB     |
+
+`/dashboard/personal/transactions` (30 chunks, 1.549 kB, 646 kB
+comprimido): los mismos sin `recharts`. `@base-ui/react` sube a 282,9 kB
+y entra `@dnd-kit/abstract` (19,8 kB) en el décimo puesto.
+
+`/dashboard/personal/reports` (32 chunks, 1.904 kB, 807 kB comprimido):
+igual que `/dashboard/personal` (`recharts` 273,5 kB).
+
+Los cuatro paquetes que 56b quiere sacar del chunk inicial están en las
+tres rutas, también en las que no los usan al entrar:
+
+| Paquete            | `/personal` | `/transactions` | `/reports` |
+| ------------------ | ----------- | --------------- | ---------- |
+| `recharts`         | 273,3 kB    | —               | 273,5 kB   |
+| `@dnd-kit/*`       | 111,2 kB    | 111,2 kB        | 111,2 kB   |
+| `react-day-picker` | 42,7 kB     | 42,7 kB         | 42,7 kB    |
+| `cmdk`             | 11,4 kB     | 11,4 kB         | 11,4 kB    |
+
+**Profiler**
+
+| Interacción                    | Commit más largo | Componentes |
+| ------------------------------ | ---------------- | ----------- |
+| Buscar en Movimientos          | _por medir_      | _por medir_ |
+| Cambiar de mes en Reportes     | _por medir_      | _por medir_ |
+| Abrir el diálogo de movimiento | _por medir_      | _por medir_ |
+
+**Clic a skeleton** (mediana de 5): _por medir_.

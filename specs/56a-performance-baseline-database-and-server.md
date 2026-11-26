@@ -61,7 +61,7 @@ Una migración `supabase/migrations/<timestamp>_performance_indexes_and_rls.sql`
 - **Funciones de conjunto**, `stable`, `security invoker`, `set search_path = ''`, con `grant execute` solo a `authenticated`:
   - `public.owned_workspace_ids()` → `setof uuid` de los espacios del usuario.
   - `public.writable_workspace_ids()` → lo mismo con `deletion_requested_at is null`.
-- **Políticas reescritas:** cada `using (public.is_workspace_owner(workspace_id))` pasa a `using (workspace_id in (select public.owned_workspace_ids()))`, y cada `is_workspace_writable(...)` a `writable_workspace_ids()`. El `(select …)` hace que Postgres la evalúe una vez por consulta (InitPlan), no por fila. Las políticas de tablas hijas que hoy usan `exists (...)` contra su padre se reescriben igual cuando el EXPLAIN muestre la evaluación por fila.
+- **Políticas reescritas:** cada `using (public.is_workspace_owner(workspace_id))` pasa a `using (workspace_id = any (array(select public.owned_workspace_ids())))`, y cada `is_workspace_writable(...)` a `writable_workspace_ids()`. El `array(select …)` hace que Postgres la evalúe una vez por consulta (InitPlan) y la use como condición del índice, no por fila. (`in (select …)` también la evalúa una vez, pero como hashed SubPlan en el filtro.) Las políticas de tablas hijas que hoy usan `exists (...)` contra su padre se reescriben igual cuando el EXPLAIN muestre la evaluación por fila.
 - `is_workspace_owner` e `is_workspace_writable` se quedan: las usan RPC y triggers.
 - **Índices adicionales** solo donde el EXPLAIN de §1 muestre `Seq Scan` sobre una tabla con datos del usuario, o donde el advisor de Supabase marque una llave foránea sin índice.
 - **RPC nuevas** solo para una pantalla que haga 4 o más consultas sueltas a la misma tabla y donde la medición muestre que la suma de idas pesa más que la consulta. Siempre `security invoker` (pasan por RLS). Cada una con su `revoke` / `grant` y sus tipos regenerados en `src/types/database.ts`.
@@ -93,7 +93,7 @@ Página por página del dashboard (Personal y Empresa), de las queries en `src/f
 ### 8. Documentación
 
 - `docs/rendimiento.md` (nuevo): método de medición, tablas antes/después y la lista de lo aplicado.
-- `docs/arquitectura.md`: `getSessionUser` como única lectura de sesión del dashboard y el patrón de políticas `workspace_id in (select …)`.
+- `docs/arquitectura.md`: `getSessionUser` como única lectura de sesión del dashboard y el patrón de políticas `workspace_id = any (array(select …))`.
 - `CLAUDE.md` (sección Supabase): el patrón nuevo de políticas reemplaza la frase sobre `is_workspace_writable` / `is_workspace_owner`.
 - `CHANGELOG.md` `[Unreleased]`: entrada en inglés.
 
@@ -121,7 +121,7 @@ language sql stable security invoker set search_path = ''
 as $$ select id from public.workspaces where owner_id = (select auth.uid()) $$;
 
 -- Forma de la política reescrita (ejemplo)
-using (workspace_id in (select public.owned_workspace_ids()))
+using (workspace_id = any (array(select public.owned_workspace_ids())))
 ```
 
 ```ts
@@ -180,7 +180,8 @@ export async function updateSession(
 - **No:** `"use cache: private"` + `cacheTag` + `updateTag` en esta serie. Exige tocar unas 40 actions y el MCP; si la medición "Después" lo justifica, va en su propio spec.
 - **Sí:** `getClaims()` en el proxy. Quita una ida al servidor de auth en cada request. El costo es que un token revocado sigue valiendo hasta que expira (≤ 1 h); se acepta porque las lecturas siguen pasando por RLS y `getSessionUser` valida con `getUser()`.
 - **Sí:** `refreshSession()` tras pedir o cancelar el borrado. Sin él, la marca del JWT llega tarde y el proxy no redirige hasta el siguiente refresco.
-- **Sí:** `workspace_id in (select public.owned_workspace_ids())` en las políticas. Mismo acceso, evaluado una vez por consulta.
+- **Sí:** `workspace_id = any (array(select public.owned_workspace_ids()))` en las políticas. Mismo acceso, evaluado una vez por consulta (InitPlan) y usado como condición del índice.
+- **No:** `workspace_id in (select …)`. También evalúa el conjunto una vez, pero como hashed SubPlan en el filtro: no cumple el criterio de InitPlan ni lo aprovecha el índice.
 - **No:** solo el índice sin tocar las políticas. Baja el costo por fila, pero sigue siendo por fila.
 - **Sí:** funciones de conjunto `security invoker`. Leen `workspaces` con su propia política (`owner_id = auth.uid()`); no hace falta `security definer`.
 - **Sí:** tests de RLS con pgTAP antes de reescribir. Es la única forma de demostrar que el acceso no cambió.

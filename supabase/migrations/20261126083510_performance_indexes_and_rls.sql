@@ -4,10 +4,10 @@
 -- is_workspace_owner(workspace_id) e is_workspace_writable(workspace_id)
 -- reciben la columna de la fila, así que Postgres las evalúa por cada fila
 -- leída (una subconsulta a workspaces por fila). Las funciones de conjunto no
--- dependen de la fila: dentro de `workspace_id in (select ...)` se evalúan una
--- vez por consulta (InitPlan). Las políticas se reescriben en la migración
--- siguiente; is_workspace_owner e is_workspace_writable se quedan para las
--- RPC y los triggers.
+-- dependen de la fila: dentro de `workspace_id = any (array(select ...))`
+-- se evalúan una vez por consulta (InitPlan). Las políticas se reescriben en
+-- la migración siguiente; is_workspace_owner e is_workspace_writable se
+-- quedan para las RPC y los triggers.
 
 -- Lo usan la subconsulta de las funciones de conjunto y getPersonalWorkspace
 -- (owner_id + type). El índice único parcial de Personal solo cubre type =

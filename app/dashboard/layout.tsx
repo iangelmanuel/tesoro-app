@@ -13,6 +13,11 @@ import {
   DashboardTitle,
   DashboardTitleSkeleton
 } from "@/components/dashboard/shell/dashboard-title"
+import {
+  VIEWPORT_COOKIE,
+  parseViewport
+} from "@/components/dashboard/shell/viewport"
+import { ViewportProvider } from "@/components/dashboard/shell/viewport-context"
 import { WorkspaceThemeRoot } from "@/components/dashboard/shell/workspace-theme-root"
 import { ShortcutsPreferenceProvider } from "@/components/dashboard/shortcuts/shortcuts-preference"
 import {
@@ -57,8 +62,9 @@ async function DashboardHeaderTitle() {
 // Entrega al cliente si las cifras están ocultas y qué tutoriales terminó el
 // usuario: el primer render ya sale con la máscara y el arranque automático
 // decide sin parpadeo ni consulta por página. También si los atajos de
-// teclado están encendidos (cookie). Envuelve el aside (el menú de
-// cuenta también oculta cifras), el header y el contenido
+// teclado están encendidos y el tamaño de pantalla (cookies): el aside y la
+// barra inferior solo se montan en la suya (SPEC 57). Envuelve el aside (el
+// menú de cuenta también oculta cifras), el header y el contenido
 async function DashboardPreferencesBoundary({
   children
 }: Readonly<{ children: React.ReactNode }>) {
@@ -68,16 +74,22 @@ async function DashboardPreferencesBoundary({
     cookies()
   ])
   return (
-    <HideAmountsProvider initial={user.hideAmounts}>
-      <ShortcutsPreferenceProvider
-        initial={parseShortcutsCookie(cookieStore.get(SHORTCUTS_COOKIE)?.value)}
-      >
-        <TutorialProvider initial={completedTutorials}>
-          {children}
-          <TutorialAutoStart />
-        </TutorialProvider>
-      </ShortcutsPreferenceProvider>
-    </HideAmountsProvider>
+    <ViewportProvider
+      initial={parseViewport(cookieStore.get(VIEWPORT_COOKIE)?.value)}
+    >
+      <HideAmountsProvider initial={user.hideAmounts}>
+        <ShortcutsPreferenceProvider
+          initial={parseShortcutsCookie(
+            cookieStore.get(SHORTCUTS_COOKIE)?.value
+          )}
+        >
+          <TutorialProvider initial={completedTutorials}>
+            {children}
+            <TutorialAutoStart />
+          </TutorialProvider>
+        </ShortcutsPreferenceProvider>
+      </HideAmountsProvider>
+    </ViewportProvider>
   )
 }
 

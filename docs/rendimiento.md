@@ -496,13 +496,29 @@ de las tres rutas:
 | `react-day-picker` | —           | —               | —          |
 | `cmdk`             | —           | —               | —          |
 
-**Lighthouse móvil** (Preview, mediana de 3)
+**Lighthouse móvil** (2026-11-26, mediana de 3)
 
-| Ruta                               | Performance | LCP         | TBT         | CLS         |
-| ---------------------------------- | ----------- | ----------- | ----------- | ----------- |
-| `/dashboard/personal`              | _por medir_ | _por medir_ | _por medir_ | _por medir_ |
-| `/dashboard/personal/transactions` | _por medir_ | _por medir_ | _por medir_ | _por medir_ |
-| `/dashboard/personal/reports`      | _por medir_ | _por medir_ | _por medir_ | _por medir_ |
+Preview de la rama (commit `0a9d8a9`, `iad1`, enlace compartido de Vercel)
+y, como control, producción (`master`) en la misma ventana de tiempo,
+corrida a corrida intercaladas. La CPU de la máquina que corre Lighthouse
+estaba más lenta que en 56a (`benchmarkIndex` ~900 en las dos primeras
+rutas y ~1.400 en Reportes, contra ~1.600 en un build local): por eso el
+control importa más que las cifras sueltas.
+
+| Ruta                               | Performance | LCP   | TBT      | CLS   | Control (`master`)        |
+| ---------------------------------- | ----------- | ----- | -------- | ----- | ------------------------- |
+| `/dashboard/personal`              | 45          | 4,5 s | 3.535 ms | 0,000 | 43 · 5,0 s · 6.408 ms TBT |
+| `/dashboard/personal/transactions` | 46          | 4,7 s | 3.844 ms | 0,000 | 47 · 4,4 s · 5.909 ms TBT |
+| `/dashboard/personal/reports`      | 49          | 5,1 s | 1.276 ms | 0,002 | 55 · 4,7 s · 1.202 ms TBT |
+
+Con la misma CPU, el TBT baja 45 % en `/dashboard/personal` y 35 % en
+Movimientos; en Reportes queda igual. El Performance no se mueve: lo
+dominan el TBT que queda y el LCP, que es una cifra del Resumen que llega
+en streaming. En el reporte, ~2,7 s del script son de `react-dom`
+(render e hidratación del árbol del dashboard con la CPU 4× simulada), no
+de descargar JS. **No se cumple** la meta de 56b (Performance ≥ 90,
+LCP ≤ 2,5 s, TBT ≤ 200 ms); el CLS sí (≤ 0,002). La cuenta de pruebas
+abre además el diálogo de bienvenida del tutorial al entrar.
 
 **Profiler**
 
@@ -512,7 +528,15 @@ de las tres rutas:
 | Cambiar de mes en Reportes     | _por medir_      | _por medir_ |
 | Abrir el diálogo de movimiento | _por medir_      | _por medir_ |
 
-**Clic a skeleton** (mediana de 5): _por medir_.
+**Clic a skeleton** (mediana de 5): 66 ms (50, 61, 66, 71 y 115 ms),
+desde el aside de Personal a Movimientos, Reportes, Presupuestos, Metas y
+Deudas, con el prefetch ya hecho. Medido con Playwright sobre el build de
+producción local: del `click` al frame que pinta el `loading.tsx`.
+
+**Funcionales** (mismo build): ⌘K / Ctrl+K abre la paleta en la primera
+pulsación, sin pasar por el botón (~400 ms con la descarga del chunk); el
+asa de Movimientos se habilita en idle y dnd-kit la engancha
+(`aria-roledescription="draggable"`).
 
 **Tabla de Movimientos con 2.000 filas.** La tabla pagina de 50 en 50
 (`getTransactions`), así que nunca pinta las 2.000 filas: escribir en el
@@ -543,6 +567,11 @@ Profiler muestre commits de más de 200 ms.
   filtros, no en la tabla.
 
 ### Pendiente
+
+Todo lo de esta sección pasa a
+[SPEC 57](../specs/57-performance-dashboard-render-and-hydration.md)
+(render e hidratación del dashboard), junto con la meta de Lighthouse ≥ 90
+y los dos criterios del Profiler.
 
 - **Sheets de detalle** de Deuda, Meta, Gasto fijo e Ingreso fijo: siguen en
   el JS inicial de sus páginas (por eso `/dashboard/personal/debts` baja

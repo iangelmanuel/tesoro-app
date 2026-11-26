@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import { Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SITE } from "@/config/site"
-import { ExportDialog } from "./export-dialog"
+import { ExportDialog, preloadExportForm } from "./export-dialog"
 
 interface ExportButtonProps {
   workspaceId: string
@@ -39,6 +39,8 @@ export function ExportButton({ workspaceId, historyStart }: ExportButtonProps) {
         aria-label="Exportar"
         className="max-sm:px-3"
         onClick={() => setOpen(true)}
+        onPointerEnter={preloadExportForm}
+        onFocus={preloadExportForm}
       >
         <Download className="size-4" />
         <span className="hidden sm:inline">Exportar</span>

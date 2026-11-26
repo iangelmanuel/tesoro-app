@@ -20,7 +20,7 @@ import {
   TRANSACTIONS_PATH,
   buildFiltersQuery
 } from "@/features/transactions/filters"
-import type { TransactionWithCategory } from "@/features/transactions/types"
+import type { RecentTransaction } from "@/features/transactions/types"
 import { cn } from "@/libs/cn"
 import { formatCurrency, formatDate } from "@/libs/format"
 
@@ -30,7 +30,7 @@ const ALL_MONTHS_QUERY = buildFiltersQuery({ month: "all", page: 1 })
 const MIN_WIDTH = "36rem"
 
 interface RecentTransactionsProps {
-  rows: TransactionWithCategory[]
+  rows: RecentTransaction[]
   currency: string
   /** Ruta de Movimientos del espacio */
   transactionsPath?: string

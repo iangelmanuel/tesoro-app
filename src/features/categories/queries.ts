@@ -21,7 +21,9 @@ export const getCategories = cache(
     const supabase = await createClient()
     const { data, error } = await supabase
       .from("categories")
-      .select("*")
+      .select(
+        "id, workspace_id, scope, type, name, icon, color, position, archived_at, created_at, updated_at"
+      )
       .eq("scope", workspace.type)
       .or(`workspace_id.is.null,workspace_id.eq.${workspace.id}`)
       .order("workspace_id", { ascending: true, nullsFirst: true })

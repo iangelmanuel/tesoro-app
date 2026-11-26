@@ -35,7 +35,7 @@ export async function getImports(workspaceId: string): Promise<ImportRecord[]> {
     supabase
       .from("imports")
       .select(
-        "*, transactions (count), recurring_expenses (count), debt_entries (count), goal_contributions (count)"
+        "id, workspace_id, filename, sheets, stats, status, target, undone_at, created_at, transactions (count), recurring_expenses (count), debt_entries (count), goal_contributions (count)"
       )
       .eq("workspace_id", workspaceId)
       .order("created_at", { ascending: false }),

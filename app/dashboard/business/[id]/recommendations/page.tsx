@@ -63,11 +63,12 @@ async function RecommendationsContent({
   const today = todayISO()
   const month = today.slice(0, 7)
 
-  const { inputs, history } = await getBusinessScoreHistory(workspace.id, today)
-  const [recommendations, dismissed] = await Promise.all([
-    getBusinessRecommendations(workspace, inputs),
+  // Los descartes no dependen del score: se piden en paralelo
+  const [{ inputs, history }, dismissed] = await Promise.all([
+    getBusinessScoreHistory(workspace.id, today),
     getDismissedRecommendations(workspace.id, month)
   ])
+  const recommendations = await getBusinessRecommendations(workspace, inputs)
   const { active, hidden } = splitDismissed(recommendations, dismissed)
 
   return (

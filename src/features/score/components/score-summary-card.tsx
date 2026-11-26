@@ -11,7 +11,7 @@ import { SUMMARY_RECOMMENDATIONS } from "../constants"
 import { hasScore, scoreVariation } from "../curves"
 import { getDismissedRecommendations, getScoreInputs } from "../queries"
 import { splitDismissed } from "../recommendation-helpers"
-import { getRecommendations } from "../recommendations"
+import { loadRecommendationData, recommendationsFor } from "../recommendations"
 import type { Recommendation, ScoreResult } from "../types"
 import { RecommendationList } from "./recommendation-list"
 import { ScoreInsufficient } from "./score-insufficient"
@@ -32,11 +32,13 @@ export async function ScoreSummaryCard({
   const previousMonth = shiftMonth(month, -1)
 
   // Solo el mes actual y el anterior: basta para la variación y las reglas
-  const inputs = await getScoreInputs(workspaceId, previousMonth, month, today)
-  const [recommendations, dismissed] = await Promise.all([
-    getRecommendations(workspaceId, inputs),
+  // Score, datos de las reglas y descartes no dependen entre sí: en paralelo
+  const [inputs, data, dismissed] = await Promise.all([
+    getScoreInputs(workspaceId, previousMonth, month, today),
+    loadRecommendationData(workspaceId, today),
     getDismissedRecommendations(workspaceId, month)
   ])
+  const recommendations = recommendationsFor(inputs, data)
   const { active } = splitDismissed(recommendations, dismissed)
 
   return (

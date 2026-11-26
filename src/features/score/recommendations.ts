@@ -11,12 +11,22 @@ import {
   categoryGrowthRanges
 } from "./recommendation-rules"
 
-/** Consulta lo que falta para las reglas del mes actual y las evalúa */
-export async function getRecommendations(
+/** Datos que piden las reglas, aparte del score */
+export type RecommendationData = Omit<
+  Parameters<typeof buildRecommendations>[0],
+  "score"
+>
+
+/**
+ * Consulta lo que piden las reglas del mes de `today`. No depende del score:
+ * las pantallas lo piden en paralelo con él (SPEC 56a) y luego evalúan con
+ * `recommendationsFor`
+ */
+export async function loadRecommendationData(
   workspaceId: string,
-  score: ScoreData
-) {
-  const month = score.today.slice(0, 7)
+  today: string
+): Promise<RecommendationData> {
+  const month = today.slice(0, 7)
   const { last, base } = categoryGrowthRanges(month)
 
   const [
@@ -33,12 +43,27 @@ export async function getRecommendations(
     getAccountBalances(workspaceId)
   ])
 
-  return buildRecommendations({
-    score,
+  return {
     lastClosedCategories,
     baseCategories,
     budgets,
     upcomingPayments,
     accounts
-  })
+  }
+}
+
+/** Evalúa las reglas con el score y los datos ya cargados */
+export function recommendationsFor(score: ScoreData, data: RecommendationData) {
+  return buildRecommendations({ score, ...data })
+}
+
+/** Consulta lo que falta para las reglas del mes actual y las evalúa */
+export async function getRecommendations(
+  workspaceId: string,
+  score: ScoreData
+) {
+  return recommendationsFor(
+    score,
+    await loadRecommendationData(workspaceId, score.today)
+  )
 }

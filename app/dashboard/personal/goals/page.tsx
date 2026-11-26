@@ -11,7 +11,7 @@ import { InactiveGoals } from "@/features/goals/components/inactive-goals"
 import { GOALS_PATH, compareByTargetDate } from "@/features/goals/progress"
 import {
   type GoalContribution,
-  getGoalContributions,
+  getGoalContributionsByGoal,
   getGoals
 } from "@/features/goals/queries"
 import { ImportButton } from "@/features/imports/components/import-button"
@@ -54,15 +54,13 @@ async function GoalsContent() {
     .sort(compareByTargetDate)
   const inactive = goals.filter((goal) => goal.status !== "active")
 
-  // Historial de cada meta para su Sheet. Solo se consultan las que tienen
-  // aportes.
+  // Historial de cada meta para su Sheet, en una sola consulta. Solo se
+  // piden las que tienen aportes.
+  const contributionsByGoal = await getGoalContributionsByGoal(
+    goals.filter((goal) => goal.contributions_count > 0).map((goal) => goal.id)
+  )
   const contributions: Record<string, GoalContribution[]> = Object.fromEntries(
-    await Promise.all(
-      goals.map(async (goal) => [
-        goal.id,
-        goal.contributions_count > 0 ? await getGoalContributions(goal.id) : []
-      ])
-    )
+    goals.map((goal) => [goal.id, contributionsByGoal.get(goal.id) ?? []])
   )
 
   const createButton = (

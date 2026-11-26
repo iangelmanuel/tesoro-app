@@ -33,6 +33,34 @@ create extension if not exists pgtap with schema extensions;
 
 select * from no_plan();
 
+-- Permisos de producción ------------------------------------------------------
+
+-- Las migraciones no conceden permisos de tabla: producción los tiene por los
+-- default privileges con que se creó el proyecto (SELECT, INSERT, UPDATE y
+-- DELETE a authenticated en cada tabla de public). Las imágenes locales nuevas
+-- de Supabase ya no los dan, así que aquí se replican los de producción para
+-- las tablas que toca la prueba. En workspaces producción solo concede
+-- select, insert, delete y update (name).
+do $$
+declare
+  v_table text;
+begin
+  for v_table in
+    select c.table_name from information_schema.columns c
+    join information_schema.tables t using (table_schema, table_name)
+    where c.table_schema = 'public' and c.column_name = 'workspace_id'
+      and t.table_type = 'BASE TABLE'
+  loop
+    execute format(
+      'grant select, insert, update, delete on public.%I to authenticated',
+      v_table
+    );
+  end loop;
+end;
+$$;
+grant select, insert, delete on public.workspaces to authenticated;
+grant update (name) on public.workspaces to authenticated;
+
 -- Infraestructura de la prueba ------------------------------------------------
 
 create schema rls_test;

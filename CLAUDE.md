@@ -12,12 +12,11 @@ cero ni conecta bancos: se alimenta de los registros que el usuario introduce
 (ingresos, gastos, deudas, metas) y a partir de ellos genera gráficas claras,
 recomendaciones y un score de salud financiera.
 
-Estado: **v0.1.0**. Por ahora solo existen la configuración base, el SEO y la
-documentación. No hay código de la app todavía. Las piezas se construyen en
-este orden (ver `README.md#hoja-de-ruta` y `docs/producto.md`):
+Estado: **v0.3.1**. La app está construida (ver `README.md#hoja-de-ruta`,
+`docs/producto.md` y `specs/`):
 
-1. Landing (`/`)
-2. Auth con Supabase (`/sign-in`, `/sign-up`)
+1. Landing (`/`), legales (`/legal/*`) y guía del MCP (`/mcp`)
+2. Auth con Supabase (`/sign-in`, `/sign-up`, Google y GitHub) y Cuenta
 3. Dashboard (`/dashboard`) con un aside. Arriba del aside va un selector tipo
    tab **Personal / Empresa**:
    - **Personal** es el espacio por defecto. Todo usuario lo tiene desde el
@@ -26,7 +25,8 @@ este orden (ver `README.md#hoja-de-ruta` y `docs/producto.md`):
    - **Empresa** es opcional. Si el usuario no tiene uno, el dashboard
      muestra un estado vacío que lo invita a crearlo. Su estructura: flujo
      de caja, ventas, costos/gastos operativos, reportes y recomendaciones.
-4. Movimientos → gráficas → score → recomendaciones
+4. Movimientos, gráficas, score y recomendaciones en ambos espacios, más
+   importar, exportar y el servidor MCP para agentes de IA
 
 `docs/producto.md` es la especificación de producto. Actualízalo cuando se
 definan detalles, por ejemplo los factores y pesos del score.

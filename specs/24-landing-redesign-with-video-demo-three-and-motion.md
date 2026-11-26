@@ -1,6 +1,7 @@
-# SPEC 19 — Landing renovada: demo en video con Hyperframes, escena Three.js y Motion
+# SPEC 24 — Landing renovada: demo en video con Hyperframes, escena Three.js y Motion
 
-> **Estado:** Aprobado
+> **Estado:** Obsoleto
+> **Nota:** el video demo se implementó; la escena Three.js del hero la reemplazó SPEC 40.
 > **Depende de:** SPEC 07, SPEC 12, SPEC 14, SPEC 18
 > **Fecha:** 2026-11-01
 > **Objetivo:** Que la landing se vea profesional y sin patrones genéricos de IA, con un video demo estilo producto (cursor sobre la app real, en modo claro) hecho con Hyperframes, una escena Three.js en el hero y animaciones con Motion, todo pulido con Impeccable.

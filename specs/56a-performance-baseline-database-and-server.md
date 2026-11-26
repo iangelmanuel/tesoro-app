@@ -30,10 +30,10 @@ Hallazgos del reconocimiento previo:
 ### 1. Línea base de la serie 56
 
 - **Entorno:** Preview de Vercel contra la Supabase remota (producción).
-- **Cuenta de pruebas:** la crea el usuario en producción. Sus credenciales viven solo en `.env.local` (`PERF_EMAIL`, `PERF_PASSWORD`), nunca en el repo ni en el spec.
-- **Datos sintéticos:** `scripts/generate-perf-csv.mjs` genera un CSV de ~2.000 movimientos en 12 meses (categorías, cuentas y montos genéricos, semilla fija para que sea reproducible). Se carga con el asistente de Importar (SPEC 08) en el espacio Personal de la cuenta de pruebas. El CSV generado va a `tmp/` (git-ignorado). El script sí va al repo.
+- **Cuenta de pruebas:** la crea Claude en producción con el registro normal (`signUp` con la clave publicable) y un email ficticio. Sus credenciales viven solo en `.env.local` (`PERF_EMAIL`, `PERF_PASSWORD`, `PERF_USER_ID`, `PERF_WORKSPACE_ID`), nunca en el repo ni en el spec.
+- **Datos sintéticos:** `scripts/generate-perf-csv.mjs` genera un CSV de ~2.000 movimientos en 12 meses (categorías, cuentas y montos genéricos, semilla fija para que sea reproducible). Se carga con la RPC del asistente de Importar (`import_transactions`, SPEC 08), con la sesión de la cuenta de pruebas, en el espacio Personal de la cuenta de pruebas. El CSV generado va a `tmp/` (git-ignorado). El script sí va al repo.
 - **Qué se mide**, todo anotado en `docs/rendimiento.md`:
-  - Lighthouse móvil (DevTools, sesión iniciada) de `/`, `/dashboard/personal`, `/dashboard/personal/transactions` y `/dashboard/personal/reports`: Performance, LCP, TBT, CLS y TTFB.
+  - Lighthouse móvil (CLI con la cookie de sesión de la cuenta de pruebas, mediana de 3) de `/`, `/dashboard/personal`, `/dashboard/personal/transactions` y `/dashboard/personal/reports`: Performance, LCP, TBT, CLS y TTFB.
   - Duración de las funciones de esas rutas en Vercel (observabilidad / runtime logs), mediana de 5 cargas.
   - Tamaño de JS por ruta que imprime `next build` (lo usa 56b; se toma aquí para tener una sola foto inicial).
   - `EXPLAIN (ANALYZE, BUFFERS)` de las consultas más pesadas, con RLS activo (ver §4).
@@ -173,7 +173,7 @@ export async function updateSession(
 - **Sí:** serie 56a / 56b / 56c. Un spec con las cinco áreas no se puede verificar ni cerrar en un solo PR.
 - **Sí:** medir en un Preview de Vercel contra la Supabase remota. Refleja la latencia real entre función y base de datos, que en local no existe.
 - **No:** medir en local con `seed-demo.mjs`. Reproducible, pero esconde justo la latencia de red que se quiere bajar.
-- **Sí:** cuenta de pruebas creada por el usuario y datos por CSV con el asistente de Importar. No hace falta la `service_role` remota en ningún script.
+- **Sí:** cuenta de pruebas creada por Claude con el registro normal y datos por la RPC del asistente de Importar, sin pedirle credenciales al usuario. No hace falta la `service_role` remota en ningún script.
 - **No:** flag `--allow-remote` en `seed-demo.mjs`. Pasaría la `service_role` de producción por un script local.
 - **No:** medir con la cuenta real del usuario. No es reproducible y expone datos reales en la documentación.
 - **Sí:** solo deduplicar sesión y paralelizar consultas, sin caché entre requests. Son datos financieros: verlos viejos o mezclados entre usuarios es peor que unos milisegundos.

@@ -1,6 +1,7 @@
 import "server-only"
 import { cache } from "react"
 import { TUTORIAL_SECTIONS, type TutorialSection } from "@/config/tutorials"
+import { getSessionUser } from "@/features/account/session"
 import { createClient } from "@/libs/supabase/server"
 
 function isTutorialSection(value: string): value is TutorialSection {
@@ -13,10 +14,10 @@ function isTutorialSection(value: string): value is TutorialSection {
  */
 export const getCompletedTutorials = cache(
   async (): Promise<TutorialSection[]> => {
-    const supabase = await createClient()
-    const {
-      data: { user }
-    } = await supabase.auth.getUser()
+    const [supabase, user] = await Promise.all([
+      createClient(),
+      getSessionUser()
+    ])
 
     if (!user) {
       return []

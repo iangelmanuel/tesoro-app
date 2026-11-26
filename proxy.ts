@@ -26,21 +26,23 @@ function redirectTo(url: URL, response: NextResponse) {
 }
 
 export async function proxy(request: NextRequest) {
-  const { response, user } = await updateSession(request)
+  const { response, claims } = await updateSession(request)
   const { pathname, search } = request.nextUrl
 
-  if (!user && isProtectedRoute(pathname)) {
+  if (!claims && isProtectedRoute(pathname)) {
     const url = new URL(SITE.routes.signIn, request.url)
     url.searchParams.set("next", `${pathname}${search}`)
     return redirectTo(url, response)
   }
 
-  // Periodo de gracia del borrado: la marca llega en el getUser() de arriba
-  // (app_metadata), sin otra consulta
-  const isMarked = user !== null && deletionRequestedAt(user) !== null
+  // Periodo de gracia del borrado: la marca llega en el app_metadata del JWT,
+  // sin otra consulta. Pedir el borrado cierra la sesión y cancelarlo la
+  // refresca, así el siguiente JWT ya trae (o pierde) la marca
+  const isMarked =
+    claims !== null && deletionRequestedAt(claims.app_metadata) !== null
 
   if (pathname === SITE.routes.accountDeleted) {
-    if (!user) {
+    if (!claims) {
       return redirectTo(new URL(SITE.routes.signIn, request.url), response)
     }
     if (!isMarked) {
@@ -55,7 +57,7 @@ export async function proxy(request: NextRequest) {
     )
   }
 
-  if (user && AUTH_ROUTES.includes(pathname)) {
+  if (claims && AUTH_ROUTES.includes(pathname)) {
     return redirectTo(new URL(SITE.routes.dashboard, request.url), response)
   }
 

@@ -127,7 +127,7 @@ export async function getDebts(workspaceId: string): Promise<Debt[]> {
 }
 
 const ENTRY_COLUMNS =
-  "*, account:accounts!debt_entries_account_id_workspace_id_fkey (name), transaction:transactions!debt_entries_transaction_id_fkey (account_id, description, category_id, account:accounts!transactions_account_id_workspace_id_fkey (name)), allocations:debt_entry_allocations (period_on, amount)"
+  "id, workspace_id, debt_id, kind, amount, occurred_on, occurred_time, day_position, note, account_id, transaction_id, import_id, installments, is_extra_payment, generated, created_at, updated_at, account:accounts!debt_entries_account_id_workspace_id_fkey (name), transaction:transactions!debt_entries_transaction_id_fkey (account_id, description, category_id, account:accounts!transactions_account_id_workspace_id_fkey (name)), allocations:debt_entry_allocations (period_on, amount)"
 
 /** Pagos, avances y ajustes de una deuda, el más reciente primero */
 export async function getDebtEntries(debtId: string): Promise<DebtEntry[]> {
@@ -146,6 +146,38 @@ export async function getDebtEntries(debtId: string): Promise<DebtEntry[]> {
   }
 
   return data.map(toDebtEntry)
+}
+
+/**
+ * Pagos, avances y ajustes de varias deudas en una sola consulta, por deuda
+ * y en el mismo orden que getDebtEntries. Una deuda sin movimientos queda con
+ * lista vacía. Evita una consulta por deuda en las listas (SPEC 56a)
+ */
+export async function getDebtEntriesByDebt(
+  debtIds: string[]
+): Promise<Map<string, DebtEntry[]>> {
+  const byDebt = new Map<string, DebtEntry[]>(debtIds.map((id) => [id, []]))
+  if (debtIds.length === 0) {
+    return byDebt
+  }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("debt_entries")
+    .select(ENTRY_COLUMNS)
+    .in("debt_id", debtIds)
+    .order("occurred_on", { ascending: false })
+    .order("day_position", { ascending: true })
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    throw new Error("No se pudieron cargar los pagos")
+  }
+
+  for (const row of data) {
+    byDebt.get(row.debt_id)?.push(toDebtEntry(row))
+  }
+  return byDebt
 }
 
 /** Un movimiento de una deuda, o null si no existe o es ajeno (RLS) */

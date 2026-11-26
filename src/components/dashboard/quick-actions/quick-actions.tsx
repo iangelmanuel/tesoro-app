@@ -4,7 +4,7 @@ import { getAccountBalances } from "@/features/accounts/queries"
 import { getCategories } from "@/features/categories/queries"
 import { isActiveDebt } from "@/features/debts/calculations"
 import { debtPaymentDescriptions } from "@/features/debts/payment-description"
-import { getDebtEntries, getDebts } from "@/features/debts/queries"
+import { getDebtEntriesByDebt, getDebts } from "@/features/debts/queries"
 import { toCollectableReceivable } from "@/features/debts/receivable-collect"
 import { getExportHistoryStart } from "@/features/exports/movement-export-queries"
 import { getGoals } from "@/features/goals/queries"
@@ -74,16 +74,16 @@ async function QuickActionsLoader() {
   // cuotas con ellos (tab "Me deben"). Tras leer la sesión: todayISO usa
   // new Date()
   const today = todayISO()
-  const receivables = await Promise.all(
-    debts
-      .filter((debt) => debt.kind === "receivable" && debt.status === "active")
-      .map(async (debt) =>
-        toCollectableReceivable(
-          debt,
-          debt.entries_count > 0 ? await getDebtEntries(debt.id) : [],
-          today
-        )
-      )
+  const activeReceivables = debts.filter(
+    (debt) => debt.kind === "receivable" && debt.status === "active"
+  )
+  const receivableEntries = await getDebtEntriesByDebt(
+    activeReceivables
+      .filter((debt) => debt.entries_count > 0)
+      .map((debt) => debt.id)
+  )
+  const receivables = activeReceivables.map((debt) =>
+    toCollectableReceivable(debt, receivableEntries.get(debt.id) ?? [], today)
   )
 
   const data: QuickActionsData = {

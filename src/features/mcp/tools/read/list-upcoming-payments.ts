@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { isReceivableOverdue } from "@/features/debts/calculations"
 import { nextPayment } from "@/features/debts/next-payment"
-import { getDebtEntries, getDebts } from "@/features/debts/queries"
+import { getDebtEntriesByDebt, getDebts } from "@/features/debts/queries"
 import { receivableInstallments } from "@/features/debts/receivable-schedule"
 import { getUpcomingPayments } from "@/features/recurring-expenses/queries"
 import { getUpcomingIncomes } from "@/features/recurring-incomes/queries"
@@ -138,6 +138,11 @@ export const listUpcomingPayments = defineTool({
     const receivables = debts.filter(
       (debt) => debt.kind === "receivable" && debt.status === "active"
     )
+    const entriesByDebt = await getDebtEntriesByDebt(
+      receivables
+        .filter((debt) => debt.schedule === "monthly" && debt.entries_count > 0)
+        .map((debt) => debt.id)
+    )
     await Promise.all(
       receivables.map(async (debt) => {
         if (debt.schedule !== "monthly") {
@@ -153,8 +158,7 @@ export const listUpcomingPayments = defineTool({
           }
           return
         }
-        const entries =
-          debt.entries_count > 0 ? await getDebtEntries(debt.id) : []
+        const entries = entriesByDebt.get(debt.id) ?? []
         // Las cuotas llegan hasta el mes siguiente a `today`; las de más
         // adelante salen del cálculo a `end`, sin cobros todavía
         const current = receivableInstallments(debt, entries, today)

@@ -3,6 +3,7 @@ import { cache } from "react"
 import { redirect } from "next/navigation"
 import { SITE } from "@/config/site"
 import { createClient } from "@/libs/supabase/server"
+import { getSessionUser } from "./session"
 import type { AccountData } from "./types"
 
 /**
@@ -10,10 +11,7 @@ import type { AccountData } from "./types"
  * request con `cache`.
  */
 export const getAccount = cache(async (): Promise<AccountData> => {
-  const supabase = await createClient()
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+  const [supabase, user] = await Promise.all([createClient(), getSessionUser()])
 
   if (!user) {
     redirect(SITE.routes.signIn)

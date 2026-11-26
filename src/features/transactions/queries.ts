@@ -41,7 +41,10 @@ export async function getTransactions(
   function filtered(head: boolean) {
     let query = supabase
       .from("ledger_entries")
-      .select("*", { count: "exact", head })
+      .select(
+        "id, kind, workspace_id, account_id, to_account_id, amount, category_id, description, note, counterparty, invoice_ref, occurred_on, occurred_time, day_position, created_at",
+        { count: "exact", head }
+      )
       .eq("workspace_id", workspaceId)
 
     if (range) {

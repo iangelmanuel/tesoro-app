@@ -1640,6 +1640,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      owned_workspace_ids: { Args: never; Returns: string[] }
       purge_deleted_accounts: { Args: never; Returns: number }
       purge_deleted_workspaces: { Args: never; Returns: number }
       purge_mcp_operations: { Args: never; Returns: number }
@@ -1863,6 +1864,7 @@ export type Database = {
         Returns: string
       }
       workspace_balance: { Args: { p_workspace_id: string }; Returns: number }
+      writable_workspace_ids: { Args: never; Returns: string[] }
     }
     Enums: {
       account_kind: "cash" | "bank" | "wallet" | "other"

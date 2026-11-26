@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Performance baseline (SPEC 56a).** `docs/rendimiento.md` documents how performance is measured (Lighthouse CLI with a test-account session, full-document timing with Playwright, `EXPLAIN (ANALYZE, BUFFERS)` with RLS on, JS per route, Supabase advisors) with "before" and "after" tables. `scripts/generate-perf-csv.mjs` generates a seeded synthetic CSV (~2,000 movements over 12 months) into the git-ignored `tmp/`.
+- **pgTAP RLS tests** in `supabase/tests/rls_workspace_access.test.sql` (`supabase test db`): read, insert, update and delete on every table with `workspace_id`, for the user's own workspace, another user's workspace and a workspace marked for deletion.
+- `getSessionUser` (`src/features/account/session.ts`): the only session read on the dashboard read path, deduplicated per request.
+- Set functions `owned_workspace_ids()` and `writable_workspace_ids()` (`security invoker`) for RLS policies.
+- `getDebtEntriesByDebt` and `getGoalContributionsByGoal`: debt entries and goal contributions for many debts or goals in a single query.
+
+### Changed
+
+- **One auth round trip per dashboard request.** `getDashboardUser`, `getPersonalWorkspace`, `getAccount` and `getCompletedTutorials` share `getSessionUser` instead of calling `getUser()` each. The proxy verifies the JWT with `getClaims()` (JWKS) instead of calling the auth server on every request; `updateSession` returns `{ response, claims }` and `deletionRequestedAt` takes `app_metadata`.
+- **RLS policies evaluated once per query.** The 67 policies that called `is_workspace_owner(workspace_id)` / `is_workspace_writable(workspace_id)` per row now use `workspace_id = any (array(select public.owned_workspace_ids()))` / `writable_workspace_ids()`. Access is unchanged (same pgTAP matrix before and after); full-workspace reads go from ~38 ms to 2–6 ms on 2,000 movements.
+- **Indexes:** `workspaces (owner_id, type)` and covering indexes for the 18 foreign keys the Supabase advisor flagged. Five single-column `account_id` indexes are replaced by composite `(account_id, workspace_id)` ones.
+- **Leaner server reads.** Read queries select explicit columns instead of `*`. The debts and goals pages, the header quick actions and the `list_receivables` / `list_upcoming_payments` MCP tools load entries in one query instead of one per debt or goal. Upcoming payments, the recommendations pages and the summary health card fetch independent data in parallel (`loadRecommendationData` + `recommendationsFor`). MCP tool contracts and export contents are unchanged.
+
 ## [0.3.1] — 2026-11-25
 
 ### Added

@@ -27,7 +27,7 @@ import { UpcomingDebtPayments } from "@/features/debts/components/upcoming-debt-
 import {
   type Debt,
   type DebtEntry,
-  getDebtEntries,
+  getDebtEntriesByDebt,
   getDebts
 } from "@/features/debts/queries"
 import { owedOnOpenEnded } from "@/features/debts/receivable-schedule"
@@ -80,15 +80,13 @@ async function DebtsContent({
     tab === "debts" ? debt.kind !== "receivable" : debt.kind === "receivable"
   )
 
-  // Historial de cada deuda de la tab para su Sheet. Solo se consultan las
-  // que tienen pagos o ajustes.
+  // Historial de cada deuda de la tab para su Sheet, en una sola consulta.
+  // Solo se piden las que tienen pagos o ajustes.
+  const entriesByDebt = await getDebtEntriesByDebt(
+    tabDebts.filter((debt) => debt.entries_count > 0).map((debt) => debt.id)
+  )
   const entries: Record<string, DebtEntry[]> = Object.fromEntries(
-    await Promise.all(
-      tabDebts.map(async (debt) => [
-        debt.id,
-        debt.entries_count > 0 ? await getDebtEntries(debt.id) : []
-      ])
-    )
+    tabDebts.map((debt) => [debt.id, entriesByDebt.get(debt.id) ?? []])
   )
 
   return (

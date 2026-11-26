@@ -55,8 +55,12 @@ export interface TransactionActionResult {
 }
 
 /** Movimiento con su categoría (Resumen y reportes) */
-export type TransactionWithCategory = TransactionRow & {
-  category: Pick<CategoryRow, "id" | "name" | "icon" | "color" | "archived_at">
+/** Movimiento de la lista "Últimos movimientos" del Resumen, con su categoría */
+export type RecentTransaction = Pick<
+  TransactionRow,
+  "id" | "type" | "amount" | "occurred_on" | "description"
+> & {
+  category: Pick<CategoryRow, "name" | "icon" | "color">
 }
 
 /** Campos de un movimiento que usa el diálogo de edición */

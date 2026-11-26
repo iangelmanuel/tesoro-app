@@ -1,6 +1,6 @@
 import "server-only"
 import type { TransactionType } from "@/features/transactions/filters"
-import type { TransactionWithCategory } from "@/features/transactions/types"
+import type { RecentTransaction } from "@/features/transactions/types"
 import { createClient } from "@/libs/supabase/server"
 import {
   type PeriodComparison,
@@ -112,11 +112,13 @@ export async function getWorkspaceBalance(workspaceId: string) {
 export async function getRecentTransactions(
   workspaceId: string,
   limit: number
-): Promise<TransactionWithCategory[]> {
+): Promise<RecentTransaction[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("transactions")
-    .select("*, category:categories!inner (id, name, icon, color, archived_at)")
+    .select(
+      "id, type, amount, occurred_on, description, category:categories!inner (name, icon, color)"
+    )
     .eq("workspace_id", workspaceId)
     .order("occurred_on", { ascending: false })
     .order("created_at", { ascending: false })

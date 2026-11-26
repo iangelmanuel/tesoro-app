@@ -62,6 +62,8 @@ export interface RecurringExpenseHistory {
 }
 
 const CATEGORY_COLUMNS = "id, name, icon, color, archived_at"
+const EXPENSE_COLUMNS =
+  "id, workspace_id, name, amount, category_id, account_id, frequency, day_of_month, month_of_year, starts_on, ends_on, is_active, import_id, created_at, updated_at"
 const PAYMENTS_LOAD_ERROR =
   "No se pudieron cargar los pagos de los gastos fijos"
 
@@ -72,7 +74,9 @@ export async function getRecurringExpenses(
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("recurring_expenses")
-    .select(`*, category:categories!inner (${CATEGORY_COLUMNS})`)
+    .select(
+      `${EXPENSE_COLUMNS}, category:categories!inner (${CATEGORY_COLUMNS})`
+    )
     .eq("workspace_id", workspaceId)
     .order("name", { ascending: true })
 
@@ -137,56 +141,48 @@ async function toUpcomingPayments(
 
   const today = todayISO()
   const categoryIds = [...new Set(occurrences.map((row) => row.category_id))]
-  const { data: categories, error: categoriesError } = await supabase
-    .from("categories")
-    .select(CATEGORY_COLUMNS)
-    .in("id", categoryIds)
-
-  if (categoriesError) {
-    throw new Error(PAYMENTS_LOAD_ERROR)
-  }
-
-  const categoryById = new Map(categories.map((row) => [row.id, row]))
-
   const expenseIds = [
     ...new Set(occurrences.map((row) => row.recurring_expense_id))
   ]
-  const { data: expenses, error: expensesError } = await supabase
-    .from("recurring_expenses")
-    .select("id, frequency, account_id")
-    .in("id", expenseIds)
-
-  if (expensesError) {
-    throw new Error(PAYMENTS_LOAD_ERROR)
-  }
-
-  const expenseById = new Map(expenses.map((row) => [row.id, row]))
-
   // Cuenta y fecha de cada pago, desde su movimiento enlazado
   const paidIds = occurrences.flatMap((row) =>
     row.transaction_id === null ? [] : [row.transaction_id]
   )
+
+  // Las tres lecturas son independientes: van en paralelo (SPEC 56a)
+  const [categoriesResult, expensesResult, paidResult] = await Promise.all([
+    supabase.from("categories").select(CATEGORY_COLUMNS).in("id", categoryIds),
+    supabase
+      .from("recurring_expenses")
+      .select("id, frequency, account_id")
+      .in("id", expenseIds),
+    paidIds.length > 0
+      ? supabase
+          .from("transactions")
+          .select(
+            "id, occurred_on, account:accounts!transactions_account_id_workspace_id_fkey (name)"
+          )
+          .in("id", paidIds)
+      : null
+  ])
+
+  if (categoriesResult.error || expensesResult.error || paidResult?.error) {
+    throw new Error(PAYMENTS_LOAD_ERROR)
+  }
+
+  const categoryById = new Map(
+    categoriesResult.data.map((row) => [row.id, row])
+  )
+  const expenseById = new Map(expensesResult.data.map((row) => [row.id, row]))
   const paymentByTransaction = new Map<
     string,
     { accountName: string | null; paidOn: string }
   >()
-  if (paidIds.length > 0) {
-    const { data: paid, error: paidError } = await supabase
-      .from("transactions")
-      .select(
-        "id, occurred_on, account:accounts!transactions_account_id_workspace_id_fkey (name)"
-      )
-      .in("id", paidIds)
-
-    if (paidError) {
-      throw new Error(PAYMENTS_LOAD_ERROR)
-    }
-    for (const row of paid) {
-      paymentByTransaction.set(row.id, {
-        accountName: row.account?.name ?? null,
-        paidOn: row.occurred_on
-      })
-    }
+  for (const row of paidResult?.data ?? []) {
+    paymentByTransaction.set(row.id, {
+      accountName: row.account?.name ?? null,
+      paidOn: row.occurred_on
+    })
   }
 
   return occurrences.flatMap((row) => {

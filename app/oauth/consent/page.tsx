@@ -75,7 +75,7 @@ async function ConsentContent({
     const next = `${SITE.routes.oauthConsent}?authorization_id=${encodeURIComponent(authorizationId)}`
     redirect(`${SITE.routes.signIn}?next=${encodeURIComponent(next)}` as Route)
   }
-  if (deletionRequestedAt(user) !== null) {
+  if (deletionRequestedAt(user.app_metadata) !== null) {
     redirect(SITE.routes.accountDeleted)
   }
 

@@ -68,6 +68,8 @@ export interface IncomeSourceOption extends IncomeReceiptPeriods {
 }
 
 const CATEGORY_COLUMNS = "id, name, icon, color, archived_at"
+const INCOME_COLUMNS =
+  "account_id, amount, category_id, created_at, day_of_month, day_of_week, ends_on, frequency, id, interval_days, is_active, month_of_year, name, second_day_of_month, starts_on, updated_at, workspace_id"
 
 /**
  * Mes (YYYY-MM) del `starts_on` más antiguo de los ingresos fijos con
@@ -117,7 +119,7 @@ export async function getRecurringIncomes(
   const { data, error } = await supabase
     .from("recurring_incomes")
     .select(
-      `*, category:categories!inner (${CATEGORY_COLUMNS}), account:accounts (name)`
+      `${INCOME_COLUMNS}, category:categories!inner (${CATEGORY_COLUMNS}), account:accounts (name)`
     )
     .eq("workspace_id", workspaceId)
     .order("name", { ascending: true })

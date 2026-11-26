@@ -341,10 +341,19 @@ líneas por archivo. Queries y servicios llevan `import "server-only"`.
   `config.toml`). Las claves de firma JWT son asimétricas (ES256).
 - `business_workspace_limit()` es el único punto que fija cuántas empresas
   tiene un usuario (hoy 1). `SITE.businessLimit` solo lo refleja en la UI.
-- Las políticas de escritura de las tablas de un espacio usan
-  `is_workspace_writable(workspace_id)` (dueño y sin marca de borrado). Las de
-  `select` usan `is_workspace_owner`. En las actions, el espacio se resuelve
-  con `requireWritableWorkspace(id)` y, tras escribir, se revalida con
+- Las políticas de las tablas de un espacio usan funciones de conjunto
+  (SPEC 56a): `workspace_id = any (array(select public.owned_workspace_ids()))`
+  para `select` y `... writable_workspace_ids()` (dueño y sin marca de
+  borrado) para escribir. El `array(select …)` se evalúa una vez por consulta
+  (InitPlan); no se llama `is_workspace_owner(workspace_id)` ni
+  `is_workspace_writable(workspace_id)` en una política (son por fila; se
+  quedan para RPC y triggers). Cada llave foránea lleva índice. El acceso lo
+  fija `supabase/tests/rls_workspace_access.test.sql` (pgTAP,
+  `supabase start` + `supabase test db`): una tabla nueva con `workspace_id`
+  entra en su matriz. Las imágenes locales nuevas de Supabase no dan permisos
+  de tabla por defecto; el test replica los de producción.
+- En las actions, el espacio se resuelve con `requireWritableWorkspace(id)`
+  y, tras escribir, se revalida con
   `revalidateWorkspacePages` (`src/features/workspaces/revalidate.ts`). Los
   servicios devuelven `ServiceResult` (`workspaces/service-result.ts`).
 - Tesoro no envía correos por ahora: sin confirmación de email, recuperar

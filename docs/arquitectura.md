@@ -168,6 +168,21 @@ composición va a un módulo de la feature, con su test.
   `"use client"`.
 - Las lecturas dinámicas (`searchParams`, `cookies`, la sesión, `todayISO()`)
   van dentro de un `Suspense` (`cacheComponents` de Next).
+- **Sesión (SPEC 56a):** en el camino de lectura del dashboard, la única
+  lectura de sesión es `getSessionUser` (`src/features/account/session.ts`,
+  `getUser()` con `cache()`): una sola ida a Supabase Auth por request. Las
+  queries que necesitan el usuario la llaman en vez de su propio `getUser()`.
+  El proxy (`src/libs/supabase/proxy.ts`) usa `getClaims()`, que verifica el
+  JWT con las claves públicas sin ir al servidor de auth, y solo decide
+  redirecciones. Las escrituras validan la sesión con su propio `getUser()`
+  y el MCP valida su Bearer en `features/mcp/auth.ts`.
+- **Consultas de lectura (SPEC 56a):** columnas explícitas, nunca
+  `select("*")`; las consultas independientes van en `Promise.all` (o en
+  componentes hermanos con su `Suspense`); los hijos de una lista (movimientos
+  de cada deuda, aportes de cada meta) se piden en una sola consulta con
+  `.in()`, no una por fila; y los límites van en la consulta (`.limit()`,
+  `.range()`), no cortando en JS. Los datos de usuario no se cachean entre
+  requests. Método y cifras en [`rendimiento.md`](rendimiento.md).
 
 ## Nombres
 
@@ -284,9 +299,14 @@ de cliente.
 
 1. Escribe el spec en `specs/` y llévalo a "Aprobado".
 2. Si hay datos nuevos: migración en `supabase/migrations/` con RLS y
-   políticas explícitas (`is_workspace_owner` para leer,
-   `is_workspace_writable` para escribir); `supabase db push` y regenera
-   `src/types/database.ts`.
+   políticas explícitas con las funciones de conjunto (SPEC 56a):
+   `workspace_id = any (array(select public.owned_workspace_ids()))` para
+   leer y `... writable_workspace_ids()` para escribir. Así Postgres arma el
+   conjunto una vez por consulta (InitPlan) en vez de evaluar
+   `is_workspace_owner(workspace_id)` por fila. Cada llave foránea lleva su
+   índice. Agrega la tabla a la matriz de
+   `supabase/tests/rls_workspace_access.test.sql` y corre `supabase test db`;
+   luego `supabase db push` y regenera `src/types/database.ts`.
 3. Crea `src/features/<área>/` con `schemas.ts` y `types.ts`.
 4. Lecturas en `queries.ts` y escrituras en `service.ts`, los dos con
    `import "server-only"`.

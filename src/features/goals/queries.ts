@@ -37,17 +37,29 @@ export async function getGoals(workspaceId: string): Promise<Goal[]> {
   }))
 }
 
-/** Aportes y retiros de una meta, el más reciente primero */
-export async function getGoalContributions(
-  goalId: string
-): Promise<GoalContribution[]> {
+const CONTRIBUTION_COLUMNS =
+  "id, workspace_id, goal_id, amount, occurred_on, occurred_time, day_position, note, account_id, import_id, created_at, updated_at, account:accounts!goal_contributions_account_id_workspace_id_fkey (name)"
+
+/**
+ * Aportes y retiros de varias metas en una sola consulta, por meta y el más
+ * reciente primero. Una meta sin aportes queda con lista vacía. Evita una
+ * consulta por meta en la lista (SPEC 56a)
+ */
+export async function getGoalContributionsByGoal(
+  goalIds: string[]
+): Promise<Map<string, GoalContribution[]>> {
+  const byGoal = new Map<string, GoalContribution[]>(
+    goalIds.map((id) => [id, []])
+  )
+  if (goalIds.length === 0) {
+    return byGoal
+  }
+
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("goal_contributions")
-    .select(
-      "*, account:accounts!goal_contributions_account_id_workspace_id_fkey (name)"
-    )
-    .eq("goal_id", goalId)
+    .select(CONTRIBUTION_COLUMNS)
+    .in("goal_id", goalIds)
     .order("occurred_on", { ascending: false })
     // Orden manual dentro del día (SPEC 19 y 45)
     .order("day_position", { ascending: true })
@@ -57,9 +69,12 @@ export async function getGoalContributions(
     throw new Error("No se pudieron cargar los aportes")
   }
 
-  return data.map(({ account, ...row }) => ({
-    ...row,
-    amount: Number(row.amount),
-    account_name: account?.name ?? null
-  }))
+  for (const { account, ...row } of data) {
+    byGoal.get(row.goal_id)?.push({
+      ...row,
+      amount: Number(row.amount),
+      account_name: account?.name ?? null
+    })
+  }
+  return byGoal
 }

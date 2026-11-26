@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { isReceivableOverdue } from "@/features/debts/calculations"
-import { getDebtEntries, getDebts } from "@/features/debts/queries"
+import { getDebtEntriesByDebt, getDebts } from "@/features/debts/queries"
 import {
   INSTALLMENT_STATUS,
   receivableInstallments,
@@ -47,6 +47,11 @@ export const listReceivables = defineTool({
     const receivables = (await getDebts(workspace.id)).filter(
       (debt) => debt.kind === "receivable" && debt.status === "active"
     )
+    const entriesByDebt = await getDebtEntriesByDebt(
+      receivables
+        .filter((debt) => debt.schedule === "monthly" && debt.entries_count > 0)
+        .map((debt) => debt.id)
+    )
 
     const rows = await Promise.all(
       receivables.map(async (debt) => {
@@ -57,8 +62,7 @@ export const listReceivables = defineTool({
         }
 
         if (debt.schedule === "monthly") {
-          const entries =
-            debt.entries_count > 0 ? await getDebtEntries(debt.id) : []
+          const entries = entriesByDebt.get(debt.id) ?? []
           const installments = receivableInstallments(debt, entries, today)
           const installment = installments.find(
             (item) => item.period_on === periodOn

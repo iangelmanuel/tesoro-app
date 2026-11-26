@@ -49,7 +49,7 @@ async function AccountDeletedContent() {
     redirect(SITE.routes.signIn)
   }
 
-  const requestedAt = deletionRequestedAt(user)
+  const requestedAt = deletionRequestedAt(user.app_metadata)
   if (!requestedAt) {
     redirect(SITE.routes.dashboard)
   }

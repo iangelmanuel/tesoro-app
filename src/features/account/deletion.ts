@@ -29,10 +29,13 @@ export function formatDeletionDate(date: string) {
   return LONG_DATE.format(new Date(Date.UTC(year, month - 1, day)))
 }
 
-/** ISO de la marca de borrado del usuario, o null si no está marcado */
-export function deletionRequestedAt(user: {
-  app_metadata: Record<string, unknown>
-}) {
-  const value = user.app_metadata.deletion_requested_at
+/**
+ * ISO de la marca de borrado, o null si no está marcado. Recibe el
+ * `app_metadata` del usuario (`getUser`) o de los claims del JWT (`getClaims`)
+ */
+export function deletionRequestedAt(
+  appMetadata: Record<string, unknown> | undefined
+) {
+  const value = appMetadata?.deletion_requested_at
   return typeof value === "string" ? value : null
 }

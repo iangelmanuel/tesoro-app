@@ -110,7 +110,7 @@ export async function authenticateMcpRequest(
     }
   }
 
-  if (deletionRequestedAt(user) !== null) {
+  if (deletionRequestedAt(user.app_metadata) !== null) {
     return {
       ok: false,
       response: jsonError(403, "Tu cuenta está en proceso de borrado.")

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useEffectEvent, useState } from "react"
 import type { Route } from "next"
 import { useRouter } from "next/navigation"
 import {
@@ -137,6 +137,15 @@ export function CommandPalette() {
   const { actions, run, workspace } = useQuickActions()
   const goTo = useGoToItems()
   const entities = useCommandEntities(open, workspace?.id)
+
+  // Las pantallas de "Ir a" no son <Link>: al abrir se precarga su shell
+  // estático, como hace el aside al entrar en vista (SPEC 56b)
+  const prefetchGoTo = useEffectEvent(() => {
+    for (const item of goTo) router.prefetch(item.href as Route)
+  })
+  useEffect(() => {
+    if (open) prefetchGoTo()
+  }, [open, workspace?.id])
 
   function select(callback: () => void) {
     setOpen(false)

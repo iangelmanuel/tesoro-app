@@ -32,7 +32,10 @@ import { frequencyLabel } from "../occurrences"
 import type { RecurringExpense } from "../queries"
 import { ActiveStatusBadge } from "./active-status-badge"
 import { RecurringExpenseDialog } from "./recurring-expense-dialog"
-import { RecurringExpenseSheet } from "./recurring-expense-sheet"
+import {
+  RecurringExpenseSheet,
+  preloadRecurringExpenseSheet
+} from "./recurring-expense-sheet"
 import { useRecurringExpenseActions } from "./use-recurring-expense-actions"
 
 /** Superficie de la tabla y de su skeleton */
@@ -183,6 +186,7 @@ function ExpenseRow({
     >
       <TableRow
         onClick={onOpen}
+        onPointerEnter={preloadRecurringExpenseSheet}
         className={cn(
           "cursor-pointer",
           !expense.is_active && "text-muted-foreground"
@@ -197,6 +201,7 @@ function ExpenseRow({
               event.stopPropagation()
               onOpen()
             }}
+            onFocus={preloadRecurringExpenseSheet}
             className="line-clamp-3 min-h-11 cursor-pointer rounded-md text-left font-medium break-words outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             {expense.name}

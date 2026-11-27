@@ -334,8 +334,9 @@ arrastre de Movimientos. Se descarga al abrir o al pasar por su disparador.
   nuevo. `Component` va dentro de un `Suspense`.
 - **Precarga** en `onPointerEnter` y `onFocus` del disparador (en táctil,
   `pointerenter` llega al tocar, antes del clic). `FormDialog` lo hace con
-  `onTriggerIntent`; los accesos rápidos, con
-  `preloadQuickAction(key)` (`quick-actions-context.tsx`).
+  `onTriggerIntent`; los accesos rápidos, con `preload(key)` de
+  `useQuickActions()` (`quick-actions-context.tsx`), que precarga el chunk
+  del formulario y, en Personal, sus datos (SPEC 57).
 - **Mientras llega** se ve su skeleton con las medidas reales, o la forma
   cerrada. Un diálogo diferido conserva su título y su descripción reales y
   difiere solo el formulario (`FormDialogBodySkeleton`): el disparador, el
@@ -360,6 +361,46 @@ arrastre de Movimientos. Se descarga al abrir o al pasar por su disparador.
   fila por ref: al llegar, ninguna fila se remonta ni pierde el foco.
 - Para saber si algo salió del chunk inicial: `pnpm next analyze` (método
   en [`rendimiento.md`](rendimiento.md)).
+
+### Montar solo lo que se ve (SPEC 57)
+
+- **Sheet con cuerpo diferido.** Deuda, Meta, Gasto fijo, Ingreso fijo y
+  Categorías siguen el mismo patrón:
+  - **Cabecera** (`…-sheet.tsx`): pasa a `DetailSheet` el título, el
+    estado y la cifra, y guarda el estado que sobrevive al cerrar. Ese
+    estado es el historial ya cargado, el "Ver más", la cuota que se cobra,
+    "Reactivar" en curso y los diálogos de editar, eliminar y pagar o
+    recibir. Los diálogos se quedan en la cabecera porque eliminar cierra
+    el Sheet mientras su diálogo todavía anima.
+  - **Cuerpo** (`…-sheet-body.tsx`): pinta resumen, acción, historial,
+    detalles y pie en el orden de `DetailSheet`, con sus mismas cajas
+    (`flex flex-col gap-2` para la acción y el borde superior del pie).
+  - **Carga:** el cuerpo usa `lazyWithPreload`, con `DetailSheetSkeleton`
+    mientras llega. Exporta `preload…Sheet`, que la tarjeta o la fila pone
+    en `onPointerEnter` / `onFocus`.
+  - **Panel que pide datos al abrir** (Gasto fijo, Ingreso fijo): el cuerpo
+    va en el slot `details`, que `DetailSheet` pinta también con `loading`.
+    El cuerpo omite resumen e historial mientras carga, y el fallback del
+    `Suspense` es `null` si `DetailSheet` ya muestra su skeleton.
+- **Diálogos al abrirse.** Un diálogo controlado que no está abierto al
+  entrar se monta con `useOpenedOnce(open)` (`src/hooks/use-opened-once.ts`):
+  la primera vez que se abre y desde entonces queda montado. Así lo usan
+  los accesos rápidos (Aporte, Pago, Categorías y Verificar), la hoja de
+  atajos y las acciones de cada fila de Movimientos (editar, duplicar y
+  eliminar).
+- **Lo propio de una pantalla.** `useViewport()`
+  (`shell/viewport-context.tsx`) da `mobile`, `desktop` o `unknown`, y
+  `mountsOn(viewport, "mobile" | "desktop")` dice si una variante se monta.
+  - **Quién lo usa:** el aside (columna en escritorio, Drawer en el
+    teléfono), `MobileShell` (barra inferior y hoja de accesos rápidos) y
+    `RowActions` (menú ⋯ o botones en línea). El CSS sigue ocultando la
+    variante que no toca, así que no hay salto de layout.
+  - **De dónde sale:** al hidratar, de la cookie `tesoro-viewport`, que
+    lee el layout. Sin cookie, en la primera visita, se montan las dos
+    hasta que la pantalla cruce los 768 px; la cookie se guarda con el
+    tamaño real.
+  - **Qué no hacer:** decidir el layout con un efecto, porque pintaría una
+    variante y la cambiaría por la otra.
 
 ### Menús rápidos (SPEC 51 §5)
 
@@ -599,12 +640,13 @@ Reglas:
 
 | Pieza                                           | Qué hace                                                                                                                                          |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/config/tutorials.ts`                       | Claves (`TUTORIAL_SECTIONS`), nombre y ruta de cada sección, `getTutorialSection(pathname)` y los pasos (`TUTORIALS`)                             |
+| `src/config/tutorials.ts`                       | Claves (`TUTORIAL_SECTIONS`), tipos, nombre y ruta de cada sección y `getTutorialSection(pathname)`                                               |
+| `src/config/tutorial-steps.ts`                  | Los pasos (`TUTORIALS`). Se descargan junto con driver.js, fuera del JS inicial (SPEC 57)                                                         |
 | `tutorials/components/tutorial-provider.tsx`    | `TutorialProvider` (progreso del servidor + `useOptimistic`), `markCompleted`, `reset`, `requestStart` ("Ver de nuevo")                           |
 | `tutorials/use-tutorial.ts`                     | `useTutorial(section)` → `{ completed, start }`. Descarga el motor con `import()` una vez por sesión y cierra el recorrido al salir de la sección |
 | `tutorials/engine/run-tour.ts`                  | Motor: filtra pasos por viewport y elementos visibles, textos en español, reduced motion y primario del espacio                                   |
 | `tutorials/engine/tour-theme.css`               | Tema del popover con tokens (contraste medido en el archivo)                                                                                      |
-| `tutorials/components/tutorial-auto-start.tsx`  | Arranque automático en el layout: espera a overlays y esqueletos                                                                                  |
+| `tutorials/components/tutorial-auto-start.tsx`  | Arranque automático en el layout: empieza tras `load` y en idle (SPEC 57) y espera a overlays y esqueletos                                        |
 | `tutorials/components/tutorial-help-button.tsx` | Botón `?` del header, junto al ojo                                                                                                                |
 | `tutorials/components/tutorials-settings.tsx`   | Tarjeta Tutoriales de Cuenta › Preferencias                                                                                                       |
 
@@ -613,7 +655,7 @@ Reglas:
 1. Pon `data-tour="<sección>-<elemento>"` en el elemento (nunca se apunta a
    clases CSS). Los componentes de `ui/` pasan el atributo al DOM.
    `ChartCard` y `ScrollTable` reciben la prop `tour`.
-2. Agrega el paso en `TUTORIALS[sección]` con `target` (sin él va centrado),
+2. Agrega el paso en `TUTORIALS[sección]` (`tutorial-steps.ts`) con `target` (sin él va centrado),
    `title` y `description` en la voz de `PRODUCT.md` (tuteo, frases cortas).
 3. Si solo aplica en escritorio o en móvil, `viewport: "desktop" | "mobile"`.
 
@@ -621,7 +663,8 @@ Reglas:
 
 - El motor resalta el **primer elemento visible** con ese `data-tour`. Por
   eso una misma ancla puede ir en la versión de escritorio y en la móvil de
-  un componente (las dos se pintan y CSS oculta una), o en cada fila de una
+  un componente (CSS oculta la que no toca y, con la cookie de viewport,
+  solo se monta una; SPEC 57), o en cada fila de una
   lista: se resalta la primera.
 - Un paso sin elemento visible se omite. No hace falta condicionar los pasos
   a que haya datos.
@@ -633,7 +676,7 @@ Reglas:
 - Algunas anclas viven en componentes que Empresa también usa (Reportes,
   score, últimos movimientos). Allí no hacen nada mientras Empresa no tenga
   tutoriales.
-- Al quitar o renombrar un `data-tour`, búscalo en `tutorials.ts`: el paso no
+- Al quitar o renombrar un `data-tour`, búscalo en `tutorial-steps.ts`: el paso no
   falla, pero desaparece del recorrido.
 - El popover se monta en `<body>`, fuera del contenedor del espacio:
   `run-tour.ts` le copia `--accent`, `--accent-foreground` y `--focus` desde

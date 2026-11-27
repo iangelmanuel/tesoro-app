@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense } from "react"
+import { Suspense, use } from "react"
 import {
   FormDialog,
   FormDialogBodySkeleton
@@ -46,9 +46,12 @@ interface TransactionDialogProps {
   /**
    * Tabs "Deuda" (pagos y avances) y "Gasto fijo" (solo Personal y al
    * registrar):
-   * deudas activas y ocurrencias sin pagar. Los pasa el botón del header
+   * deudas activas y ocurrencias sin pagar. Los pasa el botón del header,
+   * que los pide al abrir (SPEC 57): puede llegar una promesa, y mientras
+   * resuelve el cuerpo muestra su skeleton. Si resuelve null (falló la
+   * carga), el diálogo abre sin esos tabs
    */
-  paymentTabs?: PaymentTabsData
+  paymentTabs?: PaymentTabsData | Promise<PaymentTabsData | null>
   /**
    * Ingresos fijos activos para el select "Ingreso fijo" del tab Ingreso
    * (solo Personal). Sin ellos no hay select y, al editar, el enlace se
@@ -115,7 +118,7 @@ export function TransactionDialog({
             />
           }
         >
-          <TransactionForm.Component
+          <TransactionFormBody
             workspaceId={workspaceId}
             workspaceType={workspaceType}
             categories={categories}
@@ -123,7 +126,8 @@ export function TransactionDialog({
             transaction={transaction}
             initialValues={isEditing ? undefined : initialValues}
             recurring={isEditing ? undefined : recurring}
-            paymentTabs={showPaymentTabs ? paymentTabs : undefined}
+            paymentTabs={paymentTabs}
+            showPaymentTabs={showPaymentTabs}
             // El traspaso existe en ambos espacios (atajo T, SPEC 51)
             initialPanel={
               showPaymentTabs || initialPanel === "transfer"
@@ -132,8 +136,11 @@ export function TransactionDialog({
             }
             incomeSources={
               workspaceType === "personal" && !isPayment
-                ? (incomeSources ?? paymentTabs?.incomeSources)
+                ? incomeSources
                 : undefined
+            }
+            withPaymentIncomeSources={
+              workspaceType === "personal" && !isPayment
             }
             onSaved={close}
             onCancel={close}
@@ -141,5 +148,43 @@ export function TransactionDialog({
         </Suspense>
       )}
     </FormDialog>
+  )
+}
+
+type TransactionFormBodyProps = Omit<
+  React.ComponentProps<typeof TransactionForm.Component>,
+  "paymentTabs"
+> & {
+  paymentTabs: TransactionDialogProps["paymentTabs"]
+  /** Los tabs de pago se muestran (Personal, al registrar) */
+  showPaymentTabs: boolean
+  /** Sin `incomeSources` propios, usa los de `paymentTabs` (Personal) */
+  withPaymentIncomeSources: boolean
+}
+
+// Dentro del Suspense del cuerpo: si los tabs de pago llegan como promesa,
+// `use` suspende y se ve el mismo skeleton que mientras baja el chunk
+function TransactionFormBody({
+  paymentTabs,
+  showPaymentTabs,
+  incomeSources,
+  withPaymentIncomeSources,
+  ...props
+}: TransactionFormBodyProps) {
+  const tabs =
+    paymentTabs instanceof Promise
+      ? (use(paymentTabs) ?? undefined)
+      : paymentTabs
+
+  return (
+    <TransactionForm.Component
+      {...props}
+      paymentTabs={showPaymentTabs ? tabs : undefined}
+      incomeSources={
+        withPaymentIncomeSources
+          ? (incomeSources ?? tabs?.incomeSources)
+          : undefined
+      }
+    />
   )
 }

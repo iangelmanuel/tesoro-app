@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,7 +19,6 @@ import { useCommandPalette } from "../command/command-palette-context"
 import { preloadCommandPalette } from "../command/command-palette-lazy"
 import {
   type QuickAction,
-  preloadQuickAction,
   useQuickActions
 } from "../quick-actions/quick-actions-context"
 
@@ -38,15 +38,23 @@ interface QuickSheetProps {
 // comandos (quick-actions-context): primero lo que registra, luego las
 // herramientas. Cada acción cierra la hoja y abre su diálogo sin cambiar de
 // página. Se cierra deslizando hacia abajo, tocando el fondo, con "Cerrar" o
-// con Escape. Solo existe en rutas de un espacio.
+// con Escape. Solo existe en rutas de un espacio. Abierta, precarga los
+// datos de los formularios de Personal (SPEC 57): casi todo lo que ofrece
+// los usa
+
 export function QuickSheet({
   open,
   onOpenChange,
   autoOpen,
   onAutoOpenChange
 }: QuickSheetProps) {
-  const { workspace, actions, run } = useQuickActions()
+  const { workspace, actions, run, preload, preloadFormData } =
+    useQuickActions()
   const palette = useCommandPalette()
+
+  useEffect(() => {
+    if (open) preloadFormData()
+  }, [open, preloadFormData])
 
   if (!workspace) {
     return null
@@ -66,8 +74,8 @@ export function QuickSheet({
           onOpenChange(false)
           run(key)
         }}
-        onPointerEnter={() => preloadQuickAction(key)}
-        onFocus={() => preloadQuickAction(key)}
+        onPointerEnter={() => preload(key)}
+        onFocus={() => preload(key)}
       >
         <Icon className="size-5" />
         {label}

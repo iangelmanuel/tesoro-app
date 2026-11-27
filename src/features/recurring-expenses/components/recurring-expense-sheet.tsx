@@ -1,40 +1,36 @@
 "use client"
 
-import { useState } from "react"
-import type { ReactNode } from "react"
-import { Check, Pause, Pencil, Play, Trash2 } from "lucide-react"
+import { Suspense, useState } from "react"
 import { Amount } from "@/components/dashboard/data/amount"
-import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
 import { DeleteDialog } from "@/components/dashboard/overlays/delete-dialog"
 import {
-  DetailSection,
   DetailSheet,
-  DetailStats
+  DetailSheetSkeleton
 } from "@/components/dashboard/overlays/detail-sheet"
-import { Button } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
 import { currentMonth } from "@/libs/dates"
-import { formatShortDate } from "@/libs/format"
+import { lazyWithPreload } from "@/libs/lazy-with-preload"
 import { frequencyLabel } from "../occurrences"
-import type {
-  RecurringExpense,
-  RecurringExpenseHistory,
-  UpcomingPayment
-} from "../queries"
-import {
-  hasFutureOccurrences,
-  nextUnpaidPayment,
-  periodLabel
-} from "../recurring-expense-history"
+import type { RecurringExpense, UpcomingPayment } from "../queries"
+import { nextUnpaidPayment } from "../recurring-expense-history"
 import { ActiveStatusBadge } from "./active-status-badge"
 import { RecurringExpenseDialog } from "./recurring-expense-dialog"
-import { RecurringExpenseSheetDetails } from "./recurring-expense-sheet-details"
-import { RecurringExpenseSheetHistory } from "./recurring-expense-sheet-history"
 import { occurrencePaymentProps } from "./upcoming-payments"
 import { useRecurringExpenseActions } from "./use-recurring-expense-actions"
 import { useRecurringExpenseSheet } from "./use-recurring-expense-sheet"
+
+// Resumen, historial de pagos, detalles y acciones se descargan al abrir el
+// panel o al pasar por su fila (SPEC 57)
+const RecurringExpenseSheetBody = lazyWithPreload(() =>
+  import("./recurring-expense-sheet-body").then(
+    (m) => m.RecurringExpenseSheetBody
+  )
+)
+
+/** Precarga el cuerpo del Sheet de gasto fijo: `onPointerEnter` / `onFocus` */
+export const preloadRecurringExpenseSheet = RecurringExpenseSheetBody.preload
 
 interface RecurringExpenseSheetProps {
   expense: RecurringExpense
@@ -48,7 +44,9 @@ interface RecurringExpenseSheetProps {
 /**
  * Detalle de un gasto fijo (SPEC 37): datos, acciones y sus periodos desde
  * `starts_on` hasta el mes actual, el más reciente primero, con "Marcar como
- * pagado" en los impagos. Muestra los últimos 12 y un "Ver más".
+ * pagado" en los impagos. Muestra los últimos 12 y un "Ver más". La
+ * cabecera, el historial cargado y los diálogos viven aquí y sobreviven al
+ * cerrar; el cuerpo es diferido (RecurringExpenseSheetBody)
  */
 export function RecurringExpenseSheet({
   expense,
@@ -67,29 +65,9 @@ export function RecurringExpenseSheet({
   const [paying, setPaying] = useState<UpcomingPayment | null>(null)
   const { pending, toggle, remove } = useRecurringExpenseActions(expense)
 
-  const isYearly = expense.frequency === "yearly"
   const month = currentMonth()
   const nextUnpaid = history ? nextUnpaidPayment(history.payments) : null
-
-  let action: ReactNode = null
-  if (!expense.is_active) {
-    action = (
-      <Button
-        disabled={pending}
-        onClick={toggle}
-      >
-        <Play />
-        Reanudar
-      </Button>
-    )
-  } else if (nextUnpaid) {
-    action = (
-      <Button onClick={() => setPaying(nextUnpaid)}>
-        <Check />
-        Marcar {periodLabel(nextUnpaid, isYearly)} como pagado
-      </Button>
-    )
-  }
+  const loading = expense.is_active && error === null && history === null
 
   return (
     <>
@@ -105,81 +83,30 @@ export function RecurringExpenseSheet({
           />
         }
         figureCaption={frequencyLabel(expense)}
-        loading={expense.is_active && error === null && history === null}
-        summary={
-          <SheetSummary
-            isActive={expense.is_active}
-            error={error}
-            history={history}
-            nextUnpaid={nextUnpaid}
-            isYearly={isYearly}
-            year={month.slice(0, 4)}
-            currency={currency}
-          />
-        }
-        action={action}
-        history={
-          expense.is_active &&
-          history && (
-            <DetailSection
-              title={isYearly ? "Pagos por año" : "Pagos mes a mes"}
-            >
-              <RecurringExpenseSheetHistory
-                history={history}
-                isYearly={isYearly}
-                currency={currency}
-                hasFutureOccurrences={hasFutureOccurrences(expense, month)}
-                payments={{
-                  workspaceId: expense.workspace_id,
-                  categories,
-                  accounts,
-                  onChanged: reload
-                }}
-                onPay={setPaying}
-                onShowMore={showMore}
-              />
-            </DetailSection>
-          )
-        }
+        loading={loading}
         details={
-          <DetailSection
-            title="Detalles"
-            help="frequency"
-          >
-            <RecurringExpenseSheetDetails expense={expense} />
-          </DetailSection>
-        }
-        footer={
-          <>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setEditing(true)}
-            >
-              <Pencil />
-              Editar
-            </Button>
-            {expense.is_active && (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={pending}
-                onClick={toggle}
-              >
-                <Pause />
-                Pausar
-              </Button>
-            )}
-            <Button
-              size="sm"
-              variant="destructive"
-              disabled={pending}
-              onClick={() => setDeleting(true)}
-            >
-              <Trash2 />
-              Eliminar
-            </Button>
-          </>
+          // Mientras baja el chunk, el skeleton del panel, salvo que ya lo
+          // pinte DetailSheet porque el historial también está cargando
+          <Suspense fallback={loading ? null : <DetailSheetSkeleton />}>
+            <RecurringExpenseSheetBody.Component
+              expense={expense}
+              categories={categories}
+              accounts={accounts}
+              currency={currency}
+              month={month}
+              loading={loading}
+              history={history}
+              error={error}
+              nextUnpaid={nextUnpaid}
+              pending={pending}
+              onToggle={toggle}
+              onPay={setPaying}
+              onEdit={() => setEditing(true)}
+              onDelete={() => setDeleting(true)}
+              onReload={reload}
+              onShowMore={showMore}
+            />
+          </Suspense>
         }
       />
 
@@ -219,76 +146,5 @@ export function RecurringExpenseSheet({
         />
       )}
     </>
-  )
-}
-
-/**
- * Resumen bajo la cifra: aviso de pausado, el error de carga o los totales
- * del historial (nada mientras carga)
- */
-function SheetSummary({
-  isActive,
-  error,
-  history,
-  nextUnpaid,
-  isYearly,
-  year,
-  currency
-}: {
-  isActive: boolean
-  error: string | null
-  history: RecurringExpenseHistory | null
-  nextUnpaid: UpcomingPayment | null
-  isYearly: boolean
-  year: string
-  currency: string
-}) {
-  if (!isActive) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Este gasto está pausado: no genera pagos. Reanúdalo para ver su
-        historial.
-      </p>
-    )
-  }
-  if (error !== null) {
-    return <p className="text-sm text-destructive">{error}</p>
-  }
-  if (!history) {
-    return null
-  }
-
-  return (
-    <DetailStats
-      items={[
-        {
-          label: `Pagado en ${year}`,
-          value: (
-            <Amount
-              value={history.paidThisYear}
-              currency={currency}
-            />
-          ),
-          className: TONE_TEXT_CLASSES.success
-        },
-        {
-          label: "Atrasado a la fecha",
-          value: (
-            <Amount
-              value={history.overdueAmount}
-              currency={currency}
-            />
-          ),
-          className:
-            history.overdueAmount > 0 ? TONE_TEXT_CLASSES.danger : undefined
-        },
-        {
-          label: "Próximo por pagar",
-          value: nextUnpaid
-            ? `${periodLabel(nextUnpaid, isYearly)} · vence el ${formatShortDate(nextUnpaid.dueOn)}`
-            : "Al día"
-        }
-      ]}
-    />
   )
 }

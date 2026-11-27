@@ -1,35 +1,35 @@
 "use client"
 
-import { type ReactNode, useState } from "react"
-import { Check, Pause, Pencil, Play, Trash2 } from "lucide-react"
+import { Suspense, useState } from "react"
 import { Amount } from "@/components/dashboard/data/amount"
-import { TONE_TEXT_CLASSES } from "@/components/dashboard/feedback/tone"
 import { DeleteDialog } from "@/components/dashboard/overlays/delete-dialog"
 import {
-  DetailSection,
   DetailSheet,
-  DetailStats
+  DetailSheetSkeleton
 } from "@/components/dashboard/overlays/detail-sheet"
-import { Button } from "@/components/ui/button"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import { ActiveStatusBadge } from "@/features/recurring-expenses/components/active-status-badge"
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog"
-import { todayISO } from "@/libs/dates"
-import {
-  type IncomeHistoryRow,
-  type RecurringIncomeHistory,
-  nextOpenOccurrence
-} from "../income-history"
-import { incomeFrequencyLabel, shortOccurrenceDate } from "../occurrences"
+import { lazyWithPreload } from "@/libs/lazy-with-preload"
+import { type IncomeHistoryRow, nextOpenOccurrence } from "../income-history"
+import { incomeFrequencyLabel } from "../occurrences"
 import type { IncomeSourceOption, RecurringIncome } from "../queries"
-import { canDuplicateReceipt } from "../receipt"
 import { receiveIncomeInitialValues } from "./receive-income-button"
 import { RecurringIncomeDialog } from "./recurring-income-dialog"
-import { RecurringIncomeSheetDetails } from "./recurring-income-sheet-details"
-import { RecurringIncomeSheetHistory } from "./recurring-income-sheet-history"
 import { useRecurringIncomeActions } from "./use-recurring-income-actions"
 import { useRecurringIncomeSheet } from "./use-recurring-income-sheet"
+
+// Resumen, periodos, detalles y acciones se descargan al abrir el panel o al
+// pasar por su fila (SPEC 57)
+const RecurringIncomeSheetBody = lazyWithPreload(() =>
+  import("./recurring-income-sheet-body").then(
+    (m) => m.RecurringIncomeSheetBody
+  )
+)
+
+/** Precarga el cuerpo del Sheet de ingreso fijo: `onPointerEnter` / `onFocus` */
+export const preloadRecurringIncomeSheet = RecurringIncomeSheetBody.preload
 
 interface RecurringIncomeSheetProps {
   income: RecurringIncome
@@ -46,7 +46,9 @@ interface RecurringIncomeSheetProps {
  * Detalle de un ingreso fijo (SPEC 38): datos, acciones y sus ocurrencias
  * desde `starts_on` hasta hoy más la próxima, la más reciente primero, con lo
  * recibido, los movimientos que cubren cada una y **Recibir** en las
- * abiertas. Muestra una página (12, o 31 en la diaria) y "Ver más".
+ * abiertas. Muestra una página (12, o 31 en la diaria) y "Ver más". La
+ * cabecera, el historial cargado y los diálogos viven aquí y sobreviven al
+ * cerrar; el cuerpo es diferido (RecurringIncomeSheetBody)
  */
 export function RecurringIncomeSheet({
   income,
@@ -63,30 +65,9 @@ export function RecurringIncomeSheet({
   const [deleting, setDeleting] = useState(false)
   const [receiving, setReceiving] = useState<IncomeHistoryRow | null>(null)
   const { pending, toggle, remove } = useRecurringIncomeActions(income)
-  // Pausada o terminada: el servidor no acepta cobros nuevos para ella
   const source = incomeSources.find((option) => option.id === income.id)
-  const canReceive = source !== undefined
   const nextOpen = history ? nextOpenOccurrence(history.occurrences) : null
-
-  let action: ReactNode = null
-  if (!income.is_active) {
-    action = (
-      <Button
-        disabled={pending}
-        onClick={toggle}
-      >
-        <Play />
-        Reanudar
-      </Button>
-    )
-  } else if (canReceive && nextOpen) {
-    action = (
-      <Button onClick={() => setReceiving(nextOpen)}>
-        <Check />
-        Recibir {shortOccurrenceDate(nextOpen.dueOn)}
-      </Button>
-    )
-  }
+  const loading = hasSchedule && error === null && history === null
 
   return (
     <>
@@ -102,82 +83,32 @@ export function RecurringIncomeSheet({
           />
         }
         figureCaption={incomeFrequencyLabel(income)}
-        loading={hasSchedule && error === null && history === null}
-        summary={
-          hasSchedule && (
-            <SheetSummary
-              error={error}
-              history={history}
-              nextOpen={nextOpen}
-              year={todayISO().slice(0, 4)}
-              currency={currency}
-            />
-          )
-        }
-        action={action}
-        history={
-          hasSchedule &&
-          history && (
-            <DetailSection
-              title="Periodos"
-              help="multipleReceipts"
-            >
-              <RecurringIncomeSheetHistory
-                history={history}
-                currency={currency}
-                editing={{
-                  workspaceId: income.workspace_id,
-                  categories,
-                  accounts,
-                  incomeSources,
-                  canDuplicate: canDuplicateReceipt(source),
-                  onChanged: reload
-                }}
-                onReceive={canReceive ? setReceiving : undefined}
-                onShowMore={showMore}
-              />
-            </DetailSection>
-          )
-        }
+        loading={loading}
         details={
-          <DetailSection
-            title="Detalles"
-            help={hasSchedule ? "frequency" : "noFixedDate"}
-          >
-            <RecurringIncomeSheetDetails income={income} />
-          </DetailSection>
-        }
-        footer={
-          <>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setEditing(true)}
-            >
-              <Pencil />
-              Editar
-            </Button>
-            {income.is_active && (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={pending}
-                onClick={toggle}
-              >
-                <Pause />
-                Pausar
-              </Button>
-            )}
-            <Button
-              size="sm"
-              variant="destructive"
-              disabled={pending}
-              onClick={() => setDeleting(true)}
-            >
-              <Trash2 />
-              Eliminar
-            </Button>
-          </>
+          // Mientras baja el chunk, el skeleton del panel, salvo que ya lo
+          // pinte DetailSheet porque el historial también está cargando
+          <Suspense fallback={loading ? null : <DetailSheetSkeleton />}>
+            <RecurringIncomeSheetBody.Component
+              income={income}
+              categories={categories}
+              accounts={accounts}
+              incomeSources={incomeSources}
+              source={source}
+              currency={currency}
+              hasSchedule={hasSchedule}
+              loading={loading}
+              history={history}
+              error={error}
+              nextOpen={nextOpen}
+              pending={pending}
+              onToggle={toggle}
+              onReceive={setReceiving}
+              onEdit={() => setEditing(true)}
+              onDelete={() => setDeleting(true)}
+              onReload={reload}
+              onShowMore={showMore}
+            />
+          </Suspense>
         }
       />
 
@@ -229,72 +160,5 @@ export function RecurringIncomeSheet({
         />
       )}
     </>
-  )
-}
-
-/**
- * Resumen bajo la cifra: el error de carga o los totales del historial (nada
- * mientras carga)
- */
-function SheetSummary({
-  error,
-  history,
-  nextOpen,
-  year,
-  currency
-}: {
-  error: string | null
-  history: RecurringIncomeHistory | null
-  nextOpen: IncomeHistoryRow | null
-  year: string
-  currency: string
-}) {
-  if (error !== null) {
-    return <p className="text-sm text-destructive">{error}</p>
-  }
-  if (!history) {
-    return null
-  }
-
-  return (
-    <DetailStats
-      items={[
-        {
-          label: `Recibido en ${year}`,
-          value: (
-            <Amount
-              value={history.receivedThisYear}
-              currency={currency}
-            />
-          ),
-          className: TONE_TEXT_CLASSES.success
-        },
-        {
-          label: "Por cobrar a la fecha",
-          value: (
-            <Amount
-              value={history.dueToDate}
-              currency={currency}
-            />
-          ),
-          className:
-            history.dueToDate > 0 ? TONE_TEXT_CLASSES.danger : undefined
-        },
-        {
-          label: "Próximo por recibir",
-          value: nextOpen ? (
-            <>
-              {shortOccurrenceDate(nextOpen.dueOn)} ·{" "}
-              <Amount
-                value={nextOpen.remaining}
-                currency={currency}
-              />
-            </>
-          ) : (
-            "Al día"
-          )
-        }
-      ]}
-    />
   )
 }

@@ -199,6 +199,34 @@ composición va a un módulo de la feature, con su test.
   formularios de diálogo, paleta, calendario, arrastre) se carga con
   `lazyWithPreload` y su skeleton. Patrón en
   [`ui.md`](ui.md#carga-diferida-spec-56b).
+- **Servidor o cliente (SPEC 57):** una tarjeta o lista de solo lectura va
+  en el servidor si así nace. Pasar al servidor una que hoy es cliente solo
+  conviene si lo que ahorra en hidratación pesa más que el HTML que suma al
+  payload RSC: un componente de servidor viaja con todas sus clases, uno
+  cliente solo con sus props. Las filas de tabla (`ui/table.tsx`) y los ítems
+  de recomendación no compensaron (+3,4 a +5,9 kB en `/dashboard/personal`).
+  Lo que más rinde es **no montar lo que no se ve**:
+  - los diálogos se montan la primera vez que se abren (`useOpenedOnce`);
+  - lo propio de una pantalla, solo en esa pantalla (`useViewport`);
+  - el cuerpo de los Sheets se difiere.
+- **Qué viaja en el layout del dashboard (SPEC 57):**
+  - las preferencias que el primer render ya respeta: cifras ocultas,
+    tutoriales terminados, atajos y la cookie `tesoro-viewport`;
+  - el usuario y las empresas del aside;
+  - los espacios de los accesos rápidos, con sus categorías, cuentas y
+    `historyStart`.
+
+  Lo que solo usan los formularios no viaja en el layout: metas, deudas,
+  cobros, gastos fijos sin pagar e ingresos fijos. Se pide al abrir el
+  formulario o se precarga con su disparador.
+
+- **Lecturas que se piden desde el cliente (SPEC 57):** con un Route
+  Handler `GET` (`app/api/quick-actions/form-data/route.ts`), no con una
+  server action. Una action siempre re-renderiza el router y Next las
+  ejecuta de una en una; un `GET` no hace ninguna de las dos cosas. Igual
+  que las actions, valida la sesión (401 sin ella), lee con RLS y responde
+  `Cache-Control: no-store`. La consulta vive en un módulo con
+  `server-only` (`quick-actions/form-data-query.ts`).
 
 ## Nombres
 
@@ -233,6 +261,9 @@ Los de una sola feature viven junto a sus componentes
 `src/hooks/`:
 
 - `use-is-mobile.ts`: corte móvil del dashboard (`< 768 px`);
+- `use-opened-once.ts` (`useOpenedOnce`, SPEC 57): si un diálogo controlado
+  ya se abrió. El diálogo se monta desde entonces y queda montado (anima el
+  cierre y conserva su estado);
 - `use-action-toast.ts` (`useActionToast`): corre una server action que
   devuelve `{ error }` en una transición y avisa con toast de éxito o de
   error; un `onSuccess` opcional corre tras el éxito (cerrar un Sheet). Lo

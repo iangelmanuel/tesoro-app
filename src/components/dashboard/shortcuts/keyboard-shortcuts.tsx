@@ -11,6 +11,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog"
 import { GO_SEQUENCE_TIMEOUT_MS, SHORTCUTS } from "@/config/shortcuts"
+import { useOpenedOnce } from "@/hooks/use-opened-once"
 import { useQuickActions } from "../quick-actions/quick-actions-context"
 import { getNavTargets } from "./nav-targets"
 import { ShortcutKeys } from "./shortcut-keys"
@@ -95,11 +96,17 @@ export function KeyboardShortcuts() {
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [enabled, router, run, targets, workspace])
 
+  // La hoja se monta la primera vez que se pide (SPEC 57)
+  const helpVisible = helpOpen && enabled
+  const helpOpened = useOpenedOnce(helpVisible)
+
   return (
-    <ShortcutsHelp
-      open={helpOpen && enabled}
-      onOpenChange={setHelpOpen}
-    />
+    helpOpened && (
+      <ShortcutsHelp
+        open={helpVisible}
+        onOpenChange={setHelpOpen}
+      />
+    )
   )
 }
 

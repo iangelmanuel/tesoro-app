@@ -1,6 +1,6 @@
 # SPEC 57 — Rendimiento: render e hidratación del dashboard
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 51, SPEC 56a, SPEC 56b
 > **Fecha:** 2026-11-26
 > **Objetivo:** Llevar las rutas principales del dashboard a Lighthouse móvil ≥ 90 bajando el trabajo de render e hidratación en el navegador, sin cambiar lo que ve ni puede hacer el usuario.
@@ -84,16 +84,28 @@ Este spec no introduce estructuras de datos nuevas. Puede mover lecturas que hoy
 
 ## Criterios de aceptación
 
-- [ ] Lighthouse móvil de `/dashboard/personal`, `/dashboard/personal/transactions` y `/dashboard/personal/reports` en el Preview: Performance ≥ 90, LCP ≤ 2,5 s, CLS ≤ 0,1 y TBT ≤ 200 ms (mediana de 3, con `benchmarkIndex` ≥ 1.200 en las corridas).
-- [ ] En las mismas corridas, el TBT de cada ruta es menor que el de `master` medido en la misma ventana.
-- [ ] Escribir en el buscador de Movimientos no da commits de más de 200 ms en el Profiler.
-- [ ] Las tres interacciones del Profiler renderizan menos componentes que en la línea base de `master`.
-- [ ] En escritorio no se monta la barra inferior ni la hoja de acciones rápidas, y en el teléfono no se monta lo propio del aside, sin salto de layout (CLS ≤ 0,1).
-- [ ] El payload RSC de `/dashboard/personal` baja respecto a la línea base.
-- [ ] Los Sheets de Deuda, Meta, Gasto fijo e Ingreso fijo cargan su cuerpo al abrir, con su skeleton, y conservan el estado que hoy sobrevive al cerrar.
-- [ ] Ningún flujo cambia: registrar, editar, pagar, aportar, recibir, reordenar, filtrar, exportar e importar funcionan igual en Personal y Empresa, en escritorio y teléfono.
-- [ ] `docs/rendimiento.md` tiene las tablas "Antes" y "Después" de este spec.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
+- [ ] Lighthouse móvil de `/dashboard/personal`, `/dashboard/personal/transactions` y `/dashboard/personal/reports` en el Preview: Performance ≥ 90, LCP ≤ 2,5 s, CLS ≤ 0,1 y TBT ≤ 200 ms (mediana de 3, con `benchmarkIndex` ≥ 1.200 en las corridas). **No se cumple:** Performance 57 en el Preview. Lo frenan el LCP y el costo de estilos, que quedan fuera de este spec (ver notas).
+- [ ] En las mismas corridas, el TBT de cada ruta es menor que el de `master` medido en la misma ventana. **Solo en Movimientos** (889 frente a 1.541 ms). `/dashboard/personal` y Reportes quedan iguales dentro del ruido.
+- [x] Escribir en el buscador de Movimientos no da commits de más de 200 ms en el Profiler.
+- [x] Las tres interacciones del Profiler renderizan menos componentes que en la línea base de `master`.
+- [x] En escritorio no se monta la barra inferior ni la hoja de acciones rápidas, y en el teléfono no se monta lo propio del aside, sin salto de layout (CLS ≤ 0,1).
+- [x] El payload RSC de `/dashboard/personal` baja respecto a la línea base.
+- [x] Los Sheets de Deuda, Meta, Gasto fijo e Ingreso fijo cargan su cuerpo al abrir, con su skeleton, y conservan el estado que hoy sobrevive al cerrar.
+- [ ] Ningún flujo cambia: registrar, editar, pagar, aportar, recibir, reordenar, filtrar, exportar e importar funcionan igual en Personal y Empresa, en escritorio y teléfono. **Prueba manual pendiente en el PR** para Empresa, reordenar, exportar, importar y pagar una deuda real.
+- [x] `docs/rendimiento.md` tiene las tablas "Antes" y "Después" de este spec.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
+
+Notas de la verificación (detalle en `docs/rendimiento.md`, "Render e hidratación (SPEC 57)"):
+
+- **Método.** Build de producción local contra la Supabase remota. Control: un worktree de `master` (`de555fb`) servido a la vez, con las corridas intercaladas. El Profiler y la hidratación se midieron con un hook mínimo de DevTools sobre `next build --profile`.
+- **Lighthouse.** En local, con `benchmarkIndex` de 1.558 a 1.778, la rama da 50–60 de Performance y `master` 53–55. En el Preview, 57. LCP de 4,8 a 6,0 s y CLS ≤ 0,002. Lighthouse no manda la cookie `tesoro-viewport`, así que cada corrida es una primera visita.
+- **LCP.** El HTML de la cifra llega 0,5–0,9 s después del primer byte, por la cadena auth → espacio → consultas. Después, React agrupa los revelados del streaming (300 ms por nivel de `Suspense`). La pintura espera al recálculo de estilos, que suma 1,1–1,8 s por carga a 4×. Se probaron y revirtieron tres cambios sin efecto medible: preferencias del layout como promesa, `:has()` con sujeto y `content-visibility`. Bajarlo exige tocar la cadena de datos del servidor o cachear los KPI, montar las gráficas como SVG estático, tener menos componentes cliente en el shell y revisar el costo de estilos. Nada de eso entra en este spec.
+- **Hidratación** (CPU 4×, con cookie de viewport). Movimientos en el teléfono pasa de 2.307 a 1.695 componentes y Reportes de 2.211 a 1.847. El commit más largo de `/dashboard/personal` en escritorio baja de 508 a 238 ms.
+- **Profiler.** Buscar: commit más largo de 47,8 a 30,4 ms, componentes de 1.590 a 1.080. Cambiar de mes: de 4.138 a 3.638 componentes; casi todo son fotogramas de la animación de Recharts, así que el total varía entre 3.600 y 4.050 en las dos versiones. Abrir el diálogo: de 298 a 295.
+- **Payload RSC.** En la cuenta de pruebas queda igual, porque no tiene metas ni deudas. Con 5 elementos temporales (borrados después), `/dashboard/personal` pasa de 212,7 a 210,7 kB.
+- **JS inicial.** Deudas de 1.774 a 1.578 kB, Metas de 1.559 a 1.416 kB e Ingresos fijos de 1.567 a 1.422 kB.
+- **Revertido por subir el payload RSC:** pasar al servidor `ui/table.tsx` (+5,9 kB) y los ítems de recomendación (+3,4 kB).
+- **Flujos verificados con Playwright en el build:** el shell al girar y al redimensionar; los accesos rápidos (precarga, tabs de pago, atajo T y Aportar, Pagar y Cobro sin datos); Categorías conserva la pestaña; las acciones de fila en escritorio, el menú contextual y el teléfono. También los 5 Sheets con datos temporales, y "Marcar como pagado" y "Eliminar" desde el Sheet de Gasto fijo.
 
 ## Decisiones
 

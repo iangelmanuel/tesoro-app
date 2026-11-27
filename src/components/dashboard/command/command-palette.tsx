@@ -134,14 +134,16 @@ const ACTION_SHORTCUTS: Partial<Record<QuickActionKey, readonly string[]>> = {
 export function CommandPalette() {
   const router = useRouter()
   const { open, setOpen } = useCommandPalette()
-  const { actions, run, workspace } = useQuickActions()
+  const { actions, run, workspace, preloadFormData } = useQuickActions()
   const goTo = useGoToItems()
   const entities = useCommandEntities(open, workspace?.id)
 
   // Las pantallas de "Ir a" no son <Link>: al abrir se precarga su shell
-  // estático, como hace el aside al entrar en vista (SPEC 56b)
+  // estático, como hace el aside al entrar en vista (SPEC 56b). También los
+  // datos de los formularios de las acciones (SPEC 57)
   const prefetchGoTo = useEffectEvent(() => {
     for (const item of goTo) router.prefetch(item.href as Route)
+    preloadFormData()
   })
   useEffect(() => {
     if (open) prefetchGoTo()

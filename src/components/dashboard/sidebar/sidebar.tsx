@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/sheet"
 import { MOBILE_QUERY, useIsMobile } from "@/hooks/use-is-mobile"
 import { cn } from "@/libs/cn"
+import { mountsOn } from "../shell/viewport"
+import { useViewport } from "../shell/viewport-context"
 import { SIDEBAR_WIDTH, clampSidebarWidth, saveSidebarWidth } from "./width"
 
 // Sidebar del dashboard con primitivas de shadcn (Button, Sheet) y tokens
@@ -117,7 +119,9 @@ export function useCloseSidebarOnNavigate() {
 
 /** Columna en escritorio y Drawer en móvil, con el mismo contenido. `width`
  *  (px) es el ancho inicial de la columna; con `resizable` se cambia con la
- *  agarradera del borde. El Drawer mantiene su ancho */
+ *  agarradera del borde. El Drawer mantiene su ancho. Cada variante se monta
+ *  solo en su pantalla (`useViewport`, SPEC 57): en el teléfono la columna
+ *  no hidrata y en escritorio el Drawer no existe */
 export function Sidebar({
   width = SIDEBAR_WIDTH.default,
   resizable = false,
@@ -131,54 +135,59 @@ export function Sidebar({
   // Cerrar la columna no toca este estado: al abrir vuelve el último ancho
   const [currentWidth, setCurrentWidth] = useState(width)
   const [isResizing, setIsResizing] = useState(false)
+  const viewport = useViewport()
 
   return (
     <>
-      <div
-        data-state={open ? "expanded" : "collapsed"}
-        style={
-          { "--sidebar-width": `${currentWidth}px` } as React.CSSProperties
-        }
-        className={cn(
-          "sticky top-0 hidden h-svh shrink-0 overflow-hidden bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out motion-reduce:transition-none md:block",
-          open ? "w-(--sidebar-width)" : "w-0",
-          // La transición queda para abrir y cerrar; al arrastrar sigue al puntero
-          isResizing && "transition-none"
-        )}
-      >
-        <aside
-          id={SIDEBAR_ID}
-          aria-label="Menú del dashboard"
-          inert={!open}
-          className="flex h-full w-(--sidebar-width) flex-col"
+      {mountsOn(viewport, "desktop") && (
+        <div
+          data-state={open ? "expanded" : "collapsed"}
+          style={
+            { "--sidebar-width": `${currentWidth}px` } as React.CSSProperties
+          }
+          className={cn(
+            "sticky top-0 hidden h-svh shrink-0 overflow-hidden bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out motion-reduce:transition-none md:block",
+            open ? "w-(--sidebar-width)" : "w-0",
+            // La transición queda para abrir y cerrar; al arrastrar sigue al puntero
+            isResizing && "transition-none"
+          )}
         >
-          {children}
-        </aside>
-        {resizable && open && (
-          <SidebarResizeHandle
-            width={currentWidth}
-            onWidthChange={setCurrentWidth}
-            isResizing={isResizing}
-            onResizingChange={setIsResizing}
-          />
-        )}
-      </div>
+          <aside
+            id={SIDEBAR_ID}
+            aria-label="Menú del dashboard"
+            inert={!open}
+            className="flex h-full w-(--sidebar-width) flex-col"
+          >
+            {children}
+          </aside>
+          {resizable && open && (
+            <SidebarResizeHandle
+              width={currentWidth}
+              onWidthChange={setCurrentWidth}
+              isResizing={isResizing}
+              onResizingChange={setIsResizing}
+            />
+          )}
+        </div>
+      )}
 
-      <Sheet
-        open={openMobile}
-        onOpenChange={setOpenMobile}
-      >
-        <SheetContent
-          side="left"
-          className="w-72 gap-0 bg-sidebar p-0 text-sidebar-foreground md:hidden"
+      {mountsOn(viewport, "mobile") && (
+        <Sheet
+          open={openMobile}
+          onOpenChange={setOpenMobile}
         >
-          <SheetTitle className="sr-only">Menú del dashboard</SheetTitle>
-          <SheetDescription className="sr-only">
-            Espacios, secciones y tu cuenta
-          </SheetDescription>
-          {children}
-        </SheetContent>
-      </Sheet>
+          <SheetContent
+            side="left"
+            className="w-72 gap-0 bg-sidebar p-0 text-sidebar-foreground md:hidden"
+          >
+            <SheetTitle className="sr-only">Menú del dashboard</SheetTitle>
+            <SheetDescription className="sr-only">
+              Espacios, secciones y tu cuenta
+            </SheetDescription>
+            {children}
+          </SheetContent>
+        </Sheet>
+      )}
     </>
   )
 }

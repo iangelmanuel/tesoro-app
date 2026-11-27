@@ -4,7 +4,10 @@ import { createContext, useContext, useState } from "react"
 import type { PaymentAccountOption } from "@/features/accounts/components/payment-account-section"
 import type { Category } from "@/features/categories/queries"
 import type { IncomeSourceOption, RecurringIncome } from "../queries"
-import { RecurringIncomeSheet } from "./recurring-income-sheet"
+import {
+  RecurringIncomeSheet,
+  preloadRecurringIncomeSheet
+} from "./recurring-income-sheet"
 
 const IncomeSheetContext = createContext<((id: string) => void) | null>(null)
 
@@ -85,6 +88,8 @@ export function OpenIncomeSheetButton({
     <button
       type="button"
       onClick={() => open(incomeId)}
+      onPointerEnter={preloadRecurringIncomeSheet}
+      onFocus={preloadRecurringIncomeSheet}
       className="min-h-11 min-w-0 cursor-pointer rounded-sm text-start font-medium break-words underline-offset-4 outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:touch-hitbox md:min-h-0"
     >
       {children}

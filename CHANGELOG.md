@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `getDebtEntriesByDebt` and `getGoalContributionsByGoal`: debt entries and goal contributions for many debts or goals in a single query.
 - **Client bundle measurements (SPEC 56b)** in `docs/rendimiento.md`: Turbopack Bundle Analyzer (`pnpm next analyze`) top modules per route, React Profiler and click-to-skeleton method, with "before" and "after" tables.
 - `lazyWithPreload` (`src/libs/lazy-with-preload.ts`): a lazy component plus a `preload()` that shares one download and retries after a failure. `FormDialog` takes `onTriggerIntent` and exports `FormDialogBodySkeleton`; `ChartSkeleton` is the shared chart placeholder.
+- **Render and hydration measurements (SPEC 57)** in `docs/rendimiento.md`: React commits and rendered components per interaction and per page load (a minimal DevTools hook on a `next build --profile` build), hydration cost per screen region, RSC payload per route, and an LCP breakdown (stream arrival, Suspense reveal and paint), measured against a `master` worktree served side by side.
+- `useOpenedOnce` (`src/hooks/use-opened-once.ts`): mounts a controlled dialog the first time it opens and keeps it mounted, so the close animation and its state survive.
+- `useViewport` / `mountsOn` (`src/components/dashboard/shell/`): which screen-size variant of the shell to mount, from the `tesoro-viewport` cookie on the server and the media query after hydration.
+- `GET /api/quick-actions/form-data`: the Personal goals, debts, receivables, unpaid recurring expenses and recurring incomes for the quick-action forms, read with the user's session and RLS.
 
 ### Changed
 
@@ -27,6 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Smaller initial JS on the dashboard (SPEC 56b).** Charts (Recharts), the ⌘K palette (`cmdk`), the quick-action forms (movement, export, goal contribution, debt payment, verify movements), the Categories sheet body, the date picker calendar (`react-day-picker`) and the movements drag and drop (`@dnd-kit`, loaded when idle) are no longer in the initial chunk. They load on open and are preloaded on pointer enter or focus of their trigger, behind a placeholder of the same size. Initial JS of `/dashboard/personal` goes from 2,003 kB to 1,314 kB (−34 %).
 - The command palette prefetches its "Go to" screens when it opens, like the sidebar links do.
 - The movement search reads the current filters when the debounce fires, so a filter changed during the 400 ms wait is no longer overwritten.
+- **Less work on dashboard load (SPEC 57).** The desktop sidebar column, the mobile bottom bar and quick sheet, and the inline or menu row actions now mount only on their screen size once the `tesoro-viewport` cookie is known (first visits still mount both, like before). Quick-action dialogs, the shortcuts sheet and each movement row's edit, duplicate and delete dialogs mount on first open. Tutorial step texts load with driver.js, and the auto-start waits for `load` and idle. On the movements page, hydration goes from ~2,300 to ~1,700 components on a phone.
+- **Quick-action form data on demand (SPEC 57).** Goals, debts, receivables, unpaid recurring expenses and recurring incomes no longer ship in the dashboard layout on every route. They are fetched with a `GET` route (not a server action, which re-renders the router) when the form opens or its trigger is hovered or focused. The movement dialog opens at once and shows its skeleton until they arrive.
+- **Deferred detail sheet bodies (SPEC 57).** The debt, goal, recurring expense and recurring income sheets keep their header and the state that survives closing, and load their body on open (preloaded from the card or row). Initial JS of `/dashboard/personal/debts` goes from 1,774 kB to 1,578 kB, goals from 1,559 kB to 1,416 kB and recurring incomes from 1,567 kB to 1,422 kB.
 
 ## [0.3.1] — 2026-11-25
 

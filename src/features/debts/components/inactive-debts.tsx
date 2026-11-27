@@ -14,7 +14,7 @@ import {
 import { cn } from "@/libs/cn"
 import { debtStatusLabel } from "../calculations"
 import type { Debt, DebtEntry } from "../queries"
-import { DebtSheet } from "./debt-sheet"
+import { DebtSheet, preloadDebtSheet } from "./debt-sheet"
 import { useDebtAction } from "./use-debt-action"
 
 export interface InactiveDebtsProps {
@@ -95,6 +95,8 @@ function InactiveDebtRow({
         type="button"
         className="-m-1 flex min-h-11 min-w-0 flex-1 cursor-pointer flex-col gap-1 rounded-2xl p-1 text-left transition-colors outline-none hover:bg-highlight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         onClick={() => setDetailOpen(true)}
+        onPointerEnter={preloadDebtSheet}
+        onFocus={preloadDebtSheet}
       >
         <span className="flex flex-wrap items-center gap-2">
           <span className="truncate font-medium">{debt.name}</span>

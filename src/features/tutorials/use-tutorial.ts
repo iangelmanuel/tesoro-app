@@ -1,20 +1,28 @@
 "use client"
 
 import { useCallback, useEffect, useRef } from "react"
-import { TUTORIALS, type TutorialSection } from "@/config/tutorials"
+import type { TUTORIALS } from "@/config/tutorial-steps"
+import type { TutorialSection } from "@/config/tutorials"
 import { useTutorialProgress } from "./components/tutorial-provider"
 import type * as RunTour from "./engine/run-tour"
 
-type TourEngine = typeof RunTour
+type TourEngine = typeof RunTour & { steps: typeof TUTORIALS }
 
-// Una sola descarga de driver.js por sesión, compartida por todas las secciones
+// Una sola descarga de driver.js y de los textos de los pasos por sesión,
+// compartida por todas las secciones (los textos no van en el JS inicial,
+// SPEC 57)
 let enginePromise: Promise<TourEngine> | null = null
 
 function loadEngine() {
-  enginePromise ??= import("./engine/run-tour").catch((error: unknown) => {
-    enginePromise = null
-    throw error
-  })
+  enginePromise ??= Promise.all([
+    import("./engine/run-tour"),
+    import("@/config/tutorial-steps")
+  ])
+    .then(([engine, { TUTORIALS: steps }]) => ({ ...engine, steps }))
+    .catch((error: unknown) => {
+      enginePromise = null
+      throw error
+    })
   return enginePromise
 }
 
@@ -46,7 +54,7 @@ export function useTutorial(section: TutorialSection) {
     }
 
     return engine.runTour({
-      steps: TUTORIALS[section],
+      steps: engine.steps[section],
       onDone: () => markCompleted(section)
     })
   }, [section, markCompleted])

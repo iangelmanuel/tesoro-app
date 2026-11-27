@@ -14,7 +14,7 @@ import { cn } from "@/libs/cn"
 import type { Goal, GoalContribution } from "../queries"
 import { GoalIcon } from "./goal-icon"
 import { GoalStatusBadge } from "./goal-progress-bar"
-import { GoalSheet } from "./goal-sheet"
+import { GoalSheet, preloadGoalSheet } from "./goal-sheet"
 import { useGoalAction } from "./use-goal-action"
 
 interface InactiveGoalsProps {
@@ -96,6 +96,8 @@ function InactiveGoalRow({
         type="button"
         className="-m-1 flex min-h-11 min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-2xl p-1 text-left transition-colors outline-none hover:bg-highlight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         onClick={() => setDetailOpen(true)}
+        onPointerEnter={preloadGoalSheet}
+        onFocus={preloadGoalSheet}
       >
         <GoalIcon
           icon={goal.icon}

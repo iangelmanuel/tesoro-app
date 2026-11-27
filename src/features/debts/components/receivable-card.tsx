@@ -34,7 +34,7 @@ import {
   DebtCardZeroBalanceNote
 } from "./debt-card-parts"
 import { ReceivableProgress } from "./debt-progress"
-import { DebtSheet } from "./debt-sheet"
+import { DebtSheet, preloadDebtSheet } from "./debt-sheet"
 import { ReceivableDialog } from "./receivable-dialog"
 import { useDebtAction } from "./use-debt-action"
 
@@ -137,6 +137,8 @@ export function ReceivableCard({
               CARD_LINK
             )}
             onClick={() => setDetailOpen(true)}
+            onPointerEnter={preloadDebtSheet}
+            onFocus={preloadDebtSheet}
           >
             <span className="flex flex-wrap items-center gap-2">
               <span className="truncate font-medium">{receivable.name}</span>

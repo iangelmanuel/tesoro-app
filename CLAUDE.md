@@ -231,11 +231,18 @@ líneas por archivo. Queries y servicios llevan `import "server-only"`.
   lugar) y `"use no memo"` va siempre con comentario. Lo que no se usa al
   entrar se carga con `lazyWithPreload` (`src/libs/lazy-with-preload.ts`)
   dentro de un `Suspense` con su skeleton y precarga en `onPointerEnter` /
-  `onFocus` del disparador (`onTriggerIntent` en `FormDialog`,
-  `preloadQuickAction`): gráficas desde su `…-lazy.tsx`, formularios de
-  diálogo, paleta, calendario de `DatePickerField` y `@dnd-kit` de
-  Movimientos (en idle). Skeletons y constantes no se importan del módulo
+  `onFocus` del disparador (`onTriggerIntent` en `FormDialog`, `preload`
+  de `useQuickActions`): gráficas desde su `…-lazy.tsx`, formularios de
+  diálogo, paleta, calendario de `DatePickerField`, `@dnd-kit` de
+  Movimientos (en idle) y el cuerpo de los Sheets de detalle
+  (`…-sheet-body.tsx`). Skeletons y constantes no se importan del módulo
   diferido. Ver `docs/ui.md#carga-diferida-spec-56b`.
+- **Montar solo lo que se ve** (SPEC 57): los diálogos controlados se montan
+  al abrirse (`useOpenedOnce`) y lo propio de una pantalla, solo en ella
+  (`useViewport` + cookie `tesoro-viewport`, sin efectos que cambien lo
+  pintado). Metas, deudas, cobros, gastos e ingresos fijos de los accesos
+  rápidos no viajan en el layout: se piden con
+  `GET /api/quick-actions/form-data`. Ver `docs/ui.md#montar-solo-lo-que-se-ve-spec-57`.
 - Listas y tarjetas de grilla con las clases de
   `src/components/dashboard/data/surface.ts`, sin `rounded-xl border` ni
   `border-dashed`. Los campos de formulario van con relleno suave y sin borde

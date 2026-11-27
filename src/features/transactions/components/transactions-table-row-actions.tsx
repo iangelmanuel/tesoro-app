@@ -5,6 +5,7 @@ import { Copy, Pencil, Trash2 } from "lucide-react"
 import type { RowAction } from "@/components/dashboard/data/row-actions"
 import { DeleteDialog } from "@/components/dashboard/overlays/delete-dialog"
 import { useActionToast } from "@/hooks/use-action-toast"
+import { useOpenedOnce } from "@/hooks/use-opened-once"
 
 interface RemoveConfig {
   title: string
@@ -31,7 +32,9 @@ export interface EntryConfig {
 /**
  * Acciones de una fila. La misma lista sirve al botón ⋯ (o los botones en
  * línea en el teléfono) y al menú contextual de la fila. Los diálogos se
- * controlan desde aquí porque los menús no pueden alojar triggers
+ * controlan desde aquí porque los menús no pueden alojar triggers. Cada uno
+ * se monta la primera vez que se abre (SPEC 57): una tabla de 50 filas no
+ * hidrata 150 diálogos cerrados al entrar
  */
 export function useEntryActions({
   label,
@@ -42,6 +45,9 @@ export function useEntryActions({
   const [editing, setEditing] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const editOpened = useOpenedOnce(editing)
+  const duplicateOpened = useOpenedOnce(duplicating)
+  const deleteOpened = useOpenedOnce(deleting)
 
   const actions: RowAction[] = [
     ...(renderEdit
@@ -75,14 +81,17 @@ export function useEntryActions({
 
   const dialogs = (
     <>
-      {renderEdit?.({ open: editing, onOpenChange: setEditing })}
-      {renderDuplicate?.({ open: duplicating, onOpenChange: setDuplicating })}
-      <DeleteEntryDialog
-        label={label}
-        {...remove}
-        open={deleting}
-        onOpenChange={setDeleting}
-      />
+      {editOpened && renderEdit?.({ open: editing, onOpenChange: setEditing })}
+      {duplicateOpened &&
+        renderDuplicate?.({ open: duplicating, onOpenChange: setDuplicating })}
+      {deleteOpened && (
+        <DeleteEntryDialog
+          label={label}
+          {...remove}
+          open={deleting}
+          onOpenChange={setDeleting}
+        />
+      )}
     </>
   )
 

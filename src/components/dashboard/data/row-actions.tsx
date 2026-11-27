@@ -20,6 +20,8 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/libs/cn"
+import { mountsOn } from "../shell/viewport"
+import { useViewport } from "../shell/viewport-context"
 
 export interface RowAction {
   id: string
@@ -50,85 +52,92 @@ function sortActions(actions: RowAction[]) {
  * Acciones de una fila de tabla. En escritorio (>= 768 px) un solo botón de
  * tres puntos abre un menú. En móvil (< 768 px) los mismos items quedan como
  * botones en línea de 44 px: la fila ya se desliza y un menú de dos toques
- * cuesta más en pantalla táctil. Se pintan ambos y el corte lo hace CSS, así
- * no hay desajuste de hidratación. La misma lista sirve a RowContextMenu
- * (clic derecho y pulsación larga)
+ * cuesta más en pantalla táctil. El corte lo hace CSS; además solo se
+ * monta la variante del tamaño de pantalla que el servidor conoce por la
+ * cookie (`useViewport`, SPEC 57), así no hay desajuste de hidratación ni se
+ * hidratan las dos. La misma lista sirve a RowContextMenu (clic derecho y
+ * pulsación larga)
  */
 export function RowActions({ label, actions }: RowActionsProps) {
   const { regular, destructive } = sortActions(actions)
   const ariaLabel = `Acciones de ${label}`
+  const viewport = useViewport()
 
   return (
     <>
-      <div
-        role="group"
-        aria-label={ariaLabel}
-        className="flex items-center justify-end gap-1 md:hidden"
-        data-tour="row-actions"
-      >
-        {[...regular, ...destructive].map((action) => (
-          <Button
-            key={action.id}
-            variant="ghost"
-            size="icon"
-            aria-label={`${action.label}: ${label}`}
-            disabled={action.disabled}
-            onClick={action.onAction}
-            className={cn(action.destructive && "text-destructive")}
-          >
-            {action.icon}
-          </Button>
-        ))}
-      </div>
+      {mountsOn(viewport, "mobile") && (
+        <div
+          role="group"
+          aria-label={ariaLabel}
+          className="flex items-center justify-end gap-1 md:hidden"
+          data-tour="row-actions"
+        >
+          {[...regular, ...destructive].map((action) => (
+            <Button
+              key={action.id}
+              variant="ghost"
+              size="icon"
+              aria-label={`${action.label}: ${label}`}
+              disabled={action.disabled}
+              onClick={action.onAction}
+              className={cn(action.destructive && "text-destructive")}
+            >
+              {action.icon}
+            </Button>
+          ))}
+        </div>
+      )}
 
       {/* Ancla compartida: el tutorial resalta la primera fila visible */}
-      <div
-        className="hidden justify-end md:flex"
-        data-tour="row-actions"
-      >
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={ariaLabel}
-              />
-            }
-          >
-            <EllipsisVertical />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="w-auto min-w-48"
-          >
-            {regular.map((action) => (
-              <DropdownMenuItem
-                key={action.id}
-                disabled={action.disabled}
-                onClick={action.onAction}
-              >
-                {action.icon}
-                {action.label}
-              </DropdownMenuItem>
-            ))}
-            {regular.length > 0 && destructive.length > 0 && (
-              <DropdownMenuSeparator />
-            )}
-            {destructive.map((action) => (
-              <DropdownMenuItem
-                key={action.id}
-                variant="destructive"
-                disabled={action.disabled}
-                onClick={action.onAction}
-              >
-                {action.icon}
-                {action.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      {mountsOn(viewport, "desktop") && (
+        <div
+          className="hidden justify-end md:flex"
+          data-tour="row-actions"
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={ariaLabel}
+                />
+              }
+            >
+              <EllipsisVertical />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-auto min-w-48"
+            >
+              {regular.map((action) => (
+                <DropdownMenuItem
+                  key={action.id}
+                  disabled={action.disabled}
+                  onClick={action.onAction}
+                >
+                  {action.icon}
+                  {action.label}
+                </DropdownMenuItem>
+              ))}
+              {regular.length > 0 && destructive.length > 0 && (
+                <DropdownMenuSeparator />
+              )}
+              {destructive.map((action) => (
+                <DropdownMenuItem
+                  key={action.id}
+                  variant="destructive"
+                  disabled={action.disabled}
+                  onClick={action.onAction}
+                >
+                  {action.icon}
+                  {action.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
     </>
   )
 }

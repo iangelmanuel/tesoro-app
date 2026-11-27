@@ -37,7 +37,7 @@ import type { Goal, GoalContribution } from "../queries"
 import { GoalDialog } from "./goal-dialog"
 import { GoalIcon } from "./goal-icon"
 import { GoalStatusBadge } from "./goal-progress-bar"
-import { GoalSheet } from "./goal-sheet"
+import { GoalSheet, preloadGoalSheet } from "./goal-sheet"
 import { GoalSummary } from "./goal-summary"
 import { useGoalAction } from "./use-goal-action"
 
@@ -112,6 +112,8 @@ export function GoalCard({
               CARD_LINK
             )}
             onClick={() => setDetailOpen(true)}
+            onPointerEnter={preloadGoalSheet}
+            onFocus={preloadGoalSheet}
           >
             <GoalIcon
               icon={goal.icon}

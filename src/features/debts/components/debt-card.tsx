@@ -31,7 +31,7 @@ import {
 } from "./debt-card-parts"
 import { DebtDialog } from "./debt-dialog"
 import { DebtProgress } from "./debt-progress"
-import { DebtSheet } from "./debt-sheet"
+import { DebtSheet, preloadDebtSheet } from "./debt-sheet"
 import { useDebtAction } from "./use-debt-action"
 
 const KIND_LABELS = { credit_card: "Tarjeta", loan: "Préstamo" } as const
@@ -130,6 +130,8 @@ export function DebtCard({
               CARD_LINK
             )}
             onClick={() => setDetailOpen(true)}
+            onPointerEnter={preloadDebtSheet}
+            onFocus={preloadDebtSheet}
           >
             <span className="flex flex-wrap items-center gap-2">
               <span className="truncate font-medium">{debt.name}</span>

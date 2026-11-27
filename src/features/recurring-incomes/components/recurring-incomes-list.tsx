@@ -33,6 +33,7 @@ import { incomeFrequencyLabel } from "../occurrences"
 import type { RecurringIncome } from "../queries"
 import { useOpenIncomeSheet } from "./income-sheet-context"
 import { RecurringIncomeDialog } from "./recurring-income-dialog"
+import { preloadRecurringIncomeSheet } from "./recurring-income-sheet"
 import { useRecurringIncomeActions } from "./use-recurring-income-actions"
 
 /** Superficie de la tabla y de su skeleton */
@@ -162,6 +163,7 @@ function IncomeRow({
     >
       <TableRow
         onClick={onOpen}
+        onPointerEnter={preloadRecurringIncomeSheet}
         className={cn(
           "cursor-pointer",
           !income.is_active && "text-muted-foreground"
@@ -177,6 +179,7 @@ function IncomeRow({
               event.stopPropagation()
               onOpen()
             }}
+            onFocus={preloadRecurringIncomeSheet}
             className="line-clamp-3 min-h-11 cursor-pointer rounded-md text-left font-medium break-words outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             {income.name}

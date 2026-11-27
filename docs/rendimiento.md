@@ -642,6 +642,30 @@ que las dos `<source>` del `<picture>` del hero salen vacías y el `<img>`
 pinta `hero-mobile-poster.webp` (720 × 1280) también en escritorio. Se
 corrige en el paso 6 (imágenes de las públicas).
 
+### Videos
+
+Re-codificados con FFmpeg desde los masters de `video/renders/` y
+`video/hero/renders/`, con los mismos fotogramas y la misma duración. La
+calidad se compara con SSIM frente al master y con recortes 1:1 del mismo
+fotograma (los clips, al ancho de la tarjeta: 800 px).
+
+| Video                           | Antes    | Después | Ajustes                                            |
+| ------------------------------- | -------- | ------- | -------------------------------------------------- |
+| Clips (5 × MP4 + WebM + póster) | 12,6 MB  | 7,3 MB  | 1280 × 720, H.264 CRF 26, VP9 CRF 36               |
+| `demo.mp4` / `demo.webm`        | 12,05 MB | 8,94 MB | 1920 × 1080, H.264 CRF 32 (antes 31), VP9 CRF 53   |
+| Hero (4 videos + 2 pósters)     | 4,10 MB  | 2,99 MB | H.264 CRF 36 / 34 (antes 32 / 31), VP9 CRF 45 (42) |
+| **`public/videos`**             | 28,8 MB  | 19,8 MB |                                                    |
+
+- **Clips:** a 800 px el SSIM baja de 0,9967 a 0,9948 (MP4) y queda igual
+  en WebM (0,974 → 0,973). En los recortes no se ve diferencia.
+- **Demo:** en H.264 los separadores finos de la UI (líneas de bajo
+  contraste) se pierden desde CRF 33; `aq-mode=3` y menos deblock no lo
+  arreglan. VP9 los conserva hasta CRF 53, así que el ahorro sale del WebM,
+  que es la primera `<source>`. El MP4 (respaldo) solo sube un punto.
+- **Hero:** SSIM 0,981 → 0,974 (escritorio) y 0,983 → 0,978 (móvil). A 1:1
+  el grano de la madera se suaviza un poco; bajo la sombra del hero no se
+  nota.
+
 ## Render e hidratación (SPEC 57)
 
 ### Método

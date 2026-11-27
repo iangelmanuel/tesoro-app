@@ -42,7 +42,7 @@ Hoy no hay métricas de usuarios reales: solo Lighthouse de laboratorio.
 - Se re-codifican desde los masters locales (`video/renders/` y `video/hero/renders/`), con FFmpeg, sin re-renderizar con Hyperframes. Mismos fotogramas, mismas duraciones.
 - **Clips de funciones** (`registros`, `score`, `espacios`, `graficas`, `recomendaciones`): se muestran en una tarjeta que no pasa de ~800 px de ancho. Se bajan de 1920 × 1080 a 1280 × 720, con el atributo `width` / `height` del `<video>` actualizado.
 - **Demo:** se mantiene 1920 × 1080 (se ve a pantalla grande al dar play) y se sube el CRF hasta que no haya diferencia visible a tamaño real.
-- **Hero:** se ajusta el CRF solo si sigue por encima de 1,5 MB (MP4 escritorio); el móvil ya está bajo.
+- **Hero:** se sube el CRF de escritorio y de móvil hasta que los cuatro videos y sus pósters quepan en 3 MB. Ajustar solo el escritorio no alcanza: sin tocar el móvil, el total queda en ~3,4 MB.
 - **Agentes** (`agentes.*`): ya pesa < 300 kB; no se toca.
 - Los pósters WebP se regeneran solo para los videos que cambian de resolución.
 - Los CRF finales se anotan en `CLAUDE.md` (sección de videos) y en `docs/rendimiento.md`.

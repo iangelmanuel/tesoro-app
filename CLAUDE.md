@@ -63,8 +63,8 @@ Videos de la landing (SPEC 24). Solo en local: `video/` (proyecto
 Hyperframes) y los scripts `scripts/seed-demo.mjs`, `record-demo.mjs`,
 `prepare-demo-video.mjs` y `scripts/demo/` están git-ignorados, igual que
 las skills de Hyperframes. Al repo solo llega el resultado en `public/videos/`
-(MP4 + WebM + póster, ≤ 30 MB en total; el hero, ≤ 4 MB). Requiere FFmpeg
-y Docker.
+(MP4 + WebM + póster, ≤ 20 MB en total; el hero, ≤ 3 MB; SPEC 56c). Requiere
+FFmpeg y Docker.
 
 ```bash
 supabase start                         # Supabase local (el seed se niega con otra URL)
@@ -74,6 +74,17 @@ node scripts/record-demo.mjs [tomas]   # Playwright: .webm + .json del cursor en
 node scripts/prepare-demo-video.mjs    # tomas H.264 y cursor-data.js para Hyperframes
 cd video && npx hyperframes render     # video principal (clips: -c clips/<slug>.html)
 ```
+
+Los renders quedan en `video/renders/<nombre>-master.mp4` y se codifican
+con FFmpeg, sin audio (SPEC 56c):
+
+- **Demo:** 1920 × 1080, H.264 `-preset slow -tune animation` CRF 32 con
+  `+faststart` y VP9 CRF 53 (`-b:v 0`). VP9 conserva los separadores finos
+  de la UI mejor que H.264 a igual peso.
+- **Clips de funciones** (`registros`, `score`, `espacios`, `graficas`,
+  `recomendaciones`): escalados a 1280 × 720 (lanczos), H.264 CRF 26
+  (mismos ajustes) y VP9 CRF 36. Póster WebP (calidad 80) a 1280 × 720 del
+  fotograma 45 (1,5 s).
 
 El clip de agentes (SPEC 34) no graba la app: es HTML en
 `video/clips/agentes.html`. Se renderiza con
@@ -92,9 +103,9 @@ npx hyperframes render -q delivery --video-frame-format png -o renders/hero-mast
 npx hyperframes render -c clips/mobile.html -q delivery --video-frame-format png -o renders/hero-mobile-master.mp4
 ```
 
-Se codifica sin audio: H.264 `-tune film` CRF 32 (escritorio) y 31 (móvil)
-con `+faststart`, VP9 CRF 42, y el póster WebP del primer fotograma de
-cada uno, a `public/videos/hero*`.
+Se codifica sin audio: H.264 `-preset slow -tune film` CRF 36 (escritorio)
+y 34 (móvil) con `+faststart`, VP9 CRF 45, y el póster WebP del primer
+fotograma de cada uno, a `public/videos/hero*` (SPEC 56c).
 
 Las variables (`DEMO_EMAIL`, `DEMO_PASSWORD`, `SUPABASE_SERVICE_ROLE_KEY`
 local) van en el entorno o en `.env.local`, nunca en el repo. Al

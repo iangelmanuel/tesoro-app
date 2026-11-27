@@ -715,6 +715,72 @@ queda dentro del shell prerenderizado (revalida cada hora) y no lo bloquea.
 - **`McpUrlField`** usa `Label` en vez de `FieldLabel` (no usa ayuda ni
   estado), y **`CopyButton`** pide `sonner` al copiar: en las públicas no
   hay `Toaster`.
+- **Vercel Speed Insights** en `app/layout.tsx`, con `normalizeVitalsUrl`
+  (`src/libs/vitals-url.ts`) en `beforeSend`.
+
+### Después
+
+Medido el 2026-11-27 en el Preview de la rama (commit `1cb1f16`, `iad1`),
+con los mismos scripts que "Antes". Al Preview se entra con un enlace
+compartido de Vercel (`_vercel_share`, 23 h), cuya cookie `_vercel_jwt` se
+pasa a Lighthouse y a Playwright, con `x-vercel-skip-toolbar: 1` para que la
+barra de Vercel no cuente. En `/` y `/mcp`, mediana de 5 corridas, porque
+el TBT varía mucho entre corridas.
+
+**Lighthouse móvil** (entre paréntesis, "Antes")
+
+| Ruta             | Performance | LCP           | TBT               | CLS   | TTFB  | Peso              |
+| ---------------- | ----------- | ------------- | ----------------- | ----- | ----- | ----------------- |
+| `/`              | 72 (70)     | 3,7 s (3,4 s) | 753 ms (914 ms)   | 0,000 | 86 ms | 903 kB (1.048 kB) |
+| `/legal/privacy` | 95 (87)     | 2,4 s (2,5 s) | 174 ms (388 ms)   | 0,000 | 85 ms | 302 kB (398 kB)   |
+| `/legal/terms`   | 95 (89)     | 2,4 s (2,5 s) | 159 ms (339 ms)   | 0,000 | 85 ms | 300 kB (397 kB)   |
+| `/mcp`           | 91 (72)     | 2,5 s (2,9 s) | 313 ms (1.022 ms) | 0,000 | 87 ms | 616 kB (706 kB)   |
+
+En `/`, el TBT de las 5 corridas fue de 332 a 1.381 ms y el LCP de 2,6 a
+3,9 s.
+
+**JS inicial**
+
+| Ruta             | Chunks | JS              | gzip            |
+| ---------------- | ------ | --------------- | --------------- |
+| `/`              | 14     | 702 kB (991 kB) | 223 kB (323 kB) |
+| `/legal/privacy` | 10     | 610 kB (606 kB) | 191 kB (189 kB) |
+| `/legal/terms`   | 10     | 610 kB (606 kB) | 191 kB (189 kB) |
+| `/mcp`           | 14     | 707 kB (857 kB) | 226 kB (277 kB) |
+
+Las legales suben 4 kB por el componente de Speed Insights del layout raíz.
+
+**Bytes transferidos de `/`**
+
+| Pantalla   | Sin scroll          | Con scroll          |
+| ---------- | ------------------- | ------------------- |
+| Móvil      | 873 kB (1.018 kB)   | 2.178 kB (2.948 kB) |
+| Escritorio | 1.348 kB (1.560 kB) | 2.653 kB (3.490 kB) |
+
+Sin scroll ya no se pide ningún clip ni el demo. El video del hero sí, pero
+después del LCP. Escritorio pinta `hero-poster.webp` (50 kB) en vez del
+póster del móvil.
+
+**Cache-Control:** `/videos/*` responde
+`public, max-age=604800, stale-while-revalidate=86400` en el Preview.
+
+### Pendiente
+
+La meta de Lighthouse ≥ 90 se cumple en `/legal/*`. En `/mcp` solo falta el
+TBT (313 ms frente a 200 ms). `/` no llega: en la corrida mediana, el LCP es
+el `<h1>` del hero (texto), con ~1,9 s de "Render Delay". Lo que queda ya
+no es JS de la landing:
+
+- **CSS que bloquea el render.** Una sola hoja de 174 kB (31 kB comprimida)
+  con los estilos de toda la app, también los del dashboard. Las palancas
+  son separar el CSS por grupo de rutas o `experimental.inlineCss` (el CSS
+  viaja en el HTML; afecta a toda la app y a la caché de los que vuelven).
+- **Costo de estilos.** ~1 s de "Style & Layout" a 4× y tareas largas sin
+  atribuir de hasta 836 ms, el mismo costo de Tailwind 4 que encontró
+  SPEC 57.
+- **Métricas de campo.** Con Speed Insights activo, el LCP y el INP p75 de
+  usuarios reales dicen si el problema se ve fuera del laboratorio antes de
+  abrir un spec para esto.
 
 ## Render e hidratación (SPEC 57)
 

@@ -53,8 +53,8 @@ export function FeatureClip({ sources }: FeatureClipProps) {
       <video
         ref={videoRef}
         className="absolute inset-0 size-full object-cover"
-        width={1920}
-        height={1080}
+        width={1280}
+        height={720}
         preload="none"
         muted
         loop

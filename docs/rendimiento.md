@@ -666,6 +666,56 @@ fotograma (los clips, al ancho de la tarjeta: 800 px).
   el grano de la madera se suaviza un poco; bajo la sombra del hero no se
   nota.
 
+### JS de las públicas
+
+Bundle Analyzer de Turbopack con el método de 56b (módulos de los chunks
+iniciales del cliente). Antes, en `master`:
+
+| Ruta            | Chunks | JS inicial | Lo que sobraba en el primer pintado                                                                                  |
+| --------------- | ------ | ---------- | -------------------------------------------------------------------------------------------------------------------- |
+| `/`             | 17     | 924,3 kB   | `motion-dom` 112,6 kB y `framer-motion` 21 kB (demo y tour, bajo el pliegue), `sonner` 35,1 kB, Popover de FieldHelp |
+| `/legal/[slug]` | 9      | 491,3 kB   | nada: casi todo es `next` (460 kB)                                                                                   |
+| `/mcp`          | 16     | 789,3 kB   | `sonner` 35,1 kB, Popover de FieldHelp (`@base-ui/react`, `@floating-ui/*`, `config/help.ts` 10,7 kB)                |
+
+Después:
+
+| Ruta            | Chunks | JS inicial         |
+| --------------- | ------ | ------------------ |
+| `/`             | 13     | 583,7 kB (−36,9 %) |
+| `/legal/[slug]` | 9      | 491,3 kB           |
+| `/mcp`          | 13     | 588,1 kB (−25,5 %) |
+
+### Rutas
+
+`/`, `/legal/*` y `/mcp` salen como Partial Prerender (◐) en `next build`,
+con el shell estático. Lo único dinámico es la isla de sesión del header
+(`SiteHeaderSession`, lee cookies dentro de un `Suspense` cuyo fallback es
+el estado sin sesión). `getRepoStars` (`"use cache"` + `cacheLife("hours")`)
+queda dentro del shell prerenderizado (revalida cada hora) y no lo bloquea.
+
+### Lo aplicado
+
+- **Videos re-codificados** (ver arriba).
+- **Caché de los videos.** `/videos/*` responde con
+  `public, max-age=604800, stale-while-revalidate=86400` en
+  `Cache-Control` (`headers()` en `next.config.ts`).
+- **Clips al acercarse.** `feature-clip.tsx` monta las `<source>` cuando la
+  tarjeta está a menos de un viewport (`rootMargin: "100% 0px"`).
+- **Hero después del LCP.** En la línea base el video del hero empezaba a
+  bajar 70–170 ms antes de pintar el póster: el servidor lo pintaba con
+  `autoPlay` y sus `<source>`. `hero-video.tsx` monta las fuentes tras
+  `load` y en idle, y llama a `play()`; ahora empieza ~0,5 s después del
+  LCP. Sin JS queda el póster.
+- **Póster del hero en escritorio.** Las `<source>` del `<picture>` llevan
+  la ruta del archivo; antes salían vacías y escritorio pintaba el póster
+  vertical del móvil.
+- **Islas bajo el pliegue.** `DemoPlayer` y `FeatureTour` se cargan con
+  `lazyWithPreload` (`landing-islands-lazy.tsx`): el servidor las pinta
+  igual y su JS, con el de `motion`, se hidrata aparte.
+- **`McpUrlField`** usa `Label` en vez de `FieldLabel` (no usa ayuda ni
+  estado), y **`CopyButton`** pide `sonner` al copiar: en las públicas no
+  hay `Toaster`.
+
 ## Render e hidratación (SPEC 57)
 
 ### Método

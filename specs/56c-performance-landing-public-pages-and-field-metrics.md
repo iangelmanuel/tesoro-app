@@ -137,7 +137,7 @@ async headers() {
 - [ ] Cargar `/` sin hacer scroll transfiere menos bytes que en la línea base.
 - [ ] `/videos/*` responde con `Cache-Control: public, max-age=604800, stale-while-revalidate=86400` en el Preview.
 - [ ] Lighthouse móvil de `/`, `/legal/*` y `/mcp`: Performance ≥ 90, LCP ≤ 2,5 s, CLS ≤ 0,1 y TBT ≤ 200 ms.
-- [ ] `/legal/*` y `/mcp` salen como estáticas en `next build`.
+- [ ] `/legal/*` y `/mcp` tienen el shell estático en `next build` (◐): lo único dinámico es la isla de sesión del header, dentro de `Suspense`.
 - [ ] `<SpeedInsights />` está en `app/layout.tsx` y `@vercel/speed-insights` tiene versión exacta.
 - [ ] `normalizeVitalsUrl` tiene test: quita el query string y cambia el uuid de `/dashboard/business/<uuid>` por `[id]`.
 - [ ] El documento de privacidad menciona Speed Insights y tiene la fecha actualizada.

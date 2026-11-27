@@ -1,4 +1,4 @@
-import { DemoPlayer } from "./demo-player"
+import { DemoPlayerLazy } from "./landing-islands-lazy"
 import { SectionHeading } from "./section-heading"
 
 // Demo en video justo después del hero (SPEC 24): la app real grabada, con
@@ -16,7 +16,7 @@ export function DemoSection() {
           title="Así se ven tus finanzas en orden"
           description="Un minuto por la app real: tu mes, tus presupuestos, tus metas, tus deudas y tu negocio. Con datos de ejemplo."
         />
-        <DemoPlayer />
+        <DemoPlayerLazy />
       </div>
     </section>
   )

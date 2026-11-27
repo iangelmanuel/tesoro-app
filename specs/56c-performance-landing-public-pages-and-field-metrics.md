@@ -51,7 +51,7 @@ Hoy no hay métricas de usuarios reales: solo Lighthouse de laboratorio.
 
 - **Clips:** las `<source>` se montan solo cuando la tarjeta está a menos de un viewport de distancia (`IntersectionObserver` con `rootMargin`), no al hidratar. Hasta entonces se ve el póster. Así ningún clip descarga nada si el usuario no llega a él.
 - **Demo:** sigue sin autoplay y con `preload="none"`. No cambia.
-- **Hero:** sigue con `preload="metadata"`; se verifica que no empiece a bajar el video antes de que el póster haya pintado.
+- **Hero:** sigue con `preload="metadata"`, y el video no empieza a bajar antes de que el póster haya pintado. En la línea base sí empezaba antes (70–170 ms antes del LCP), porque el servidor pintaba el `<video>` con `autoPlay` y sus `<source>`. Por eso `hero-video.tsx` monta las `<source>` y llama a `play()` tras el evento `load` y en idle. Sin JS solo se ve el póster.
 
 ### 4. Cache-Control de los estáticos públicos
 

@@ -782,6 +782,39 @@ no es JS de la landing:
   usuarios reales dicen si el problema se ve fuera del laboratorio antes de
   abrir un spec para esto.
 
+## Resumen de la serie (56a, 56b, 56c)
+
+Desde la línea base de 56a (v0.3.1, 2026-11-26) hasta el cierre de 56c
+(v0.4.0). Cada fila compara medidas con el mismo método. Cuando la cifra
+final la dio SPEC 57, que siguió la serie en el dashboard, se indica.
+
+| Métrica                                            | Antes          | Después        | Diferencia | Spec      |
+| -------------------------------------------------- | -------------- | -------------- | ---------- | --------- |
+| Documento de `/dashboard/personal`                 | 739 ms         | 517 ms         | −30 %      | 56a       |
+| Documento de `/`                                   | 266 ms         | 210 ms         | −21 %      | 56a       |
+| Lectura de un espacio completo con RLS             | ~38 ms         | 2–6 ms         | −85–95 %   | 56a       |
+| JS inicial de `/dashboard/personal` (`next build`) | 2.003 kB       | 1.314 kB       | −34 %      | 56b       |
+| JS inicial de `/dashboard/personal/reports`        | 1.986 kB       | 1.253 kB       | −37 %      | 56b       |
+| JS inicial de `/dashboard/personal/debts`          | 1.774 kB       | 1.578 kB       | −11 %      | 57        |
+| Componentes al hidratar Movimientos (móvil)        | 2.307          | 1.695          | −27 %      | 57        |
+| JS inicial de `/` (`<script>` del HTML)            | 991 kB         | 702 kB         | −29 %      | 56c       |
+| JS inicial de `/mcp`                               | 857 kB         | 707 kB         | −18 %      | 56c       |
+| Bytes de `/` sin scroll (móvil, Fast 4G)           | 1.018 kB       | 873 kB         | −14 %      | 56c       |
+| Bytes de `/` con scroll hasta el final (móvil)     | 2.948 kB       | 2.178 kB       | −26 %      | 56c       |
+| `public/videos`                                    | 28,8 MB        | 19,8 MB        | −31 %      | 56c       |
+| Lighthouse móvil de `/legal/*`                     | 87–89          | 95             | +6–8       | 56c       |
+| Lighthouse móvil de `/mcp`                         | 72             | 91             | +19        | 56c       |
+| Lighthouse móvil de `/`                            | 67 (LCP 3,4 s) | 72 (LCP 3,7 s) | +5         | 56a → 56c |
+| TBT de `/`                                         | 1.217 ms       | 753 ms         | −38 %      | 56a → 56c |
+
+**Lo que no se cumplió:** la meta de Lighthouse ≥ 90 / LCP ≤ 2,5 s / TBT
+≤ 200 ms en `/` y en el dashboard. En el dashboard el Performance queda en
+50–57 según la máquina (56b y 57). En los dos casos la causa ya no es el
+JS que se descarga: es el LCP de una cifra o un título que espera al
+streaming o al CSS, y el costo de estilos y de `react-dom` con la CPU 4×.
+Las palancas están en "Pendiente" de 56b, 56c y 57. Desde 56c, las
+métricas de campo de Speed Insights deciden cuál atacar primero.
+
 ## Render e hidratación (SPEC 57)
 
 ### Método

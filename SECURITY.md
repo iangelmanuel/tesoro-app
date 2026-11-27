@@ -7,11 +7,12 @@ seguridad en serio y agradecemos cualquier reporte responsable.
 
 | Versión | Soportada          |
 | ------- | ------------------ |
-| 0.3.x   | :white_check_mark: |
-| < 0.3   | :x:                |
+| 0.4.x   | :white_check_mark: |
+| < 0.4   | :x:                |
 
-**Versión actual**: 0.3.1 — código reorganizado por capas y features, con
-tests de Vitest, sin cambios para el usuario.
+**Versión actual**: 0.4.0 — cierre de la serie de rendimiento (base de
+datos, bundle, render del dashboard, landing y métricas de campo con
+Vercel Speed Insights).
 
 ## Reportar una vulnerabilidad
 

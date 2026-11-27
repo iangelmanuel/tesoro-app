@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-11-27
+
+Closes the performance series (SPEC 56a, 56b, 56c and 57): database and server, client bundle, dashboard render and hydration, and the landing and public pages. No breaking changes.
+
 ### Added
 
 - **Performance baseline (SPEC 56a).** `docs/rendimiento.md` documents how performance is measured (Lighthouse CLI with a test-account session, full-document timing with Playwright, `EXPLAIN (ANALYZE, BUFFERS)` with RLS on, JS per route, Supabase advisors) with "before" and "after" tables. `scripts/generate-perf-csv.mjs` generates a seeded synthetic CSV (~2,000 movements over 12 months) into the git-ignored `tmp/`.
@@ -20,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `useOpenedOnce` (`src/hooks/use-opened-once.ts`): mounts a controlled dialog the first time it opens and keeps it mounted, so the close animation and its state survive.
 - `useViewport` / `mountsOn` (`src/components/dashboard/shell/`): which screen-size variant of the shell to mount, from the `tesoro-viewport` cookie on the server and the media query after hydration.
 - `GET /api/quick-actions/form-data`: the Personal goals, debts, receivables, unpaid recurring expenses and recurring incomes for the quick-action forms, read with the user's session and RLS.
+- **Vercel Speed Insights (SPEC 56c).** `@vercel/speed-insights` 2.1.1 and `<SpeedInsights />` in the root layout (`src/components/seo/speed-insights.tsx`) report real-user Web Vitals. `normalizeVitalsUrl` (`src/libs/vitals-url.ts`, with tests) drops the query string and hash and replaces the business workspace id in `/dashboard/business/<id>` with `[id]` before anything is sent.
+- **Landing and public page measurements (SPEC 56c)** in `docs/rendimiento.md`: Lighthouse of `/`, `/legal/*` and `/mcp`, bytes transferred on `/` with and without scrolling, initial JS and Bundle Analyzer per public route, video encoding settings, and a summary of the whole 56 series.
 
 ### Changed
 
@@ -34,6 +40,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Less work on dashboard load (SPEC 57).** The desktop sidebar column, the mobile bottom bar and quick sheet, and the inline or menu row actions now mount only on their screen size once the `tesoro-viewport` cookie is known (first visits still mount both, like before). Quick-action dialogs, the shortcuts sheet and each movement row's edit, duplicate and delete dialogs mount on first open. Tutorial step texts load with driver.js, and the auto-start waits for `load` and idle. On the movements page, hydration goes from ~2,300 to ~1,700 components on a phone.
 - **Quick-action form data on demand (SPEC 57).** Goals, debts, receivables, unpaid recurring expenses and recurring incomes no longer ship in the dashboard layout on every route. They are fetched with a `GET` route (not a server action, which re-renders the router) when the form opens or its trigger is hovered or focused. The movement dialog opens at once and shows its skeleton until they arrive.
 - **Deferred detail sheet bodies (SPEC 57).** The debt, goal, recurring expense and recurring income sheets keep their header and the state that survives closing, and load their body on open (preloaded from the card or row). Initial JS of `/dashboard/personal/debts` goes from 1,774 kB to 1,578 kB, goals from 1,559 kB to 1,416 kB and recurring incomes from 1,567 kB to 1,422 kB.
+- **Lighter landing videos (SPEC 56c).** Re-encoded from the masters with the same frames and durations: the five feature clips at 1280 × 720 (H.264 CRF 26, VP9 CRF 36, new 1280 × 720 posters), the demo at 1080p (H.264 CRF 32, VP9 CRF 53) and the hero (H.264 CRF 36 desktop / 34 mobile, VP9 CRF 45). `public/videos` goes from 28.8 MB to 19.8 MB and the hero with its posters from 4.1 MB to 3.0 MB.
+- **Videos load only when needed (SPEC 56c).** Feature clips mount their `<source>` when the card is within one viewport, so loading `/` without scrolling downloads no clip and no demo. The hero video mounts its sources after `load`, when idle, so the poster (the LCP) gets the bandwidth first; without JS only the poster shows. `/videos/*` is served with `Cache-Control: public, max-age=604800, stale-while-revalidate=86400`.
+- **Smaller initial JS on public pages (SPEC 56c).** The demo player and the feature tour (and `motion` with them) are loaded with `lazyWithPreload` and still server-rendered; `McpUrlField` uses `Label` instead of `FieldLabel`, and `CopyButton` loads `sonner` when copying. Initial JS goes from 991 kB to 702 kB on `/` and from 857 kB to 707 kB on `/mcp`. Lighthouse mobile reaches 95 on `/legal/*` and 91 on `/mcp`.
+- **Privacy policy** lists Vercel Speed Insights (what it measures, no cookies, no identification, no financial data) and is dated 2026-11-27.
+
+### Fixed
+
+- On desktop, the hero painted the vertical mobile poster: `getImageProps` with `unoptimized` returns no `srcSet`, so both `<source>` elements of the `<picture>` were empty. They now point to the poster files.
 
 ## [0.3.1] — 2026-11-25
 
@@ -704,7 +718,7 @@ Actualización a Node.js 26 (LTS), dependencias exactas y ajustes de tooling.
 
 ## Version Support
 
-- **Current version**: 0.1.0
+- **Current version**: 0.4.0
 - **Node.js**: >= 24.19.0
 - **pnpm**: >= 12.16.1
 - **Next.js**: 16.4.3

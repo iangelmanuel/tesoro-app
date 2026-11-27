@@ -1,6 +1,6 @@
 # SPEC 56c — Rendimiento: landing, páginas públicas y métricas de campo
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 24, SPEC 40, SPEC 56a, SPEC 56b
 > **Fecha:** 2026-11-26
 > **Objetivo:** Dejar la landing y las páginas públicas en Lighthouse móvil ≥ 90 con videos re-codificados y cargados solo al verse, medir Web Vitals reales con Vercel Speed Insights y cerrar la serie 56 subiendo la versión.
@@ -129,21 +129,30 @@ async headers() {
 
 ## Criterios de aceptación
 
-- [ ] `public/videos` pesa ≤ 20 MB en total.
-- [ ] `hero.mp4` + `hero.webm` + `hero-mobile.mp4` + `hero-mobile.webm` + sus pósters pesan ≤ 3 MB en total.
-- [ ] Los cinco clips de funciones son 1280 × 720 y su `<video>` declara esas medidas.
-- [ ] Ningún video cambia de duración ni de contenido.
-- [ ] Cargar `/` sin hacer scroll no descarga ningún clip de funciones ni el demo (pestaña Red).
-- [ ] Cargar `/` sin hacer scroll transfiere menos bytes que en la línea base.
-- [ ] `/videos/*` responde con `Cache-Control: public, max-age=604800, stale-while-revalidate=86400` en el Preview.
-- [ ] Lighthouse móvil de `/`, `/legal/*` y `/mcp`: Performance ≥ 90, LCP ≤ 2,5 s, CLS ≤ 0,1 y TBT ≤ 200 ms.
-- [ ] `/legal/*` y `/mcp` tienen el shell estático en `next build` (◐): lo único dinámico es la isla de sesión del header, dentro de `Suspense`.
-- [ ] `<SpeedInsights />` está en `app/layout.tsx` y `@vercel/speed-insights` tiene versión exacta.
-- [ ] `normalizeVitalsUrl` tiene test: quita el query string y cambia el uuid de `/dashboard/business/<uuid>` por `[id]`.
-- [ ] El documento de privacidad menciona Speed Insights y tiene la fecha actualizada.
-- [ ] `package.json`, `SITE.info.version`, `CHANGELOG.md` y `SECURITY.md` dicen 0.4.0.
-- [ ] `docs/rendimiento.md` tiene las tablas de este spec y el resumen de la serie.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
+- [x] `public/videos` pesa ≤ 20 MB en total.
+- [x] `hero.mp4` + `hero.webm` + `hero-mobile.mp4` + `hero-mobile.webm` + sus pósters pesan ≤ 3 MB en total.
+- [x] Los cinco clips de funciones son 1280 × 720 y su `<video>` declara esas medidas.
+- [x] Ningún video cambia de duración ni de contenido.
+- [x] Cargar `/` sin hacer scroll no descarga ningún clip de funciones ni el demo (pestaña Red).
+- [x] Cargar `/` sin hacer scroll transfiere menos bytes que en la línea base.
+- [x] `/videos/*` responde con `Cache-Control: public, max-age=604800, stale-while-revalidate=86400` en el Preview.
+- [ ] Lighthouse móvil de `/`, `/legal/*` y `/mcp`: Performance ≥ 90, LCP ≤ 2,5 s, CLS ≤ 0,1 y TBT ≤ 200 ms. **Se cumple en `/legal/*`; en `/mcp` falta el TBT y `/` no llega. Queda en "Pendiente" de `docs/rendimiento.md`.**
+- [x] `/legal/*` y `/mcp` tienen el shell estático en `next build` (◐): lo único dinámico es la isla de sesión del header, dentro de `Suspense`.
+- [x] `<SpeedInsights />` está en `app/layout.tsx` y `@vercel/speed-insights` tiene versión exacta.
+- [x] `normalizeVitalsUrl` tiene test: quita el query string y cambia el uuid de `/dashboard/business/<uuid>` por `[id]`.
+- [x] El documento de privacidad menciona Speed Insights y tiene la fecha actualizada.
+- [x] `package.json`, `SITE.info.version`, `CHANGELOG.md` y `SECURITY.md` dicen 0.4.0.
+- [x] `docs/rendimiento.md` tiene las tablas de este spec y el resumen de la serie.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
+
+Notas de la verificación (detalle en `docs/rendimiento.md`):
+
+- Videos: `public/videos` pasa de 28,8 MB a 19,8 MB y el hero con sus pósters, de 4,1 MB a 2,99 MB. Mismos fotogramas y duración que los masters (ffprobe). La calidad se comparó con SSIM y recortes 1:1. El demo baja sobre todo en VP9: en H.264 los separadores finos de la UI se pierden desde CRF 33.
+- Carga: verificada con Playwright en un build local y en el Preview. Sin scroll no se pide ningún clip ni el demo, y el video del hero empieza ~0,5 s después del LCP (en la línea base, 70–170 ms antes). Bytes de `/` sin scroll: 873 kB (antes 1.018) en móvil y 1.348 kB (antes 1.560) en escritorio.
+- Lighthouse (Preview, mediana de 3, y de 5 en `/` y `/mcp`): `/legal/*` 95, LCP 2,4 s, TBT 159–174 ms. `/mcp` 91, LCP 2,5 s, TBT 313 ms. `/` 72, LCP 3,7 s, TBT 753 ms (de 332 a 1.381 ms entre corridas). En `/` el LCP es el `<h1>` del hero y lo frenan el CSS global que bloquea el render (174 kB con el del dashboard) y el costo de estilos de Tailwind 4, no el JS de la landing, que bajó de 991 a 702 kB.
+- Rutas: las públicas salen ◐. El criterio se ajustó durante la implementación: lo único dinámico es la isla de sesión del header, y `getRepoStars` queda dentro del shell.
+- Se corrigió un bug que ya existía: en escritorio el hero pintaba el póster vertical del móvil.
+- Speed Insights: lo activa el dueño del proyecto en Vercel. El paso 11 (resumen de 7 días de métricas de campo) va en un PR de documentación aparte.
 
 ## Decisiones
 

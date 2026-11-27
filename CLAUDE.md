@@ -12,7 +12,7 @@ cero ni conecta bancos: se alimenta de los registros que el usuario introduce
 (ingresos, gastos, deudas, metas) y a partir de ellos genera gráficas claras,
 recomendaciones y un score de salud financiera.
 
-Estado: **v0.3.1**. La app está construida (ver `README.md#hoja-de-ruta`,
+Estado: **v0.4.0**. La app está construida (ver `README.md#hoja-de-ruta`,
 `docs/producto.md` y `specs/`):
 
 1. Landing (`/`), legales (`/legal/*`) y guía del MCP (`/mcp`)

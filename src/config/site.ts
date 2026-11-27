@@ -12,7 +12,7 @@ export const SITE = {
       "Gestor y recomendador de finanzas personales y empresariales. Registra tus movimientos y Tesoro los convierte en gráficas claras, recomendaciones accionables y un score de salud financiera.",
     slogan: "Tus finanzas, claras desde el primer registro.",
     founded: 2026,
-    version: "0.3.1",
+    version: "0.4.0",
     license: "MIT",
     openSource: true
   },

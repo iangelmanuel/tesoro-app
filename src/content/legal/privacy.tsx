@@ -127,6 +127,13 @@ export const PRIVACY: LegalContent = {
               <strong>Proveedor de hosting de la aplicación:</strong> sirve las
               páginas y ejecuta el código del servidor.
             </li>
+            <li>
+              <strong>Vercel Speed Insights:</strong> mide qué tan rápido carga
+              y responde cada página (las métricas Web Vitals) junto con la ruta
+              visitada. La ruta se envía sin parámetros de búsqueda ni
+              identificadores de tus espacios. No usa cookies, no te identifica
+              y no recibe tus datos financieros.
+            </li>
           </ul>
           <p>
             Sus servidores pueden estar fuera de Colombia, por lo que tus datos
@@ -159,7 +166,9 @@ export const PRIVACY: LegalContent = {
             </li>
           </ul>
           <p>
-            No usamos analítica, píxeles de seguimiento ni cookies de terceros.
+            No usamos analítica de comportamiento, píxeles de seguimiento ni
+            cookies de terceros. La medición de rendimiento de Vercel Speed
+            Insights (ver Encargados) no guarda nada en tu navegador.
           </p>
         </>
       )

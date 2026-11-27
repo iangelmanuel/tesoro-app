@@ -1,5 +1,5 @@
 import { SITE } from "@/config/site"
-import { FeatureTour } from "./feature-tour"
+import { FeatureTourLazy } from "./landing-islands-lazy"
 import { SectionHeading } from "./section-heading"
 
 // Cada función con pantalla trae su clip (SITE.landing.clips, unido por el
@@ -31,7 +31,7 @@ export function Features() {
           title="Tú registras. Tesoro ordena."
           description="Anotas tus movimientos o los importas desde Excel o CSV, sin conectar bancos ni compartir contraseñas. Lo demás sale de ahí."
         />
-        <FeatureTour items={TOUR} />
+        <FeatureTourLazy items={TOUR} />
       </div>
     </section>
   )

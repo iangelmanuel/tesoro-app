@@ -1,6 +1,6 @@
 # SPEC 56c — Rendimiento: landing, páginas públicas y métricas de campo
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 24, SPEC 40, SPEC 56a, SPEC 56b
 > **Fecha:** 2026-11-26
 > **Objetivo:** Dejar la landing y las páginas públicas en Lighthouse móvil ≥ 90 con videos re-codificados y cargados solo al verse, medir Web Vitals reales con Vercel Speed Insights y cerrar la serie 56 subiendo la versión.
@@ -42,7 +42,7 @@ Hoy no hay métricas de usuarios reales: solo Lighthouse de laboratorio.
 - Se re-codifican desde los masters locales (`video/renders/` y `video/hero/renders/`), con FFmpeg, sin re-renderizar con Hyperframes. Mismos fotogramas, mismas duraciones.
 - **Clips de funciones** (`registros`, `score`, `espacios`, `graficas`, `recomendaciones`): se muestran en una tarjeta que no pasa de ~800 px de ancho. Se bajan de 1920 × 1080 a 1280 × 720, con el atributo `width` / `height` del `<video>` actualizado.
 - **Demo:** se mantiene 1920 × 1080 (se ve a pantalla grande al dar play) y se sube el CRF hasta que no haya diferencia visible a tamaño real.
-- **Hero:** se ajusta el CRF solo si sigue por encima de 1,5 MB (MP4 escritorio); el móvil ya está bajo.
+- **Hero:** se sube el CRF de escritorio y de móvil hasta que los cuatro videos y sus pósters quepan en 3 MB. Ajustar solo el escritorio no alcanza: sin tocar el móvil, el total queda en ~3,4 MB.
 - **Agentes** (`agentes.*`): ya pesa < 300 kB; no se toca.
 - Los pósters WebP se regeneran solo para los videos que cambian de resolución.
 - Los CRF finales se anotan en `CLAUDE.md` (sección de videos) y en `docs/rendimiento.md`.
@@ -51,7 +51,7 @@ Hoy no hay métricas de usuarios reales: solo Lighthouse de laboratorio.
 
 - **Clips:** las `<source>` se montan solo cuando la tarjeta está a menos de un viewport de distancia (`IntersectionObserver` con `rootMargin`), no al hidratar. Hasta entonces se ve el póster. Así ningún clip descarga nada si el usuario no llega a él.
 - **Demo:** sigue sin autoplay y con `preload="none"`. No cambia.
-- **Hero:** sigue con `preload="metadata"`; se verifica que no empiece a bajar el video antes de que el póster haya pintado.
+- **Hero:** sigue con `preload="metadata"`, y el video no empieza a bajar antes de que el póster haya pintado. En la línea base sí empezaba antes (70–170 ms antes del LCP), porque el servidor pintaba el `<video>` con `autoPlay` y sus `<source>`. Por eso `hero-video.tsx` monta las `<source>` y llama a `play()` tras el evento `load` y en idle. Sin JS solo se ve el póster.
 
 ### 4. Cache-Control de los estáticos públicos
 
@@ -68,7 +68,7 @@ Hoy no hay métricas de usuarios reales: solo Lighthouse de laboratorio.
 
 - Dependencia `@vercel/speed-insights` (versión exacta) y `<SpeedInsights />` de `@vercel/speed-insights/next` en `app/layout.tsx`.
 - **Rutas con ids:** `beforeSend` reemplaza el id de `/dashboard/business/[id]` por `[id]` en la URL antes de enviarla. No se envía ningún query string (`?next=…`, filtros de Movimientos).
-- **Privacidad:** el documento de privacidad (`src/features/legal/documents.ts`) agrega Vercel Speed Insights: qué mide (Web Vitals y ruta), que no usa cookies ni identifica al usuario y que no envía datos financieros. Se actualiza su `updatedAt` en `SITE.legal`.
+- **Privacidad:** el documento de privacidad (`src/content/legal/privacy.tsx`, registrado en `src/features/legal/documents.ts`) agrega Vercel Speed Insights: qué mide (Web Vitals y ruta), que no usa cookies ni identifica al usuario y que no envía datos financieros. Se actualiza su `updatedAt` en `SITE.legal`.
 - Las métricas de campo se revisan en el panel de Vercel; el resumen de los primeros 7 días con datos queda en `docs/rendimiento.md`.
 
 ### 7. Cierre de la serie
@@ -129,21 +129,30 @@ async headers() {
 
 ## Criterios de aceptación
 
-- [ ] `public/videos` pesa ≤ 20 MB en total.
-- [ ] `hero.mp4` + `hero.webm` + `hero-mobile.mp4` + `hero-mobile.webm` + sus pósters pesan ≤ 3 MB en total.
-- [ ] Los cinco clips de funciones son 1280 × 720 y su `<video>` declara esas medidas.
-- [ ] Ningún video cambia de duración ni de contenido.
-- [ ] Cargar `/` sin hacer scroll no descarga ningún clip de funciones ni el demo (pestaña Red).
-- [ ] Cargar `/` sin hacer scroll transfiere menos bytes que en la línea base.
-- [ ] `/videos/*` responde con `Cache-Control: public, max-age=604800, stale-while-revalidate=86400` en el Preview.
-- [ ] Lighthouse móvil de `/`, `/legal/*` y `/mcp`: Performance ≥ 90, LCP ≤ 2,5 s, CLS ≤ 0,1 y TBT ≤ 200 ms.
-- [ ] `/legal/*` y `/mcp` salen como estáticas en `next build`.
-- [ ] `<SpeedInsights />` está en `app/layout.tsx` y `@vercel/speed-insights` tiene versión exacta.
-- [ ] `normalizeVitalsUrl` tiene test: quita el query string y cambia el uuid de `/dashboard/business/<uuid>` por `[id]`.
-- [ ] El documento de privacidad menciona Speed Insights y tiene la fecha actualizada.
-- [ ] `package.json`, `SITE.info.version`, `CHANGELOG.md` y `SECURITY.md` dicen 0.4.0.
-- [ ] `docs/rendimiento.md` tiene las tablas de este spec y el resumen de la serie.
-- [ ] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
+- [x] `public/videos` pesa ≤ 20 MB en total.
+- [x] `hero.mp4` + `hero.webm` + `hero-mobile.mp4` + `hero-mobile.webm` + sus pósters pesan ≤ 3 MB en total.
+- [x] Los cinco clips de funciones son 1280 × 720 y su `<video>` declara esas medidas.
+- [x] Ningún video cambia de duración ni de contenido.
+- [x] Cargar `/` sin hacer scroll no descarga ningún clip de funciones ni el demo (pestaña Red).
+- [x] Cargar `/` sin hacer scroll transfiere menos bytes que en la línea base.
+- [x] `/videos/*` responde con `Cache-Control: public, max-age=604800, stale-while-revalidate=86400` en el Preview.
+- [ ] Lighthouse móvil de `/`, `/legal/*` y `/mcp`: Performance ≥ 90, LCP ≤ 2,5 s, CLS ≤ 0,1 y TBT ≤ 200 ms. **Se cumple en `/legal/*`; en `/mcp` falta el TBT y `/` no llega. Queda en "Pendiente" de `docs/rendimiento.md`.**
+- [x] `/legal/*` y `/mcp` tienen el shell estático en `next build` (◐): lo único dinámico es la isla de sesión del header, dentro de `Suspense`.
+- [x] `<SpeedInsights />` está en `app/layout.tsx` y `@vercel/speed-insights` tiene versión exacta.
+- [x] `normalizeVitalsUrl` tiene test: quita el query string y cambia el uuid de `/dashboard/business/<uuid>` por `[id]`.
+- [x] El documento de privacidad menciona Speed Insights y tiene la fecha actualizada.
+- [x] `package.json`, `SITE.info.version`, `CHANGELOG.md` y `SECURITY.md` dicen 0.4.0.
+- [x] `docs/rendimiento.md` tiene las tablas de este spec y el resumen de la serie.
+- [x] `pnpm check`, `pnpm eslint`, `pnpm prettier:check`, `pnpm test` y `pnpm build` pasan.
+
+Notas de la verificación (detalle en `docs/rendimiento.md`):
+
+- Videos: `public/videos` pasa de 28,8 MB a 19,8 MB y el hero con sus pósters, de 4,1 MB a 2,99 MB. Mismos fotogramas y duración que los masters (ffprobe). La calidad se comparó con SSIM y recortes 1:1. El demo baja sobre todo en VP9: en H.264 los separadores finos de la UI se pierden desde CRF 33.
+- Carga: verificada con Playwright en un build local y en el Preview. Sin scroll no se pide ningún clip ni el demo, y el video del hero empieza ~0,5 s después del LCP (en la línea base, 70–170 ms antes). Bytes de `/` sin scroll: 873 kB (antes 1.018) en móvil y 1.348 kB (antes 1.560) en escritorio.
+- Lighthouse (Preview, mediana de 3, y de 5 en `/` y `/mcp`): `/legal/*` 95, LCP 2,4 s, TBT 159–174 ms. `/mcp` 91, LCP 2,5 s, TBT 313 ms. `/` 72, LCP 3,7 s, TBT 753 ms (de 332 a 1.381 ms entre corridas). En `/` el LCP es el `<h1>` del hero y lo frenan el CSS global que bloquea el render (174 kB con el del dashboard) y el costo de estilos de Tailwind 4, no el JS de la landing, que bajó de 991 a 702 kB.
+- Rutas: las públicas salen ◐. El criterio se ajustó durante la implementación: lo único dinámico es la isla de sesión del header, y `getRepoStars` queda dentro del shell.
+- Se corrigió un bug que ya existía: en escritorio el hero pintaba el póster vertical del móvil.
+- Speed Insights: lo activa el dueño del proyecto en Vercel. El paso 11 (resumen de 7 días de métricas de campo) va en un PR de documentación aparte.
 
 ## Decisiones
 

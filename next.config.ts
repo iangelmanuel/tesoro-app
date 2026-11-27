@@ -22,6 +22,22 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"]
   },
+  // Videos de la landing (SPEC 56c): una semana en el navegador, sin
+  // `immutable` porque los nombres no llevan hash y al re-codificar se
+  // mantiene el nombre
+  async headers() {
+    return [
+      {
+        source: "/videos/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=604800, stale-while-revalidate=86400"
+          }
+        ]
+      }
+    ]
+  },
   turbopack: {
     rules: {
       "*.css": {

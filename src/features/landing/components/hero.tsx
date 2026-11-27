@@ -27,21 +27,15 @@ const [SLOGAN_LEAD, SLOGAN_ACCENT] = (() => {
 // debajo del video: son el primer pintado y el LCP, y lo único que se ve con
 // reduced motion, ahorro de datos o sin JS. El atributo poster del <video> no
 // sirve aquí porque no cambia con el ancho y en móvil saltaría al encuadre
-// vertical al arrancar
-const POSTER_COMMON = { alt: "", sizes: "100vw", unoptimized: true }
-const {
-  props: { srcSet: desktopPoster }
-} = getImageProps({
-  ...POSTER_COMMON,
-  src: "/videos/hero-poster.webp",
-  width: 1920,
-  height: 1080
-})
-const {
-  props: { srcSet: mobilePoster, ...posterProps }
-} = getImageProps({
-  ...POSTER_COMMON,
-  src: "/videos/hero-mobile-poster.webp",
+// vertical al arrancar. Sin optimizar, getImageProps no devuelve `srcSet`:
+// las <source> llevan la ruta del archivo tal cual (SPEC 56c)
+const DESKTOP_POSTER = "/videos/hero-poster.webp"
+const MOBILE_POSTER = "/videos/hero-mobile-poster.webp"
+const { props: posterProps } = getImageProps({
+  alt: "",
+  sizes: "100vw",
+  unoptimized: true,
+  src: MOBILE_POSTER,
   width: 720,
   height: 1280
 })
@@ -71,9 +65,15 @@ export function Hero() {
           <picture>
             <source
               media="(max-width: 767px)"
-              srcSet={mobilePoster}
+              srcSet={MOBILE_POSTER}
+              width={720}
+              height={1280}
             />
-            <source srcSet={desktopPoster} />
+            <source
+              srcSet={DESKTOP_POSTER}
+              width={1920}
+              height={1080}
+            />
             <img
               {...posterProps}
               alt=""

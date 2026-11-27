@@ -584,6 +584,237 @@ y los dos criterios del Profiler.
   públicas y ~120 kB en `/dashboard/personal/transactions` antes de
   diferir. Se revisa con las cifras de campo de 56c.
 
+## Landing y páginas públicas (SPEC 56c)
+
+### Método
+
+- **Lighthouse:** igual que en 56a (CLI 12.8.2, perfil móvil, Chromium de
+  Playwright en headless, mediana de 3), sin sesión, sobre `/`,
+  `/legal/privacy`, `/legal/terms` y `/mcp`.
+- **Bytes transferidos de `/`:** script local de Playwright (fuera del
+  repo) con la red "Fast 4G" de DevTools y la caché desactivada por CDP.
+  Suma `encodedDataLength` de cada petición: "Sin scroll" a los 5 s del
+  evento `load`; "Con scroll" tras bajar hasta el final de a 400 px y
+  esperar 5 s. Mediana de 3, en móvil (Pixel 7) y escritorio
+  (1440 × 900).
+- **JS inicial:** suma de los `<script src>` del HTML de cada ruta, en
+  bruto y con gzip (como en 56a).
+
+### Antes
+
+Medido el 2026-11-27 en producción, sobre `master` (v0.3.1 con 56a, 56b y
+57 fusionados).
+
+**Lighthouse móvil**
+
+| Ruta             | Performance | LCP   | TBT      | CLS   | TTFB  | Peso     |
+| ---------------- | ----------- | ----- | -------- | ----- | ----- | -------- |
+| `/`              | 70          | 3,4 s | 914 ms   | 0,000 | 87 ms | 1.048 kB |
+| `/legal/privacy` | 87          | 2,5 s | 388 ms   | 0,000 | 88 ms | 398 kB   |
+| `/legal/terms`   | 89          | 2,5 s | 339 ms   | 0,000 | 91 ms | 397 kB   |
+| `/mcp`           | 72          | 2,9 s | 1.022 ms | 0,000 | 88 ms | 706 kB   |
+
+El TBT de `/` varía mucho entre corridas (530–1.947 ms).
+
+**JS inicial**
+
+| Ruta             | Chunks | JS     | gzip   |
+| ---------------- | ------ | ------ | ------ |
+| `/`              | 18     | 991 kB | 323 kB |
+| `/legal/privacy` | 10     | 606 kB | 189 kB |
+| `/legal/terms`   | 10     | 606 kB | 189 kB |
+| `/mcp`           | 17     | 857 kB | 277 kB |
+
+**Bytes transferidos de `/`**
+
+| Pantalla   | Sin scroll | Con scroll |
+| ---------- | ---------- | ---------- |
+| Móvil      | 1.018 kB   | 2.948 kB   |
+| Escritorio | 1.560 kB   | 3.490 kB   |
+
+Videos sin scroll: el video del hero (`hero-mobile.webm` 496 kB en móvil,
+`hero.webm` 1.037 kB en escritorio) y los pósters del hero, del demo y de
+`registros`. Al bajar se suman `registros.webm` (1.612 kB, el clip de la
+pestaña activa) y `agentes.webm` (244 kB). El demo no baja sin play.
+
+**Hallazgo:** con `unoptimized`, `getImageProps` no devuelve `srcSet`, así
+que las dos `<source>` del `<picture>` del hero salen vacías y el `<img>`
+pinta `hero-mobile-poster.webp` (720 × 1280) también en escritorio. Se
+corrige en el paso 6 (imágenes de las públicas).
+
+### Videos
+
+Re-codificados con FFmpeg desde los masters de `video/renders/` y
+`video/hero/renders/`, con los mismos fotogramas y la misma duración. La
+calidad se compara con SSIM frente al master y con recortes 1:1 del mismo
+fotograma (los clips, al ancho de la tarjeta: 800 px).
+
+| Video                           | Antes    | Después | Ajustes                                            |
+| ------------------------------- | -------- | ------- | -------------------------------------------------- |
+| Clips (5 × MP4 + WebM + póster) | 12,6 MB  | 7,3 MB  | 1280 × 720, H.264 CRF 26, VP9 CRF 36               |
+| `demo.mp4` / `demo.webm`        | 12,05 MB | 8,94 MB | 1920 × 1080, H.264 CRF 32 (antes 31), VP9 CRF 53   |
+| Hero (4 videos + 2 pósters)     | 4,10 MB  | 2,99 MB | H.264 CRF 36 / 34 (antes 32 / 31), VP9 CRF 45 (42) |
+| **`public/videos`**             | 28,8 MB  | 19,8 MB |                                                    |
+
+- **Clips:** a 800 px el SSIM baja de 0,9967 a 0,9948 (MP4) y queda igual
+  en WebM (0,974 → 0,973). En los recortes no se ve diferencia.
+- **Demo:** en H.264 los separadores finos de la UI (líneas de bajo
+  contraste) se pierden desde CRF 33; `aq-mode=3` y menos deblock no lo
+  arreglan. VP9 los conserva hasta CRF 53, así que el ahorro sale del WebM,
+  que es la primera `<source>`. El MP4 (respaldo) solo sube un punto.
+- **Hero:** SSIM 0,981 → 0,974 (escritorio) y 0,983 → 0,978 (móvil). A 1:1
+  el grano de la madera se suaviza un poco; bajo la sombra del hero no se
+  nota.
+
+### JS de las públicas
+
+Bundle Analyzer de Turbopack con el método de 56b (módulos de los chunks
+iniciales del cliente). Antes, en `master`:
+
+| Ruta            | Chunks | JS inicial | Lo que sobraba en el primer pintado                                                                                  |
+| --------------- | ------ | ---------- | -------------------------------------------------------------------------------------------------------------------- |
+| `/`             | 17     | 924,3 kB   | `motion-dom` 112,6 kB y `framer-motion` 21 kB (demo y tour, bajo el pliegue), `sonner` 35,1 kB, Popover de FieldHelp |
+| `/legal/[slug]` | 9      | 491,3 kB   | nada: casi todo es `next` (460 kB)                                                                                   |
+| `/mcp`          | 16     | 789,3 kB   | `sonner` 35,1 kB, Popover de FieldHelp (`@base-ui/react`, `@floating-ui/*`, `config/help.ts` 10,7 kB)                |
+
+Después:
+
+| Ruta            | Chunks | JS inicial         |
+| --------------- | ------ | ------------------ |
+| `/`             | 13     | 583,7 kB (−36,9 %) |
+| `/legal/[slug]` | 9      | 491,3 kB           |
+| `/mcp`          | 13     | 588,1 kB (−25,5 %) |
+
+### Rutas
+
+`/`, `/legal/*` y `/mcp` salen como Partial Prerender (◐) en `next build`,
+con el shell estático. Lo único dinámico es la isla de sesión del header
+(`SiteHeaderSession`, lee cookies dentro de un `Suspense` cuyo fallback es
+el estado sin sesión). `getRepoStars` (`"use cache"` + `cacheLife("hours")`)
+queda dentro del shell prerenderizado (revalida cada hora) y no lo bloquea.
+
+### Lo aplicado
+
+- **Videos re-codificados** (ver arriba).
+- **Caché de los videos.** `/videos/*` responde con
+  `public, max-age=604800, stale-while-revalidate=86400` en
+  `Cache-Control` (`headers()` en `next.config.ts`).
+- **Clips al acercarse.** `feature-clip.tsx` monta las `<source>` cuando la
+  tarjeta está a menos de un viewport (`rootMargin: "100% 0px"`).
+- **Hero después del LCP.** En la línea base el video del hero empezaba a
+  bajar 70–170 ms antes de pintar el póster: el servidor lo pintaba con
+  `autoPlay` y sus `<source>`. `hero-video.tsx` monta las fuentes tras
+  `load` y en idle, y llama a `play()`; ahora empieza ~0,5 s después del
+  LCP. Sin JS queda el póster.
+- **Póster del hero en escritorio.** Las `<source>` del `<picture>` llevan
+  la ruta del archivo; antes salían vacías y escritorio pintaba el póster
+  vertical del móvil.
+- **Islas bajo el pliegue.** `DemoPlayer` y `FeatureTour` se cargan con
+  `lazyWithPreload` (`landing-islands-lazy.tsx`): el servidor las pinta
+  igual y su JS, con el de `motion`, se hidrata aparte.
+- **`McpUrlField`** usa `Label` en vez de `FieldLabel` (no usa ayuda ni
+  estado), y **`CopyButton`** pide `sonner` al copiar: en las públicas no
+  hay `Toaster`.
+- **Vercel Speed Insights** en `app/layout.tsx`, con `normalizeVitalsUrl`
+  (`src/libs/vitals-url.ts`) en `beforeSend`.
+
+### Después
+
+Medido el 2026-11-27 en el Preview de la rama (commit `1cb1f16`, `iad1`),
+con los mismos scripts que "Antes". Al Preview se entra con un enlace
+compartido de Vercel (`_vercel_share`, 23 h), cuya cookie `_vercel_jwt` se
+pasa a Lighthouse y a Playwright, con `x-vercel-skip-toolbar: 1` para que la
+barra de Vercel no cuente. En `/` y `/mcp`, mediana de 5 corridas, porque
+el TBT varía mucho entre corridas.
+
+**Lighthouse móvil** (entre paréntesis, "Antes")
+
+| Ruta             | Performance | LCP           | TBT               | CLS   | TTFB  | Peso              |
+| ---------------- | ----------- | ------------- | ----------------- | ----- | ----- | ----------------- |
+| `/`              | 72 (70)     | 3,7 s (3,4 s) | 753 ms (914 ms)   | 0,000 | 86 ms | 903 kB (1.048 kB) |
+| `/legal/privacy` | 95 (87)     | 2,4 s (2,5 s) | 174 ms (388 ms)   | 0,000 | 85 ms | 302 kB (398 kB)   |
+| `/legal/terms`   | 95 (89)     | 2,4 s (2,5 s) | 159 ms (339 ms)   | 0,000 | 85 ms | 300 kB (397 kB)   |
+| `/mcp`           | 91 (72)     | 2,5 s (2,9 s) | 313 ms (1.022 ms) | 0,000 | 87 ms | 616 kB (706 kB)   |
+
+En `/`, el TBT de las 5 corridas fue de 332 a 1.381 ms y el LCP de 2,6 a
+3,9 s.
+
+**JS inicial**
+
+| Ruta             | Chunks | JS              | gzip            |
+| ---------------- | ------ | --------------- | --------------- |
+| `/`              | 14     | 702 kB (991 kB) | 223 kB (323 kB) |
+| `/legal/privacy` | 10     | 610 kB (606 kB) | 191 kB (189 kB) |
+| `/legal/terms`   | 10     | 610 kB (606 kB) | 191 kB (189 kB) |
+| `/mcp`           | 14     | 707 kB (857 kB) | 226 kB (277 kB) |
+
+Las legales suben 4 kB por el componente de Speed Insights del layout raíz.
+
+**Bytes transferidos de `/`**
+
+| Pantalla   | Sin scroll          | Con scroll          |
+| ---------- | ------------------- | ------------------- |
+| Móvil      | 873 kB (1.018 kB)   | 2.178 kB (2.948 kB) |
+| Escritorio | 1.348 kB (1.560 kB) | 2.653 kB (3.490 kB) |
+
+Sin scroll ya no se pide ningún clip ni el demo. El video del hero sí, pero
+después del LCP. Escritorio pinta `hero-poster.webp` (50 kB) en vez del
+póster del móvil.
+
+**Cache-Control:** `/videos/*` responde
+`public, max-age=604800, stale-while-revalidate=86400` en el Preview.
+
+### Pendiente
+
+La meta de Lighthouse ≥ 90 se cumple en `/legal/*`. En `/mcp` solo falta el
+TBT (313 ms frente a 200 ms). `/` no llega: en la corrida mediana, el LCP es
+el `<h1>` del hero (texto), con ~1,9 s de "Render Delay". Lo que queda ya
+no es JS de la landing:
+
+- **CSS que bloquea el render.** Una sola hoja de 174 kB (31 kB comprimida)
+  con los estilos de toda la app, también los del dashboard. Las palancas
+  son separar el CSS por grupo de rutas o `experimental.inlineCss` (el CSS
+  viaja en el HTML; afecta a toda la app y a la caché de los que vuelven).
+- **Costo de estilos.** ~1 s de "Style & Layout" a 4× y tareas largas sin
+  atribuir de hasta 836 ms, el mismo costo de Tailwind 4 que encontró
+  SPEC 57.
+- **Métricas de campo.** Con Speed Insights activo, el LCP y el INP p75 de
+  usuarios reales dicen si el problema se ve fuera del laboratorio antes de
+  abrir un spec para esto.
+
+## Resumen de la serie (56a, 56b, 56c)
+
+Desde la línea base de 56a (v0.3.1, 2026-11-26) hasta el cierre de 56c
+(v0.4.0). Cada fila compara medidas con el mismo método. Cuando la cifra
+final la dio SPEC 57, que siguió la serie en el dashboard, se indica.
+
+| Métrica                                            | Antes          | Después        | Diferencia | Spec      |
+| -------------------------------------------------- | -------------- | -------------- | ---------- | --------- |
+| Documento de `/dashboard/personal`                 | 739 ms         | 517 ms         | −30 %      | 56a       |
+| Documento de `/`                                   | 266 ms         | 210 ms         | −21 %      | 56a       |
+| Lectura de un espacio completo con RLS             | ~38 ms         | 2–6 ms         | −85–95 %   | 56a       |
+| JS inicial de `/dashboard/personal` (`next build`) | 2.003 kB       | 1.314 kB       | −34 %      | 56b       |
+| JS inicial de `/dashboard/personal/reports`        | 1.986 kB       | 1.253 kB       | −37 %      | 56b       |
+| JS inicial de `/dashboard/personal/debts`          | 1.774 kB       | 1.578 kB       | −11 %      | 57        |
+| Componentes al hidratar Movimientos (móvil)        | 2.307          | 1.695          | −27 %      | 57        |
+| JS inicial de `/` (`<script>` del HTML)            | 991 kB         | 702 kB         | −29 %      | 56c       |
+| JS inicial de `/mcp`                               | 857 kB         | 707 kB         | −18 %      | 56c       |
+| Bytes de `/` sin scroll (móvil, Fast 4G)           | 1.018 kB       | 873 kB         | −14 %      | 56c       |
+| Bytes de `/` con scroll hasta el final (móvil)     | 2.948 kB       | 2.178 kB       | −26 %      | 56c       |
+| `public/videos`                                    | 28,8 MB        | 19,8 MB        | −31 %      | 56c       |
+| Lighthouse móvil de `/legal/*`                     | 87–89          | 95             | +6–8       | 56c       |
+| Lighthouse móvil de `/mcp`                         | 72             | 91             | +19        | 56c       |
+| Lighthouse móvil de `/`                            | 67 (LCP 3,4 s) | 72 (LCP 3,7 s) | +5         | 56a → 56c |
+| TBT de `/`                                         | 1.217 ms       | 753 ms         | −38 %      | 56a → 56c |
+
+**Lo que no se cumplió:** la meta de Lighthouse ≥ 90 / LCP ≤ 2,5 s / TBT
+≤ 200 ms en `/` y en el dashboard. En el dashboard el Performance queda en
+50–57 según la máquina (56b y 57). En los dos casos la causa ya no es el
+JS que se descarga: es el LCP de una cifra o un título que espera al
+streaming o al CSS, y el costo de estilos y de `react-dom` con la CPU 4×.
+Las palancas están en "Pendiente" de 56b, 56c y 57. Desde 56c, las
+métricas de campo de Speed Insights deciden cuál atacar primero.
+
 ## Render e hidratación (SPEC 57)
 
 ### Método

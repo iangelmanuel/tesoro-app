@@ -18,7 +18,7 @@
 ---
 
 > [!NOTE]
-> Versión `0.3.1`. La app ya cubre los espacios _Personal_ y _Empresa_ de
+> Versión `0.4.0`. La app ya cubre los espacios _Personal_ y _Empresa_ de
 > punta a punta; lo que sigue está en la [Hoja de ruta](#hoja-de-ruta).
 
 ## Qué es

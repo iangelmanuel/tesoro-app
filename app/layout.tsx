@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import localFont from "next/font/local"
 import { JsonLd } from "@/components/seo/json-ld"
+import { SpeedInsights } from "@/components/seo/speed-insights"
 import { SITE } from "@/config/site"
 import { cn } from "@/libs/cn"
 import {
@@ -81,6 +82,7 @@ export default function RootLayout({
           ]}
         />
         {children}
+        <SpeedInsights />
       </body>
     </html>
   )

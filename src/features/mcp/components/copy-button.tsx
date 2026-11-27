@@ -3,8 +3,12 @@
 import { useEffect, useState } from "react"
 import { Check, Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { toast } from "@/components/ui/sonner"
 import { cn } from "@/libs/cn"
+
+// sonner se pide al copiar, no al cargar: en las páginas públicas no hay
+// Toaster y no tiene por qué viajar en su JS inicial (SPEC 56c)
+const loadToast = () =>
+  import("@/components/ui/sonner").then((module) => module.toast)
 
 interface CopyButtonProps {
   value: string
@@ -39,9 +43,11 @@ export function CopyButton({
     try {
       await navigator.clipboard.writeText(value)
       setCopied(true)
-      if (toastMessage) toast.success(toastMessage)
+      if (toastMessage) void loadToast().then((t) => t.success(toastMessage))
     } catch {
-      toast.error("No se pudo copiar. Selecciónalo y cópialo a mano")
+      void loadToast().then((t) =>
+        t.error("No se pudo copiar. Selecciónalo y cópialo a mano")
+      )
     }
   }
 

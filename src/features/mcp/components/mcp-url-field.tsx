@@ -3,8 +3,8 @@
 import { useId } from "react"
 import type { Route } from "next"
 import Link from "next/link"
-import { FieldLabel } from "@/components/forms/field-label"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { SITE } from "@/config/site"
 import { cn } from "@/libs/cn"
 import { CopyButton } from "./copy-button"
@@ -32,7 +32,9 @@ export function McpUrlField({
     <div className={cn("flex flex-col gap-2", className)}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <FieldLabel htmlFor={id}>{label}</FieldLabel>
+          {/* Label y no FieldLabel: sin ayuda ni estado, y así la landing y
+              /mcp no cargan el Popover de FieldHelp (SPEC 56c) */}
+          <Label htmlFor={id}>{label}</Label>
           <Input
             id={id}
             value={url}

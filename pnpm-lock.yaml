@@ -222,8 +222,8 @@ importers:
         specifier: 4.4.0
         version: 4.4.0
       driver.js:
-        specifier: 1.11.0
-        version: 1.11.0
+        specifier: 1.14.0
+        version: 1.14.0
       exceljs:
         specifier: 4.4.0
         version: 4.4.0
@@ -2295,8 +2295,8 @@ packages:
     resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
     engines: {node: '>=12'}
 
-  driver.js@1.11.0:
-    resolution: {integrity: sha512-Xp/tYNYQ4Wth6AN3HqVVYdrCF4ahe4FVBDphWKylVDBBbeDEsFqnogxko6Gv30Yf9T/B92g0RZOCp4xfl1gqqw==}
+  driver.js@1.14.0:
+    resolution: {integrity: sha512-BnCFuNU8QO2rrYiDra43Ortx6D6chqMvEMF1q3fWQfsC3xNyCX4T1P1vZDTXTxGdtcXh2v5r11hxSpNLF3DJVw==}
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -6584,7 +6584,7 @@ snapshots:
 
   dotenv@17.4.2: {}
 
-  driver.js@1.11.0: {}
+  driver.js@1.14.0: {}
 
   dunder-proto@1.0.1:
     dependencies:

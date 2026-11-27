@@ -218,7 +218,7 @@ export const SITE = {
     {
       slug: "privacy",
       title: "Política de Privacidad",
-      updatedAt: "2026-10-31"
+      updatedAt: "2026-11-27"
     },
     {
       slug: "terms",

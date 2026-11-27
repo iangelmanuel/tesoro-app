@@ -68,7 +68,7 @@ Hoy no hay métricas de usuarios reales: solo Lighthouse de laboratorio.
 
 - Dependencia `@vercel/speed-insights` (versión exacta) y `<SpeedInsights />` de `@vercel/speed-insights/next` en `app/layout.tsx`.
 - **Rutas con ids:** `beforeSend` reemplaza el id de `/dashboard/business/[id]` por `[id]` en la URL antes de enviarla. No se envía ningún query string (`?next=…`, filtros de Movimientos).
-- **Privacidad:** el documento de privacidad (`src/features/legal/documents.ts`) agrega Vercel Speed Insights: qué mide (Web Vitals y ruta), que no usa cookies ni identifica al usuario y que no envía datos financieros. Se actualiza su `updatedAt` en `SITE.legal`.
+- **Privacidad:** el documento de privacidad (`src/content/legal/privacy.tsx`, registrado en `src/features/legal/documents.ts`) agrega Vercel Speed Insights: qué mide (Web Vitals y ruta), que no usa cookies ni identifica al usuario y que no envía datos financieros. Se actualiza su `updatedAt` en `SITE.legal`.
 - Las métricas de campo se revisan en el panel de Vercel; el resumen de los primeros 7 días con datos queda en `docs/rendimiento.md`.
 
 ### 7. Cierre de la serie

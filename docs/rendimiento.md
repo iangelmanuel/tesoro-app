@@ -584,6 +584,64 @@ y los dos criterios del Profiler.
   públicas y ~120 kB en `/dashboard/personal/transactions` antes de
   diferir. Se revisa con las cifras de campo de 56c.
 
+## Landing y páginas públicas (SPEC 56c)
+
+### Método
+
+- **Lighthouse:** igual que en 56a (CLI 12.8.2, perfil móvil, Chromium de
+  Playwright en headless, mediana de 3), sin sesión, sobre `/`,
+  `/legal/privacy`, `/legal/terms` y `/mcp`.
+- **Bytes transferidos de `/`:** script local de Playwright (fuera del
+  repo) con la red "Fast 4G" de DevTools y la caché desactivada por CDP.
+  Suma `encodedDataLength` de cada petición: "Sin scroll" a los 5 s del
+  evento `load`; "Con scroll" tras bajar hasta el final de a 400 px y
+  esperar 5 s. Mediana de 3, en móvil (Pixel 7) y escritorio
+  (1440 × 900).
+- **JS inicial:** suma de los `<script src>` del HTML de cada ruta, en
+  bruto y con gzip (como en 56a).
+
+### Antes
+
+Medido el 2026-11-27 en producción, sobre `master` (v0.3.1 con 56a, 56b y
+57 fusionados).
+
+**Lighthouse móvil**
+
+| Ruta             | Performance | LCP   | TBT      | CLS   | TTFB  | Peso     |
+| ---------------- | ----------- | ----- | -------- | ----- | ----- | -------- |
+| `/`              | 70          | 3,4 s | 914 ms   | 0,000 | 87 ms | 1.048 kB |
+| `/legal/privacy` | 87          | 2,5 s | 388 ms   | 0,000 | 88 ms | 398 kB   |
+| `/legal/terms`   | 89          | 2,5 s | 339 ms   | 0,000 | 91 ms | 397 kB   |
+| `/mcp`           | 72          | 2,9 s | 1.022 ms | 0,000 | 88 ms | 706 kB   |
+
+El TBT de `/` varía mucho entre corridas (530–1.947 ms).
+
+**JS inicial**
+
+| Ruta             | Chunks | JS     | gzip   |
+| ---------------- | ------ | ------ | ------ |
+| `/`              | 18     | 991 kB | 323 kB |
+| `/legal/privacy` | 10     | 606 kB | 189 kB |
+| `/legal/terms`   | 10     | 606 kB | 189 kB |
+| `/mcp`           | 17     | 857 kB | 277 kB |
+
+**Bytes transferidos de `/`**
+
+| Pantalla   | Sin scroll | Con scroll |
+| ---------- | ---------- | ---------- |
+| Móvil      | 1.018 kB   | 2.948 kB   |
+| Escritorio | 1.560 kB   | 3.490 kB   |
+
+Videos sin scroll: el video del hero (`hero-mobile.webm` 496 kB en móvil,
+`hero.webm` 1.037 kB en escritorio) y los pósters del hero, del demo y de
+`registros`. Al bajar se suman `registros.webm` (1.612 kB, el clip de la
+pestaña activa) y `agentes.webm` (244 kB). El demo no baja sin play.
+
+**Hallazgo:** con `unoptimized`, `getImageProps` no devuelve `srcSet`, así
+que las dos `<source>` del `<picture>` del hero salen vacías y el `<img>`
+pinta `hero-mobile-poster.webp` (720 × 1280) también en escritorio. Se
+corrige en el paso 6 (imágenes de las públicas).
+
 ## Render e hidratación (SPEC 57)
 
 ### Método

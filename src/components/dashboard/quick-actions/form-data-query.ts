@@ -1,5 +1,4 @@
-"use server"
-
+import "server-only"
 import { isActiveDebt } from "@/features/debts/calculations"
 import { debtPaymentDescriptions } from "@/features/debts/payment-description"
 import { getDebtEntriesByDebt, getDebts } from "@/features/debts/queries"
@@ -15,10 +14,12 @@ import { todayISO } from "@/libs/dates"
  * Datos de Personal que solo usan los formularios de los accesos rápidos
  * (SPEC 57): metas, deudas y cobros activos, gastos fijos sin pagar e
  * ingresos fijos. Antes viajaban en el layout en cada ruta; ahora se piden
- * al abrir el formulario o al pasar por su disparador. El espacio es el
- * Personal del usuario de la sesión y cada consulta pasa por RLS
+ * al abrir el formulario o al pasar por su disparador, con un GET a
+ * `/api/quick-actions/form-data` (una server action re-renderizaba el router
+ * y se encolaba con las demás). El espacio es el Personal del usuario de la
+ * sesión y cada consulta pasa por RLS
  */
-export async function loadQuickActionsFormData(): Promise<PaymentTabsData> {
+export async function getQuickActionsFormData(): Promise<PaymentTabsData> {
   const personal = await getPersonalWorkspace()
   const [goals, debts, payments, incomeSources] = await Promise.all([
     getGoals(personal.id),

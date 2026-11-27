@@ -1,5 +1,16 @@
 import type { PaymentTabsData } from "@/features/transactions/components/transaction-form-panels"
-import { loadQuickActionsFormData } from "./actions"
+
+/** Route Handler que devuelve los datos (`app/api/quick-actions/form-data`) */
+const FORM_DATA_URL = "/api/quick-actions/form-data"
+
+// GET con la sesión del navegador; cualquier error (sin sesión, red) lanza
+async function fetchFormData(): Promise<PaymentTabsData> {
+  const response = await fetch(FORM_DATA_URL, { cache: "no-store" })
+  if (!response.ok) {
+    throw new Error(`form-data ${response.status}`)
+  }
+  return (await response.json()) as PaymentTabsData
+}
 
 // Datos de los formularios de los accesos rápidos (SPEC 57), pedidos una
 // vez por carga del layout. La llave es el objeto de props que el servidor
@@ -17,12 +28,24 @@ export function loadFormData(key: object): Promise<PaymentTabsData | null> {
   if (slot?.key === key) {
     return slot.promise
   }
-  const promise = loadQuickActionsFormData().catch(() => {
-    if (slot?.promise === promise) {
-      slot = null
-    }
-    return null
-  })
+  const promise: Promise<PaymentTabsData | null> & {
+    status?: "fulfilled"
+    value?: PaymentTabsData | null
+  } = fetchFormData()
+    .catch(() => {
+      if (slot?.promise === promise) {
+        slot = null
+      }
+      return null
+    })
+    .then((data) => {
+      // Protocolo de thenables de React: con la promesa ya resuelta (por la
+      // precarga), `use` lee el valor en el acto en vez de suspender y pintar
+      // un commit de skeleton
+      promise.status = "fulfilled"
+      promise.value = data
+      return data
+    })
   slot = { key, promise }
   return promise
 }

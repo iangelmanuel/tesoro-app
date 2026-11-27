@@ -312,12 +312,13 @@ export function QuickActionsProvider({
 
       const pending = loadFormData(value)
       // Movimiento y traspaso abren en el acto; el cuerpo espera los datos.
-      // Si fallan, abre sin los tabs de pago y lo avisa
+      // Si fallan, abre sin los tabs de pago y lo avisa. No guarda los datos
+      // en el estado: Aporte y Pago los piden frescos al abrir, y guardarlos
+      // aquí re-renderizaba el proveedor sin necesidad
       if (key === "movement" || key === "transfer") {
         setDialog({ key, formData: pending })
         void pending.then((data) => {
-          if (data) setFormData(data)
-          else if (id === request.current) toast.error(FORM_DATA_ERROR)
+          if (!data && id === request.current) toast.error(FORM_DATA_ERROR)
         })
         return
       }
